@@ -1,5 +1,4 @@
-
-# v4 #' Merge SWAN .rda Files from Directory ----
+# v4 Merge SWAN .rda Files from Directory ----
 #' Merge SWAN .rda Files from Directory
 #'
 #' This function discovers, loads, and intelligently merges all .rda files from
@@ -591,7 +590,7 @@ save_merged_dataset_to_file <- function(merged_dataset, file_path, verbose_mode)
 # Run ----
 # Test the updated merger that should find SWANID
 merged_longitudinal_data <- merge_swan_rda_files_comprehensive(
-  swan_data_directory_path = "~/Dropbox (Personal)/workforce/Dall_model/data/SWAN/",
+  swan_data_directory_path = "data/SWAN/",
   merge_strategy = "by_key",
   preferred_key_columns = c("SWANID", "swanid"),
   create_source_tracking = FALSE,
