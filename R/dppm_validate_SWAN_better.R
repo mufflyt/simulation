@@ -1,5 +1,9 @@
 # Validate DPMM Model Performance Against SWAN Longitudinal Data ----
 
+library(mgcv)
+library(tidyverse)
+
+
 #' Validate DPMM Model Performance Against SWAN Longitudinal Data
 #'
 #' @description
@@ -66,7 +70,7 @@
 #' # Example 2: Comprehensive validation with all metrics
 #' \dontrun{
 #' comprehensive_validation <- validate_dpmm_with_swan_data(
-#'   swan_data_file_path = "~/Dropbox/workforce/Dall_model/data/SWAN/merged.rds",
+#'   swan_data_file_path = "data/SWAN/merged.rds",
 #'   baseline_visit_identifier = "00",
 #'   validation_visit_identifiers = c("01", "02", "03", "04", "05", "06"),
 #'   maximum_followup_years = 15,
@@ -107,7 +111,7 @@
 #' @importFrom stats cor lm coef rbinom cut
 #' @export
 validate_dpmm_with_swan_data <- function(
-    swan_data_file_path = "~/Dropbox (Personal)/workforce/Dall_model/data/SWAN/merged_longitudinal_data.rds",
+    swan_data_file_path = "data/SWAN/merged_longitudinal_data.rds",
     baseline_visit_identifier = "0",
     validation_visit_identifiers = c("1", "2", "3", "4", "5"),
     maximum_followup_years = 10,
@@ -1358,149 +1362,21 @@ create_validation_analysis_report <- function(validation_results,
   }
 }
 
+# Run ----
 validate_dpmm_with_swan_data_output <- validate_dpmm_with_swan_data(
-    swan_data_file_path = "~/Dropbox (Personal)/workforce/Dall_model/data/SWAN/merged_longitudinal_data.rds",
+    swan_data_file_path = "data/SWAN/merged_longitudinal_data.rds",
     baseline_visit_identifier = "0",
     validation_visit_identifiers = c("1", "2", "3", "4", "5", "6"),
     maximum_followup_years = 20,
-    number_of_simulations = 1000,
+    number_of_simulations = 5, #1000
     validation_metric_types = c("prevalence", "incidence", "progression",
                                 "severity", "age_patterns"),
     calculate_bootstrap_ci = TRUE,
     save_detailed_output = TRUE,
-    output_directory_path = "~/Dropbox (Personal)/workforce/Dall_model/data/SWAN/swan_validation_results/",
+    output_directory_path = "data/SWAN/swan_validation_results/",
     verbose_logging = TRUE)
 
 # 📋 Review validation results ----
 cat("Overall Validation Score:", validate_dpmm_with_swan_data_output$validation_summary$overall_score, "/100\n")
 cat("Validation Level:", validate_dpmm_with_swan_data_output$validation_summary$validation_level, "\n")
 cat("Ready for Forecasting:", validate_dpmm_with_swan_data_output$validation_summary$ready_for_forecasting, "\n")
-
-# 📊 Step 4: Analyze Validation Results ----
-# Load required library
-library(ggplot2)
-
-# Extract prevalence comparison data
-prevalence_data <- validate_dpmm_with_swan_data_output$prevalence_validation$comparison_data
-
-# Plot observed vs predicted prevalence
-ggplot(prevalence_data, aes(x = years_since_baseline)) +
-  geom_line(aes(y = observed_prevalence_rate, color = "Observed SWAN"), size = 1.2) +
-  geom_line(aes(y = predicted_prevalence_rate, color = "DPMM Predicted"), size = 1.2) +
-  geom_ribbon(aes(
-    ymin = predicted_prevalence_rate - 1.96 * predicted_standard_error,
-    ymax = predicted_prevalence_rate + 1.96 * predicted_standard_error
-  ),
-  alpha = 0.2, fill = "blue") +
-  labs(
-    title = "SWAN Validation: Observed vs Predicted Prevalence",
-    x = "Years from Baseline",
-    y = "Incontinence Prevalence",
-    color = "Data Source"
-  ) +
-  scale_y_continuous(labels = scales::percent) +
-  theme_minimal()
-
-ggplot(prevalence_data, aes(x = years_since_baseline)) +
-  geom_point(aes(y = observed_prevalence_rate), color = "cyan4", size = 2) +
-  geom_smooth(aes(y = observed_prevalence_rate, color = "Observed SWAN Smoothed"),
-              method = "loess", span = 0.5, se = FALSE, size = 1.2) +
-  geom_line(aes(y = predicted_prevalence_rate, color = "DPMM Predicted"), size = 1.2) +
-  geom_ribbon(aes(
-    ymin = predicted_prevalence_rate - 1.96 * predicted_standard_error,
-    ymax = predicted_prevalence_rate + 1.96 * predicted_standard_error
-  ), alpha = 0.2, fill = "blue") +
-  labs(
-    title = "SWAN Validation: Smoothed Observed vs Predicted Prevalence",
-    x = "Years from Baseline",
-    y = "Incontinence Prevalence",
-    color = "Data Source"
-  ) +
-  scale_y_continuous(labels = scales::percent) +
-  theme_minimal()
-
-
-# 📉 Correlation between observed and predicted prevalence
-correlation_value <- cor(
-  prevalence_data$observed_prevalence_rate,
-  prevalence_data$predicted_prevalence_rate,
-  use = "complete.obs"
-)
-cat("Observed vs Predicted Prevalence Correlation:", round(correlation_value, 3), "\n")
-
-# 📈 Age pattern correlation, if available
-if (!is.null(validate_dpmm_with_swan_data_output$age_pattern_validation)) {
-  age_patterns <- validate_dpmm_with_swan_data_output$age_pattern_validation
-  cat("Age pattern correlation:", round(age_patterns$metrics$age_pattern_correlation, 3), "\n")
-}
-
-
-library(mgcv)
-
-gam_model <- gam(observed_prevalence_rate ~ s(years_since_baseline), data = prevalence_data, family = quasibinomial())
-
-prevalence_data$observed_smoothed <- predict(gam_model, type = "response")
-
-ggplot(prevalence_data, aes(x = years_since_baseline)) +
-  geom_point(aes(y = observed_prevalence_rate), color = "cyan4") +
-  geom_line(aes(y = observed_smoothed, color = "Observed SWAN Smoothed"), size = 1.2) +
-  geom_line(aes(y = predicted_prevalence_rate, color = "DPMM Predicted"), size = 1.2) +
-  theme_minimal()
-
-lm_poly <- lm(observed_prevalence_rate ~ poly(years_since_baseline, 3), data = prevalence_data)
-prevalence_data$observed_smoothed <- predict(lm_poly)
-
-# Plot
-ggplot(prevalence_data, aes(x = years_since_baseline)) +
-  geom_point(aes(y = observed_prevalence_rate), color = "cyan4") +
-  geom_line(aes(y = observed_smoothed, color = "Observed SWAN Smoothed"), size = 1.2) +
-  geom_line(aes(y = predicted_prevalence_rate, color = "DPMM Predicted"), size = 1.2) +
-  theme_minimal()
-
-
-#imputed
-library(dplyr)
-
-# Step 1: Extract average prevalence from Visit 6
-prev_v6 <- prevalence_data %>%
-  filter(VISIT == "6") %>%
-  summarise(avg_prev_v6 = mean(observed_prevalence_rate, na.rm = TRUE)) %>%
-  pull(avg_prev_v6)
-
-# Step 2: Create imputed entries for V7–V9
-imputed_visits <- tibble(
-  VISIT = rep("6_imputed", 3),
-  years_since_baseline = c(7.5, 8.5, 9.5),
-  observed_prevalence_rate = prev_v6,
-  predicted_prevalence_rate = NA,
-  predicted_standard_error = NA,
-  participant_count = NA,
-  absolute_difference_rate = NA,
-  relative_difference_rate = NA,
-  within_confidence_interval = NA,
-  observed_smoothed = NA,
-  imputed = TRUE
-)
-
-# Step 3: Mark original data and combine
-prevalence_data_imputed <- prevalence_data %>%
-  mutate(imputed = FALSE) %>%
-  bind_rows(imputed_visits) %>%
-  arrange(years_since_baseline)
-
-library(ggplot2)
-
-ggplot(prevalence_data_imputed, aes(x = years_since_baseline)) +
-  geom_point(aes(y = observed_prevalence_rate, shape = imputed), color = "cyan4", size = 2) +
-  geom_line(aes(y = observed_prevalence_rate, color = "Observed SWAN (with V6 imputed)"), size = 1.2) +
-  geom_line(aes(y = predicted_prevalence_rate, color = "DPMM Predicted"), size = 1.2, na.rm = TRUE) +
-  labs(
-    title = "Observed vs Predicted Prevalence (V6 imputed across V7–V9)",
-    x = "Years from Baseline",
-    y = "Incontinence Prevalence",
-    color = "Data Source",
-    shape = "Imputed"
-  ) +
-  scale_y_continuous(labels = scales::percent) +
-  theme_minimal()
-
