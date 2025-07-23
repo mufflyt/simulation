@@ -1,3 +1,5 @@
+# Validate DPMM Model Performance Against SWAN Longitudinal Data ----
+
 #' Validate DPMM Model Performance Against SWAN Longitudinal Data
 #'
 #' @description
