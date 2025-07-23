@@ -1,8 +1,54 @@
-.Rproj.user
+# RStudio project files
+.Rproj.user/
 .Rhistory
 .RData
 .Ruserdata
-.Rdata
-.httr-oauth
+.Rapp.history
+
+# R package & compiled artifacts
+*.o
+*.so
+*.dll
+*.Rproj
+*.Rcheck/
+*.tar.gz
+
+# Data files (raw or derived — adjust as needed)
+*.rds
+*.csv
+*.tsv
+*.sav
+*.dta
+*.xlsx
+*.xls
+*.feather
+*.parquet
+*.zip
+
+# Images & plots
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.svg
+*.eps
+
+# Intermediate model files and outputs
+processed_data/
+*_results.csv
+*_summary.csv
+*_complete.csv
+*_projections*
+*_bands.png
+*_confidence.png
+
+# Simulation folders
+*/dppm_25_year_test/
+*/manuscript/
+*/swan_validation/
+*/workforce_analysis_results*/
+*/workforce*_fixed/
+
+# System files
 .DS_Store
-.quarto
+Thumbs.db
