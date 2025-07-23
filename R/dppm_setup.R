@@ -7,6 +7,7 @@ library(assertthat)
 library(stats)
 library(utils)
 
+# Setup for DPPM ----
 #' Disease Prevention Microsimulation Model for Urinary Incontinence using SWAN Data
 #'
 #' @description
