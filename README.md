@@ -1,7 +1,7 @@
 # Simulation Modeling for Urogynecology Workforce Planning
 
 # To Do for DPMM:
-Replace simulated data with real SWAN variables - Your calculate_swan_incontinence_prevalence() function shows you're ready to connect to real SWAN data
+Replace simulated data with real SWAN variables - Your calculate_swan_incontinence_prevalence() function shows you're ready to connect to real SWAN data - ***DONE in `dppm_validate_SWAN_better.R`***
 Calibrate transition probabilities - Currently using placeholder coefficients; need to estimate from longitudinal SWAN data
 Add geographic stratification - Dall's models are county-level; yours is currently population-level
 Integrate healthcare utilization - Missing the demand-side modeling that connects incontinence prevalence to provider needs
