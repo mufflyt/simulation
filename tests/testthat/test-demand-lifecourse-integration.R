@@ -18,14 +18,14 @@ test_that("lifecourse_required_fte hands service volumes to convert_workload_to_
 
 test_that("lifecourse_demand_estimand matches the demand_long estimand shape", {
   traj <- lifecourse_demand_trajectory(pop_by_age_year, n = 4000, seed = 1)
-  d4 <- lifecourse_demand_estimand(traj$demand_summary, measure = "service_units")
-  expect_named(d4, c("year", "estimand", "label", "demand_cases"))
-  expect_true(all(d4$estimand == "D4_lifecourse"))
-  expect_true(all(d4$demand_cases > 0))
+  d5 <- lifecourse_demand_estimand(traj$demand_summary, measure = "service_units")
+  expect_named(d5, c("year", "estimand", "label", "demand_cases"))
+  expect_true(all(d5$estimand == "D5_lifecourse_service"))
+  expect_true(all(d5$demand_cases > 0))
   # same columns as compute_demand_denominators(), so they bind and flow through
   # compute_growth_adequacy()/assess_demand_concordance() unchanged
   d123 <- compute_demand_denominators(example_female_population_by_band())
-  expect_true(all(names(d4) %in% names(d123)))
+  expect_true(all(names(d5) %in% names(d123)))
 })
 
 test_that("the life-course estimand is NOT a proportional rescaling of D1/D2/D3", {
@@ -40,6 +40,6 @@ test_that("the life-course estimand is NOT a proportional rescaling of D1/D2/D3"
   supply <- tibble::tibble(year = years,
                            effective_fte_median = seq(1300, 1500, length.out = length(years)))
   conc <- assess_demand_concordance(compute_growth_adequacy(supply, demand_long), demand_long)
-  expect_true("D4_lifecourse" %in% conc$final_year_adequacy$estimand)
-  expect_true(conc$distinct_estimands)   # a genuinely independent 4th estimand
+  expect_true("D5_lifecourse_service" %in% conc$final_year_adequacy$estimand)
+  expect_true(conc$distinct_estimands)   # a genuinely independent estimand
 })

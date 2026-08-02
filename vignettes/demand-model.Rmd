@@ -1,0 +1,124 @@
+---
+title: "The URPS demand model, end to end"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The URPS demand model, end to end}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+# Chunks are not evaluated at build time: they call the full demand stack and are
+# for illustration. The coefficient tables are placeholders
+# (calibration_status = "placeholder_uncalibrated"), so any numbers here are
+# structure, not results. See docs/DEMAND_METHODS.md.
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
+library(urpssim)
+library(dplyr)
+```
+
+This vignette walks the demand side of `urpssim` from the obstetric life course to
+required provider FTE, the dynamic disease model, calibration, and the versioned
+demand contract that feeds downstream repositories. It mirrors the methods in
+`docs/DEMAND_METHODS.md`.
+
+## 1. A synthetic female population
+
+```{r pop}
+pop_by_age_year <- tidyr::expand_grid(year = 2025:2050, age = 40:85) |>
+  dplyr::mutate(population = round(2e6 * exp(-0.02 * (age - 40))))
+```
+
+## 2. Life-course demand → service volumes → FTE
+
+The pathway runs childbirth exposure → pelvic-floor conditions → care-seeking →
+service volumes, then hands the volumes to the work-RVU FTE conversion (`R/17`).
+`wrvu_per_fte` is illustrative here; in practice derive it with
+`calibrate_wrvu_per_fte()`.
+
+```{r fte}
+fte <- lifecourse_required_fte(
+  pop_by_age_year,
+  wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]],
+  scenario = "baseline", n = 5e4, seed = 1
+)
+fte$required_fte
+```
+
+Scenarios shift the primary exposure or the care pathway (BMI reduction lives in
+the prevention scenario, not at the model's center):
+
+```{r scenarios}
+lifecourse_required_fte(pop_by_age_year, WRVU_PER_FTE_BENCHMARK[["median"]],
+                        scenario = "delivery_mode", cesarean_rate = 0.60, seed = 1)
+lifecourse_required_fte(pop_by_age_year, WRVU_PER_FTE_BENCHMARK[["median"]],
+                        scenario = "reduced_barriers", seed = 1)
+```
+
+## 3. Parameter-uncertainty intervals
+
+```{r uncertainty}
+ci <- lifecourse_demand_trajectory_ci(pop_by_age_year, n = 2e4, n_draws = 200, seed = 1)
+ci  # median + lo/hi for care-seeking and service units
+```
+
+## 4. Dynamic multistate disease model (DMDM)
+
+Longitudinal onset/remission/death; the open engine can be reweighted to Census
+projections so counts match official demography.
+
+```{r dmdm}
+tr <- dmdm_open_prevalence_trajectory(pop_by_age_year, 2025, 2050,
+                                      reweight_to_projection = TRUE, seed = 1)
+tr  # year, population, prev_ui/pop/ai, incidence
+```
+
+Fit the hazards from a longitudinal panel (SWAN) instead of the placeholders:
+
+```{r fit}
+td  <- dmdm_transition_data(swan_panel)          # your SWAN-style person-year panel
+fit <- fit_dmdm_transitions(td)                   # status = "fitted"
+dmdm_open_prevalence_trajectory(pop_by_age_year, 2025, 2050, transitions = fit)
+```
+
+## 5. Calibration and back-test
+
+```{r calibration}
+obs <- tibble::tibble(category = c("urps_office_visits", "sling_procedure_volume",
+                                   "prolapse_procedure_volume"),
+                      observed = c(3.6e6, 1.0e5, 1.0e5))   # HCUP SASD / Medicare / NAMCS
+cal <- calibrate_lifecourse_demand(fte$service_volumes, obs)
+cal$scalars   # scalar = observed / predicted (HDMM Exhibit 11)
+```
+
+## 6. Concordance across demand estimands
+
+```{r concordance}
+bands <- example_female_population_by_band()
+demand_long <- dplyr::bind_rows(
+  compute_demand_denominators(bands),                 # D1/D2/D3
+  compute_demand_denominators_lifecourse(bands),      # D4 (obstetric-weighted)
+  lifecourse_demand_estimand(                          # D5 (life-course service)
+    lifecourse_demand_trajectory(pop_by_age_year, n = 2e4, seed = 1)$demand_summary))
+supply <- tibble::tibble(year = sort(unique(bands$year)),
+                         effective_fte_median = seq(1300, 1500,
+                           length.out = length(unique(bands$year))))
+assess_demand_concordance(compute_growth_adequacy(supply, demand_long), demand_long)
+```
+
+## 7. Geographic (isochrone) demand
+
+```{r geo}
+geo_need <- data.frame(geo_id = 1:4, need = c(100, 400, 150, 100),
+                       nearest_provider_min = c(15, 90, 200, 240),
+                       access_ratio = c(3, 0.5, 0.2, 0.1))
+geographic_demand_summary(geo_need)  # need within 30/60/120/180 min; need-weighted access
+```
+
+## 8. Versioned demand contract (feeds cliff / twostep / isochrones)
+
+```{r contract}
+traj <- lifecourse_demand_trajectory(pop_by_age_year, n = 2e4, seed = 1)
+export_hdmm_demand_contract(traj$demand_summary, output_directory = tempdir())  # tiers 5-6
+export_dmdm_demand_contract(tr, output_directory = tempdir())                    # tier 3 + per-condition
+```
