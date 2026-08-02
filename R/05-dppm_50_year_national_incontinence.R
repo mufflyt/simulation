@@ -824,6 +824,20 @@ cat("🎯 Shows your dramatic finding: 8% → 99% prevalence over 50 years!\n")
 # Run ----
 dpmm_plots <- plot_dpmm_results(future_results)
 
+# Export versioned demand contract for downstream repos (cliff/twostep/isochrones).
+# Guarded so it never breaks the plotting pipeline if inputs are missing.
+tryCatch({
+  if (!exists("export_dpmm_demand_contract")) {
+    exporter <- "R/export_demand_contract.R"
+    if (file.exists(exporter)) source(exporter)
+  }
+  if (exists("export_dpmm_demand_contract") && exists("future_results")) {
+    export_dpmm_demand_contract(future_results, output_directory = "./dpmm_outputs/")
+  }
+}, error = function(e) {
+  message("Demand-contract export skipped: ", conditionMessage(e))
+})
+
 #'
 #' # Using sandvik severity scale ----
 #' #' Literature-Based Incontinence Severity Scores for DPMM
