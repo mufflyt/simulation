@@ -1,0 +1,5 @@
+scenario,baseline,annual_grads,avg_annual_departures,replacement_ratio
+ABOG-only URPS,1027,48,10.9,4.39
+Both-pathway (ABU=ABOG hazard),1306,64,13,4.94
+"Both-pathway, ABU hazard x0.5",1306,64,12,5.31
+"Both-pathway, ABU hazard x2.0",1306,64,14.8,4.33

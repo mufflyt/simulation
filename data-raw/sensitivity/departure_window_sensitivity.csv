@@ -1,0 +1,10 @@
+window,label,subspecialty_abbrev,rate,dynamic_ratio,assessment
+2016-2021,fully_obs,URPS,0.78,5.61,Above replacement
+2016-2021,fully_obs,GO,0.99,7.11,Above replacement
+2016-2021,fully_obs,MIGS,0.58,11.12,Above replacement
+2016-2019,drop2,URPS,0.69,6.01,Above replacement
+2016-2019,drop2,GO,1.02,6.37,Above replacement
+2016-2019,drop2,MIGS,0.48,13.16,Above replacement
+2016-2023,full,URPS,1.18,3.69,Above replacement
+2016-2023,full,GO,1.51,4.3,Above replacement
+2016-2023,full,MIGS,0.91,7.3,Above replacement
