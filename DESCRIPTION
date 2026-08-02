@@ -1,19 +1,22 @@
 Package: urpssim
 Title: Urogynecology Workforce Supply and Demand Microsimulation
-Version: 0.2.0
+Version: 0.5.0
 Authors@R: 
     person("Tyler", "Muffly", email = "tyler.muffly@dhha.org", role = c("aut", "cre"))
 Description: A stochastic, individual-level microsimulation of the supply of and
     demand for urogynecology and reconstructive pelvic surgery (URPS) services in
-    the United States. Supply is projected from an individual provider roster
-    using age- and sex-specific hours worked, retirement and career-change
-    hazards, and geographic placement. Demand is projected from age-banded
-    population series through service volumes and a work-RVU workload conversion
-    to required full-time-equivalent providers, so supply and demand are always
-    compared in the same units. The base-year supply shortfall is estimated
-    rather than assumed. Methods follow the IHS Markit / Dall Health Workforce
-    Microsimulation Model and its published applications in physiatry, neurology
-    and physical therapy.
+    the United States. Supply is projected from a provider cohort using age- and
+    sex-specific hours worked, separate retirement and career-change hazards, and
+    geographic placement, with parameters redrawn each Monte Carlo iteration so
+    reported intervals carry forecast uncertainty rather than sampling noise.
+    Demand is projected from age-banded Census population series through a
+    reproductive life-course pathway and a work-RVU workload conversion, giving
+    required full-time-equivalent providers, so supply and demand are always
+    compared in the same units. The base-year shortfall is estimated rather than
+    assumed, every input carries an explicit calibration tier, and a leakage-free
+    historical back-test scores the engine against a held-out period. Methods
+    follow the IHS Markit / Dall Health Workforce Microsimulation Model and its
+    published applications in physiatry, neurology and physical therapy.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -36,6 +39,7 @@ Imports:
     utils,
     yaml
 Suggests:
+    arrow,
     covr,
     ggplot2,
     knitr,
