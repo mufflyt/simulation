@@ -26,7 +26,7 @@ to the whole retirement schedule. 0 means the hazard is treated as known,
 which it is not -- see the module note.}
 
 \item{hours_model}{Optional fitted hours model; its coefficients are drawn
-through \code{\link[=.param_draw]{.param_draw()}}.}
+through the shared internal \code{.param_draw()} helper.}
 }
 \value{
 An object of class \code{urps_param_spec}.

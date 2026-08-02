@@ -23,3 +23,7 @@ NULL
 #' @param rhs A function call using the magrittr semantics.
 #' @return The result of calling `rhs(lhs)`.
 NULL
+
+# PR #8's survey-weighted fits construct temporary offset and weight columns
+# inside the model frame; R CMD check reads the names as undeclared globals.
+utils::globalVariables(c(".hdmm_off", ".hdmm_w"))
