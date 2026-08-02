@@ -73,14 +73,60 @@ lifecourse_demand_trajectory_ci <- function(pop_by_age_year,
   })
   all_draws <- dplyr::bind_rows(draws)
   q <- function(x, p) stats::quantile(x, p, names = FALSE, na.rm = TRUE)
-  dplyr::summarise(
+
+  # ORDER IS LOAD-BEARING. dplyr::summarise() makes a column created earlier in
+  # the same call visible to later expressions, and the point estimate reuses the
+  # NAME of its own source column. Computing the point estimate first therefore
+  # replaces `service_units_national` with a single summarised value, and the
+  # bounds then take the quantile of that one number -- returning the median
+  # three times and reporting a 95% interval of exactly zero width.
+  #
+  # The bounds are computed BEFORE the name is reused. `assert_interval_nondegenerate()`
+  # is the regression guard: a zero-width interval across varying draws is a bug,
+  # not a result.
+  out <- dplyr::summarise(
     dplyr::group_by(all_draws, .data$year),
-    care_seeking_national     = q(.data$care_seeking_national, probs[2]),
     care_seeking_national_lo  = q(.data$care_seeking_national, probs[1]),
     care_seeking_national_hi  = q(.data$care_seeking_national, probs[3]),
-    service_units_national     = q(.data$service_units_national, probs[2]),
+    care_seeking_national     = q(.data$care_seeking_national, probs[2]),
     service_units_national_lo  = q(.data$service_units_national, probs[1]),
     service_units_national_hi  = q(.data$service_units_national, probs[3]),
+    service_units_national     = q(.data$service_units_national, probs[2]),
     .groups = "drop"
   )
+  assert_interval_nondegenerate(out, all_draws)
+  out[, c("year",
+          "care_seeking_national", "care_seeking_national_lo", "care_seeking_national_hi",
+          "service_units_national", "service_units_national_lo", "service_units_national_hi")]
+}
+
+#' Refuse a zero-width interval when the underlying draws vary
+#'
+#' A prediction interval that collapses to its point estimate while the draws
+#' behind it differ is a defect, not a narrow result. This caught a real one: the
+#' summarise below originally computed the point estimate first, under the same
+#' name as its source column, so the bounds were taken over a single value.
+#'
+#' @param out Summarised tibble with `_lo`/`_hi` columns.
+#' @param draws The per-draw tibble the summary was built from.
+#' @param tol Minimum width, relative to the point estimate, to accept.
+#' @return (Invisibly) TRUE when every interval is non-degenerate.
+#' @export
+assert_interval_nondegenerate <- function(out, draws, tol = 1e-9) {
+  bases <- sub("_lo$", "", grep("_lo$", names(out), value = TRUE))
+  bad <- character(0)
+  for (b in bases) {
+    if (!all(c(b, paste0(b, "_hi")) %in% names(out))) next
+    varies <- is.finite(stats::sd(draws[[b]])) && stats::sd(draws[[b]]) > 0
+    width <- out[[paste0(b, "_hi")]] - out[[paste0(b, "_lo")]]
+    if (varies && any(width <= tol * pmax(abs(out[[b]]), 1))) bad <- c(bad, b)
+  }
+  if (length(bad)) {
+    stop(sprintf(paste(
+      "Degenerate prediction interval for %s: the draws vary (sd > 0) but the",
+      "reported interval has zero width. This is the dplyr::summarise() column-",
+      "shadowing defect -- compute the bounds before reusing the source column's",
+      "name for the point estimate."), paste(bad, collapse = ", ")), call. = FALSE)
+  }
+  invisible(TRUE)
 }

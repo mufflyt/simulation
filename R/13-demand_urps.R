@@ -285,7 +285,12 @@ rebase_to_year <- function(year, value, base_year = DEMAND_INDEX_BASE_YEAR) {
   if (length(base_val) != 1 || is.na(base_val) || base_val == 0) {
     .msg_warn(sprintf("rebase_to_year: base year %s not found / zero; using first value",
                       format(base_year)))
-    base_val <- value[which(!is.na(value))[1]]
+    base_val <- value[which(!is.na(value) & value != 0)[1]]
+  }
+  if (!is.finite(base_val) || base_val == 0) {
+    stop("rebase_to_year: no non-zero base value is available, so the series ",
+         "cannot be rebased. Dividing by zero here would produce an index of ",
+         "Inf that reads as a real number downstream.", call. = FALSE)
   }
   value / base_val
 }

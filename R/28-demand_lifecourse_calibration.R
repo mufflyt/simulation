@@ -25,7 +25,7 @@ LIFECOURSE_ANCHOR_MAP <- tibble::tribble(
 #' @param service_volumes Tibble `year`, `service`, `volume` (from
 #'   [lifecourse_demand_trajectory()] / [simulate_lifecourse_demand()]).
 #' @param base_year Year whose totals are compared to the anchors. Default 2025.
-#' @param map Service-to-anchor-category map. Default [LIFECOURSE_ANCHOR_MAP].
+#' @param map Service-to-anchor-category map. Default `LIFECOURSE_ANCHOR_MAP`.
 #' @return Tibble `category`, `predicted` (base-year national totals).
 #' @export
 lifecourse_anchor_predictions <- function(service_volumes, base_year = 2025L,

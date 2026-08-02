@@ -213,3 +213,44 @@ test_that("the no-attrition arm removes departures entirely", {
   # Without attrition the trajectory is exactly baseline + entrants per year.
   expect_equal(m(no_att), 1099 + 3 * 60, tolerance = 2)
 })
+
+# ---- Provenance ------------------------------------------------------------
+
+test_that("every scored row records the artifact it was scored against", {
+  skip_if_not_installed("mufflyaccess")
+  bt <- run_backtest(n_iterations = 15L)
+  need <- c("contract_version", "artifact_version", "artifact_source",
+            "snapshot_date", "source_sha256", "canonical_release",
+            "target_basis", "observed_applies_attrition")
+  expect_true(all(need %in% names(bt$summary)))
+  # A frozen artifact with no contract identity is untraceable: if mufflyaccess
+  # ships a new snapshot where 2023 reads differently, the stale CSV must be
+  # detectable rather than silent.
+  expect_equal(unique(bt$summary$contract_version), "3.0.0")
+  expect_match(unique(bt$summary$target_basis), "subspecialty")
+  expect_true(all(nzchar(bt$summary$artifact_version)))
+  # canonical_release is FALSE for the bundled bootstrap and must be recorded,
+  # not assumed.
+  expect_false(unique(bt$summary$canonical_release))
+})
+
+test_that("the written summary carries its provenance to disk", {
+  # Self-contained: .repo_root() lives in another test file and is not visible
+  # under R CMD check, and artifacts/ is .Rbuildignore'd so it is absent from a
+  # built package. Skip cleanly in both cases.
+  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
+                 c(".", "..", file.path("..", "..")))
+  skip_if(length(root) == 0)
+  path <- file.path(root[1], "artifacts", "backtest_2020_to_2023_summary.csv")
+  skip_if_not(file.exists(path))
+  s <- utils::read.csv(path)
+  expect_true(all(c("contract_version", "source_sha256", "target_basis") %in% names(s)))
+  expect_equal(unique(as.character(s$contract_version)), "3.0.0")
+
+  man <- file.path(root[1], "artifacts", "backtest_2020_to_2023_manifest.json")
+  expect_true(file.exists(man))
+  m <- jsonlite::read_json(man)
+  expect_equal(m$target_value, 1306)
+  expect_setequal(unlist(m$retired_values_rejected), c(1332, 1329))
+  expect_false(m$observed_series_applies_attrition)
+})

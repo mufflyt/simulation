@@ -194,7 +194,10 @@ apply_provider_migration <- function(agents, year, shares,
 #' @export
 supply_per_capita <- function(supply, population, per = 1e6) {
   out <- safe_left_join(supply, population, by = "geo", min_match_rate = 1.0)
-  dplyr::mutate(out, fte_per_capita = .data$fte / .data$population * per)
+  # A geography with zero recorded population yields no density, not an
+  # infinite one.
+  dplyr::mutate(out, fte_per_capita = ssot_safe_divide(.data$fte * per,
+                                                       .data$population))
 }
 
 #' Providers required to raise every geography to a benchmark density
@@ -220,6 +223,10 @@ benchmark_density_shortfall <- function(per_capita, benchmark, per = 1e6) {
   total_pop <- sum(detail$population, na.rm = TRUE)
   total_fte <- sum(detail$fte, na.rm = TRUE)
 
+  if (!is.finite(total_pop) || total_pop <= 0) {
+    stop("benchmark_density_shortfall: total population is zero, so a density ",
+         "benchmark is undefined.", call. = FALSE)
+  }
   list(
     national_additional = max(total_pop / per * benchmark - total_fte, 0),
     geographic_additional = sum(detail$deficit_fte, na.rm = TRUE),
