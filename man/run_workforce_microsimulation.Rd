@@ -19,6 +19,7 @@ run_workforce_microsimulation(
   n_iterations = 200,
   baseline_entrants = 55,
   calibration = NULL,
+  parameter_spec = NULL,
   allow_analogy = TRUE,
   output_dir = NULL,
   seed = 20260801L,
@@ -60,6 +61,9 @@ fail-closed guard.}
 
 \item{calibration}{Optional calibration scalars from
 \code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}}.}
+
+\item{parameter_spec}{Optional \code{\link[=supply_parameter_spec]{supply_parameter_spec()}}; defaults to one
+built from the observed certification series.}
 
 \item{allow_analogy}{Permit inputs derived by analogy from another specialty
 (currently the delegation matrix). Declared in the run metadata either way.}

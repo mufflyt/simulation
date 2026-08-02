@@ -84,6 +84,7 @@ tests that need it skip themselves.
 | `23-cms_rvu.R` | CMS work RVUs, CPT basket, re-derivation helpers |
 | `24-ssot.R` | every `mufflyaccess` contract hookup, in one place |
 | `25-roster.R` | base-year cohort from the observed certification series |
+| `28-parameter-uncertainty.R` | per-iteration parameter draws, so intervals mean something |
 | `00-paths.R` | external-data path resolution (no hardcoded paths anywhere) |
 
 ### Single source of truth

@@ -156,10 +156,35 @@ answer.
 The definition-matched arms make this vivid: with attrition off and integral
 entrants, the model has **no stochasticity at all** (PI width 0–2 providers).
 
-Fixing it requires drawing parameters per iteration — the entrant rate, the
-retirement hazards, the hours coefficients — from their sampling distributions,
-as `MASS::mvrnorm(1, coef(m), vcov(m))` in the HDMM improvement plan §7 and in
-Dall's own approach. That work has not been done.
+### Addendum: parameter uncertainty was added, and it is not sufficient
+
+`R/28-parameter-uncertainty.R` now redraws the entrant rate each iteration from
+the observed series' own sampling distribution (pre-cutoff only: 40/48/10, SE
+11.6 on n=3), reusing PR #8's `.param_draw()` where a fitted model exists.
+
+Re-scoring the best arm, with the point estimate held fixed:
+
+| | Median | 95% PI | Width | In 95%? |
+|---|---:|---|---:|:-:|
+| Fixed parameters | 1,194 | 1,177–1,212 | 35 | ✗ |
+| Drawn entrant rate | 1,194 | 1,127–1,258 | **131** | ✗ |
+
+The interval widened **3.7×** and the median did not move — this adds
+uncertainty, it does not recalibrate. Coverage improved from ~6.5× too narrow to
+~1.7× too narrow.
+
+**It still does not cover.** That is the honest and informative outcome:
+sampling variation in a three-year mean of 32.7/yr cannot reach an outcome that
+averaged 69.0/yr. The residual is **structural break, not sampling error** — a
+COVID trough inside the fitting window followed by backlog clearance outside it.
+Prediction intervals derived from within-window variation cannot represent a
+regime change, and no correctly-derived parameter uncertainty would have.
+
+Two parameters remain unquantified and are labelled as such rather than given an
+invented spread: the retirement hazard schedule and the hours schedule are
+published (HWSM Exhibits 14 and 17, FutureDocs Figure 10) as point estimates
+with no sample sizes or standard errors. `supply_parameter_spec()` exposes a
+`hazard_cv` that defaults to zero and reports the omission.
 
 ## 5. What the back-test does establish
 
