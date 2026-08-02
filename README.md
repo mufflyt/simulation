@@ -18,9 +18,22 @@ library(urpssim)
 ```bash
 Rscript scripts/run_workforce_microsimulation_example.R          # no external data needed (~2 min)
 REPRODUCIBILITY_MODE=strict Rscript scripts/run_workforce_microsimulation_example.R
-Rscript -e 'devtools::test()'                                    # 233 regression guards
-Rscript -e 'rcmdcheck::rcmdcheck()'                              # 0 errors, 0 warnings, 0 notes
 ```
+
+### Checks
+
+GitHub Actions workflows exist but are **`workflow_dispatch` only** — this account
+has exhausted its Actions minutes, so nothing runs automatically. Run the
+equivalents locally before merging:
+
+```bash
+Rscript -e 'devtools::test()'                                    # 233 regression guards
+Rscript -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"))'
+Rscript -e 'pkgload::load_all("."); testthat::test_file("tests/testthat/test-repo-hygiene.R", package = "urpssim")'
+```
+
+Re-enable the `push:` / `pull_request:` triggers in `.github/workflows/` when
+minutes are available again.
 
 Logging goes through `base::message()`; there is no logging-package dependency.
 `mufflyaccess` is in Suggests — the package checks and tests without it, and the

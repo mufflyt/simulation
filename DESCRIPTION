@@ -44,8 +44,6 @@ Suggests:
     rcmdcheck,
     rmarkdown,
     testthat (>= 3.0.0)
-Remotes:
-    mufflyt/mufflyaccess
 Config/testthat/edition: 3
 URL: https://github.com/mufflyt/simulation
 BugReports: https://github.com/mufflyt/simulation/issues

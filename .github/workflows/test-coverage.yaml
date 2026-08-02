@@ -1,7 +1,10 @@
+# NOTE: triggers are workflow_dispatch ONLY because this account has exhausted
+# its GitHub Actions minutes. Run these locally instead (see README "Checks"):
+#   Rscript -e 'devtools::test()'
+#   Rscript -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"))'
+#   Rscript -e 'pkgload::load_all("."); testthat::test_file("tests/testthat/test-repo-hygiene.R", package = "urpssim")'
+# Re-enable push/pull_request triggers when minutes are available again.
 on:
-  push:
-    branches: [main, master]
-  pull_request:
   workflow_dispatch:
 
 name: test-coverage
@@ -13,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      _R_CHECK_FORCE_SUGGESTS_: false
 
     steps:
       - uses: actions/checkout@v4
@@ -23,8 +27,10 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::covr, any::xml2
-          needs: coverage
+          extra-packages: any::covr, any::xml2, any::testthat, any::pkgload
+          # mufflyaccess (Suggests) is a private repo the CI token cannot
+          # reach. Hard dependencies only; tests needing it skip themselves.
+          dependencies: '"hard"'
 
       - name: Test coverage
         run: |

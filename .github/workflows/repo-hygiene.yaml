@@ -3,8 +3,6 @@
 # code, and source-time file reads. These guard defects the repository has
 # actually had.
 on:
-  push:
-  pull_request:
   workflow_dispatch:
 
 name: repo-hygiene
@@ -24,6 +22,9 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::testthat, any::pkgload, any::dplyr, any::tibble, any::tidyr
+          # mufflyaccess (Suggests) is a private repo the CI token cannot
+          # reach. Hard dependencies only; tests needing it skip themselves.
+          dependencies: '"hard"'
 
       - name: Structural guards
         run: |
