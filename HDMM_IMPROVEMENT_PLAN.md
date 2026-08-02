@@ -31,8 +31,16 @@ Prepared 2026-08-02.
   population prevalence reflects the whole female population (it does not collapse like a
   closed cohort and reaches a quasi-steady state). Deterministic cohort-component engine
   (`simulate_dmdm_open`) using survival weights + marginal-probability Markov updates.
-  Refinements next: annual reweighting to Census projections, fitting onset/remission to
-  SWAN, and a DMDM→demand-contract bridge.
+  Now also: **annual reweighting to Census projections** (`pop_by_age_year` /
+  `reweight_to_projection` — counts match official demography while the model supplies the
+  rates).
+- `R/31-dmdm_fit_transitions.R` — **fitting onset/remission hazards to longitudinal data
+  (SWAN)**: `dmdm_transition_data()` reshapes a state panel into at-risk transition rows
+  and `fit_dmdm_transitions()` fits per-condition onset logistics + remission rates,
+  returning a `transitions` object usable directly by the DMDM engines (`status="fitted"`).
+- `export_dmdm_demand_contract()` (in `R/export_demand_contract.R`) — the **DMDM →
+  demand-contract bridge**: dynamic prevalence into `tier3_prevalent_pfd` (any-PFD) plus
+  per-condition tiers, so it flows to cliff through the same generic seam.
 
 ---
 
