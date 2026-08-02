@@ -1,0 +1,33 @@
+# URPS Service Workload Basket
+# ---------------------------------------------------------------------------
+# Work RVUs per unit of service and the provider-type delegation matrix used by
+# R/17-workload_to_fte.R.
+#
+# STATUS: uncalibrated_illustrative. The work_rvu values below are placeholders
+# and MUST be replaced from the CMS Physician Fee Schedule RVU file for the
+# modelled year before any FTE number is published. The delegation shares are
+# structured after Forte GJ et al. Am J Phys Med Rehabil 2021;100:866-876
+# Table 4, which measured the physiatrist / NP / PA / PT split BY SERVICE.
+# Their central finding: NPs and PAs perform 1-3% of injection and diagnostic
+# procedures but 15-20% of outpatient services -- a scalar substitution ratio
+# cannot represent that.
+#
+# assert_publishable_workload() fails closed in REPRODUCIBILITY_MODE=strict
+# until calibration_status reads "calibrated".
+
+calibration_status: uncalibrated_illustrative
+source_note: "work_rvu placeholders; replace from CMS PFS RVU file"
+indirect_time_share: 0.271   # 2010 AAN Practice Profile: 72.9% of professional time in patient care
+
+services:
+  new_consultation:       {setting: ambulatory, unit: encounter, work_rvu: 2.60, urps_share: 0.70, app_share: 0.08, other_clinician_share: 0.22}
+  return_visit:           {setting: ambulatory, unit: encounter, work_rvu: 1.30, urps_share: 0.58, app_share: 0.22, other_clinician_share: 0.20}
+  pessary_care:           {setting: ambulatory, unit: encounter, work_rvu: 0.90, urps_share: 0.45, app_share: 0.40, other_clinician_share: 0.15}
+  urodynamics:            {setting: ambulatory, unit: study,     work_rvu: 1.60, urps_share: 0.62, app_share: 0.28, other_clinician_share: 0.10}
+  cystoscopy:             {setting: ambulatory, unit: procedure, work_rvu: 2.20, urps_share: 0.80, app_share: 0.05, other_clinician_share: 0.15}
+  botox_bladder:          {setting: ambulatory, unit: procedure, work_rvu: 3.30, urps_share: 0.78, app_share: 0.07, other_clinician_share: 0.15}
+  ptns:                   {setting: ambulatory, unit: session,   work_rvu: 0.45, urps_share: 0.30, app_share: 0.55, other_clinician_share: 0.15}
+  bladder_instillation:   {setting: ambulatory, unit: session,   work_rvu: 0.40, urps_share: 0.25, app_share: 0.60, other_clinician_share: 0.15}
+  sling_procedure:        {setting: operative,  unit: procedure, work_rvu: 12.70, urps_share: 0.72, app_share: 0.01, other_clinician_share: 0.27}
+  prolapse_procedure:     {setting: operative,  unit: procedure, work_rvu: 18.50, urps_share: 0.68, app_share: 0.01, other_clinician_share: 0.31}
+  postoperative_care:     {setting: ambulatory, unit: encounter, work_rvu: 0.00, urps_share: 0.55, app_share: 0.35, other_clinician_share: 0.10}

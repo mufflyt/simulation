@@ -1,0 +1,6 @@
+# External data path defaults.
+# Machine-specific overrides go in config/paths.local.yml (gitignored) or the
+# SIMULATION_DATA_ROOT environment variable. Never hardcode a path in a script.
+external_data_root: "~/Dropbox (Personal)"
+swan_subdir: "workforce/Dall_model/data/SWAN"
+data_raw_subdir: "tyler/data-raw"

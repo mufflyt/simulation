@@ -1,0 +1,42 @@
+# Calibration Targets
+# ---------------------------------------------------------------------------
+# Independent national anchors the model's base-year predictions are compared
+# against, per HDMM Exhibit 11: scalar = national estimate / model prediction.
+# A model with no anchor is not calibrated to anything.
+#
+# Published HDMM office-visit scalars for reference (Exhibit 11):
+#   Obstetrics & Gynecology 0.906   Urology 0.728   General Surgery 0.963
+#   Orthopedic Surgery      0.243   Pediatrics 1.665
+# A scalar far from 1 signals a structural mismatch, not an offset.
+
+max_scalar: 3.0
+
+anchors:
+  urps_office_visits:
+    source: "NAMCS / MEPS national office-visit totals for urogynecologic care"
+    path: data/anchors/urps_office_visits.csv
+    sha256: ""
+  sling_procedure_volume:
+    source: "HCUP SASD (ambulatory surgery) + Medicare Part B carrier, CPT 57288"
+    note: "NIS is INPATIENT and carries ICD-10-PCS, not CPT; most slings are outpatient"
+    path: data/anchors/sling_volume.csv
+    sha256: ""
+  prolapse_procedure_volume:
+    source: "HCUP SASD + Medicare Part B carrier"
+    path: data/anchors/prolapse_volume.csv
+    sha256: ""
+  ui_prevalence:
+    source: "Nygaard 2008 JAMA; SWAN longitudinal prevalence"
+    path: data/anchors/ui_prevalence.csv
+    sha256: ""
+
+# Back-test configuration: fit through fit_through_year, project to target_year,
+# compare with observed. Goes beyond the published Dall-family standard, which
+# calibrates and cross-checks but does not back-test.
+backtest:
+  fit_through_year: 2017
+  target_year: 2023
+  compare:
+    - urps_headcount
+    - urps_state_distribution
+    - sling_procedure_volume

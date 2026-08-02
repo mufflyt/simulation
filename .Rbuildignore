@@ -1,0 +1,12 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.github$
+^config$
+^docs$
+^inst/legacy/README\.md$
+^scripts$
+^outputs$
+^HDMM_IMPROVEMENT_PLAN\.md$
+^README\.html$
+^LICENSE\.md$
+^\.gitignore$
