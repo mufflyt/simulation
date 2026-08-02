@@ -6,7 +6,7 @@
 \usage{
 compute_demand_denominators(
   pop_by_band,
-  pfd_prevalence = PFD_PREVALENCE_BY_AGE,
+  pfd_prevalence = pfd_prevalence_by_band(),
   consult_rate = CONSULT_RATE_BY_AGE,
   surgery_rate_per_1000 = WU2011_SURGERY_RATE_PER_1000
 )

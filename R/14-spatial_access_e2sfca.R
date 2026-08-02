@@ -23,6 +23,17 @@
 
 # Cumulative drive-time distance-decay weights (Luo & Qi 2009 step weights).
 E2SFCA_DEFAULT_WEIGHTS <- c("30" = 1.00, "60" = 0.68, "120" = 0.22, "180" = 0.09)
+
+#' Drive-time bands used by the access layer
+#'
+#' Sourced from `mufflyaccess::get_canonical_bands()` so this layer cannot
+#' diverge from `twostep` and `isochrones`. A test asserts the shipped weights
+#' still key to the canonical bands.
+#' @return Integer vector of bands in minutes.
+#' @export
+e2sfca_bands <- function() ssot_access_bands()
+
+# Retained for backward compatibility; prefer e2sfca_bands().
 E2SFCA_BANDS <- c(30L, 60L, 120L, 180L)
 
 ISOCHRONE_MATCH_KM <- 5.0             # isochrones ISOCHRONE_MATCH_M = 5000

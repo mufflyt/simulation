@@ -17,6 +17,8 @@ run_supply_microsimulation(
   hours_model = NULL,
   hours_multiplier = 1,
   hours_intercept = HWSM_HOURS_INTERCEPT,
+  late_career_fte_factor = 1,
+  late_career_fte_onset_age = NA_real_,
   placement_shares = NULL,
   ci = 0.95,
   seed = 20260801L,
@@ -50,6 +52,11 @@ switches back to the coarse seven-band gradient.}
 
 \item{hours_intercept}{Hours-schedule intercept; use
 \code{\link[=calibrate_hours_intercept]{calibrate_hours_intercept()}} so the schedule and the FTE threshold agree.}
+
+\item{late_career_fte_factor}{Multiplier on clinical FTE from
+\code{late_career_fte_onset_age} (mufflyaccess scenario field).}
+
+\item{late_career_fte_onset_age}{Age from which the factor applies.}
 
 \item{placement_shares}{Optional geographic share table enabling entrant
 placement and mid-career migration.}

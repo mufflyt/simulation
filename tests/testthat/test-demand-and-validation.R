@@ -10,7 +10,8 @@ test_that("the three demand estimands are no longer proportional rescalings", {
     dplyr::mutate(female_pop = dplyr::case_when(
       age_band == "20-39" ~ 43e6 * 1.001^(year - 2025),
       age_band == "40-59" ~ 41.5e6 * 1.004^(year - 2025),
-      age_band == "60-79" ~ 33e6 * 1.014^(year - 2025),
+      age_band == "60-64" ~ 11e6 * 1.008^(year - 2025),
+      age_band == "65-79" ~ 22e6 * 1.016^(year - 2025),
       TRUE                ~ 7.5e6 * 1.031^(year - 2025)
     ))
   d <- compute_demand_denominators(pop)
@@ -32,10 +33,33 @@ test_that("the crude single-rate path is detected as tautological", {
 test_that("the age profiles genuinely differ in shape", {
   # Surgery peaks at 60-79 and halves at 80+, while prevalence keeps rising.
   # That difference is what makes the estimands informative.
-  expect_gt(WU2011_SURGERY_RATE_PER_1000[["60-79"]],
+  p <- pfd_prevalence_by_band()
+  expect_gt(WU2011_SURGERY_RATE_PER_1000[["65-79"]],
             WU2011_SURGERY_RATE_PER_1000[["80+"]])
-  expect_gt(PFD_PREVALENCE_BY_AGE[["80+"]], PFD_PREVALENCE_BY_AGE[["60-79"]])
-  expect_gt(CONSULT_RATE_BY_AGE[["60-79"]], CONSULT_RATE_BY_AGE[["80+"]])
+  expect_gt(p[["80+"]], p[["65-79"]])
+  expect_gt(CONSULT_RATE_BY_AGE[["65-79"]], CONSULT_RATE_BY_AGE[["80+"]])
+})
+
+test_that("age bands align exactly with the SSOT prevalence boundary", {
+  # mufflyaccess::pfd_prevalence() owns 65-79 and 80+. The old 60-79 band could
+  # not take the contract's 65-79 value without a silent wrong-grain error, so
+  # 60-64 is split out.
+  expect_true(all(c("60-64", "65-79", "80+") %in% DEMAND_AGE_BANDS))
+  expect_false("60-79" %in% DEMAND_AGE_BANDS)
+
+  own <- pfd_prevalence_ownership()
+  expect_equal(own$owner[own$age_band == "65-79"], "mufflyaccess::pfd_prevalence()")
+  expect_equal(own$owner[own$age_band == "80+"], "mufflyaccess::pfd_prevalence()")
+  # The contract does NOT cover women under 65; those must stay labelled local.
+  expect_true(all(grepl("^local", own$owner[own$age_band %in% c("20-39", "40-59", "60-64")])))
+})
+
+test_that("PFD prevalence for 65+ comes from the contract, not a literal", {
+  skip_if_not_installed("mufflyaccess")
+  p <- pfd_prevalence_by_band()
+  ssot <- mufflyaccess::pfd_prevalence()
+  expect_equal(unname(p[["65-79"]]), unname(ssot[["65_79"]]))
+  expect_equal(unname(p[["80+"]]), unname(ssot[["80plus"]]))
 })
 
 test_that("growth adequacy is labelled as relative, and equals 1 at the base year", {
@@ -67,21 +91,52 @@ test_that("Spearman rho across years is flagged as uninformative for monotone se
 
 # ---- Scenario registry -----------------------------------------------------
 
-test_that("supply scenarios use age-axis shifts, not hazard multipliers", {
+test_that("supply scenarios come from the mufflyaccess SSOT registry", {
+  skip_if_not_installed("mufflyaccess")
   reg <- supply_scenario_registry(55)
   expect_silent(validate_scenario_registry(reg, "supply"))
-  expect_equal(reg$retirement_2_years_later$retirement_shift_years, 2)
-  expect_equal(reg$retirement_2_years_earlier$retirement_shift_years, -2)
+  # The ids are the contract's, not locally invented ones.
+  expect_setequal(names(reg), mufflyaccess::urps_scenario_ids())
+  expect_true("baseline" %in% names(reg))
+  expect_equal(reg$retire_2yr_later$retirement_shift_years, 2)
+  expect_equal(reg$retire_2yr_earlier$retirement_shift_years, -2)
+  expect_equal(reg$retire_5yr_earlier$retirement_shift_years, -5)
+  # Entrants come through as a multiplier on the baseline count.
+  expect_equal(reg$fellowship_plus_10pct$entrants, 55 * 1.10)
+  expect_equal(reg$fellowship_constrained$entrants, 55 * 0.90)
+  # And the late-career FTE scenario carries an onset age, not a flat multiplier.
+  expect_equal(reg$lower_late_career_fte$late_career_fte_factor, 0.75)
+  expect_equal(reg$lower_late_career_fte$late_career_fte_onset_age, 60)
+})
 
+test_that("an unregistered scenario id is refused", {
+  skip_if_not_installed("mufflyaccess")
+  expect_silent(assert_scenarios_registered(c("baseline", "retire_2yr_later"),
+                                            mode = "strict"))
+  expect_error(assert_scenarios_registered("my_made_up_scenario", mode = "strict"),
+               "not in the mufflyaccess registry")
+})
+
+test_that("the local fallback still rejects scalar hazard multipliers", {
+  reg <- local_supply_scenario_registry(55)
+  expect_silent(validate_scenario_registry(reg, "supply"))
+  expect_equal(reg$retirement_2_years_later$retirement_shift_years, 2)
   bad <- reg
   bad$status_quo$hazard_mult <- 0.73
   expect_error(validate_scenario_registry(bad, "supply"), "scalar hazard multiplier")
 })
 
+test_that("the local registry version cannot collide with the SSOT version", {
+  skip_if_not_installed("mufflyaccess")
+  # Two different registries sharing "1.0.0" is how silent divergence starts.
+  expect_false(identical(SCENARIO_REGISTRY_VERSION,
+                         mufflyaccess::URPS_SCENARIO_REGISTRY_VERSION))
+})
+
 test_that("scenario registries are contract-checked", {
-  reg <- supply_scenario_registry()
+  reg <- local_supply_scenario_registry()
   no_sq <- reg[setdiff(names(reg), "status_quo")]
-  expect_error(validate_scenario_registry(no_sq, "supply"), "status_quo")
+  expect_error(validate_scenario_registry(no_sq, "supply"), "reference scenario")
 
   incomplete <- reg
   incomplete$status_quo$entrants <- NULL
@@ -220,4 +275,89 @@ test_that("the report records the validation types that cannot be automated", {
   rep <- validation_report(tibble::tibble(year = 2025, effective_fte_median = 1))
   expect_setequal(unique(rep$type), c("internal", "conceptual", "external", "data"))
   expect_true(all(is.na(rep$passed[rep$type %in% c("conceptual", "external", "data")])))
+})
+
+# ---- mufflyaccess SSOT hookups ---------------------------------------------
+
+test_that("the supply projection conforms to the URPS projection contract", {
+  skip_if_not_installed("mufflyaccess")
+  sup <- tibble::tibble(
+    year = 2025:2027, scenario = "baseline",
+    headcount_median = c(1306, 1300, 1295),
+    headcount_lo = c(1290, 1282, 1275), headcount_hi = c(1322, 1318, 1315),
+    effective_fte_median = c(1300, 1295, 1290)
+  )
+  p <- as_urps_projection(sup)
+  schema <- mufflyaccess::urps_projection_schema()
+  expect_true(all(schema$column[!schema$optional] %in% names(p)))
+  expect_silent(mufflyaccess::validate_urps_projection(p))
+})
+
+test_that("the 95% bounds bracket headcount, not FTE", {
+  # The contract requires lower_95/upper_95 to bracket supply_headcount. Passing
+  # FTE bounds fails validation -- a real bug this hookup caught.
+  skip_if_not_installed("mufflyaccess")
+  sup <- tibble::tibble(
+    year = 2025, scenario = "baseline",
+    headcount_median = 1306, headcount_lo = 1290, headcount_hi = 1322,
+    effective_fte_median = 1200, effective_fte_lo = 1180, effective_fte_hi = 1220
+  )
+  p <- as_urps_projection(sup)
+  expect_lte(p$lower_95, p$supply_headcount)
+  expect_gte(p$upper_95, p$supply_headcount)
+})
+
+test_that("drive-time bands come from the canonical contract", {
+  expect_equal(e2sfca_bands(), c(30L, 60L, 120L, 180L))
+  if (requireNamespace("mufflyaccess", quietly = TRUE)) {
+    expect_equal(e2sfca_bands(), as.integer(mufflyaccess::get_canonical_bands()))
+  }
+  # The shipped decay weights must key to the canonical bands.
+  expect_setequal(as.integer(names(E2SFCA_DEFAULT_WEIGHTS)), e2sfca_bands())
+})
+
+test_that("rurality has an operational definition", {
+  skip_if_not_installed("mufflyaccess")
+  expect_equal(ssot_rurality(1), "Metropolitan")
+  expect_equal(ssot_rurality(10), "Rural")
+  # The nonmetro access component is no longer a bare label.
+  expect_true("nonmetro" %in% ACCESS_COMPONENTS)
+})
+
+test_that("division guards delegate to the contract convention", {
+  expect_true(is.na(ssot_safe_divide(1, 0)))
+  expect_equal(ssot_safe_divide(10, 2), 5)
+  expect_equal(ssot_safe_percent(1, 4), 25)
+  expect_equal(ssot_safe_percent(1, 0), 0)
+})
+
+test_that("SSOT ownership is reported, including what is NOT owned", {
+  r <- ssot_coverage_report()
+  expect_true(all(r$owner %in% c("mufflyaccess", "local")))
+  # These are owned and must not be redefined locally.
+  expect_equal(r$owner[r$quantity == "supply scenarios"], "mufflyaccess")
+  expect_equal(r$owner[r$quantity == "PFD prevalence 65+"], "mufflyaccess")
+  expect_equal(r$owner[r$quantity == "drive-time bands"], "mufflyaccess")
+  # These are NOT owned by the contract despite similar-sounding exports.
+  expect_equal(r$owner[r$quantity == "PFD prevalence <65"], "local")
+  expect_equal(r$owner[r$quantity == "Monte Carlo CI bands"], "local")
+  expect_equal(r$owner[r$quantity == "work RVUs"], "local")
+})
+
+test_that("the late-career FTE factor applies only from its onset age", {
+  agents <- tibble::tibble(
+    provider_id = sprintf("p%d", 1:200), subspecialty = "URPS",
+    sex = rep(c("female", "male"), 100),
+    age = c(rep(45, 100), rep(65, 100)),
+    entry_year = 2010, retirement_year = NA_real_, origin_cohort = "baseline"
+  )
+  set.seed(4)
+  full <- simulate_provider_career_once(agents, 2025, 0)$panel$effective_fte
+  set.seed(4)
+  cut <- simulate_provider_career_once(agents, 2025, 0,
+                                       late_career_fte_factor = 0.75,
+                                       late_career_fte_onset_age = 60)$panel$effective_fte
+  expect_lt(cut, full)
+  # Only the 65-year-olds are affected, so the reduction is far less than 25%.
+  expect_gt(cut / full, 0.80)
 })
