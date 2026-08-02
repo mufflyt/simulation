@@ -293,3 +293,127 @@ export_hdmm_demand_contract <- function(trajectory,
 
   invisible(list(csv_path = csv_path, manifest_path = manifest_path, data = tidy))
 }
+
+# =============================================================================
+# DMDM dynamic-prevalence contract bridge (tiers 3 + per-condition)
+# =============================================================================
+# The dynamic multistate model (R/29-R/30) produces year-by-year population
+# prevalence. This bridges that output into the shared demand-contract schema so
+# it flows downstream (cliff) exactly like the DPMM/HDMM exporters. It emits:
+#   tier3_prevalent_pfd  <- any-PFD prevalence = 1 - (1-ui)(1-pop)(1-ai)
+#                           (independence approximation across conditions)
+#   dmdm_ui / dmdm_pop / dmdm_ai  <- per-condition population prevalence
+# so a consumer can read any tier via read_dpmm_demand_contract() +
+# dpmm_alt_d1_index(tier = ...). Base R, matching the other exporters.
+
+DMDM_DEMAND_CONTRACT_VERSION <- "0.1.0"
+
+#' Export a DMDM open-population trajectory as demand-contract tiers
+#'
+#' @description Formats a dynamic-prevalence trajectory (from
+#'   [dmdm_open_prevalence_trajectory()] / [simulate_dmdm_open()]) into the shared
+#'   demand-contract schema, emitting `tier3_prevalent_pfd` (any-PFD) plus
+#'   per-condition `dmdm_ui`/`dmdm_pop`/`dmdm_ai`, indexed to the base year, with a
+#'   JSON provenance manifest.
+#'
+#' @param trajectory Data frame with `year`, `population`, `prev_ui`, `prev_pop`,
+#'   `prev_ai`.
+#' @param output_directory Directory to write into (created if missing).
+#' @param model_version Version string. Default `DMDM_DEMAND_CONTRACT_VERSION`.
+#' @param base_year Calendar year the index is normalized to (= 100). Default 2025.
+#' @param calibration_status Provenance guard. Keep "placeholder_uncalibrated"
+#'   until the onset/remission hazards are fitted (see [fit_dmdm_transitions()]).
+#' @param population_scope Population denominator label. Default "us_adult_women".
+#' @param verbose Log progress. Default TRUE.
+#' @return (invisibly) a list with `csv_path`, `manifest_path`, and the tidy `data`.
+#' @keywords internal
+export_dmdm_demand_contract <- function(trajectory,
+                                        output_directory,
+                                        model_version = DMDM_DEMAND_CONTRACT_VERSION,
+                                        base_year = 2025L,
+                                        calibration_status = "placeholder_uncalibrated",
+                                        population_scope = "us_adult_women",
+                                        verbose = TRUE) {
+  need <- c("year", "population", "prev_ui", "prev_pop", "prev_ai")
+  if (!is.data.frame(trajectory) || !all(need %in% names(trajectory))) {
+    stop("export_dmdm_demand_contract(): trajectory needs columns ",
+         paste(need, collapse = ", "), ".", call. = FALSE)
+  }
+  if (!dir.exists(output_directory)) dir.create(output_directory, recursive = TRUE)
+  trajectory <- trajectory[order(trajectory$year), , drop = FALSE]
+
+  any_pfd <- 1 - (1 - trajectory$prev_ui) * (1 - trajectory$prev_pop) * (1 - trajectory$prev_ai)
+  make_tier <- function(tier, prev_vec) {
+    base_row <- which(trajectory$year == base_year)
+    base_val <- if (length(base_row)) prev_vec[base_row[1]] else NA_real_
+    idx <- if (!is.na(base_val) && base_val > 0) 100 * prev_vec / base_val
+           else rep(NA_real_, length(prev_vec))
+    data.frame(
+      model                = "DMDM",
+      model_version        = model_version,
+      calibration_status   = calibration_status,
+      geography            = "national",
+      population_scope     = population_scope,
+      denominator_tier     = tier,
+      calendar_year        = trajectory$year,
+      prevalence           = prev_vec,
+      prevalence_lo        = NA_real_,
+      prevalence_hi        = NA_real_,
+      national_cases       = trajectory$population * prev_vec,
+      national_cases_lo    = NA_real_,
+      national_cases_hi    = NA_real_,
+      denominator_index    = idx,
+      denominator_index_lo = NA_real_,
+      denominator_index_hi = NA_real_,
+      stringsAsFactors     = FALSE
+    )
+  }
+
+  tidy <- rbind(
+    make_tier("tier3_prevalent_pfd", any_pfd),
+    make_tier("dmdm_ui",  trajectory$prev_ui),
+    make_tier("dmdm_pop", trajectory$prev_pop),
+    make_tier("dmdm_ai",  trajectory$prev_ai)
+  )
+  tidy <- tidy[order(tidy$denominator_tier, tidy$calendar_year), , drop = FALSE]
+
+  csv_path <- file.path(output_directory,
+                        sprintf("dmdm_demand_contract_v%s.csv", model_version))
+  utils::write.csv(tidy, csv_path, row.names = FALSE)
+
+  csv_hash <- tryCatch(unname(tools::md5sum(csv_path)), error = function(e) NA_character_)
+  manifest <- list(
+    artifact             = basename(csv_path),
+    model                = "DMDM",
+    model_version        = model_version,
+    calibration_status   = calibration_status,
+    generated_at         = as.character(Sys.time()),
+    base_year            = base_year,
+    calendar_years       = range(tidy$calendar_year),
+    tiers                = sort(unique(tidy$denominator_tier)),
+    n_rows               = nrow(tidy),
+    csv_md5              = csv_hash,
+    source_model_file    = "R/30-demand_dynamic_open.R",
+    contract_reference   = "URPS improvement plan 2026-07-30, sec 10 & 16; DMDM (IP sec 9)",
+    downstream_consumers = c("cliff", "twostep", "isochrones"),
+    notes = paste("Dynamic multistate prevalence (onset/remission/death over the",
+                  "obstetric life course). tier3 any-PFD uses an independence",
+                  "approximation across conditions. Coefficients are placeholders;",
+                  "downstream must gate on calibration_status.")
+  )
+  manifest_path <- file.path(output_directory,
+                             sprintf("dmdm_demand_contract_v%s_manifest.json", model_version))
+  if (requireNamespace("jsonlite", quietly = TRUE)) {
+    jsonlite::write_json(manifest, manifest_path, auto_unbox = TRUE, pretty = TRUE, null = "null")
+  } else {
+    writeLines(paste(names(unlist(manifest)), unlist(manifest), sep = ": "), manifest_path)
+  }
+
+  if (verbose) {
+    msg <- sprintf("Wrote DMDM demand contract v%s (%d rows, %s): %s",
+                   model_version, nrow(tidy), calibration_status, csv_path)
+    if (exists(".msg_info", mode = "function")) .msg_info(msg) else message(msg)
+  }
+
+  invisible(list(csv_path = csv_path, manifest_path = manifest_path, data = tidy))
+}
