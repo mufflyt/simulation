@@ -83,6 +83,7 @@ tests that need it skip themselves.
 | `22-legacy_loader.R` | ordered, collision-reporting loader for `inst/legacy/` |
 | `23-cms_rvu.R` | CMS work RVUs, CPT basket, re-derivation helpers |
 | `24-ssot.R` | every `mufflyaccess` contract hookup, in one place |
+| `25-roster.R` | base-year cohort from the observed certification series |
 | `00-paths.R` | external-data path resolution (no hardcoded paths anywhere) |
 
 ### Single source of truth
@@ -99,6 +100,31 @@ tests that need it skip themselves.
 | Drive-time bands | `mufflyaccess` | `get_canonical_bands()` |
 | Rurality | `mufflyaccess` | `rurality_from_ruca()` (RUCA ≥ 4 is rural) |
 | Artifact provenance | `mufflyaccess` | `urps_provenance()`, folded into the run manifest |
+
+#### The base-year cohort
+
+The starting cohort was `round(rnorm(n, 52, 9))`. The contract cannot replace it
+with a real roster — it ships **aggregate counts only**, no age, sex or state,
+with `n_retired = 0` in every row — but it does support something much better.
+
+URPS subspecialty certification began in 2013 and the contract's active-in-year
+definition keys on the certification year, so year-over-year differences are
+cohort sizes. Two populations sit inside the 2023 total of 1,306:
+
+| | n | Share | Mean age | Basis |
+|---|---:|---:|---:|---|
+| Certified 2014–2023 | 651 | 49.8% | 39.5 | **Observed** — fellowship graduates, age known from cohort year |
+| Certified by 2013 | 655 | 50.2% | 54.4 | **Assumed** — initial backlog clearance; cert year says nothing about career stage |
+
+One normal draw was wrong for both: too wide for the graduates, too narrow for
+the backlog. `agents_from_certification_cohorts()` builds them separately and
+tags each agent `observed` or `assumed`; `cohort_provenance()` refuses to call
+the result a roster.
+
+The same series also reconciles the entrant rate. The model carried a hardcoded
+`baseline_entrants = 55`; observed net growth (53/yr from 2018, excluding the
+2014–2017 backlog ramp) plus modelled departures implies **~87–90/yr**.
+`implied_gross_entrants()` warns when the assumption is more than 15% off.
 
 **Three things the contract does not own**, despite the export names suggesting
 otherwise — verified against the installed package, not inferred:

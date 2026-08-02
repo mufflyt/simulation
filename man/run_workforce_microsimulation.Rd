@@ -8,6 +8,7 @@ run_workforce_microsimulation(
   baseline_supply = NULL,
   supply_geography = c("national", "conus"),
   roster = NULL,
+  use_certification_cohorts = TRUE,
   years = 2025:2050,
   subspecialty = "FPMRS",
   pop_by_band = NULL,
@@ -30,8 +31,11 @@ run_workforce_microsimulation(
 \item{supply_geography}{"national" or "conus": national for supply reporting,
 CONUS for the geographic access layer.}
 
-\item{roster}{Optional production provider roster; when NULL a synthetic
-cohort is generated and the run is marked example-only.}
+\item{roster}{Optional production provider roster; when NULL the base cohort
+is built from the observed certification series where available.}
+
+\item{use_certification_cohorts}{Build the base cohort from
+\code{mufflyaccess::urps_counts_long()} when no roster is supplied.}
 
 \item{years}{Integer projection years.}
 
