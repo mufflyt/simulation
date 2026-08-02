@@ -2,15 +2,21 @@
 % Please edit documentation in R/17-workload_to_fte.R
 \name{assert_publishable_workload}
 \alias{assert_publishable_workload}
-\title{Refuse to publish numbers built on an uncalibrated workload basket}
+\title{Gate publication on the calibration tier of the model inputs}
 \usage{
 assert_publishable_workload(
-  status = URPS_SERVICE_WORKLOAD_STATUS,
+  status = urps_service_workload_status(),
+  allow_analogy = FALSE,
+  what = "workload basket",
   mode = resolve_reproducibility_mode()
 )
 }
 \arguments{
-\item{status}{Calibration status string to check.}
+\item{status}{Calibration status to check.}
+
+\item{allow_analogy}{Permit "derived_by_analogy" inputs.}
+
+\item{what}{Label used in the message.}
 
 \item{mode}{Reproducibility mode; strict errors, relaxed warns.}
 }
@@ -18,5 +24,10 @@ assert_publishable_workload(
 (Invisibly) TRUE when publishable.
 }
 \description{
-Refuse to publish numbers built on an uncalibrated workload basket
+Accepts inputs that are anchored to a published source ("calibrated") or
+determined by an internal constraint rather than assumed ("solved").
+"derived_by_analogy" inputs -- structure borrowed from a published study in a
+DIFFERENT specialty -- require explicit opt-in, because transferring a
+physiatry delegation pattern onto urogynaecology is a modelling choice a
+reader must be told about. Placeholders are always refused.
 }

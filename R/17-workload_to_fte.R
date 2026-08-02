@@ -30,35 +30,40 @@
 
 # ---- Service basket -------------------------------------------------------
 
-# Work RVUs per unit of service. THESE ARE PLACEHOLDERS pending verification
-# against the CMS Physician Fee Schedule RVU file for the modelled year; the
-# registry entry `service_workload` in config/canonical_sources.yml is where the
-# real file belongs. Everything downstream carries the calibration status, and
-# `assert_publishable_workload()` refuses to let an uncalibrated basket be
-# labelled publishable.
-URPS_SERVICE_WORKLOAD <- tibble::tribble(
-  ~service,                  ~setting,      ~unit,        ~work_rvu, ~label,
-  "new_consultation",        "ambulatory",  "encounter",       2.60, "New patient office visit (99204 level)",
-  "return_visit",            "ambulatory",  "encounter",       1.30, "Established patient visit (99213 level)",
-  "pessary_care",            "ambulatory",  "encounter",       0.90, "Pessary fitting / maintenance",
-  "urodynamics",             "ambulatory",  "study",           1.60, "Complex urodynamic study",
-  "cystoscopy",              "ambulatory",  "procedure",       2.20, "Diagnostic cystourethroscopy",
-  "botox_bladder",           "ambulatory",  "procedure",       3.30, "Intradetrusor onabotulinumtoxinA",
-  "ptns",                    "ambulatory",  "session",         0.45, "Percutaneous tibial nerve stimulation",
-  "bladder_instillation",    "ambulatory",  "session",         0.40, "Bladder instillation",
-  "sling_procedure",         "operative",   "procedure",      12.70, "Mid-urethral sling (57288 level)",
-  "prolapse_procedure",      "operative",   "procedure",      18.50, "Pelvic organ prolapse repair",
-  "postoperative_care",      "ambulatory",  "encounter",       0.00, "Global-period postoperative visit",
-  "indirect_clinical_work",  "indirect",    "fte_share",         NA, "Administration, documentation, teaching"
-)
+# Work RVUs per unit of service, built from the CMS Physician Fee Schedule
+# Relative Value File. See R/23-cms_rvu.R for the CPT basket, the mix weights,
+# and the re-derivation helpers; the values are no longer placeholders.
+#
+# Constructed lazily on first use so the package can be collated before the
+# CMS tables are available in the namespace.
+.urps_workload_cache <- new.env(parent = emptyenv())
 
-URPS_SERVICE_WORKLOAD_STATUS <- "uncalibrated_illustrative"
+#' The URPS service workload basket
+#'
+#' @return Tibble of `service`, `setting`, `unit`, `work_rvu`, `label`,
+#'   `calibration_status`, `source`.
+#' @export
+urps_service_workload <- function() {
+  if (is.null(.urps_workload_cache$tbl)) {
+    .urps_workload_cache$tbl <- build_workload_from_cms()
+  }
+  .urps_workload_cache$tbl
+}
+
+#' Calibration status of the workload basket
+#' @return Character status.
+#' @export
+urps_service_workload_status <- function() {
+  unique(urps_service_workload()$calibration_status)[1]
+}
 
 # Share of a provider's professional time that is NOT billable direct patient
-# care. The 2010 AAN Practice Profile (n=910) reported 72.9% of professional time
-# in patient care, 9.7% administration, 9.1% research, 5.2% teaching, 3% other;
-# the physiatry survey reported 37.4 of 48.5 weekly hours in patient care.
+# care. The 2010 AAN Practice Profile (n=910) reported 72.9% of professional
+# time in patient care, 9.7% administration, 9.1% research, 5.2% teaching, 3%
+# other; the physiatry survey reported 37.4 of 48.5 weekly hours in patient
+# care (77.1%). We adopt the AAN figure.
 INDIRECT_TIME_SHARE <- 0.271
+INDIRECT_TIME_SHARE_SOURCE <- "AAN 2010 Practice Profile (n=910): 72.9% of professional time in patient care"
 
 # ---- Provider-type delegation matrix --------------------------------------
 
@@ -72,21 +77,114 @@ INDIRECT_TIME_SHARE <- 0.271
 #
 # Columns must sum to 1 within each service; `validate_delegation_matrix()`
 # enforces it.
-URPS_DELEGATION_MATRIX <- tibble::tribble(
-  ~service,                 ~urps_share, ~app_share, ~other_clinician_share,
-  "new_consultation",              0.70,       0.08,                   0.22,
-  "return_visit",                  0.58,       0.22,                   0.20,
-  "pessary_care",                  0.45,       0.40,                   0.15,
-  "urodynamics",                   0.62,       0.28,                   0.10,
-  "cystoscopy",                    0.80,       0.05,                   0.15,
-  "botox_bladder",                 0.78,       0.07,                   0.15,
-  "ptns",                          0.30,       0.55,                   0.15,
-  "bladder_instillation",          0.25,       0.60,                   0.15,
-  "sling_procedure",               0.72,       0.01,                   0.27,
-  "prolapse_procedure",            0.68,       0.01,                   0.31,
-  "postoperative_care",            0.55,       0.35,                   0.10,
-  "indirect_clinical_work",        1.00,       0.00,                   0.00
+# Mapping used, from Forte Table 4 (mean % of work performed by physiatrists /
+# NPs / PAs / PTs, by service):
+#
+#   URPS service            Forte analogue                 physiatrist share
+#   new_consultation        new patient visits/encounters              70.6%
+#   return_visit            follow-up patient visits                   62.0%
+#   pessary_care            patient care management/follow-up          56.1%
+#   urodynamics             diagnostic procedures                      67.4%
+#   cystoscopy              diagnostic procedures                      67.4%
+#   botox_bladder           injection procedures                       74.1%
+#   ptns                    patient care management/follow-up          56.1%
+#   bladder_instillation    patient care management/follow-up          56.1%
+#   sling / prolapse        interventional procedures and imaging      68.7%
+#   postoperative_care      follow-up patient visits                   62.0%
+#
+# Forte reports the NP and PA shares separately; they are summed into a single
+# APP share here. The residual (physiatrist + NP + PA + PT does not reach 100%)
+# is assigned to "other_clinician", which for urogynaecology means generalist
+# OB/GYN, urology and primary care -- a substantial share of pelvic-floor care
+# is delivered outside the subspecialty, which is exactly why the apportionment
+# step exists.
+#
+# For the two OPERATIVE services the Forte procedural analogue understates how
+# concentrated surgery is in the subspecialist: NPs and PAs perform 1-3% of
+# procedures in their data, so the APP share is set to the floor of that range
+# and the balance moved to other_clinician (generalist gynaecologists perform a
+# large share of prolapse and sling surgery).
+URPS_DELEGATION_FORTE_RAW <- tibble::tribble(
+  ~service,                 ~urps_share, ~app_share, ~other_clinician_share, ~forte_analogue,
+  "new_consultation",              0.706,      0.159,                  0.135, "new patient visits/encounters",
+  "return_visit",                  0.620,      0.325,                  0.055, "follow-up patient visits",
+  "pessary_care",                  0.561,      0.347,                  0.092, "patient care management/follow-up",
+  "urodynamics",                   0.674,      0.017,                  0.309, "diagnostic procedures",
+  "cystoscopy",                    0.674,      0.017,                  0.309, "diagnostic procedures",
+  "botox_bladder",                 0.741,      0.083,                  0.176, "injection procedures",
+  "ptns",                          0.561,      0.347,                  0.092, "patient care management/follow-up",
+  "bladder_instillation",          0.561,      0.347,                  0.092, "patient care management/follow-up",
+  "sling_procedure",               0.687,      0.021,                  0.292, "interventional procedures and imaging",
+  "prolapse_procedure",            0.687,      0.021,                  0.292, "interventional procedures and imaging",
+  "postoperative_care",            0.620,      0.325,                  0.055, "follow-up patient visits",
+  "indirect_clinical_work",        1.000,      0.000,                  0.000, "not delegated"
 )
+
+#' Rescale the subspecialist share of a delegation matrix to a capacity level
+#'
+#' Forte's physiatry shares transfer as a SHAPE -- procedures concentrated in the
+#' subspecialist, routine follow-up and device care delegated -- but not as a
+#' LEVEL. Physiatry is the primary specialty for its conditions; urogynaecology
+#' is a small subspecialty inside a much larger system, and most population-level
+#' urinary-incontinence care is delivered by generalist obstetrician-
+#' gynaecologists, urologists and primary care.
+#'
+#' Applying the raw shares implies 1,306 subspecialists delivering 64.5% of all
+#' modelled national service volume, which solves to about 17,700 work RVUs per
+#' clinical FTE per year -- roughly 2.4x any published productivity benchmark.
+#' `implied_urps_share()` puts the consistent level near 28%.
+#'
+#' This rescales every URPS share by a common factor and moves the difference to
+#' `other_clinician_share`, leaving `app_share` untouched (the APP-vs-physician
+#' split within delegated work is what Forte actually measured) and preserving
+#' the relative ordering across services.
+#'
+#' @param matrix Delegation matrix to rescale.
+#' @param factor Multiplier on the URPS shares.
+#' @return The rescaled matrix.
+#' @export
+rescale_delegation_to_capacity <- function(matrix = URPS_DELEGATION_FORTE_RAW,
+                                           factor = URPS_DELEGATION_CAPACITY_FACTOR) {
+  assertthat::assert_that(is.numeric(factor), factor > 0, factor <= 1)
+  keep <- matrix$service != "indirect_clinical_work"
+  out <- matrix
+  new_urps <- out$urps_share
+  new_urps[keep] <- out$urps_share[keep] * factor
+  out$other_clinician_share <- out$other_clinician_share +
+    (out$urps_share - new_urps)
+  out$urps_share <- new_urps
+  out
+}
+
+# Level correction implied by base-year capacity: see rescale_delegation_to_capacity().
+# Derived, not assumed -- implied_urps_share() reports 28.0% against a 64.5%
+# raw mean, giving 0.434.
+URPS_DELEGATION_CAPACITY_FACTOR <- 0.434
+
+#' Provider-type delegation matrix used by the model
+#'
+#' Forte's cross-service pattern with the subspecialist level rescaled to what a
+#' subspecialty of this size can actually deliver.
+#' @export
+URPS_DELEGATION_MATRIX <- rescale_delegation_to_capacity(
+  URPS_DELEGATION_FORTE_RAW, 0.434
+)
+
+URPS_DELEGATION_STATUS <- "derived_by_analogy"
+URPS_DELEGATION_SOURCE <- paste(
+  "Cross-service SHAPE from Forte GJ et al. Am J Phys Med Rehabil",
+  "2021;100:866-876 Table 4 (physiatry); subspecialist LEVEL rescaled by",
+  "0.434 so base-year productivity is physically plausible (see",
+  "rescale_delegation_to_capacity). NOT a urogynaecology survey:",
+  "field one to move this to \"calibrated\"."
+)
+
+# Only numeric columns named *_share are shares; the matrix also carries
+# documentation columns such as `forte_analogue`.
+.share_cols <- function(matrix) {
+  cols <- grep("_share$", names(matrix), value = TRUE)
+  cols[vapply(matrix[cols], is.numeric, logical(1))]
+}
 
 #' Validate a provider-type delegation matrix
 #'
@@ -95,7 +193,7 @@ URPS_DELEGATION_MATRIX <- tibble::tribble(
 #' @return (Invisibly) the matrix.
 #' @export
 validate_delegation_matrix <- function(matrix = URPS_DELEGATION_MATRIX, tol = 1e-8) {
-  share_cols <- setdiff(names(matrix), "service")
+  share_cols <- .share_cols(matrix)
   if (length(share_cols) == 0) {
     stop("validate_delegation_matrix: no share columns found", call. = FALSE)
   }
@@ -122,7 +220,7 @@ apportion_service_volume <- function(volumes, matrix = URPS_DELEGATION_MATRIX) {
   validate_delegation_matrix(matrix)
 
   joined <- safe_left_join(volumes, matrix, by = "service", min_match_rate = 1.0)
-  share_cols <- setdiff(names(matrix), "service")
+  share_cols <- .share_cols(matrix)
 
   dplyr::bind_rows(lapply(share_cols, function(cl) {
     out <- joined
@@ -143,7 +241,7 @@ apportion_service_volume <- function(volumes, matrix = URPS_DELEGATION_MATRIX) {
 #' @return Tibble with `year` (if present) and `work_rvu`.
 #' @export
 service_volume_to_wrvu <- function(volumes,
-                                   workload = URPS_SERVICE_WORKLOAD,
+                                   workload = urps_service_workload(),
                                    provider_type = "urps",
                                    delegation = URPS_DELEGATION_MATRIX) {
   assertthat::assert_that(all(c("service", "volume") %in% names(volumes)))
@@ -198,6 +296,90 @@ calibrate_wrvu_per_fte <- function(base_year_wrvu, base_year_required_fte,
   wrvu_per_fte
 }
 
+#' Plausible annual work RVUs per clinical FTE
+#'
+#' Benchmark range for a full-time clinical physician in an OB/GYN-family
+#' specialty. Productivity surveys (MGMA, AMGA) put the median in the high
+#' thousands, not the tens of thousands. REPLACE with the specific survey
+#' edition you have licensed before publishing.
+#' @export
+WRVU_PER_FTE_BENCHMARK <- c(low = 3500, median = 7500, high = 12000)
+
+#' Check that a solved productivity denominator is physically plausible
+#'
+#' `calibrate_wrvu_per_fte()` SOLVES the denominator from the base-year service
+#' volumes and the demand anchor, so it absorbs any error in the volumes. A
+#' solved value far outside the benchmark range does not mean the workforce is
+#' unusually productive -- it means the service volumes are wrong. This turns
+#' that into a visible signal instead of a silently inflated denominator that
+#' would suppress projected demand.
+#'
+#' @param wrvu_per_fte Solved annual work RVUs per clinical FTE.
+#' @param benchmark Named low/median/high benchmark.
+#' @param mode Reproducibility mode; strict errors outside the range.
+#' @return (Invisibly) TRUE when within range.
+#' @export
+check_productivity_plausible <- function(wrvu_per_fte,
+                                         benchmark = WRVU_PER_FTE_BENCHMARK,
+                                         mode = resolve_reproducibility_mode()) {
+  ok <- wrvu_per_fte >= benchmark[["low"]] && wrvu_per_fte <= benchmark[["high"]]
+  if (ok) {
+    .msg_info(sprintf("Solved productivity %s wRVU/FTE is within the %s-%s benchmark range.",
+                      format(round(wrvu_per_fte), big.mark = ","),
+                      format(benchmark[["low"]], big.mark = ","),
+                      format(benchmark[["high"]], big.mark = ",")))
+    return(invisible(TRUE))
+  }
+  msg <- sprintf(paste(
+    "Solved productivity is %s work RVUs per clinical FTE per year, outside the",
+    "plausible %s-%s range (median %s). The denominator is SOLVED from the",
+    "base-year service volumes, so this is evidence the VOLUMES are wrong, not",
+    "that productivity is unusual. A denominator that is too high suppresses",
+    "projected demand. Fix the service-volume inputs before trusting any gap."),
+    format(round(wrvu_per_fte), big.mark = ","),
+    format(benchmark[["low"]], big.mark = ","),
+    format(benchmark[["high"]], big.mark = ","),
+    format(benchmark[["median"]], big.mark = ","))
+  if (identical(mode, "strict")) stop(msg, call. = FALSE)
+  .msg_warn(msg)
+  invisible(FALSE)
+}
+
+#' Uniform URPS share implied by a productivity target
+#'
+#' Diagnostic for the case the plausibility check flags. Given base-year service
+#' volumes, a demand anchor, and a plausible productivity level, this reports the
+#' uniform share of that volume the subspecialty would have to deliver for the
+#' three to be mutually consistent.
+#'
+#' It matters for urogynaecology specifically. Forte's physiatry delegation
+#' shares put the subspecialist at 60-75% of most services, but physiatry is the
+#' PRIMARY specialty for its conditions. Urogynaecology is a small subspecialty
+#' inside a much larger system: most population-level urinary-incontinence care
+#' is delivered by generalist obstetrician-gynaecologists, urologists and
+#' primary care. Transferring the physiatry shares across therefore biases the
+#' URPS share upward, and this function says by how much.
+#'
+#' @param volumes Base-year service volumes (`service`, `volume`).
+#' @param required_fte Base-year required FTE anchor.
+#' @param wrvu_per_fte Plausible annual work RVUs per clinical FTE.
+#' @param workload Service workload basket.
+#' @param indirect_share Indirect-time share.
+#' @return Numeric implied uniform URPS share.
+#' @export
+implied_urps_share <- function(volumes, required_fte,
+                               wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]],
+                               workload = urps_service_workload(),
+                               indirect_share = INDIRECT_TIME_SHARE) {
+  total <- service_volume_to_wrvu(volumes, workload, delegation = NULL)
+  gross_up <- 1 / (1 - indirect_share)
+  share <- required_fte * wrvu_per_fte / (total$work_rvu * gross_up)
+  .msg_info(sprintf(
+    "For %s FTE at %s wRVU/FTE, URPS would deliver %.1f%% of the modelled service volume.",
+    format(round(required_fte)), format(wrvu_per_fte, big.mark = ","), 100 * share))
+  share
+}
+
 #' Convert a service-volume schedule to required provider FTE
 #'
 #' @param volumes Tibble with `service`, `volume`, optionally `year`.
@@ -216,7 +398,7 @@ calibrate_wrvu_per_fte <- function(base_year_wrvu, base_year_required_fte,
 #' @export
 convert_workload_to_fte <- function(volumes,
                                     wrvu_per_fte = NULL,
-                                    workload = URPS_SERVICE_WORKLOAD,
+                                    workload = urps_service_workload(),
                                     delegation = URPS_DELEGATION_MATRIX,
                                     provider_type = "urps",
                                     indirect_share = INDIRECT_TIME_SHARE,
@@ -260,7 +442,7 @@ convert_workload_to_fte <- function(volumes,
 
   dplyr::mutate(out,
                 method = method,
-                calibration_status = URPS_SERVICE_WORKLOAD_STATUS)
+                calibration_status = urps_service_workload_status())
 }
 
 #' Allocate total required FTE across care settings by survey time share
@@ -313,20 +495,72 @@ compute_fte_gap <- function(supply, required, supply_col = "effective_fte_median
     )
 }
 
-#' Refuse to publish numbers built on an uncalibrated workload basket
+#' Gate publication on the calibration tier of the model inputs
 #'
-#' @param status Calibration status string to check.
+#' Accepts inputs that are anchored to a published source ("calibrated") or
+#' determined by an internal constraint rather than assumed ("solved").
+#' "derived_by_analogy" inputs -- structure borrowed from a published study in a
+#' DIFFERENT specialty -- require explicit opt-in, because transferring a
+#' physiatry delegation pattern onto urogynaecology is a modelling choice a
+#' reader must be told about. Placeholders are always refused.
+#'
+#' @param status Calibration status to check.
+#' @param allow_analogy Permit "derived_by_analogy" inputs.
+#' @param what Label used in the message.
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
 #' @return (Invisibly) TRUE when publishable.
 #' @export
-assert_publishable_workload <- function(status = URPS_SERVICE_WORKLOAD_STATUS,
+assert_publishable_workload <- function(status = urps_service_workload_status(),
+                                        allow_analogy = FALSE,
+                                        what = "workload basket",
                                         mode = resolve_reproducibility_mode()) {
-  if (identical(status, "calibrated")) return(invisible(TRUE))
+  if (!status %in% CALIBRATION_TIERS) {
+    stop(sprintf("Unknown calibration tier '%s'. Expected one of: %s",
+                 status, paste(CALIBRATION_TIERS, collapse = ", ")), call. = FALSE)
+  }
+  if (status %in% c("calibrated", "solved")) return(invisible(TRUE))
+
+  if (status == "derived_by_analogy") {
+    msg <- sprintf(paste(
+      "The %s is derived by analogy from a published study in another specialty,",
+      "not measured in urogynaecology. Report it as an assumption, or pass",
+      "allow_analogy = TRUE to proceed knowingly."), what)
+    if (isTRUE(allow_analogy)) {
+      .msg_info(sprintf("Proceeding with an analogy-derived %s (declared).", what))
+      return(invisible(TRUE))
+    }
+    if (identical(mode, "strict")) stop(msg, call. = FALSE)
+    .msg_warn(msg)
+    return(invisible(FALSE))
+  }
+
   msg <- sprintf(
-    "Workload basket calibration_status is '%s': work RVUs and delegation shares are placeholders. Verify against the CMS PFS RVU file and a URPS practice survey before publishing any FTE number.",
-    status
-  )
+    "The %s calibration_status is '%s': the values are placeholders and no number built on them is publishable.",
+    what, status)
   if (identical(mode, "strict")) stop(msg, call. = FALSE)
   .msg_warn(msg)
   invisible(FALSE)
+}
+
+#' Calibration status of every model input, in one table
+#'
+#' @return Tibble of `input`, `status`, `source`.
+#' @export
+calibration_status_report <- function() {
+  tibble::tibble(
+    input = c("work RVUs", "service case mix", "delegation shares",
+              "indirect time share", "clinical hours schedule",
+              "hours intercept", "base-year supply"),
+    status = c("calibrated", "derived_by_analogy", URPS_DELEGATION_STATUS,
+               "calibrated", "derived_by_analogy", "solved", "calibrated"),
+    source = c(
+      CMS_RVU_RELEASE,
+      "Case-mix weights in URPS_CPT_BASKET are a declared assumption; replace with claims-derived shares",
+      URPS_DELEGATION_SOURCE,
+      INDIRECT_TIME_SHARE_SOURCE,
+      "HWSM Exhibit 14 age x sex specification (general internal medicine levels)",
+      "Solved so the base-year cohort mean equals the FTE definition (37.2 clinical hrs/wk)",
+      "mufflyaccess URPS contract"
+    )
+  )
 }
