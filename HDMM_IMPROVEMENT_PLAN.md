@@ -6,7 +6,65 @@ Prepared 2026-08-02.
 **Companion documents**
 - URPS microsimulation improvement plan (2026-07-30) — the supply/agent-based counterpart; sections referenced below as *IP §n*.
 - `cliff/SIMULATION_TO_CLIFF_INTEGRATION_PLAN.md` — how simulation's outputs feed the cliff workforce-cliff analysis.
-- `R/export_demand_contract.R` — the versioned demand contract this plan's output should emit into (tiers 3–4 today; tiers 5–6 proposed below).
+- Zarek et al. (2025) — a contemporary application of Dall's health-workforce demand
+  model (population → predicted service use → staffing conversion → provider FTE); the
+  architecture adopted in *Reframing* below.
+- `R/export_demand_contract.R` — the versioned demand contract. `export_dpmm_demand_contract()`
+  serves tiers 3–4 (prevalence / symptomatic); `export_hdmm_demand_contract()` serves
+  **tiers 5–6 (care-seeking / procedural)** from the life-course model.
+- `R/25-demand_lifecourse.R` — the reproductive life-course demand generator (this plan's
+  Part B, implemented). `R/26-utilization_models.R` — the corrected surgery-rate and
+  survey-weighted visit models (Part A, implemented).
+
+---
+
+## REFRAMING (Zarek 2025): a reproductive life-course model, not a BMI-centered DPMM
+
+The most important structural change: **BMI is a risk modifier, not the organizing
+variable.** The primary generator of pelvic-floor disease burden is the **obstetric life
+course** — cumulative vaginal-delivery exposure — not obesity. Reframe from
+
+    female population → BMI → pelvic-floor disease
+
+to a life-course demand pipeline in the Zarek/Dall shape:
+
+    female population
+      → childbirth exposures (cumulative vaginal deliveries = primary engine)
+      → pelvic-floor conditions (UI / POP / AI), BMI et al. as MODIFIERS
+      → recognition → care-seeking → referral → treatment
+      → annual SERVICE VOLUMES
+      → (R/17-workload_to_fte.R) provider FTE demand
+
+Zarek's transferable lesson is the last steps: demand is **not** read off disease
+prevalence — you predict service use and apply staffing/work-RVU conversion. This model
+implements the demand-generation half (`R/25`) and hands service volumes to the existing
+`convert_workload_to_fte()` (`R/17`); it does **not** re-implement the FTE conversion or the
+provider-substitution delegation matrix that already live there.
+
+**Causal hierarchy (implemented in `R/25-demand_lifecourse.R`):**
+1. *Primary exposure* — childbirth history: live births, vaginal vs cesarean, age at and
+   time since last vaginal delivery. Key state variable: `cumulative_vaginal_deliveries`
+   (parity and cesarean births retained separately).
+2. *Risk modifiers* — age, BMI, hysterectomy, menopause, comorbidity, access barriers.
+   **BMI lives here.**
+3. *Clinical disease states* — UI / POP / AI.
+4. *Care pathway → service use* — prevalence × recognition × P(seek | access) × P(referral)
+   × P(treated) → expected treated → service volumes by service line.
+
+**Scenarios** (`R/25`): *baseline*; *delivery_mode* (shifts the primary exposure via
+`cesarean_rate`); *reduced_barriers* (raises care-seeking for high-barrier women); and
+*prevention* (cuts one transition — OASI/rehab or **BMI reduction**, the only place BMI
+interventions belong). Treatment-substitution across provider types is intentionally NOT
+here — it is the `R/17` delegation matrix.
+
+Coefficient tables in `R/25`/`R/26` are explicit and marked `placeholder_uncalibrated`; the
+childbirth and pelvic-floor transition equations must come from obstetric and
+urogynecologic epidemiology.
+
+> Bottom line: not a broad chronic-disease DPMM but a **reproductive life-course
+> microsimulation** linking vaginal-delivery exposure to pelvic-floor disease, healthcare
+> utilization, and workforce demand — more clinically credible and more directly tied to
+> urogynecology.
 
 ---
 
