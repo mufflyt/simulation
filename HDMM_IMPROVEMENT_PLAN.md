@@ -88,6 +88,21 @@ models.
 
 ---
 
+> **Implemented (2026-08-02): `VaginalParity` now has a principled cohort source.**
+> The rate/visit models below reference `VaginalParity` as a covariate, but the
+> repo had no source for a vaginal-parity distribution by birth cohort.
+> `R/13b-obstetric_exposure.R` now supplies it: `cohort_vaginal_exposure()`
+> derives mean vaginal/cesarean deliveries per woman by birth cohort from cited
+> CDC/NCHS cesarean-by-year and Census/NCHS completed-parity-by-cohort series
+> (`inst/extdata/obstetric/`), and `compute_demand_denominators_lifecourse()`
+> adds an obstetric-exposure-weighted estimand **D4** alongside D1–D3 — directly
+> answering R/13's note that age-only denominators understate parous-women
+> demand. Cited dose-response coefficients (Gyhagen 2013, Rortveit 2003 NEJM,
+> Hendrix WHI, Mant, LaCross 2015) are in
+> `inst/extdata/obstetric/parity_disease_dose_response.csv`. Ported from
+> `cliff/demand_lifecourse` (spec + evidence there). Refinement target: an NSFG
+> microdata tabulation of the per-woman vaginal/cesarean joint distribution.
+
 ## PART A — CORRECTNESS ISSUES (fix before any number is trusted)
 
 ### 1. The logistic surgery model is degenerate
