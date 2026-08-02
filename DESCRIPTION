@@ -40,7 +40,9 @@ Imports:
     yaml
 Suggests:
     arrow,
+    blme,
     covr,
+    lme4,
     ggplot2,
     knitr,
     MASS,

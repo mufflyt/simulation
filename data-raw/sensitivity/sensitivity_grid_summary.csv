@@ -1,0 +1,4 @@
+subspecialty_abbrev,n_cells,n_above,n_at,n_below,worst_ratio,oneway_min,worst_window,worst_mult,worst_conv
+GO,27,26,1,0,1.003,2.37,full,3,0.7
+URPS,27,25,1,1,0.861,1.87,full,3,0.7
+MIGS,27,27,0,0,1.703,3.707,full,3,0.7

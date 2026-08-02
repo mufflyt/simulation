@@ -79,6 +79,8 @@ outputs/
 # package build stays small -- see .Rbuildignore ^data-raw$).
 !data-raw/census/
 !data-raw/census/*.csv
+!data-raw/calibration/
+!data-raw/calibration/*.csv
 
 # Cited obstetric reference data shipped with the package.
 !inst/extdata/**/*.csv
@@ -86,3 +88,6 @@ outputs/
 # Real spatial-access inputs (vetted tract demand; build-ignored).
 !data-raw/spatial/
 !data-raw/spatial/*.csv
+# Vetted workforce sensitivity datasets (carried from cliff; build-ignored).
+!data-raw/sensitivity/
+!data-raw/sensitivity/*.csv
