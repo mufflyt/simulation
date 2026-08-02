@@ -1,0 +1,98 @@
+citHeader(
+  "To cite urpssim in publications, cite the software. If you report projections",
+  "or a supply/demand gap, also cite the methodology it implements (Dall et al.),",
+  "and state the calibration tier of the inputs you used -- calibration_status_report()",
+  "prints it."
+)
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "urpssim: Urogynecology Workforce Supply and Demand Microsimulation",
+  author   = person("Tyler", "Muffly"),
+  year     = "2026",
+  note     = "R package version 0.5.0",
+  url      = "https://github.com/mufflyt/simulation",
+  textVersion = paste(
+    "Muffly T (2026). urpssim: Urogynecology Workforce Supply and Demand",
+    "Microsimulation. R package version 0.5.0.",
+    "https://github.com/mufflyt/simulation"
+  )
+)
+
+bibentry(
+  bibtype = "TechReport",
+  title   = "Health Workforce Microsimulation Model Documentation, Version 5.19.20",
+  author  = c(person("Timothy M.", "Dall"), person("Ryan", "Reynolds"),
+              person("Ritashree", "Chakrabarti"), person("Will", "Iacobucci"),
+              person("Kari", "Jones")),
+  institution = "IHS Markit",
+  year    = "2020",
+  header  = "The methodology this package implements:",
+  textVersion = paste(
+    "Dall TM, Reynolds R, Chakrabarti R, Iacobucci W, Jones K (2020).",
+    "Health Workforce Microsimulation Model Documentation, Version 5.19.20.",
+    "IHS Markit."
+  )
+)
+
+bibentry(
+  bibtype = "Article",
+  title   = "Supply and demand analysis of the current and future US neurology workforce",
+  author  = c(person("Timothy M.", "Dall"), person("Michael V.", "Storm"),
+              person("Ritashree", "Chakrabarti"), person("Oksana", "Drogan"),
+              person("Christopher M.", "Keran"), person("Peter D.", "Donofrio"),
+              person("Victor W.", "Henderson"), person("Henry J.", "Kaminski"),
+              person("James C.", "Stevens"), person("Thomas R.", "Vidic")),
+  journal = "Neurology",
+  year    = "2013",
+  volume  = "81",
+  number  = "5",
+  pages   = "470--478",
+  doi     = "10.1212/WNL.0b013e318294b1cf",
+  header  = "The work-RVU workload-to-FTE conversion:",
+  textVersion = paste(
+    "Dall TM, Storm MV, Chakrabarti R, et al. (2013). Supply and demand analysis",
+    "of the current and future US neurology workforce. Neurology 81(5):470-478."
+  )
+)
+
+bibentry(
+  bibtype = "Article",
+  title   = "The Physiatry Workforce in 2019 and Beyond, Part 2: Modeling Results",
+  author  = c(person("Timothy M.", "Dall"), person("Ryan L.", "Reynolds"),
+              person("Ritashree", "Chakrabarti"), person("Gaetano J.", "Forte"),
+              person("Margaret", "Langelier")),
+  journal = "American Journal of Physical Medicine & Rehabilitation",
+  year    = "2021",
+  volume  = "100",
+  number  = "9",
+  pages   = "877--884",
+  doi     = "10.1097/PHM.0000000000001659",
+  header  = "The capacity-survey estimate of the base-year shortfall:",
+  textVersion = paste(
+    "Dall TM, Reynolds RL, Chakrabarti R, Forte GJ, Langelier M (2021).",
+    "The Physiatry Workforce in 2019 and Beyond, Part 2: Modeling Results.",
+    "Am J Phys Med Rehabil 100(9):877-884."
+  )
+)
+
+bibentry(
+  bibtype = "Article",
+  title   = "Current and Projected Future Supply and Demand for Physical Therapists From 2022 to 2037: A New Approach Using Microsimulation",
+  author  = c(person("Patrick", "Zarek"), person("Clark", "Ruttinger"),
+              person("David", "Armstrong"), person("Ritashree", "Chakrabarti"),
+              person("Douglas R.", "Hess"), person("Tara Jo", "Manal"),
+              person("Timothy M.", "Dall")),
+  journal = "Physical Therapy",
+  year    = "2025",
+  volume  = "105",
+  number  = "3",
+  pages   = "pzaf014",
+  doi     = "10.1093/ptj/pzaf014",
+  header  = "The capacity-survey adequacy arithmetic and licensure de-duplication:",
+  textVersion = paste(
+    "Zarek P, Ruttinger C, Armstrong D, Chakrabarti R, Hess DR, Manal TJ,",
+    "Dall TM (2025). Current and Projected Future Supply and Demand for Physical",
+    "Therapists From 2022 to 2037. Phys Ther 105(3):pzaf014."
+  )
+)
