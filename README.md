@@ -1,5 +1,22 @@
 # Simulation Modeling for Urogynecology Workforce Planning
 
+## Workforce Microsimulation (new)
+
+The workforce supply model is now a **stochastic, individual-level microsimulation**
+(modules `R/10`–`R/15`), porting approaches from the sister repositories
+`cliff` (age-structured hazards, effective-FTE, three-estimand demand
+concordance), `twostep` (E2SFCA/M2SFCA geographic access), and `isochrones`
+(strict active-in-year retirement predicate, reproducibility + fail-closed
+provenance). See [`docs/WORKFORCE_MICROSIMULATION_UPDATES.md`](docs/WORKFORCE_MICROSIMULATION_UPDATES.md).
+
+```bash
+Rscript scripts/run_workforce_microsimulation_example.R          # runs without external data
+REPRODUCIBILITY_MODE=strict Rscript scripts/run_workforce_microsimulation_example.R
+Rscript -e 'testthat::test_dir("tests/testthat")'                # regression guards
+```
+
+Additional dependencies for these modules: `digest`, `jsonlite`, `yaml`, `logger`, `assertthat` (plus the existing tidyverse stack).
+
 # To Do for DPMM:
 Replace simulated data with real SWAN variables - Your calculate_swan_incontinence_prevalence() function shows you're ready to connect to real SWAN data - ***DONE in `dppm_validate_SWAN_better.R`***
 Calibrate transition probabilities - Currently using placeholder coefficients; need to estimate from longitudinal SWAN data

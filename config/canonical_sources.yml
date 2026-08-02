@@ -1,0 +1,34 @@
+# Canonical Source Registry
+# -------------------------------------------------------------------------
+# Ported from the isochrones "Trust-a-Number" contract (Non-Negotiable #19):
+# every model input has ONE named source here, reached through ONE resolver
+# (resolve_canonical() in R/11-canonical_and_joins.R). A wrong-source or
+# wrong-grain error is SILENT -- a confident wrong number, not a crash -- so
+# never hardcode an input path in a caller; resolve it by logical name.
+#
+# Each entry is either a bare path (relative to the repo root, or absolute) or a
+# mapping with `path` and an optional `sha256`. When `sha256` is present the
+# resolver verifies it and STOPS on drift in REPRODUCIBILITY_MODE=strict (warns
+# in relaxed). Add a checksum for any file that drives a published number.
+
+sources:
+  # Census 2023 National Population Projections -- women 65+ demand driver.
+  # (cliff demand_denominator.R uses np2023_d1_{mid,low,hi}.csv.)
+  population_projection_mid:
+    path: data-raw/np2023-t2.xlsx
+    sha256: ""      # fill in once the file is committed / frozen
+
+  # Base-year FPMRS active workforce roster (age-structured; cliff SSOT).
+  fpmrs_baseline_roster:
+    path: data/fpmrs_baseline_roster.csv
+    sha256: ""
+
+  # Isochrone origin coordinates (5 km cluster reps) for the E2SFCA access layer.
+  isochrone_origins:
+    path: data/isochrone_origins.csv
+    sha256: ""
+
+  # Census tract population (demand denominator for the spatial access layer).
+  tract_female_population:
+    path: data/tract_female_population.csv
+    sha256: ""
