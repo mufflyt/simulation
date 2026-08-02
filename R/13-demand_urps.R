@@ -131,6 +131,127 @@ stopifnot(
   identical(names(WU2011_SURGERY_RATE_PER_1000), DEMAND_AGE_BANDS)
 )
 
+# ---- Census NPP population loader (real demand driver) --------------------
+#
+# The example population (example_female_population_by_band) is a placeholder.
+# The real demand driver is the Census 2023 National Population Projections
+# single-year-of-age file (np2023_d1_<series>.csv), resolved through the
+# canonical-source registry so the path + SHA-256 live in exactly one place
+# (config/canonical_sources.yml, keys census_npp_female_{mid,low,hi}).
+#
+# Age-band aggregation maps DEMAND_AGE_BANDS onto the file's POP_<age> columns.
+# The female-population filter (SEX==2 & ORIGIN==0 & RACE==0) is cliff's SSOT
+# (R/demand_denominator.R::npp_total_female): a wrong ORIGIN/RACE code silently
+# narrows the denominator to a subgroup, so it is guarded, not inlined ad hoc.
+
+# Inclusive single-year age bounds for each DEMAND_AGE_BAND (top bucket = 100+).
+NPP_AGE_BAND_BOUNDS <- list(
+  "20-39" = c(20, 39), "40-59" = c(40, 59), "60-64" = c(60, 64),
+  "65-79" = c(65, 79), "80+"   = c(80, 100)
+)
+NPP_MAX_AGE <- 100L
+stopifnot(identical(names(NPP_AGE_BAND_BOUNDS), DEMAND_AGE_BANDS))
+
+#' Select total US female rows from a Census NPP table (cliff SSOT filter)
+#'
+#' @param df Data frame read from an NPP CSV (integer SEX/ORIGIN/RACE columns).
+#' @return The all-origins, all-races female rows (one per projected year).
+#' @keywords internal
+npp_total_female <- function(df) {
+  need <- c("SEX", "ORIGIN", "RACE", "YEAR")
+  missing <- setdiff(need, names(df))
+  if (length(missing) > 0) {
+    stop(sprintf("NPP file missing column(s): %s", paste(missing, collapse = ", ")),
+         call. = FALSE)
+  }
+  df[df$SEX == 2 & df$ORIGIN == 0 & df$RACE == 0, , drop = FALSE]
+}
+
+#' Load the Census-NPP female population by DEMAND_AGE_BAND
+#'
+#' Reads the canonical NPP series, applies the SSOT female filter, and sums the
+#' single-year POP_<age> columns into the model's demand age bands.
+#'
+#' @param series One of "mid" (primary), "low", or "hi" (the NPP low/mid/high
+#'   variants that drive demand uncertainty).
+#' @param years Optional integer year filter (default: all years in the file).
+#' @param mode Reproducibility mode (governs SHA-256 drift handling in the
+#'   resolver).
+#' @return Tibble `year`, `age_band` (a `DEMAND_AGE_BANDS` factor order), `female_pop`.
+#' @export
+npp_female_by_band <- function(series = c("mid", "low", "hi"),
+                               years = NULL,
+                               mode = resolve_reproducibility_mode()) {
+  series <- match.arg(series)
+  path <- resolve_canonical(sprintf("census_npp_female_%s", series), mode = mode)
+  df <- npp_total_female(utils::read.csv(path))
+
+  band_totals <- lapply(DEMAND_AGE_BANDS, function(b) {
+    bounds <- NPP_AGE_BAND_BOUNDS[[b]]
+    cols <- sprintf("POP_%d", bounds[1]:bounds[2])
+    missing <- setdiff(cols, names(df))
+    if (length(missing) > 0) {
+      stop(sprintf("NPP file missing age column(s) for band %s: %s",
+                   b, paste(missing, collapse = ", ")), call. = FALSE)
+    }
+    tibble::tibble(year = df$YEAR, age_band = b,
+                   female_pop = rowSums(df[, cols, drop = FALSE]))
+  })
+
+  out <- dplyr::bind_rows(band_totals)
+  if (!is.null(years)) out <- dplyr::filter(out, .data$year %in% years)
+  out$age_band <- factor(out$age_band, levels = DEMAND_AGE_BANDS)
+  dplyr::arrange(out, .data$year, .data$age_band) %>%
+    dplyr::mutate(age_band = as.character(.data$age_band))
+}
+
+#' Load Census-NPP women 65+ (crude single-denominator path)
+#'
+#' @inheritParams npp_female_by_band
+#' @return Tibble `year`, `population_65_plus`.
+#' @export
+npp_women_65plus <- function(series = c("mid", "low", "hi"),
+                             years = NULL,
+                             mode = resolve_reproducibility_mode()) {
+  npp_female_by_band(series, years, mode) %>%
+    dplyr::filter(.data$age_band %in% c("65-79", "80+")) %>%
+    dplyr::group_by(.data$year) %>%
+    dplyr::summarise(population_65_plus = sum(.data$female_pop), .groups = "drop")
+}
+
+#' Resolve the demand population, preferring real NPP data with example fallback
+#'
+#' Returns the canonical Census-NPP age-banded female population when the file is
+#' registered and present; otherwise falls back to
+#' [example_female_population_by_band()] (and, in `strict` mode, re-raises so an
+#' uncalibrated run cannot masquerade as a result).
+#'
+#' @param years Integer years to return.
+#' @param series NPP series (default "mid").
+#' @param mode Reproducibility mode.
+#' @return List: `pop_by_band` (tibble) and `source` ("census_npp_<series>" or
+#'   "example").
+#' @export
+resolve_demand_population <- function(years = 2025:2050,
+                                      series = "mid",
+                                      mode = resolve_reproducibility_mode()) {
+  attempt <- tryCatch(
+    npp_female_by_band(series, years = years, mode = mode),
+    error = function(e) e
+  )
+  if (inherits(attempt, "error")) {
+    if (identical(mode, "strict")) {
+      stop(sprintf("resolve_demand_population(strict): NPP series '%s' unavailable: %s",
+                   series, conditionMessage(attempt)), call. = FALSE)
+    }
+    .msg_warn(sprintf("Census NPP '%s' unavailable (%s); using EXAMPLE population",
+                      series, conditionMessage(attempt)))
+    return(list(pop_by_band = example_female_population_by_band(years),
+                source = "example"))
+  }
+  list(pop_by_band = attempt, source = sprintf("census_npp_%s", series))
+}
+
 # ---- Index helpers --------------------------------------------------------
 
 #' Build a constant-geometric-growth index between two published anchors

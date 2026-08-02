@@ -12,11 +12,22 @@
 # in relaxed). Add a checksum for any file that drives a published number.
 
 sources:
-  # Census 2023 National Population Projections -- women 65+ demand driver.
-  # (cliff demand_denominator.R uses np2023_d1_{mid,low,hi}.csv.)
-  population_projection_mid:
-    path: data-raw/np2023-t2.xlsx
-    sha256: ""      # fill in once the file is committed / frozen
+  # Census 2023 National Population Projections, single-year-of-age detail file
+  # (np2023_d1_<series>.csv, columns POP_0..POP_100). The demand driver is the
+  # projected female population by age band; the SSOT female filter is
+  # SEX==2 & ORIGIN==0 & RACE==0 (R/13-demand_urps.R::npp_total_female).
+  # Loaded via npp_female_by_band(series). Mid is the primary series; low/hi
+  # drive the demand uncertainty band. Source: US Census Bureau, 2023 NPP,
+  # Main projections series (www.census.gov/programs-surveys/popproj.html).
+  census_npp_female_mid:
+    path: data-raw/census/np2023_d1_mid.csv
+    sha256: "1532822751d0d08b69bb9947e4f64cb2d2217229000bd7a97997d305b890d16f"
+  census_npp_female_low:
+    path: data-raw/census/np2023_d1_low.csv
+    sha256: "7b780edb10a0d3fa219db9477829c9a2a0a9c8f44708ab828ff52a2f3af971d8"
+  census_npp_female_hi:
+    path: data-raw/census/np2023_d1_hi.csv
+    sha256: "d3ff9d25cc0f1b1425641f9a5512afd335d0d048b3824fbb539e6de14890d5b3"
 
   # Base-year FPMRS active workforce roster (age-structured; cliff SSOT).
   fpmrs_baseline_roster:

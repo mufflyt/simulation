@@ -15,14 +15,20 @@
 
 # ---- Canonical source resolver --------------------------------------------
 
-.canonical_config_path <- function() {
-  # Anchored on the project root (the simulation.Rproj directory).
-  candidates <- c(
-    file.path(getwd(), "config", "canonical_sources.yml"),
-    file.path(dirname(getwd()), "config", "canonical_sources.yml")
-  )
-  hit <- candidates[file.exists(candidates)]
-  if (length(hit) > 0) hit[1] else candidates[1]
+.canonical_config_path <- function(start = getwd()) {
+  # Walk up from `start` looking for config/canonical_sources.yml, so the
+  # resolver works from any working directory (repo root, scripts/, or the
+  # tests/testthat/ dir that testthat sets during checks).
+  dir <- normalizePath(start, mustWork = FALSE)
+  repeat {
+    candidate <- file.path(dir, "config", "canonical_sources.yml")
+    if (file.exists(candidate)) return(candidate)
+    parent <- dirname(dir)
+    if (identical(parent, dir)) break   # reached filesystem root
+    dir <- parent
+  }
+  # Fallback: the conventional repo-root location (may not exist yet).
+  file.path(normalizePath(start, mustWork = FALSE), "config", "canonical_sources.yml")
 }
 
 #' Resolve a canonical input path by logical name (fail-closed)

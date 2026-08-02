@@ -73,3 +73,8 @@ outputs/
 !artifacts/backtest_*.csv
 !artifacts/backtest_*.parquet
 !figures/backtest_*.png
+
+# Canonical Census NPP inputs (vetted reference data; build-ignored so the
+# package build stays small -- see .Rbuildignore ^data-raw$).
+!data-raw/census/
+!data-raw/census/*.csv
