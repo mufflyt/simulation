@@ -159,7 +159,11 @@ example_capacity_survey <- function() {
 #'   `mufflyaccess::urps_counts_long()` when no roster is supplied.
 #' @param years Integer projection years.
 #' @param subspecialty Subspecialty label.
-#' @param pop_by_band Age-banded female population; defaults to the example.
+#' @param pop_by_band Age-banded female population. When NULL, resolved from the
+#'   canonical Census-NPP series ([resolve_demand_population()]), falling back to
+#'   [example_female_population_by_band()] if the file is absent.
+#' @param population_series Census-NPP series when `pop_by_band` is NULL: one of
+#'   "mid" (default), "low", "hi".
 #' @param supply_scenarios,demand_scenarios Scenario registries.
 #' @param baseline_gap_estimate A [baseline_gap()] object; NULL triggers the
 #'   fail-closed guard.
@@ -182,6 +186,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           years = 2025:2050,
                                           subspecialty = "FPMRS",
                                           pop_by_band = NULL,
+                                          population_series = "mid",
                                           supply_scenarios = NULL,
                                           demand_scenarios = NULL,
                                           baseline_gap_estimate = NULL,
@@ -205,7 +210,15 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   }
   base_year <- min(years)
 
-  if (is.null(pop_by_band)) pop_by_band <- example_female_population_by_band(years)
+  # Prefer the real Census-NPP female population (canonical source); fall back to
+  # the example series when the file is absent (strict mode re-raises instead).
+  if (is.null(pop_by_band)) {
+    demand_pop <- resolve_demand_population(years, series = population_series, mode = mode)
+    pop_by_band <- demand_pop$pop_by_band
+    population_source <- demand_pop$source
+  } else {
+    population_source <- "caller_supplied"
+  }
   if (is.null(supply_scenarios)) supply_scenarios <- supply_scenario_registry(baseline_entrants)
   if (is.null(demand_scenarios)) demand_scenarios <- demand_scenario_registry()
   validate_scenario_registry(supply_scenarios, "supply")
@@ -358,6 +371,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       subspecialty = subspecialty,
       baseline_supply = baseline_supply,
       supply_geography = supply_geography,
+      population_source = population_source,
       supply_contract = contract,
       example_only = example_only,
       cohort_provenance = cohort,
