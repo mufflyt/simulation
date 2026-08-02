@@ -67,3 +67,9 @@ outputs/
 !dpmm_demand_contract_v*.csv
 !dpmm_demand_contract_v*_manifest.json
 !tests/**/*.csv
+
+# Back-test artifacts are deliverables and must be tracked despite the broad
+# *.csv / *.png / *.parquet rules above.
+!artifacts/backtest_*.csv
+!artifacts/backtest_*.parquet
+!figures/backtest_*.png

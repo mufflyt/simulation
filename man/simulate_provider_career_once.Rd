@@ -12,6 +12,7 @@ simulate_provider_career_once(
   conversion_floor = 1,
   subspecialty = "FPMRS",
   retirement_schedule = RETIREMENT_HAZARD_BY_AGE,
+  career_change_hazard = CAREER_CHANGE_HAZARD_UNDER_50,
   fte_method = "hours",
   hours_model = NULL,
   hours_multiplier = 1,
@@ -39,6 +40,9 @@ fractional part is realised stochastically).}
 
 \item{retirement_schedule}{Single-year-of-age retirement hazard schedule.
 Scenarios pass a SHIFTED schedule (retire n years earlier/later).}
+
+\item{career_change_hazard}{Annual departure hazard below the retirement age.
+Set to 0, with a zero retirement schedule, for a no-attrition run.}
 
 \item{fte_method}{FTE method: "hours", "participation", or "legacy_weight".}
 

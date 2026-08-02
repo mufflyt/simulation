@@ -251,6 +251,8 @@ initialize_provider_agents <- function(n,
 #' @param subspecialty Subspecialty label for injected entrants.
 #' @param retirement_schedule Single-year-of-age retirement hazard schedule.
 #'   Scenarios pass a SHIFTED schedule (retire n years earlier/later).
+#' @param career_change_hazard Annual departure hazard below the retirement age.
+#'   Set to 0, with a zero retirement schedule, for a no-attrition run.
 #' @param fte_method FTE method: "hours", "participation", or "legacy_weight".
 #' @param hours_model Optional fitted hours model from
 #'   [fit_clinical_hours_model()]; when NULL the reference schedule is used.
@@ -274,6 +276,7 @@ simulate_provider_career_once <- function(agents,
                                           conversion_floor = 1.0,
                                           subspecialty = "FPMRS",
                                           retirement_schedule = RETIREMENT_HAZARD_BY_AGE,
+                                          career_change_hazard = CAREER_CHANGE_HAZARD_UNDER_50,
                                           fte_method = "hours",
                                           hours_model = NULL,
                                           hours_multiplier = 1.0,
@@ -357,7 +360,8 @@ simulate_provider_career_once <- function(agents,
     if (length(active)) {
       hz <- if (is.null(hazard_table)) {
         departure_hazard(v_age[active], v_sex[active],
-                         retirement_schedule = retirement_schedule)
+                         retirement_schedule = retirement_schedule,
+                         career_change_hazard = career_change_hazard)
       } else {
         retirement_hazard(v_age[active], hazard_table)
       }
