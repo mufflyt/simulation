@@ -489,3 +489,84 @@ wilson_ci <- function(successes, n, conf_level = 0.95) {
     hi = ifelse(n > 0, pmin(1, center + half), NA_real_)
   )
 }
+
+# ---- E2SFCA distance-decay weight presets (sensitivity registry) -----------
+#
+# The default decay weights (Luo & Qi 2009) are an assumption. twostep ships
+# alternative presets so a finding can be shown robust (or not) to the decay
+# choice. Source: twostep scripts/sensitivity_e2sfca_2020.R.
+
+#' Gaussian-kernel band weights normalised to the 30-min band
+#'
+#' Port of twostep::gaussian_band_weights. A continuous Gaussian distance-decay
+#' G(d) = exp(-d^2 / (2 sigma^2)) evaluated at the band midpoints and rescaled so
+#' the 30-min band weight is 1 -- an alternative to the step weights.
+#'
+#' @param bands Integer drive-time bands (minutes).
+#' @param sigma Gaussian bandwidth in minutes.
+#' @return Named numeric cumulative weights keyed by band.
+#' @export
+gaussian_band_weights <- function(bands = c(30L, 60L, 120L, 180L), sigma = 60) {
+  g <- exp(-(bands^2) / (2 * sigma^2))
+  w <- g / g[1]
+  stats::setNames(w, as.character(bands))
+}
+
+# Named cumulative band-weight presets. All key to the 30/60/120/180 bands.
+# (gaussian_band_weights() is defined above so this load-time call resolves.)
+E2SFCA_WEIGHT_PRESETS <- list(
+  base    = c("30" = 1.00, "60" = 0.68, "120" = 0.22, "180" = 0.09),  # Luo & Qi 2009
+  sharper = c("30" = 1.00, "60" = 0.42, "120" = 0.09, "180" = 0.02),  # steeper decay
+  slower  = c("30" = 1.00, "60" = 0.85, "120" = 0.55, "180" = 0.30),  # gentler decay
+  drop180 = c("30" = 1.00, "60" = 0.68, "120" = 0.22, "180" = 0.00),  # exclude 180-min band
+  gaussian = gaussian_band_weights()                                  # Gaussian kernel, sigma=60
+)
+
+#' List the available E2SFCA weight presets
+#' @return Character vector of preset names.
+#' @export
+e2sfca_weight_presets <- function() names(E2SFCA_WEIGHT_PRESETS)
+
+#' Compute an access surface under a named weight preset
+#'
+#' @param membership,supply,demand Passed to [compute_e2sfca_access()].
+#' @param preset One of [e2sfca_weight_presets()].
+#' @param step2_power 1 = E2SFCA, 2 = M2SFCA.
+#' @param per_capita_scale Reporting scale.
+#' @return The [compute_e2sfca_access()] result under that preset's weights.
+#' @export
+compute_access_preset <- function(membership, supply, demand,
+                                  preset = "base", step2_power = 1,
+                                  per_capita_scale = 1e5) {
+  if (!preset %in% names(E2SFCA_WEIGHT_PRESETS)) {
+    stop(sprintf("Unknown weight preset '%s'. Available: %s",
+                 preset, paste(e2sfca_weight_presets(), collapse = ", ")), call. = FALSE)
+  }
+  compute_e2sfca_access(membership, supply, demand,
+                        weights = E2SFCA_WEIGHT_PRESETS[[preset]],
+                        step2_power = step2_power, per_capita_scale = per_capita_scale)
+}
+
+#' Sensitivity sweep: national mean access across every weight preset
+#'
+#' Runs the access surface under each decay preset and returns the
+#' population-weighted national mean and zero-access share for each, so a finding
+#' can be reported as robust (or not) to the distance-decay assumption.
+#'
+#' @param membership,supply,demand Passed to [compute_e2sfca_access()].
+#' @param presets Presets to sweep (default all).
+#' @param step2_power 1 = E2SFCA, 2 = M2SFCA.
+#' @return Tibble: `preset`, `mean_access`, `zero_access_share`.
+#' @export
+access_weight_sensitivity <- function(membership, supply, demand,
+                                      presets = e2sfca_weight_presets(),
+                                      step2_power = 1) {
+  rows <- lapply(presets, function(p) {
+    res <- compute_access_preset(membership, supply, demand, preset = p,
+                                 step2_power = step2_power)
+    s <- summarize_access(res$access)
+    tibble::tibble(preset = p, mean_access = s$mean_access,
+                   zero_access_share = s$zero_access_share)
+  })
+  dplyr::bind_rows(rows)
+}
