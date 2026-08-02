@@ -260,3 +260,59 @@ lifecourse_demand_trajectory <- function(pop_by_age_year,
   )
   list(service_volumes = service_volumes, demand_summary = demand_summary)
 }
+
+# ---- Integration with the workforce FTE conversion (R/17) -------------------
+
+#' Required provider FTE from the life-course demand pathway
+#'
+#' Runs [lifecourse_demand_trajectory()] and converts its annual service volumes
+#' to required FTE with [convert_workload_to_fte()] (R/17). The provider-type
+#' delegation matrix and the work-RVU conversion are therefore REUSED, not
+#' reimplemented here.
+#'
+#' @param pop_by_age_year Tibble with `year`, `age`, `population`.
+#' @param wrvu_per_fte Annual work RVUs per clinical FTE. No default on purpose:
+#'   derive it from a base-year anchor with [calibrate_wrvu_per_fte()] rather than
+#'   assuming a productivity level. For an illustrative run pass
+#'   `WRVU_PER_FTE_BENCHMARK[["median"]]`.
+#' @param scenario,n,seed,... Passed to [lifecourse_demand_trajectory()].
+#' @return A list with `service_volumes`, `demand_summary`, and `required_fte`
+#'   (the tibble returned by [convert_workload_to_fte()]).
+#' @export
+lifecourse_required_fte <- function(pop_by_age_year, wrvu_per_fte,
+                                    scenario = "baseline", n = 1e5, seed = NULL, ...) {
+  traj <- lifecourse_demand_trajectory(pop_by_age_year, scenario = scenario,
+                                       n = n, seed = seed, ...)
+  fte <- convert_workload_to_fte(traj$service_volumes, wrvu_per_fte = wrvu_per_fte,
+                                 method = "wrvu")
+  list(service_volumes = traj$service_volumes,
+       demand_summary   = traj$demand_summary,
+       required_fte     = fte)
+}
+
+#' Life-course demand as a concordance estimand
+#'
+#' Reshapes a life-course demand summary into the long demand-estimand format used
+#' by [compute_demand_denominators()], [compute_growth_adequacy()] and
+#' [assess_demand_concordance()], so the childbirth-driven pathway can be checked
+#' for concordance against the aging-population denominators D1/D2/D3 as an
+#' independent fourth estimand (its generator differs, so it is not a proportional
+#' rescaling — exactly the real-concordance check the concordance framework wants).
+#'
+#' @param demand_summary The `demand_summary` from [lifecourse_demand_trajectory()].
+#' @param measure Which series to treat as demand: "service_units" (procedural
+#'   load) or "care_seeking".
+#' @param estimand,label Estimand id and label.
+#' @return Tibble with `year`, `estimand`, `label`, `demand_cases`.
+#' @export
+lifecourse_demand_estimand <- function(demand_summary,
+                                       measure = c("service_units", "care_seeking"),
+                                       estimand = "D4_lifecourse",
+                                       label = "Life-course demand (vaginal-delivery driven)") {
+  measure <- match.arg(measure)
+  col <- if (measure == "service_units") "service_units_national" else "care_seeking_national"
+  assertthat::assert_that(is.data.frame(demand_summary),
+                          all(c("year", col) %in% names(demand_summary)))
+  tibble::tibble(year = demand_summary$year, estimand = estimand, label = label,
+                 demand_cases = demand_summary[[col]])
+}
