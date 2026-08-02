@@ -48,12 +48,16 @@
 #'   `inc_ui`/`inc_pop`/`inc_ai` (expected national new cases in the year).
 #' @export
 simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
-                               transitions = dmdm_default_transitions()) {
+                               transitions = dmdm_default_transitions(),
+                               pop_by_age_year = NULL) {
   req <- c("age", "cumulative_vaginal_deliveries", "years_since_last_vaginal_birth",
            "bmi", "hysterectomy", "menopause_status", "comorbidity",
            "weight", "p_ui", "p_pop", "p_ai")
   stopifnot(is.data.frame(init), all(req %in% names(init)), end_year >= start_year)
   if (!is.null(entrants)) stopifnot(all(c(req, "entry_year") %in% names(entrants)))
+  if (!is.null(pop_by_age_year)) {
+    stopifnot(all(c("year", "age", "population") %in% names(pop_by_age_year)))
+  }
 
   a <- init[, req, drop = FALSE]
   years <- start_year:end_year
@@ -63,6 +67,20 @@ simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
     if (!is.null(entrants) && y > start_year) {
       add <- entrants[entrants$entry_year == y, req, drop = FALSE]
       if (nrow(add)) a <- rbind(a, add)
+    }
+    # Optional: rescale weights within each integer age so counts match the
+    # Census projection for year y, while the disease RATES (p_ui/p_pop/p_ai)
+    # carried by each track are left untouched. Dynamics supply the rates;
+    # official demography supplies the counts. Ages absent from the projection
+    # keep their current weight.
+    if (!is.null(pop_by_age_year)) {
+      proj <- pop_by_age_year[pop_by_age_year$year == y, , drop = FALSE]
+      tgt <- stats::setNames(proj$population, as.character(proj$age))
+      cur <- tapply(a$weight, a$age, sum)
+      sf <- stats::setNames(rep(1, length(cur)), names(cur))
+      common <- intersect(names(cur), names(tgt))
+      for (ag in common) if (cur[[ag]] > 0) sf[[ag]] <- tgt[[ag]] / cur[[ag]]
+      a$weight <- a$weight * sf[as.character(a$age)]
     }
     W <- sum(a$weight)
     wm <- function(p) if (W > 0) sum(a$weight * p) / W else NA_real_
@@ -119,12 +137,17 @@ simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
 #' @param n_init,n_entrants Agent-track counts for the base year and each entrant
 #'   cohort.
 #' @param seed,risk_params,transitions Passed through.
+#' @param reweight_to_projection If TRUE, rescale each year's age-specific weights
+#'   to `pop_by_age_year` so population counts match the Census projection while
+#'   the model supplies the disease rates. Default FALSE (internal cohort-component
+#'   demography).
 #' @return The per-year data frame from [simulate_dmdm_open()].
 #' @export
 dmdm_open_prevalence_trajectory <- function(pop_by_age_year, start_year, end_year,
                                             entry_age = 40L, n_init = 5e4, n_entrants = 2e3,
                                             seed = NULL, risk_params = lifecourse_risk_params(),
-                                            transitions = dmdm_default_transitions()) {
+                                            transitions = dmdm_default_transitions(),
+                                            reweight_to_projection = FALSE) {
   stopifnot(all(c("year", "age", "population") %in% names(pop_by_age_year)))
   pa0 <- pop_by_age_year[pop_by_age_year$year == start_year, c("age", "population")]
   init <- .dmdm_open_agents(pa0, start_year, entry_age, n_init, seed = seed,
@@ -141,5 +164,6 @@ dmdm_open_prevalence_trajectory <- function(pop_by_age_year, start_year, end_yea
   })
   entrants <- dplyr::bind_rows(ent_list)
 
-  simulate_dmdm_open(init, entrants, start_year, end_year, transitions = transitions)
+  simulate_dmdm_open(init, entrants, start_year, end_year, transitions = transitions,
+                     pop_by_age_year = if (reweight_to_projection) pop_by_age_year else NULL)
 }
