@@ -80,6 +80,24 @@ CAPACITY_SURVEY_TEMPLATE <- tibble::tribble(
 #' @export
 capacity_category_adequacy <- function(category, seen = NA_real_, additional = NA_real_) {
   category <- match.arg(category, CAPACITY_SURVEY_TEMPLATE$category)
+  if (category != "equilibrium") {
+    # Each formula has its own denominator, and each can vanish: `seen` of zero
+    # for the surplus and unmet forms, and `seen == additional` for the
+    # extended-hours form (a respondent whose entire load was overtime). An
+    # unguarded divide gives Inf, which would enter the weighted mean as a
+    # finite-looking adequacy.
+    denom <- switch(category,
+                    surplus = seen + additional,
+                    shortage_hours = seen - additional,
+                    shortage_unmet = seen)
+    if (!is.finite(denom) || denom <= 0) {
+      stop(sprintf(paste("capacity_category_adequacy: the '%s' denominator is %s.",
+                         "seen = %s, additional = %s. This respondent group cannot",
+                         "yield an adequacy ratio."),
+                   category, format(denom), format(seen), format(additional)),
+           call. = FALSE)
+    }
+  }
   switch(
     category,
     equilibrium    = 1.0,

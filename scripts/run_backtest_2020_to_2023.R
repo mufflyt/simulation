@@ -42,6 +42,24 @@ utils::write.csv(bt$summary, "artifacts/backtest_2020_to_2023_summary.csv",
 utils::write.csv(bt$trajectory, "artifacts/backtest_2020_to_2023_trajectory.csv",
                  row.names = FALSE)
 
+# Provenance manifest: which contract artifact these numbers were scored
+# against, so a stale artifact is detectable rather than silent.
+manifest <- list(
+  generated_by = "scripts/run_backtest_2020_to_2023.R",
+  cutoff_year = bt$settings$cutoff_year,
+  target_year = bt$settings$target_year,
+  n_iterations = bt$settings$n_iterations,
+  seed = bt$settings$seed,
+  target_value = bt$target$value,
+  target_rationale = bt$target$rationale,
+  retired_values_rejected = bt$target$retired_values_rejected,
+  observed_series_applies_attrition = bt$target$observed_series_applies_attrition,
+  leakage_audit = bt$leakage_audit,
+  urps_artifact = bt$provenance
+)
+jsonlite::write_json(manifest, "artifacts/backtest_2020_to_2023_manifest.json",
+                     auto_unbox = TRUE, pretty = TRUE, null = "null")
+
 if (requireNamespace("arrow", quietly = TRUE)) {
   arrow::write_parquet(bt$iterations,
                        "artifacts/backtest_2020_to_2023_iterations.parquet")

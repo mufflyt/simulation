@@ -211,30 +211,43 @@ export_hdmm_demand_contract <- function(trajectory,
   if (!dir.exists(output_directory)) dir.create(output_directory, recursive = TRUE)
   trajectory <- trajectory[order(trajectory$year), , drop = FALSE]
 
-  make_tier <- function(tier, value_vec) {
+  # Optional lo/hi columns (from lifecourse_demand_trajectory_ci) become
+  # national_cases_lo/hi and denominator_index_lo/hi; absent -> NA. All indices
+  # are rebased to the SAME median base-year value so the band is consistent.
+  getcol <- function(nm) if (nm %in% names(trajectory)) trajectory[[nm]] else NULL
+  make_tier <- function(tier, value_vec, lo_vec = NULL, hi_vec = NULL) {
     base_row <- which(trajectory$year == base_year)
     base_val <- if (length(base_row)) value_vec[base_row[1]] else NA_real_
+    nyr <- length(value_vec)
+    if (is.null(lo_vec)) lo_vec <- rep(NA_real_, nyr)
+    if (is.null(hi_vec)) hi_vec <- rep(NA_real_, nyr)
+    idx <- function(v) if (!is.na(base_val) && base_val > 0) 100 * v / base_val else rep(NA_real_, length(v))
     data.frame(
-      model              = "HDMM",
-      model_version      = model_version,
-      calibration_status = calibration_status,
-      geography          = "national",
-      population_scope   = population_scope,
-      denominator_tier   = tier,
-      calendar_year      = trajectory$year,
-      prevalence         = NA_real_,
-      prevalence_lo      = NA_real_,
-      prevalence_hi      = NA_real_,
-      national_cases     = value_vec,
-      denominator_index  = if (!is.na(base_val) && base_val > 0)
-                             100 * value_vec / base_val else NA_real_,
-      stringsAsFactors   = FALSE
+      model                = "HDMM",
+      model_version        = model_version,
+      calibration_status   = calibration_status,
+      geography            = "national",
+      population_scope     = population_scope,
+      denominator_tier     = tier,
+      calendar_year        = trajectory$year,
+      prevalence           = NA_real_,
+      prevalence_lo        = NA_real_,
+      prevalence_hi        = NA_real_,
+      national_cases       = value_vec,
+      national_cases_lo    = lo_vec,
+      national_cases_hi    = hi_vec,
+      denominator_index    = idx(value_vec),
+      denominator_index_lo = idx(lo_vec),
+      denominator_index_hi = idx(hi_vec),
+      stringsAsFactors     = FALSE
     )
   }
 
   tidy <- rbind(
-    make_tier("tier5_care_seeking", trajectory$care_seeking_national),
-    make_tier("tier6_procedural",   trajectory$service_units_national)
+    make_tier("tier5_care_seeking", trajectory$care_seeking_national,
+              getcol("care_seeking_national_lo"), getcol("care_seeking_national_hi")),
+    make_tier("tier6_procedural",   trajectory$service_units_national,
+              getcol("service_units_national_lo"), getcol("service_units_national_hi"))
   )
   tidy <- tidy[order(tidy$denominator_tier, tidy$calendar_year), , drop = FALSE]
 
