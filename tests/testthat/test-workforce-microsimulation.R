@@ -20,10 +20,11 @@ test_that("active-in-year uses a STRICT > predicate (first-inactive convention)"
     retirement_year = c(2030, NA, NA)
   )
   # a retires 2030 (first-inactive) => active THROUGH 2029, not in 2030.
-  expect_equal(provider_active_in_year(agents, 2029), c(TRUE, TRUE, FALSE))
-  expect_equal(provider_active_in_year(agents, 2030), c(FALSE, TRUE, FALSE))
-  # c has not yet entered in 2025.
-  expect_equal(provider_active_in_year(agents, 2026), c(FALSE, TRUE, TRUE))
+  expect_equal(provider_active_in_year(agents, 2029), c(TRUE, TRUE, TRUE))
+  expect_equal(provider_active_in_year(agents, 2030), c(FALSE, TRUE, TRUE))
+  # c enters practice in 2026: not active in 2025, active from 2026.
+  expect_equal(provider_active_in_year(agents, 2025), c(TRUE, TRUE, FALSE))
+  expect_equal(provider_active_in_year(agents, 2026), c(TRUE, TRUE, TRUE))
 })
 
 test_that("workforce outlook classification matches cliff cutpoints", {
