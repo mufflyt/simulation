@@ -373,7 +373,12 @@ implied_urps_share <- function(volumes, required_fte,
                                indirect_share = INDIRECT_TIME_SHARE) {
   total <- service_volume_to_wrvu(volumes, workload, delegation = NULL)
   gross_up <- 1 / (1 - indirect_share)
-  share <- required_fte * wrvu_per_fte / (total$work_rvu * gross_up)
+  denom <- total$work_rvu * gross_up
+  if (!is.finite(denom) || denom <= 0) {
+    stop("implied_urps_share: the modelled service basket has zero total work ",
+         "RVUs, so no share is defined. Check the service volumes.", call. = FALSE)
+  }
+  share <- required_fte * wrvu_per_fte / denom
   .msg_info(sprintf(
     "For %s FTE at %s wRVU/FTE, URPS would deliver %.1f%% of the modelled service volume.",
     format(round(required_fte)), format(wrvu_per_fte, big.mark = ","), 100 * share))
@@ -490,8 +495,12 @@ compute_fte_gap <- function(supply, required, supply_col = "effective_fte_median
   safe_left_join(s, r, by = "year", min_match_rate = 1.0) %>%
     dplyr::mutate(
       gap_fte = .data$supplied_fte - .data$required_fte,
-      gap_pct = 100 * .data$gap_fte / .data$required_fte,
-      pct_supply_to_demand = 100 * .data$supplied_fte / .data$required_fte
+      # Required FTE of zero is degenerate, not infinite: a percentage of nothing
+      # is undefined, and returning Inf would propagate into every downstream
+      # summary as a plausible-looking number.
+      gap_pct = ssot_safe_divide(100 * .data$gap_fte, .data$required_fte),
+      pct_supply_to_demand = ssot_safe_divide(100 * .data$supplied_fte,
+                                              .data$required_fte)
     )
 }
 

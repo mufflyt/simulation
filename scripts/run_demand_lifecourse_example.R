@@ -72,4 +72,26 @@ cat("Final-year adequacy spread:", round(conc$final_year_spread, 4), "\n")
 cat("All estimands agree on the conclusion:", conc$conclusion_agrees, "\n")
 print(conc$final_year_adequacy)
 
-cat("\nNote: placeholder coefficients - wiring demonstration, not a result.\n")
+# --- Step 4: parameter-uncertainty intervals on demand ----------------------
+ci <- lifecourse_demand_trajectory_ci(pop_by_age_year, n = 20000, n_draws = 100, seed = 1)
+cat("\n===== DEMAND WITH PARAMETER-UNCERTAINTY INTERVALS (final year) =====\n")
+ci %>%
+  dplyr::filter(year == max(year)) %>%
+  dplyr::transmute(year,
+                   service_units = round(service_units_national),
+                   lo = round(service_units_national_lo),
+                   hi = round(service_units_national_hi)) %>%
+  print()
+
+# --- Step 5: calibrate base-year volumes to national anchors -----------------
+# Illustrative "observed" anchors (replace with the sources in
+# config/calibration_targets.yml: HCUP SASD / Medicare CPT 57288, NAMCS/MEPS).
+predicted <- lifecourse_anchor_predictions(out$service_volumes, base_year = min(years))
+observed <- predicted %>% dplyr::mutate(observed = predicted * 0.9) %>%
+  dplyr::select(category, observed)                    # pretend the model overshoots 11%
+cal <- calibrate_lifecourse_demand(out$service_volumes, observed, base_year = min(years))
+cat("\n===== CALIBRATION SCALARS (observed / predicted) =====\n")
+cal$scalars %>% dplyr::select(category, predicted, observed, scalar, flagged) %>%
+  dplyr::mutate(dplyr::across(where(is.numeric), ~round(.x, 3))) %>% print()
+
+cat("\nNote: placeholder coefficients + illustrative anchors - wiring demonstration, not a result.\n")

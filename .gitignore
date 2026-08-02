@@ -72,12 +72,15 @@ outputs/
 # *.csv / *.png / *.parquet rules above.
 !artifacts/backtest_*.csv
 !artifacts/backtest_*.parquet
+!artifacts/backtest_*.json
 !figures/backtest_*.png
 
 # Canonical Census NPP inputs (vetted reference data; build-ignored so the
 # package build stays small -- see .Rbuildignore ^data-raw$).
 !data-raw/census/
 !data-raw/census/*.csv
+!data-raw/calibration/
+!data-raw/calibration/*.csv
 
 # Cited obstetric reference data shipped with the package.
 !inst/extdata/**/*.csv

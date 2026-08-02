@@ -168,9 +168,16 @@ example_capacity_survey <- function() {
 #' @param baseline_gap_estimate A [baseline_gap()] object; NULL triggers the
 #'   fail-closed guard.
 #' @param n_iterations Monte-Carlo replicates per scenario.
-#' @param baseline_entrants Baseline annual entrants.
+#' @param baseline_entrants Baseline annual entrants. `nrmp_entrants("URPS")`
+#'   supplies the real NRMP-matched value (70).
+#' @param retirement_source Base retirement hazard: "hwsm" (default, the
+#'   HWSM/FutureDocs literature curve) or "urps_empirical" (cliff's observed
+#'   URPS hazards for ages 50-69 with the HWSM tail past 70). Scenario age-shifts
+#'   apply on top of whichever base is chosen.
 #' @param calibration Optional calibration scalars from
 #'   [fit_calibration_scalars()].
+#' @param parameter_spec Optional [supply_parameter_spec()]; defaults to one
+#'   built from the observed certification series.
 #' @param allow_analogy Permit inputs derived by analogy from another specialty
 #'   (currently the delegation matrix). Declared in the run metadata either way.
 #' @param output_dir If non-NULL, write provenance-tagged artifacts here.
@@ -192,15 +199,37 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           baseline_gap_estimate = NULL,
                                           n_iterations = 200,
                                           baseline_entrants = 55,
+                                          retirement_source = c("hwsm", "urps_empirical"),
                                           calibration = NULL,
+                                          parameter_spec = NULL,
                                           allow_analogy = TRUE,
                                           output_dir = NULL,
                                           seed = 20260801L,
                                           verbose = TRUE) {
   supply_geography <- match.arg(supply_geography)
+  retirement_source <- match.arg(retirement_source)
   mode <- resolve_reproducibility_mode()
   seed_microsimulation(seed, mode)
   run_id <- make_run_id(paste0("workforce_", tolower(subspecialty)), seed, mode)
+
+  # Base retirement schedule: the HWSM/FutureDocs literature curve by default, or
+  # cliff's empirical URPS hazards (observed 50-69 + HWSM tail past 70) opt-in.
+  base_retirement_schedule <- if (identical(retirement_source, "urps_empirical")) {
+    tryCatch(
+      urps_empirical_retirement_schedule(mode = mode),
+      error = function(e) {
+        if (identical(mode, "strict")) {
+          stop(sprintf("retirement_source='urps_empirical' unavailable: %s",
+                       conditionMessage(e)), call. = FALSE)
+        }
+        .msg_warn(sprintf("Empirical retirement schedule unavailable (%s); using HWSM",
+                          conditionMessage(e)))
+        RETIREMENT_HAZARD_BY_AGE
+      }
+    )
+  } else {
+    RETIREMENT_HAZARD_BY_AGE
+  }
 
   # --- Base-year supply from the versioned contract ------------------------
   contract <- NULL
@@ -260,6 +289,15 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   # Keep the hours schedule and the FTE threshold internally consistent.
   hours_intercept <- calibrate_hours_intercept(agents$age, agents$sex)
 
+  # Parameter uncertainty: the entrant rate is drawn from the observed series'
+  # own sampling distribution each iteration. Without this the intervals are
+  # sampling noise only, which the 2020->2023 back-test showed to be 6.5-8.2x
+  # too narrow.
+  param_spec <- if (is.null(parameter_spec) && has_mufflyaccess()) {
+    tryCatch(entrant_spec_from_series(agents), error = function(e) NULL)
+  } else parameter_spec
+  if (!is.null(param_spec)) assert_parameter_uncertainty(param_spec, mode)
+
   # --- Supply: one Monte-Carlo microsimulation per scenario ----------------
   supply_by_scenario <- purrr::imap_dfr(supply_scenarios, function(params, scenario_name) {
     if (verbose) .msg_info(sprintf("  supply scenario: %s", params$label))
@@ -270,9 +308,10 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       subspecialty = subspecialty,
       n_iterations = n_iterations,
       conversion_floor = params$conversion %||% 1.0,
-      retirement_schedule = scenario_retirement_schedule(params),
+      retirement_schedule = scenario_retirement_schedule(params, base_retirement_schedule),
       hours_multiplier = params$hours_multiplier %||% 1.0,
       hours_intercept = hours_intercept,
+      param_spec = param_spec,
       late_career_fte_factor = params$late_career_fte_factor %||% 1.0,
       late_career_fte_onset_age = params$late_career_fte_onset_age %||% NA_real_,
       seed = seed,
@@ -328,7 +367,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
              error = function(e) NULL)
   } else NULL
   outlook <- purrr::imap_dfr(supply_scenarios, function(params, scenario_name) {
-    sched <- scenario_retirement_schedule(params)
+    sched <- scenario_retirement_schedule(params, base_retirement_schedule)
     rate <- implied_annual_departure_rate(agents$age, agents$sex, retirement_schedule = sched)
     departures <- baseline_supply * rate
     rr <- (params$entrants * (params$conversion %||% 1.0)) / departures
@@ -372,12 +411,14 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       baseline_supply = baseline_supply,
       supply_geography = supply_geography,
       population_source = population_source,
+      retirement_source = retirement_source,
       supply_contract = contract,
       example_only = example_only,
       cohort_provenance = cohort,
       cohort_composition = cohort_composition(agents),
       fte_definition = fte_definition(),
       hours_intercept = hours_intercept,
+      parameter_spec = param_spec,
       wrvu_per_fte = wrvu_per_fte,
       productivity_plausible = productivity_ok,
       crude_departure_rate = crude_rate,

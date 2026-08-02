@@ -20,6 +20,7 @@ run_supply_microsimulation(
   late_career_fte_factor = 1,
   late_career_fte_onset_age = NA_real_,
   placement_shares = NULL,
+  param_spec = NULL,
   ci = 0.95,
   seed = 20260801L,
   verbose = TRUE
@@ -60,6 +61,12 @@ switches back to the coarse seven-band gradient.}
 
 \item{placement_shares}{Optional geographic share table enabling entrant
 placement and mid-career migration.}
+
+\item{param_spec}{Optional \code{\link[=supply_parameter_spec]{supply_parameter_spec()}}. When supplied, the
+entrant rate (and any other quantified parameter) is REDRAWN each
+iteration, so the reported intervals carry forecast uncertainty rather than
+Monte Carlo sampling noise alone. Without it the intervals are far too
+narrow -- see docs/BACKTEST_2020_TO_2023.md.}
 
 \item{ci}{Width of the reported credible band (default 0.95).}
 

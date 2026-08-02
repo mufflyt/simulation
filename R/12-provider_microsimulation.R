@@ -469,6 +469,11 @@ simulate_provider_career_once <- function(agents,
 #' @param late_career_fte_onset_age Age from which the factor applies.
 #' @param placement_shares Optional geographic share table enabling entrant
 #'   placement and mid-career migration.
+#' @param param_spec Optional [supply_parameter_spec()]. When supplied, the
+#'   entrant rate (and any other quantified parameter) is REDRAWN each
+#'   iteration, so the reported intervals carry forecast uncertainty rather than
+#'   Monte Carlo sampling noise alone. Without it the intervals are far too
+#'   narrow -- see docs/BACKTEST_2020_TO_2023.md.
 #' @param ci Width of the reported credible band (default 0.95).
 #' @param seed Integer RNG seed.
 #' @param verbose Logical.
@@ -490,6 +495,7 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
                                         late_career_fte_factor = 1.0,
                                         late_career_fte_onset_age = NA_real_,
                                         placement_shares = NULL,
+                                        param_spec = NULL,
                                         ci = 0.95,
                                         seed = 20260801L,
                                         verbose = TRUE) {
@@ -513,15 +519,28 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
     initialize_provider_agents(initial_workforce, subspecialty, min(years))
   }
 
+  if (!is.null(param_spec)) assert_parameter_uncertainty(param_spec)
+
   iteration_panels <- vector("list", n_iterations)
   for (it in seq_len(n_iterations)) {
     if (verbose && it %% 100 == 0) .msg_info(sprintf("  iteration %d/%d", it, n_iterations))
+
+    # Draw the parameters for THIS iteration before simulating individuals, so
+    # the replicate spread reflects both sources of variation.
+    it_entrants <- entrants_per_year
+    it_schedule <- retirement_schedule
+    if (!is.null(param_spec)) {
+      d <- draw_supply_parameters(param_spec, retirement_schedule)
+      it_entrants <- d$entrants
+      it_schedule <- d$retirement_schedule
+    }
+
     sim <- simulate_provider_career_once(
-      base_agents, years, entrants_per_year,
+      base_agents, years, it_entrants,
       hazard_table = hazard_table,
       conversion_floor = conversion_floor,
       subspecialty = subspecialty,
-      retirement_schedule = retirement_schedule,
+      retirement_schedule = it_schedule,
       fte_method = fte_method,
       hours_model = hours_model,
       hours_multiplier = hours_multiplier,
@@ -560,6 +579,8 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
       conversion_floor = conversion_floor,
       n_iterations = n_iterations,
       baseline_rate = baseline_rate,
+      parameter_uncertainty = if (is.null(param_spec)) "none (intervals are sampling noise only)" else
+        paste(names(param_spec$quantified)[param_spec$quantified], collapse = ", "),
       implied_departure_rate = implied_annual_departure_rate(
         base_agents$age,
         if ("sex" %in% names(base_agents)) base_agents$sex else "female",

@@ -15,6 +15,32 @@ Prepared 2026-08-02.
 - `R/25-demand_lifecourse.R` — the reproductive life-course demand generator (this plan's
   Part B, implemented). `R/26-utilization_models.R` — the corrected surgery-rate and
   survey-weighted visit models (Part A, implemented).
+- `R/27-demand_lifecourse_uncertainty.R` — parameter-uncertainty intervals on the demand
+  trajectory (Part B / IP §5, implemented). `R/28-demand_lifecourse_calibration.R` —
+  calibration to national anchors + a 2010s→2020s back-test (Part C / IP §4, implemented),
+  reusing `fit_calibration_scalars()` and `config/calibration_targets.yml`.
+- `R/29-demand_dynamic_multistate.R` — the Dynamic Multistate Disease Model (DMDM, IP §9,
+  first version): a longitudinal microsimulation that follows each woman year by year
+  through onset / remission / death, so prevalence emerges from within-person dynamics
+  driven by cumulative vaginal-delivery exposure rather than a static risk equation. Base-R
+  engine (`simulate_dmdm`), reuses R/25 for the base-year cohort. Closed-cohort v1;
+  open-population (entrant replenishment) and a bridge into the demand contract are the
+  next steps.
+- `R/30-demand_dynamic_open.R` — the OPEN-population extension of the DMDM: new women
+  enter each year at `entry_age` and existing women age/develop/resolve disease/die, so
+  population prevalence reflects the whole female population (it does not collapse like a
+  closed cohort and reaches a quasi-steady state). Deterministic cohort-component engine
+  (`simulate_dmdm_open`) using survival weights + marginal-probability Markov updates.
+  Now also: **annual reweighting to Census projections** (`pop_by_age_year` /
+  `reweight_to_projection` — counts match official demography while the model supplies the
+  rates).
+- `R/31-dmdm_fit_transitions.R` — **fitting onset/remission hazards to longitudinal data
+  (SWAN)**: `dmdm_transition_data()` reshapes a state panel into at-risk transition rows
+  and `fit_dmdm_transitions()` fits per-condition onset logistics + remission rates,
+  returning a `transitions` object usable directly by the DMDM engines (`status="fitted"`).
+- `export_dmdm_demand_contract()` (in `R/export_demand_contract.R`) — the **DMDM →
+  demand-contract bridge**: dynamic prevalence into `tier3_prevalent_pfd` (any-PFD) plus
+  per-condition tiers, so it flows to cliff through the same generic seam.
 
 ---
 

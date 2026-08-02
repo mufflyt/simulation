@@ -86,3 +86,23 @@ sources:
   sensitivity_demand_denominators:
     path: data-raw/sensitivity/urps_demand_denominators_sensitivity.csv
     sha256: "4e748e00b440f4923bbed33b9402097525c61635ff81f24599cdb7c646dfce8e"
+  # --- Supply-side calibration inputs (vetted, carried from cliff) ----------
+  # Empirical age-band departure hazards for URPS (person-years / events /
+  # annual_hazard), from cliff's 6-source departure signal validated vs state
+  # boards at 94.4% agreement. The 70+ cell is 0 events / 16 person-years -- a
+  # sparse artifact, floored on load (see urps_empirical_hazard_by_ageband()).
+  urps_retirement_hazard_ageband:
+    path: data-raw/calibration/retirement_hazard_by_ageband.csv
+    sha256: "7e9fdb4f72c6de193e68d2c6182b33d6b1d166db47a8233877417fba88466d44"
+  # Subspecialty-specific + partial-pooled hazards (GO / URPS / MIGS / pooled).
+  urps_hazard_pooled:
+    path: data-raw/calibration/hazard_by_band_pooled_vs_unpooled.csv
+    sha256: "fcc37642e7e289631b291a4225bce91adea3f98dc5655e989742811a0f85521b"
+  # Age-productivity curve (rel_to_peak, work_usd) for effective-FTE validation.
+  urps_age_productivity:
+    path: data-raw/calibration/urps_module_a_age_productivity_2026-07-23.csv
+    sha256: "0cb612c56f2b4f8b4ef82e32d0e865d6b7e4f379fda65707471aaa19daef3df5"
+  # NRMP filled fellowship positions by subspecialty (real annual entrants).
+  urps_nrmp_entrants:
+    path: data-raw/calibration/nrmp_fellowship_entrants.csv
+    sha256: "1f9cba14d78922d1910ed5008c2d38639e81ef917ad124c82b2c4ca48030a159"
