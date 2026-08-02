@@ -156,3 +156,127 @@ export_dpmm_demand_contract <- function(dpmm_results,
 
   invisible(list(csv_path = csv_path, manifest_path = manifest_path, data = tidy))
 }
+
+# =============================================================================
+# HDMM life-course demand contract (tiers 5-6: care-seeking + procedural)
+# =============================================================================
+# The DPMM exporter above serves tiers 3-4 (prevalence / symptomatic). The
+# reproductive life-course demand model (R/25-demand_lifecourse.R) carries the
+# demand hierarchy further down the care pathway and emits tiers 5-6 into the
+# SAME contract schema, so a downstream consumer (e.g. cliff) reads any tier
+# through one generic seam:
+#
+#   tier5_care_seeking  <- expected national women seeking pelvic-floor care
+#   tier6_procedural    <- expected national annual specialty service units
+#
+# Fed by lifecourse_demand_trajectory()$demand_summary. Base R (matching the DPMM
+# exporter), so the formatting is testable without the tidyverse.
+
+HDMM_DEMAND_CONTRACT_VERSION <- "0.1.0"
+
+#' Export the HDMM life-course demand trajectory as contract tiers 5-6
+#'
+#' @description Formats a national life-course demand summary into the shared
+#'   demand-contract schema (the same columns as [export_dpmm_demand_contract()]),
+#'   emitting `tier5_care_seeking` and `tier6_procedural` indexed to the base year,
+#'   plus a JSON provenance manifest.
+#'
+#' @param trajectory Data frame with `year`, `care_seeking_national`, and
+#'   `service_units_national` (the `demand_summary` from
+#'   [lifecourse_demand_trajectory()]).
+#' @param output_directory Directory to write into (created if missing).
+#' @param model_version Version string stamped on every row and the manifest.
+#'   Defaults to `HDMM_DEMAND_CONTRACT_VERSION`.
+#' @param base_year Calendar year the index is normalized to (= 100). Default 2025.
+#' @param scenario Scenario label recorded in the manifest.
+#' @param calibration_status Provenance guard; keep "placeholder_uncalibrated"
+#'   until the obstetric/urogynecologic transition equations are fitted.
+#' @param population_scope Population denominator label. Default "us_adult_women".
+#' @param verbose Log progress. Default TRUE.
+#' @return (invisibly) a list with `csv_path`, `manifest_path`, and the tidy `data`.
+#' @keywords internal
+export_hdmm_demand_contract <- function(trajectory,
+                                        output_directory,
+                                        model_version = HDMM_DEMAND_CONTRACT_VERSION,
+                                        base_year = 2025L,
+                                        scenario = "baseline",
+                                        calibration_status = "placeholder_uncalibrated",
+                                        population_scope = "us_adult_women",
+                                        verbose = TRUE) {
+  need <- c("year", "care_seeking_national", "service_units_national")
+  if (!is.data.frame(trajectory) || !all(need %in% names(trajectory))) {
+    stop("export_hdmm_demand_contract(): trajectory needs columns ",
+         paste(need, collapse = ", "), ".", call. = FALSE)
+  }
+  if (!dir.exists(output_directory)) dir.create(output_directory, recursive = TRUE)
+  trajectory <- trajectory[order(trajectory$year), , drop = FALSE]
+
+  make_tier <- function(tier, value_vec) {
+    base_row <- which(trajectory$year == base_year)
+    base_val <- if (length(base_row)) value_vec[base_row[1]] else NA_real_
+    data.frame(
+      model              = "HDMM",
+      model_version      = model_version,
+      calibration_status = calibration_status,
+      geography          = "national",
+      population_scope   = population_scope,
+      denominator_tier   = tier,
+      calendar_year      = trajectory$year,
+      prevalence         = NA_real_,
+      prevalence_lo      = NA_real_,
+      prevalence_hi      = NA_real_,
+      national_cases     = value_vec,
+      denominator_index  = if (!is.na(base_val) && base_val > 0)
+                             100 * value_vec / base_val else NA_real_,
+      stringsAsFactors   = FALSE
+    )
+  }
+
+  tidy <- rbind(
+    make_tier("tier5_care_seeking", trajectory$care_seeking_national),
+    make_tier("tier6_procedural",   trajectory$service_units_national)
+  )
+  tidy <- tidy[order(tidy$denominator_tier, tidy$calendar_year), , drop = FALSE]
+
+  csv_path <- file.path(output_directory,
+                        sprintf("hdmm_demand_contract_v%s.csv", model_version))
+  utils::write.csv(tidy, csv_path, row.names = FALSE)
+
+  csv_hash <- tryCatch(unname(tools::md5sum(csv_path)), error = function(e) NA_character_)
+  manifest <- list(
+    artifact             = basename(csv_path),
+    model                = "HDMM",
+    model_version        = model_version,
+    scenario             = scenario,
+    calibration_status   = calibration_status,
+    generated_at         = as.character(Sys.time()),
+    base_year            = base_year,
+    calendar_years       = range(tidy$calendar_year),
+    tiers                = sort(unique(tidy$denominator_tier)),
+    n_rows               = nrow(tidy),
+    csv_md5              = csv_hash,
+    source_model_file    = "R/25-demand_lifecourse.R",
+    contract_reference   = "URPS improvement plan 2026-07-30, sec 10 & 16; Zarek 2025 architecture",
+    downstream_consumers = c("cliff", "twostep", "isochrones"),
+    notes = paste("Reproductive life-course demand (vaginal-delivery exposure ->",
+                  "pelvic-floor disease -> care pathway -> service use). Coefficient",
+                  "tables are placeholders; downstream must gate on calibration_status",
+                  "and keep validated published-anchor denominators as the default",
+                  "until this reads 'calibrated'.")
+  )
+  manifest_path <- file.path(output_directory,
+                             sprintf("hdmm_demand_contract_v%s_manifest.json", model_version))
+  if (requireNamespace("jsonlite", quietly = TRUE)) {
+    jsonlite::write_json(manifest, manifest_path, auto_unbox = TRUE, pretty = TRUE, null = "null")
+  } else {
+    writeLines(paste(names(unlist(manifest)), unlist(manifest), sep = ": "), manifest_path)
+  }
+
+  if (verbose) {
+    msg <- sprintf("Wrote HDMM demand contract v%s (%d rows, tiers 5-6, %s): %s",
+                   model_version, nrow(tidy), calibration_status, csv_path)
+    if (requireNamespace("logger", quietly = TRUE)) logger::log_info(msg) else message(msg)
+  }
+
+  invisible(list(csv_path = csv_path, manifest_path = manifest_path, data = tidy))
+}
