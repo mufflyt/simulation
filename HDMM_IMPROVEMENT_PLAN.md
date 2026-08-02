@@ -26,6 +26,13 @@ Prepared 2026-08-02.
   engine (`simulate_dmdm`), reuses R/25 for the base-year cohort. Closed-cohort v1;
   open-population (entrant replenishment) and a bridge into the demand contract are the
   next steps.
+- `R/30-demand_dynamic_open.R` — the OPEN-population extension of the DMDM: new women
+  enter each year at `entry_age` and existing women age/develop/resolve disease/die, so
+  population prevalence reflects the whole female population (it does not collapse like a
+  closed cohort and reaches a quasi-steady state). Deterministic cohort-component engine
+  (`simulate_dmdm_open`) using survival weights + marginal-probability Markov updates.
+  Refinements next: annual reweighting to Census projections, fitting onset/remission to
+  SWAN, and a DMDM→demand-contract bridge.
 
 ---
 
