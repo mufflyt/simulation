@@ -59,7 +59,7 @@ series_mean_se <- function(x) {
 #'   to the whole retirement schedule. 0 means the hazard is treated as known,
 #'   which it is not -- see the module note.
 #' @param hours_model Optional fitted hours model; its coefficients are drawn
-#'   through [.param_draw()].
+#'   through the shared internal `.param_draw()` helper.
 #' @return An object of class `urps_param_spec`.
 #' @export
 supply_parameter_spec <- function(entrant_series = NULL,
