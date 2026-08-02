@@ -1,0 +1,4 @@
+subspecialty_abbrev,rate_agestratified,rate_directly_observed,rate_agecert33,rate_min,rate_max,ratio_at_max_rate,assessment_at_max_rate
+URPS,0.8,0.5,0.9,0.5,0.9,5.39,Adequate
+GO,1,0.6,1.1,0.6,1.1,6.83,Adequate
+MIGS,0.6,0.3,0.6,0.3,0.6,12.95,Adequate

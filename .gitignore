@@ -84,3 +84,7 @@ outputs/
 
 # Cited obstetric reference data shipped with the package.
 !inst/extdata/**/*.csv
+
+# Vetted workforce sensitivity datasets (carried from cliff; build-ignored).
+!data-raw/sensitivity/
+!data-raw/sensitivity/*.csv
