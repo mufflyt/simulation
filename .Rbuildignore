@@ -2,6 +2,8 @@
 ^\.Rproj\.user$
 ^\.github$
 ^config$
+^artifacts$
+^figures$
 ^docs$
 ^inst/legacy/README\.md$
 ^scripts$
