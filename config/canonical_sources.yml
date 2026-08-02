@@ -44,6 +44,19 @@ sources:
     path: data/tract_female_population.csv
     sha256: ""
 
+  # --- Real spatial-access inputs -------------------------------------------
+  # Census tract female-65+ population with centroids (demand denominator for
+  # the E2SFCA access layer). 83,492 CONUS tracts; total fem65 ~30.5M.
+  # Extracted from twostep/data/urogyn_tract_fem65_centroids.rds (ACS, GEOID+
+  # fem65+centroid, EPSG:4326).
+  tract_fem65_centroids:
+    path: data-raw/spatial/tract_fem65_centroids.csv
+    sha256: "27ac1ba1b847e7ae7fa79fbfba3b97e7ed224d8b780121910bb2864f9616e968"
+  # NOTE: the SUPPLY-side provider drive-time isochrone polygons (30/60/120/180
+  # min) are LARGE external artifacts from the isochrones pipeline (Valhalla) and
+  # are NOT vendored / not registered here. Point load_provider_isochrones() at a
+  # local isochrones_{band}min_consolidated.rds set via its `artifacts_dir` arg
+  # or the ISOCHRONES_ARTIFACTS_DIR env var.
   # --- Vetted workforce sensitivity-analysis datasets (from cliff main) -----
   # Registered as a group; reached via load_sensitivity_table(name) over the
   # SENSITIVITY_TABLES registry in R/workforce_statistics.R.
