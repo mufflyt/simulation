@@ -135,12 +135,24 @@ test_that("the definition detector rejects statements that do work", {
 test_that("the package R directory has no top-level executable script code", {
   # Constants, stopifnot() guards and function definitions are fine. Anything
   # that performs work at load time is not.
+  #
+  # utils::globalVariables() is allowed: it is the sanctioned way to declare
+  # names that R CMD check would otherwise read as undeclared bindings, and it
+  # only registers metadata. It is matched on the fully-qualified form so a bare
+  # call to something else via `::` is still caught.
+  allowed <- c("<-", "=", "stopifnot", "if", "library", "requireNamespace")
   for (f in .r_files("R")) {
     e <- parse(f)
     for (x in e) {
       if (!is.call(x)) next
       head_fn <- as.character(x[[1]])[1]
-      if (head_fn %in% c("<-", "=", "stopifnot", "if", "library", "requireNamespace")) next
+      if (head_fn %in% allowed) next
+      if (identical(head_fn, "::")) {
+        qualified <- paste(as.character(x[[1]])[2:3], collapse = "::")
+        if (identical(qualified, "utils::globalVariables")) next
+        fail(sprintf("%s has a top-level call to %s()", basename(f), qualified))
+        next
+      }
       fail(sprintf("%s has a top-level call to %s()", basename(f), head_fn))
     }
   }
