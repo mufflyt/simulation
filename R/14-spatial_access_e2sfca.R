@@ -311,3 +311,181 @@ match_points_to_isochrones <- function(points, iso_centers, threshold_km = ISOCH
       )
     )
 }
+
+# ---- M2SFCA toggle (convenience over compute_e2sfca_access) ----------------
+
+#' Compute an accessibility surface by named method (E2SFCA or M2SFCA)
+#'
+#' Thin wrapper over [compute_e2sfca_access()] exposing the maldistribution
+#' penalty as a first-class toggle rather than a numeric power. M2SFCA
+#' (Delamater 2013) squares the CUMULATIVE band weights before differencing
+#' (`step2_power = 2`), penalising supply that is present but poorly located.
+#'
+#' @param membership,supply,demand,weights,per_capita_scale Passed to
+#'   [compute_e2sfca_access()].
+#' @param method "E2SFCA" (default) or "M2SFCA".
+#' @return The [compute_e2sfca_access()] result for the chosen method.
+#' @export
+compute_access <- function(membership, supply, demand,
+                           method = c("E2SFCA", "M2SFCA"),
+                           weights = E2SFCA_DEFAULT_WEIGHTS,
+                           per_capita_scale = 1e5) {
+  method <- match.arg(method)
+  power <- if (identical(method, "M2SFCA")) 2 else 1
+  compute_e2sfca_access(membership, supply, demand, weights = weights,
+                        step2_power = power, per_capita_scale = per_capita_scale)
+}
+
+#' Compare E2SFCA and M2SFCA national access (with the monotonicity guard)
+#'
+#' Runs both methods on the same inputs and returns their population-weighted
+#' national mean access. Enforces the twostep numerical contract that the M2SFCA
+#' mean cannot exceed the E2SFCA mean (the maldistribution penalty only removes
+#' access), so a violation signals a weighting bug rather than a finding.
+#'
+#' @inheritParams compute_access
+#' @return List: `e2sfca` / `m2sfca` (full results), `mean_e2sfca` /
+#'   `mean_m2sfca` (national pop-weighted means), `penalty_share`.
+#' @export
+compare_access_methods <- function(membership, supply, demand,
+                                   weights = E2SFCA_DEFAULT_WEIGHTS,
+                                   per_capita_scale = 1e5) {
+  e2 <- compute_access(membership, supply, demand, "E2SFCA", weights, per_capita_scale)
+  m2 <- compute_access(membership, supply, demand, "M2SFCA", weights, per_capita_scale)
+  mean_e2 <- summarize_access(e2$access)$mean_access
+  mean_m2 <- summarize_access(m2$access)$mean_access
+
+  if (is.finite(mean_e2) && is.finite(mean_m2) && mean_m2 > mean_e2 + 1e-9) {
+    stop(sprintf("M2SFCA mean (%.4f) exceeds E2SFCA mean (%.4f); weighting bug",
+                 mean_m2, mean_e2), call. = FALSE)
+  }
+
+  list(
+    e2sfca = e2, m2sfca = m2,
+    mean_e2sfca = mean_e2, mean_m2sfca = mean_m2,
+    penalty_share = if (is.finite(mean_e2) && mean_e2 > 0) 1 - mean_m2 / mean_e2 else NA_real_
+  )
+}
+
+# ---- Access-disparity inference (twostep accessibility_stratification.R) ----
+
+#' Population-weighted mean over ALL elements (sparse-group safe)
+#'
+#' Sums over every element rather than filtering `w > 0`, so a sparse group's
+#' point estimate stays inside its own Monte-Carlo interval (twostep documents
+#' that filtering pushes sparse-group estimates outside their CIs).
+#'
+#' @param a Numeric values.
+#' @param w Numeric weights (same length as `a`).
+#' @return Weighted mean, or NA if the weights sum to 0 / are non-finite.
+#' @export
+weighted_mean_all <- function(a, w) {
+  stopifnot(length(a) == length(w))
+  sw <- sum(w)
+  if (!is.finite(sw) || sw == 0) return(NA_real_)
+  sum(a * w) / sw
+}
+
+#' Zero-access share: percent of weighted population with access EXACTLY 0
+#'
+#' The workforce-adequacy KPI "share of women with no modelled access". Distinct
+#' from the `zero_access_share` element of [summarize_access()], which counts
+#' access <= 0 as a fraction; this is the twostep-faithful percent of == 0.
+#'
+#' @param access Numeric accessibility values.
+#' @param w Numeric weights.
+#' @return Percent in [0, 100] under non-negative weights, or NA.
+#' @export
+zero_access_share <- function(access, w) {
+  stopifnot(length(access) == length(w))
+  sw <- sum(w)
+  if (!is.finite(sw) || sw == 0) return(NA_real_)
+  100 * sum(w * (access == 0)) / sw
+}
+
+#' Monte-Carlo CI for a population-weighted access statistic (ACS MOE)
+#'
+#' Port of twostep::mc_weighted_ci. Propagates demographic (ACS) uncertainty by
+#' redrawing the population weights ~ Normal(est, se) `B` times and taking the
+#' quantiles of the resulting weighted statistic. This is ACS margin-of-error
+#' propagation, NOT the microsimulation replicate-quantile band.
+#'
+#' Named `access_moe_ci()` rather than `mc_weighted_ci()` to avoid shadowing
+#' `mufflyaccess::mc_weighted_ci()`, which the SSOT coverage report names as the
+#' contract-owned variant of this same quantity. The caller's RNG stream is
+#' saved and restored.
+#'
+#' @param access Numeric accessibility values.
+#' @param est Numeric weight point estimates (e.g. ACS population).
+#' @param se Numeric weight standard errors (ACS MOE / 1.645). NA -> 0.
+#' @param stat "mean" ([weighted_mean_all()]) or "zero" ([zero_access_share()]).
+#' @param B Monte-Carlo draws.
+#' @param probs Interval quantiles.
+#' @param seed RNG seed (restored on exit).
+#' @return Named numeric `c(point, lo, hi)`.
+#' @export
+access_moe_ci <- function(access, est, se, stat = c("mean", "zero"),
+                          B = 2000L, probs = c(0.025, 0.975), seed = 1L) {
+  # Save/restore the caller's RNG stream FIRST, so the whole call is RNG-neutral.
+  old <- if (exists(".Random.seed", envir = .GlobalEnv)) {
+    get(".Random.seed", envir = .GlobalEnv)
+  } else NULL
+  on.exit(if (!is.null(old)) assign(".Random.seed", old, envir = .GlobalEnv))
+
+  stat <- match.arg(stat)
+  stopifnot(length(access) == length(est), length(est) == length(se))
+  se[is.na(se)] <- 0
+  f <- if (stat == "mean") weighted_mean_all else zero_access_share
+  point <- f(access, est)
+
+  set.seed(seed)
+  n <- length(est)
+  draws <- vapply(seq_len(B), function(b) f(access, stats::rnorm(n, est, se)), numeric(1))
+  q <- stats::quantile(draws, probs, na.rm = TRUE)
+  c(point = point, lo = unname(q[1]), hi = unname(q[2]))
+}
+
+#' OLS temporal trend of an annual series (95% t-interval on the slope)
+#'
+#' Port of twostep::annual_trend. Fits `value ~ year` and returns the slope with
+#' its 95% t-interval and p-value; the access-per-year change over a study window.
+#'
+#' @param year Integer years.
+#' @param value Numeric annual estimates.
+#' @return Named numeric `c(slope, lo, hi, p)` (all NA if < 3 complete points).
+#' @export
+annual_trend <- function(year, value) {
+  d <- data.frame(year = as.numeric(year), value = as.numeric(value))
+  d <- d[stats::complete.cases(d), ]
+  if (nrow(d) < 3) return(c(slope = NA_real_, lo = NA_real_, hi = NA_real_, p = NA_real_))
+  m <- stats::lm(value ~ year, d)
+  s <- summary(m)$coefficients["year", ]
+  ci <- stats::confint(m)["year", ]
+  c(slope = unname(s[["Estimate"]]), lo = unname(ci[1]), hi = unname(ci[2]),
+    p = unname(s[["Pr(>|t|)"]]))
+}
+
+#' Wilson score confidence interval for a binomial proportion
+#'
+#' Port of cliff::calculate_proportion_ci. The Wilson interval is well-behaved
+#' for small samples and near 0/1 (unlike the Wald interval), so it is the right
+#' choice for rural/subgroup access-desert proportions and validation rates.
+#'
+#' @param successes Integer count(s) of successes.
+#' @param n Integer sample size(s).
+#' @param conf_level Confidence level (default 0.95).
+#' @return Tibble `estimate`, `lo`, `hi` (one row per input element).
+#' @export
+wilson_ci <- function(successes, n, conf_level = 0.95) {
+  stopifnot(length(successes) == length(n), all(successes <= n, na.rm = TRUE))
+  z <- stats::qnorm(1 - (1 - conf_level) / 2)
+  phat <- ifelse(n > 0, successes / n, NA_real_)
+  denom <- 1 + z^2 / n
+  center <- (phat + z^2 / (2 * n)) / denom
+  half <- z * sqrt(phat * (1 - phat) / n + z^2 / (4 * n^2)) / denom
+  tibble::tibble(
+    estimate = phat,
+    lo = ifelse(n > 0, pmax(0, center - half), NA_real_),
+    hi = ifelse(n > 0, pmin(1, center + half), NA_real_)
+  )
+}
