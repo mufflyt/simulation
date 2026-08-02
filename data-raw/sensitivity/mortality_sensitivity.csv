@@ -1,0 +1,3 @@
+"subspecialty_abbrev","n_active","departures_primary","expected_mortality_per_yr","departures_adj_all_missed","departures_adj_half_missed","rate_primary_pct","rate_adj_all_pct","ratio_primary","ratio_adj_all_missed","ratio_adj_half_missed","projected_2029_primary","projected_2029_mortality_adj"
+"GO",1052,10.6,7,17.6,14.1,1,1.67,7.11,4.26,5.33,1310,1280
+"URPS",1306,11.9,7.9,19.8,15.8,0.91,1.51,5.38,3.23,4.04,1514,1483

@@ -43,3 +43,46 @@ sources:
   tract_female_population:
     path: data/tract_female_population.csv
     sha256: ""
+
+  # --- Vetted workforce sensitivity-analysis datasets (from cliff main) -----
+  # Registered as a group; reached via load_sensitivity_table(name) over the
+  # SENSITIVITY_TABLES registry in R/workforce_statistics.R.
+  sensitivity_abu_pathway:
+    path: data-raw/sensitivity/abu_pathway_sensitivity.csv
+    sha256: "02a2f3d9d1be4d7a363a2a425b9cc7f95b786fd5cd68089f855a02ab8865eba5"
+  sensitivity_age_shift:
+    path: data-raw/sensitivity/age_shift_sensitivity.csv
+    sha256: "c6b50a0ea6769e1c0e63a8a5c3b71d66adc7a4c6b82d8ec718be7a709c9991b6"
+  sensitivity_consistent_definition_baseline:
+    path: data-raw/sensitivity/consistent_definition_baseline_sensitivity.csv
+    sha256: "b38a375cc22b54fd99835fb47579ae33787de37b3cb1ce9d8354a490fb68570a"
+  sensitivity_departure_rate:
+    path: data-raw/sensitivity/departure_rate_sensitivity.csv
+    sha256: "d76c5a7fd5449c27f8e9c016c8114fdfc4aab2895bf667bc290532d55b290528"
+  sensitivity_departure_window:
+    path: data-raw/sensitivity/departure_window_sensitivity.csv
+    sha256: "2939ed49dcb3d8e9c2798f373bfb7ae0d6652433c82c8593e993d12142757d69"
+  sensitivity_feminization:
+    path: data-raw/sensitivity/feminization_sensitivity.csv
+    sha256: "aff14eebd0145d4e918245aadf01959a93f28d862369b86916c9f667f9abff48"
+  sensitivity_inactivity_threshold:
+    path: data-raw/sensitivity/inactivity_threshold_sensitivity.csv
+    sha256: "b7493c4de47d0856061016c9a53dd1eb1b7ff3a163ad3684d8582728dd5715ca"
+  sensitivity_mortality:
+    path: data-raw/sensitivity/mortality_sensitivity.csv
+    sha256: "c20b53260355b155db04c64942456d4d0462dc054402b0b1d25e8bcc4976d69f"
+  sensitivity_open_payments:
+    path: data-raw/sensitivity/open_payments_sensitivity.csv
+    sha256: "00efd39ac06b31e951aabeaa4071f65da8e384c3b97b35afc90a2021408c2b87"
+  sensitivity_retirement:
+    path: data-raw/sensitivity/retirement_sensitivity.csv
+    sha256: "cdfa176678f64564cea8c63220c2731f05e3cf8eb999677a5036c6635d957a98"
+  sensitivity_grid:
+    path: data-raw/sensitivity/sensitivity_grid.csv
+    sha256: "492cdcd1adcd793f1ec3c6df216013ae613415e6d3726a6a6884040ef6efebfb"
+  sensitivity_grid_summary:
+    path: data-raw/sensitivity/sensitivity_grid_summary.csv
+    sha256: "8f51b2b30eafc67ffdd66f05c8876060a01edce0f741eb8e947b5c4e339e274d"
+  sensitivity_demand_denominators:
+    path: data-raw/sensitivity/urps_demand_denominators_sensitivity.csv
+    sha256: "4e748e00b440f4923bbed33b9402097525c61635ff81f24599cdb7c646dfce8e"

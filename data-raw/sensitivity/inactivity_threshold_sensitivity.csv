@@ -1,0 +1,7 @@
+subspecialty_abbrev,threshold_years,n_events_in_window,departure_rate_pct,avg_annual_departures,replacement_ratio,assessment
+GO,2,54,1.61,17,4.42,Adequate
+GO,3,54,1.61,17,4.42,Adequate
+GO,4,38,0.93,9.8,7.63,Adequate
+URPS,2,57,1.35,17.4,3.67,Adequate
+URPS,3,57,1.35,17.4,3.67,Adequate
+URPS,4,41,0.86,11.1,5.74,Adequate
