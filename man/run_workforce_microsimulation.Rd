@@ -12,6 +12,7 @@ run_workforce_microsimulation(
   years = 2025:2050,
   subspecialty = "FPMRS",
   pop_by_band = NULL,
+  population_series = "mid",
   supply_scenarios = NULL,
   demand_scenarios = NULL,
   baseline_gap_estimate = NULL,
@@ -41,7 +42,12 @@ is built from the observed certification series where available.}
 
 \item{subspecialty}{Subspecialty label.}
 
-\item{pop_by_band}{Age-banded female population; defaults to the example.}
+\item{pop_by_band}{Age-banded female population. When NULL, resolved from the
+canonical Census-NPP series (\code{\link[=resolve_demand_population]{resolve_demand_population()}}), falling back to
+\code{\link[=example_female_population_by_band]{example_female_population_by_band()}} if the file is absent.}
+
+\item{population_series}{Census-NPP series when \code{pop_by_band} is NULL: one of
+"mid" (default), "low", "hi".}
 
 \item{supply_scenarios, demand_scenarios}{Scenario registries.}
 
