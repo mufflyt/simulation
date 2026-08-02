@@ -19,6 +19,13 @@ Prepared 2026-08-02.
   trajectory (Part B / IP §5, implemented). `R/28-demand_lifecourse_calibration.R` —
   calibration to national anchors + a 2010s→2020s back-test (Part C / IP §4, implemented),
   reusing `fit_calibration_scalars()` and `config/calibration_targets.yml`.
+- `R/29-demand_dynamic_multistate.R` — the Dynamic Multistate Disease Model (DMDM, IP §9,
+  first version): a longitudinal microsimulation that follows each woman year by year
+  through onset / remission / death, so prevalence emerges from within-person dynamics
+  driven by cumulative vaginal-delivery exposure rather than a static risk equation. Base-R
+  engine (`simulate_dmdm`), reuses R/25 for the base-year cohort. Closed-cohort v1;
+  open-population (entrant replenishment) and a bridge into the demand contract are the
+  next steps.
 
 ---
 
