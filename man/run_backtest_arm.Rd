@@ -11,6 +11,7 @@ run_backtest_arm(
   target_year = BACKTEST_TARGET_YEAR,
   n_iterations = 1000L,
   apply_attrition = TRUE,
+  param_spec = NULL,
   seed = 20260802L
 )
 }
@@ -27,6 +28,10 @@ run_backtest_arm(
 
 \item{apply_attrition}{Apply retirement hazards. FALSE gives the
 definition-matched comparison against a series that applies none.}
+
+\item{param_spec}{Optional \code{\link[=supply_parameter_spec]{supply_parameter_spec()}} built from PRE-CUTOFF
+data only. Supplying it redraws the entrant rate each iteration so the
+intervals carry forecast uncertainty. It does NOT move the point estimate.}
 
 \item{seed}{RNG seed.}
 }

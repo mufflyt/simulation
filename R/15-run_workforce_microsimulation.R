@@ -171,6 +171,8 @@ example_capacity_survey <- function() {
 #' @param baseline_entrants Baseline annual entrants.
 #' @param calibration Optional calibration scalars from
 #'   [fit_calibration_scalars()].
+#' @param parameter_spec Optional [supply_parameter_spec()]; defaults to one
+#'   built from the observed certification series.
 #' @param allow_analogy Permit inputs derived by analogy from another specialty
 #'   (currently the delegation matrix). Declared in the run metadata either way.
 #' @param output_dir If non-NULL, write provenance-tagged artifacts here.
@@ -193,6 +195,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           n_iterations = 200,
                                           baseline_entrants = 55,
                                           calibration = NULL,
+                                          parameter_spec = NULL,
                                           allow_analogy = TRUE,
                                           output_dir = NULL,
                                           seed = 20260801L,
@@ -260,6 +263,15 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   # Keep the hours schedule and the FTE threshold internally consistent.
   hours_intercept <- calibrate_hours_intercept(agents$age, agents$sex)
 
+  # Parameter uncertainty: the entrant rate is drawn from the observed series'
+  # own sampling distribution each iteration. Without this the intervals are
+  # sampling noise only, which the 2020->2023 back-test showed to be 6.5-8.2x
+  # too narrow.
+  param_spec <- if (is.null(parameter_spec) && has_mufflyaccess()) {
+    tryCatch(entrant_spec_from_series(agents), error = function(e) NULL)
+  } else parameter_spec
+  if (!is.null(param_spec)) assert_parameter_uncertainty(param_spec, mode)
+
   # --- Supply: one Monte-Carlo microsimulation per scenario ----------------
   supply_by_scenario <- purrr::imap_dfr(supply_scenarios, function(params, scenario_name) {
     if (verbose) .msg_info(sprintf("  supply scenario: %s", params$label))
@@ -273,6 +285,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       retirement_schedule = scenario_retirement_schedule(params),
       hours_multiplier = params$hours_multiplier %||% 1.0,
       hours_intercept = hours_intercept,
+      param_spec = param_spec,
       late_career_fte_factor = params$late_career_fte_factor %||% 1.0,
       late_career_fte_onset_age = params$late_career_fte_onset_age %||% NA_real_,
       seed = seed,
@@ -378,6 +391,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       cohort_composition = cohort_composition(agents),
       fte_definition = fte_definition(),
       hours_intercept = hours_intercept,
+      parameter_spec = param_spec,
       wrvu_per_fte = wrvu_per_fte,
       productivity_plausible = productivity_ok,
       crude_departure_rate = crude_rate,

@@ -28,6 +28,9 @@ BACKTEST_ARMS <- tibble::tribble(
 #' @param n_iterations Monte Carlo replicates.
 #' @param apply_attrition Apply retirement hazards. FALSE gives the
 #'   definition-matched comparison against a series that applies none.
+#' @param param_spec Optional [supply_parameter_spec()] built from PRE-CUTOFF
+#'   data only. Supplying it redraws the entrant rate each iteration so the
+#'   intervals carry forecast uncertainty. It does NOT move the point estimate.
 #' @param seed RNG seed.
 #' @return List with per-iteration trajectories and the arm's settings.
 #' @export
@@ -37,6 +40,7 @@ run_backtest_arm <- function(cohort = c("derived", "synthetic"),
                              target_year = BACKTEST_TARGET_YEAR,
                              n_iterations = 1000L,
                              apply_attrition = TRUE,
+                             param_spec = NULL,
                              seed = 20260802L) {
   cohort <- match.arg(cohort)
   seed_microsimulation(seed)
@@ -63,9 +67,16 @@ run_backtest_arm <- function(cohort = c("derived", "synthetic"),
       a$sex <- ifelse(stats::runif(nrow(a)) < 0.55, "female", "male")
       a
     }
+    it_entrants <- entrants_per_year
+    it_sched <- sched
+    if (!is.null(param_spec)) {
+      d <- draw_supply_parameters(param_spec, sched)
+      it_entrants <- d$entrants
+      it_sched <- d$retirement_schedule
+    }
     sim <- simulate_provider_career_once(
-      agents, years, entrants_per_year,
-      retirement_schedule = sched,
+      agents, years, it_entrants,
+      retirement_schedule = it_sched,
       career_change_hazard = career_change,
       fte_method = "hours"
     )
@@ -78,7 +89,8 @@ run_backtest_arm <- function(cohort = c("derived", "synthetic"),
     settings = list(cohort = cohort, entrants_per_year = entrants_per_year,
                     cutoff_year = cutoff_year, target_year = target_year,
                     n_iterations = n_iterations, apply_attrition = apply_attrition,
-                    n0 = n0, seed = seed)
+                    n0 = n0, seed = seed,
+                    parameter_uncertainty = !is.null(param_spec))
   )
 }
 
