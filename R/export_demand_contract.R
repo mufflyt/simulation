@@ -275,7 +275,7 @@ export_hdmm_demand_contract <- function(trajectory,
   if (verbose) {
     msg <- sprintf("Wrote HDMM demand contract v%s (%d rows, tiers 5-6, %s): %s",
                    model_version, nrow(tidy), calibration_status, csv_path)
-    if (requireNamespace("logger", quietly = TRUE)) logger::log_info(msg) else message(msg)
+    .msg_info(msg)
   }
 
   invisible(list(csv_path = csv_path, manifest_path = manifest_path, data = tidy))

@@ -67,7 +67,9 @@ test_that("prediction with uncertainty is obs x draws, centered on the point est
   P  <- predict_count_with_uncertainty(m, nd, n_draws = 4000)
   pt <- .expected_count(m, nd)
   expect_equal(dim(P), c(3L, 4000L))
-  expect_equal(rowMeans(P), pt, tolerance = 0.05 * max(pt))
+  # rowMeans() names its result from the matrix rows while .expected_count()
+  # returns an unnamed vector; compare the values, not the names.
+  expect_equal(unname(rowMeans(P)), unname(pt), tolerance = 0.05 * max(pt))
   # offset scales counts: N people => N * per-person rate
   expect_equal(.expected_count(m, nd[2, , drop = FALSE], offset = log(1000)),
                pt[2] * 1000, tolerance = 1e-6)
