@@ -297,6 +297,8 @@ ssot_coverage_report <- function() {
   tibble::tribble(
     ~quantity,                    ~owner,          ~note,
     "base-year supply",           "mufflyaccess",  "urps_count(); national and CONUS kept distinct",
+    "certification cohorts",      "mufflyaccess",  "urps_counts_long(); yields the base-cohort age structure and the entrant rate",
+    "individual provider roster", "local",         "NOT in the contract: aggregate counts only, no age/sex/state. use_urps_artifact() hook exists but no artifact is configured",
     "supply scenarios",           "mufflyaccess",  "urps_scenarios() v1.0.0; replaces the local registry",
     "projection output shape",    "mufflyaccess",  "urps_projection_schema(); validated before export",
     "PFD prevalence 65+",         "mufflyaccess",  "pfd_prevalence(): 65-79 and 80plus only",

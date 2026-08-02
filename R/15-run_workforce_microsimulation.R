@@ -153,8 +153,10 @@ example_capacity_survey <- function() {
 #'   `mufflyaccess` contract. Never hard-code a workforce count.
 #' @param supply_geography "national" or "conus": national for supply reporting,
 #'   CONUS for the geographic access layer.
-#' @param roster Optional production provider roster; when NULL a synthetic
-#'   cohort is generated and the run is marked example-only.
+#' @param roster Optional production provider roster; when NULL the base cohort
+#'   is built from the observed certification series where available.
+#' @param use_certification_cohorts Build the base cohort from
+#'   `mufflyaccess::urps_counts_long()` when no roster is supplied.
 #' @param years Integer projection years.
 #' @param subspecialty Subspecialty label.
 #' @param pop_by_band Age-banded female population; defaults to the example.
@@ -176,6 +178,7 @@ example_capacity_survey <- function() {
 run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           supply_geography = c("national", "conus"),
                                           roster = NULL,
+                                          use_certification_cohorts = TRUE,
                                           years = 2025:2050,
                                           subspecialty = "FPMRS",
                                           pop_by_band = NULL,
@@ -219,17 +222,27 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   }
 
   # --- Starting cohort -----------------------------------------------------
-  example_only <- is.null(roster)
-  if (example_only) {
-    .msg_warn("No provider roster supplied: generating a SYNTHETIC cohort. ",
-              "Synthetic agents are for examples and tests only; production runs ",
-              "require a roster (see validate_provider_roster()).")
-    agents <- initialize_provider_agents(baseline_supply, subspecialty, base_year)
-    agents$sex <- ifelse(stats::runif(nrow(agents)) < 0.55, "female", "male")
-  } else {
+  if (!is.null(roster)) {
     dedup <- deduplicate_provider_roster(roster)
     agents <- agents_from_roster(dedup$roster, base_year)
+  } else if (isTRUE(use_certification_cohorts) && has_mufflyaccess()) {
+    # Better than a synthetic draw: fellowship-graduate cohorts get an age
+    # derived from their observed certification year; only the 2013
+    # backlog-clearance cohort is assumed. Still not a roster -- the contract
+    # ships aggregate counts with no age, sex or state.
+    agents <- agents_from_certification_cohorts(
+      baseline_year = base_year, geography = supply_geography,
+      subspecialty = subspecialty
+    )
+  } else {
+    .msg_warn("No provider roster and no certification series: generating a ",
+              "SYNTHETIC cohort. Examples and tests only.")
+    agents <- initialize_provider_agents(baseline_supply, subspecialty, base_year)
+    agents$sex <- ifelse(stats::runif(nrow(agents)) < 0.55, "female", "male")
   }
+  cohort <- cohort_provenance(agents)
+  example_only <- !cohort$is_production
+  if (example_only) .msg_warn("Cohort source '", cohort$source, "': ", cohort$note)
 
   # Keep the hours schedule and the FTE threshold internally consistent.
   hours_intercept <- calibrate_hours_intercept(agents$age, agents$sex)
@@ -297,6 +310,10 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
 
   # --- Replacement-ratio outlook per supply scenario -----------------------
   crude_rate <- implied_annual_departure_rate(agents$age, agents$sex)
+  entrant_check <- if (has_mufflyaccess()) {
+    tryCatch(implied_gross_entrants(agents, assumed = baseline_entrants),
+             error = function(e) NULL)
+  } else NULL
   outlook <- purrr::imap_dfr(supply_scenarios, function(params, scenario_name) {
     sched <- scenario_retirement_schedule(params)
     rate <- implied_annual_departure_rate(agents$age, agents$sex, retirement_schedule = sched)
@@ -343,11 +360,14 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       supply_geography = supply_geography,
       supply_contract = contract,
       example_only = example_only,
+      cohort_provenance = cohort,
+      cohort_composition = cohort_composition(agents),
       fte_definition = fte_definition(),
       hours_intercept = hours_intercept,
       wrvu_per_fte = wrvu_per_fte,
       productivity_plausible = productivity_ok,
       crude_departure_rate = crude_rate,
+      entrant_reconciliation = entrant_check,
       years = range(years),
       n_iterations = n_iterations,
       scenario_registry_version = ssot_scenario_registry_version() %||% SCENARIO_REGISTRY_VERSION,
