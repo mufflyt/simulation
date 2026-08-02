@@ -78,3 +78,6 @@ outputs/
 # package build stays small -- see .Rbuildignore ^data-raw$).
 !data-raw/census/
 !data-raw/census/*.csv
+
+# Cited obstetric reference data shipped with the package.
+!inst/extdata/**/*.csv
