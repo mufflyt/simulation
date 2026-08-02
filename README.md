@@ -97,13 +97,54 @@ tests that need it skip themselves.
 
 ### Calibration status
 
-The model is structurally complete and **not yet calibrated**. Work RVUs, the
-delegation shares, and the hours intercept are placeholders; every run reports
-its own `calibration_status`, and strict mode refuses to proceed. What is needed:
-CMS PFS RVU values, a fielded URPS practice-capacity survey, a URPS practice
-survey for hours worked, and national anchors (NAMCS/MEPS office visits; HCUP
-SASD + Medicare Part B for the procedure basket — **not** NIS, which is inpatient
-and carries ICD-10-PCS rather than CPT).
+Every input carries one of four tiers, reported by `calibration_status_report()`
+and enforced by `assert_publishable_workload()`:
+
+| Tier | Meaning | Gate |
+|---|---|---|
+| `calibrated` | anchored to an external published source | passes |
+| `solved` | determined by an internal constraint, not assumed | passes |
+| `derived_by_analogy` | structure from a published study in **another specialty** | needs `allow_analogy = TRUE` |
+| `uncalibrated_illustrative` | placeholder | always refused |
+
+| Input | Tier | Source |
+|---|---|---|
+| Work RVUs | `calibrated` | CMS PFS Relative Value File, RVU25A (2025) |
+| Indirect time share (0.271) | `calibrated` | AAN 2010 Practice Profile, n=910 |
+| Base-year supply | `calibrated` | `mufflyaccess` URPS contract |
+| Hours intercept | `solved` | set so the base-year cohort mean equals 37.2 clinical hrs/wk |
+| Service case mix | `derived_by_analogy` | declared CPT mix; replace with claims-derived shares |
+| Delegation shares | `derived_by_analogy` | Forte 2021 physiatry shape, level rescaled (see below) |
+| Clinical hours schedule | `derived_by_analogy` | HWSM Exhibit 14 (general internal medicine levels) |
+
+Refresh the RVUs from a newer CMS release with `refresh_cms_work_rvu(path)`, and
+diff a release against the shipped table with `verify_cms_work_rvu(path)`.
+
+#### Two things calibration exposed
+
+**Placeholder work RVUs were wrong by up to 44%** — cystoscopy (52000) was 2.20
+against an actual 1.53, PTNS 0.45 against 0.60, prolapse 18.50 against a
+mix-weighted 12.12.
+
+**Forte's physiatry delegation shares do not transfer as a level.** Physiatry is
+the primary specialty for its conditions; urogynecology is a small subspecialty
+inside a much larger system, and most population-level UI care is delivered by
+generalist OB/GYN, urology and primary care. The raw shares imply ~1,306
+subspecialists delivering 64.5% of modelled national volume, which solves to
+~17,700 work RVUs per clinical FTE — about 2.4× any published benchmark.
+`implied_urps_share()` puts the consistent level at 28.0%, so the shares are
+rescaled by 0.434 with the cross-service *shape* preserved. Solved productivity
+then lands at 7,685 wRVU/FTE, against a benchmark median of 7,500.
+
+`check_productivity_plausible()` enforces this permanently: because the
+productivity denominator is *solved* from the base-year volumes, it silently
+absorbs any error in them, and a denominator that is too high suppresses
+projected demand.
+
+Still needed to move the remaining tiers: a fielded URPS practice-capacity and
+hours survey, claims-derived case mix, and national volume anchors (NAMCS/MEPS
+office visits; HCUP SASD + Medicare Part B for the procedure basket — **not**
+NIS, which is inpatient and carries ICD-10-PCS rather than CPT).
 
 # To Do for DPMM:
 Replace simulated data with real SWAN variables - ***DONE in `dppm_validate_SWAN_better.R`***

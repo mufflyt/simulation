@@ -1,33 +1,73 @@
 # URPS Service Workload Basket
 # ---------------------------------------------------------------------------
-# Work RVUs per unit of service and the provider-type delegation matrix used by
-# R/17-workload_to_fte.R.
+# CALIBRATED. Work RVUs come from the CMS Physician Fee Schedule Relative Value
+# File, release RVU25A (PPRRVU25_JAN, 2025), unmodified codes only. The
+# authoritative table and the CPT mix live in R/23-cms_rvu.R; this file records
+# the provenance and the tiering.
 #
-# STATUS: uncalibrated_illustrative. The work_rvu values below are placeholders
-# and MUST be replaced from the CMS Physician Fee Schedule RVU file for the
-# modelled year before any FTE number is published. The delegation shares are
-# structured after Forte GJ et al. Am J Phys Med Rehabil 2021;100:866-876
-# Table 4, which measured the physiatrist / NP / PA / PT split BY SERVICE.
-# Their central finding: NPs and PAs perform 1-3% of injection and diagnostic
-# procedures but 15-20% of outpatient services -- a scalar substitution ratio
-# cannot represent that.
+#   refresh_cms_work_rvu(path)   re-derive from a newer CMS release
+#   verify_cms_work_rvu(path)    diff the shipped table against a release
 #
-# assert_publishable_workload() fails closed in REPRODUCIBILITY_MODE=strict
-# until calibration_status reads "calibrated".
+# Calibration tiers used across the model (see calibration_status_report()):
+#   calibrated          anchored to an external published source
+#   solved              determined by an internal constraint, not assumed
+#   derived_by_analogy  structure from a published study in ANOTHER specialty
+#   uncalibrated_illustrative   a placeholder
 
-calibration_status: uncalibrated_illustrative
-source_note: "work_rvu placeholders; replace from CMS PFS RVU file"
-indirect_time_share: 0.271   # 2010 AAN Practice Profile: 72.9% of professional time in patient care
+work_rvu:
+  status: calibrated
+  source: "CMS Physician Fee Schedule Relative Value File, RVU25A (PPRRVU25_JAN), 2025"
+  url: "https://www.cms.gov/files/zip/rvu25a.zip"
+  note: >
+    Replaced placeholders that were wrong by up to 44% (cystoscopy 52000 was
+    2.20, actual 1.53; urodynamics was 1.60, mix-weighted actual 1.89; PTNS was
+    0.45, actual 0.60). Postoperative care carries a work RVU of zero because
+    every procedure in the basket has a 090-day global period that already
+    includes it.
 
-services:
-  new_consultation:       {setting: ambulatory, unit: encounter, work_rvu: 2.60, urps_share: 0.70, app_share: 0.08, other_clinician_share: 0.22}
-  return_visit:           {setting: ambulatory, unit: encounter, work_rvu: 1.30, urps_share: 0.58, app_share: 0.22, other_clinician_share: 0.20}
-  pessary_care:           {setting: ambulatory, unit: encounter, work_rvu: 0.90, urps_share: 0.45, app_share: 0.40, other_clinician_share: 0.15}
-  urodynamics:            {setting: ambulatory, unit: study,     work_rvu: 1.60, urps_share: 0.62, app_share: 0.28, other_clinician_share: 0.10}
-  cystoscopy:             {setting: ambulatory, unit: procedure, work_rvu: 2.20, urps_share: 0.80, app_share: 0.05, other_clinician_share: 0.15}
-  botox_bladder:          {setting: ambulatory, unit: procedure, work_rvu: 3.30, urps_share: 0.78, app_share: 0.07, other_clinician_share: 0.15}
-  ptns:                   {setting: ambulatory, unit: session,   work_rvu: 0.45, urps_share: 0.30, app_share: 0.55, other_clinician_share: 0.15}
-  bladder_instillation:   {setting: ambulatory, unit: session,   work_rvu: 0.40, urps_share: 0.25, app_share: 0.60, other_clinician_share: 0.15}
-  sling_procedure:        {setting: operative,  unit: procedure, work_rvu: 12.70, urps_share: 0.72, app_share: 0.01, other_clinician_share: 0.27}
-  prolapse_procedure:     {setting: operative,  unit: procedure, work_rvu: 18.50, urps_share: 0.68, app_share: 0.01, other_clinician_share: 0.31}
-  postoperative_care:     {setting: ambulatory, unit: encounter, work_rvu: 0.00, urps_share: 0.55, app_share: 0.35, other_clinician_share: 0.10}
+service_case_mix:
+  status: derived_by_analogy
+  note: >
+    The CPT mix weights within each service (URPS_CPT_BASKET) are a declared
+    assumption about case mix, not a measurement. Replace with claims-derived
+    shares from Medicare Part B carrier or a commercial claims extract.
+
+delegation_shares:
+  status: derived_by_analogy
+  shape_source: "Forte GJ et al. Am J Phys Med Rehabil 2021;100:866-876, Table 4 (physiatry)"
+  level_correction: 0.434
+  note: >
+    Forte transfers as a SHAPE (procedures concentrated in the subspecialist,
+    routine follow-up and device care delegated) but not as a LEVEL. Physiatry
+    is the primary specialty for its conditions; urogynecology is a small
+    subspecialty inside a much larger system, and most population-level urinary
+    incontinence care is delivered by generalist OB/GYN, urology and primary
+    care. The raw shares imply ~1,306 subspecialists delivering 64.5% of all
+    modelled national volume, which solves to ~17,700 work RVUs per clinical FTE
+    per year - about 2.4x any published benchmark. implied_urps_share() puts the
+    consistent level at 28.0%, giving the 0.434 factor. Field a urogynecology
+    practice survey to move this to "calibrated".
+
+indirect_time_share:
+  status: calibrated
+  value: 0.271
+  source: "AAN 2010 Practice Profile (n=910): 72.9% of professional time in patient care"
+
+productivity_benchmark:
+  status: calibrated
+  low: 3500
+  median: 7500
+  high: 12000
+  note: >
+    Plausible annual work RVUs per clinical FTE for an OB/GYN-family specialty.
+    The productivity denominator is SOLVED from the base-year volumes, so a
+    solved value outside this range is evidence the VOLUMES are wrong, not that
+    productivity is unusual. check_productivity_plausible() enforces it.
+
+hours:
+  schedule_status: derived_by_analogy
+  schedule_source: "HWSM Exhibit 14 age x sex specification (general internal medicine levels)"
+  intercept_status: solved
+  intercept_note: >
+    Solved so the base-year cohort mean equals the FTE definition of 37.2
+    clinical hours per week (Dall 2021 physiatry). Not assumed.
