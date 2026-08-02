@@ -14,7 +14,23 @@
 # These utilities have no hard dependency on the rest of the model; they are the
 # substrate the microsimulation, demand, and access modules build on.
 #
-# Dependencies: digest, jsonlite, logger (all light-weight).
+# Dependencies: digest, jsonlite (both light-weight).
+
+# ---- Logging --------------------------------------------------------------
+#
+# Progress and diagnostics go through base::message() (stderr), not a logging
+# package. Messages are suppressible with suppressMessages(), capturable, and add
+# no dependency. `.msg_debug()` is silent unless MICROSIM_VERBOSE is truthy.
+
+.msg_info <- function(...) message(...)
+
+.msg_warn <- function(...) message("WARNING: ", ...)
+
+.msg_debug <- function(...) {
+  v <- tolower(trimws(Sys.getenv("MICROSIM_VERBOSE", unset = "")))
+  if (v %in% c("1", "true", "yes", "on")) message("DEBUG: ", ...)
+  invisible(NULL)
+}
 
 # ---- Reproducibility mode -------------------------------------------------
 
@@ -32,9 +48,9 @@ resolve_reproducibility_mode <- function(default = "relaxed") {
   mode <- tolower(trimws(mode))
 
   if (!mode %in% c("strict", "relaxed")) {
-    logger::log_warn(
-      "Unknown REPRODUCIBILITY_MODE '{mode}'; falling back to '{default}'"
-    )
+    .msg_warn(sprintf(
+      "Unknown REPRODUCIBILITY_MODE '%s'; falling back to '%s'", mode, default
+    ))
     mode <- default
   }
   mode
@@ -57,7 +73,7 @@ seed_microsimulation <- function(seed = NULL, mode = resolve_reproducibility_mod
   }
 
   if (mode == "relaxed" && is.na(seed)) {
-    logger::log_info("Reproducibility mode 'relaxed' with no seed: RNG left unseeded")
+    .msg_info("Reproducibility mode 'relaxed' with no seed: RNG left unseeded")
     return(invisible(NA_integer_))
   }
 
@@ -65,7 +81,7 @@ seed_microsimulation <- function(seed = NULL, mode = resolve_reproducibility_mod
   # RNGkind pinned so the stream is reproducible across R versions >= 3.6.
   suppressWarnings(RNGkind("Mersenne-Twister", "Inversion", "Rejection"))
   set.seed(seed)
-  logger::log_info("Seeded microsimulation RNG with {seed} (mode = {mode})")
+  .msg_debug(sprintf("Seeded microsimulation RNG with %d (mode = %s)", seed, mode))
   invisible(seed)
 }
 
@@ -209,7 +225,8 @@ write_artifact_with_provenance <- function(object,
   jsonlite::write_json(provenance, tmp_sidecar, auto_unbox = TRUE, pretty = TRUE)
   file.rename(tmp_sidecar, sidecar)
 
-  logger::log_info("Wrote artifact {basename(artifact_path)} ({n_rows} records) + provenance sidecar")
+  .msg_info(sprintf("Wrote artifact %s (%s records) + provenance sidecar",
+                    basename(artifact_path), format(n_rows)))
   invisible(provenance)
 }
 
@@ -235,7 +252,7 @@ read_artifact_with_provenance <- function(artifact_path,
     if (identical(mode, "strict")) {
       stop(msg, call. = FALSE)
     }
-    logger::log_warn("{msg} -> recompute")
+    .msg_warn(msg, " -> recompute")
     return(NULL)
   }
 
@@ -263,8 +280,7 @@ read_artifact_with_provenance <- function(artifact_path,
     }
   }
 
-  logger::log_info(
-    "Loaded artifact {basename(artifact_path)} (run_id = {provenance$provenance$run_id})"
-  )
+  .msg_debug(sprintf("Loaded artifact %s (run_id = %s)",
+                     basename(artifact_path), provenance$provenance$run_id))
   readRDS(artifact_path)
 }

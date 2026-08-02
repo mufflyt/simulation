@@ -1,27 +1,115 @@
 # Simulation Modeling for Urogynecology Workforce Planning
 
-## Workforce Microsimulation (new)
+## Workforce Microsimulation
 
-The workforce supply model is now a **stochastic, individual-level microsimulation**
-(modules `R/10`–`R/15`), porting approaches from the sister repositories
-`cliff` (age-structured hazards, effective-FTE, three-estimand demand
-concordance), `twostep` (E2SFCA/M2SFCA geographic access), and `isochrones`
-(strict active-in-year retirement predicate, reproducibility + fail-closed
-provenance). See [`docs/WORKFORCE_MICROSIMULATION_UPDATES.md`](docs/WORKFORCE_MICROSIMULATION_UPDATES.md).
+A **stochastic, individual-level microsimulation** on both the supply and the
+demand side (modules `R/10`–`R/21`), built to the methodology documented in the
+IHS Markit / Dall *Health Workforce Microsimulation Model* (HWMM v5.19.20) and
+the published applications of it.
 
-```bash
-Rscript scripts/run_workforce_microsimulation_example.R          # runs without external data
-REPRODUCIBILITY_MODE=strict Rscript scripts/run_workforce_microsimulation_example.R
-Rscript -e 'testthat::test_dir("tests/testthat")'                # regression guards
+This is an R package, `urpssim`.
+
+```r
+# install.packages("pak")
+pak::pak("mufflyt/simulation")
+library(urpssim)
 ```
 
-Additional dependencies for these modules: `digest`, `jsonlite`, `yaml`, `logger`, `assertthat` (plus the existing tidyverse stack).
+```bash
+Rscript scripts/run_workforce_microsimulation_example.R          # no external data needed (~2 min)
+REPRODUCIBILITY_MODE=strict Rscript scripts/run_workforce_microsimulation_example.R
+```
+
+### Checks
+
+GitHub Actions workflows exist but are **`workflow_dispatch` only** — this account
+has exhausted its Actions minutes, so nothing runs automatically. Run the
+equivalents locally before merging:
+
+```bash
+Rscript -e 'devtools::test()'                                    # 233 regression guards
+Rscript -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"))'
+Rscript -e 'pkgload::load_all("."); testthat::test_file("tests/testthat/test-repo-hygiene.R", package = "urpssim")'
+```
+
+Re-enable the `push:` / `pull_request:` triggers in `.github/workflows/` when
+minutes are available again.
+
+Logging goes through `base::message()`; there is no logging-package dependency.
+`mufflyaccess` is in Suggests — the package checks and tests without it, and the
+tests that need it skip themselves.
+
+### The four rules this model enforces
+
+1. **The base-year shortfall is estimated, never assumed.** Rebasing supply and
+   demand to 1.0 in the base year guarantees adequacy of 1.0 whether or not the
+   workforce is short. HWMM names this as a conceptual limitation: base-year
+   equilibrium "essentially presents future adequacy relative to current levels."
+   `R/18-baseline_gap.R` implements the three sanctioned routes — a provider
+   capacity survey, HPSA-removal counts, or an explicitly labelled assumption
+   with an evidence ledger. Without one, `REPRODUCIBILITY_MODE=strict` refuses to
+   run.
+2. **Every supply/demand comparison has FTE on both sides.** Provider FTE divided
+   by a count of prevalent cases, consultations, or procedures is dimensionally
+   meaningless. `R/17-workload_to_fte.R` converts service volumes to required FTE
+   through work RVUs calibrated to a base-year anchor (Dall 2013's approach), a
+   staffing-ratio route (Zarek 2025), or a setting time-share route (Dall 2021).
+   `compute_demand_coverage()` now errors with an explanation.
+3. **FTE is an hours threshold, and hours are modelled by age and sex.** Not a
+   hand-picked productivity step function. FTE thresholds are not comparable
+   across studies (37.2 / 40 / 42.3 / 70 clinical hrs/wk in the four source
+   models), so `restate_fte()` exists to convert between them.
+4. **Retirement scenarios shift the age axis.** "Retire two years earlier/later",
+   as in every published Dall-family study — not a scalar hazard multiplier,
+   which distorts the shape of the curve. The scenario-registry validator rejects
+   a `hazard_mult` field outright.
+
+### Module map
+
+| Module | Contents |
+|---|---|
+| `10-repro_provenance.R` | reproducibility modes, seeding, fail-closed artifact provenance |
+| `11-canonical_and_joins.R` | canonical source resolver, join-safety wrappers |
+| `12-provider_microsimulation.R` | stochastic supply engine + deterministic mean-field backbone |
+| `13-demand_urps.R` | D1/D2/D3 demand estimands with distinct age profiles |
+| `14-spatial_access_e2sfca.R` | E2SFCA / M2SFCA geographic access |
+| `15-run_workforce_microsimulation.R` | orchestrator |
+| `16-provider_lifecycle.R` | roster contract, hours by age×sex, retirement, career change |
+| `17-workload_to_fte.R` | service basket, delegation matrix, workload→FTE |
+| `18-baseline_gap.R` | base-year supply adequacy |
+| `19-scenario_registry.R` | versioned supply and demand scenarios |
+| `20-provider_geography.R` | entrant placement, migration, density benchmarks |
+| `21-calibration_validation.R` | calibration scalars, two-method agreement, validation report |
+| `22-legacy_loader.R` | ordered, collision-reporting loader for `inst/legacy/` |
+| `00-paths.R` | external-data path resolution (no hardcoded paths anywhere) |
+
+### Source models
+
+| Source | What was taken |
+|---|---|
+| IHS Markit / Dall, *HWMM* v5.19.20 (2020) | overall architecture; hours-worked OLS specification (Exhibit 14); physician retirement to age 90; calibration scalars (Exhibit 11); five-step geographic allocation; validation taxonomy; the base-year-equilibrium warning |
+| Dall et al., *Neurology* 2013;81:470–478 | work-RVU→FTE calibration; assumed-shortfall route with an evidence ledger; the access double-counting warning |
+| Dall et al., *Am J Phys Med Rehabil* 2021;100:877–884 | capacity-survey shortfall (bottom-up FTE route); FTE = 37.2 clinical hrs/wk; setting time-share allocation |
+| Forte et al., *Am J Phys Med Rehabil* 2021;100:866–876 | service-level provider-type delegation matrix (Table 4) |
+| Zarek et al., *Phys Ther* 2025;105:pzaf014 | capacity-survey adequacy arithmetic; multistate-licensure de-duplication; separate under-50 career-change hazard |
+| Fraher & Knapton, UNC Sheps Center (2017) | categorical FTE participation; two-model agreement as real concordance |
+| ASN Data Analytics, `wf_supply_modeling` (MIT) | digitised FutureDocs FTE-probability table by single year of age and sex |
+
+### Calibration status
+
+The model is structurally complete and **not yet calibrated**. Work RVUs, the
+delegation shares, and the hours intercept are placeholders; every run reports
+its own `calibration_status`, and strict mode refuses to proceed. What is needed:
+CMS PFS RVU values, a fielded URPS practice-capacity survey, a URPS practice
+survey for hours worked, and national anchors (NAMCS/MEPS office visits; HCUP
+SASD + Medicare Part B for the procedure basket — **not** NIS, which is inpatient
+and carries ICD-10-PCS rather than CPT).
 
 # To Do for DPMM:
-Replace simulated data with real SWAN variables - Your calculate_swan_incontinence_prevalence() function shows you're ready to connect to real SWAN data - ***DONE in `dppm_validate_SWAN_better.R`***
+Replace simulated data with real SWAN variables - ***DONE in `dppm_validate_SWAN_better.R`***
 Calibrate transition probabilities - Currently using placeholder coefficients; need to estimate from longitudinal SWAN data
-Add geographic stratification - Dall's models are county-level; yours is currently population-level
-Integrate healthcare utilization - Missing the demand-side modeling that connects incontinence prevalence to provider needs
+Add geographic stratification - Dall's models are county-level (HWMM builds a population file for each of the 3,142 counties); the microsimulation modules now carry state-level geography (`R/20-provider_geography.R`) but the DPMM disease layer is still population-level
+Integrate healthcare utilization - The workload->FTE chain now exists (`R/17-workload_to_fte.R`); what is missing is the SWAN-derived disease layer feeding it. NOTE: vaginal parity cannot enter through the MEPS utilization regression (MEPS does not carry delivery history, and Dall's models restrict explanatory variables to those present in BOTH MEPS and the population file). Parity must enter through the disease layer instead.
 
 This repository contains simulation code and data processing tools developed for a microsimulation model of the female pelvic medicine and reconstructive surgery (FPMRS) workforce, inspired by the modeling approach used by Timothy Dall.
 
@@ -43,13 +131,40 @@ The goal of this project is to simulate future supply and demand for urogynecolo
 ## 📁 File Structure
 ```r
 simulation/
-├── R/ # R scripts for workforce logic, validation, and processing
-├── data/ # Raw and intermediate data (ignored in .gitignore)
-├── manuscript/ # Writing for paper/manuscript
-├── swan_validation/ # Outputs and code validating prevalence inputs
-├── .gitignore # Ignores output, data, and cache
-├── simulation.Rproj # RStudio project file
+├── R/             # package code: microsimulation modules 00, 10-22
+├── man/           # roxygen-generated documentation (120 pages)
+├── inst/legacy/   # original DPMM/SWAN/workforce scripts, NOT loaded by the package
+├── config/        # canonical_sources, service_workload, calibration_targets, paths
+├── scripts/       # runnable entry points
+├── tests/         # testthat regression guards
+├── .github/       # R CMD check, coverage, and repo-hygiene CI
+├── DESCRIPTION, NAMESPACE, LICENSE
 ```
+
+### External data
+
+No filesystem path is hardcoded. `swan_path()`, `data_raw_path()` and
+`external_path()` resolve against `SIMULATION_DATA_ROOT`, then
+`config/paths.local.yml` (gitignored, per-machine), then `config/paths.yml`.
+Run `check_external_data()` to see what is reachable before starting a long job.
+
+### Legacy scripts
+
+`inst/legacy/` holds the original DPMM, SWAN-validation and early-workforce
+scripts. They are deliberately outside the package: they interleave function
+definitions with top-level analysis code that reads data files. Load them with:
+
+```r
+load_legacy()                          # definitions only; touches no files
+load_legacy(functions_only = FALSE)    # runs them as scripts; needs external data
+```
+
+Fifteen function names are defined in more than one of those files, so source
+order used to decide silently which implementation you got. `LEGACY_CANONICAL`
+now declares the owner of each, `load_legacy()` reports every redefinition, and a
+test verifies the load order delivers what was declared. Within-file duplicates
+are gone: identical bodies were deleted, divergent ones renamed to
+`<name>_variant1` and flagged. See `inst/legacy/README.md`.
 
 ## 🔧 Dependencies
 

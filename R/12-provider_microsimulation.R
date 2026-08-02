@@ -60,7 +60,8 @@ microsim_baseline_rate <- function(subspecialty) {
   if (subspecialty %in% names(MICROSIM_BASELINE_RATES)) {
     MICROSIM_BASELINE_RATES[[subspecialty]]
   } else {
-    logger::log_warn("No baseline rate for subspecialty '{subspecialty}'; using reference {MICROSIM_REFERENCE_BASELINE_RATE}")
+    .msg_warn(sprintf("No baseline rate for subspecialty '%s'; using reference %.3f",
+                      subspecialty, MICROSIM_REFERENCE_BASELINE_RATE))
     MICROSIM_REFERENCE_BASELINE_RATE
   }
 }
@@ -107,7 +108,7 @@ build_hazard_table <- function(baseline_rate,
 #' Look up the annual departure hazard for an age given a hazard table
 #' @param age Numeric age(s).
 #' @param hazard_table Named vector of band hazards (see [build_hazard_table()]).
-#' @return Numeric hazard(s) in [0, 1].
+#' @return Numeric hazard(s) in the unit interval.
 #' @export
 retirement_hazard <- function(age, hazard_table) {
   bands <- microsim_age_band_of(age)
@@ -116,11 +117,14 @@ retirement_hazard <- function(age, hazard_table) {
   unname(pmin(h, 1))
 }
 
-#' Age-productivity weight (cliff effective-FTE concept)
+#' Age-productivity weight (DEPRECATED step function)
 #'
-#' Older surgeons operate less; weight each provider-year by relative
-#' productivity. Raw weights are normalised elsewhere so the base-year active
-#' cohort averages 1.0 (effective(base) == headcount(base)).
+#' Superseded by the hours-based FTE definition in R/16-provider_lifecycle.R.
+#' Every Dall-family model defines FTE as an HOURS THRESHOLD and estimates weekly
+#' hours by regression on age and sex; a hand-chosen step function normalised so
+#' the base-year cohort averages 1.0 cannot reproduce the two properties those
+#' regressions show (hours flat until the late 50s, and a sex gap that varies
+#' with age). Retained only so old results can be reproduced for comparison.
 #'
 #' @param age Numeric age(s).
 #' @return Numeric relative-productivity weight(s).
@@ -132,6 +136,45 @@ productivity_weight_raw <- function(age) {
     age < 65  ~ 0.85,
     age < 70  ~ 0.70,
     TRUE      ~ 0.55
+  )
+}
+
+#' Clinical FTE contributed by each active provider
+#'
+#' Dispatches on the FTE method:
+#'   "hours"          weekly clinical hours / the FTE hours threshold (default;
+#'                    Dall 2013, Dall 2021, Zarek 2025)
+#'   "participation"  categorical full-time / part-time / no-patient-care
+#'                    expectation (Fraher & Knapton FutureDocs)
+#'   "legacy_weight"  the deprecated normalised step function
+#'
+#' @param age Numeric age(s).
+#' @param sex Character sex.
+#' @param method FTE method.
+#' @param hours_model Optional fitted hours model.
+#' @param fte_hours Weekly clinical hours defining 1.0 FTE.
+#' @param legacy_norm Normalisation constant for the legacy method.
+#' @param hours_intercept Intercept for the reference hours schedule; supply the
+#'   value from [calibrate_hours_intercept()] so the hours schedule and the FTE
+#'   threshold are internally consistent.
+#' @return Numeric clinical FTE per provider.
+#' @export
+provider_clinical_fte <- function(age, sex = "female",
+                                  method = c("hours", "participation", "legacy_weight"),
+                                  hours_model = NULL,
+                                  fte_hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK,
+                                  legacy_norm = 1,
+                                  hours_intercept = HWSM_HOURS_INTERCEPT) {
+  method <- match.arg(method)
+  switch(
+    method,
+    hours = if (is.null(hours_model)) {
+      hwsm_reference_hours(age, sex, intercept = hours_intercept) / fte_hours
+    } else {
+      predict_clinical_fte(age, sex, hours_model, fte_hours)
+    },
+    participation = participation_fte(age, sex),
+    legacy_weight = productivity_weight_raw(age) * legacy_norm
   )
 }
 
@@ -206,75 +249,173 @@ initialize_provider_agents <- function(n,
 #' @param conversion_floor Fraction of entrants that actually enter practice
 #'   (cliff WORKFORCE_CONVERSION_FLOOR = 0.70). Applied as a haircut on entrants.
 #' @param subspecialty Subspecialty label for injected entrants.
+#' @param retirement_schedule Single-year-of-age retirement hazard schedule.
+#'   Scenarios pass a SHIFTED schedule (retire n years earlier/later).
+#' @param fte_method FTE method: "hours", "participation", or "legacy_weight".
+#' @param hours_model Optional fitted hours model from
+#'   [fit_clinical_hours_model()]; when NULL the reference schedule is used.
+#' @param hours_multiplier Scenario knob scaling hours worked.
+#' @param hours_intercept Intercept for the reference hours schedule; use
+#'   [calibrate_hours_intercept()] so hours and the FTE threshold agree.
+#' @param entrant_female_share Share of new entrants drawn as female.
+#' @param placement_shares Optional tibble of `geo` and `share` enabling entrant
+#'   placement and mid-career migration.
 #' @return List with `panel` (per-year summary tibble) and `agents` (final agent
 #'   table incl. drawn retirement years) so the temporal cohort is reconstructible.
 #' @export
 simulate_provider_career_once <- function(agents,
                                           years,
                                           entrants_per_year,
-                                          hazard_table,
+                                          hazard_table = NULL,
                                           conversion_floor = 1.0,
-                                          subspecialty = "FPMRS") {
+                                          subspecialty = "FPMRS",
+                                          retirement_schedule = RETIREMENT_HAZARD_BY_AGE,
+                                          fte_method = "hours",
+                                          hours_model = NULL,
+                                          hours_multiplier = 1.0,
+                                          hours_intercept = HWSM_HOURS_INTERCEPT,
+                                          entrant_female_share = 0.82,
+                                          placement_shares = NULL) {
   years <- sort(unique(as.integer(years)))
   base_year <- min(years)
 
-  # Normalise productivity so the base-year active cohort averages 1.0.
-  base_active <- provider_active_in_year(agents, base_year)
-  raw_w <- productivity_weight_raw(agents$age[base_active])
-  prod_norm <- if (length(raw_w) > 0 && mean(raw_w) > 0) 1 / mean(raw_w) else 1
+  if (!"sex" %in% names(agents)) agents$sex <- "female"
+
+  # Legacy step-function weights are normalised so the base-year cohort averages
+  # 1.0; the hours and participation methods are absolute and need no scaling.
+  prod_norm <- 1
+  if (identical(fte_method, "legacy_weight")) {
+    base_active <- provider_active_in_year(agents, base_year)
+    raw_w <- productivity_weight_raw(agents$age[base_active])
+    prod_norm <- if (length(raw_w) > 0 && mean(raw_w) > 0) 1 / mean(raw_w) else 1
+  }
+
+  fte_of <- function(age, sex) {
+    provider_clinical_fte(age, sex, method = fte_method, hours_model = hours_model,
+                          legacy_norm = prod_norm,
+                          hours_intercept = hours_intercept) * hours_multiplier
+  }
 
   effective_entrants <- entrants_per_year * conversion_floor
-  panel_rows <- vector("list", length(years))
+
+  # ---- Preallocated plain-vector state --------------------------------------
+  # The inner loop previously grew a tibble with dplyr::bind_rows() once per
+  # simulated year and built a one-row tibble per year for the panel. Both are
+  # O(n) copies inside an O(years x iterations) loop and dominated the runtime.
+  # Here the agent state lives in preallocated atomic vectors and the tibbles are
+  # constructed once, at the end.
+  n0 <- nrow(agents)
+  n_years <- length(years)
+  capacity <- n0 + n_years * (as.integer(ceiling(effective_entrants)) + 1L)
+
+  v_age <- c(as.numeric(agents$age), rep(NA_real_, capacity - n0))
+  v_sex <- c(as.character(agents$sex), rep(NA_character_, capacity - n0))
+  v_entry <- c(as.numeric(agents$entry_year), rep(NA_real_, capacity - n0))
+  v_retire <- c(as.numeric(agents$retirement_year), rep(NA_real_, capacity - n0))
+  v_state <- if ("state" %in% names(agents)) {
+    c(as.character(agents$state), rep(NA_character_, capacity - n0))
+  } else NULL
+  v_id <- c(as.character(agents$provider_id), rep(NA_character_, capacity - n0))
+  v_origin <- c(as.character(agents$origin_cohort %||% "baseline"),
+                rep(NA_character_, capacity - n0))
+  n_used <- n0
+
+  p_year <- integer(n_years)
+  p_head <- integer(n_years)
+  p_fte <- numeric(n_years)
+  p_age <- numeric(n_years)
   next_entrant_seq <- 1L
 
   for (i in seq_along(years)) {
     year <- years[i]
+    live <- seq_len(n_used)
 
     # --- Departures: Bernoulli draw per active agent ---
-    active_mask <- provider_active_in_year(agents, year)
-    if (any(active_mask)) {
-      hz <- retirement_hazard(agents$age[active_mask], hazard_table)
-      draws <- stats::runif(sum(active_mask)) < hz
-      # retirement_year = first-inactive = this year + 1 (last active = year).
-      idx_active <- which(active_mask)
-      agents$retirement_year[idx_active[draws]] <- year + 1L
+    # retirement_year is first-inactive, so an agent retiring THIS year (value
+    # year + 1) is still active this year. The active set therefore does not
+    # change when the draws are applied, and one recomputation is enough.
+    active <- live[(v_entry[live] <= year) &
+                     (is.na(v_retire[live]) | v_retire[live] > year)]
+
+    if (length(active)) {
+      hz <- if (is.null(hazard_table)) {
+        departure_hazard(v_age[active], v_sex[active],
+                         retirement_schedule = retirement_schedule)
+      } else {
+        retirement_hazard(v_age[active], hazard_table)
+      }
+      retiring <- active[stats::runif(length(active)) < hz]
+      v_retire[retiring] <- year + 1L
     }
 
     # --- Record end-of-year state BEFORE injecting next year's entrants ---
-    active_now <- provider_active_in_year(agents, year)
-    active_ages <- agents$age[active_now]
-    eff_fte <- sum(productivity_weight_raw(active_ages) * prod_norm)
-    panel_rows[[i]] <- tibble::tibble(
-      year = year,
-      subspecialty = subspecialty,
-      headcount = sum(active_now),
-      effective_fte = eff_fte,
-      mean_age = if (length(active_ages) > 0) mean(active_ages) else NA_real_
-    )
+    p_year[i] <- year
+    p_head[i] <- length(active)
+    p_fte[i] <- if (length(active)) sum(fte_of(v_age[active], v_sex[active])) else 0
+    p_age[i] <- if (length(active)) mean(v_age[active]) else NA_real_
+
+    # --- Optional mid-career geographic migration ---
+    if (!is.null(placement_shares) && !is.null(v_state) && length(active)) {
+      yrs <- year - v_entry[active]
+      h <- migration_hazard(yrs, v_age[active])
+      movers <- active[stats::runif(length(active)) < h]
+      if (length(movers)) {
+        v_state[movers] <- assign_entrant_geography(length(movers), placement_shares)
+      }
+    }
 
     # --- Age everyone by one year (survivors and retirees alike) ---
-    agents$age <- agents$age + 1
+    v_age[live] <- v_age[live] + 1
 
     # --- Inject entrants for the next year (stochastic fractional part) ---
     n_new <- floor(effective_entrants) +
       as.integer(stats::runif(1) < (effective_entrants - floor(effective_entrants)))
     if (n_new > 0) {
-      new_agents <- tibble::tibble(
-        provider_id = sprintf("E%d_%06d", year, seq.int(next_entrant_seq, length.out = n_new)),
-        subspecialty = subspecialty,
-        age = MICROSIM_ENTRY_AGE,
-        entry_year = year + 1L,
-        retirement_year = NA_real_,
-        origin_cohort = "entrant"
-      )
-      agents <- dplyr::bind_rows(agents, new_agents)
+      slot <- seq.int(n_used + 1L, length.out = n_new)
+      if (max(slot) > capacity) {
+        grow <- max(slot) - capacity + n_new
+        v_age <- c(v_age, rep(NA_real_, grow));    v_sex <- c(v_sex, rep(NA_character_, grow))
+        v_entry <- c(v_entry, rep(NA_real_, grow)); v_retire <- c(v_retire, rep(NA_real_, grow))
+        v_id <- c(v_id, rep(NA_character_, grow)); v_origin <- c(v_origin, rep(NA_character_, grow))
+        if (!is.null(v_state)) v_state <- c(v_state, rep(NA_character_, grow))
+        capacity <- capacity + grow
+      }
+      # HWSM: entrant sex is a uniform draw against the recent-entrant share.
+      v_sex[slot] <- ifelse(stats::runif(n_new) < entrant_female_share, "female", "male")
+      v_age[slot] <- MICROSIM_ENTRY_AGE
+      v_entry[slot] <- year + 1L
+      v_retire[slot] <- NA_real_
+      v_id[slot] <- sprintf("E%d_%06d", year, seq.int(next_entrant_seq, length.out = n_new))
+      v_origin[slot] <- "entrant"
+      if (!is.null(v_state)) {
+        v_state[slot] <- assign_entrant_geography(n_new, placement_shares)
+      }
+      n_used <- n_used + n_new
       next_entrant_seq <- next_entrant_seq + n_new
     }
   }
 
+  keep <- seq_len(n_used)
+  final_agents <- tibble::tibble(
+    provider_id = v_id[keep],
+    subspecialty = subspecialty,
+    sex = v_sex[keep],
+    age = v_age[keep],
+    entry_year = v_entry[keep],
+    retirement_year = v_retire[keep],
+    origin_cohort = v_origin[keep]
+  )
+  if (!is.null(v_state)) final_agents$state <- v_state[keep]
+
   list(
-    panel = dplyr::bind_rows(panel_rows),
-    agents = agents
+    panel = tibble::tibble(
+      year = p_year,
+      subspecialty = subspecialty,
+      headcount = p_head,
+      effective_fte = p_fte,
+      mean_age = p_age
+    ),
+    agents = final_agents
   )
 }
 
@@ -293,41 +434,73 @@ simulate_provider_career_once <- function(agents,
 #' @param subspecialty Subspecialty label (selects the baseline hazard).
 #' @param n_iterations Number of Monte-Carlo replicates.
 #' @param conversion_floor cliff graduate-to-practice conversion (0.70-1.0).
+#' @param retirement_schedule Single-year retirement hazard schedule; scenarios
+#'   supply a SHIFTED schedule (retire +/- n years) rather than a multiplier.
+#' @param hazard_table Optional legacy age-band hazard table. Supplying it
+#'   switches back to the coarse seven-band gradient.
+#' @param fte_method FTE method (see [provider_clinical_fte()]).
+#' @param hours_model Optional fitted hours model.
+#' @param hours_multiplier Scenario knob on hours worked.
+#' @param hours_intercept Hours-schedule intercept; use
+#'   [calibrate_hours_intercept()] so the schedule and the FTE threshold agree.
+#' @param placement_shares Optional geographic share table enabling entrant
+#'   placement and mid-career migration.
 #' @param ci Width of the reported credible band (default 0.95).
 #' @param seed Integer RNG seed.
 #' @param verbose Logical.
 #' @return List: `summary` (per-year quantiles), `iterations` (all replicate
 #'   panels), and `scenario` metadata.
 #' @export
-run_supply_microsimulation <- function(initial_workforce = 1169,
+run_supply_microsimulation <- function(initial_workforce = 1306,
                                         years = 2025:2050,
                                         entrants_per_year = 55,
                                         subspecialty = "FPMRS",
                                         n_iterations = 500,
                                         conversion_floor = 1.0,
+                                        retirement_schedule = RETIREMENT_HAZARD_BY_AGE,
+                                        hazard_table = NULL,
+                                        fte_method = "hours",
+                                        hours_model = NULL,
+                                        hours_multiplier = 1.0,
+                                        hours_intercept = HWSM_HOURS_INTERCEPT,
+                                        placement_shares = NULL,
                                         ci = 0.95,
                                         seed = 20260801L,
                                         verbose = TRUE) {
   seed_microsimulation(seed)
 
   baseline_rate <- microsim_baseline_rate(subspecialty)
-  hazard_table <- build_hazard_table(baseline_rate)
 
   if (verbose) {
-    logger::log_info("Supply microsimulation: {subspecialty}, {n_iterations} iterations, {min(years)}-{max(years)}")
-    logger::log_info("Baseline hazard {round(100*baseline_rate,1)}%/yr; entrants {entrants_per_year}/yr; conversion {conversion_floor}")
+    .msg_info(sprintf("Supply microsimulation: %s, %d iterations, %d-%d",
+                      subspecialty, n_iterations, min(years), max(years)))
+    .msg_info(sprintf("Entrants %s/yr; conversion %.2f; FTE method '%s'",
+                      format(entrants_per_year), conversion_floor, fte_method))
+  }
+
+  # Build the starting cohort ONCE when a size was supplied, so replicate-to-
+  # replicate variation comes from the simulated career decisions rather than
+  # from redrawing the base-year age distribution every iteration.
+  base_agents <- if (is.data.frame(initial_workforce)) {
+    initial_workforce
+  } else {
+    initialize_provider_agents(initial_workforce, subspecialty, min(years))
   }
 
   iteration_panels <- vector("list", n_iterations)
   for (it in seq_len(n_iterations)) {
-    if (verbose && it %% 100 == 0) logger::log_info("  iteration {it}/{n_iterations}")
-    agents <- if (is.data.frame(initial_workforce)) {
-      initial_workforce
-    } else {
-      initialize_provider_agents(initial_workforce, subspecialty, min(years))
-    }
+    if (verbose && it %% 100 == 0) .msg_info(sprintf("  iteration %d/%d", it, n_iterations))
     sim <- simulate_provider_career_once(
-      agents, years, entrants_per_year, hazard_table, conversion_floor, subspecialty
+      base_agents, years, entrants_per_year,
+      hazard_table = hazard_table,
+      conversion_floor = conversion_floor,
+      subspecialty = subspecialty,
+      retirement_schedule = retirement_schedule,
+      fte_method = fte_method,
+      hours_model = hours_model,
+      hours_multiplier = hours_multiplier,
+      hours_intercept = hours_intercept,
+      placement_shares = placement_shares
     )
     iteration_panels[[it]] <- dplyr::mutate(sim$panel, iteration = it)
   }
@@ -359,6 +532,13 @@ run_supply_microsimulation <- function(initial_workforce = 1169,
       conversion_floor = conversion_floor,
       n_iterations = n_iterations,
       baseline_rate = baseline_rate,
+      implied_departure_rate = implied_annual_departure_rate(
+        base_agents$age,
+        if ("sex" %in% names(base_agents)) base_agents$sex else "female",
+        retirement_schedule = retirement_schedule
+      ),
+      fte_method = fte_method,
+      hours_multiplier = hours_multiplier,
       ci = ci,
       seed = seed
     )
@@ -376,38 +556,70 @@ run_supply_microsimulation <- function(initial_workforce = 1169,
 #'
 #' @param agents Starting agent tibble.
 #' @param years Integer years to project.
-#' @param entrants_per_year Annual entrants.
-#' @param hazard_table Age-band hazard table.
+#' @param entrants_per_year Annual entrants (BEFORE the conversion haircut).
+#' @param hazard_table Optional age-band hazard table; when NULL the single-year
+#'   [departure_hazard()] schedule is used, matching the stochastic engine.
+#' @param conversion_floor Graduate-to-practice conversion. Previously ABSENT
+#'   from this function while the stochastic engine applied it, so the two
+#'   disagreed by 37% at 2050 whenever conversion was not 1.0 -- read as model
+#'   disagreement when it was a missing argument.
+#' @param retirement_schedule Single-year retirement hazard schedule.
+#' @param fte_method FTE method (see [provider_clinical_fte()]).
+#' @param hours_model Optional fitted hours model.
+#' @param hours_intercept Intercept for the reference hours schedule.
+#' @param sex Sex mix to evaluate the hazard and hours schedules against.
 #' @return Per-year tibble with expected headcount and effective FTE.
 #' @export
-project_supply_deterministic <- function(agents, years, entrants_per_year, hazard_table) {
+project_supply_deterministic <- function(agents, years, entrants_per_year,
+                                         hazard_table = NULL,
+                                         conversion_floor = 1.0,
+                                         retirement_schedule = RETIREMENT_HAZARD_BY_AGE,
+                                         fte_method = "hours",
+                                         hours_model = NULL,
+                                         hours_intercept = HWSM_HOURS_INTERCEPT,
+                                         sex = "female") {
   years <- sort(unique(as.integer(years)))
   base_year <- min(years)
 
   # Represent the cohort as (age -> expected count) so departures are fractional.
   active0 <- provider_active_in_year(agents, base_year)
   ages <- agents$age[active0]
+  sexes <- if ("sex" %in% names(agents)) agents$sex[active0] else rep(sex, length(ages))
   count <- rep(1, length(ages))
 
-  base_w <- productivity_weight_raw(ages)
-  prod_norm <- if (length(base_w) > 0 && mean(base_w) > 0) 1 / mean(base_w) else 1
+  prod_norm <- 1
+  if (identical(fte_method, "legacy_weight")) {
+    base_w <- productivity_weight_raw(ages)
+    prod_norm <- if (length(base_w) > 0 && mean(base_w) > 0) 1 / mean(base_w) else 1
+  }
+  fte_of <- function(a, s) {
+    provider_clinical_fte(a, s, method = fte_method, hours_model = hours_model,
+                          legacy_norm = prod_norm, hours_intercept = hours_intercept)
+  }
+
+  effective_entrants <- entrants_per_year * conversion_floor
 
   out <- vector("list", length(years))
   for (i in seq_along(years)) {
-    hz <- retirement_hazard(ages, hazard_table)
+    hz <- if (is.null(hazard_table)) {
+      departure_hazard(ages, sexes, retirement_schedule = retirement_schedule)
+    } else {
+      retirement_hazard(ages, hazard_table)
+    }
     survivors <- count * (1 - hz)
 
     out[[i]] <- tibble::tibble(
       year = years[i],
       headcount = sum(count),
-      effective_fte = sum(count * productivity_weight_raw(ages) * prod_norm)
+      effective_fte = sum(count * fte_of(ages, sexes))
     )
 
     # Age and inject entrants for next year.
     ages <- ages + 1
     count <- survivors
     ages <- c(ages, MICROSIM_ENTRY_AGE)
-    count <- c(count, entrants_per_year)
+    sexes <- c(sexes, sex)
+    count <- c(count, effective_entrants)
   }
   dplyr::bind_rows(out)
 }

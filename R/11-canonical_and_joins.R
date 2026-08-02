@@ -76,15 +76,20 @@ resolve_canonical <- function(name,
         name, substr(recorded_sha, 1, 12), substr(actual_sha, 1, 12)
       )
       if (identical(mode, "strict")) stop(msg, call. = FALSE)
-      logger::log_warn(msg)
+      .msg_warn(msg)
     }
   }
 
-  logger::log_debug("Resolved canonical source '{name}' -> {path}")
+  .msg_debug(sprintf("Resolved canonical source '%s' -> %s", name, path))
   path
 }
 
-`%||%` <- function(x, y) if (is.null(x)) y else x
+# `%||%` is exported by rlang and, since R 4.4.0, by base. Defining our own would
+# shadow whichever is attached and quietly change behaviour depending on load
+# order, so we re-use the existing one and only define a fallback for older R.
+if (!exists("%||%", envir = baseenv())) {
+  `%||%` <- function(x, y) if (is.null(x)) y else x
+}
 
 # ---- Join safety ----------------------------------------------------------
 
@@ -150,7 +155,7 @@ safe_left_join <- function(x, y, by, allow_fanout = FALSE,
         msg <- sprintf("safe_left_join: match rate %.1f%% below required %.1f%%",
                        100 * match_rate, 100 * min_match_rate)
         if (identical(mode, "strict")) stop(msg, call. = FALSE)
-        logger::log_warn(msg)
+        .msg_warn(msg)
       }
     }
   }

@@ -21,14 +21,50 @@
 DEMAND_AGE_MIN <- 65L                 # cliff DEMAND_AGE_MIN
 DEMAND_INDEX_BASE_YEAR <- 2025L       # cliff DEMAND_INDEX_BASE_YEAR (= supply WC_YEAR0)
 
-# D1: prevalence of >=1 pelvic floor disorder among women 65+ (Nygaard 2008
-# reports 23.7% across all adult women, rising steeply with age; ~0.40 for 65+).
-PFD_PREVALENCE_65PLUS <- 0.40
+# CRITICAL DESIGN NOTE -------------------------------------------------------
+# The original implementation computed all three estimands as
+#   demand = population_65plus * constant
+# which makes D1, D2 and D3 exact proportional rescalings of ONE series. After
+# rebasing, their adequacy curves are bit-identical and the Spearman rho across
+# them is exactly 1.000 -- reported as a robustness result when it is pure
+# arithmetic. Fraher & Knapton (2017) show what real concordance looks like: two
+# models with different demand definitions (ESRD patients per nephrologist vs
+# unmet visits by clinical service area), different data, and different
+# geographies, agreeing on the qualitative conclusion.
+#
+# Each estimand now carries its OWN AGE PROFILE, so the three series diverge as
+# the age structure of the female population shifts. `assert_estimands_independent()`
+# (R/21) is wired into the orchestrator to stop the tautology returning.
+#
+# The deeper caution also comes from the nephrology comparison: the ASN report
+# used Medicare ESRD patients as the measure of need while acknowledging
+# "nephrologists provide many services to patients with kidney diseases and
+# injury beyond ESRD care". "Women 65+" is the same kind of convenient proxy for
+# urogynaecology and understates demand from parous women in their 40s-60s.
 
-# D2: new urogynecology consultations per woman 65+ per year (Kirby 2013 scale).
-CONSULT_RATE_PER_WOMAN_65PLUS <- 0.045
+# D1: prevalence of >=1 pelvic floor disorder by age band. Nygaard 2008 reports
+# 23.7% across all adult women, rising steeply with age.
+PFD_PREVALENCE_BY_AGE <- c(
+  "20-39" = 0.098,
+  "40-59" = 0.269,
+  "60-79" = 0.367,
+  "80+"   = 0.497
+)
+
+# D2: new urogynecology consultations per woman per year by age band (Kirby 2013
+# scale). Consultation rates peak in the years around and after menopause, then
+# fall in the oldest band as care shifts to conservative management.
+CONSULT_RATE_BY_AGE <- c(
+  "20-39" = 0.004,
+  "40-59" = 0.021,
+  "60-79" = 0.048,
+  "80+"   = 0.031
+)
 
 # D3: age-specific SUI+POP surgery rate per 1,000 women (Wu 2011, four bands).
+# Note the DIFFERENT shape: surgery peaks at 60-79 and falls by half at 80+,
+# while prevalence keeps rising. That difference is exactly what makes the three
+# estimands informative rather than redundant.
 WU2011_SURGERY_RATE_PER_1000 <- c(
   "20-39" = 1.5,
   "40-59" = 4.6,
@@ -36,10 +72,19 @@ WU2011_SURGERY_RATE_PER_1000 <- c(
   "80+"   = 3.2
 )
 
+DEMAND_AGE_BANDS <- c("20-39", "40-59", "60-79", "80+")
+
+# Retained for backward compatibility with the crude single-rate path.
+PFD_PREVALENCE_65PLUS <- 0.40
+CONSULT_RATE_PER_WOMAN_65PLUS <- 0.045
+
 stopifnot(
-  PFD_PREVALENCE_65PLUS > 0 && PFD_PREVALENCE_65PLUS <= 1,
-  CONSULT_RATE_PER_WOMAN_65PLUS > 0,
-  all(WU2011_SURGERY_RATE_PER_1000 >= 0)
+  all(PFD_PREVALENCE_BY_AGE > 0 & PFD_PREVALENCE_BY_AGE <= 1),
+  all(CONSULT_RATE_BY_AGE > 0),
+  all(WU2011_SURGERY_RATE_PER_1000 >= 0),
+  identical(names(PFD_PREVALENCE_BY_AGE), DEMAND_AGE_BANDS),
+  identical(names(CONSULT_RATE_BY_AGE), DEMAND_AGE_BANDS),
+  identical(names(WU2011_SURGERY_RATE_PER_1000), DEMAND_AGE_BANDS)
 )
 
 # ---- Index helpers --------------------------------------------------------
@@ -73,7 +118,8 @@ anchor_index <- function(years, y0, v0, y1, v1, base = DEMAND_INDEX_BASE_YEAR) {
 rebase_to_year <- function(year, value, base_year = DEMAND_INDEX_BASE_YEAR) {
   base_val <- value[year == base_year]
   if (length(base_val) != 1 || is.na(base_val) || base_val == 0) {
-    logger::log_warn("rebase_to_year: base year {base_year} not found / zero; using first value")
+    .msg_warn(sprintf("rebase_to_year: base year %s not found / zero; using first value",
+                      format(base_year)))
     base_val <- value[which(!is.na(value))[1]]
   }
   value / base_val
@@ -81,32 +127,81 @@ rebase_to_year <- function(year, value, base_year = DEMAND_INDEX_BASE_YEAR) {
 
 # ---- Three demand estimands ------------------------------------------------
 
-#' Compute D1/D2/D3 demand estimands from a women-65+ population series
+#' Compute D1/D2/D3 demand estimands from an AGE-BANDED female population
 #'
-#' @param population_65plus Tibble with `year` and `population_65_plus` columns.
-#' @param pfd_prevalence D1 prevalence among women 65+.
-#' @param consult_rate D2 consultations per woman 65+ per year.
-#' @param surgery_rate_per_1000 D3 crude surgery rate per 1,000 women 65+
-#'   (used when age-band detail is unavailable; see
-#'   [apply_age_specific_surgery_demand()] for the Wu 2011 age-specific path).
-#' @return Long tibble: `year`, `estimand` (D1/D2/D3), `demand_cases`, `label`.
+#' Each estimand applies its own age-specific rate schedule, so the three series
+#' respond differently to a shifting age structure. This is the sanctioned entry
+#' point; [compute_demand_denominators_crude()] reproduces the old single-rate
+#' behaviour and is retained only for backward comparison.
+#'
+#' @param pop_by_band Tibble with `year`, `age_band` (one of `DEMAND_AGE_BANDS`)
+#'   and `female_pop`.
+#' @param pfd_prevalence Named age-band prevalence for D1.
+#' @param consult_rate Named age-band consultation rate for D2.
+#' @param surgery_rate_per_1000 Named age-band surgery rate per 1,000 for D3.
+#' @return Long tibble: `year`, `estimand` (D1/D2/D3), `label`, `demand_cases`.
 #' @export
-compute_demand_denominators <- function(population_65plus,
-                                         pfd_prevalence = PFD_PREVALENCE_65PLUS,
-                                         consult_rate = CONSULT_RATE_PER_WOMAN_65PLUS,
-                                         surgery_rate_per_1000 = 5.0) {
-  assertthat::assert_that(is.data.frame(population_65plus))
-  assertthat::assert_that(all(c("year", "population_65_plus") %in% names(population_65plus)))
+compute_demand_denominators <- function(pop_by_band,
+                                        pfd_prevalence = PFD_PREVALENCE_BY_AGE,
+                                        consult_rate = CONSULT_RATE_BY_AGE,
+                                        surgery_rate_per_1000 = WU2011_SURGERY_RATE_PER_1000) {
+  assertthat::assert_that(is.data.frame(pop_by_band))
+  assertthat::assert_that(all(c("year", "age_band", "female_pop") %in% names(pop_by_band)))
 
-  pop <- population_65plus$population_65_plus
-  yr <- population_65plus$year
+  unknown <- setdiff(unique(pop_by_band$age_band), DEMAND_AGE_BANDS)
+  if (length(unknown) > 0) {
+    stop(sprintf("compute_demand_denominators: unknown age band(s): %s. Expected: %s",
+                 paste(unknown, collapse = ", "), paste(DEMAND_AGE_BANDS, collapse = ", ")),
+         call. = FALSE)
+  }
+
+  band_sum <- function(rates, scale = 1) {
+    pop_by_band %>%
+      dplyr::mutate(rate = unname(rates[.data$age_band])) %>%
+      dplyr::group_by(.data$year) %>%
+      dplyr::summarise(demand_cases = sum(.data$female_pop * .data$rate * scale,
+                                          na.rm = TRUE),
+                       .groups = "drop")
+  }
 
   dplyr::bind_rows(
-    tibble::tibble(year = yr, estimand = "D1", label = "Prevalent PFD cases (Nygaard 2008)",
+    dplyr::mutate(band_sum(pfd_prevalence), estimand = "D1",
+                  label = "Prevalent PFD cases (Nygaard 2008, age-specific)"),
+    dplyr::mutate(band_sum(consult_rate), estimand = "D2",
+                  label = "New consultations (Kirby 2013 scale, age-specific)"),
+    dplyr::mutate(band_sum(surgery_rate_per_1000, scale = 1 / 1000), estimand = "D3",
+                  label = "SUI+POP surgical volume (Wu 2011, age-specific)")
+  ) %>%
+    dplyr::select("year", "estimand", "label", "demand_cases") %>%
+    dplyr::arrange(.data$estimand, .data$year)
+}
+
+#' Crude single-rate demand estimands (deprecated)
+#'
+#' Reproduces the previous behaviour, in which every estimand was
+#' `population_65plus * constant`. Retained only so the change can be quantified;
+#' the three series it produces are proportional rescalings of one another and
+#' any concordance computed across them is a tautology.
+#'
+#' @param population_65plus Tibble with `year` and `population_65_plus`.
+#' @param pfd_prevalence,consult_rate,surgery_rate_per_1000 Crude rates.
+#' @return Long tibble in the same shape as [compute_demand_denominators()].
+#' @export
+compute_demand_denominators_crude <- function(population_65plus,
+                                              pfd_prevalence = PFD_PREVALENCE_65PLUS,
+                                              consult_rate = CONSULT_RATE_PER_WOMAN_65PLUS,
+                                              surgery_rate_per_1000 = 5.0) {
+  assertthat::assert_that(all(c("year", "population_65_plus") %in% names(population_65plus)))
+  .msg_warn("compute_demand_denominators_crude(): all three estimands are ",
+            "proportional to one population series; concordance across them is arithmetic.")
+  pop <- population_65plus$population_65_plus
+  yr <- population_65plus$year
+  dplyr::bind_rows(
+    tibble::tibble(year = yr, estimand = "D1", label = "Prevalent PFD cases (crude)",
                    demand_cases = pop * pfd_prevalence),
-    tibble::tibble(year = yr, estimand = "D2", label = "New consultations (Kirby 2013)",
+    tibble::tibble(year = yr, estimand = "D2", label = "New consultations (crude)",
                    demand_cases = pop * consult_rate),
-    tibble::tibble(year = yr, estimand = "D3", label = "SUI+POP surgical volume (Wu 2011)",
+    tibble::tibble(year = yr, estimand = "D3", label = "SUI+POP surgical volume (crude)",
                    demand_cases = pop * surgery_rate_per_1000 / 1000)
   )
 }
@@ -134,19 +229,28 @@ apply_age_specific_surgery_demand <- function(pop_by_band,
 
 # ---- Coverage, adequacy, concordance --------------------------------------
 
-#' Compute supply-vs-demand coverage for each demand estimand
+#' Relative growth adequacy of supply against each demand estimand
 #'
-#' coverage = 100 * supply / demand, with each series expressed in comparable
-#' provider-equivalent units by rebasing both supply and demand to the base year
-#' and reporting the ratio (cliff adequacy). Also returns the raw coverage %.
+#' RENAMED AND NARROWED. The previous version also returned
+#' `coverage_pct = 100 * supply_FTE / demand_cases`, dividing provider FTE by a
+#' count of prevalent cases, consultations or procedures. Those are not FTE
+#' units and the ratio is dimensionally meaningless (D1 "coverage" printed as
+#' 0.0108%). It has been removed; use [convert_workload_to_fte()] and
+#' [compute_fte_gap()] for an absolute comparison with FTE on both sides.
 #'
-#' @param supply Tibble with `year` and a supply column.
+#' What remains is legitimate but LIMITED: both series are rebased to the base
+#' year, so `growth_adequacy` is 1.0 in the base year BY CONSTRUCTION and can
+#' only say whether supply grows faster than demand thereafter. It cannot
+#' estimate a shortage. See R/18-baseline_gap.R for the absolute level.
+#'
+#' @param supply Tibble with `year` and a supplied-FTE column.
 #' @param demand_long Long demand tibble ([compute_demand_denominators()]).
-#' @param supply_col Name of the supply column to use.
+#' @param supply_col Name of the supplied-FTE column.
 #' @param base_year Rebase year.
-#' @return Long tibble: `year`, `estimand`, `coverage_pct`, `adequacy`.
+#' @return Long tibble: `year`, `estimand`, `label`, `supply_index`,
+#'   `demand_index`, `growth_adequacy`.
 #' @export
-compute_demand_coverage <- function(supply, demand_long,
+compute_growth_adequacy <- function(supply, demand_long,
                                     supply_col = "effective_fte_median",
                                     base_year = DEMAND_INDEX_BASE_YEAR) {
   assertthat::assert_that(supply_col %in% names(supply))
@@ -160,52 +264,114 @@ compute_demand_coverage <- function(supply, demand_long,
     dplyr::mutate(demand_index = rebase_to_year(.data$year, .data$demand_cases, base_year)) %>%
     dplyr::ungroup() %>%
     safe_left_join(supply2, by = "year") %>%
-    dplyr::mutate(
-      coverage_pct = 100 * .data$supply / .data$demand_cases,
-      adequacy = .data$supply_index / .data$demand_index
-    ) %>%
-    dplyr::select("year", "estimand", "label", "coverage_pct", "adequacy",
-                  "supply_index", "demand_index")
+    dplyr::mutate(growth_adequacy = .data$supply_index / .data$demand_index) %>%
+    dplyr::select("year", "estimand", "label", "supply_index", "demand_index",
+                  "growth_adequacy")
 }
 
-#' Assess concordance of the adequacy conclusion across demand estimands
+#' Deprecated alias that refuses the dimensionally invalid coverage ratio
 #'
-#' Port of cliff's concordance verdict: rank-correlate the coverage curves
-#' (Spearman rho) and check whether the adequacy conclusion is invariant to the
-#' choice of demand denominator (a reviewer-proofing robustness statement).
-#'
-#' @param coverage Long coverage tibble ([compute_demand_coverage()]).
-#' @return List: `spearman` (pairwise rho matrix), `min_adequacy_by_estimand`,
-#'   `robust` (logical: adequacy >= 1 in the final year under ALL estimands),
-#'   `trough_year` (year of minimum adequacy, worst estimand).
+#' @param ... Ignored.
 #' @export
-assess_demand_concordance <- function(coverage) {
-  wide <- coverage %>%
-    dplyr::select("year", "estimand", "coverage_pct") %>%
-    tidyr::pivot_wider(names_from = "estimand", values_from = "coverage_pct") %>%
+compute_demand_coverage <- function(...) {
+  stop(paste(
+    "compute_demand_coverage() has been removed. It divided provider FTE by a count of",
+    "prevalent cases / consultations / procedures, which are not FTE units.",
+    "Use compute_growth_adequacy() for the (base-year-normalised) growth comparison, or",
+    "convert_workload_to_fte() + compute_fte_gap() for an absolute comparison with FTE",
+    "on both sides."
+  ), call. = FALSE)
+}
+
+#' Assess concordance of the growth-adequacy conclusion across demand estimands
+#'
+#' Rank-correlates the growth-adequacy curves and checks whether the conclusion
+#' survives the choice of demand denominator. The verdict now carries an
+#' `informative` flag: if the estimands are proportional rescalings of one series
+#' the rho is 1.000 by construction and means nothing, so the flag is FALSE and
+#' the result must not be reported as robustness evidence.
+#'
+#' @param adequacy Long tibble from [compute_growth_adequacy()].
+#' @param demand_long The demand tibble the adequacy was built from, used for the
+#'   proportionality check.
+#' @return List: `spearman`, `min_adequacy_by_estimand`, `final_year_adequacy`,
+#'   `robust`, `trough_year`, `informative`, `proportional_pairs`.
+#' @export
+assess_demand_concordance <- function(adequacy, demand_long = NULL) {
+  measure <- if ("growth_adequacy" %in% names(adequacy)) "growth_adequacy" else "adequacy"
+
+  wide <- adequacy %>%
+    dplyr::select("year", "estimand", dplyr::all_of(measure)) %>%
+    tidyr::pivot_wider(names_from = "estimand", values_from = dplyr::all_of(measure)) %>%
     dplyr::arrange(.data$year)
 
   estimand_cols <- setdiff(names(wide), "year")
   rho <- suppressWarnings(stats::cor(wide[estimand_cols], method = "spearman",
                                      use = "pairwise.complete.obs"))
 
-  final_year <- max(coverage$year)
-  final_adeq <- coverage %>%
-    dplyr::filter(.data$year == final_year) %>%
-    dplyr::select("estimand", "adequacy")
+  # Spearman rho computed ACROSS YEARS is 1 for any pair of series that are both
+  # monotone in time, whether or not they are related. Nearly every demand
+  # projection is monotone, so a rho of 1.000 here is a property of the time
+  # index, not evidence of agreement. Flag it rather than reporting it as a
+  # robustness result. The informative comparisons are the SPREAD of adequacy
+  # across estimands and whether they place the conclusion on the same side of
+  # 1.0; rank correlation belongs across GEOGRAPHIES (see two_method_agreement()).
+  monotone <- vapply(estimand_cols, function(cl) {
+    v <- wide[[cl]]
+    v <- v[is.finite(v)]
+    length(v) < 2 || all(diff(v) >= 0) || all(diff(v) <= 0)
+  }, logical(1))
+  rho_uninformative <- all(monotone)
 
-  min_adeq <- coverage %>%
+  final_year <- max(adequacy$year)
+  final_adeq <- adequacy %>%
+    dplyr::filter(.data$year == final_year) %>%
+    dplyr::select("estimand", adequacy = dplyr::all_of(measure))
+
+  min_adeq <- adequacy %>%
     dplyr::group_by(.data$estimand) %>%
-    dplyr::summarise(min_adequacy = min(.data$adequacy, na.rm = TRUE),
-                     trough_year = .data$year[which.min(.data$adequacy)],
+    dplyr::summarise(min_adequacy = min(.data[[measure]], na.rm = TRUE),
+                     trough_year = .data$year[which.min(.data[[measure]])],
                      .groups = "drop")
+
+  prop <- if (!is.null(demand_long)) {
+    detect_proportional_estimands(demand_long, "demand_cases")
+  } else {
+    tibble::tibble(a = character(0), b = character(0))
+  }
+  distinct_estimands <- nrow(prop) == 0
+
+  # The informative statistics: how far apart the estimands place adequacy in the
+  # final year, and whether they agree on which side of 1.0 it falls.
+  spread <- if (nrow(final_adeq)) {
+    max(final_adeq$adequacy, na.rm = TRUE) - min(final_adeq$adequacy, na.rm = TRUE)
+  } else NA_real_
+  same_side <- if (nrow(final_adeq)) {
+    length(unique(sign(final_adeq$adequacy - 1))) == 1L
+  } else NA
 
   list(
     spearman = rho,
+    rho_uninformative = rho_uninformative,
     min_adequacy_by_estimand = min_adeq,
     final_year_adequacy = final_adeq,
-    robust = all(final_adeq$adequacy >= 1, na.rm = TRUE),
-    trough_year = min_adeq$trough_year[which.min(min_adeq$min_adequacy)]
+    final_year_spread = spread,
+    conclusion_agrees = same_side,
+    robust = isTRUE(same_side) && all(final_adeq$adequacy >= 1, na.rm = TRUE),
+    trough_year = if (nrow(min_adeq)) min_adeq$trough_year[which.min(min_adeq$min_adequacy)] else NA,
+    distinct_estimands = distinct_estimands,
+    informative = distinct_estimands,
+    proportional_pairs = prop,
+    note = paste(
+      if (distinct_estimands) {
+        "Estimands carry distinct age profiles."
+      } else {
+        "Estimands are proportional rescalings of one series and carry identical information."
+      },
+      if (rho_uninformative) {
+        "Spearman rho across years is 1 by construction for monotone series - read final_year_spread and conclusion_agrees instead."
+      } else ""
+    )
   )
 }
 
