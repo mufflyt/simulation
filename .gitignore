@@ -52,3 +52,6 @@ processed_data/
 # System files
 .DS_Store
 Thumbs.db
+
+# Microsimulation runtime artifacts (provenance sidecars + rds)
+outputs/
