@@ -1,3 +1,6 @@
+# Machine-specific path overrides
+config/paths.local.yml
+
 # RStudio project files
 .Rproj.user/
 .Rhistory
@@ -9,11 +12,12 @@
 *.o
 *.so
 *.dll
-*.Rproj
 *.Rcheck/
 *.tar.gz
 
 # Data files (raw or derived — adjust as needed)
+# NOTE: config/*.yml and the versioned demand-contract CSVs are force-added below
+# so the canonical registry and the downstream contract can actually be committed.
 *.rds
 *.csv
 *.tsv
@@ -55,3 +59,11 @@ Thumbs.db
 
 # Microsimulation runtime artifacts (provenance sidecars + rds)
 outputs/
+
+# Force-tracked: the canonical registry and downstream contracts must be
+# committable even though *.csv / *.yml sit under the ignore rules above.
+!config/*.yml
+!config/*.csv
+!dpmm_demand_contract_v*.csv
+!dpmm_demand_contract_v*_manifest.json
+!tests/**/*.csv

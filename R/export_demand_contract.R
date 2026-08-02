@@ -151,7 +151,7 @@ export_dpmm_demand_contract <- function(dpmm_results,
   if (verbose) {
     msg <- sprintf("Wrote demand contract v%s (%d rows, %s) + manifest: %s",
                    model_version, nrow(tidy), calibration_status, csv_path)
-    if (requireNamespace("logger", quietly = TRUE)) logger::log_info(msg) else cat(msg, "\n")
+    .msg_info(msg)
   }
 
   invisible(list(csv_path = csv_path, manifest_path = manifest_path, data = tidy))

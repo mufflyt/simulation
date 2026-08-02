@@ -1,0 +1,51 @@
+Package: urpssim
+Title: Urogynecology Workforce Supply and Demand Microsimulation
+Version: 0.2.0
+Authors@R: 
+    person("Tyler", "Muffly", email = "tyler.muffly@dhha.org", role = c("aut", "cre"))
+Description: A stochastic, individual-level microsimulation of the supply of and
+    demand for urogynecology and reconstructive pelvic surgery (URPS) services in
+    the United States. Supply is projected from an individual provider roster
+    using age- and sex-specific hours worked, retirement and career-change
+    hazards, and geographic placement. Demand is projected from age-banded
+    population series through service volumes and a work-RVU workload conversion
+    to required full-time-equivalent providers, so supply and demand are always
+    compared in the same units. The base-year supply shortfall is estimated
+    rather than assumed. Methods follow the IHS Markit / Dall Health Workforce
+    Microsimulation Model and its published applications in physiatry, neurology
+    and physical therapy.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.1)
+Imports:
+    assertthat,
+    digest,
+    dplyr (>= 1.1.0),
+    jsonlite,
+    purrr,
+    rlang,
+    splines,
+    stats,
+    tibble,
+    tidyr,
+    tools,
+    utils,
+    yaml
+Suggests:
+    covr,
+    ggplot2,
+    knitr,
+    mufflyaccess,
+    pkgload,
+    rcmdcheck,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Remotes:
+    mufflyt/mufflyaccess
+Config/testthat/edition: 3
+URL: https://github.com/mufflyt/simulation
+BugReports: https://github.com/mufflyt/simulation/issues

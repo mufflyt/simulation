@@ -1,22 +1,18 @@
-# Source the microsimulation modules so tests can call them without a package.
-# testthat auto-sources helper-*.R before running tests.
+# The package is now loaded by tests/testthat.R (or by pkgload during
+# devtools::test()), so tests call exported functions directly. This helper only
+# attaches the tidyverse verbs that test fixtures use directly, and provides a
+# source-tree fallback for running test_dir() outside a package context.
 
-# The modules use the magrittr pipe (%>%) and dplyr/tidyr verbs, so the
-# tidyverse stack must be attached before the module functions run.
 suppressPackageStartupMessages({
   library(dplyr)
   library(tidyr)
-  library(purrr)
   library(tibble)
 })
 
-.mods <- c(
-  "10-repro_provenance.R", "11-canonical_and_joins.R",
-  "12-provider_microsimulation.R", "13-demand_urps.R",
-  "14-spatial_access_e2sfca.R", "15-run_workforce_microsimulation.R"
-)
-.r_dir <- if (dir.exists("R")) "R" else file.path("..", "..", "R")
-for (.m in .mods) {
-  .p <- file.path(.r_dir, .m)
-  if (file.exists(.p)) source(.p)
+if (!requireNamespace("urpssim", quietly = TRUE) ||
+    !exists("run_workforce_microsimulation", mode = "function")) {
+  if (requireNamespace("pkgload", quietly = TRUE)) {
+    root <- if (file.exists("DESCRIPTION")) "." else file.path("..", "..")
+    suppressMessages(pkgload::load_all(root, quiet = TRUE, export_all = TRUE))
+  }
 }

@@ -9,10 +9,11 @@
 #     Catchment Area (E2SFCA, Luo & Qi 2009) with cumulative drive-time bands,
 #     the diff(W^power) incremental-weight identity (power=2 => M2SFCA,
 #     Delamater 2013), zero-demand -> NA (never 0) semantics, the Spatial Access
-#     Ratio (SPAR, Wan 2012), and zero-access-share / access-quintile KPIs.
-#     This is a pure-base-R engine (no sf/terra/dplyr) so it drops into a
-#     microsim inner loop -- only `supply` changes each simulated year, the
-#     year-agnostic band geometry is fixed.
+#     Ratio (SPAR, Wan 2012), and zero-access-share / access-category KPIs.
+#     No spatial dependencies (no sf/terra/GEOS) so it drops into a microsim
+#     inner loop -- only `supply` changes each simulated year, the year-agnostic
+#     band geometry is fixed. Table manipulation uses dplyr, as elsewhere in the
+#     repo.
 #   * isochrones (R/match_points_to_isochrones.R): match providers to isochrone
 #     origins by a 5 km HAVERSINE nearest-neighbour, NEVER exact coordinate
 #     equality (cluster jitter otherwise fabricates coverage gaps), and CONUS-only
@@ -42,7 +43,7 @@ e2sfca_band_weights <- function(weights = E2SFCA_DEFAULT_WEIGHTS) {
   ord <- order(as.numeric(names(weights)))
   w <- weights[ord]
   if (is.unsorted(rev(w))) {
-    logger::log_warn("E2SFCA weights are not monotonically non-increasing by band")
+    .msg_warn("E2SFCA weights are not monotonically non-increasing by band")
   }
   w
 }
@@ -76,8 +77,8 @@ e2sfca_incremental_weights <- function(weights = E2SFCA_DEFAULT_WEIGHTS, step2_p
 #' Two-step floating catchment over drive-time bands. Port of
 #' twostep::dj7_tract_access.
 #'
-#'   Step 1 (provider ratio R_j): R_j = S_j / sum_b w'_b * Pop_b(j)
-#'   Step 2 (accessibility A_i):  A_i = sum_{j reaching i} W_b(i,j) * R_j
+#'   Step 1 (provider ratio R_j): `R_j = S_j / sum_b w'_b * Pop_b(j)`
+#'   Step 2 (accessibility A_i):  `A_i = sum over j reaching i of W_b(i,j) * R_j`
 #'
 #' Zero-demand semantics are preserved exactly: a provider whose weighted demand
 #' is 0 yields ratio = NA (undefined, not 0) and contributes no access; its
@@ -210,7 +211,9 @@ spatial_access_ratio <- function(access) {
 
 #' Assign access categories: 1 = zero-access, 2-5 = quartiles of positive access
 #'
-#' Port of twostep::dj7_assign_quintile.
+#' Port of twostep::dj7_assign_quintile. Note the five categories are a
+#' zero-access class plus QUARTILES of the positive-access distribution, not
+#' quintiles of the whole distribution.
 #'
 #' @param access_scaled Numeric scaled access values.
 #' @return Integer category 1-5.
@@ -272,6 +275,11 @@ conus_ok <- function(lat, lon) {
 match_points_to_isochrones <- function(points, iso_centers, threshold_km = ISOCHRONE_MATCH_KM) {
   assertthat::assert_that(all(c("id", "lat", "lon") %in% names(points)))
   assertthat::assert_that(all(c("coord_id", "lat", "lon") %in% names(iso_centers)))
+
+  if (nrow(points) == 0) {
+    return(dplyr::mutate(points, match_km = numeric(0), matched = logical(0),
+                         matched_coord_id = character(0)))
+  }
 
   in_conus <- conus_ok(points$lat, points$lon)
 
