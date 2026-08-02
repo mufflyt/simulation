@@ -26,7 +26,7 @@ result <- run_workforce_microsimulation(
   initial_workforce = 1295,     # cliff frozen URPS baseline (SSOT)
   years = 2025:2050,
   subspecialty = "FPMRS",
-  n_iterations = 200,           # bump to 1000 for publication-grade CIs
+  n_iterations = 1000,          # publication-grade CIs
   baseline_entrants = 55,
   output_dir = "outputs",
   verbose = TRUE
