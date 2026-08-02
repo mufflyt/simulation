@@ -257,6 +257,10 @@ initialize_provider_agents <- function(n,
 #' @param hours_multiplier Scenario knob scaling hours worked.
 #' @param hours_intercept Intercept for the reference hours schedule; use
 #'   [calibrate_hours_intercept()] so hours and the FTE threshold agree.
+#' @param late_career_fte_factor Multiplier on clinical FTE applied only from
+#'   `late_career_fte_onset_age` (a mufflyaccess scenario field).
+#' @param late_career_fte_onset_age Age from which the late-career factor
+#'   applies; NA disables it.
 #' @param entrant_female_share Share of new entrants drawn as female.
 #' @param placement_shares Optional tibble of `geo` and `share` enabling entrant
 #'   placement and mid-career migration.
@@ -274,6 +278,8 @@ simulate_provider_career_once <- function(agents,
                                           hours_model = NULL,
                                           hours_multiplier = 1.0,
                                           hours_intercept = HWSM_HOURS_INTERCEPT,
+                                          late_career_fte_factor = 1.0,
+                                          late_career_fte_onset_age = NA_real_,
                                           entrant_female_share = 0.82,
                                           placement_shares = NULL) {
   years <- sort(unique(as.integer(years)))
@@ -290,10 +296,21 @@ simulate_provider_career_once <- function(agents,
     prod_norm <- if (length(raw_w) > 0 && mean(raw_w) > 0) 1 / mean(raw_w) else 1
   }
 
+  # `late_career_fte_factor` is applied only from `late_career_fte_onset_age`,
+  # which is what the mufflyaccess scenario registry specifies. A uniform hours
+  # multiplier cannot represent it: the registry's lower_late_career_fte
+  # scenario reduces clinical FTE by 25% from age 60 ONLY, leaving younger
+  # providers untouched.
+  apply_late_career <- is.finite(late_career_fte_onset_age) &&
+    !isTRUE(all.equal(late_career_fte_factor, 1))
   fte_of <- function(age, sex) {
-    provider_clinical_fte(age, sex, method = fte_method, hours_model = hours_model,
-                          legacy_norm = prod_norm,
-                          hours_intercept = hours_intercept) * hours_multiplier
+    base <- provider_clinical_fte(age, sex, method = fte_method, hours_model = hours_model,
+                                  legacy_norm = prod_norm,
+                                  hours_intercept = hours_intercept) * hours_multiplier
+    if (apply_late_career) {
+      base <- base * ifelse(age >= late_career_fte_onset_age, late_career_fte_factor, 1)
+    }
+    base
   }
 
   effective_entrants <- entrants_per_year * conversion_floor
@@ -443,6 +460,9 @@ simulate_provider_career_once <- function(agents,
 #' @param hours_multiplier Scenario knob on hours worked.
 #' @param hours_intercept Hours-schedule intercept; use
 #'   [calibrate_hours_intercept()] so the schedule and the FTE threshold agree.
+#' @param late_career_fte_factor Multiplier on clinical FTE from
+#'   `late_career_fte_onset_age` (mufflyaccess scenario field).
+#' @param late_career_fte_onset_age Age from which the factor applies.
 #' @param placement_shares Optional geographic share table enabling entrant
 #'   placement and mid-career migration.
 #' @param ci Width of the reported credible band (default 0.95).
@@ -463,6 +483,8 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
                                         hours_model = NULL,
                                         hours_multiplier = 1.0,
                                         hours_intercept = HWSM_HOURS_INTERCEPT,
+                                        late_career_fte_factor = 1.0,
+                                        late_career_fte_onset_age = NA_real_,
                                         placement_shares = NULL,
                                         ci = 0.95,
                                         seed = 20260801L,
@@ -500,6 +522,8 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
       hours_model = hours_model,
       hours_multiplier = hours_multiplier,
       hours_intercept = hours_intercept,
+      late_career_fte_factor = late_career_fte_factor,
+      late_career_fte_onset_age = late_career_fte_onset_age,
       placement_shares = placement_shares
     )
     iteration_panels[[it]] <- dplyr::mutate(sim$panel, iteration = it)

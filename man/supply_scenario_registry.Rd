@@ -2,16 +2,21 @@
 % Please edit documentation in R/19-scenario_registry.R
 \name{supply_scenario_registry}
 \alias{supply_scenario_registry}
-\title{Default supply scenario registry}
+\title{Supply scenario registry}
 \usage{
-supply_scenario_registry(baseline_entrants = 55)
+supply_scenario_registry(baseline_entrants = 55, prefer_ssot = TRUE)
 }
 \arguments{
 \item{baseline_entrants}{Baseline annual entrants to practice.}
+
+\item{prefer_ssot}{Use \code{mufflyaccess::urps_scenarios()} when available.}
 }
 \value{
 Named list of supply scenario definitions.
 }
 \description{
-Default supply scenario registry
+Returns the mufflyaccess registry when available -- it is the SSOT and
+downstream consumers validate scenario ids against it. The local definitions
+are a fallback for when the contract is absent, plus the one extension it
+does not carry (graduate-to-practice conversion).
 }

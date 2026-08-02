@@ -16,6 +16,8 @@ simulate_provider_career_once(
   hours_model = NULL,
   hours_multiplier = 1,
   hours_intercept = HWSM_HOURS_INTERCEPT,
+  late_career_fte_factor = 1,
+  late_career_fte_onset_age = NA_real_,
   entrant_female_share = 0.82,
   placement_shares = NULL
 )
@@ -47,6 +49,12 @@ Scenarios pass a SHIFTED schedule (retire n years earlier/later).}
 
 \item{hours_intercept}{Intercept for the reference hours schedule; use
 \code{\link[=calibrate_hours_intercept]{calibrate_hours_intercept()}} so hours and the FTE threshold agree.}
+
+\item{late_career_fte_factor}{Multiplier on clinical FTE applied only from
+\code{late_career_fte_onset_age} (a mufflyaccess scenario field).}
+
+\item{late_career_fte_onset_age}{Age from which the late-career factor
+applies; NA disables it.}
 
 \item{entrant_female_share}{Share of new entrants drawn as female.}
 

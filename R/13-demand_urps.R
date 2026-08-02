@@ -42,47 +42,91 @@ DEMAND_INDEX_BASE_YEAR <- 2025L       # cliff DEMAND_INDEX_BASE_YEAR (= supply W
 # injury beyond ESRD care". "Women 65+" is the same kind of convenient proxy for
 # urogynaecology and understates demand from parous women in their 40s-60s.
 
-# D1: prevalence of >=1 pelvic floor disorder by age band. Nygaard 2008 reports
-# 23.7% across all adult women, rising steeply with age.
-PFD_PREVALENCE_BY_AGE <- c(
+# BAND STRUCTURE ------------------------------------------------------------
+# The bands were restructured to align EXACTLY with the boundary used by
+# `mufflyaccess::pfd_prevalence()`, which owns prevalence for 65-79 and 80+.
+# The previous 60-79 band could not take the contract's 65-79 value without a
+# silent wrong-grain error, so 60-64 is now split out. Wu 2011 publishes surgery
+# rates on a 60-79 band; that single rate is applied to both 60-64 and 65-79,
+# which is stated here rather than hidden.
+DEMAND_AGE_BANDS <- c("20-39", "40-59", "60-64", "65-79", "80+")
+
+# D1: prevalence of >=1 pelvic floor disorder by age band.
+#
+# 65-79 and 80+ come from the mufflyaccess contract at load time via
+# `pfd_prevalence_by_band()`. The younger bands are NOT in the contract and
+# remain Nygaard-derived literals local to this package; `owner` in the returned
+# table says which is which so a local literal cannot be mistaken for a
+# contract value.
+PFD_PREVALENCE_LOCAL_UNDER_65 <- c(
   "20-39" = 0.098,
   "40-59" = 0.269,
-  "60-79" = 0.367,
-  "80+"   = 0.497
+  "60-64" = 0.330
 )
 
 # D2: new urogynecology consultations per woman per year by age band (Kirby 2013
-# scale). Consultation rates peak in the years around and after menopause, then
-# fall in the oldest band as care shifts to conservative management.
+# scale). No contract equivalent; local.
 CONSULT_RATE_BY_AGE <- c(
   "20-39" = 0.004,
   "40-59" = 0.021,
-  "60-79" = 0.048,
+  "60-64" = 0.044,
+  "65-79" = 0.048,
   "80+"   = 0.031
 )
 
 # D3: age-specific SUI+POP surgery rate per 1,000 women (Wu 2011, four bands).
-# Note the DIFFERENT shape: surgery peaks at 60-79 and falls by half at 80+,
-# while prevalence keeps rising. That difference is exactly what makes the three
+# The published 60-79 rate of 6.3 is applied to BOTH 60-64 and 65-79. Note the
+# DIFFERENT shape from prevalence: surgery peaks at 60-79 and halves at 80+,
+# while prevalence keeps rising. That difference is what makes the three
 # estimands informative rather than redundant.
 WU2011_SURGERY_RATE_PER_1000 <- c(
   "20-39" = 1.5,
   "40-59" = 4.6,
-  "60-79" = 6.3,
+  "60-64" = 6.3,
+  "65-79" = 6.3,
   "80+"   = 3.2
 )
 
-DEMAND_AGE_BANDS <- c("20-39", "40-59", "60-79", "80+")
+#' PFD prevalence by demand age band
+#'
+#' 65-79 and 80+ are read from `mufflyaccess::pfd_prevalence()`; the younger
+#' bands are local literals. Falls back entirely to local values when the
+#' contract is unavailable, and says so.
+#'
+#' @param condition Condition passed to the contract.
+#' @return Named numeric vector over `DEMAND_AGE_BANDS`.
+#' @export
+pfd_prevalence_by_band <- function(condition = "any_PFD") {
+  local_65plus <- c("65-79" = 0.368, "80+" = 0.497)
+  if (!has_mufflyaccess()) {
+    .msg_warn("mufflyaccess unavailable: using local PFD prevalence for 65+ ",
+              "instead of the contract value.")
+    return(c(PFD_PREVALENCE_LOCAL_UNDER_65, local_65plus)[DEMAND_AGE_BANDS])
+  }
+  ssot <- ssot_pfd_prevalence(condition)
+  from_ssot <- stats::setNames(ssot$prevalence, ssot$age_band)
+  c(PFD_PREVALENCE_LOCAL_UNDER_65, from_ssot)[DEMAND_AGE_BANDS]
+}
+
+#' Which age bands are owned by the contract
+#' @return Tibble of `age_band` and `owner`.
+#' @export
+pfd_prevalence_ownership <- function() {
+  tibble::tibble(
+    age_band = DEMAND_AGE_BANDS,
+    owner = ifelse(DEMAND_AGE_BANDS %in% c("65-79", "80+"),
+                   "mufflyaccess::pfd_prevalence()", "local (Nygaard-derived)")
+  )
+}
 
 # Retained for backward compatibility with the crude single-rate path.
 PFD_PREVALENCE_65PLUS <- 0.40
 CONSULT_RATE_PER_WOMAN_65PLUS <- 0.045
 
 stopifnot(
-  all(PFD_PREVALENCE_BY_AGE > 0 & PFD_PREVALENCE_BY_AGE <= 1),
   all(CONSULT_RATE_BY_AGE > 0),
   all(WU2011_SURGERY_RATE_PER_1000 >= 0),
-  identical(names(PFD_PREVALENCE_BY_AGE), DEMAND_AGE_BANDS),
+  all(PFD_PREVALENCE_LOCAL_UNDER_65 > 0 & PFD_PREVALENCE_LOCAL_UNDER_65 <= 1),
   identical(names(CONSULT_RATE_BY_AGE), DEMAND_AGE_BANDS),
   identical(names(WU2011_SURGERY_RATE_PER_1000), DEMAND_AGE_BANDS)
 )
@@ -142,7 +186,7 @@ rebase_to_year <- function(year, value, base_year = DEMAND_INDEX_BASE_YEAR) {
 #' @return Long tibble: `year`, `estimand` (D1/D2/D3), `label`, `demand_cases`.
 #' @export
 compute_demand_denominators <- function(pop_by_band,
-                                        pfd_prevalence = PFD_PREVALENCE_BY_AGE,
+                                        pfd_prevalence = pfd_prevalence_by_band(),
                                         consult_rate = CONSULT_RATE_BY_AGE,
                                         surgery_rate_per_1000 = WU2011_SURGERY_RATE_PER_1000) {
   assertthat::assert_that(is.data.frame(pop_by_band))

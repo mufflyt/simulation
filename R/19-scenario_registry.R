@@ -20,7 +20,13 @@
 # evolving-care-delivery scenario that combines several "with attention paid to
 # not double counting the effects that overlapping scenarios might have".
 
-SCENARIO_REGISTRY_VERSION <- "1.0.0"
+# The local registry version is deliberately NOT "1.0.0": mufflyaccess already
+# ships a URPS scenario registry at 1.0.0 with a `retirement_shift_years` field
+# of identical name and semantics, and two different registries sharing a
+# version string is how silent divergence starts. The SSOT registry is now the
+# default (see ssot_supply_scenarios()); what remains here is a local fallback
+# and the extensions the contract does not carry.
+SCENARIO_REGISTRY_VERSION <- "2.0.0-local-fallback"
 
 # Access components a demand scenario can relax. Named so the base-year gap can
 # declare which of them it already contains (see assert_access_not_double_counted).
@@ -28,12 +34,31 @@ ACCESS_COMPONENTS <- c("uninsured", "nonmetro", "racial_equity", "income")
 
 # ---- Supply scenarios -----------------------------------------------------
 
-#' Default supply scenario registry
+#' Supply scenario registry
+#'
+#' Returns the mufflyaccess registry when available -- it is the SSOT and
+#' downstream consumers validate scenario ids against it. The local definitions
+#' are a fallback for when the contract is absent, plus the one extension it
+#' does not carry (graduate-to-practice conversion).
 #'
 #' @param baseline_entrants Baseline annual entrants to practice.
+#' @param prefer_ssot Use `mufflyaccess::urps_scenarios()` when available.
 #' @return Named list of supply scenario definitions.
 #' @export
-supply_scenario_registry <- function(baseline_entrants = 55) {
+supply_scenario_registry <- function(baseline_entrants = 55, prefer_ssot = TRUE) {
+  if (isTRUE(prefer_ssot) && has_mufflyaccess()) {
+    return(ssot_supply_scenarios(baseline_entrants))
+  }
+  .msg_warn("Using the LOCAL scenario fallback; ids will not validate against ",
+            "the mufflyaccess projection contract.")
+  local_supply_scenario_registry(baseline_entrants)
+}
+
+#' Local fallback scenario definitions
+#' @param baseline_entrants Baseline annual entrants.
+#' @return Named list of scenario definitions.
+#' @export
+local_supply_scenario_registry <- function(baseline_entrants = 55) {
   list(
     status_quo = list(
       label = "Status quo",
@@ -146,8 +171,7 @@ demand_scenario_registry <- function() {
 
 # ---- Contract validation --------------------------------------------------
 
-SUPPLY_SCENARIO_REQUIRED <- c("label", "entrants", "retirement_shift_years",
-                              "hours_multiplier", "conversion", "source")
+SUPPLY_SCENARIO_REQUIRED <- c("label", "entrants", "retirement_shift_years", "source")
 DEMAND_SCENARIO_REQUIRED <- c("label", "access_components", "source")
 
 #' Validate a scenario registry against its contract
@@ -163,8 +187,11 @@ validate_scenario_registry <- function(registry, kind = c("supply", "demand")) {
   if (!is.list(registry) || is.null(names(registry)) || any(!nzchar(names(registry)))) {
     stop("validate_scenario_registry: registry must be a named list", call. = FALSE)
   }
-  if (!"status_quo" %in% names(registry)) {
-    stop("validate_scenario_registry: every registry needs a 'status_quo' scenario",
+  # The reference scenario is "baseline" in the mufflyaccess registry and
+  # "status_quo" in the local fallback; either satisfies the contract.
+  if (!any(c("baseline", "status_quo") %in% names(registry))) {
+    stop("validate_scenario_registry: every registry needs a reference scenario ",
+         "named 'baseline' (mufflyaccess) or 'status_quo' (local fallback)",
          call. = FALSE)
   }
   for (nm in names(registry)) {

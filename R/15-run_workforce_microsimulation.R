@@ -76,8 +76,10 @@ load_workforce_microsimulation <- function(r_dir = "R") {
 #' @export
 example_female_population_by_band <- function(
     years = 2025:2050,
-    base_pop = c("20-39" = 43.0e6, "40-59" = 41.5e6, "60-79" = 33.0e6, "80+" = 7.5e6),
-    growth   = c("20-39" = 0.001,  "40-59" = 0.004,  "60-79" = 0.014,  "80+" = 0.031)) {
+    base_pop = c("20-39" = 43.0e6, "40-59" = 41.5e6, "60-64" = 11.0e6,
+                 "65-79" = 22.0e6, "80+" = 7.5e6),
+    growth   = c("20-39" = 0.001,  "40-59" = 0.004,  "60-64" = 0.008,
+                 "65-79" = 0.016,  "80+" = 0.031)) {
   tidyr::expand_grid(year = years, age_band = names(base_pop)) %>%
     dplyr::mutate(
       female_pop = unname(base_pop[.data$age_band]) *
@@ -204,6 +206,9 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   if (is.null(supply_scenarios)) supply_scenarios <- supply_scenario_registry(baseline_entrants)
   if (is.null(demand_scenarios)) demand_scenarios <- demand_scenario_registry()
   validate_scenario_registry(supply_scenarios, "supply")
+  # Downstream consumers validate scenario ids against the mufflyaccess
+  # registry, so an unregistered id fails validate_urps_projection() later.
+  assert_scenarios_registered(names(supply_scenarios), mode)
   validate_scenario_registry(demand_scenarios, "demand")
 
   if (verbose) {
@@ -238,10 +243,12 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       entrants_per_year = params$entrants,
       subspecialty = subspecialty,
       n_iterations = n_iterations,
-      conversion_floor = params$conversion,
+      conversion_floor = params$conversion %||% 1.0,
       retirement_schedule = scenario_retirement_schedule(params),
-      hours_multiplier = params$hours_multiplier,
+      hours_multiplier = params$hours_multiplier %||% 1.0,
       hours_intercept = hours_intercept,
+      late_career_fte_factor = params$late_career_fte_factor %||% 1.0,
+      late_career_fte_onset_age = params$late_career_fte_onset_age %||% NA_real_,
       seed = seed,
       verbose = FALSE
     )
@@ -274,7 +281,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   required <- convert_workload_to_fte(volumes, wrvu_per_fte = wrvu_per_fte)
 
   # --- Absolute gap, status quo -------------------------------------------
-  status_quo <- dplyr::filter(supply_by_scenario, .data$scenario == "status_quo")
+  reference_id <- if ("baseline" %in% names(supply_scenarios)) "baseline" else "status_quo"
+  status_quo <- dplyr::filter(supply_by_scenario, .data$scenario == reference_id)
   fte_gap <- compute_fte_gap(status_quo, required, supply_col = "effective_fte_median")
 
   # --- Relative growth adequacy (explicitly labelled) ---------------------
@@ -293,11 +301,11 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
     sched <- scenario_retirement_schedule(params)
     rate <- implied_annual_departure_rate(agents$age, agents$sex, retirement_schedule = sched)
     departures <- baseline_supply * rate
-    rr <- (params$entrants * params$conversion) / departures
+    rr <- (params$entrants * (params$conversion %||% 1.0)) / departures
     tibble::tibble(
       scenario = scenario_name,
       scenario_label = params$label,
-      annual_entrants_effective = params$entrants * params$conversion,
+      annual_entrants_effective = params$entrants * (params$conversion %||% 1.0),
       implied_departure_rate = rate,
       expected_annual_departures = departures,
       replacement_ratio = rr,
@@ -308,8 +316,16 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   validation <- validation_report(supply_by_scenario, required, gap)
   assert_validation_passed(validation, mode)
 
+  projection <- if (has_mufflyaccess()) {
+    tryCatch(as_urps_projection(supply_by_scenario, specialty = subspecialty,
+                                geography_type = supply_geography,
+                                geography_id = if (supply_geography == "conus") "CONUS" else "US"),
+             error = function(e) { .msg_warn("Projection contract: ", conditionMessage(e)); NULL })
+  } else NULL
+
   result <- list(
     supply = supply_by_scenario,
+    projection = projection,
     demand = demand_long,
     service_volumes = volumes,
     required_fte = required,
@@ -334,7 +350,10 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       crude_departure_rate = crude_rate,
       years = range(years),
       n_iterations = n_iterations,
-      scenario_registry_version = SCENARIO_REGISTRY_VERSION,
+      scenario_registry_version = ssot_scenario_registry_version() %||% SCENARIO_REGISTRY_VERSION,
+      reference_scenario = reference_id,
+      ssot_provenance = ssot_provenance(),
+      ssot_coverage = ssot_coverage_report(),
       workload_status = urps_service_workload_status(),
       calibration = calibration_status_report(),
       hours_status = reference_hours_status(),

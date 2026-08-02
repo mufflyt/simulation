@@ -81,7 +81,44 @@ tests that need it skip themselves.
 | `20-provider_geography.R` | entrant placement, migration, density benchmarks |
 | `21-calibration_validation.R` | calibration scalars, two-method agreement, validation report |
 | `22-legacy_loader.R` | ordered, collision-reporting loader for `inst/legacy/` |
+| `23-cms_rvu.R` | CMS work RVUs, CPT basket, re-derivation helpers |
+| `24-ssot.R` | every `mufflyaccess` contract hookup, in one place |
 | `00-paths.R` | external-data path resolution (no hardcoded paths anywhere) |
+
+### Single source of truth
+
+`mufflyaccess` owns several quantities this package must not redefine.
+`ssot_coverage_report()` lists what is owned and what is local.
+
+| Quantity | Owner | Function |
+|---|---|---|
+| Base-year supply | `mufflyaccess` | `urps_count()` |
+| Supply scenarios | `mufflyaccess` | `urps_scenarios()` v1.0.0 — 9 registered ids |
+| Projection output shape | `mufflyaccess` | `urps_projection_schema()`, validated on export |
+| PFD prevalence 65+ | `mufflyaccess` | `pfd_prevalence()` |
+| Drive-time bands | `mufflyaccess` | `get_canonical_bands()` |
+| Rurality | `mufflyaccess` | `rurality_from_ruca()` (RUCA ≥ 4 is rural) |
+| Artifact provenance | `mufflyaccess` | `urps_provenance()`, folded into the run manifest |
+
+**Three things the contract does not own**, despite the export names suggesting
+otherwise — verified against the installed package, not inferred:
+
+- `pfd_prevalence()` covers **65–79 and 80+ only**. Women under 65 are a large
+  share of urogynecologic demand and are not in the contract. Its 65–79 band is
+  also *not* this model's old 60–79 band, so the demand age bands were
+  restructured to `20-39 / 40-59 / 60-64 / 65-79 / 80+` to align exactly.
+  `pfd_prevalence_ownership()` labels which bands are contract values and which
+  are local literals.
+- `pfd_prevalence_acs_bands()` returns the same 65+ values keyed by ACS variable
+  name. It solves ACS joins; it does not supply younger-age prevalence.
+- `mc_weighted_ci(access, est, se, ...)` propagates ACS margins of error through
+  an access surface. It is not a Monte Carlo replicate summariser and does not
+  replace the quantile bands computed over simulation replicates.
+
+The local scenario registry was versioned `1.0.0` — the same string as the
+contract's, which is how silent divergence starts. It is now
+`2.0.0-local-fallback` and used only when `mufflyaccess` is absent;
+`assert_scenarios_registered()` refuses an id the contract does not know.
 
 ### Source models
 
