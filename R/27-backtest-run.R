@@ -231,8 +231,24 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
     }
   }
 
+  # PROVENANCE. A frozen back-test artifact that does not record which contract
+  # snapshot it was scored against is untraceable: if mufflyaccess ships a new
+  # artifact where 2023 reads 1,310, this CSV becomes silently stale and nothing
+  # in it says so. Every row carries the artifact identity.
+  prov <- ssot_provenance()
+  summary_tbl <- dplyr::bind_rows(rows)
+  summary_tbl$contract_version <- target$contract_version
+  summary_tbl$artifact_version <- prov$artifact_version %||% NA_character_
+  summary_tbl$artifact_source <- prov$artifact_source %||% NA_character_
+  summary_tbl$snapshot_date <- as.character(prov$snapshot_date %||% NA)
+  summary_tbl$source_sha256 <- prov$source_sha256 %||% NA_character_
+  summary_tbl$canonical_release <- prov$canonical_release %||% NA
+  summary_tbl$target_basis <- target$basis
+  summary_tbl$observed_applies_attrition <- target$observed_series_applies_attrition
+
   list(
-    summary = dplyr::bind_rows(rows),
+    summary = summary_tbl,
+    provenance = prov,
     iterations = dplyr::bind_rows(iter_rows),
     trajectory = dplyr::bind_rows(traj_rows),
     target = target,

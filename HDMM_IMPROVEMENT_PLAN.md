@@ -15,6 +15,10 @@ Prepared 2026-08-02.
 - `R/25-demand_lifecourse.R` — the reproductive life-course demand generator (this plan's
   Part B, implemented). `R/26-utilization_models.R` — the corrected surgery-rate and
   survey-weighted visit models (Part A, implemented).
+- `R/27-demand_lifecourse_uncertainty.R` — parameter-uncertainty intervals on the demand
+  trajectory (Part B / IP §5, implemented). `R/28-demand_lifecourse_calibration.R` —
+  calibration to national anchors + a 2010s→2020s back-test (Part C / IP §4, implemented),
+  reusing `fit_calibration_scalars()` and `config/calibration_targets.yml`.
 
 ---
 

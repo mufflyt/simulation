@@ -72,6 +72,7 @@ outputs/
 # *.csv / *.png / *.parquet rules above.
 !artifacts/backtest_*.csv
 !artifacts/backtest_*.parquet
+!artifacts/backtest_*.json
 !figures/backtest_*.png
 
 # Canonical Census NPP inputs (vetted reference data; build-ignored so the
