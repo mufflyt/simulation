@@ -1,0 +1,5 @@
+rule,subspecialty_abbrev,departure_rate_pct,avg_annual_departures,replacement_ratio
+non_op_anchored (primary),GO,1,10.6,7.11
+non_op_anchored (primary),URPS,0.88,11.4,5.61
+op_inclusive,GO,1.27,13.4,5.6
+op_inclusive,URPS,1.15,14.8,4.31
