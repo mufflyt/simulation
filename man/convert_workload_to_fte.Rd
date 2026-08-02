@@ -7,7 +7,7 @@
 convert_workload_to_fte(
   volumes,
   wrvu_per_fte = NULL,
-  workload = URPS_SERVICE_WORKLOAD,
+  workload = urps_service_workload(),
   delegation = URPS_DELEGATION_MATRIX,
   provider_type = "urps",
   indirect_share = INDIRECT_TIME_SHARE,

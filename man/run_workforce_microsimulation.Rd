@@ -17,6 +17,7 @@ run_workforce_microsimulation(
   n_iterations = 200,
   baseline_entrants = 55,
   calibration = NULL,
+  allow_analogy = TRUE,
   output_dir = NULL,
   seed = 20260801L,
   verbose = TRUE
@@ -49,6 +50,9 @@ fail-closed guard.}
 
 \item{calibration}{Optional calibration scalars from
 \code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}}.}
+
+\item{allow_analogy}{Permit inputs derived by analogy from another specialty
+(currently the delegation matrix). Declared in the run metadata either way.}
 
 \item{output_dir}{If non-NULL, write provenance-tagged artifacts here.}
 

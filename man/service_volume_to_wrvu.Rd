@@ -6,7 +6,7 @@
 \usage{
 service_volume_to_wrvu(
   volumes,
-  workload = URPS_SERVICE_WORKLOAD,
+  workload = urps_service_workload(),
   provider_type = "urps",
   delegation = URPS_DELEGATION_MATRIX
 )

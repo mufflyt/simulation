@@ -163,6 +163,8 @@ example_capacity_survey <- function() {
 #' @param baseline_entrants Baseline annual entrants.
 #' @param calibration Optional calibration scalars from
 #'   [fit_calibration_scalars()].
+#' @param allow_analogy Permit inputs derived by analogy from another specialty
+#'   (currently the delegation matrix). Declared in the run metadata either way.
 #' @param output_dir If non-NULL, write provenance-tagged artifacts here.
 #' @param seed RNG seed.
 #' @param verbose Logical.
@@ -181,6 +183,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           n_iterations = 200,
                                           baseline_entrants = 55,
                                           calibration = NULL,
+                                          allow_analogy = TRUE,
                                           output_dir = NULL,
                                           seed = 20260801L,
                                           verbose = TRUE) {
@@ -251,6 +254,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
 
   # --- Workload -> required FTE (FTE on both sides) ------------------------
   assert_publishable_workload(mode = mode)
+  assert_publishable_workload(URPS_DELEGATION_STATUS, allow_analogy = allow_analogy,
+                              what = "delegation matrix", mode = mode)
   volumes <- example_service_volumes(demand_long)
   base_wrvu <- service_volume_to_wrvu(dplyr::filter(volumes, .data$year == base_year))
 
@@ -265,6 +270,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   }
 
   wrvu_per_fte <- calibrate_wrvu_per_fte(base_wrvu$work_rvu, base_required)
+  productivity_ok <- check_productivity_plausible(wrvu_per_fte, mode = mode)
   required <- convert_workload_to_fte(volumes, wrvu_per_fte = wrvu_per_fte)
 
   # --- Absolute gap, status quo -------------------------------------------
@@ -324,11 +330,13 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       fte_definition = fte_definition(),
       hours_intercept = hours_intercept,
       wrvu_per_fte = wrvu_per_fte,
+      productivity_plausible = productivity_ok,
       crude_departure_rate = crude_rate,
       years = range(years),
       n_iterations = n_iterations,
       scenario_registry_version = SCENARIO_REGISTRY_VERSION,
-      workload_status = URPS_SERVICE_WORKLOAD_STATUS,
+      workload_status = urps_service_workload_status(),
+      calibration = calibration_status_report(),
       hours_status = reference_hours_status(),
       mode = mode,
       seed = seed
