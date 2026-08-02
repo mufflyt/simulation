@@ -1,0 +1,7 @@
+subspecialty_abbrev,age_shift_years,departure_rate_pct,avg_annual_departures,replacement_ratio
+GO,0,1,10.6,7.11
+URPS,0,0.88,11.4,5.61
+GO,2,1.34,14.1,5.31
+URPS,2,0.99,12.8,5
+GO,4,1.32,13.9,5.42
+URPS,4,0.97,12.5,5.11

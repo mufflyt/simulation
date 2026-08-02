@@ -18,6 +18,7 @@ run_workforce_microsimulation(
   baseline_gap_estimate = NULL,
   n_iterations = 200,
   baseline_entrants = 55,
+  retirement_source = c("hwsm", "urps_empirical"),
   calibration = NULL,
   parameter_spec = NULL,
   allow_analogy = TRUE,
@@ -57,7 +58,13 @@ fail-closed guard.}
 
 \item{n_iterations}{Monte-Carlo replicates per scenario.}
 
-\item{baseline_entrants}{Baseline annual entrants.}
+\item{baseline_entrants}{Baseline annual entrants. \code{nrmp_entrants("URPS")}
+supplies the real NRMP-matched value (70).}
+
+\item{retirement_source}{Base retirement hazard: "hwsm" (default, the
+HWSM/FutureDocs literature curve) or "urps_empirical" (cliff's observed
+URPS hazards for ages 50-69 with the HWSM tail past 70). Scenario age-shifts
+apply on top of whichever base is chosen.}
 
 \item{calibration}{Optional calibration scalars from
 \code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}}.}

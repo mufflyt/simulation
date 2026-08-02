@@ -168,7 +168,12 @@ example_capacity_survey <- function() {
 #' @param baseline_gap_estimate A [baseline_gap()] object; NULL triggers the
 #'   fail-closed guard.
 #' @param n_iterations Monte-Carlo replicates per scenario.
-#' @param baseline_entrants Baseline annual entrants.
+#' @param baseline_entrants Baseline annual entrants. `nrmp_entrants("URPS")`
+#'   supplies the real NRMP-matched value (70).
+#' @param retirement_source Base retirement hazard: "hwsm" (default, the
+#'   HWSM/FutureDocs literature curve) or "urps_empirical" (cliff's observed
+#'   URPS hazards for ages 50-69 with the HWSM tail past 70). Scenario age-shifts
+#'   apply on top of whichever base is chosen.
 #' @param calibration Optional calibration scalars from
 #'   [fit_calibration_scalars()].
 #' @param parameter_spec Optional [supply_parameter_spec()]; defaults to one
@@ -194,6 +199,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           baseline_gap_estimate = NULL,
                                           n_iterations = 200,
                                           baseline_entrants = 55,
+                                          retirement_source = c("hwsm", "urps_empirical"),
                                           calibration = NULL,
                                           parameter_spec = NULL,
                                           allow_analogy = TRUE,
@@ -201,9 +207,29 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           seed = 20260801L,
                                           verbose = TRUE) {
   supply_geography <- match.arg(supply_geography)
+  retirement_source <- match.arg(retirement_source)
   mode <- resolve_reproducibility_mode()
   seed_microsimulation(seed, mode)
   run_id <- make_run_id(paste0("workforce_", tolower(subspecialty)), seed, mode)
+
+  # Base retirement schedule: the HWSM/FutureDocs literature curve by default, or
+  # cliff's empirical URPS hazards (observed 50-69 + HWSM tail past 70) opt-in.
+  base_retirement_schedule <- if (identical(retirement_source, "urps_empirical")) {
+    tryCatch(
+      urps_empirical_retirement_schedule(mode = mode),
+      error = function(e) {
+        if (identical(mode, "strict")) {
+          stop(sprintf("retirement_source='urps_empirical' unavailable: %s",
+                       conditionMessage(e)), call. = FALSE)
+        }
+        .msg_warn(sprintf("Empirical retirement schedule unavailable (%s); using HWSM",
+                          conditionMessage(e)))
+        RETIREMENT_HAZARD_BY_AGE
+      }
+    )
+  } else {
+    RETIREMENT_HAZARD_BY_AGE
+  }
 
   # --- Base-year supply from the versioned contract ------------------------
   contract <- NULL
@@ -282,7 +308,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       subspecialty = subspecialty,
       n_iterations = n_iterations,
       conversion_floor = params$conversion %||% 1.0,
-      retirement_schedule = scenario_retirement_schedule(params),
+      retirement_schedule = scenario_retirement_schedule(params, base_retirement_schedule),
       hours_multiplier = params$hours_multiplier %||% 1.0,
       hours_intercept = hours_intercept,
       param_spec = param_spec,
@@ -341,7 +367,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
              error = function(e) NULL)
   } else NULL
   outlook <- purrr::imap_dfr(supply_scenarios, function(params, scenario_name) {
-    sched <- scenario_retirement_schedule(params)
+    sched <- scenario_retirement_schedule(params, base_retirement_schedule)
     rate <- implied_annual_departure_rate(agents$age, agents$sex, retirement_schedule = sched)
     departures <- baseline_supply * rate
     rr <- (params$entrants * (params$conversion %||% 1.0)) / departures
@@ -385,6 +411,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       baseline_supply = baseline_supply,
       supply_geography = supply_geography,
       population_source = population_source,
+      retirement_source = retirement_source,
       supply_contract = contract,
       example_only = example_only,
       cohort_provenance = cohort,
