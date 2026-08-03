@@ -140,7 +140,13 @@ All demand outputs are emitted into a single versioned demand contract
 5–6 (care-seeking/procedural, life-course), and dynamic prevalence (DMDM) — with a
 provenance manifest and a `calibration_status` guard, so downstream repositories
 (cliff, twostep, isochrones) consume the same artifacts rather than rebuilding the
-epidemiology.
+epidemiology. Provenance is carried **per tier**: passing the transition object
+used for a DMDM run (e.g. `dmdm_transitions_with_pop_literature()`) to
+`export_dmdm_demand_contract(transitions = )` stamps a `tier_calibration_status`
+column, so `dmdm_pop` reads `derived_by_analogy` while `dmdm_ui`/`dmdm_ai` remain
+placeholders and the any-PFD `tier3` takes the weakest input status. A consumer
+gates on the provenance of the specific tier it reads, not a single artifact-level
+flag.
 
 ## Key references
 
