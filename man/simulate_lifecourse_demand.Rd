@@ -10,7 +10,7 @@ simulate_lifecourse_demand(
   scenario = "baseline",
   n = 1e+05,
   seed = NULL,
-  cesarean_rate = 0.32,
+  cesarean_rate = NULL,
   access_gain = 1,
   prevention_target = c("pop", "ui", "ai", "bmi"),
   prevention_effect = 0.2,
@@ -33,7 +33,8 @@ target year).}
 \item{seed}{Optional RNG seed.}
 
 \item{cesarean_rate}{Share of live births delivered by cesarean (delivery-mode
-lever). Default 0.32.}
+lever). Default \code{NULL} uses the CITED cohort-varying cesarean baseline (via
+R/13b \code{cohort_vaginal_exposure()}); pass a scalar to override it.}
 
 \item{access_gain}{Multiplier on care-seeking for high-barrier women
 (reduced-barriers lever). Default 1; the "reduced_barriers" scenario sets 1.6
