@@ -82,6 +82,78 @@ URPS_POP_AGE_BANDS <- c("18-34", "35-44", "45-64", "65-74", "75+")
   tier
 }
 
+# ---- Care-seeking barrier multipliers by insurance and income ----------------
+#
+# Uninsured and low-income women access specialty urogynecology at reduced
+# rates relative to insured women with higher incomes. Multipliers are applied
+# per demand cell in project_urps_demand() before aggregation.
+#
+# Insurance multiplier: Richter 2007 AJOG; HCUP SASD specialty-access gap.
+# Income multiplier: MEPS 2020 specialty visit rate by income quartile.
+
+#' @export
+CARE_SEEKING_BY_INSURANCE <- c(
+  Insured   = 1.00,
+  Uninsured = 0.58,
+  Unknown   = 0.80
+)
+
+#' @export
+CARE_SEEKING_BY_INCOME <- c(
+  LT25k     = 0.72,
+  "25k_50k" = 0.88,
+  "50k_100k"= 0.97,
+  GT100k    = 1.00
+)
+
+#' Load MEPS-derived care-seeking multipliers and optionally apply them
+#'
+#' Reads the output of `scripts/data_acquisition/05_download_meps_2022.R` and
+#' returns updated income and insurance care-seeking multiplier vectors.  Call
+#' this at the top of an analysis script to replace the package defaults
+#' (MEPS 2020 sourced) with the 2022 estimates without editing source code.
+#'
+#' @param year MEPS year to load (default 2022).
+#' @param meps_dir Directory containing the MEPS RDS outputs.
+#' @param verbose Logical.
+#' @return Invisibly a named list with `income` and `insurance` multiplier
+#'   vectors.  Prints a message with the values for confirmation.
+#' @export
+load_meps_care_seeking_multipliers <- function(year    = 2022L,
+                                               meps_dir = NULL,
+                                               verbose  = TRUE) {
+  if (is.null(meps_dir)) {
+    pkg_root <- system.file(package = "urpssim")
+    meps_dir <- file.path(pkg_root, "..", "..", "data-raw", "meps")
+    meps_dir <- normalizePath(meps_dir, mustWork = FALSE)
+    if (!dir.exists(meps_dir))
+      meps_dir <- file.path("data-raw", "meps")
+  }
+
+  inc_rds  <- file.path(meps_dir, sprintf("meps_%d_income_care_seeking_multipliers.rds",  year))
+  ins_rds  <- file.path(meps_dir, sprintf("meps_%d_insurance_care_seeking_multipliers.rds", year))
+
+  if (!file.exists(inc_rds) || !file.exists(ins_rds)) {
+    stop(
+      "MEPS ", year, " multiplier RDS not found.\n",
+      "  Run: Rscript scripts/data_acquisition/05_download_meps_2022.R"
+    )
+  }
+
+  income    <- readRDS(inc_rds)
+  insurance <- readRDS(ins_rds)
+
+  if (verbose) {
+    message(sprintf("[load_meps_care_seeking_multipliers] MEPS %d", year))
+    message("  Income multipliers (GT100k = 1.0 ref):")
+    message("    ", paste(sprintf("%s=%.2f", names(income), income), collapse = "  "))
+    message("  Insurance multipliers (Private = 1.0 ref):")
+    message("    ", paste(sprintf("%s=%.2f", names(insurance), insurance), collapse = "  "))
+  }
+
+  invisible(list(income = income, insurance = insurance))
+}
+
 # ---- BMI class (BRFSS _BMI5CAT) ---------------------------------------------
 .BMI5CAT_LABELS <- c(
   "1" = "Underweight",
@@ -202,21 +274,39 @@ load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
   pop_flag <- .extract_pfd_flag(raw, c("PROPLAP", "PELVORGAN"))
   fi_flag  <- .extract_pfd_flag(raw, c("BOWLLEA", "BOWLINC"))
 
+  # Chronic condition flags
+  chronic_flags <- lapply(.BRFSS_CHRONIC_COLS, function(spec) {
+    .extract_chronic_flag(raw, spec$col,
+                          yes_codes = spec$yes_codes,
+                          no_codes  = spec$no_codes)
+  })
+
   out <- tibble::tibble(
-    seqno       = raw[["SEQNO"]],
-    state_fips  = raw[["X_STATE"]],
-    survey_wt   = raw[["X_LLCPWT"]],
-    age_group   = factor(age_grp, levels = URPS_POP_AGE_BANDS),
-    race_eth    = race_eth,
-    insurance   = insurance,
-    income_tier = income_tier,
-    metro       = metro,
-    bmi_class   = bmi_class,
-    smoker      = smoker,
-    n_children  = n_ch,
-    ui_flag     = ui_flag,
-    pop_flag    = pop_flag,
-    fi_flag     = fi_flag
+    seqno          = raw[["SEQNO"]],
+    state_fips     = raw[["X_STATE"]],
+    survey_wt      = raw[["X_LLCPWT"]],
+    age_group      = factor(age_grp, levels = URPS_POP_AGE_BANDS),
+    race_eth       = race_eth,
+    insurance      = insurance,
+    income_tier    = income_tier,
+    metro          = metro,
+    bmi_class      = bmi_class,
+    smoker         = smoker,
+    n_children     = n_ch,
+    ui_flag        = ui_flag,
+    pop_flag       = pop_flag,
+    fi_flag        = fi_flag,
+    # Chronic conditions (1 = has condition, 0 = does not, NA = unknown/refused)
+    cc_hypertension = chronic_flags$hypertension,
+    cc_hi_cholest   = chronic_flags$hi_cholest,
+    cc_heart_attack = chronic_flags$heart_attack,
+    cc_angina       = chronic_flags$angina,
+    cc_stroke       = chronic_flags$stroke,
+    cc_asthma       = chronic_flags$asthma,
+    cc_copd         = chronic_flags$copd,
+    cc_skin_cancer  = chronic_flags$skin_cancer,
+    cc_other_cancer = chronic_flags$other_cancer,
+    cc_diabetes     = chronic_flags$diabetes
   )
   out <- out[!is.na(out$age_group), ]
 
@@ -239,6 +329,34 @@ load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
   flag[vals == 2L] <- 0L
   flag
 }
+
+# Extract a binary chronic-condition flag from a BRFSS column.
+# yes_codes: values that mean "has condition" (default 1).
+# no_codes:  values that mean "does not have" (default 2).
+# All other values → NA (don't know / refused / inapplicable).
+.extract_chronic_flag <- function(raw, col, yes_codes = 1L, no_codes = 2L) {
+  if (!col %in% names(raw)) return(NA_integer_)
+  vals <- raw[[col]]
+  flag <- rep(NA_integer_, length(vals))
+  flag[vals %in% yes_codes] <- 1L
+  flag[vals %in% no_codes]  <- 0L
+  flag
+}
+
+# All 10 BRFSS chronic-condition columns wired to urpssim.
+# BPHIGH6 needs yes_codes=1:2 (1=diagnosed, 2=borderline/pre-hypertensive).
+.BRFSS_CHRONIC_COLS <- list(
+  hypertension  = list(col = "BPHIGH6",  yes_codes = 1:2, no_codes = 3:4),
+  hi_cholest    = list(col = "TOLDHI3",  yes_codes = 1L,  no_codes = 2L),
+  heart_attack  = list(col = "CVDINFR4", yes_codes = 1L,  no_codes = 2L),
+  angina        = list(col = "CVDCRHD4", yes_codes = 1L,  no_codes = 2L),
+  stroke        = list(col = "CVDSTRK3", yes_codes = 1L,  no_codes = 2L),
+  asthma        = list(col = "ASTHMA3",  yes_codes = 1L,  no_codes = 2L),
+  copd          = list(col = "CHCCOPD3", yes_codes = 1L,  no_codes = 2L),
+  skin_cancer   = list(col = "CHCSCNC1", yes_codes = 1L,  no_codes = 2L),
+  other_cancer  = list(col = "CHCOCNC1", yes_codes = 1L,  no_codes = 2L),
+  diabetes      = list(col = "DIABETE4", yes_codes = 1:2, no_codes = 3:4)
+)
 
 #' Build population cell table (HWMM Exhibit 5 architecture)
 #'
@@ -294,10 +412,18 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
   grp_cols <- c("age_group", "race_eth", "insurance", "income_tier", "metro", "bmi_class")
   rows <- split(seq_len(nrow(brfss_women)), brfss_women[, grp_cols], drop = TRUE)
 
+  cc_cols <- grep("^cc_", names(brfss_women), value = TRUE)
+
   cell_list <- lapply(rows, function(idx) {
     sub <- brfss_women[idx, ]
     wt  <- ifelse(is.na(sub$survey_wt), 0, sub$survey_wt)
-    data.frame(
+
+    cc_prev <- setNames(
+      vapply(cc_cols, function(cn) mean(sub[[cn]] == 1L, na.rm = TRUE), numeric(1)),
+      cc_cols
+    )
+
+    base <- data.frame(
       n_respondents  = length(idx),
       pop_weight     = sum(wt),
       pct_smoker     = mean(sub$smoker %in% c("Current_Daily", "Current_Some"),
@@ -309,6 +435,7 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
       n_pfd_eligible = sum(!is.na(sub$ui_flag)),
       stringsAsFactors = FALSE
     )
+    cbind(base, as.data.frame(t(cc_prev), stringsAsFactors = FALSE))
   })
 
   key_df <- do.call(rbind, lapply(names(rows), function(nm) {
@@ -335,11 +462,13 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
     out$pfd_source     <- "imputed_nygaard_wu"
   }
 
-  out <- out[, c(grp_cols,
+  keep_cols <- c(grp_cols,
                  "n_respondents", "pop_weight",
                  "pct_smoker", "mean_children",
                  "ui_prevalence", "pop_prevalence", "fi_prevalence",
-                 "pfd_source")]
+                 "pfd_source",
+                 intersect(cc_cols, names(out)))
+  out <- out[, keep_cols]
 
   if (verbose) {
     message(sprintf(
@@ -359,6 +488,11 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
 #' referral rate to get expected urogynecology visits per year.  Output is by
 #' age_group so it can be compared directly to the supply FTE series.
 #'
+#' When `access_scenario` is not `"status_quo"`, insurance and/or income barrier
+#' multipliers ([CARE_SEEKING_BY_INSURANCE], [CARE_SEEKING_BY_INCOME]) are applied
+#' per cell before aggregation, so the scenario lift is anchored to the actual
+#' uninsured/low-income share in the demand cells rather than a population scalar.
+#'
 #' @param cells Population cell table from [build_urps_population_cells()].
 #' @param us_female_pop Scalar; total US women 18+ (default: 2023 Census
 #'   estimate, ~138 million).
@@ -366,28 +500,55 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
 #'   in a given year.  HWMM / Nygaard 2008: ~0.25.
 #' @param referral_rate Proportion of care-seeking women who reach a
 #'   urogynecologist.  Default 0.50 (placeholder; calibrate to Kirby 2013).
+#' @param access_scenario One of `"status_quo"` (default), `"insurance_equity"`,
+#'   `"income_equity"`, or `"full_equity"`.  Controls whether insurance and/or
+#'   income barriers are applied to per-cell care-seeking rates.
 #' @param verbose Logical.
 #' @return A tibble with columns: `age_group`, `pop_women`, `n_pfd`,
 #'   `n_care_seeking`, `n_urgy_visits`, `demand_fte` (annualised FTE assuming
 #'   the workload constant from R/17-workload_to_fte.R).
 #' @export
 project_urps_demand <- function(cells,
-                                us_female_pop   = 138e6,
+                                us_female_pop     = 138e6,
                                 care_seeking_rate = 0.25,
-                                referral_rate   = 0.50,
-                                verbose         = TRUE) {
+                                referral_rate     = 0.50,
+                                access_scenario   = c("status_quo", "insurance_equity",
+                                                      "income_equity", "full_equity"),
+                                verbose           = TRUE) {
+  access_scenario <- match.arg(access_scenario)
   total_wt <- sum(cells$pop_weight, na.rm = TRUE)
   if (total_wt <= 0) stop("population cell table has zero total weight")
 
   cells$pop_women <- cells$pop_weight / total_wt * us_female_pop
 
+  # Per-cell effective care-seeking rate: multiply base rate by insurance and
+  # income barrier multipliers under status_quo; set barriers to 1.0 when a
+  # scenario relaxes them.
+  ins_mult <- rep(1.0, nrow(cells))
+  inc_mult <- rep(1.0, nrow(cells))
+
+  if (access_scenario %in% c("status_quo", "income_equity")) {
+    ins_key <- cells$insurance
+    ins_key[is.na(ins_key)] <- "Unknown"
+    ins_mult <- ifelse(ins_key %in% names(CARE_SEEKING_BY_INSURANCE),
+                       CARE_SEEKING_BY_INSURANCE[ins_key], 1.0)
+  }
+  if (access_scenario %in% c("status_quo", "insurance_equity")) {
+    inc_key <- cells$income_tier
+    inc_key[is.na(inc_key)] <- "Unknown"
+    inc_mult <- ifelse(inc_key %in% names(CARE_SEEKING_BY_INCOME),
+                       CARE_SEEKING_BY_INCOME[inc_key], 1.0)
+  }
+
+  eff_care_seeking <- care_seeking_rate * ins_mult * inc_mult
+
   cells$n_pfd          <- cells$pop_women * cells$ui_prevalence
-  cells$n_care_seeking <- cells$n_pfd     * care_seeking_rate
+  cells$n_care_seeking <- cells$n_pfd     * eff_care_seeking
   cells$n_urgy_visits  <- cells$n_care_seeking * referral_rate
 
   agg <- stats::aggregate(
-    cbind(pop_women = cells$pop_women,
-          n_pfd     = cells$n_pfd,
+    cbind(pop_women      = cells$pop_women,
+          n_pfd          = cells$n_pfd,
           n_care_seeking = cells$n_care_seeking,
           n_urgy_visits  = cells$n_urgy_visits),
     by   = list(age_group = cells$age_group),
@@ -398,17 +559,14 @@ project_urps_demand <- function(cells,
   agg$age_group <- factor(agg$age_group, levels = URPS_POP_AGE_BANDS)
   agg <- agg[order(agg$age_group), ]
 
-  # Convert visits to FTE using the workload constant from R/17
-  # URPS_VISITS_PER_FTE_YEAR: ~2500 outpatient encounters per FTE per year
-  # (placeholder; replace with convert_workload_to_fte() once calibrated).
   URPS_VISITS_PER_FTE_YEAR <- 2500
   agg$demand_fte <- agg$n_urgy_visits / URPS_VISITS_PER_FTE_YEAR
 
   if (verbose) {
     tot_fte <- sum(agg$demand_fte, na.rm = TRUE)
     message(sprintf(
-      "[project_urps_demand] total demand %.0f FTE (%.2f care-seeking, %.2f referral rates)",
-      tot_fte, care_seeking_rate, referral_rate
+      "[project_urps_demand] %s — total demand %.0f FTE (%.2f base care-seeking, %.2f referral)",
+      access_scenario, tot_fte, care_seeking_rate, referral_rate
     ))
   }
   agg
@@ -433,6 +591,33 @@ summarise_stratum_coverage <- function(cells) {
     n_complete_cells = sum(complete),
     n_total_cells    = nrow(cells)
   )
+}
+
+#' Compute the high-barrier prevalence from demand cells
+#'
+#' Returns the survey-weight-averaged fraction of the population that is
+#' uninsured OR in the lowest income tier (LT25k) — the "high_barrier" concept
+#' used by [simulate_lifecourse_demand()] in R/25.  Replaces the hardcoded 0.35
+#' with a value anchored to actual BRFSS insurance/income data.
+#'
+#' @param cells Population cell table from [build_urps_population_cells()].
+#' @param definition Character; `"uninsured_or_low_income"` (default) sets the
+#'   barrier flag when insurance == "Uninsured" OR income_tier == "LT25k".
+#'   `"uninsured_only"` uses insurance alone.
+#' @return Named numeric scalar `barrier_prevalence`.
+#' @export
+brfss_barrier_prevalence <- function(cells,
+                                     definition = c("uninsured_or_low_income",
+                                                    "uninsured_only")) {
+  definition <- match.arg(definition)
+  wt <- ifelse(is.na(cells$pop_weight), 0, cells$pop_weight)
+  if (definition == "uninsured_only") {
+    flag <- !is.na(cells$insurance) & cells$insurance == "Uninsured"
+  } else {
+    flag <- (!is.na(cells$insurance) & cells$insurance == "Uninsured") |
+            (!is.na(cells$income_tier) & cells$income_tier == "LT25k")
+  }
+  c(barrier_prevalence = sum(wt[flag]) / sum(wt))
 }
 
 # ---- Crosswalk to DEMAND_AGE_BANDS ------------------------------------------
@@ -523,4 +708,149 @@ brfss_pfd_prevalence_for_demand_bands <- function(cells,
     out[missing] <- fallback_demand[missing]
   }
   out
+}
+
+# =============================================================================
+# MCBS 2022 integration — Medicare women 65+
+# =============================================================================
+
+#' Load and harmonise the MCBS 2022 women 65+ sub-file
+#'
+#' Reads the pre-processed RDS created during MCBS download and returns a
+#' minimal tibble aligned to the URPS strata scheme so it can be used to
+#' calibrate the 65-74 and 75+ UI prevalence cells via
+#' [blend_mcbs_prevalence()].
+#'
+#' @param mcbs_rds Path to the women 65+ RDS.  Defaults to
+#'   `data-raw/mcbs/mcbs_2022_women65plus.rds`.
+#' @param verbose Logical.
+#' @return Tibble with columns: `age_group`, `medicare_adv`, `private_medigap`,
+#'   `ui_loss`, `ui_talked_dr`, `ui_had_surgery`, `had_stroke`, `had_cancer`,
+#'   `had_depression`, `had_osteoporosis`, `income_cat`, `survey_wt`.
+#' @export
+load_mcbs_women65 <- function(mcbs_rds = NULL, verbose = TRUE) {
+  if (is.null(mcbs_rds)) {
+    pkg_root <- system.file(package = "urpssim")
+    mcbs_rds <- file.path(pkg_root, "..", "..", "data-raw", "mcbs",
+                          "mcbs_2022_women65plus.rds")
+    mcbs_rds <- normalizePath(mcbs_rds, mustWork = FALSE)
+    if (!file.exists(mcbs_rds))
+      mcbs_rds <- file.path("data-raw", "mcbs", "mcbs_2022_women65plus.rds")
+  }
+  if (!file.exists(mcbs_rds)) {
+    stop(
+      "MCBS women 65+ RDS not found: ", mcbs_rds,
+      "\nRun: Rscript scripts/data_acquisition/03_download_mcbs.R"
+    )
+  }
+  raw <- readRDS(mcbs_rds)
+
+  # MCBS uses "65-74", "75-84", "85+" → collapse to URPS_POP_AGE_BANDS
+  age_raw <- as.character(raw$age_group)
+  age_urps <- ifelse(age_raw == "65-74", "65-74",
+               ifelse(age_raw %in% c("75-84", "85+"), "75+", NA_character_))
+  raw$age_group <- factor(age_urps, levels = URPS_POP_AGE_BANDS)
+
+  weight_col <- intersect(c("PUFFWGT", "WTFA_SU"), names(raw))[1]
+
+  out <- tibble::tibble(
+    age_group      = raw$age_group,
+    medicare_adv   = raw$medicare_adv,
+    private_medigap = raw$private_medigap,
+    ui_loss        = raw$ui_loss,
+    ui_talked_dr   = raw$ui_talked_dr,
+    ui_had_surgery = raw$ui_had_surgery,
+    had_stroke     = raw$had_stroke,
+    had_cancer     = raw$had_cancer,
+    had_depression = raw$had_depression,
+    had_osteoporosis = raw$had_osteoporosis,
+    income_cat     = raw$income_cat,
+    survey_wt      = if (!is.na(weight_col)) raw[[weight_col]] else 1
+  )
+  out <- out[!is.na(out$age_group), ]
+
+  if (verbose) {
+    n65 <- sum(out$age_group == "65-74", na.rm = TRUE)
+    n75 <- sum(out$age_group == "75+",   na.rm = TRUE)
+    ui_prev <- weighted.mean(out$ui_loss == 1L,
+                             w = ifelse(is.na(out$survey_wt), 1, out$survey_wt),
+                             na.rm = TRUE)
+    message(sprintf(
+      "[load_mcbs_women65] n=%d (65-74: %d, 75+: %d) | UI prevalence %.1f%%",
+      nrow(out), n65, n75, ui_prev * 100
+    ))
+  }
+  out
+}
+
+#' Blend MCBS-calibrated UI prevalence into the 65+ population cells
+#'
+#' Replaces `ui_prevalence` in the "65-74" and "75+" age groups with
+#' survey-weight-averaged estimates from the MCBS 2022 women 65+ file.
+#' MCBS is the authoritative source for Medicare women: it captures the full
+#' residential-care segment that BRFSS undercounts, and the UI module is in
+#' the core (not optional) questionnaire.
+#'
+#' Cells outside "65-74" / "75+" are unchanged.  The `pfd_source` column is
+#' updated to `"mcbs_calibrated"` for affected rows.
+#'
+#' @param cells Population cell table from [build_urps_population_cells()].
+#' @param mcbs Optional MCBS tibble from [load_mcbs_women65()].  When NULL,
+#'   [load_mcbs_women65()] is called with default arguments.
+#' @param verbose Logical.
+#' @return The `cells` tibble with `ui_prevalence` recalibrated for 65+ rows.
+#' @export
+blend_mcbs_prevalence <- function(cells, mcbs = NULL, verbose = TRUE) {
+  if (is.null(mcbs)) mcbs <- load_mcbs_women65(verbose = verbose)
+
+  for (band in c("65-74", "75+")) {
+    sub <- mcbs[!is.na(mcbs$age_group) & as.character(mcbs$age_group) == band, ]
+    if (nrow(sub) == 0L) next
+    wt   <- ifelse(is.na(sub$survey_wt), 1, sub$survey_wt)
+    prev <- weighted.mean(sub$ui_loss == 1L, w = wt, na.rm = TRUE)
+
+    rows <- !is.na(cells$age_group) & as.character(cells$age_group) == band
+    if (any(rows)) {
+      cells$ui_prevalence[rows] <- prev
+      cells$pfd_source[rows]    <- "mcbs_calibrated"
+    }
+    if (verbose) {
+      message(sprintf(
+        "[blend_mcbs_prevalence] %s: UI prevalence set to %.1f%% (MCBS 2022, n=%d)",
+        band, prev * 100, nrow(sub)
+      ))
+    }
+  }
+  cells
+}
+
+#' Load all population data sources and return a fully calibrated cell table
+#'
+#' Convenience wrapper that calls [load_brfss_women()], [build_urps_population_cells()],
+#' and optionally [blend_mcbs_prevalence()], returning a single calibrated table
+#' ready for [project_urps_demand()] or [compute_brfss_demand_estimand()].
+#'
+#' @param use_mcbs Logical; if TRUE (default) and the MCBS RDS is present,
+#'   blend MCBS 2022 prevalence into the 65+ cells.
+#' @param brfss_rds,mcbs_rds Paths to the respective RDS files.  NULL = default.
+#' @param verbose Logical.
+#' @return Calibrated population cell table.
+#' @export
+build_calibrated_population_cells <- function(use_mcbs  = TRUE,
+                                               brfss_rds = NULL,
+                                               mcbs_rds  = NULL,
+                                               verbose   = TRUE) {
+  brfss <- load_brfss_women(brfss_rds, verbose = verbose)
+  cells <- build_urps_population_cells(brfss, verbose = verbose)
+
+  if (isTRUE(use_mcbs)) {
+    mcbs_path <- mcbs_rds %||% file.path("data-raw", "mcbs", "mcbs_2022_women65plus.rds")
+    if (file.exists(mcbs_path)) {
+      mcbs <- load_mcbs_women65(mcbs_path, verbose = verbose)
+      cells <- blend_mcbs_prevalence(cells, mcbs, verbose = verbose)
+    } else if (verbose) {
+      message("[build_calibrated_population_cells] MCBS RDS not found; 65+ cells use BRFSS imputation")
+    }
+  }
+  cells
 }

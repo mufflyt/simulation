@@ -429,3 +429,83 @@ test_that("the late-career FTE factor applies only from its onset age", {
   # Only the 65-year-olds are affected, so the reduction is far less than 25%.
   expect_gt(cut / full, 0.80)
 })
+
+
+# ---- NAMCS URPS visit-rate equations (D5 estimand) -------------------------
+
+test_that("flag_urps_visits identifies correct ICD-10 codes", {
+  fake <- tibble::tibble(
+    DIAG1 = c("N393", "I10-", "N81-", "E119"),
+    DIAG2 = c("-9",   "R32-", "-9",   "-9"),
+    DIAG3 = rep("-9", 4)
+  )
+  result <- flag_urps_visits(fake)
+  expect_equal(unname(result$is_urps), c(TRUE, TRUE, TRUE, FALSE))
+})
+
+# Helper: locate a data-raw file regardless of test working directory
+.data_raw_path <- function(...) {
+  rel  <- file.path("data-raw", ...)
+  rel2 <- file.path("..", "..", "data-raw", ...)
+  if (file.exists(rel)) rel else rel2
+}
+.namcs_rds_path  <- function() .data_raw_path("namcs",  "namcs2019_clean.rds")
+.brfss_rds_path  <- function() .data_raw_path("brfss",  "brfss_2023_women18plus.rds")
+
+test_that("namcs_urps_stratum_visits returns non-negative weighted totals", {
+  skip_if_not(file.exists(.namcs_rds_path()), "NAMCS 2019 cleaned file not present")
+  namcs <- flag_urps_visits(load_namcs_2019(.namcs_rds_path()))
+  sv    <- namcs_urps_stratum_visits(namcs)
+  expect_gt(nrow(sv), 0L)
+  expect_true(all(sv$visits_weighted > 0))
+  expect_true(all(sv$n_visits_unweighted > 0))
+})
+
+test_that("compute_urps_visit_rates produces positive rates in plausible range", {
+  skip_if_not(file.exists(.namcs_rds_path()), "NAMCS 2019 cleaned file not present")
+  namcs <- flag_urps_visits(load_namcs_2019(.namcs_rds_path()))
+  sv    <- namcs_urps_stratum_visits(namcs)
+  brfss <- readRDS(.brfss_rds_path())
+  sp    <- brfss_population_by_stratum(brfss)
+  rt    <- compute_urps_visit_rates(sv, sp)
+  expect_gt(nrow(rt), 0L)
+  expect_true(all(rt$visits_per_1000 > 0))
+  expect_true(all(rt$visits_per_1000 < 100))
+})
+
+test_that("fit_urps_visit_rate_model produces a fitted lm with R2 > 0.5", {
+  skip_if_not(file.exists(.namcs_rds_path()), "NAMCS 2019 cleaned file not present")
+  namcs <- flag_urps_visits(load_namcs_2019(.namcs_rds_path()))
+  sv    <- namcs_urps_stratum_visits(namcs)
+  brfss <- readRDS(.brfss_rds_path())
+  sp    <- brfss_population_by_stratum(brfss)
+  rt    <- compute_urps_visit_rates(sv, sp)
+  model <- fit_urps_visit_rate_model(rt)
+  expect_s3_class(model, "lm")
+  expect_gt(summary(model)$r.squared, 0.5)
+})
+
+test_that("compute_namcs_demand_estimand returns monotonically growing D5 FTE", {
+  skip_if_not(file.exists(.namcs_rds_path()), "NAMCS 2019 cleaned file not present")
+  namcs <- flag_urps_visits(load_namcs_2019(.namcs_rds_path()))
+  sv    <- namcs_urps_stratum_visits(namcs)
+  brfss <- readRDS(.brfss_rds_path())
+  sp    <- brfss_population_by_stratum(brfss)
+  rt    <- compute_urps_visit_rates(sv, sp)
+  model <- fit_urps_visit_rate_model(rt)
+
+  pop_proj <- tidyr::expand_grid(
+    year = 2024:2034,
+    age_band = c("18-34", "35-44", "45-64", "65-74", "75+"),
+    sex = "Female",
+    race_eth = c("White_NH", "Black_NH", "Hispanic"),
+    insurance_2tier = "Insured"
+  ) |>
+    dplyr::mutate(population = 8e6 * (1 + 0.005 * (year - 2024)))
+
+  d5 <- compute_namcs_demand_estimand(pop_proj, model)
+  expect_equal(unique(d5$estimand), "D5")
+  expect_equal(nrow(d5), 11L)
+  expect_true(all(diff(d5$demand_clinical_fte) > 0))
+  expect_gt(min(d5$demand_clinical_fte), 0)
+})

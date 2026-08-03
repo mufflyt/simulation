@@ -8,7 +8,7 @@ dmdm_prevalence_trajectory(
   pop_by_age,
   start_year,
   end_year,
-  n = 1e+05,
+  n = 100000,
   cesarean_rate = 0.32,
   seed = NULL,
   risk_params = lifecourse_risk_params(),

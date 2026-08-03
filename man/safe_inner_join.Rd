@@ -9,7 +9,7 @@ safe_inner_join(x, y, by, allow_fanout = FALSE)
 \arguments{
 \item{x, y}{Data frames.}
 
-\item{by}{Join specification (as in \code{\link[dplyr:mutate-joins]{dplyr::left_join()}}).}
+\item{by}{Join specification (as in \code{\link[dplyr:left_join]{dplyr::left_join()}}).}
 
 \item{allow_fanout}{If FALSE (default), a non-unique key in \code{y} is an error.}
 }

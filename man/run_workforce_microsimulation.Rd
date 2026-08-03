@@ -22,6 +22,9 @@ run_workforce_microsimulation(
   calibration = NULL,
   parameter_spec = NULL,
   allow_analogy = TRUE,
+  brfss_cells = NULL,
+  prevention_scenario = NULL,
+  setting_scenario = NULL,
   output_dir = NULL,
   seed = 20260801L,
   verbose = TRUE
@@ -74,6 +77,25 @@ built from the observed certification series.}
 
 \item{allow_analogy}{Permit inputs derived by analogy from another specialty
 (currently the delegation matrix). Declared in the run metadata either way.}
+
+\item{brfss_cells}{Optional population cell table from
+\code{\link[=build_urps_population_cells]{build_urps_population_cells()}}.  When non-NULL, a fourth demand estimand
+D4 (BRFSS survey-weighted UI care-seeking demand) is appended to
+\code{demand_long} and flows through concordance assessment alongside D1-D3.
+Requires that \code{\link[=brfss_pfd_prevalence_for_demand_bands]{brfss_pfd_prevalence_for_demand_bands()}} is available (i.e.
+that R/44-urps_population.R is loaded).}
+
+\item{prevention_scenario}{Character key in \link{URPS_PREVENTION_SCENARIOS}, or
+\code{NULL} (default). When non-NULL, service volumes are adjusted by
+\code{\link[=apply_named_prevention_scenario]{apply_named_prevention_scenario()}} before \code{\link[=convert_workload_to_fte]{convert_workload_to_fte()}},
+modelling conservative PFD management (PT/pessary) as a demand-side
+multiplier. Use \code{"baseline"} to confirm the no-shift reference.}
+
+\item{setting_scenario}{Character key in \link{URPS_SETTING_SCENARIOS}, or \code{NULL}
+(default). When non-NULL, \code{\link[=apply_setting_scenario]{apply_setting_scenario()}} redistributes service
+volumes across care-delivery settings and applies per-setting productivity
+adjustments before \code{\link[=convert_workload_to_fte]{convert_workload_to_fte()}}. Scenarios include
+\code{"telehealth_10pct"}, \code{"asc_migration_30pct"}, \code{"combined_shift"}.}
 
 \item{output_dir}{If non-NULL, write provenance-tagged artifacts here.}
 

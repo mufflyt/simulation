@@ -4,7 +4,13 @@
 \alias{validation_report}
 \title{Run the automatable internal-validation checks}
 \usage{
-validation_report(supply, required = NULL, gap = NULL, state_totals = NULL)
+validation_report(
+  supply,
+  required = NULL,
+  gap = NULL,
+  state_totals = NULL,
+  gap_projection = NULL
+)
 }
 \arguments{
 \item{supply}{Supply projection tibble.}
@@ -14,6 +20,11 @@ validation_report(supply, required = NULL, gap = NULL, state_totals = NULL)
 \item{gap}{Optional \code{\link[=baseline_gap]{baseline_gap()}} object.}
 
 \item{state_totals}{Optional tibble with \code{year} and \code{fte} summed by state.}
+
+\item{gap_projection}{Optional data frame from \code{\link[=as_urps_gap_projection]{as_urps_gap_projection()}} /
+\code{\link[=gap_projections_all_scenarios]{gap_projections_all_scenarios()}}. When supplied, two internal checks are
+added: (1) all REQUIRED_COLS are present; (2) gap arithmetic is consistent
+(\code{gap_fte == supply_clinical_fte - demand_clinical_fte} to ±0.01 FTE).}
 }
 \value{
 Tibble of checks with pass/fail and detail.

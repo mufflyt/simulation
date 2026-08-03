@@ -8,10 +8,11 @@ simulate_lifecourse_demand(
   pop_by_age,
   year,
   scenario = "baseline",
-  n = 1e+05,
+  n = 100000,
   seed = NULL,
   cesarean_rate = NULL,
   access_gain = 1,
+  barrier_prevalence = 0.35,
   prevention_target = c("pop", "ui", "ai", "bmi"),
   prevention_effect = 0.2,
   risk_params = lifecourse_risk_params(),
@@ -39,6 +40,11 @@ R/13b \code{cohort_vaginal_exposure()}); pass a scalar to override it.}
 \item{access_gain}{Multiplier on care-seeking for high-barrier women
 (reduced-barriers lever). Default 1; the "reduced_barriers" scenario sets 1.6
 when left at 1.}
+
+\item{barrier_prevalence}{Fraction of synthetic persons assigned \code{high_barrier = 1}.
+Default 0.35; derive from actual BRFSS data with
+\code{brfss_barrier_prevalence(cells)} (R/44-urps_population.R) to anchor to
+observed uninsured/low-income rates rather than a fixed assumption.}
 
 \item{prevention_target}{One of "pop", "ui", "ai", "bmi" (prevention lever).}
 

@@ -110,7 +110,8 @@ lifecourse_service_map <- function() {
 # Build a synthetic person-year panel centered on vaginal-delivery exposure.
 # Base R vectors assembled into a tibble (no survey/tidyverse NSE), so the
 # marginals are transparent and swappable.
-.lifecourse_population <- function(pop_by_age, year, n, cesarean_rate = NULL, seed = NULL) {
+.lifecourse_population <- function(pop_by_age, year, n, cesarean_rate = NULL,
+                                   barrier_prevalence = 0.35, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   stopifnot(all(c("age", "population") %in% names(pop_by_age)))
   idx <- sample(seq_len(nrow(pop_by_age)), size = n, replace = TRUE,
@@ -139,7 +140,7 @@ lifecourse_service_map <- function() {
     menopause_status = as.integer(age >= 51 | stats::runif(n) < pmax(0, (age - 45) / 12)),
     hysterectomy = stats::rbinom(n, 1, pmin(0.45, pmax(0, 0.008 * (age - 30)))),
     comorbidity = stats::rbinom(n, 1, pmin(0.5, 0.1 + 0.006 * age)),
-    high_barrier = stats::rbinom(n, 1, 0.35)
+    high_barrier = stats::rbinom(n, 1, barrier_prevalence)
   )
 }
 
@@ -214,6 +215,10 @@ lifecourse_service_map <- function() {
 #' @param access_gain Multiplier on care-seeking for high-barrier women
 #'   (reduced-barriers lever). Default 1; the "reduced_barriers" scenario sets 1.6
 #'   when left at 1.
+#' @param barrier_prevalence Fraction of synthetic persons assigned `high_barrier = 1`.
+#'   Default 0.35; derive from actual BRFSS data with
+#'   `brfss_barrier_prevalence(cells)` (R/44-urps_population.R) to anchor to
+#'   observed uninsured/low-income rates rather than a fixed assumption.
 #' @param prevention_target One of "pop", "ui", "ai", "bmi" (prevention lever).
 #' @param prevention_effect Fractional reduction applied by the prevention lever.
 #' @param risk_params,pathway_params,service_map Parameter tables; defaults are
@@ -224,6 +229,7 @@ lifecourse_service_map <- function() {
 simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
                                        n = 1e5, seed = NULL,
                                        cesarean_rate = NULL, access_gain = 1,
+                                       barrier_prevalence = 0.35,
                                        prevention_target = c("pop", "ui", "ai", "bmi"),
                                        prevention_effect = 0.20,
                                        risk_params = lifecourse_risk_params(),
@@ -234,7 +240,7 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
   prevention_target <- match.arg(prevention_target)
   if (scenario == "reduced_barriers" && access_gain == 1) access_gain <- 1.6
 
-  pop <- .lifecourse_population(pop_by_age, year, n, cesarean_rate, seed)
+  pop <- .lifecourse_population(pop_by_age, year, n, cesarean_rate, barrier_prevalence, seed)
   if (scenario == "prevention" && prevention_target == "bmi") {
     pop$bmi <- pop$bmi - prevention_effect * pmax(0, pop$bmi - 25)
   }

@@ -4,7 +4,7 @@
 \alias{assert_interval_nondegenerate}
 \title{Refuse a zero-width interval when the underlying draws vary}
 \usage{
-assert_interval_nondegenerate(out, draws, tol = 1e-09)
+assert_interval_nondegenerate(out, draws, tol = 0.000000001)
 }
 \arguments{
 \item{out}{Summarised tibble with \verb{_lo}/\verb{_hi} columns.}

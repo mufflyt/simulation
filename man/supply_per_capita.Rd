@@ -4,7 +4,7 @@
 \alias{supply_per_capita}
 \title{Provider supply per capita by geography}
 \usage{
-supply_per_capita(supply, population, per = 1e+06)
+supply_per_capita(supply, population, per = 1000000)
 }
 \arguments{
 \item{supply}{Tibble with \code{geo} and \code{fte}.}

@@ -412,10 +412,43 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   growth <- compute_growth_adequacy(status_quo, demand_long, base_year = base_year)
   concordance <- assess_demand_concordance(growth, demand_long)
 
-  # --- Demand scenarios: guard against access double-counting --------------
+  # --- Demand scenarios: double-count guard + insurance/income lift ----------
+  # When brfss_cells is supplied, project_urps_demand() provides an access-
+  # scenario-aware demand estimate for each registered demand scenario.  The
+  # lift ratio (scenario / status_quo) is applied to `required` so every demand
+  # scenario produces its own gap series against the status-quo supply.
+  sq_demand_fte <- if (!is.null(brfss_cells)) {
+    sum(project_urps_demand(brfss_cells, access_scenario = "status_quo",
+                            verbose = FALSE)$demand_fte, na.rm = TRUE)
+  } else NULL
+
+  demand_scenario_gaps <- NULL
   for (nm in names(demand_scenarios)) {
-    comps <- demand_scenarios[[nm]]$access_components
+    s <- demand_scenarios[[nm]]
+    comps <- s$access_components
     if (length(comps)) assert_access_not_double_counted(gap, comps, mode)
+
+    acc <- s$access_scenario
+    if (!is.null(sq_demand_fte) && !is.null(acc) && !identical(nm, "status_quo")) {
+      scen_fte <- sum(
+        project_urps_demand(brfss_cells, access_scenario = acc,
+                            verbose = FALSE)$demand_fte,
+        na.rm = TRUE
+      )
+      demand_lift <- scen_fte / sq_demand_fte
+      required_s  <- dplyr::mutate(required,
+                                   required_fte = .data$required_fte * demand_lift)
+      gap_s <- compute_fte_gap(status_quo, required_s,
+                               supply_col = "effective_fte_median")
+      gap_s$demand_scenario       <- nm
+      gap_s$demand_scenario_label <- s$label
+      gap_s$demand_lift           <- demand_lift
+      demand_scenario_gaps <- dplyr::bind_rows(demand_scenario_gaps, gap_s)
+      if (verbose) {
+        .msg_info(sprintf("  demand scenario '%s': +%.1f%% demand vs status quo",
+                          s$label, 100 * (demand_lift - 1)))
+      }
+    }
   }
 
   # --- Replacement-ratio outlook per supply scenario -----------------------
@@ -477,6 +510,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
     required_fte = required,
     required_fte_by_setting = required_by_setting,
     fte_gap = fte_gap,
+    demand_scenario_gaps = demand_scenario_gaps,
     baseline_gap = gap,
     growth_adequacy = growth,
     concordance = concordance,

@@ -4,16 +4,28 @@
 \alias{scenario_retirement_schedule}
 \title{Resolve the retirement schedule implied by a supply scenario}
 \usage{
-scenario_retirement_schedule(scenario, schedule = RETIREMENT_HAZARD_BY_AGE)
+scenario_retirement_schedule(
+  scenario,
+  schedule = RETIREMENT_HAZARD_BY_AGE,
+  use_weibull = TRUE
+)
 }
 \arguments{
-\item{scenario}{A supply scenario definition.}
+\item{scenario}{A supply scenario definition (must have \code{retirement_shift_years}).}
 
-\item{schedule}{Base retirement hazard schedule.}
+\item{schedule}{Base retirement hazard schedule (used only when
+\code{use_weibull = FALSE}).}
+
+\item{use_weibull}{Logical; use Weibull survival curves (default TRUE).}
 }
 \value{
-Shifted hazard schedule.
+A hazard schedule data frame with columns \code{age}, \code{sex},
+\code{prob_exit}, \code{se_prob_exit}, \code{calibration_tier}.
 }
 \description{
-Resolve the retirement schedule implied by a supply scenario
+When \code{use_weibull = TRUE} (the default), the schedule is built from the
+Weibull survival curves in \code{\link[=urps_weibull_exit_probs]{urps_weibull_exit_probs()}}, with
+\code{retirement_shift_years} used directly as the Weibull \code{scale_shift} (±2 yr
+= scale ± 2).  When \code{use_weibull = FALSE}, the legacy \code{shift_retirement_schedule()}
+deterministic age-axis shift is applied instead.
 }

@@ -1,0 +1,27 @@
+MEPS 2022 Download Manifest
+Generated: 2026-08-03 22:58:33.207158
+MEPS year: 2022 (HC-233 series)
+ICD-10 codes: N39, N81, R32, R15
+
+Files:
+  meps_2022_ui_visit_rates.rds            — visit totals by age/insurance/income/specialty
+  meps_2022_income_care_seeking_multipliers.rds  — named vector, GT100k=1.0 reference
+  meps_2022_insurance_care_seeking_multipliers.rds — named vector, Private=1.0 reference
+  meps_2022_specialty_distribution.rds    — share of visits by provider specialty
+
+Analytic sample (women 18+ with UI/PFD OB visit): 907
+Weighted total visits: 10,894,754
+FTE estimate: 4358 at 2500 visits/FTE/year
+
+Survey design:
+  id = ~VARPSU, strata = ~VARSTR, weights = ~PERWT22F, nest = TRUE
+
+MEPS data source: AHRQ FTP via MEPS R package
+  remotes::install_github('e-mitchell/meps_r_pkg/MEPS')
+  read_MEPS(year = 2022, type = 'FYC')
+
+Recalibration target in R/44-urps_population.R:
+  CARE_SEEKING_BY_INCOME    — income-tier multipliers (was MEPS 2020)
+  CARE_SEEKING_BY_INSURANCE — insurance-type multipliers (was Richter 2007/MEPS 2020)
+
+DUA required: NO (MEPS public use files)

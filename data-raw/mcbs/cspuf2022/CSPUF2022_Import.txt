@@ -1,0 +1,331 @@
+/********************************************************************************
+SAS User File for:
+Medicare Current Beneficiary Survey (MCBS)
+2022 Cost Supplement Public Use File (CS PUF)
+                                                         
+This file contains information and sample SAS programs to create a permanent                        
+SAS dataset for users who want to use SAS in processing the CSPUF2022 transport data file                              
+provided in this PUF release.                                                                       
+                                                                                                    
+Section A provides a sample SAS program to convert the SAS transport data file into a                             
+regular SAS dataset using the SAS procedure: CIMPORT.  
+
+Section B creates a format library.
+
+Section C creates and applies labels to the datasets, which it saves as a permanent datasets 
+(CSPUF2022) in the specified location (library PUFLIB)                       
+                                                                                                    
+******************************************************************************/                      
+
+/*******************************************************************************                                                                                                                                                                                                                                  
+A. This code converts the XPT files into temporary SAS datasets in library location given by LIBNAME.
+The XPT files have been downloaded from the CMS website, and will be in a folder of your choosing.
+Please change the following 2 file extensions so that they match the location of the files 
+on your computer or network. 
+*******************************************************************************/
+            
+LIBNAME PUFLIB "C:\MCBS\SASDATA"; 
+FILENAME F_CSPUF "C:\MCBS\SASDATA\DOWNLOAD\CSPUF2022.XPT";                                              
+
+
+PROC CIMPORT LIBRARY=WORK INFILE=F_CSPUF;
+RUN;                                                                                                                                                                                                                                                                                                                                                                                        
+
+
+/*******************************************************************************                                                                                                 
+The LIBNAME PUFLIB statement tells SAS the location (directory name) to store the                          
+permanent SAS dataset which is output by PROC CIMPORT.  The FILENAME F statement                        
+tells SAS the location (complete directory and file name) of the input SAS                          
+transport data file.                                                                                
+*******************************************************************************/
+                                                                                                                                                                                             
+/*********************************************************************************                                                                                              
+B. Creates format library                           
+*******************************************************************************/                                                                                                                                                      
+ 
+
+
+proc format library=PUFLIB;
+
+VALUE puffmt
+            LOW-HIGH = "PUF_ID Count" ;
+
+value svyrfmt
+2022="2022";
+
+value versfmt
+1="Version 1"
+2="Version 2"
+3="Version 3"
+4="Version 4"
+5="Version 5"
+6="Version 6"
+7="Version 7"
+8="Version 8"
+9="Version 9"
+10="Version 10";
+
+value age2grp
+1="1:Age Group <65"
+2="2:Age Group [65,75)"
+3="3:Age Group >=75"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value sex
+.="Inapplicable/Missing"
+1="1:Male"
+2="2:Female"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value race
+.="Inapplicable/Missing"
+1="1:Non-Hispanic white"
+2="2:Non-Hispanic black"
+3="3:Hispanic"
+4="4:Other"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value incom25f
+1="1:<$25,000"
+2="2:>=$25,000"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+VALUE NCHRN
+.="Inapplicable/Missing"
+1="0-1 chronic conditions"
+2="2-3 chronic conditions"
+3="4+ chronic conditions"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+  VALUE MONYFMT
+                   . = "Inapplicable/Missing"
+                  .R = "Refused"
+                  .D = "Don't know"
+                  .N = "Not ascertained" 
+            LOW-HIGH = "Amount as $$$$$$.CC" ;
+
+
+  VALUE NUM4FMT   
+                   . = "Inapplicable/Missing"
+                  .R = "Refused"
+                  .D = "Don't know"
+                  .N = "Not ascertained"
+            LOW-HIGH = "Number"; 
+
+VALUE CONTIN
+                   . = "Inapplicable/Missing"
+                  .R = "Refused"
+                  .D = "Don't know"
+                  .N = "Not ascertained"
+            LOW-HIGH = "Range of Values";
+
+
+run;
+
+
+
+ 
+/*******************************************************************************************************                                                                                                                                                                                                  
+C. 	Applies labels and formats.
+	Creates new permanent dataset for the MCBS CS PUF.
+	Permanent dataset is stored in whichever folder you designated as "PUFLIB"
+*******************************************************************************************************/                                                                                                    
+                                                             
+OPTIONS FMTSEARCH=(PUFLIB PUFLIB.FORMATS);
+
+
+/***********************************
+		C1. CS PUF
+************************************/
+
+DATA puflib.CSPUF2022;
+SET CSPUF2022;
+
+FORMAT 
+PUF_ID PUFFMT.
+SURVEYYR	SVYRFMT.
+VERSION	VERSFMT.
+CSP_AGE	AGE2GRP.
+CSP_SEX	SEX.
+CSP_RACE	RACE.
+CSP_INCOME	INCOM25F.
+CSP_NCHRNCND	NCHRN.
+PAMTDU	MONYFMT.
+PAMTVU	MONYFMT.
+PAMTHU	MONYFMT.
+PAMTHH	MONYFMT.
+PAMTIP	MONYFMT.
+PAMTMP	MONYFMT.
+PAMTOP	MONYFMT.
+PAMTPM	MONYFMT.
+DUAEVNTS	NUM4FMT.
+VUAEVNTS	NUM4FMT.
+HUAEVNTS	NUM4FMT.
+HHAEVNTS	NUM4FMT.
+IPAEVNTS	NUM4FMT.
+MPAEVNTS	NUM4FMT.
+OPAEVNTS	NUM4FMT.
+PMAEVNTS	NUM4FMT.
+PAMTTOT	MONYFMT.
+PAMTCARE	MONYFMT.
+PAMTCAID	MONYFMT.
+PAMTMADV	MONYFMT.
+PAMTALPR	MONYFMT.
+PAMTOOP	MONYFMT.
+PAMTDISC	MONYFMT.
+PAMTOTH	MONYFMT.
+PEVENTS	NUM4FMT.
+CSPUFWGT--CSPUF100 CONTIN.;
+
+LABEL
+PUF_ID="Unique PUF Identification Number"
+SURVEYYR = 'Survey Year'
+VERSION = 'Version Number'
+CSP_RACE = 'Race'
+CSP_AGE = 'Age Group'
+CSP_SEX = 'Gender'
+CSP_INCOME = 'Household income'
+CSP_NCHRNCND = 'Number of chronic conditions'
+PAMTDU = 'Adj. sum for dental events'
+PAMTVU = 'Adj. sum for vision events'
+PAMTHU = 'Adj. sum for hearing events'
+PAMTHH = 'Adj. sum for home health agency events'
+PAMTIP = 'Adj. sum for inpatient events'
+PAMTMP = 'Adj. sum for medical provider events'
+PAMTOP = 'Adj. sum for outpatient events'
+PAMTPM = 'Adj. sum for prescribed medicine events'
+DUAEVNTS = 'Adj. number of dental events'
+VUAEVNTS = 'Adj. number of vision events'
+HUAEVNTS = 'Adj. number of hearing events'
+HHAEVNTS = 'Adj. number of home health agency events'
+IPAEVNTS = 'Adj. number of inpatient events'
+MPAEVNTS = 'Adj. number of medical provider events'
+OPAEVNTS = 'Adj. number of outpatient events'
+PMAEVNTS = 'Adj. number of prescribed medicine events'
+PAMTTOT = 'Adj. sum: total payments, all sources'
+PAMTCARE = 'Adj. sum: Medicare payments'
+PAMTCAID = 'Adj. sum: Medicaid payments'
+PAMTMADV = 'Adj. sum: Medicare MCO/HMO payments'
+PAMTALPR = 'Adj. sum: all priv ins. payments'
+PAMTOOP = 'Adj. sum: out-of-pocket payments'
+PAMTDISC = 'Adj. sum: uncollected liability'
+PAMTOTH = 'Adj. sum: other payments (includes VA)'
+PEVENTS = 'Adjusted count of events'
+CSPUFWGT = 'CS PUF full sample weight'
+CSPUF001 = 'CS PUF replicate weight 1'
+CSPUF002 = 'CS PUF replicate weight 2'
+CSPUF003 = 'CS PUF replicate weight 3'
+CSPUF004 = 'CS PUF replicate weight 4'
+CSPUF005 = 'CS PUF replicate weight 5'
+CSPUF006 = 'CS PUF replicate weight 6'
+CSPUF007 = 'CS PUF replicate weight 7'
+CSPUF008 = 'CS PUF replicate weight 8'
+CSPUF009 = 'CS PUF replicate weight 9'
+CSPUF010 = 'CS PUF replicate weight 10'
+CSPUF011 = 'CS PUF replicate weight 11'
+CSPUF012 = 'CS PUF replicate weight 12'
+CSPUF013 = 'CS PUF replicate weight 13'
+CSPUF014 = 'CS PUF replicate weight 14'
+CSPUF015 = 'CS PUF replicate weight 15'
+CSPUF016 = 'CS PUF replicate weight 16'
+CSPUF017 = 'CS PUF replicate weight 17'
+CSPUF018 = 'CS PUF replicate weight 18'
+CSPUF019 = 'CS PUF replicate weight 19'
+CSPUF020 = 'CS PUF replicate weight 20'
+CSPUF021 = 'CS PUF replicate weight 21'
+CSPUF022 = 'CS PUF replicate weight 22'
+CSPUF023 = 'CS PUF replicate weight 23'
+CSPUF024 = 'CS PUF replicate weight 24'
+CSPUF025 = 'CS PUF replicate weight 25'
+CSPUF026 = 'CS PUF replicate weight 26'
+CSPUF027 = 'CS PUF replicate weight 27'
+CSPUF028 = 'CS PUF replicate weight 28'
+CSPUF029 = 'CS PUF replicate weight 29'
+CSPUF030 = 'CS PUF replicate weight 30'
+CSPUF031 = 'CS PUF replicate weight 31'
+CSPUF032 = 'CS PUF replicate weight 32'
+CSPUF033 = 'CS PUF replicate weight 33'
+CSPUF034 = 'CS PUF replicate weight 34'
+CSPUF035 = 'CS PUF replicate weight 35'
+CSPUF036 = 'CS PUF replicate weight 36'
+CSPUF037 = 'CS PUF replicate weight 37'
+CSPUF038 = 'CS PUF replicate weight 38'
+CSPUF039 = 'CS PUF replicate weight 39'
+CSPUF040 = 'CS PUF replicate weight 40'
+CSPUF041 = 'CS PUF replicate weight 41'
+CSPUF042 = 'CS PUF replicate weight 42'
+CSPUF043 = 'CS PUF replicate weight 43'
+CSPUF044 = 'CS PUF replicate weight 44'
+CSPUF045 = 'CS PUF replicate weight 45'
+CSPUF046 = 'CS PUF replicate weight 46'
+CSPUF047 = 'CS PUF replicate weight 47'
+CSPUF048 = 'CS PUF replicate weight 48'
+CSPUF049 = 'CS PUF replicate weight 49'
+CSPUF050 = 'CS PUF replicate weight 50'
+CSPUF051 = 'CS PUF replicate weight 51'
+CSPUF052 = 'CS PUF replicate weight 52'
+CSPUF053 = 'CS PUF replicate weight 53'
+CSPUF054 = 'CS PUF replicate weight 54'
+CSPUF055 = 'CS PUF replicate weight 55'
+CSPUF056 = 'CS PUF replicate weight 56'
+CSPUF057 = 'CS PUF replicate weight 57'
+CSPUF058 = 'CS PUF replicate weight 58'
+CSPUF059 = 'CS PUF replicate weight 59'
+CSPUF060 = 'CS PUF replicate weight 60'
+CSPUF061 = 'CS PUF replicate weight 61'
+CSPUF062 = 'CS PUF replicate weight 62'
+CSPUF063 = 'CS PUF replicate weight 63'
+CSPUF064 = 'CS PUF replicate weight 64'
+CSPUF065 = 'CS PUF replicate weight 65'
+CSPUF066 = 'CS PUF replicate weight 66'
+CSPUF067 = 'CS PUF replicate weight 67'
+CSPUF068 = 'CS PUF replicate weight 68'
+CSPUF069 = 'CS PUF replicate weight 69'
+CSPUF070 = 'CS PUF replicate weight 70'
+CSPUF071 = 'CS PUF replicate weight 71'
+CSPUF072 = 'CS PUF replicate weight 72'
+CSPUF073 = 'CS PUF replicate weight 73'
+CSPUF074 = 'CS PUF replicate weight 74'
+CSPUF075 = 'CS PUF replicate weight 75'
+CSPUF076 = 'CS PUF replicate weight 76'
+CSPUF077 = 'CS PUF replicate weight 77'
+CSPUF078 = 'CS PUF replicate weight 78'
+CSPUF079 = 'CS PUF replicate weight 79'
+CSPUF080 = 'CS PUF replicate weight 80'
+CSPUF081 = 'CS PUF replicate weight 81'
+CSPUF082 = 'CS PUF replicate weight 82'
+CSPUF083 = 'CS PUF replicate weight 83'
+CSPUF084 = 'CS PUF replicate weight 84'
+CSPUF085 = 'CS PUF replicate weight 85'
+CSPUF086 = 'CS PUF replicate weight 86'
+CSPUF087 = 'CS PUF replicate weight 87'
+CSPUF088 = 'CS PUF replicate weight 88'
+CSPUF089 = 'CS PUF replicate weight 89'
+CSPUF090 = 'CS PUF replicate weight 90'
+CSPUF091 = 'CS PUF replicate weight 91'
+CSPUF092 = 'CS PUF replicate weight 92'
+CSPUF093 = 'CS PUF replicate weight 93'
+CSPUF094 = 'CS PUF replicate weight 94'
+CSPUF095 = 'CS PUF replicate weight 95'
+CSPUF096 = 'CS PUF replicate weight 96'
+CSPUF097 = 'CS PUF replicate weight 97'
+CSPUF098 = 'CS PUF replicate weight 98'
+CSPUF099 = 'CS PUF replicate weight 99'
+CSPUF100 = 'CS PUF replicate weight 100';
+RUN;
+
+PROC SORT data=puflib.CSPUF2022;
+BY PUF_ID;
+QUIT;

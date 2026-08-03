@@ -12,7 +12,8 @@ convert_workload_to_fte(
   provider_type = "urps",
   indirect_share = INDIRECT_TIME_SHARE,
   method = c("wrvu", "staffing", "time"),
-  staffing_ratios = NULL
+  staffing_ratios = NULL,
+  by_setting = FALSE
 )
 }
 \arguments{
@@ -35,9 +36,17 @@ and teaching are not silently free.}
 
 \item{staffing_ratios}{For method = "staffing": tibble with \code{service} and
 \code{volume_per_fte} (national volume divided by providers in that setting).}
+
+\item{by_setting}{Logical. When \code{TRUE}, the returned tibble includes a
+\code{setting} column and reports required FTE separately for each care delivery
+setting (ambulatory, operative, indirect). Requires the \code{setting} column to
+be present in \code{volumes} — attach it first with \code{\link[=volumes_with_setting]{volumes_with_setting()}}.
+When \code{FALSE} (default), behaviour is unchanged: a single aggregate FTE is
+returned.}
 }
 \value{
 Tibble with \code{year} (if present), \code{required_fte}, and the method used.
+When \code{by_setting = TRUE}, also includes a \code{setting} column.
 }
 \description{
 Convert a service-volume schedule to required provider FTE

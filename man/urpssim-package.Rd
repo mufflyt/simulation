@@ -19,5 +19,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Tyler Muffly \email{tyler.muffly@dhha.org}
 
+Authors:
+\itemize{
+  \item Tyler Muffly \email{tyler.muffly@dhha.org}
+}
+
 }
 \keyword{internal}

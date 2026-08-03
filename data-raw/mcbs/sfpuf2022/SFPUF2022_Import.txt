@@ -1,0 +1,2298 @@
+/********************************************************************************
+SAS User File for PUF2022 Data                                                                   
+                                                                                                    
+This file contains sample SAS programs that will create 3 permanent                        
+SAS datasets for users who want to use SAS in processing the PUF2022 transport data file                              
+provided in this PUF release.                                                                       
+                                                                                                    
+Section A provides a sample SAS program to convert the SAS transport (.XPT) data files into a                             
+regular SAS datasets using the SAS procedure: CIMPORT.  
+***IN SECTION A, YOU WILL NEED TO CHANGE FILE EXTENSIONS TO REFLECT THE FOLDERS WHERE YOU ARE SAVING YOUR DATA***
+
+Section B creates a format library.
+
+Section C creates labels and applies formats to the datasets, which it saves as 3 permanent datasets 
+(SFPUF2022_1_FALL, SFPUF2022_2_WINTER, SFPUF2022_3_SUMMER) in the specified location (library PUFLIB)    
+
+
+******************************************************************************/                      
+
+/*******************************************************************************  
+
+Weights and linking segments
+
+To link two segments together, use the ID variable: PUF_ID
+
+PUF_ID links beneficiaries within a PUF release, but PUF_IDs change between every release.
+So, for example, a person may appear in both the 2021 and 2022 MCBS Survey File PUF,
+but they would have a different PUF_ID, so you cannot link people between the 2021 and 2022 MCBS Survey File PUF.
+
+You can do either of the following, and if you do, these are the survey weights you should use in your analysis:
+-Link FALL with WINTER (use the WINTER weights)
+-Link FALL with SUMMER (use the SUMMER weights)
+
+If you link WINTER with SUMMER, or link all three segments together, then we do not have weights that will give you
+nationally representative results. You may be able to structure your analysis so that, in any given tabulation,
+you are only ever linking FALL with WINTER, or FALL with SUMMER.
+
+If you need help, please contact the MCBS help desk: mcbs@cms.hhs.gov
+                                                                                                    
+******************************************************************************/                      
+
+/*******************************************************************************                                                                                                                                                                                                                                  
+Section A. This code converts the XPT files into temporary SAS datasets in library location given by LIBNAME.
+The XPT files have been downloaded from the CMS website, and will be in a folder of your choosing.
+Please change the following 4 file extensions so that they match the location of the files 
+on your computer or network. 
+*******************************************************************************/
+            
+LIBNAME PUFLIB "C:\MCBS\SASDATA"; 
+FILENAME F_FALL "C:\MCBS\SASDATA\DOWNLOAD\SFPUF2022_1_FALL.XPT";                                              
+FILENAME F_WINTER "C:\MCBS\SASDATA\DOWNLOAD\SFPUF2022_2_WINTER.XPT"; 
+FILENAME F_SUMMER "C:\MCBS\SASDATA\DOWNLOAD\SFPUF2022_3_SUMMER.XPT"; 
+
+
+
+PROC CIMPORT LIBRARY=WORK INFILE=F_FALL;
+RUN;                                                                                                                                                                                                                                                                                                                                                                                        
+
+PROC CIMPORT LIBRARY=WORK INFILE=F_WINTER;
+RUN;  
+
+PROC CIMPORT LIBRARY=WORK INFILE=F_SUMMER;
+RUN;  
+
+
+/*******************************************************************************                                                                                                 
+The LIBNAME PUFLIB statement tells SAS the location (directory name) to store the                          
+permanent SAS dataset which is output by PROC CIMPORT.  The FILENAME F statement                        
+tells SAS the location (complete directory and file name) of the input SAS                          
+transport data file.                                                                                
+*******************************************************************************/
+                                                                                                                                                                                             
+/*********************************************************************************                                                                                              
+Section B. Creates format library                           
+*******************************************************************************/                                                                                                                                                      
+ 
+
+
+proc format library=PUFLIB;
+
+value puffmt
+            LOW-HIGH = "PUF_ID Count" ;
+
+value svyrfmt
+2022="2022";
+
+value versfmt
+1="Version 1"
+2="Version 2"
+3="Version 3"
+4="Version 4"
+5="Version 5"
+6="Version 6"
+7="Version 7"
+8="Version 8"
+9="Version 9"
+10="Version 10";
+
+value adlhnm
+.="Inapplicable/Missing"
+0="0:No helpers"
+1="1:1 helper"
+2="2:2 helpers"
+3="3:3 or more helpers";
+
+value age2grp
+1="1:Age <65 years"
+2="2:Age 65-74 years"
+3="3:Age 75+ years"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value agree
+.="Inapplicable/Missing"
+1="1:Agree a lot"
+2="2:Agree a little"
+3="3:Neither agree nor disagree"
+4="4:Disagree a little "
+5="5:Disagree a lot"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+         
+value apptfmt
+.="Inapplicable/Missing"
+1="1:Appointment" 
+2="2:Walked in"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+
+value appttime
+.="Inapplicable/Missing"
+0="0:Didn't have wait"
+1="1:1 to 3 days"
+2="2:4 to 9 days"
+3="3:10 or more days"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value appt2tf
+.="Inapplicable/Missing"
+0="0:Didn't have wait"
+1="1:1 to 3 days"
+2="2:4 to 6 days"
+3="3:7 to 9 days"
+4="4:10 to 20 days"
+5="5:21 days or more"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value bmifmt
+.="Inapplicable/Missing"
+1="1:Underweight/healthy, <25"
+2="2:Overweight, 25-<30"
+3="3:Obese/high-risk obese, >=30";
+
+value compfmt 
+.="Inapplicable/Missing"
+1="1:Much better"
+2="2:Somewhat better"
+3="3:About the same"
+4="4:Somewhat worse"
+5="5:Much worse"
+.N=".N: Not ascertained"
+.D=".D: Don't know"
+.R=".R: Refused";
+
+value contin
+. = "Inapplicable/Missing"
+.R = "Refused"
+.D = "Don't know"
+.N = "Not ascertained"
+LOW-HIGH = "Range of Values";
+
+value ctrlfmt
+.="Inapplicable/Missing"
+1="1:Very confident"
+2="2:Confident"
+3="3:Somewhat confident"
+4="4:Not confident"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value d_madv
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"
+1="1:Enrolled in MA during year"
+2="2:Never enrolled in MA during year";
+
+value diactrpf
+1="1:All/most of the time"                                             
+2="2:Some/a little/none of the time"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";                        
+                                       
+value diafmt
+.="Inapplicable/Missing"
+1="1:Type 1 diabetes"
+2="2:Type 2 diabetes"
+3="3:Borderline/gestational/other"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value difffmt
+.="Inapplicable/Missing"
+1="1:No difficulty"
+2="2:Little difficulty"
+3="3:Some difficulty"
+4="4:A lot of difficulty/Unable to do it"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"; 
+
+value drinkday
+.="Inapplicable/Missing"
+0="0:None"
+1="1:One day a month"
+2="2:Two days a month"
+3="3:Three days a month"
+4="4:Four days a month"
+5="5:Five days a month"
+6="6:Six to ten days a month"
+7="7:Eleven to fifteen days a month"
+8="8:Sixteen to twenty days a month"
+9="9:Twenty-one to twenty-five days a month"
+10="10:Twenty-six days to every day"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value drinkspd 
+.="Inapplicable/Missing"
+0="0:0 drinks per day"
+1="1:One drink per day"
+2="2:Two drinks per day"
+3="3:Three to five drinks per day"
+4="4:Six or more drinks per day"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value drinkspm 
+.="Inapplicable/Missing"
+0="0:None"
+1="1:One day a month"
+2="2:Two to five days a month"
+3="3:Six days a month to every day"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value dualfmt
+.="Inapplicable/Missing"
+1="1:Non dual"
+2="2:Part year dual"
+3="3:Full year dual"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value dwelfmt
+.="Inapplicable/Missing"
+1="1:Single family home (one-family detached)"
+2="2:Multi family dwelling"
+3="3:Apartment/condo/rowhouse/townhouse"
+4="4:Mobile home or trailer"
+5="5:Other"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value easydiff
+1="1:Very easy"                               
+2="2:Somewhat easy"                           
+3="3:Somewhat difficult"                      
+4="4:Very difficult"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";  
+
+value edofmt
+.="Inapplicable/Missing"
+1="1:Optometrist"
+2="2:Ophthalmologist"
+91="91:Other"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value edu
+.="Inapplicable/Missing"
+1="1:Less than high school"
+2="2:High school or vocational/technical/business"
+3="3:More than high school"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value fallscal
+.="Inapplicable/Missing"
+1="1:Not at all afraid of falling"
+2="2:A little afraid of falling"
+3="3:Moderately afraid of falling"
+4="4:Afraid of falling"
+5="5:Very afraid of falling"
+6="6:Extremely afraid of falling"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value felltimf
+.="Inapplicable/Missing"
+1="1:Fell 1 time" 
+2="2:Fell 2 times" 
+3="3:Fell 3 times"
+4="4:Fell 4 times" 
+5="5:Fell 5 or more times"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"; 
+
+value ffsfmt
+.="Inapplicable/Missing"
+1="1:No FFS"
+2="2:Part year FFS"
+3="3:Full year FFS"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value fmtfdlas
+1="1:Often true"                              
+2="2:Sometimes true"                          
+3="3:Never true"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value freqfmt
+.="Inapplicable/Missing"
+1="1:Often"
+2="2:Sometimes"
+3="3:Never"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value funlmtf
+.="Inapplicable/Missing"
+0="0:No Functional Limitations"
+1="1:IADLs Only"
+2="2:1 to 2 ADLs"
+3="3:3 to 4 ADLs"
+4="4:5 to 6 ADLs";
+
+value generrp
+1="1:Often"                                   
+2="2:Sometimes"                               
+3="3:Never"                                   
+4="4:Automatically receives generic"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value genhfmt
+.="Inapplicable/Missing"
+1="1:Excellent"
+2="2:Very good"
+3="3:Good"
+4="4:Fair"
+5="5:Poor" 
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value hccom
+.="Inapplicable/Missing"
+1="1:No trouble" 
+2="2:A little/a lot of trouble"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value hcfmt
+.="Inapplicable/Missing"
+1="1:No trouble" 
+2="2:A little"
+3="3:A lot of trouble"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value hh2tot
+.="Inapplicable/Missing"
+0="0:No one"
+1="1:One"
+2="2:Two"
+3="3:Three or more"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value hhlt
+.="Inapplicable/Missing"
+0="0:No one"
+1="1:One"
+2="2:Two"
+3="3:Three"
+4="4:Four or more"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value hhtot
+.="Inapplicable/Missing"
+1="1:One"
+2="2:Two"
+3="3:Three"
+4="4:Four"
+5="5:Five"
+6="6:Six or more"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value howoftn
+1="1:Never"                                  
+2="2:Sometimes"                               
+3="3:Usually"                                 
+4="4:Always"
+5="5:No test result yet" 
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+                    
+value hracta
+.="Inapplicable/Missing"
+0="0:None"
+1="1:One hour per week"
+2="2:Two hours per week"
+3="3:Three hours per week"
+4="4:Four hours per week"
+5="5:Five hours per week"
+6="6:Six hours per week"
+7="7:Seven hours per week" 
+8="8:Eight to thirteen hours per week"
+9="9:Fourteen hours per week"
+10="10:Fifteen to twenty five hours per week"
+11="11:Twenty six or more hours per week"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value hractb
+.="Inapplicable/Missing"
+0="0:None"
+1="1:One hour per week"
+2="2:Two hours per week"
+3="3:Three hours per week"
+4="4:Four hours per week"
+5="5:Five hours per week"
+6="6:Six hours per week"
+7="7:Seven hours per week"
+8="8:Eight to nine hours per week"
+9="9:Ten hours per week"
+10="10:Eleven to thirteen" 
+11="11:Fourteen hours per week"
+12="12:Fifteen hours per week"
+13="13:Sixteen to twenty hours per week" 
+14="14:Twenty one to twenty five hours per week"
+15="15:Twenty six to thirty hours per week"
+16="16:Thirty one or more hours per week"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value hractc
+.="Inapplicable/Missing"
+0="0:None"
+1="1:One hour per week"
+2="2:Two hours per week"
+3="3:Three hours per week"
+4="4:Four hours per week"
+5="5:Five hours per week"
+6="6:Six hours per week"
+7="7:Seven hours per week" 
+8="8:Eight or more hours per week"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value hypedrnf
+.="Inapplicable/Missing"
+1="1:Yes"
+2="2:No"
+3="3:N/A; Does not drink alcohol"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value hypetf 
+.="Inapplicable/Missing"
+1="1:Yes"
+2="2:No"
+3="3:Never told. Prior entry in error"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value incom25f
+1="1:<$25,000"
+2="2:>=$25,000"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value incsrcef
+.="Inapplicable/Missing"
+1="1:Not imputed"
+2="2:Imputed by carry forward"
+3="3:Imputed by hotdeck";
+
+value indpuf
+0="0:Not indicated"
+1="1:Indicated"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value insdrds
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"
+1="1:Had RDS during year"
+2="2:Never had RDS during year";
+
+value ipdayfmt
+.="Inapplicable/Missing"
+0="0:0 day"
+1="1:1 day"
+2="2:2 days"
+3="3:3 days" 
+4="4:4 days"
+5="5:5 or more days"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value ipr
+1="1: <=100% of the Federal Poverty Level"     
+2="2: >100% and <=120% of the Federal Poverty" 
+3="3: >120% and <=135% of the Federal Poverty"
+4="4: >135% and <=200% of the Federal Poverty" 
+5="5: >200% of the Federal Poverty Level"
+.="Inapplicable/Missing";
+
+value ipsty2f 
+.="Inapplicable/Missing"
+0="0:No visit" 
+1="1:One or more visit"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value ipstyfmt 
+.="Inapplicable/Missing"
+0="0:No stay" 
+1="1:One stay" 
+2="2:Two stays"
+3="3:Three stays"
+4="4:Four or more stays"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value ivcore
+.="Inapplicable/Missing"
+1="1:Non-Hispanic white, <65 years" 
+2="2:Non-Hispanic white, 65-74 years" 
+3="3:Non-Hispanic white, 75-84 years" 
+4="4:Non-Hispanic white, 85+ years" 
+5="5:Non-Hispanic black, <65 years" 
+6="6:Non-Hispanic black, 65-74 years" 
+7="7:Non-Hispanic black, 75-84 years" 
+8="8:Non-Hispanic black, 85+ years" 
+9="9:Hispanic, <65 years" 
+10="10:Hispanic, 65-74 years" 
+11="11:Hispanic, 75+ years" 
+12="12:Other, <65 years" 
+13="13:Other, 65-74 years" 
+14="14:Other, 75+ years"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value kn2f
+1="1:Just about everything you need to know"  
+2="2:Most of what you need to know"           
+3="3:Some of what you need to know"           
+4="4:A little of what you need to know"       
+5="5:Almost none of what you need to know"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";  
+
+value kntoftnf
+1="1:Every day"                               
+2="2:A few times per week"                    
+3="3:A few times per month"                   
+4="4:A few times per year or less" 
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";  
+
+value lang
+.="Inapplicable/Missing"
+1="1:English"
+2="2:Spanish";
+
+value lastfmt
+1="1:Never had an eye exam"
+2="2:Less than 2 years"
+3="3:2 years to less than 5 years"
+4="4:5 years or more"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"
+.="Inapplicable/Missing";
+
+value levelfmt
+.="Inapplicable/Missing"
+1="1:One level"
+2="2:Two levels"
+3="3:Three or more levels"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"
+-1="-1: Inapplicable" ;
+
+value lookfmt
+.="Inapplicable/Missing"
+1="1:No trouble seeing"
+2="2:A little trouble seeing"
+3="3:A lot of trouble seeing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value losturnf
+1="1:At least once/year"                                   
+2="2:Not at all"                               
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value madvnoem
+.="Inapplicable/Missing"
+1="1:1:Yes"
+2="2:2:No"
+3="3:N/A, haven't needed emergency treatment"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value madvyrs
+.="Inapplicable/Missing"
+1="1:0-2 years"
+2="2:3 to 5 years"
+3="3:6 to 10 years"
+4="4:11 or more years"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value mafmt
+.="Inapplicable/Missing"
+1="1:No MA"
+2="2:Part year MA"
+3="3:Full year MA"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value marsta
+.="Inapplicable/Missing"
+1="1:Married"
+2="2:Widowed"
+3="3:Divorced/separated"
+4="4:Never Married"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value mchihelp
+1="1:Makes decisions on own"                  
+2="2:Gets help on decisions"                  
+3="3:Someone else makes decisions"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value mdtime
+.="Inapplicable/Missing"
+1="1:0 - 60 mins"
+2="2:61 - 120 mins"
+3="3:121 mins or more"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value medstaf
+.="Inapplicable/Missing"
+1="1:Aged"
+2="2:Disabled"
+3="3:Unknown"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value metro 
+.="Inapplicable/Missing"
+1="1:Metro area"
+2="2:Non-metro area";
+
+value minsfmt
+.="Inapplicable/Missing"
+1="1:0 to 15 mins"
+2="2:16 to 30 mins"
+3="3:31 to 59 mins"
+4="4:60 to 119 mins"
+5="5:2 hours or more"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value opmdcd
+.="Inapplicable/Missing"
+1="1:Nondual"
+2="2:Full dual"
+3="3:Partial dual"
+4="4:QMB dual";
+
+value pdconfip
+1="1:Very/extremely confident"
+2="2:Moderately confident"
+3="3:Not/slightly confident"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value pdrsfmt
+.="Inapplicable/Missing"
+1="1:Not subsidized"
+2="2:Subsidized part year"
+3="3:Subsidized full year"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"; 
+
+value phyvist     
+.="Inapplicable/Missing" 
+0="0:No office visit"
+1="1:1 to 5 office visits"
+2="2:6 to 10 office visits"
+3="3:11 to 15 office visits"
+4="4:16 to 20 office visits"
+5="5:21 or more office visits"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value premfmt
+.="Inapplicable/Missing"
+1="1:No premium subsidy"
+2="2:Part year premium subsidy"
+3="3:Full year premium subsidy"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value prem2fmt
+.="Inapplicable/Missing"
+1="1:No premium subsidy"
+2="2:Not full year 100% premium subsidy"
+3="3:Full year 100% premium subsidy"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value privnum
+.="Inapplicable/Missing"
+0="0:No private plan"
+1="1:One private plan"
+2="2:Two private plans"
+3="3:Three or more private plans"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value proxy 
+.="Inapplicable/Missing"
+1="1:Self"
+2="2:Proxy"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+Value pvspec
+1="1:Primary Care"                                                          
+2="2:Obstetrics/Gynecology"                                                    
+3="3:Ophthalmology"                                                            
+4="4:Orthopedics"                                                              
+5="5:Psychiatry/Psychology"                                                               
+6="6:Cardiology"                                                               
+7="7:Dermatology"                                                              
+8="8:Urology"                                                                  
+9="9:Surgery"      
+10="10:Gerontology"
+11="11:Osteopathy/DO"
+12="12:Nurse practioner"
+13="13:Physicians assistant"
+14="14:Other" 
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value race
+.="Inapplicable/Missing"
+1="1:Non-Hispanic white"
+2="2:Non-Hispanic black"
+3="3:Hispanic"
+4="4:Other"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value recfmt
+1="1:Less than 1 year ago"                    
+2="2:1 year to less than 2 years"                   
+3="3:2 years to less than 3 years"                   
+4="4:3 years to less than 5 years"                   
+5="5:5 or more years ago"   
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"; 
+
+value recordna
+1="1:Yes"                                     
+2="2:No"                                      
+3="3:Not applicable to SP"                    
+4="4:Not sure"    
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value refdif
+.="Inapplicable/Missing"
+1="1:Yes"
+2="2:No"
+3="3:N/A - haven't tried to obtain referral"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value roomnum
+.="Inapplicable/Missing"
+1="1:One room" 
+2="2:Two rooms"
+3="3:Three rooms"
+4="4:Four rooms"
+5="5:Five rooms"
+6="6:Six rooms"
+7="7:Seven rooms"
+8="8:Eight rooms"
+9="9:Nine or more rooms"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value rxamntlf
+1="1:More than last year"                     
+2="2:Less than last year"                     
+3="3:The same as last year"                   
+4="4:No cost for RX last year"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value rxcostlf
+1="1:More than last year"                     
+2="2:Less than last year"                     
+3="3:The same as last year"                   
+4="4:No drug coverage premium last year"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value sat2fmt
+1="1:Satsified/very satisfied"
+2="2:Dissatisfied/very dissatisfied"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value satffmt
+.="Inapplicable/Missing"
+1="1:Very Satisfied"
+2="2:Satisfied"
+3="3:Dissatisfied"
+4="4:Very Dissatisfied"
+5="5:No experience"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value servfmt
+.="Inapplicable/Missing"
+1="1:All included"
+2="2:Some included/some separate"
+3="3:All separate"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not asc
+ertained";
+
+value sex
+.="Inapplicable/Missing"
+1="1:Male"
+2="2:Female"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value showfmt
+.="Inapplicable/Missing"
+1="1:Walking"
+2="2:Driving"
+3="3:Being driven"
+4="4:Ambulance or other special vehicle"
+5="5:Taxi"
+6="6:Other public transportation"
+7="7:Other"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value site2fmt
+.="Inapplicable/Missing"
+1="1:Dr office/Medical clinic/VA facility"
+2="2:Managed care plan center/HMO"
+3="3:Other clinic (rural,company,family,etc)"
+4="4:Urgent care/Hospital/ER"
+5="5:Other/At home"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value snfdayf
+.="Inapplicable/Missing"
+0="0:0 day covered"
+1="1:1 day or more covered"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value televid
+1="1:Telephone"
+2="2:Video"
+3="3:Both telephone and video"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"; 
+
+value timefmt
+.="Inapplicable/Missing"
+1="1:None of the time"
+2="2:Some of the time"
+3="3:Most of the time"
+4="4:All of the time"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value time2fmt
+.="Inapplicable/Missing"
+1="1:Less than 6 months ago"
+2="2:6 months to less than 1 year"
+3="3:1 year to less than 2 years"
+4="4: 2 years or more"
+5="5:Never taken" 
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value time3fmt
+.="Inapplicable/Missing"
+1="1:All of the time"
+2="2:Most of the time"
+3="3:Some of the time"
+4="4:A little of the time"
+5="5:None of the time"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value time4fmt
+.="Inapplicable/Missing"
+0="0:Never had blood cholesterol taken"
+1="1:Less than 6 months ago"
+2="2:6 months to 1 year ago"
+3="3:1 year to less than 2 years ago"
+4="4:2 years to less than 5 years ago"
+5="5:5 or more years ago"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+
+
+value time5fmt
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"
+.="Inapplicable/Missing"
+1="1:Less than 5 years ago"
+2="2:5 to 9 years ago"
+3="3:10 or more years ago";
+
+value time6fmt
+.="Inapplicable/Missing"
+1="1:Less than 1 year"
+2="2:1 to 4 years"
+3="3:5 to 9 years"
+4="4:10 to 14 years"
+5="5:15 to 19 years"
+6="6:20 to 29 years"
+7="7:30 or more years"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+                 
+value time7fmt
+.="Inapplicable/Missing"
+1="1:Less than 1 week"
+2="2:More than 1 week"
+3="3:Never resumed regular activities"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value toldfmt
+1="1:Someone made appt during earlier visit"  
+2="2:SP contacted office to set up appt"      
+3="3:Dr office contacted SP to set up appt"   
+4="4:Standing appointment"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value truefmt
+.="Inapplicable/Missing"
+1="1:True" 
+2="2:False"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value vacnumf
+0="0:No recorded doses"
+1="1:1 dose"
+2="2:2 doses"
+3="3:3 doses"
+4="4:4 doses"
+5="5:5+ doses"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained"; 
+
+value yes2fmt
+.="Inapplicable/Missing"
+1="1:Yes" 
+2="2:No"
+3="3:No experience"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value yesfmt
+1="1:Yes"
+2="2:No"
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value yesnomob
+1="1:Yes"                                     
+2="2:No"                                      
+3="3:Does not drive"                          
+4="4:Has never driven"                        
+5="5:Gave up driving before"  
+.="Inapplicable/Missing"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+value yyn
+.="Inapplicable/Missing"
+1="1:Yes, definitely"
+2="2:Yes, somewhat"
+3="3:No"
+.R=".R:Refused"
+.D=".D:Don't know"
+.N=".N:Not ascertained";
+
+run;
+
+
+
+ 
+/*******************************************************************************************************                                                                                                                                                                                                  
+Section C. 	Applies labels and formats.
+	Creates new permanent datasets for fall, winter, and summer PUFs.
+	Permanent datasets are stored in whichever folder you designated as "PUFLIB"
+*******************************************************************************************************/                                                                                                    
+                                                             
+OPTIONS FMTSEARCH=(PUFLIB PUFLIB.FORMATS);
+
+
+/***********************************
+		C1. Fall
+************************************/
+
+DATA puflib.SFPUF2022_1_FALL;
+SET puf_fall;
+
+FORMAT 
+PUF_ID PUFFMT.
+SURVEYYR	SVYRFMT.
+VERSION	VERSFMT.
+ADM_H_MEDSTA	MEDSTAF.
+ADM_H_GHPSW	YESFMT.
+ADM_H_PDRS	PDRSFMT.
+ADM_OP_MDCD	OPMDCD.
+ADM_DUAL_FLAG_YR	DUALFMT.
+ADM_FFS_FLAG_YR	FFSFMT.
+ADM_MA_FLAG_YR	MAFMT.
+ADM_PARTD	YESFMT.
+ADM_LIS_FLAG_YR	PREMFMT.
+ADM_PREM_AMT_YR	PREM2FMT.
+ADM_H_HHASW	YESFMT.
+ADM_H_HOSSW	YESFMT.
+ADM_H_INPSW	YESFMT.
+ADM_H_OUTSW	YESFMT.
+ADM_H_PBSW	YESFMT.
+ADM_H_SNFSW	YESFMT.
+ADM_H_ACTSTY	IPSTYFMT.
+ADM_H_ACTDAY	IPDAYFMT.
+ADM_H_SNFSTY	IPSTYFMT.
+ADM_H_SNFDAY	SNFDAYF.
+ADM_H_HHVIS	IPSTY2F.
+ADM_H_PHYEVT	PHYVIST.
+INS_PRIVRX	YESFMT.
+INS_PRIVLTC	YESFMT.
+INS_PRIVVIS	YESFMT.
+INS_PRIVDS	YESFMT.
+INS_D_MADV	D_MADV.
+INS_D_PRIVNUM	YESFMT.
+INS_D_PRIVNUMC	PRIVNUM.
+INS_D_PVESI	YESFMT.
+INS_D_PVSELF	YESFMT.
+INS_D_RDS	INSDRDS.
+INS_MADVRXHT	YESFMT.
+INT_LANG	LANG.
+INT_SPPROXY	PROXY.
+DEM_AGE	AGE2GRP.
+DEM_SEX	SEX.
+DEM_RACE	RACE.
+DEM_RE_AGE	IVCORE.
+DEM_EDU	EDU.
+DEM_MARSTA	MARSTA.
+DEM_INCOME	INCOM25F.
+DEM_INCSRCE	INCSRCEF.
+DEM_ARMED	YESFMT.
+DEM_CBSA	METRO.
+DEM_IPR_IND	IPR.
+ACC_HCTROUBL	YESFMT.
+ACC_HCTRBMNY	INDPUF.
+ACC_HCDELAY	YESFMT.
+ACC_PAYPROB	YESFMT.
+ACC_PAYOVRTM	YESFMT.
+ACC_MCQUALTY	SATFFMT.
+ACC_MCAVAIL	SATFFMT.
+ACC_MCEASE	SATFFMT.
+ACC_MCCOSTS	SATFFMT.
+ACC_MCINFO	SATFFMT.
+ACC_MCCONCRN	SATFFMT.
+ACC_MCSAMLOC	SATFFMT.
+ACC_MCSPECAR	SATFFMT.
+ACC_MCTELANS	SATFFMT.
+ACC_MCWORRY	TRUEFMT.
+ACC_MCAVOID	TRUEFMT.
+ACC_MCSICK	TRUEFMT.
+ACC_MCDRSOON	TRUEFMT.
+HLT_HYSTEREC	YESFMT.
+HLT_OCARTERY	YESFMT.
+HLT_OCHBP	YESFMT.
+HLT_OCMYOCAR	YESFMT.
+HLT_OCCHD	YESFMT.
+HLT_OCCFAIL	YESFMT.
+HLT_OCHRTCND	YESFMT.
+HLT_OCSTROKE	YESFMT.
+HLT_OCCHOLES	YESFMT.
+HLT_OCCSKIN	YESFMT.
+HLT_OCCANCER	YESFMT.
+HLT_OCARTHRH	YESFMT.
+HLT_OCOSARTH	YESFMT.
+HLT_OCARTHOT	YESFMT.
+HLT_ALZDEM	YESFMT.
+HLT_OCDEPRSS	YESFMT.
+HLT_OCPSYCHO	YESFMT.
+HLT_OCOSTEOP	YESFMT.
+HLT_OCBRKHIP	YESFMT.
+HLT_OCEMPHYS	YESFMT.
+HLT_OCPPARAL	YESFMT.
+HLT_HAVEPROS	YESFMT.
+HLT_OCKIDNY YESFMT.
+HLT_OCBETES	YESFMT.
+HLT_OCDTYPE	DIAFMT.
+HLT_OCDVISIT	YESFMT.
+HLT_LOSTURIN	LOSTURNf.
+HLT_TALKURIN	YESFMT.
+HLT_REASURIN	YESFMT.
+HLT_SURGURIN	YESFMT.
+HLT_HYPETOLD	HYPETF.
+HLT_HYPEYRS	TIME5FMT.
+HLT_HYPEHOME	YESFMT.
+HLT_HYPEMEDS	YESFMT.
+HLT_HYPEDRNK	HYPEDRNF.
+HLT_HYPELONG	TIME6FMT.
+HLT_HYPECOND	YESFMT.
+HLT_HYPECTRL	CTRLFMT.
+HLT_HYPEPAY	YESFMT.
+HLT_HYPESKIP	YESFMT.
+HLT_PROSSURG	YESFMT.
+HLT_GENHELTH	GENHFMT.
+HLT_COMPHLTH	COMPFMT.
+HLT_HELMTACT	TIMEFMT.
+HLT_BMI_CAT	BMIFMT.
+HLT_DIAINSUL	YESFMT.
+HLT_DIAMEDS	YESFMT.
+HLT_DIATEST	YESFMT.
+HLT_CONTGLUC YESFMT.
+HLT_DIATENYR	YESFMT.
+HLT_DIACTRLP	DIACTRPF.
+HLT_DIAHYPO	YESFMT.
+HLT_DIAMNGE	YESFMT.
+HLT_DISTEETH	YESFMT.
+HLT_DISDECSN	YESFMT.
+HLT_DISWALK	YESFMT.
+HLT_DISBATH	YESFMT.
+HLT_DISERRND	YESFMT.
+HLT_FOODTRBL	HCFMT.
+HLT_DIFSTOOP	DIFFFMT.
+HLT_DIFLIFT	DIFFFMT.
+HLT_DIFREACH	DIFFFMT.
+HLT_DIFWRITE	DIFFFMT.
+HLT_DIFWALK	DIFFFMT.
+HLT_D_VIGTIM	HRACTA.
+HLT_D_MODTIM	HRACTB.
+HLT_D_MUSTIM	HRACTC.
+HLT_FUNC_LIM	FUNLMTF.
+HLT_D_LSTADL	ADLHNM.
+HLT_DTBLGTPL	YESFMT.
+HLT_DREDTRAV	YESFMT.
+HLT_DASKRIDE	YESFMT.
+HLT_DGIVUPDR	YESNOMOB.
+HLT_DLIMDRIV	YESFMT.
+HLT_DUSETRNS	YESFMT.
+HLT_ECHELP	YESFMT.
+HLT_ECTROUB	LOOKFMT.
+HLT_EDOCEXAM	YESFMT.
+HLT_EDOCLAST	LASTFMT.
+HLT_EDOCTYPE	EDOFMT.
+HLT_EDOCDLAT	YESFMT.
+HLT_CATAREVR	YESFMT.
+HLT_GLCOMEVR	YESFMT.
+HLT_RETINEVR	YESFMT.
+HLT_MACULEVR	YESFMT.
+HLT_CATAROPC	YESFMT.
+HLT_EYESURG	YESFMT.
+HLT_HCHELP	YESFMT.
+HLT_HCTROUB	HCFMT.
+HLT_HCKNOWMC	HCFMT.
+HLT_HCCOMDOC	HCCOM.
+PRV_BPTAKEN	TIME2FMT.
+PRV_BCTAKEN	TIME4FMT.
+PRV_MAMMOGRM	YESFMT.
+PRV_PAPSMEAR	YESFMT.
+PRV_DIGTEXAM	YESFMT.
+PRV_BLOODTST	YESFMT.
+PRV_ONEDOSE YESFMT.
+PRV_CVDOSE VACNUMF.
+PRV_FLUSHOT	YESFMT.
+PRV_SHINGVAC	YESFMT.
+PRV_PNEUSHOT	YESFMT.
+PRV_DIAEVERT	YESFMT.
+PRV_DIARISK	YESFMT.
+PRV_COLHEAR	YESFMT.
+PRV_COLHTEST	YESFMT.
+PRV_COLHKIT	YESFMT.
+PRV_COLCARD	YESFMT.
+PRV_COLFDOC	YESFMT.
+PRV_COLRECNT	RECFMT.
+PRV_EVERSCOP	YESFMT.
+PRV_HEARSIG	YESFMT.
+PRV_COLDRREC	YESFMT.
+PRV_COLSCRNS	YESFMT.
+PRV_OSTEVERT	YESFMT.
+PRV_OSTHRISK	YESFMT.
+PRV_COLORECT	YESFMT.
+PRV_HEARSIG 	YESFMT.
+PRV_WELLNESS	YESFMT.
+PRV_BASKORAL	YESFMT.
+RSK_EVRSMKAL	YESFMT.
+RSK_SMKNOWAL	YESFMT.
+RSK_ALCLIFE		YESFMT.
+RSK_D_ALCFRQ	DRINKDAY.
+RSK_SMKLSONE	YESFMT.
+RSK_SMKLSNOW	YESFMT.
+RSK_ECIGONE	YESFMT.
+RSK_ECIGNOW	YESFMT.
+RSK_ALCDAY	DRINKSPD.
+RSK_FFDRNK	DRINKSPM.
+FAL_FALLANY	YESFMT.
+FAL_FALLTIME	FELLTIMF.
+FAL_FALLHELP	YESFMT.
+FAL_FALFRACT	INDPUF.
+FAL_FALSPRAN	INDPUF.
+FAL_FALBRUIS	INDPUF.
+FAL_FALCUT	INDPUF.
+FAL_FALCDOTH	INDPUF.
+FAL_FALNOINJ	INDPUF.
+FAL_FALLIMIT	YESFMT.
+FAL_FALLBACK	TIME7FMT.
+FAL_FALLFEAR	FALLSCAL.
+HOU_D_HHTOT		HHTOT.
+HOU_D_HHLT50	HHLT.
+HOU_D_HHGE50	HHLT.
+HOU_D_HHLT18	HHLT.
+HOU_DWELLING	DWELFMT.
+HOU_HLEVELS	LEVELFMT.
+HOU_HELEVTR	YESFMT.
+HOU_HONELEVL	YESFMT.
+HOU_HBTHLEVL	YESFMT.
+HOU_HRAMPS	YESFMT.
+HOU_HBATHRM	YESFMT.
+HOU_HRAILING	YESFMT.
+HOU_HOUSTYPE	YESFMT.
+HOU_HPERCARE	YESFMT.
+HOU_MEALPROB	YESFMT.
+HOU_MAIDPROB	YESFMT.
+HOU_WASHPROB	YESFMT.
+HOU_HELPPROB	YESFMT.
+HOU_TRANPROB	YESFMT.
+HOU_RECPROB	YESFMT.
+HOU_SERVINCL	SERVFMT.
+HOU_STAYPUT	YESFMT.
+HOU_CAREPART	YESFMT.
+HOU_REQAGE	YESFMT.
+HOU_PERSBATH	YESFMT.
+HOU_NBRROOMS	ROOMNUM.
+HOU_PERKITCH	YESFMT.
+MA_MADVDENT	YESFMT.
+MA_MADVEYE	YESFMT.
+MA_MADVNH	YESFMT.
+MA_MADVPAY	YESFMT.
+MA_RECMADV	YESFMT.
+MA_MADVYRS	MADVYRS.
+PUFFWGT--PUFF100 CONTIN.
+;
+LABEL
+PUF_ID="Unique PUF Identification Number"
+SURVEYYR = "Survey year"
+VERSION = "Version number"
+ADM_H_MEDSTA = "Medicare status code as of 12/31"
+ADM_H_GHPSW = "Some group health participation in year"
+ADM_H_PDRS = "RDS Indicator for the year"
+ADM_OP_MDCD = "Medicare-Medicaid dual eligibility"
+ADM_DUAL_FLAG_YR = "Dual eligibility flag for the year"
+ADM_FFS_FLAG_YR = "Fee-for-Service flag for the year"
+ADM_MA_FLAG_YR = "Medicare Advantage flag for the year"
+ADM_PARTD = "Part D plan flag for the year"
+ADM_LIS_FLAG_YR = "Low income subsidy indicator for the yr"
+ADM_PREM_AMT_YR = "Premium subsidy coverage for the year"
+ADM_H_HHASW = "1+ HHA visit current year (FFS)"
+ADM_H_HOSSW = "1+ hospice bill current yr (FFS)"
+ADM_H_INPSW = "1+ inpatient discharge current yr (FFS)"
+ADM_H_OUTSW = "1+ outpatient visit current yr (FFS)"
+ADM_H_PBSW = "1+ Part B claim current yr (FFS)"
+ADM_H_SNFSW = "1+ SNF admission current yr (FFS)"
+ADM_H_ACTSTY = "Number inpatient stays current yr (FFS)"
+ADM_H_ACTDAY = "Number IP covered days current yr (FFS)"
+ADM_H_SNFSTY = "Total SNF stays current yr (FFS)"
+ADM_H_SNFDAY = "Total SNF covered days current yr (FFS)"
+ADM_H_HHVIS = "Total HHA visits current yr (FFS)"
+ADM_H_PHYEVT = "Total office visits in current yr (FFS)"
+INS_PRIVRX = "Private plan covers Rx drugs (excl. RDS)"
+INS_PRIVLTC = "Private plan covers nursing home"
+INS_PRIVVIS = "Private plan covers vision"
+INS_PRIVDS = "Private plan covers dental"
+INS_D_MADV = "Enrolled in Medicare Advantage"
+INS_D_PRIVNUM = "One or more private plans (excl. RDS)"
+INS_D_PRIVNUMC = "Number of private plans (excl. RDS)"
+INS_D_PVESI = "Has employer-sponsored insurance"
+INS_D_PVSELF = "Has self-purchased private insurance"
+INS_D_RDS = "Has Retiree Drug Subsidy (RDS)"
+INS_MADVRXHT = "Medicare Advantage plan covers drugs"
+INT_LANG = "Language of interview"
+INT_SPPROXY = "Self - respondent or proxy"
+DEM_AGE = "Age group"
+DEM_SEX = "Gender"
+DEM_RACE = "Race/ethnicity group"
+DEM_RE_AGE = "Race/ethnicity age group"
+DEM_EDU = "Highest grade completed"
+DEM_MARSTA = "Marital status"
+DEM_INCOME = "Income group"
+DEM_INCSRCE = "Source of income data"
+DEM_ARMED = "Ever served in armed forces"
+DEM_CBSA = "Metro residence designated by CBSA"
+DEM_IPR_IND = "Income Poverty Ratio Medicare Threshold"
+ACC_HCTROUBL = "Has SP had troub get needed health care?"
+ACC_HCTRBMNY = "Troub getting care: cost, insuff. money"
+ACC_HCDELAY = "Last year ever delay in care due to cost"
+ACC_PAYPROB = "Problem paying medical bills"
+ACC_PAYOVRTM = "Medical bills being paid off over time"
+ACC_MCQUALTY = "Satisfaction: qual of med care last year"
+ACC_MCAVAIL = "Satisfaction: medical care night/wkend"
+ACC_MCEASE = "Satisfaction: ease get to Dr from home"
+ACC_MCCOSTS = "Satisfaction: OOP costs for med services"
+ACC_MCINFO = "Satisfaction: info abt what was wrong"
+ACC_MCCONCRN = "Satisfaction: Dr concern w/overall hlth"
+ACC_MCSAMLOC = "Satisfaction: med care at same location"
+ACC_MCSPECAR = "Satisfaction: avail care by specialists"
+ACC_MCTELANS = "Satisfaction: phone answers for tx or Rx"
+ACC_MCWORRY = "Worry abt hlth more than others your age"
+ACC_MCAVOID = "Do almost anything to avoid going to Dr"
+ACC_MCSICK = "When sick - try keeping sickness to self"
+ACC_MCDRSOON = "Usually go to Dr as soon as feel bad"
+HLT_HYSTEREC = "Hysterectomy (ever)"
+HLT_OCARTERY = "Hardening of arteries (ever)"
+HLT_OCHBP = "Hypertension/high BP (ever)"
+HLT_OCMYOCAR = "MI/heart attack (ever)"
+HLT_OCCHD = "Angina pectoris/CHD (ever)"
+HLT_OCCFAIL = "Congestive heart failure (ever)"
+HLT_OCHRTCND = "Other heart cond, eg valve/rhythm (ever)"
+HLT_OCSTROKE = "Stroke/brain hemorrhage (ever)"
+HLT_OCCHOLES = "High cholesterol (ever)"
+HLT_OCCSKIN = "Skin cancer (ever)"
+HLT_OCCANCER = "Other (non-skin) cancer (ever)"
+HLT_OCARTHRH = "Rheumatoid arthritis (ever)"
+HLT_OCOSARTH = "Osteoarthritis (ever)"
+HLT_OCARTHOT = "Arthritis, other (ever)"
+HLT_ALZDEM = "Ever told Alzheimer's or dx of dementia"
+HLT_OCDEPRSS = "Depression (ever)"
+HLT_OCPSYCHO = "Ever told had mental disorder"
+HLT_OCOSTEOP = "Osteoporosis/soft bones (ever)"
+HLT_OCBRKHIP = "Broken hip (ever)"
+HLT_OCEMPHYS = "Emphysema/asthma/COPD (ever)"
+HLT_OCPPARAL = "Complete/partial paralysis (ever)"
+HLT_HAVEPROS = "Enlarged prostate/BPH (ever)"
+HLT_OCKIDNY = "Chronic kidney disease (ever)"
+HLT_OCBETES = "Diabetes/high blood sugar (ever)"
+HLT_OCDTYPE = "Type of diabetes diagnosed"
+HLT_OCDVISIT = "Told on 2+ visits had diabetes"
+HLT_LOSTURIN = "How often lost urine control (past year)"
+HLT_TALKURIN = "Talked to Dr about urine control"
+HLT_REASURIN = "Medical exam for urine control problem"
+HLT_SURGURIN = "Dr talked urine control meds/surgery"
+HLT_HYPETOLD = "Told on 2+ visits had high BP"
+HLT_HYPEYRS = "Years since 1st told of hgh bld pressure"
+HLT_HYPEHOME = "Measures BP at home"
+HLT_HYPEMEDS = "Takes meds for high BP"
+HLT_HYPEDRNK = "Reducing alcohol intake due to high BP"
+HLT_HYPELONG = "How long taken meds for high BP (years)"
+HLT_HYPECOND = "Side effects from BP meds"
+HLT_HYPECTRL = "How confident in control of BP"
+HLT_HYPEPAY = "Difficulty paying for BP meds"
+HLT_HYPESKIP = "Skip/share BP meds b/c high cost"
+HLT_PROSSURG = "Prostate surgery (ever)"
+HLT_GENHELTH = "General health compared others same age"
+HLT_COMPHLTH = "General health compared to one year ago"
+HLT_HELMTACT = "Limited social activities (past month)"
+HLT_BMI_CAT = "BMI categories (kg/m^2)"
+HLT_DIAINSUL = "Takes insulin"
+HLT_DIAMEDS = "Takes prescribed diabetes pill/medicine"
+HLT_DIATEST = "Tests own blood for sugar/glucose"
+HLT_CONTGLUC = "Uses continuous glucose monitor"
+HLT_DIATENYR = "Foot exam in last year"
+HLT_DIACTRLP = "Blood sugar well controlled"
+HLT_DIAHYPO = "Ever experience hypoglycemia"
+HLT_DIAMNGE = "Had diabetes self management course"
+HLT_DISTEETH = "Lost all upper and lower natural teeth"
+HLT_DISDECSN = "Difficulty concentrate/remember/decide"
+HLT_DISWALK = "Difficulty walking/stairs"
+HLT_DISBATH = "Difficulty dressing/bathing"
+HLT_DISERRND = "Difficulty doing errands"
+HLT_FOODTRBL = "Difficulty eating solid foods b/c teeth"
+HLT_DIFSTOOP = "Difficulty stooping/crouching/kneeling"
+HLT_DIFLIFT = "Difficulty lifting/carrying 10 pounds"
+HLT_DIFREACH = "Difficulty extending arms above shoulder"
+HLT_DIFWRITE = "Difficulty writing/handling object"
+HLT_DIFWALK = "Difficulty walking 1/4 mile"
+HLT_D_VIGTIM = "Hrs/wk spent doing vigorous activities"
+HLT_D_MODTIM = "Hrs/wk spent doing moderate activities"
+HLT_D_MUSTIM = "Hrs/wk spent increasing muscle strength"
+HLT_FUNC_LIM = "Functional limitations: IADLs and ADLs"
+HLT_D_LSTADL = "Number helpers for listed ADLs/IADLs"
+HLT_DTBLGTPL = "Has trouble getting places"
+HLT_DREDTRAV = "Reduced day-to-day travel"
+HLT_DASKRIDE = "Ask others for rides"
+HLT_DGIVUPDR = "Given up driving altogether"
+HLT_DLIMDRIV = "Limited driving to daytime"
+HLT_DUSETRNS = "Use taxi or special transportation"
+HLT_ECHELP = "SP wear eyeglasses/contact lenses"
+HLT_ECTROUB = "Description of SP's vision"
+HLT_EDOCEXAM = "Has SP had eye exam in past year"
+HLT_EDOCLAST = "How Long since last eye exam"
+HLT_EDOCTYPE = "Eye care professional last exam"
+HLT_EDOCDLAT = "Eye Dr ever dilate eyes"
+HLT_CATAREVR = "Ever told had cataracts"
+HLT_GLCOMEVR = "Ever told had glaucoma"
+HLT_RETINEVR = "Ever told had diabetic retinopathy"
+HLT_MACULEVR = "Ever told had macular degeneration"
+HLT_CATAROPC = "Ever had operation for cataracts"
+HLT_EYESURG = "Ever had laser eye surgery"
+HLT_HCHELP = "SP use hearing aid"
+HLT_HCTROUB = "Description of SP's hearing"
+HLT_HCKNOWMC = "Difficult finding Mcare info bc hearing"
+HLT_HCCOMDOC = "Difficult communicate w/ Dr bc hearing"
+PRV_BPTAKEN = "How long since BP taken"
+PRV_BCTAKEN = "How long since blood cholesterol taken"
+PRV_MAMMOGRM = "Mammogram/breast X-ray (past year)"
+PRV_PAPSMEAR = "Pap smear (past year)"
+PRV_DIGTEXAM = "DRE prostate exam (past year)"
+PRV_BLOODTST = "PSA prostate blood test (past year)"
+PRV_ONEDOSE = "Got 1+ CV19 vaccine dose by Fall 2022"
+PRV_CVDOSE	= "Number CV19 vaccine doses by Fall 2022"
+PRV_FLUSHOT = "Flu shot for last winter"
+PRV_SHINGVAC = "Ever had shingles vaccine"
+PRV_PNEUSHOT = "Pneumonia shot (ever)"
+PRV_DIAEVERT = "Ever had a blood test for diabetes"
+PRV_DIARISK = "Ever told at high risk for diabetes"
+PRV_COLHEAR = "Heard of colon cancer before today"
+PRV_COLHTEST = "Given home fecal blood test (FOBT)"
+PRV_COLORECT= "Ever tested for colon cancer"
+PRV_COLHKIT = "Heard of home FOBT"
+PRV_COLCARD = "Sent card in for most recent FOBT"
+PRV_COLFDOC = "Had FOBT in Drs office"
+PRV_COLRECNT = "How long since FOBT"
+PRV_EVERSCOP = "Colonoscopy/sigmoidoscopy (ever)"
+PRV_HEARSIG = "Heard of colonoscopy before today"
+PRV_WELLNESS= "Annual wellness since last fall"
+PRV_BASKORAL= "Ever had oral cancer exam"
+PRV_COLDRREC = "Dr ever recommend colonoscopy"
+PRV_COLSCRNS = "Know Medicare help pay screening test"
+PRV_OSTEVERT = "Ever talked to dr. about osteoporosis"
+PRV_OSTHRISK = "Told at high risk for osteoporosis"
+RSK_EVRSMKAL = "Ever smoke cigarette/cigar/tobacco"
+RSK_SMKNOWAL = "Currently smoke cigarette/cigar/tobacco"
+RSK_SMKLSONE = "Has ever used smokeless tobacco"
+RSK_SMKLSNOW = "Uses smokeless tobacco now" 
+RSK_ECIGONE = "Has ever used e-cigarette" 
+RSK_ECIGNOW = "Uses e-cigarette now"
+RSK_ALCLIFE = "Has had at least 12 drinks in life"
+RSK_D_ALCFRQ = "Number of days/month drink alcohol"
+RSK_ALCDAY = "Number of alcohol drinks/day (past yr)"
+RSK_FFDRNK = "Number days/mo has 5/4+ drinks (past yr)"
+FAL_FALLANY = "Fallen down (past year)"
+FAL_FALLTIME = "Number of times fallen (past year)"
+FAL_FALLHELP = "Fall required medical help"
+FAL_FALFRACT = "Fracture from fall"
+FAL_FALSPRAN = "Sprain from fall"
+FAL_FALBRUIS = "Bruise from fall"
+FAL_FALCUT = "Cut from fall"
+FAL_FALCDOTH = "Concuss/dislocate/other injury from fall"
+FAL_FALNOINJ = "No injury from fall"
+FAL_FALLIMIT = "Limit activities b/c fall"
+FAL_FALLBACK = "Time to get back to regular activities"
+FAL_FALLFEAR = "Fear of falling scale"
+HOU_D_HHTOT = "Total Number of People in Household"
+HOU_D_HHLT50 = "Num in HH Under 50 (May Include SP)"
+HOU_D_HHGE50 = "Num in HH 50 and Over (May Include SP)"
+HOU_D_HHLT18 = "Num <18 related to SP (May Include SP)"
+HOU_DWELLING = "Description of Home"
+HOU_HLEVELS = "Levels in SP Housing"
+HOU_HELEVTR = "Elevator in SP Housing"
+HOU_HONELEVL = "One Level Living Space"
+HOU_HBTHLEVL = "Bathroom on All Levels"
+HOU_HRAMPS = "Ramps at Entrances"
+HOU_HBATHRM = "Does SP Bathroom have Modifications"
+HOU_HRAILING = "Special Railing in Housing"
+HOU_HOUSTYPE = "Is Housing in Special Comm Type in HA10"
+HOU_HPERCARE = "SP Housing Have Personal Care"
+HOU_MEALPROB = "Do You Have Access to Prepared Meals"
+HOU_MAIDPROB = "Do You Have Access to Cleaning Services"
+HOU_WASHPROB = "Do You Have Access to Laundry Services"
+HOU_HELPPROB = "Do You Have Access to Help w/Medications"
+HOU_TRANPROB = "Do You Have Access to Transportation"
+HOU_RECPROB = "Do You Have Access to Rec Services"
+HOU_SERVINCL = "Personal Srvcs Included in Housing Cost"
+HOU_STAYPUT = "Stay in Same Housing if Need More Care"
+HOU_CAREPART = "Provide Care in Diff Part of Housing"
+HOU_REQAGE = "Must be Certain Age for Housing"
+HOU_PERSBATH = "SP Have Own Bath Facilities"
+HOU_NBRROOMS = "How Many Rooms in Housing"
+HOU_PERKITCH = "SP Have Kitchen"
+MA_MADVDENT = "Mcare Adv plan covers dental"
+MA_MADVEYE = "Mcare Adv plan covers eye exams"
+MA_MADVNH = "Mcare Adv plan covers nursing home"
+MA_MADVPAY = "Ever pay additional for Mcare Adv cvg"
+MA_RECMADV = "Recommend Mcare Adv to family/friends"
+MA_MADVYRS = "Years enrolled in Medicare Advantage"
+PUFFWGT = "PUF Fall Ever Enrolled Full Sample Wt"
+PUFF001 = "PUF Fall Ever Enrolled rep wt 1"
+PUFF002 = "PUF Fall Ever Enrolled rep wt 2"
+PUFF003 = "PUF Fall Ever Enrolled rep wt 3"
+PUFF004 = "PUF Fall Ever Enrolled rep wt 4"
+PUFF005 = "PUF Fall Ever Enrolled rep wt 5"
+PUFF006 = "PUF Fall Ever Enrolled rep wt 6"
+PUFF007 = "PUF Fall Ever Enrolled rep wt 7"
+PUFF008 = "PUF Fall Ever Enrolled rep wt 8"
+PUFF009 = "PUF Fall Ever Enrolled rep wt 9"
+PUFF010 = "PUF Fall Ever Enrolled rep wt 10"
+PUFF011 = "PUF Fall Ever Enrolled rep wt 11"
+PUFF012 = "PUF Fall Ever Enrolled rep wt 12"
+PUFF013 = "PUF Fall Ever Enrolled rep wt 13"
+PUFF014 = "PUF Fall Ever Enrolled rep wt 14"
+PUFF015 = "PUF Fall Ever Enrolled rep wt 15"
+PUFF016 = "PUF Fall Ever Enrolled rep wt 16"
+PUFF017 = "PUF Fall Ever Enrolled rep wt 17"
+PUFF018 = "PUF Fall Ever Enrolled rep wt 18"
+PUFF019 = "PUF Fall Ever Enrolled rep wt 19"
+PUFF020 = "PUF Fall Ever Enrolled rep wt 20"
+PUFF021 = "PUF Fall Ever Enrolled rep wt 21"
+PUFF022 = "PUF Fall Ever Enrolled rep wt 22"
+PUFF023 = "PUF Fall Ever Enrolled rep wt 23"
+PUFF024 = "PUF Fall Ever Enrolled rep wt 24"
+PUFF025 = "PUF Fall Ever Enrolled rep wt 25"
+PUFF026 = "PUF Fall Ever Enrolled rep wt 26"
+PUFF027 = "PUF Fall Ever Enrolled rep wt 27"
+PUFF028 = "PUF Fall Ever Enrolled rep wt 28"
+PUFF029 = "PUF Fall Ever Enrolled rep wt 29"
+PUFF030 = "PUF Fall Ever Enrolled rep wt 30"
+PUFF031 = "PUF Fall Ever Enrolled rep wt 31"
+PUFF032 = "PUF Fall Ever Enrolled rep wt 32"
+PUFF033 = "PUF Fall Ever Enrolled rep wt 33"
+PUFF034 = "PUF Fall Ever Enrolled rep wt 34"
+PUFF035 = "PUF Fall Ever Enrolled rep wt 35"
+PUFF036 = "PUF Fall Ever Enrolled rep wt 36"
+PUFF037 = "PUF Fall Ever Enrolled rep wt 37"
+PUFF038 = "PUF Fall Ever Enrolled rep wt 38"
+PUFF039 = "PUF Fall Ever Enrolled rep wt 39"
+PUFF040 = "PUF Fall Ever Enrolled rep wt 40"
+PUFF041 = "PUF Fall Ever Enrolled rep wt 41"
+PUFF042 = "PUF Fall Ever Enrolled rep wt 42"
+PUFF043 = "PUF Fall Ever Enrolled rep wt 43"
+PUFF044 = "PUF Fall Ever Enrolled rep wt 44"
+PUFF045 = "PUF Fall Ever Enrolled rep wt 45"
+PUFF046 = "PUF Fall Ever Enrolled rep wt 46"
+PUFF047 = "PUF Fall Ever Enrolled rep wt 47"
+PUFF048 = "PUF Fall Ever Enrolled rep wt 48"
+PUFF049 = "PUF Fall Ever Enrolled rep wt 49"
+PUFF050 = "PUF Fall Ever Enrolled rep wt 50"
+PUFF051 = "PUF Fall Ever Enrolled rep wt 51"
+PUFF052 = "PUF Fall Ever Enrolled rep wt 52"
+PUFF053 = "PUF Fall Ever Enrolled rep wt 53"
+PUFF054 = "PUF Fall Ever Enrolled rep wt 54"
+PUFF055 = "PUF Fall Ever Enrolled rep wt 55"
+PUFF056 = "PUF Fall Ever Enrolled rep wt 56"
+PUFF057 = "PUF Fall Ever Enrolled rep wt 57"
+PUFF058 = "PUF Fall Ever Enrolled rep wt 58"
+PUFF059 = "PUF Fall Ever Enrolled rep wt 59"
+PUFF060 = "PUF Fall Ever Enrolled rep wt 60"
+PUFF061 = "PUF Fall Ever Enrolled rep wt 61"
+PUFF062 = "PUF Fall Ever Enrolled rep wt 62"
+PUFF063 = "PUF Fall Ever Enrolled rep wt 63"
+PUFF064 = "PUF Fall Ever Enrolled rep wt 64"
+PUFF065 = "PUF Fall Ever Enrolled rep wt 65"
+PUFF066 = "PUF Fall Ever Enrolled rep wt 66"
+PUFF067 = "PUF Fall Ever Enrolled rep wt 67"
+PUFF068 = "PUF Fall Ever Enrolled rep wt 68"
+PUFF069 = "PUF Fall Ever Enrolled rep wt 69"
+PUFF070 = "PUF Fall Ever Enrolled rep wt 70"
+PUFF071 = "PUF Fall Ever Enrolled rep wt 71"
+PUFF072 = "PUF Fall Ever Enrolled rep wt 72"
+PUFF073 = "PUF Fall Ever Enrolled rep wt 73"
+PUFF074 = "PUF Fall Ever Enrolled rep wt 74"
+PUFF075 = "PUF Fall Ever Enrolled rep wt 75"
+PUFF076 = "PUF Fall Ever Enrolled rep wt 76"
+PUFF077 = "PUF Fall Ever Enrolled rep wt 77"
+PUFF078 = "PUF Fall Ever Enrolled rep wt 78"
+PUFF079 = "PUF Fall Ever Enrolled rep wt 79"
+PUFF080 = "PUF Fall Ever Enrolled rep wt 80"
+PUFF081 = "PUF Fall Ever Enrolled rep wt 81"
+PUFF082 = "PUF Fall Ever Enrolled rep wt 82"
+PUFF083 = "PUF Fall Ever Enrolled rep wt 83"
+PUFF084 = "PUF Fall Ever Enrolled rep wt 84"
+PUFF085 = "PUF Fall Ever Enrolled rep wt 85"
+PUFF086 = "PUF Fall Ever Enrolled rep wt 86"
+PUFF087 = "PUF Fall Ever Enrolled rep wt 87"
+PUFF088 = "PUF Fall Ever Enrolled rep wt 88"
+PUFF089 = "PUF Fall Ever Enrolled rep wt 89"
+PUFF090 = "PUF Fall Ever Enrolled rep wt 90"
+PUFF091 = "PUF Fall Ever Enrolled rep wt 91"
+PUFF092 = "PUF Fall Ever Enrolled rep wt 92"
+PUFF093 = "PUF Fall Ever Enrolled rep wt 93"
+PUFF094 = "PUF Fall Ever Enrolled rep wt 94"
+PUFF095 = "PUF Fall Ever Enrolled rep wt 95"
+PUFF096 = "PUF Fall Ever Enrolled rep wt 96"
+PUFF097 = "PUF Fall Ever Enrolled rep wt 97"
+PUFF098 = "PUF Fall Ever Enrolled rep wt 98"
+PUFF099 = "PUF Fall Ever Enrolled rep wt 99"
+PUFF100 = "PUF Fall Ever Enrolled rep wt 100"
+;
+RUN;
+
+
+
+
+
+/***********************************
+		C2. Winter
+************************************/
+DATA puflib.SFPUF2022_2_WINTER;
+SET puf_winter;
+
+FORMAT
+PUF_ID PUFFMT.
+SURVEYYR	SVYRFMT.
+VERSION	VERSFMT.
+ACW_D_ERVIST	YESFMT.
+ACW_D_OPVIST	YESFMT.
+ACW_OPDMCOND	INDPUF.
+ACW_OPDTESTS	INDPUF.
+ACW_OPDFOLUP	INDPUF.
+ACW_OPDCHKUP	INDPUF.
+ACW_OPDRFRL	INDPUF.
+ACW_OPDSURGY	INDPUF.
+ACW_OPDPSHOT	INDPUF.
+ACW_OPDTSHOT	INDPUF.
+ACW_OPDPMED	INDPUF.
+ACW_OPDOTHER	INDPUF.
+ACW_OPDAPPT	APPTFMT.
+ACW_OPDDRTEL	TOLDFMT.
+ACW_D_OPAPPT	APPTTIME.
+ACW_D_MDVIST	YESFMT.
+ACW_MDMCOND	INDPUF.
+ACW_MDTESTS	INDPUF.
+ACW_MDFOLUP	INDPUF.
+ACW_MDCHKUP	INDPUF.
+ACW_MDRFRL	INDPUF.
+ACW_MDSURGY	INDPUF.
+ACW_MDPSHOT	INDPUF.
+ACW_MDTSHOT	INDPUF.
+ACW_MDPMED	INDPUF.
+ACW_MDOTHER	INDPUF.
+ACW_MDAPPT	APPTFMT.
+ACW_MDDRTEL	TOLDFMT.
+ACW_D_MDAPPT	APPT2TF.
+ACW_D_MDTIME	MDTIME.
+ACW_DVNEED	YESFMT.
+ACW_DVNDCOST	INDPUF.
+ACW_MADVDFRF	REFDIF.
+ACW_MADVNOEM	MADVNOEM.
+ACW_PLACEPAR	YESFMT.
+ACW_PLACEKND	SITE2FMT.
+ACW_PLACEMCP	YESFMT.
+ACW_USUALDOC	YESFMT.
+ACW_PVSPEC		PVSPEC.
+ACW_GETUSHOW	SHOWFMT.
+ACW_D_GETUS	MINSFMT.
+ACW_ACCOMPUS	YESFMT.
+ACW_ACCWRITE	INDPUF.
+ACW_ACCEXPDR	INDPUF.
+ACW_ACCEXPSP	INDPUF.
+ACW_ACCASKQS	INDPUF.
+ACW_ACCTRANS	INDPUF.
+ACW_ACCAPPTS	INDPUF.
+ACW_ACCMORAL	INDPUF.
+ACW_ACCDRIVE	INDPUF.
+ACW_ACCHELP	INDPUF.
+ACW_PROVYR	YESFMT.
+ACW_DOCHLTH	HOWOFTN.
+ACW_DOCEASY	HOWOFTN.
+ACW_HLTHIDEA	HOWOFTN.
+ACW_STHLTHGL	YYN.
+ACW_MTHLTHGL	YYN.
+ACW_USCKEVRY	AGREE.
+ACW_USUNWRNG	AGREE.
+ACW_ORDRTEST	YESFMT.
+ACW_TSTFLWUP	HOWOFTN.
+ACW_RQSTRSLT	HOWOFTN.
+ACW_RSLTEASY	HOWOFTN.
+ACW_HLTHSRVC	YESFMT.
+ACW_GIVEINST	YESFMT.
+ACW_ANYRX	YESFMT.
+ACW_TALKRX	HOWOFTN.
+ACW_BADRCTN	HOWOFTN.
+ACW_CARESPCL	YESFMT.
+ACW_DRINFRMD	HOWOFTN.
+ACW_REMINDDR	HOWOFTN.
+ACW_STPMSPCL	YESFMT.
+ACW_TALKPMS	HOWOFTN.
+ACW_KNOWSPCL	YYN.
+ACW_DRREPEAT	HOWOFTN.
+ACW_KNOWRSLT	HOWOFTN.
+ACW_HOSADMIT	YESFMT.
+ACW_PRVNOMED	YYN.
+ACW_NOTAVAIL	RECORDNA.
+ACW_EMEDREC	YESFMT.
+ACW_NUSNOTSK	YESFMT.
+ACW_NUSMOVIN	YESFMT.
+ACW_NUSAVAIL	YESFMT.
+ACW_NUSDIFFP	YESFMT.
+ACW_NUSTOOFR	YESFMT.
+ACW_NUSTOOEX	YESFMT.
+KNW_KNOWMC	EASYDIFF.
+KNW_KCARKNOW	KN2F.
+KNW_COMPDESK	YESFMT.
+KNW_COMPPHON 	YESFMT.
+KNW_COMPTAB		YESFMT.
+KNW_INTERNET YESFMT.
+KNW_USENET	YESFMT.
+KNW_SOMELNET	YESFMT.
+KNW_OFTNNET	KNTOFTNF.
+KNW_KVSTSITE YESFMT.
+KNW_KCOMINTE YESFMT.
+KNW_KCOMPRES YESFMT.
+KNW_KCOMAPPO YESFMT.
+KNW_KCOMCOMM YESFMT.
+KNW_KCHIHELP	MCHIHELP.
+TMW_TELMED		YESFMT.
+TMW_TELMEDT1	TELEVID.
+TMW_TELMEDDU	YESFMT.
+TMW_TELMEDT3	TELEVID.
+TMW_TELMEDUS	YESFMT.
+TMW_TELMEDT4	TELEVID.
+PUFWWGT--PUFW100 CONTIN.
+;
+
+LABEL
+PUF_ID="Unique PUF Identification Number"
+SURVEYYR ="Survey year"
+VERSION ="Version number"
+ACW_D_ERVIST ="ER visit in this or any of prev 2 rounds"
+ACW_D_OPVIST ="OP visit in this or any of prev 2 rounds"
+ACW_OPDMCOND ="Reason for OPD visit: medical condition"
+ACW_OPDTESTS ="Reason for OPD visit: tests"
+ACW_OPDFOLUP ="Reason for OPD visit: follow-up"
+ACW_OPDCHKUP ="Reason for OPD visit: checkup"
+ACW_OPDRFRL ="Reason for OPD visit: referral"
+ACW_OPDSURGY ="Reason for OPD visit: surgery"
+ACW_OPDPSHOT ="Reason for OPD visit: preventative shot"
+ACW_OPDTSHOT ="Reason for OPD visit: treatment shot"
+ACW_OPDPMED ="Reason for OPD visit: medication"
+ACW_OPDOTHER ="Reason for OPD visit: other"
+ACW_OPDAPPT ="OPD visit by appt or walk-in"
+ACW_OPDDRTEL ="Did someone in OPD tell to come back"
+ACW_D_OPAPPT ="Days waited for OPD appointment"
+ACW_D_MDVIST ="MD visit in this or any of prev 2 rounds"
+ACW_MDMCOND ="Reason Dr seen: med condition"
+ACW_MDTESTS ="Reason Dr seen: tests"
+ACW_MDFOLUP ="Reason Dr seen: follow-up"
+ACW_MDCHKUP ="Reason Dr seen: checkup"
+ACW_MDRFRL ="Reason Dr seen: referral"
+ACW_MDSURGY ="Reason Dr seen: surgery"
+ACW_MDPSHOT ="Reason Dr seen: preventative shot"
+ACW_MDTSHOT ="Reason Dr seen: treatment shot"
+ACW_MDPMED ="Reason Dr seen: medication"
+ACW_MDOTHER ="Reason Dr seen: other"
+ACW_MDAPPT ="Was visit to Dr appointment or walk-in"
+ACW_MDDRTEL ="Dr's office tell come back"
+ACW_D_MDAPPT ="Days waited for Dr's appointment"
+ACW_D_MDTIME ="Minutes wait at Dr"
+ACW_DVNEED ="Ever a time SP couldn’t get dental care?"
+ACW_DVNDCOST ="Cldn’t get dental: cost"
+ACW_MADVDFRF ="Difficulty get referrals thru Mcare Adv"
+ACW_MADVNOEM ="Mcare Adv refused to pay emergency care"
+ACW_PLACEPAR ="Ever go to particular place for med care"
+ACW_PLACEKND ="Kind of place usually go for med care"
+ACW_PLACEMCP ="Dr/clinic associated with MCP"
+ACW_USUALDOC ="Have particular Dr usually see"
+ACW_PVSPEC="Doctor specialty: Usual source of care"
+ACW_GETUSHOW ="How usually get to Dr office"
+ACW_D_GETUS ="Time it usually takes to get Dr office"
+ACW_ACCOMPUS ="Does someone accompany to Dr office"
+ACW_ACCWRITE ="Someone accompanies to take notes"
+ACW_ACCEXPDR ="Someone accompanies explain things to dr"
+ACW_ACCEXPSP ="Someone accompanies explain instructions"
+ACW_ACCASKQS ="Someone accompanies to ask questions"
+ACW_ACCTRANS ="Someone accompanies to translate"
+ACW_ACCAPPTS ="Someone accompanies to schedule appt"
+ACW_ACCMORAL ="Someone accompanies for moral support"
+ACW_ACCDRIVE ="Someone accompanies for transportation"
+ACW_ACCHELP ="Someone accompanies to assist with ADLs"
+ACW_PROVYR ="SP seen provider in last 12 months"
+ACW_DOCHLTH ="How often provider asks about SP's life"
+ACW_DOCEASY ="Provider explains things clearly"
+ACW_HLTHIDEA ="Provider asks to improve health"
+ACW_STHLTHGL ="Provider talked to SP about health goals"
+ACW_MTHLTHGL ="Care helped reach goals"
+ACW_USCKEVRY ="Dr checks everything when examining"
+ACW_USUNWRNG ="Dr completely understands what's wrong"
+ACW_ORDRTEST ="Provider ordered tests"
+ACW_TSTFLWUP ="Provider followed up about tests"
+ACW_RQSTRSLT ="How often SP requested test results"
+ACW_RSLTEASY ="How often test results presented clearly"
+ACW_HLTHSRVC ="SP needed home services"
+ACW_GIVEINST ="Provider gave health care instructions"
+ACW_ANYRX ="SP took prescription medcines"
+ACW_TALKRX ="Provider told SP how to take meds"
+ACW_BADRCTN ="Provider talked about bad reactions"
+ACW_CARESPCL ="See specialist outside PCP office"
+ACW_DRINFRMD ="How often PCP seem informed of spec care"
+ACW_REMINDDR ="How often remind PCP about spec care"
+ACW_STPMSPCL ="Specialist outside pcp prescribe Rx"
+ACW_TALKPMS ="How often PCP talk abt spec prescr'd Rx"
+ACW_KNOWSPCL ="Specialist knows enough of med history"
+ACW_DRREPEAT ="How often SP repeats info to specialist"
+ACW_KNOWRSLT ="How often specialists know SP test rslts"
+ACW_HOSADMIT ="SP admitted to hospital overnight"
+ACW_PRVNOMED ="One provider knew all SP's medicines"
+ACW_NOTAVAIL ="Med records not available for Dr appt"
+ACW_EMEDREC ="Does PCP enter health info in computer"
+ACW_NUSNOTSK ="No USC: Seldom/never sick"
+ACW_NUSMOVIN ="No USC: Recent move to area"
+ACW_NUSAVAIL ="No USC: USC no longer available"
+ACW_NUSDIFFP ="No USC: Like different place"
+ACW_NUSTOOFR ="No USC: Places are too far away"
+ACW_NUSTOOEX ="No USC: Cost too expensive"
+KNW_KNOWMC ="How easy is Mcare to understand"
+KNW_KCARKNOW ="How much they know about Mcare"
+KNW_COMPDESK="Own/use a desktop/laptop computer"
+KNW_COMPPHON ="Own/use a smartphone"
+KNW_COMPTAB="Own/use a tablet/portable computer"
+KNW_INTERNET="Has access to Internet"
+KNW_USENET ="Ever use Internet to get info"
+KNW_SOMELNET ="Has someone to get info from Internet"
+KNW_OFTNNET ="How often access Internet seeking info"
+KNW_KVSTSITE ="Has visited website for Medicare info"
+KNW_KCOMINTE ="Past yr, used Internet for health info"
+KNW_KCOMPRES ="Past yr, used Internet to fill Rx"
+KNW_KCOMAPPO ="Past yr, used Internet to schedule appt"
+KNW_KCOMCOMM ="Past yr, used Internet communicate w HCP"
+KNW_KCHIHELP ="Who makes health insurance decisions"
+TMW_TELMED="Usual provider offers telehealth"
+TMW_TELMEDT1="Provider offers telephone or video appts"
+TMW_TELMEDDU="Provider offered tele appt (past yr)"
+TMW_TELMEDT3="Offered appt was telephone or video"
+TMW_TELMEDUS="SP had telehealth appt (past yr)"
+TMW_TELMEDT4="Appt was telephone or video"
+PUFWWGT = "PUF Winter Ever Enrolled Full Sample Wt"
+PUFW001 = "PUF Winter Ever Enrolled rep wt 1"
+PUFW002 = "PUF Winter Ever Enrolled rep wt 2"
+PUFW003 = "PUF Winter Ever Enrolled rep wt 3"
+PUFW004 = "PUF Winter Ever Enrolled rep wt 4"
+PUFW005 = "PUF Winter Ever Enrolled rep wt 5"
+PUFW006 = "PUF Winter Ever Enrolled rep wt 6"
+PUFW007 = "PUF Winter Ever Enrolled rep wt 7"
+PUFW008 = "PUF Winter Ever Enrolled rep wt 8"
+PUFW009 = "PUF Winter Ever Enrolled rep wt 9"
+PUFW010 = "PUF Winter Ever Enrolled rep wt 10"
+PUFW011 = "PUF Winter Ever Enrolled rep wt 11"
+PUFW012 = "PUF Winter Ever Enrolled rep wt 12"
+PUFW013 = "PUF Winter Ever Enrolled rep wt 13"
+PUFW014 = "PUF Winter Ever Enrolled rep wt 14"
+PUFW015 = "PUF Winter Ever Enrolled rep wt 15"
+PUFW016 = "PUF Winter Ever Enrolled rep wt 16"
+PUFW017 = "PUF Winter Ever Enrolled rep wt 17"
+PUFW018 = "PUF Winter Ever Enrolled rep wt 18"
+PUFW019 = "PUF Winter Ever Enrolled rep wt 19"
+PUFW020 = "PUF Winter Ever Enrolled rep wt 20"
+PUFW021 = "PUF Winter Ever Enrolled rep wt 21"
+PUFW022 = "PUF Winter Ever Enrolled rep wt 22"
+PUFW023 = "PUF Winter Ever Enrolled rep wt 23"
+PUFW024 = "PUF Winter Ever Enrolled rep wt 24"
+PUFW025 = "PUF Winter Ever Enrolled rep wt 25"
+PUFW026 = "PUF Winter Ever Enrolled rep wt 26"
+PUFW027 = "PUF Winter Ever Enrolled rep wt 27"
+PUFW028 = "PUF Winter Ever Enrolled rep wt 28"
+PUFW029 = "PUF Winter Ever Enrolled rep wt 29"
+PUFW030 = "PUF Winter Ever Enrolled rep wt 30"
+PUFW031 = "PUF Winter Ever Enrolled rep wt 31"
+PUFW032 = "PUF Winter Ever Enrolled rep wt 32"
+PUFW033 = "PUF Winter Ever Enrolled rep wt 33"
+PUFW034 = "PUF Winter Ever Enrolled rep wt 34"
+PUFW035 = "PUF Winter Ever Enrolled rep wt 35"
+PUFW036 = "PUF Winter Ever Enrolled rep wt 36"
+PUFW037 = "PUF Winter Ever Enrolled rep wt 37"
+PUFW038 = "PUF Winter Ever Enrolled rep wt 38"
+PUFW039 = "PUF Winter Ever Enrolled rep wt 39"
+PUFW040 = "PUF Winter Ever Enrolled rep wt 40"
+PUFW041 = "PUF Winter Ever Enrolled rep wt 41"
+PUFW042 = "PUF Winter Ever Enrolled rep wt 42"
+PUFW043 = "PUF Winter Ever Enrolled rep wt 43"
+PUFW044 = "PUF Winter Ever Enrolled rep wt 44"
+PUFW045 = "PUF Winter Ever Enrolled rep wt 45"
+PUFW046 = "PUF Winter Ever Enrolled rep wt 46"
+PUFW047 = "PUF Winter Ever Enrolled rep wt 47"
+PUFW048 = "PUF Winter Ever Enrolled rep wt 48"
+PUFW049 = "PUF Winter Ever Enrolled rep wt 49"
+PUFW050 = "PUF Winter Ever Enrolled rep wt 50"
+PUFW051 = "PUF Winter Ever Enrolled rep wt 51"
+PUFW052 = "PUF Winter Ever Enrolled rep wt 52"
+PUFW053 = "PUF Winter Ever Enrolled rep wt 53"
+PUFW054 = "PUF Winter Ever Enrolled rep wt 54"
+PUFW055 = "PUF Winter Ever Enrolled rep wt 55"
+PUFW056 = "PUF Winter Ever Enrolled rep wt 56"
+PUFW057 = "PUF Winter Ever Enrolled rep wt 57"
+PUFW058 = "PUF Winter Ever Enrolled rep wt 58"
+PUFW059 = "PUF Winter Ever Enrolled rep wt 59"
+PUFW060 = "PUF Winter Ever Enrolled rep wt 60"
+PUFW061 = "PUF Winter Ever Enrolled rep wt 61"
+PUFW062 = "PUF Winter Ever Enrolled rep wt 62"
+PUFW063 = "PUF Winter Ever Enrolled rep wt 63"
+PUFW064 = "PUF Winter Ever Enrolled rep wt 64"
+PUFW065 = "PUF Winter Ever Enrolled rep wt 65"
+PUFW066 = "PUF Winter Ever Enrolled rep wt 66"
+PUFW067 = "PUF Winter Ever Enrolled rep wt 67"
+PUFW068 = "PUF Winter Ever Enrolled rep wt 68"
+PUFW069 = "PUF Winter Ever Enrolled rep wt 69"
+PUFW070 = "PUF Winter Ever Enrolled rep wt 70"
+PUFW071 = "PUF Winter Ever Enrolled rep wt 71"
+PUFW072 = "PUF Winter Ever Enrolled rep wt 72"
+PUFW073 = "PUF Winter Ever Enrolled rep wt 73"
+PUFW074 = "PUF Winter Ever Enrolled rep wt 74"
+PUFW075 = "PUF Winter Ever Enrolled rep wt 75"
+PUFW076 = "PUF Winter Ever Enrolled rep wt 76"
+PUFW077 = "PUF Winter Ever Enrolled rep wt 77"
+PUFW078 = "PUF Winter Ever Enrolled rep wt 78"
+PUFW079 = "PUF Winter Ever Enrolled rep wt 79"
+PUFW080 = "PUF Winter Ever Enrolled rep wt 80"
+PUFW081 = "PUF Winter Ever Enrolled rep wt 81"
+PUFW082 = "PUF Winter Ever Enrolled rep wt 82"
+PUFW083 = "PUF Winter Ever Enrolled rep wt 83"
+PUFW084 = "PUF Winter Ever Enrolled rep wt 84"
+PUFW085 = "PUF Winter Ever Enrolled rep wt 85"
+PUFW086 = "PUF Winter Ever Enrolled rep wt 86"
+PUFW087 = "PUF Winter Ever Enrolled rep wt 87"
+PUFW088 = "PUF Winter Ever Enrolled rep wt 88"
+PUFW089 = "PUF Winter Ever Enrolled rep wt 89"
+PUFW090 = "PUF Winter Ever Enrolled rep wt 90"
+PUFW091 = "PUF Winter Ever Enrolled rep wt 91"
+PUFW092 = "PUF Winter Ever Enrolled rep wt 92"
+PUFW093 = "PUF Winter Ever Enrolled rep wt 93"
+PUFW094 = "PUF Winter Ever Enrolled rep wt 94"
+PUFW095 = "PUF Winter Ever Enrolled rep wt 95"
+PUFW096 = "PUF Winter Ever Enrolled rep wt 96"
+PUFW097 = "PUF Winter Ever Enrolled rep wt 97"
+PUFW098 = "PUF Winter Ever Enrolled rep wt 98"
+PUFW099 = "PUF Winter Ever Enrolled rep wt 99"
+PUFW100 = "PUF Winter Ever Enrolled rep wt 100"
+;
+
+RUN;
+
+
+
+
+
+/***********************************
+		C3. Summer
+************************************/
+DATA puflib.SFPUF2022_3_SUMMER;
+SET puf_summer;
+
+FORMAT
+PUF_ID PUFFMT.
+SURVEYYR	SVYRFMT.
+VERSION	VERSFMT.
+CVS_CVDBOOST		YESFMT.
+CVS_VCNUMS		VACNUMF.
+FIS_FOODLAST	FMTFDLAS.
+FIS_AFFDMEAL	FMTFDLAS.
+FIS_SKIPMEAL	YESFMT.
+FIS_EATLESS	YESFMT.
+RXS_PDEASY	EASYDIFF.
+RXS_PDKNOW	KN2F.
+RXS_PDSATSFP	SAT2FMT.
+RXS_PDCONFIP	PDCONFIP.
+RXS_RXUSEPLN	YESFMT.
+RXS_RXCOSTLY	RXCOSTLF.
+RXS_RXAMNTLY	RXAMNTLF.
+RXS_PDNOCVG	YESFMT.
+RXS_RXCHGMED	YESFMT.
+RXS_RXSWTCH	YESFMT.
+RXS_RXPARTIC	YESFMT.
+RXS_PDRXRATP	SAT2FMT.
+RXS_MCAMTPAY	SATFFMT.
+RXS_MCDRGLST	SATFFMT.
+RXS_MCFNDPCY	SATFFMT.
+RXS_MCRECPLN	YES2FMT.
+RXS_GENERRX	GENERRP.
+RXS_MAILRX	FREQFMT.
+RXS_DOSESRX	FREQFMT.
+RXS_SKIPRX	FREQFMT.
+RXS_DELAYRX	FREQFMT.
+RXS_SAMPLERX	FREQFMT.
+RXS_COMPARRX	FREQFMT.
+RXS_NOFILLRX	FREQFMT.
+RXS_SPENTLRX	FREQFMT.
+RXS_CHAINRX	FREQFMT.
+RXS_STOPRX	FREQFMT.
+RXS_CREDRX	FREQFMT.
+RXS_NOINSRX	FREQFMT.
+PUFSWGT--PUFS100 CONTIN.
+;
+
+LABEL
+PUF_ID="Unique PUF Identification Number"
+SURVEYYR ="Survey year"
+VERSION ="Version number"
+CVS_CVDBOOST="Got CV19 booster (2022-23)"
+CVS_VCNUMS="Number CV19 vaccine doses by Summer 2023"
+
+FIS_FOODLAST ="Food doesn’t last, no money to get more"
+FIS_AFFDMEAL ="Can't afford to eat balanced meals"
+FIS_SKIPMEAL ="Adults skip meals due to cost"
+FIS_EATLESS ="Eat less bc not enough money"
+RXS_PDEASY ="Mcare Rx drug benefit easy understand"
+RXS_PDKNOW ="Mcare Rx drug benefit knowledge"
+RXS_PDSATSFP ="Mcare Rx plan: satisfied w info"
+RXS_PDCONFIP ="Confident level of coverage meets needs"
+RXS_RXUSEPLN ="Used Mcare Rx drug plan past yr"
+RXS_RXCOSTLY ="Compared to last year, premium cost"
+RXS_RXAMNTLY ="Compared to last year, Rx cost"
+RXS_PDNOCVG ="Rx that are not covered"
+RXS_RXCHGMED ="Change to generic for coverage"
+RXS_RXSWTCH ="Change to different drug for coverage"
+RXS_RXPARTIC ="Current pharmacy participation"
+RXS_PDRXRATP ="Level of satisfaction with Rx coverage"
+RXS_MCAMTPAY ="Satisfaction: amt paid for Rx drugs"
+RXS_MCDRGLST ="Satisfaction:Rx plan list/drugs covered"
+RXS_MCFNDPCY ="Satisfaction: find pharmacy accept Rx"
+RXS_MCRECPLN ="Recommend Rx plan to other people"
+RXS_GENERRX ="How often ask for generic form of Rx"
+RXS_MAILRX ="How often purchased Rx via mail/internet"
+RXS_DOSESRX ="How often took smaller dose of Rx"
+RXS_SKIPRX ="How often skipped doses to make Rx last"
+RXS_DELAYRX ="How often delayed Rx because of cost"
+RXS_SAMPLERX ="How often asked for Rx samples from Dr"
+RXS_COMPARRX ="How often compared prices for best price"
+RXS_NOFILLRX ="How often not get Rx because of cost"
+RXS_SPENTLRX ="How often spent less $ to save for Rx"
+RXS_CHAINRX ="How often purchased Rx through big chain"
+RXS_STOPRX ="How often talk to Dr about stop Rx"
+RXS_CREDRX ="How often pay with credit card for Rx"
+RXS_NOINSRX ="How often purchase discounted Rx w/o ins"
+PUFSWGT = "PUF Summer Ever Enrolled Full Sample Wt"
+PUFS001 = "PUF Summer Ever Enrolled rep wt 1"
+PUFS002 = "PUF Summer Ever Enrolled rep wt 2"
+PUFS003 = "PUF Summer Ever Enrolled rep wt 3"
+PUFS004 = "PUF Summer Ever Enrolled rep wt 4"
+PUFS005 = "PUF Summer Ever Enrolled rep wt 5"
+PUFS006 = "PUF Summer Ever Enrolled rep wt 6"
+PUFS007 = "PUF Summer Ever Enrolled rep wt 7"
+PUFS008 = "PUF Summer Ever Enrolled rep wt 8"
+PUFS009 = "PUF Summer Ever Enrolled rep wt 9"
+PUFS010 = "PUF Summer Ever Enrolled rep wt 10"
+PUFS011 = "PUF Summer Ever Enrolled rep wt 11"
+PUFS012 = "PUF Summer Ever Enrolled rep wt 12"
+PUFS013 = "PUF Summer Ever Enrolled rep wt 13"
+PUFS014 = "PUF Summer Ever Enrolled rep wt 14"
+PUFS015 = "PUF Summer Ever Enrolled rep wt 15"
+PUFS016 = "PUF Summer Ever Enrolled rep wt 16"
+PUFS017 = "PUF Summer Ever Enrolled rep wt 17"
+PUFS018 = "PUF Summer Ever Enrolled rep wt 18"
+PUFS019 = "PUF Summer Ever Enrolled rep wt 19"
+PUFS020 = "PUF Summer Ever Enrolled rep wt 20"
+PUFS021 = "PUF Summer Ever Enrolled rep wt 21"
+PUFS022 = "PUF Summer Ever Enrolled rep wt 22"
+PUFS023 = "PUF Summer Ever Enrolled rep wt 23"
+PUFS024 = "PUF Summer Ever Enrolled rep wt 24"
+PUFS025 = "PUF Summer Ever Enrolled rep wt 25"
+PUFS026 = "PUF Summer Ever Enrolled rep wt 26"
+PUFS027 = "PUF Summer Ever Enrolled rep wt 27"
+PUFS028 = "PUF Summer Ever Enrolled rep wt 28"
+PUFS029 = "PUF Summer Ever Enrolled rep wt 29"
+PUFS030 = "PUF Summer Ever Enrolled rep wt 30"
+PUFS031 = "PUF Summer Ever Enrolled rep wt 31"
+PUFS032 = "PUF Summer Ever Enrolled rep wt 32"
+PUFS033 = "PUF Summer Ever Enrolled rep wt 33"
+PUFS034 = "PUF Summer Ever Enrolled rep wt 34"
+PUFS035 = "PUF Summer Ever Enrolled rep wt 35"
+PUFS036 = "PUF Summer Ever Enrolled rep wt 36"
+PUFS037 = "PUF Summer Ever Enrolled rep wt 37"
+PUFS038 = "PUF Summer Ever Enrolled rep wt 38"
+PUFS039 = "PUF Summer Ever Enrolled rep wt 39"
+PUFS040 = "PUF Summer Ever Enrolled rep wt 40"
+PUFS041 = "PUF Summer Ever Enrolled rep wt 41"
+PUFS042 = "PUF Summer Ever Enrolled rep wt 42"
+PUFS043 = "PUF Summer Ever Enrolled rep wt 43"
+PUFS044 = "PUF Summer Ever Enrolled rep wt 44"
+PUFS045 = "PUF Summer Ever Enrolled rep wt 45"
+PUFS046 = "PUF Summer Ever Enrolled rep wt 46"
+PUFS047 = "PUF Summer Ever Enrolled rep wt 47"
+PUFS048 = "PUF Summer Ever Enrolled rep wt 48"
+PUFS049 = "PUF Summer Ever Enrolled rep wt 49"
+PUFS050 = "PUF Summer Ever Enrolled rep wt 50"
+PUFS051 = "PUF Summer Ever Enrolled rep wt 51"
+PUFS052 = "PUF Summer Ever Enrolled rep wt 52"
+PUFS053 = "PUF Summer Ever Enrolled rep wt 53"
+PUFS054 = "PUF Summer Ever Enrolled rep wt 54"
+PUFS055 = "PUF Summer Ever Enrolled rep wt 55"
+PUFS056 = "PUF Summer Ever Enrolled rep wt 56"
+PUFS057 = "PUF Summer Ever Enrolled rep wt 57"
+PUFS058 = "PUF Summer Ever Enrolled rep wt 58"
+PUFS059 = "PUF Summer Ever Enrolled rep wt 59"
+PUFS060 = "PUF Summer Ever Enrolled rep wt 60"
+PUFS061 = "PUF Summer Ever Enrolled rep wt 61"
+PUFS062 = "PUF Summer Ever Enrolled rep wt 62"
+PUFS063 = "PUF Summer Ever Enrolled rep wt 63"
+PUFS064 = "PUF Summer Ever Enrolled rep wt 64"
+PUFS065 = "PUF Summer Ever Enrolled rep wt 65"
+PUFS066 = "PUF Summer Ever Enrolled rep wt 66"
+PUFS067 = "PUF Summer Ever Enrolled rep wt 67"
+PUFS068 = "PUF Summer Ever Enrolled rep wt 68"
+PUFS069 = "PUF Summer Ever Enrolled rep wt 69"
+PUFS070 = "PUF Summer Ever Enrolled rep wt 70"
+PUFS071 = "PUF Summer Ever Enrolled rep wt 71"
+PUFS072 = "PUF Summer Ever Enrolled rep wt 72"
+PUFS073 = "PUF Summer Ever Enrolled rep wt 73"
+PUFS074 = "PUF Summer Ever Enrolled rep wt 74"
+PUFS075 = "PUF Summer Ever Enrolled rep wt 75"
+PUFS076 = "PUF Summer Ever Enrolled rep wt 76"
+PUFS077 = "PUF Summer Ever Enrolled rep wt 77"
+PUFS078 = "PUF Summer Ever Enrolled rep wt 78"
+PUFS079 = "PUF Summer Ever Enrolled rep wt 79"
+PUFS080 = "PUF Summer Ever Enrolled rep wt 80"
+PUFS081 = "PUF Summer Ever Enrolled rep wt 81"
+PUFS082 = "PUF Summer Ever Enrolled rep wt 82"
+PUFS083 = "PUF Summer Ever Enrolled rep wt 83"
+PUFS084 = "PUF Summer Ever Enrolled rep wt 84"
+PUFS085 = "PUF Summer Ever Enrolled rep wt 85"
+PUFS086 = "PUF Summer Ever Enrolled rep wt 86"
+PUFS087 = "PUF Summer Ever Enrolled rep wt 87"
+PUFS088 = "PUF Summer Ever Enrolled rep wt 88"
+PUFS089 = "PUF Summer Ever Enrolled rep wt 89"
+PUFS090 = "PUF Summer Ever Enrolled rep wt 90"
+PUFS091 = "PUF Summer Ever Enrolled rep wt 91"
+PUFS092 = "PUF Summer Ever Enrolled rep wt 92"
+PUFS093 = "PUF Summer Ever Enrolled rep wt 93"
+PUFS094 = "PUF Summer Ever Enrolled rep wt 94"
+PUFS095 = "PUF Summer Ever Enrolled rep wt 95"
+PUFS096 = "PUF Summer Ever Enrolled rep wt 96"
+PUFS097 = "PUF Summer Ever Enrolled rep wt 97"
+PUFS098 = "PUF Summer Ever Enrolled rep wt 98"
+PUFS099 = "PUF Summer Ever Enrolled rep wt 99"
+PUFS100 = "PUF Summer Ever Enrolled rep wt 100"
+;
+
+RUN;
+
+

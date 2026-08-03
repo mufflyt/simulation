@@ -24,7 +24,10 @@ run_supply_microsimulation(
   allow_fixed_parameters = FALSE,
   ci = 0.95,
   seed = 20260801L,
-  verbose = TRUE
+  verbose = TRUE,
+  p_active_coef = NULL,
+  p_active_scenario_id = NULL,
+  thin_by_p_active = FALSE
 )
 }
 \arguments{

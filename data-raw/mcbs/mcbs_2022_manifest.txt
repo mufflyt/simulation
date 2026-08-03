@@ -1,0 +1,17 @@
+MCBS 2022 Survey File PUF — Women 65+ Sub-file
+Generated: 2026-08-03 22:37:21.979068
+Source: SFPUF2022_Data.zip (CMS data.cms.gov)
+Raw rows (all respondents): 12477
+Women 65+ rows: 6879
+
+Key urinary incontinence variables:
+  HLT_LOSTURIN  — lost urine (UI)
+  HLT_TALKURIN  — talked to doctor about UI
+  HLT_REASURIN  — reason for not talking to doctor
+  HLT_SURGURIN  — had UI surgery
+
+Chronic conditions:
+  HLT_OCSTROKE, HLT_OCCANCER, HLT_OCDEPRSS, HLT_OCOSTEOP
+
+Survey weight: PUFFWGT
+DUA required: NO (Public Use File)

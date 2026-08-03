@@ -20,7 +20,9 @@ simulate_provider_career_once(
   late_career_fte_factor = 1,
   late_career_fte_onset_age = NA_real_,
   entrant_female_share = 0.82,
-  placement_shares = NULL
+  placement_shares = NULL,
+  p_active_coef = NULL,
+  p_active_scenario_id = NULL
 )
 }
 \arguments{
