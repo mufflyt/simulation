@@ -180,6 +180,9 @@ example_capacity_survey <- function() {
 #'   built from the observed certification series.
 #' @param allow_analogy Permit inputs derived by analogy from another specialty
 #'   (currently the delegation matrix). Declared in the run metadata either way.
+#' @param access_isochrones,access_supply Optional provider isochrone polygons
+#'   (`sf`) and a `provider_id`/`supply` map. When both are supplied the run also
+#'   emits a real geographic-access summary (`result$access`); NULL by default.
 #' @param output_dir If non-NULL, write provenance-tagged artifacts here.
 #' @param seed RNG seed.
 #' @param verbose Logical.
@@ -203,6 +206,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           calibration = NULL,
                                           parameter_spec = NULL,
                                           allow_analogy = TRUE,
+                                          access_isochrones = NULL,
+                                          access_supply = NULL,
                                           output_dir = NULL,
                                           seed = 20260801L,
                                           verbose = TRUE) {
@@ -444,6 +449,19 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       seed = seed
     )
   )
+
+  # Optional: emit a real geographic-access surface alongside supply and demand.
+  # Requires provider isochrone polygons (external artifact) + a provider->supply
+  # map; NULL by default so existing runs are unchanged.
+  if (!is.null(access_isochrones) && !is.null(access_supply)) {
+    result$access <- tryCatch(
+      workforce_access_summary(access_isochrones, access_supply, mode = mode),
+      error = function(e) {
+        .msg_warn(sprintf("access summary skipped: %s", conditionMessage(e)))
+        NULL
+      }
+    )
+  }
 
   if (!is.null(output_dir)) {
     artifact_path <- file.path(output_dir, sprintf("workforce_microsim_%s.rds", run_id))

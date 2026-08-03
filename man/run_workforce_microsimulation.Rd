@@ -22,6 +22,8 @@ run_workforce_microsimulation(
   calibration = NULL,
   parameter_spec = NULL,
   allow_analogy = TRUE,
+  access_isochrones = NULL,
+  access_supply = NULL,
   output_dir = NULL,
   seed = 20260801L,
   verbose = TRUE
@@ -74,6 +76,10 @@ built from the observed certification series.}
 
 \item{allow_analogy}{Permit inputs derived by analogy from another specialty
 (currently the delegation matrix). Declared in the run metadata either way.}
+
+\item{access_isochrones, access_supply}{Optional provider isochrone polygons
+(\code{sf}) and a \code{provider_id}/\code{supply} map. When both are supplied the run also
+emits a real geographic-access summary (\code{result$access}); NULL by default.}
 
 \item{output_dir}{If non-NULL, write provenance-tagged artifacts here.}
 
