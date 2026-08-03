@@ -323,6 +323,16 @@ DMDM_DEMAND_CONTRACT_VERSION <- "0.1.0"
 #' @param base_year Calendar year the index is normalized to (= 100). Default 2025.
 #' @param calibration_status Provenance guard. Keep "placeholder_uncalibrated"
 #'   until the onset/remission hazards are fitted (see [fit_dmdm_transitions()]).
+#'   Ignored (and derived from `transitions`) when `transitions` carries its own
+#'   `calibration_status`.
+#' @param transitions Optional transition object actually used to produce
+#'   `trajectory` (e.g. [dmdm_transitions_with_pop_literature()]). When supplied,
+#'   its `calibration_status` becomes the object-level status and its per-condition
+#'   `provenance` is stamped per tier in a `tier_calibration_status` column, so a
+#'   downstream consumer can gate on the provenance of the specific tier it reads
+#'   (e.g. `dmdm_pop` = "derived_by_analogy" while `dmdm_ui`/`dmdm_ai` stay
+#'   placeholder). The any-PFD `tier3` is stamped with the *weakest* provenance
+#'   across the conditions that compose it.
 #' @param population_scope Population denominator label. Default "us_adult_women".
 #' @param verbose Log progress. Default TRUE.
 #' @return (invisibly) a list with `csv_path`, `manifest_path`, and the tidy `data`.
@@ -332,6 +342,7 @@ export_dmdm_demand_contract <- function(trajectory,
                                         model_version = DMDM_DEMAND_CONTRACT_VERSION,
                                         base_year = 2025L,
                                         calibration_status = "placeholder_uncalibrated",
+                                        transitions = NULL,
                                         population_scope = "us_adult_women",
                                         verbose = TRUE) {
   need <- c("year", "population", "prev_ui", "prev_pop", "prev_ai")
@@ -342,6 +353,30 @@ export_dmdm_demand_contract <- function(trajectory,
   if (!dir.exists(output_directory)) dir.create(output_directory, recursive = TRUE)
   trajectory <- trajectory[order(trajectory$year), , drop = FALSE]
 
+  # Provenance: object-level status + per-condition status from `transitions`.
+  # A tier is only as trustworthy as its weakest input, so tier3 (any-PFD) takes
+  # the weakest of the three conditions' statuses.
+  status_rank <- c(placeholder_uncalibrated = 1L, uncalibrated_illustrative = 1L,
+                   derived_by_analogy = 2L, fitted = 3L, calibrated = 4L)
+  weakest <- function(s) {
+    r <- status_rank[s]; r[is.na(r)] <- 0L
+    s[which.min(r)]
+  }
+  prov <- if (!is.null(transitions) && !is.null(transitions$provenance))
+    transitions$provenance else NULL
+  if (!is.null(transitions) && !is.null(transitions$calibration_status))
+    calibration_status <- transitions$calibration_status
+  or_default <- function(x, d) if (is.null(x)) d else x
+  tier_status <- function(tier) {
+    if (is.null(prov)) return(calibration_status)
+    switch(tier,
+           dmdm_ui  = or_default(prov$ui,  calibration_status),
+           dmdm_pop = or_default(prov$pop, calibration_status),
+           dmdm_ai  = or_default(prov$ai,  calibration_status),
+           tier3_prevalent_pfd = weakest(c(prov$ui, prov$pop, prov$ai)),
+           calibration_status)
+  }
+
   any_pfd <- 1 - (1 - trajectory$prev_ui) * (1 - trajectory$prev_pop) * (1 - trajectory$prev_ai)
   make_tier <- function(tier, prev_vec) {
     base_row <- which(trajectory$year == base_year)
@@ -349,23 +384,24 @@ export_dmdm_demand_contract <- function(trajectory,
     idx <- if (!is.na(base_val) && base_val > 0) 100 * prev_vec / base_val
            else rep(NA_real_, length(prev_vec))
     data.frame(
-      model                = "DMDM",
-      model_version        = model_version,
-      calibration_status   = calibration_status,
-      geography            = "national",
-      population_scope     = population_scope,
-      denominator_tier     = tier,
-      calendar_year        = trajectory$year,
-      prevalence           = prev_vec,
-      prevalence_lo        = NA_real_,
-      prevalence_hi        = NA_real_,
-      national_cases       = trajectory$population * prev_vec,
-      national_cases_lo    = NA_real_,
-      national_cases_hi    = NA_real_,
-      denominator_index    = idx,
-      denominator_index_lo = NA_real_,
-      denominator_index_hi = NA_real_,
-      stringsAsFactors     = FALSE
+      model                  = "DMDM",
+      model_version          = model_version,
+      calibration_status     = calibration_status,
+      tier_calibration_status = tier_status(tier),
+      geography              = "national",
+      population_scope       = population_scope,
+      denominator_tier       = tier,
+      calendar_year          = trajectory$year,
+      prevalence             = prev_vec,
+      prevalence_lo          = NA_real_,
+      prevalence_hi          = NA_real_,
+      national_cases         = trajectory$population * prev_vec,
+      national_cases_lo      = NA_real_,
+      national_cases_hi      = NA_real_,
+      denominator_index      = idx,
+      denominator_index_lo   = NA_real_,
+      denominator_index_hi   = NA_real_,
+      stringsAsFactors       = FALSE
     )
   }
 
@@ -391,6 +427,9 @@ export_dmdm_demand_contract <- function(trajectory,
     base_year            = base_year,
     calendar_years       = range(tidy$calendar_year),
     tiers                = sort(unique(tidy$denominator_tier)),
+    tier_calibration_status = as.list(stats::setNames(
+      tidy$tier_calibration_status[!duplicated(tidy$denominator_tier)],
+      tidy$denominator_tier[!duplicated(tidy$denominator_tier)])),
     n_rows               = nrow(tidy),
     csv_md5              = csv_hash,
     source_model_file    = "R/30-demand_dynamic_open.R",
@@ -398,8 +437,10 @@ export_dmdm_demand_contract <- function(trajectory,
     downstream_consumers = c("cliff", "twostep", "isochrones"),
     notes = paste("Dynamic multistate prevalence (onset/remission/death over the",
                   "obstetric life course). tier3 any-PFD uses an independence",
-                  "approximation across conditions. Coefficients are placeholders;",
-                  "downstream must gate on calibration_status.")
+                  "approximation across conditions. When produced from the",
+                  "literature POP transitions, dmdm_pop is derived_by_analogy",
+                  "while dmdm_ui/dmdm_ai remain placeholders; downstream must gate",
+                  "on tier_calibration_status for the tier it reads.")
   )
   manifest_path <- file.path(output_directory,
                              sprintf("dmdm_demand_contract_v%s_manifest.json", model_version))

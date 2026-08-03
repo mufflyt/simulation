@@ -92,3 +92,30 @@ test_that("export_dmdm_demand_contract emits tier3 + per-condition tiers", {
   expect_true(all(t3$prevalence >= ui$prevalence))            # any-PFD is the union
   expect_equal(t3$denominator_index[t3$calendar_year == 2025], 100)
 })
+
+test_that("export_dmdm_demand_contract stamps per-tier provenance from `transitions`", {
+  tr <- data.frame(year = 2025:2030, population = seq(45e6, 48e6, length.out = 6),
+                   prev_ui = seq(.20, .26, length.out = 6),
+                   prev_pop = seq(.08, .14, length.out = 6),
+                   prev_ai = seq(.05, .07, length.out = 6))
+  out <- export_dmdm_demand_contract(
+    tr, output_directory = tempfile("dmp_"), verbose = FALSE,
+    transitions = dmdm_transitions_with_pop_literature())
+  dc <- out$data
+  expect_true("tier_calibration_status" %in% names(dc))
+  # object-level status comes from the transitions object
+  expect_true(all(dc$calibration_status == "derived_by_analogy"))
+  status_of <- function(tier) unique(dc$tier_calibration_status[dc$denominator_tier == tier])
+  expect_identical(status_of("dmdm_pop"), "derived_by_analogy")     # the POP row is literature-derived
+  expect_identical(status_of("dmdm_ui"), "placeholder_uncalibrated")
+  expect_identical(status_of("dmdm_ai"), "placeholder_uncalibrated")
+  # any-PFD is only as calibrated as its weakest input condition
+  expect_identical(status_of("tier3_prevalent_pfd"), "placeholder_uncalibrated")
+})
+
+test_that("without `transitions`, the per-tier status mirrors the object status (back-compat)", {
+  tr <- data.frame(year = 2025:2027, population = 45e6,
+                   prev_ui = .2, prev_pop = .1, prev_ai = .05)
+  out <- export_dmdm_demand_contract(tr, output_directory = tempfile("dmn_"), verbose = FALSE)
+  expect_true(all(out$data$tier_calibration_status == "placeholder_uncalibrated"))
+})
