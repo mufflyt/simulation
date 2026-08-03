@@ -7,8 +7,8 @@
 lifecourse_demand_estimand(
   demand_summary,
   measure = c("service_units", "care_seeking"),
-  estimand = "D4_lifecourse",
-  label = "Life-course demand (vaginal-delivery driven)"
+  estimand = "D5_lifecourse_service",
+  label = "Life-course service demand (care-pathway, vaginal-delivery driven)"
 )
 }
 \arguments{
@@ -26,7 +26,15 @@ Tibble with \code{year}, \code{estimand}, \code{label}, \code{demand_cases}.
 Reshapes a life-course demand summary into the long demand-estimand format used
 by \code{\link[=compute_demand_denominators]{compute_demand_denominators()}}, \code{\link[=compute_growth_adequacy]{compute_growth_adequacy()}} and
 \code{\link[=assess_demand_concordance]{assess_demand_concordance()}}, so the childbirth-driven pathway can be checked
-for concordance against the aging-population denominators D1/D2/D3 as an
-independent fourth estimand (its generator differs, so it is not a proportional
-rescaling — exactly the real-concordance check the concordance framework wants).
+for concordance against the other estimands. Its generator differs, so it is
+not a proportional rescaling — exactly the real-concordance check the framework
+wants.
+}
+\details{
+Estimand id note: this is \code{D5}, the life-course \emph{service} demand (downstream of
+the care pathway). It is distinct from \code{D4} in
+\code{\link[=compute_demand_denominators_lifecourse]{compute_demand_denominators_lifecourse()}} (R/13b), which is an obstetric-
+exposure-weighted prevalent-case \emph{denominator}. D1–D3 are the published
+denominators (R/13); D4 is the obstetric-weighted denominator; D5 is the
+dynamic service-demand series.
 }

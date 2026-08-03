@@ -231,18 +231,20 @@ which it currently is.
 | `22-legacy_loader.R` | ordered, collision-reporting loader for `inst/legacy/` |
 | `23-cms_rvu.R` | CMS work RVUs, CPT basket, re-derivation helpers |
 | `24-ssot.R` | every `mufflyaccess` contract hookup, in one place |
-| `25-roster.R` | base-year cohort from the observed certification series |
 | `25-demand_lifecourse.R` | reproductive life-course demand pathway |
-| `26-backtest.R`, `27-backtest-run.R` | leakage-free historical back-test |
 | `26-utilization_models.R` | survey-weighted utilization and offset-Poisson rate models |
 | `27-demand_lifecourse_uncertainty.R` | life-course demand prediction intervals |
 | `28-demand_lifecourse_calibration.R` | life-course anchoring to national totals |
-| `28-parameter-uncertainty.R` | per-iteration parameter draws for the supply engine |
+| `33-roster.R` | base-year cohort from the observed certification series |
+| `34-backtest.R`, `35-backtest_run.R` | leakage-free historical back-test |
+| `36-parameter_uncertainty.R` | per-iteration parameter draws for the supply engine |
+| `37-calibration_sources.R` | empirical `cliff` hazards, NRMP entrants, age-productivity curve |
 
-> The numeric prefixes have collided — `25`, `26`, `27` and `28` each name two
-> files. There is no functional break (collation is alphabetical with no
-> load-order dependency), but the prefix no longer identifies a module and a
-> renumbering pass is overdue.
+> `25`-`32` are the demand life-course chain and its dynamic extensions, which
+> read as a sequence; `33`+ are the supply-side roster, back-test and
+> uncertainty modules. The prefix identifies a module uniquely — keep it that
+> way when adding one, since parallel branches each taking "the next number" is
+> how four of them previously collided.
 
 ## Source models
 
