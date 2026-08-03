@@ -15,5 +15,10 @@ draw_supply_parameters(spec, schedule = RETIREMENT_HAZARD_BY_AGE)
 List with \code{entrants}, \code{retirement_schedule}, \code{hours_coef}.
 }
 \description{
-Draw one parameter set for a Monte Carlo iteration
+\code{hours_coef} is the COEFFICIENT VECTOR of the fitted weekly-clinical-hours
+model (\code{clinical_hours ~ ns(age, df) + sex}), drawn from its own \code{coef}/\code{vcov}
+-- not a scalar multiplier. The no-uncertainty case is therefore
+\code{hours_coef == coef(spec$hours_model)}, which reproduces the point-estimate
+fit exactly. Substitute it into the model with \code{.hours_model_with_coef()}
+rather than applying it to anything by hand.
 }

@@ -106,12 +106,20 @@ simulate_dmdm <- function(cohort0, start_year, end_year,
     rec$deaths <- sum(died)
     surv <- alive
     for (cc in c("ui", "pop", "ai")) {
+      # Both transitions are evaluated against the state at the START of the year,
+      # so a woman cannot develop a condition and resolve it within the same year.
+      # Applying remission to the post-onset state instead would let a case be
+      # counted in `inc_` and then vanish before it ever appeared in any `prev_`,
+      # making incidence and prevalence mutually inconsistent. The open-population
+      # engine (R/30) is already correct here: its Markov step applies remission to
+      # the prior marginal only.
+      prevalent <- st[[cc]] == 1L
       p_on <- unname(onset_p(cc))
-      new_onset <- surv & st[[cc]] == 0L & (stats::runif(n) < p_on)
+      new_onset <- surv & !prevalent & (stats::runif(n) < p_on)
+      remit <- surv & prevalent & (stats::runif(n) < transitions$remission[[cc]])
       st[[cc]][new_onset] <- 1L
-      rec[[paste0("inc_", cc)]] <- sum(new_onset)
-      remit <- surv & st[[cc]] == 1L & (stats::runif(n) < transitions$remission[[cc]])
       st[[cc]][remit] <- 0L
+      rec[[paste0("inc_", cc)]] <- sum(new_onset)
     }
     rows[[i]] <- rec
 

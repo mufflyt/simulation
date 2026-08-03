@@ -66,7 +66,10 @@ placement and mid-career migration.}
 entrant rate (and any other quantified parameter) is REDRAWN each
 iteration, so the reported intervals carry forecast uncertainty rather than
 Monte Carlo sampling noise alone. Without it the intervals are far too
-narrow -- see docs/BACKTEST_2020_TO_2023.md.}
+narrow -- see docs/BACKTEST_2020_TO_2023.md. When the spec carries an
+\code{hours_model}, its coefficients are redrawn per iteration and take
+precedence over the \code{hours_model} argument; they widen \code{effective_fte} only
+and leave \code{headcount} untouched.}
 
 \item{ci}{Width of the reported credible band (default 0.95).}
 

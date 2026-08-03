@@ -43,6 +43,35 @@ test_that("remission lowers long-run prevalence", {
   expect_gt(a$prev_ui[nrow(a)], b$prev_ui[nrow(b)])
 })
 
+test_that("a case cannot onset and remit within the same year", {
+  # Both transitions must be evaluated against the state at the START of the
+  # year. Applying remission to the post-onset state let a case be counted in
+  # inc_ and vanish before appearing in any prev_, so incidence and prevalence
+  # disagreed. With remission = 1 the old code reported ~178 incident UI cases a
+  # year against a prevalence that never left zero.
+  always <- dmdm_default_transitions()
+  always$remission <- c(ui = 1, pop = 1, ai = 1)
+  out <- simulate_dmdm(mk_cohort(2L), 2025, 2028, transitions = always, seed = 7)
+
+  # Every case incident in year y is prevalent at the start of year y+1, then
+  # resolves. So prevalence must track the previous year's incidence exactly.
+  # Onsets are drawn among survivors, and prevalence is measured among the living
+  # at the start of the next year -- the same set, so the denominator is living[y+1].
+  expected <- utils::head(out$inc_ui, -1) / out$living[-1]
+  expect_equal(out$prev_ui[-1], expected, tolerance = 1e-9)
+  expect_true(all(out$inc_ui > 0))
+  expect_true(all(out$prev_ui[-1] > 0))
+})
+
+test_that("prevalence and incidence stay mutually consistent without remission", {
+  none <- dmdm_default_transitions()
+  none$remission <- c(ui = 0, pop = 0, ai = 0)
+  out <- simulate_dmdm(mk_cohort(2L), 2025, 2035, transitions = none, seed = 3)
+  # With no remission and no re-entry, the prevalent count can only grow.
+  prevalent <- out$prev_pop * out$living
+  expect_true(all(diff(prevalent) >= -1e-9))
+})
+
 test_that("the engine is deterministic given a seed", {
   expect_equal(simulate_dmdm(mk_cohort(2L), 2025, 2035, seed = 7),
                simulate_dmdm(mk_cohort(2L), 2025, 2035, seed = 7))

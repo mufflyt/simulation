@@ -473,7 +473,10 @@ simulate_provider_career_once <- function(agents,
 #'   entrant rate (and any other quantified parameter) is REDRAWN each
 #'   iteration, so the reported intervals carry forecast uncertainty rather than
 #'   Monte Carlo sampling noise alone. Without it the intervals are far too
-#'   narrow -- see docs/BACKTEST_2020_TO_2023.md.
+#'   narrow -- see docs/BACKTEST_2020_TO_2023.md. When the spec carries an
+#'   `hours_model`, its coefficients are redrawn per iteration and take
+#'   precedence over the `hours_model` argument; they widen `effective_fte` only
+#'   and leave `headcount` untouched.
 #' @param ci Width of the reported credible band (default 0.95).
 #' @param seed Integer RNG seed.
 #' @param verbose Logical.
@@ -521,6 +524,36 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
 
   if (!is.null(param_spec)) assert_parameter_uncertainty(param_spec)
 
+  # Resolve which fitted hours model is in force BEFORE the consistency check
+  # below, so that check sees the model the run will actually use.
+  #
+  # `param_spec$hours_model` is the model whose coefficients are redrawn each
+  # iteration, so it is the one that must reach the engine; a different model
+  # passed through `hours_model` would otherwise be silently overridden. The
+  # drawn coefficients affect ONLY effective FTE -- see the loop below.
+  spec_hours_model <- if (!is.null(param_spec)) param_spec$hours_model else NULL
+  draws_hours <- !is.null(param_spec) && isTRUE(param_spec$quantified[["hours"]])
+  if (draws_hours) {
+    if (!identical(fte_method, "hours")) {
+      # The hours model is consulted only by the "hours" FTE method, so quantifying
+      # it under any other method reports an uncertainty component the intervals
+      # do not contain -- the exact defect this module exists to prevent.
+      msg <- sprintf(paste(
+        "param_spec quantifies hours uncertainty but fte_method is '%s', which",
+        "never consults an hours model. The reported intervals would omit the",
+        "hours component while the run metadata claims it. Use fte_method =",
+        "'hours' or drop hours_model from the spec."), fte_method)
+      if (identical(resolve_reproducibility_mode(), "strict")) stop(msg, call. = FALSE)
+      .msg_warn(msg)
+    }
+    if (!is.null(hours_model) && !identical(hours_model, spec_hours_model)) {
+      .msg_warn("Both `hours_model` and `param_spec$hours_model` were supplied ",
+                "and they differ. The spec's model carries the drawn coefficients ",
+                "and takes precedence.")
+    }
+    hours_model <- spec_hours_model
+  }
+
   iteration_panels <- vector("list", n_iterations)
   for (it in seq_len(n_iterations)) {
     if (verbose && it %% 100 == 0) .msg_info(sprintf("  iteration %d/%d", it, n_iterations))
@@ -529,10 +562,20 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
     # the replicate spread reflects both sources of variation.
     it_entrants <- entrants_per_year
     it_schedule <- retirement_schedule
+    it_hours_model <- hours_model
     if (!is.null(param_spec)) {
       d <- draw_supply_parameters(param_spec, retirement_schedule)
       it_entrants <- d$entrants
       it_schedule <- d$retirement_schedule
+      # The drawn hours coefficients enter the estimand HERE and nowhere else.
+      # simulate_provider_career_once() consults the model only inside fte_of(),
+      # which feeds `effective_fte`; headcount is the size of the active set and
+      # is structurally untouched. Substituting the coefficients into the model
+      # (rather than scaling any output) keeps the age x sex hours profile intact,
+      # which is the whole content of the fit.
+      if (!is.null(d$hours_coef)) {
+        it_hours_model <- .hours_model_with_coef(spec_hours_model, d$hours_coef)
+      }
     }
 
     sim <- simulate_provider_career_once(
@@ -542,7 +585,7 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
       subspecialty = subspecialty,
       retirement_schedule = it_schedule,
       fte_method = fte_method,
-      hours_model = hours_model,
+      hours_model = it_hours_model,
       hours_multiplier = hours_multiplier,
       hours_intercept = hours_intercept,
       late_career_fte_factor = late_career_fte_factor,
