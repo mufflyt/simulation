@@ -296,7 +296,11 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   param_spec <- if (is.null(parameter_spec) && has_mufflyaccess()) {
     tryCatch(entrant_spec_from_series(agents), error = function(e) NULL)
   } else parameter_spec
-  if (!is.null(param_spec)) assert_parameter_uncertainty(param_spec, mode)
+  # Unconditional, for the same reason as in run_supply_microsimulation(): a NULL
+  # spec is the case the guard exists to catch, and here it is reachable whenever
+  # the contract is unavailable or the spec fit fails. Failing at the orchestrator
+  # is a clearer error than failing inside the first scenario's engine call.
+  assert_parameter_uncertainty(param_spec, mode)
 
   # --- Supply: one Monte-Carlo microsimulation per scenario ----------------
   supply_by_scenario <- purrr::imap_dfr(supply_scenarios, function(params, scenario_name) {
