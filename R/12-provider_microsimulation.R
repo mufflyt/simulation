@@ -284,7 +284,9 @@ simulate_provider_career_once <- function(agents,
                                           late_career_fte_factor = 1.0,
                                           late_career_fte_onset_age = NA_real_,
                                           entrant_female_share = 0.82,
-                                          placement_shares = NULL) {
+                                          placement_shares = NULL,
+                                          p_active_coef = NULL,
+                                          p_active_scenario_id = NULL) {
   years <- sort(unique(as.integer(years)))
   base_year <- min(years)
 
@@ -306,7 +308,21 @@ simulate_provider_career_once <- function(agents,
   # providers untouched.
   apply_late_career <- is.finite(late_career_fte_onset_age) &&
     !isTRUE(all.equal(late_career_fte_factor, 1))
+
+  # `"participation_logistic"` uses urps_p_active() — the HWSM Exhibit 16
+  # logistic model — as the per-provider FTE weight.  Years certified is
+  # approximated from current age and the known certification-to-entry gap,
+  # which avoids adding a new per-agent vector to the simulation state.
+  use_p_active_fte <- identical(fte_method, "participation_logistic") &&
+    !is.null(p_active_coef)
+
   fte_of <- function(age, sex) {
+    if (use_p_active_fte) {
+      yrs_cert <- pmax(age - MICROSIM_AGE_AT_CERT, 0)
+      return(urps_p_active(age, sex, yrs_cert,
+                           scenario_id = p_active_scenario_id,
+                           coef        = p_active_coef) * hours_multiplier)
+    }
     base <- provider_clinical_fte(age, sex, method = fte_method, hours_model = hours_model,
                                   legacy_norm = prod_norm,
                                   hours_intercept = hours_intercept) * hours_multiplier
@@ -514,7 +530,10 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
                                         allow_fixed_parameters = FALSE,
                                         ci = 0.95,
                                         seed = 20260801L,
-                                        verbose = TRUE) {
+                                        verbose = TRUE,
+                                        p_active_coef = NULL,
+                                        p_active_scenario_id = NULL,
+                                        thin_by_p_active = FALSE) {
   seed_microsimulation(seed)
 
   baseline_rate <- microsim_baseline_rate(subspecialty)
@@ -533,6 +552,26 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
     initial_workforce
   } else {
     initialize_provider_agents(initial_workforce, subspecialty, min(years))
+  }
+
+  # Roster thinning: when the input roster contains providers whose activity
+  # status is unconfirmed (no retirement_year stamp, "lost to follow-up"),
+  # thin the cohort once using urps_p_active() so that unobserved departures
+  # are not all treated as still-active. Each agent is retained with
+  # probability P(active | age, sex, years_certified). This is distinct from
+  # the within-simulation departure hazard: it adjusts the BASE-YEAR headcount
+  # rather than projecting future attrition.
+  if (isTRUE(thin_by_p_active)) {
+    p_active_coef_eff <- p_active_coef %||% URPS_P_ACTIVE_COEF
+    base_agents <- thin_roster_by_p_active(
+      base_agents,
+      coef        = p_active_coef_eff,
+      scenario_id = p_active_scenario_id
+    )
+    if (verbose) {
+      .msg_info(sprintf("Roster thinned to %d providers by urps_p_active()",
+                        nrow(base_agents)))
+    }
   }
 
   # UNCONDITIONAL. Guarding this call on `!is.null(param_spec)` skipped it in the
@@ -641,7 +680,9 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
       hours_intercept = hours_intercept,
       late_career_fte_factor = late_career_fte_factor,
       late_career_fte_onset_age = late_career_fte_onset_age,
-      placement_shares = placement_shares
+      placement_shares = placement_shares,
+      p_active_coef = p_active_coef,
+      p_active_scenario_id = p_active_scenario_id
     )
     iteration_panels[[it]] <- dplyr::mutate(sim$panel, iteration = it)
   }

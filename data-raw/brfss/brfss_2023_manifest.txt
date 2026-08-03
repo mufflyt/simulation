@@ -1,0 +1,16 @@
+BRFSS 2023 Download Manifest
+Generated: 2026-08-03 21:58:52.823615
+Source URL: https://www.cdc.gov/brfss/annual_data/2023/files/LLCP2023XPT.zip
+ZIP size (MB): 93.2
+XPT size (MB): 1205.6
+RDS size (MB): 24.8
+Raw record count: 433,323
+Women record count: 229,541
+Pelvic floor vars found: NONE - optional module not in core file
+Columns: 350
+
+NOTE: BLADCON/URINCON are in the state-optional urinary incontinence module.
+States that opted in: see https://www.cdc.gov/brfss/questionnaires/modules/state2023.htm
+
+Survey design: ids=~_PSU, strata=~_STSTR, weights=~_LLCPWT, nest=TRUE
+DUA required: NO
