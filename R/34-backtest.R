@@ -208,7 +208,7 @@ validate_backtest_target <- function(target_year = BACKTEST_TARGET_YEAR,
 
   # Attrition: a definition mismatch, not a wrong target.
   series <- mufflyaccess::urps_counts_long()
-  no_attrition <- all(series$n_retired == 0) && all(series$n_active == series$n_ever_certified)
+  no_attrition <- all(series$n_retired == 0, na.rm = TRUE) && all(series$n_active == series$n_ever_certified, na.rm = TRUE)
   if (no_attrition && !isTRUE(acknowledge_no_attrition)) {
     fail(paste(
       "the observed series applies NO ATTRITION -- n_retired is 0 in every row and",
