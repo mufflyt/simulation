@@ -50,7 +50,11 @@ test_that("fit_dmdm_transitions recovers onset coefficients and is engine-usable
   tr <- fit_dmdm_transitions(rbind(df, rem), conditions = "pop")
   expect_identical(tr$status, "fitted")
   expect_equal(unname(tr$onset$pop["avag"]), 0.30, tolerance = 0.05)
-  expect_equal(unname(tr$remission[["pop"]]), 0.05, tolerance = 0.02)
+  # expect_equal()'s `tolerance` is RELATIVE, so 0.02 demanded recovery to within
+  # 2% of 0.05 -- i.e. +/- 0.001 -- from 2,000 Bernoulli draws whose standard
+  # error is 0.0049. The observed 0.056 is 1.2 SE out and the test failed on
+  # ordinary sampling variation. State the intended ABSOLUTE bound instead.
+  expect_lt(abs(unname(tr$remission[["pop"]]) - 0.05), 0.02)
   # usable directly by the engine
   co <- mk_agents(50:70, 2, 1e5)[, setdiff(names(mk_agents(50, 2, 1)), c("weight","p_ui","p_pop","p_ai"))]
   full <- dmdm_default_transitions(); full$onset$pop <- tr$onset$pop
