@@ -45,7 +45,7 @@ lifecourse_risk_params <- function() {
 
 #' Literature-anchored life-course risk coefficients (cited option)
 #'
-#' An explicit, documented alternative to [lifecourse_risk_params()]: the
+#' An explicit, documented alternative to `lifecourse_risk_params()`: the
 #' vaginal-delivery log-odds (`bvag`, the primary term) and the BMI modifier
 #' (`bbmi`) are anchored to cited urogynecologic epidemiology; all other terms
 #' inherit the internal placeholder set. Pass via `risk_params` to
@@ -58,7 +58,7 @@ lifecourse_risk_params <- function() {
 #'          (LaCross 2015) is a distinct, stronger contrast.
 #' `bbmi` per +5 kg/m^2 from Giri 2017 AJOG (obese vs normal RR ~1.47). All
 #' PROVISIONAL: full-text verification recommended before publication.
-#' @return A risk-params list in the shape of [lifecourse_risk_params()].
+#' @return A risk-params list in the shape of `lifecourse_risk_params()`.
 #' @export
 lifecourse_risk_params_cited <- function() {
   base <- lifecourse_risk_params()

@@ -7,7 +7,7 @@
 psa_sample(inputs, n, seed = 20260801L)
 }
 \arguments{
-\item{inputs}{List of \link{psa_input} specs.}
+\item{inputs}{List of \code{psa_input} specs.}
 
 \item{n}{Number of draws.}
 

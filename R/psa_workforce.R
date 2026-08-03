@@ -14,7 +14,7 @@
 
 #' Default PSA input set for the workforce 2050 gap
 #'
-#' @return List of [psa_input] specs.
+#' @return List of `psa_input` specs.
 #' @export
 psa_workforce_gap_inputs <- function() {
   list(

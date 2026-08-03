@@ -7,7 +7,7 @@
 run_psa(inputs, evaluate, n = 500, seed = 20260801L, verbose = TRUE)
 }
 \arguments{
-\item{inputs}{List of \link{psa_input} specs.}
+\item{inputs}{List of \code{psa_input} specs.}
 
 \item{evaluate}{Function taking a named list of input values (discrete inputs
 passed as their mapped value) and returning a numeric scalar, or a named

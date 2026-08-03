@@ -30,7 +30,7 @@ workforce_gini <- function(x) {
 #' Herfindahl-Hirschman Index of provider share
 #' @param counts Numeric counts per unit (zero/negative dropped).
 #' @param normalized If TRUE, size-corrected HHI* = (H - 1/n)/(1 - 1/n).
-#' @return HHI in [0, 1]; `NA_real_` if the total is 0.
+#' @return HHI in `[0, 1]`; `NA_real_` if the total is 0.
 #' @export
 workforce_hhi <- function(counts, normalized = FALSE) {
   counts <- counts[is.finite(counts) & counts > 0]
@@ -61,7 +61,7 @@ workforce_lorenz <- function(x) {
 #' Share of the total held by the k largest units
 #' @param counts Numeric counts per unit.
 #' @param k Number of top units. Default 5.
-#' @return Fraction in [0, 1], or `NA_real_` if the total is 0.
+#' @return Fraction in `[0, 1]`, or `NA_real_` if the total is 0.
 #' @export
 workforce_top_k_share <- function(counts, k = 5L) {
   counts <- counts[is.finite(counts)]
