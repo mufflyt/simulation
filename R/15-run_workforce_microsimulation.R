@@ -186,6 +186,11 @@ example_capacity_survey <- function() {
 #'   `demand_long` and flows through concordance assessment alongside D1-D3.
 #'   Requires that [brfss_pfd_prevalence_for_demand_bands()] is available (i.e.
 #'   that R/44-urps_population.R is loaded).
+#' @param prevention_scenario Character key in [URPS_PREVENTION_SCENARIOS], or
+#'   `NULL` (default). When non-NULL, service volumes are adjusted by
+#'   [apply_named_prevention_scenario()] before [convert_workload_to_fte()],
+#'   modelling conservative PFD management (PT/pessary) as a demand-side
+#'   multiplier. Use `"baseline"` to confirm the no-shift reference.
 #' @param output_dir If non-NULL, write provenance-tagged artifacts here.
 #' @param seed RNG seed.
 #' @param verbose Logical.
@@ -210,6 +215,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           parameter_spec = NULL,
                                           allow_analogy = TRUE,
                                           brfss_cells = NULL,
+                                          prevention_scenario = NULL,
                                           output_dir = NULL,
                                           seed = 20260801L,
                                           verbose = TRUE) {
@@ -360,7 +366,12 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   assert_publishable_workload(mode = mode)
   assert_publishable_workload(URPS_DELEGATION_STATUS, allow_analogy = allow_analogy,
                               what = "delegation matrix", mode = mode)
-  volumes <- example_service_volumes(demand_long)
+  volumes <- if (!is.null(prevention_scenario)) {
+    if (verbose) .msg_info(sprintf("  prevention scenario: %s", prevention_scenario))
+    prevention_demand_trajectory(demand_long, scenario_id = prevention_scenario)
+  } else {
+    example_service_volumes(demand_long)
+  }
   base_wrvu <- service_volume_to_wrvu(dplyr::filter(volumes, .data$year == base_year))
 
   gap <- baseline_gap_estimate
@@ -469,7 +480,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       calibration = calibration_status_report(),
       hours_status = reference_hours_status(),
       mode = mode,
-      seed = seed
+      seed = seed,
+      prevention_scenario = prevention_scenario
     )
   )
 
