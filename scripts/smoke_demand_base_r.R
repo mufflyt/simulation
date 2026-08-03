@@ -23,8 +23,9 @@ src <- function(f) if (file.exists(f)) source(f) else stop("missing ", f, call. 
 # --- load base-R modules ----------------------------------------------------
 src("R/29-demand_dynamic_multistate.R")   # dmdm_default_transitions, simulate_dmdm
 src("R/30-demand_dynamic_open.R")          # simulate_dmdm_open (+ helpers)
-src("R/31-dmdm_fit_transitions.R")         # .fit_onset_coefs (base-R core)
+src("R/31-dmdm_fit_transitions.R")         # .fit_onset_coefs, .fit_stage_transitions
 src("R/32-geographic_demand.R")            # geographic (isochrone) demand
+src("R/33-pop_transitions.R")              # literature POP onset + staged transitions
 src("R/export_demand_contract.R")          # export_hdmm/dmdm_demand_contract
 
 set.seed(1)
@@ -66,6 +67,27 @@ geo <- data.frame(need = c(100, 400, 250), nearest_provider_min = c(15, 90, 240)
 gd <- geographic_demand_summary(geo)
 ok(abs(gd$beyond_share - 250 / 750) < 1e-9, "need beyond 180 min computed")
 ok(gd$need_weighted_access < mean(geo$access_ratio), "need-weighted access below unweighted")
+
+cat("== literature POP transitions (R/33) ==\n")
+ptr <- dmdm_transitions_with_pop_literature()
+ok(ptr$calibration_status == "derived_by_analogy", "POP overlay marked derived_by_analogy")
+ok(ptr$provenance$ui == "placeholder_uncalibrated", "UI/AI left as placeholders")
+ok(ptr$onset$pop[["avag"]] > 0, "vaginal delivery is a positive POP onset driver")
+ok(ptr$pop_regression[["1"]] > ptr$pop_progression[["1"]],
+   "mild POP regresses more than it progresses (the feature UI lacks)")
+plo <- simulate_dmdm(mk(sample(45:70, 4000, TRUE), 0L), 2025, 2035, transitions = ptr, seed = 7)
+phi <- simulate_dmdm(mk(sample(45:70, 4000, TRUE), 3L), 2025, 2035, transitions = ptr, seed = 7)
+ok(phi$prev_pop[11] > plo$prev_pop[11], "literature transitions: more vaginal deliveries -> more POP")
+
+cat("== staged POP transition fit (R/31 .fit_stage_transitions) ==\n")
+set.seed(11); M <- 60000; fs <- sample(0:3, M, TRUE)
+pu <- c(`0` = .10, `1` = .08, `2` = .05, `3` = .03); pd <- c(`1` = .20, `2` = .08, `3` = .03)
+ts <- vapply(seq_len(M), function(i) { s <- fs[i]; u <- runif(1)
+  a <- pu[[as.character(s)]]; b <- if (s > 0) pd[[as.character(s)]] else 0
+  if (u < a && s < 4L) s + 1L else if (u < a + b && s > 0L) s - 1L else s }, integer(1))
+sf <- .fit_stage_transitions(data.frame(from_stage = fs, to_stage = ts))
+ok(abs(sf$progression[["1"]] - .08) < .02, "recovers stage 1->2 progression rate")
+ok(abs(sf$regression[["1"]] - .20) < .02, "recovers stage 1->0 regression rate")
 
 cat("== contract exporters (R/export_demand_contract.R) ==\n")
 hd <- export_hdmm_demand_contract(
