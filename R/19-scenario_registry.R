@@ -230,12 +230,30 @@ validate_scenario_registry <- function(registry, kind = c("supply", "demand")) {
 
 #' Resolve the retirement schedule implied by a supply scenario
 #'
-#' @param scenario A supply scenario definition.
-#' @param schedule Base retirement hazard schedule.
-#' @return Shifted hazard schedule.
+#' When `use_weibull = TRUE` (the default), the schedule is built from the
+#' Weibull survival curves in [urps_weibull_exit_probs()], with
+#' `retirement_shift_years` used directly as the Weibull `scale_shift` (±2 yr
+#' = scale ± 2).  When `use_weibull = FALSE`, the legacy `shift_retirement_schedule()`
+#' deterministic age-axis shift is applied instead.
+#'
+#' @param scenario A supply scenario definition (must have `retirement_shift_years`).
+#' @param schedule Base retirement hazard schedule (used only when
+#'   `use_weibull = FALSE`).
+#' @param use_weibull Logical; use Weibull survival curves (default TRUE).
+#' @return A hazard schedule data frame with columns `age`, `sex`,
+#'   `prob_exit`, `se_prob_exit`, `calibration_tier`.
 #' @export
-scenario_retirement_schedule <- function(scenario, schedule = RETIREMENT_HAZARD_BY_AGE) {
-  shift_retirement_schedule(scenario$retirement_shift_years %||% 0, schedule)
+scenario_retirement_schedule <- function(scenario,
+                                          schedule   = RETIREMENT_HAZARD_BY_AGE,
+                                          use_weibull = TRUE) {
+  shift <- scenario$retirement_shift_years %||% 0
+  if (use_weibull) {
+    h <- build_urps_exit_hazard(cliff_duckdb_path = NULL,
+                                scale_shift = shift,
+                                verbose = FALSE)
+    return(h$exit_probs)
+  }
+  shift_retirement_schedule(shift, schedule)
 }
 
 #' Summarise a registry as a tibble for reporting

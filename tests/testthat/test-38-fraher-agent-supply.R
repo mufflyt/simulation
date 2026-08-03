@@ -63,9 +63,10 @@ test_that("build_urps_exit_hazard fallback: prob_exit in [0,1]", {
   expect_true(all(h$exit_probs$prob_exit <= 1))
 })
 
-test_that("build_urps_exit_hazard fallback: hazard_cv is 0", {
+test_that("build_urps_exit_hazard fallback: hazard_cv is positive (Weibull spread)", {
   h <- build_urps_exit_hazard(cliff_duckdb_path = NULL, verbose = FALSE)
-  expect_equal(h$hazard_cv, 0)
+  expect_gt(h$hazard_cv, 0)
+  expect_lte(h$hazard_cv, 1)
 })
 
 test_that("apply_hrsa_surgical_fte: clinical_fte in [0,1] for active", {

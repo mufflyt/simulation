@@ -19,16 +19,27 @@
 # pelvic floor often shift back to general urology at career midpoint.
 # `derived_by_analogy` tier until ABOG departure micro-data are available.
 
+# Scale derivation: for a Weibull S(a) = exp(-(a/scale)^shape),
+#   median retirement age = scale × ln(2)^(1/shape)
+# Target medians: ABOG female 67, ABOG male 70, ABU 64.
+#   Female: scale = 67 / 0.693^(1/2.1) = 67 / 0.836 = 80.1
+#   Male:   scale = 70 / 0.693^(1/1.9) = 70 / 0.820 = 85.4
+#   ABU:    scale = 64 / 0.693^(1/2.0) = 64 / 0.832 = 76.9
+# Shapes from HWSM Exhibits 17–18 general physician curves (derived_by_analogy).
+
 URPS_WEIBULL_PARAMS <- list(
-  abog_female = list(shape = 2.1, scale = 68.5,
+  abog_female = list(shape = 2.1, scale = 80.1,
+                     median_retirement_age = 67,
                      tier = "derived_by_analogy",
-                     note = "HWSM Exhibit 17 female physician analogy"),
-  abog_male   = list(shape = 1.9, scale = 70.2,
+                     note = "HWSM Exhibit 17 female physician analogy; median 67"),
+  abog_male   = list(shape = 1.9, scale = 85.4,
+                     median_retirement_age = 70,
                      tier = "derived_by_analogy",
-                     note = "HWSM Exhibit 18 male physician analogy"),
-  abu         = list(shape = 2.0, scale = 66.0,
+                     note = "HWSM Exhibit 18 male physician analogy; median 70"),
+  abu         = list(shape = 2.0, scale = 76.9,
+                     median_retirement_age = 64,
                      tier = "derived_by_analogy",
-                     note = "HWSM Exhibit 18 male analogy, −4 yr for mixed urology practice")
+                     note = "HWSM Exhibit 18 male analogy, median 64 (mixed urology practice exits earlier)")
 )
 
 #' Weibull discrete annual exit probabilities for URPS providers
