@@ -21,6 +21,7 @@ run_supply_microsimulation(
   late_career_fte_onset_age = NA_real_,
   placement_shares = NULL,
   param_spec = NULL,
+  allow_fixed_parameters = FALSE,
   ci = 0.95,
   seed = 20260801L,
   verbose = TRUE
@@ -70,6 +71,12 @@ narrow -- see docs/BACKTEST_2020_TO_2023.md. When the spec carries an
 \code{hours_model}, its coefficients are redrawn per iteration and take
 precedence over the \code{hours_model} argument; they widen \code{effective_fte} only
 and leave \code{headcount} untouched.}
+
+\item{allow_fixed_parameters}{Declare an exploratory run in which every
+parameter is held fixed. The uncertainty guard runs UNCONDITIONALLY -- a
+missing \code{param_spec} is precisely the case it exists to catch -- so this is
+the only way to obtain a sampling-noise-only band, and it always warns. The
+resulting \code{effective_fte_lo}/\verb{_hi} are not forecast intervals.}
 
 \item{ci}{Width of the reported credible band (default 0.95).}
 

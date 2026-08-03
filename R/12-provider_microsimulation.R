@@ -484,6 +484,11 @@ simulate_provider_career_once <- function(agents,
 #'   `hours_model`, its coefficients are redrawn per iteration and take
 #'   precedence over the `hours_model` argument; they widen `effective_fte` only
 #'   and leave `headcount` untouched.
+#' @param allow_fixed_parameters Declare an exploratory run in which every
+#'   parameter is held fixed. The uncertainty guard runs UNCONDITIONALLY -- a
+#'   missing `param_spec` is precisely the case it exists to catch -- so this is
+#'   the only way to obtain a sampling-noise-only band, and it always warns. The
+#'   resulting `effective_fte_lo`/`_hi` are not forecast intervals.
 #' @param ci Width of the reported credible band (default 0.95).
 #' @param seed Integer RNG seed.
 #' @param verbose Logical.
@@ -506,6 +511,7 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
                                         late_career_fte_onset_age = NA_real_,
                                         placement_shares = NULL,
                                         param_spec = NULL,
+                                        allow_fixed_parameters = FALSE,
                                         ci = 0.95,
                                         seed = 20260801L,
                                         verbose = TRUE) {
@@ -529,7 +535,20 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
     initialize_provider_agents(initial_workforce, subspecialty, min(years))
   }
 
-  if (!is.null(param_spec)) assert_parameter_uncertainty(param_spec)
+  # UNCONDITIONAL. Guarding this call on `!is.null(param_spec)` skipped it in the
+  # one case it exists to catch: no spec at all, so every coefficient is held
+  # fixed and the reported band is Monte Carlo sampling noise rather than
+  # forecast uncertainty. A strict-mode run could still emit such a band. The
+  # escape hatch is explicit and declared, not the absence of an argument.
+  if (isTRUE(allow_fixed_parameters)) {
+    if (!inherits(param_spec, "urps_param_spec") || !any(param_spec$quantified)) {
+      .msg_warn("Exploratory run: allow_fixed_parameters = TRUE. Every parameter ",
+                "is held fixed, so effective_fte_lo/hi describe Monte Carlo ",
+                "sampling noise and must not be reported as a forecast interval.")
+    }
+  } else {
+    assert_parameter_uncertainty(param_spec)
+  }
 
   # Resolve which fitted hours model is in force BEFORE the consistency check
   # below, so that check sees the model the run will actually use.
@@ -566,19 +585,23 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
   # while the FTE threshold is the physiatry clinical-hours definition (37.2), so
   # leaving the default in place makes the average provider ~1.16 FTE and the
   # base-year FTE supply EXCEED headcount -- which no published table shows.
-  # The orchestrator calibrates it; a direct call to this function would not,
-  # so warn rather than silently report more FTE than people.
+  # The orchestrator calibrates it; a direct call to this function would not.
+  # More FTE than people is not a borderline result to be flagged and carried
+  # forward -- it is dimensionally impossible under an hours-threshold FTE
+  # definition, so strict mode refuses it outright and relaxed mode warns.
   if (identical(fte_method, "hours") && is.null(hours_model)) {
     ages <- base_agents$age
     sexes <- if ("sex" %in% names(base_agents)) base_agents$sex else "female"
     mean_fte <- mean(provider_clinical_fte(ages, sexes, method = "hours",
                                            hours_intercept = hours_intercept))
     if (mean_fte > 1.02) {
-      .msg_warn(sprintf(paste(
+      msg <- sprintf(paste(
         "Mean clinical FTE per provider is %.3f, so FTE supply will exceed",
         "headcount. The hours intercept (%.2f) is not consistent with the %.1f",
         "hr/wk FTE definition. Pass hours_intercept = calibrate_hours_intercept(age, sex)."),
-        mean_fte, hours_intercept, URPS_FTE_CLINICAL_HOURS_PER_WEEK))
+        mean_fte, hours_intercept, URPS_FTE_CLINICAL_HOURS_PER_WEEK)
+      if (identical(resolve_reproducibility_mode(), "strict")) stop(msg, call. = FALSE)
+      .msg_warn(msg)
     }
   }
 

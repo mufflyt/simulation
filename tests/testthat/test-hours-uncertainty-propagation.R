@@ -221,3 +221,73 @@ test_that("the spec's hours model takes precedence over a conflicting argument",
     "takes precedence"
   )
 })
+
+# ---- The uncertainty guard runs unconditionally ----------------------------
+
+hu_with_mode <- function(mode, code) {
+  old <- Sys.getenv("REPRODUCIBILITY_MODE", unset = NA)
+  on.exit(if (is.na(old)) Sys.unsetenv("REPRODUCIBILITY_MODE")
+          else Sys.setenv(REPRODUCIBILITY_MODE = old), add = TRUE)
+  Sys.setenv(REPRODUCIBILITY_MODE = mode)
+  force(code)
+}
+
+test_that("strict mode refuses a run that holds every parameter fixed", {
+  m <- hu_model(); agents <- hu_cohort()
+  # The guard used to be skipped when param_spec was NULL -- exactly the case it
+  # exists to catch -- so a strict run could still emit a sampling-noise band.
+  hu_with_mode("strict", {
+    expect_error(
+      run_supply_microsimulation(agents, 2025:2027, 20, "FPMRS", n_iterations = 3,
+                                 hours_model = m, verbose = FALSE),
+      "6.5-8.2x too narrow")
+  })
+  # Relaxed mode still only warns.
+  hu_with_mode("relaxed", {
+    expect_message(
+      run_supply_microsimulation(agents, 2025:2027, 20, "FPMRS", n_iterations = 3,
+                                 hours_model = m, verbose = FALSE),
+      "6.5-8.2x too narrow")
+  })
+})
+
+test_that("an exploratory run must be declared, and says what its band means", {
+  m <- hu_model(); agents <- hu_cohort()
+  hu_with_mode("strict", {
+    expect_message(
+      r <- run_supply_microsimulation(agents, 2025:2027, 20, "FPMRS", n_iterations = 3,
+                                      hours_model = m, allow_fixed_parameters = TRUE,
+                                      verbose = FALSE),
+      "must not be reported as a forecast interval")
+    expect_s3_class(r$summary, "data.frame")
+    # The metadata must keep saying the band is noise, not forecast uncertainty.
+    expect_match(r$scenario$parameter_uncertainty, "sampling noise")
+  })
+  # A spec that genuinely draws something needs no override and gets no warning.
+  spec <- supply_parameter_spec(entrant_series = c(30, 35, 33), entrant_mean = 20)
+  hu_with_mode("strict", {
+    expect_no_error(
+      run_supply_microsimulation(agents, 2025:2027, 20, "FPMRS", n_iterations = 3,
+                                 hours_model = m, param_spec = spec, verbose = FALSE))
+  })
+})
+
+test_that("strict mode refuses an hours intercept that yields more FTE than people", {
+  agents <- hu_cohort()
+  # allow_fixed_parameters clears the uncertainty guard so this reaches the
+  # FTE-consistency guard, which is the one under test.
+  hu_with_mode("strict", {
+    expect_error(
+      run_supply_microsimulation(agents, 2025:2027, 20, "FPMRS", n_iterations = 3,
+                                 allow_fixed_parameters = TRUE, verbose = FALSE),
+      "FTE supply will exceed headcount")
+  })
+  # A calibrated intercept passes the same guard.
+  ic <- calibrate_hours_intercept(agents$age, agents$sex)
+  hu_with_mode("strict", {
+    expect_no_error(
+      run_supply_microsimulation(agents, 2025:2027, 20, "FPMRS", n_iterations = 3,
+                                 hours_intercept = ic, allow_fixed_parameters = TRUE,
+                                 verbose = FALSE))
+  })
+})
