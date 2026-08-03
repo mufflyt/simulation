@@ -135,7 +135,7 @@ simulate_dmdm <- function(cohort0, start_year, end_year,
 
 #' Build a DMDM starting cohort at the base year
 #'
-#' Draws a synthetic cohort with [`.lifecourse_population`]-style attributes and
+#' Draws a synthetic cohort with `.lifecourse_population`-style attributes and
 #' seeds each woman's initial disease states from the cross-sectional risk
 #' (R/25), giving a plausible year-0 prevalence for the dynamics to evolve.
 #'

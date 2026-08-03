@@ -554,6 +554,27 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
     hours_model <- spec_hours_model
   }
 
+  # The hours schedule and the FTE threshold must be mutually consistent. The
+  # shipped HWSM intercept is a general-internal-medicine level (46.29 hrs/wk)
+  # while the FTE threshold is the physiatry clinical-hours definition (37.2), so
+  # leaving the default in place makes the average provider ~1.16 FTE and the
+  # base-year FTE supply EXCEED headcount -- which no published table shows.
+  # The orchestrator calibrates it; a direct call to this function would not,
+  # so warn rather than silently report more FTE than people.
+  if (identical(fte_method, "hours") && is.null(hours_model)) {
+    ages <- base_agents$age
+    sexes <- if ("sex" %in% names(base_agents)) base_agents$sex else "female"
+    mean_fte <- mean(provider_clinical_fte(ages, sexes, method = "hours",
+                                           hours_intercept = hours_intercept))
+    if (mean_fte > 1.02) {
+      .msg_warn(sprintf(paste(
+        "Mean clinical FTE per provider is %.3f, so FTE supply will exceed",
+        "headcount. The hours intercept (%.2f) is not consistent with the %.1f",
+        "hr/wk FTE definition. Pass hours_intercept = calibrate_hours_intercept(age, sex)."),
+        mean_fte, hours_intercept, URPS_FTE_CLINICAL_HOURS_PER_WEEK))
+    }
+  }
+
   iteration_panels <- vector("list", n_iterations)
   for (it in seq_len(n_iterations)) {
     if (verbose && it %% 100 == 0) .msg_info(sprintf("  iteration %d/%d", it, n_iterations))
