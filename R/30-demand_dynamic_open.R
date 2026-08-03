@@ -47,13 +47,21 @@
 #'   supplied, each year's age-specific weights are rescaled to it, so population
 #'   counts follow the Census projection while the model supplies the disease
 #'   rates. `NULL` (default) runs the internal cohort-component demography.
+#' @param conservation_tolerance Largest share of a year's simulated population
+#'   that may sit at ages the projection does not carry, and so escape
+#'   reweighting. Exceeding it warns (strict: errors), because beyond that point
+#'   `population` and the weighted prevalences mix Census-anchored with
+#'   free-floating mass. Only consulted when `pop_by_age_year` is supplied.
 #' @return A data frame, one row per year: `year`, `population` (sum of weights),
 #'   `prev_ui`/`prev_pop`/`prev_ai` (weighted population prevalence) and
-#'   `inc_ui`/`inc_pop`/`inc_ai` (expected national new cases in the year).
+#'   `inc_ui`/`inc_pop`/`inc_ai` (expected national new cases in the year). When
+#'   reweighting, also `share_unanchored`, with the full per-year audit on the
+#'   `population_audit` attribute (see [dmdm_population_audit()]).
 #' @export
 simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
                                transitions = dmdm_default_transitions(),
-                               pop_by_age_year = NULL) {
+                               pop_by_age_year = NULL,
+                               conservation_tolerance = 0.01) {
   req <- c("age", "cumulative_vaginal_deliveries", "years_since_last_vaginal_birth",
            "bmi", "hysterectomy", "menopause_status", "comorbidity",
            "weight", "p_ui", "p_pop", "p_ai")
@@ -66,6 +74,7 @@ simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
   a <- init[, req, drop = FALSE]
   years <- start_year:end_year
   rows <- vector("list", length(years))
+  audit <- vector("list", length(years))
   for (i in seq_along(years)) {
     y <- years[i]
     if (!is.null(entrants) && y > start_year) {
@@ -85,6 +94,34 @@ simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
       common <- intersect(names(cur), names(tgt))
       for (ag in common) if (cur[[ag]] > 0) sf[[ag]] <- tgt[[ag]] / cur[[ag]]
       a$weight <- a$weight * sf[as.character(a$age)]
+
+      # CONSERVATION AUDIT. Ages present in the simulation but absent from the
+      # projection keep their pre-rescaling weight, so the reported `population`
+      # is a mix of Census-anchored and free-floating mass with nothing marking
+      # the boundary. The leak is systematic rather than incidental: a closed
+      # cohort ages past the projection's top age every year it runs, so the
+      # unanchored share grows monotonically and concentrates in exactly the
+      # oldest ages, which carry the highest disease prevalence.
+      unanchored_ages <- setdiff(names(cur), names(tgt))
+      unanchored <- if (length(unanchored_ages)) {
+        sum(a$weight[as.character(a$age) %in% unanchored_ages])
+      } else 0
+      total_now <- sum(a$weight)
+      # Projection mass at ages the simulation spans but has no agents for: the
+      # converse leak, where the target exists and the model cannot carry it.
+      span <- as.character(seq(min(a$age), max(a$age)))
+      uncovered <- sum(tgt[setdiff(intersect(span, names(tgt)), names(cur))])
+      audit[[i]] <- data.frame(
+        year = y,
+        population_simulated = total_now,
+        population_anchored = total_now - unanchored,
+        population_unanchored = unanchored,
+        share_unanchored = if (total_now > 0) unanchored / total_now else NA_real_,
+        n_ages_unanchored = length(unanchored_ages),
+        age_min_unanchored = if (length(unanchored_ages)) min(as.numeric(unanchored_ages)) else NA_real_,
+        age_max_unanchored = if (length(unanchored_ages)) max(as.numeric(unanchored_ages)) else NA_real_,
+        population_target_uncovered = uncovered
+      )
     }
     W <- sum(a$weight)
     wm <- function(p) if (W > 0) sum(a$weight * p) / W else NA_real_
@@ -109,7 +146,46 @@ simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
     a$menopause_status <- pmax(a$menopause_status, as.integer(a$age >= 51))
     rows[[i]] <- rec
   }
-  do.call(rbind, rows)
+  out <- do.call(rbind, rows)
+
+  if (!is.null(pop_by_age_year)) {
+    aud <- do.call(rbind, audit)
+    out$share_unanchored <- aud$share_unanchored
+    attr(out, "population_audit") <- aud
+    worst <- max(aud$share_unanchored, na.rm = TRUE)
+    if (is.finite(worst) && worst > conservation_tolerance) {
+      hit <- aud[which.max(aud$share_unanchored), ]
+      msg <- sprintf(paste(
+        "Population conservation: %.1f%% of the simulated population in %d is NOT",
+        "anchored to the supplied projection (ages %g-%g are absent from it), above",
+        "the %.1f%% tolerance. Reported `population` and every weighted prevalence",
+        "mix Census-matched and free-floating mass. Extend pop_by_age_year to cover",
+        "the ages the cohort reaches, or raise conservation_tolerance knowingly."),
+        100 * hit$share_unanchored, hit$year,
+        hit$age_min_unanchored, hit$age_max_unanchored,
+        100 * conservation_tolerance)
+      if (identical(resolve_reproducibility_mode(), "strict")) stop(msg, call. = FALSE)
+      .msg_warn(msg)
+    }
+  }
+  out
+}
+
+#' Per-year population-conservation audit from an open-population run
+#'
+#' Reweighting to a Census projection only rescales ages the projection carries;
+#' ages it omits keep their simulated weight. This reports how much of each
+#' year's population is anchored, how much is not, and which ages leak -- the
+#' quantity that decides whether a reweighted trajectory may be read as a
+#' Census-consistent population.
+#'
+#' @param x Result of [simulate_dmdm_open()] run with `pop_by_age_year`.
+#' @return Tibble of the per-year audit, or NULL when the run did not reweight.
+#' @export
+dmdm_population_audit <- function(x) {
+  a <- attr(x, "population_audit", exact = TRUE)
+  if (is.null(a)) return(NULL)
+  tibble::as_tibble(a)
 }
 
 # ---- builder + wrapper (reuse R/25) ---------------------------------------

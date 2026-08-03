@@ -683,7 +683,13 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
       fte_method = fte_method,
       hours_multiplier = hours_multiplier,
       ci = ci,
-      seed = seed
+      seed = seed,
+      # The bands above are unvalidated: the 2020->2023 back-test missed the
+      # observed count outside the 95% interval in every arm. Carry that with the
+      # result so a consumer reading effective_fte_lo/hi cannot mistake them for
+      # validated forecast intervals.
+      backtest = backtest_status(),
+      interval_label = interval_label(ci = ci)
     )
   )
 }

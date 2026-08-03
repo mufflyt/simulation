@@ -173,6 +173,12 @@ as_urps_projection <- function(supply,
     .msg_info(sprintf("Supply projection validates against the URPS contract v%s.",
                       mufflyaccess::URPS_PROJECTION_CONTRACT_VERSION))
   }
+  # `lower_95`/`upper_95` leave here looking like forecast bounds. They are not:
+  # the back-test missed the observed count outside the 95% interval in every
+  # arm. The contract schema is fixed at 13 columns, so the status rides as an
+  # attribute -- adding a column would fail validate_urps_projection().
+  out <- stamp_backtest_status(out)
+  assert_forecast_intervals_validated()
   out
 }
 
