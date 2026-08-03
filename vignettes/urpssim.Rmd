@@ -3,7 +3,7 @@ title: "urpssim: supply, demand, access, gap, and sensitivity"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{urpssim: supply, demand, access, gap, and sensitivity}
-  %\VignetteEngine{knitr::knitr}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
