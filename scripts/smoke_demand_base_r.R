@@ -95,12 +95,19 @@ hd <- export_hdmm_demand_contract(
              service_units_national = seq(9e6, 10.8e6, length.out = 6)),
   output_directory = tempfile("h_"), verbose = FALSE)
 ok(all(c("tier5_care_seeking", "tier6_procedural") %in% hd$data$denominator_tier), "HDMM tiers 5-6 emitted")
-dm <- export_dmdm_demand_contract(
-  data.frame(year = 2025:2030, population = seq(45e6, 48e6, length.out = 6),
-             prev_ui = seq(.2, .26, length.out = 6), prev_pop = seq(.08, .14, length.out = 6),
-             prev_ai = seq(.05, .07, length.out = 6)),
-  output_directory = tempfile("d_"), verbose = FALSE)
+dm_traj <- data.frame(year = 2025:2030, population = seq(45e6, 48e6, length.out = 6),
+                      prev_ui = seq(.2, .26, length.out = 6), prev_pop = seq(.08, .14, length.out = 6),
+                      prev_ai = seq(.05, .07, length.out = 6))
+dm <- export_dmdm_demand_contract(dm_traj, output_directory = tempfile("d_"), verbose = FALSE)
 ok("tier3_prevalent_pfd" %in% dm$data$denominator_tier, "DMDM tier3 emitted")
+# Built from the literature POP transitions -> per-tier provenance is stamped.
+dmp <- export_dmdm_demand_contract(dm_traj, output_directory = tempfile("dp_"),
+                                   transitions = dmdm_transitions_with_pop_literature(),
+                                   verbose = FALSE)
+pop_row <- dmp$data[dmp$data$denominator_tier == "dmdm_pop", ][1, ]
+ui_row  <- dmp$data[dmp$data$denominator_tier == "dmdm_ui", ][1, ]
+ok(pop_row$tier_calibration_status == "derived_by_analogy", "dmdm_pop tier is derived_by_analogy")
+ok(ui_row$tier_calibration_status == "placeholder_uncalibrated", "dmdm_ui tier stays placeholder")
 
 cat("== cliff ingestion round-trip (optional) ==\n")
 cliff_fn <- Find(file.exists, c("../cliff/R/dpmm_contract.R", "/home/user/cliff/R/dpmm_contract.R"))
@@ -109,6 +116,12 @@ if (!is.null(cliff_fn)) {
   ct <- read_dpmm_demand_contract(dm$csv_path)
   d3 <- dpmm_alt_d1_index(ct$data, 2025:2035, base_year = 2025L, tier = "tier3_prevalent_pfd")
   ok(abs(d3[1] - 100) < 1e-9, "cliff consumes DMDM tier3 (rebased to 100)")
+  # cliff reads the POP-specific literature series and its per-tier provenance
+  ctp <- read_dpmm_demand_contract(dmp$csv_path)
+  dpop <- dpmm_alt_d1_index(ctp$data, 2025:2035, base_year = 2025L, tier = "dmdm_pop")
+  ok(dpmm_series_usable(dpop), "cliff consumes DMDM POP-specific series (dmdm_pop)")
+  ok(dpmm_tier_status(ctp, "dmdm_pop") == "derived_by_analogy",
+     "cliff reads dmdm_pop provenance = derived_by_analogy")
 } else {
   cat("  skip: no cliff checkout found\n")
 }
