@@ -400,6 +400,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   wrvu_per_fte <- calibrate_wrvu_per_fte(base_wrvu$work_rvu, base_required)
   productivity_ok <- check_productivity_plausible(wrvu_per_fte, mode = mode)
   required <- convert_workload_to_fte(volumes, wrvu_per_fte = wrvu_per_fte)
+  required_by_setting <- convert_workload_to_fte(volumes, wrvu_per_fte = wrvu_per_fte,
+                                                  by_setting = TRUE)
 
   # --- Absolute gap, status quo -------------------------------------------
   reference_id <- if ("baseline" %in% names(supply_scenarios)) "baseline" else "status_quo"
@@ -473,6 +475,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
     demand = demand_long,
     service_volumes = volumes,
     required_fte = required,
+    required_fte_by_setting = required_by_setting,
     fte_gap = fte_gap,
     baseline_gap = gap,
     growth_adequacy = growth,
