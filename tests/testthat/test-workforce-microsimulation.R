@@ -221,6 +221,43 @@ test_that("safe_left_join blocks unintended fan-out", {
   expect_equal(nrow(safe_left_join(x, y_ok, by = "k")), 3L)
 })
 
+test_that("the match-rate gate measures key coverage, not one column's NA-ness", {
+  x <- tibble::tibble(k = 1:4)
+
+  # Every key matches, but a joined column is legitimately all-NA. Probing that
+  # column reported a 0% match rate on a join that in fact covered every row.
+  y_na_col <- tibble::tibble(k = 1:4, a = c(NA, NA, NA, NA), b = c(1, 2, 3, 4))
+  expect_silent(safe_left_join(x, y_na_col, by = "k", min_match_rate = 1.0))
+
+  # The converse, and the one that mattered: the FIRST joined column is
+  # populated while a later one is entirely NA. The old probe passed a 100% gate
+  # here regardless of whether the keys actually matched.
+  y_partial <- tibble::tibble(k = c(1, 2), a = c(9, 9), b = c(NA, NA))
+  expect_message(safe_left_join(x, y_partial, by = "k", min_match_rate = 1.0),
+                 "match rate 50.0% below required 100.0%")
+
+  # A right table carrying only key columns is now checkable at all.
+  expect_message(safe_left_join(x, tibble::tibble(k = c(1, 2)), by = "k",
+                                min_match_rate = 1.0),
+                 "match rate 50.0%")
+  # Named-key joins (by = c(left = "right")) resolve each side's key correctly.
+  expect_silent(safe_left_join(x, tibble::tibble(kk = 1:4, w = 1:4),
+                               by = c(k = "kk"), min_match_rate = 1.0))
+})
+
+test_that("no entrant is created after the final projection year", {
+  set.seed(3)
+  agents <- initialize_provider_agents(40, "FPMRS", 2025)
+  sim <- simulate_provider_career_once(agents, 2025:2030, 10)
+  # entry_year 2031 providers would sit in the returned temporal cohort having
+  # entered after the horizon, and are counted in no panel row.
+  expect_lte(max(sim$agents$entry_year), 2030)
+  expect_equal(nrow(sim$panel), 6L)
+  # Entrants for every year INSIDE the horizon are still created.
+  entrants <- sim$agents[sim$agents$origin_cohort == "entrant", ]
+  expect_setequal(unique(entrants$entry_year), 2026:2030)
+})
+
 test_that("provenance round-trip verifies content SHA and rejects tampering", {
   tmp <- tempfile(fileext = ".rds")
   obj <- data.frame(a = 1:3, b = letters[1:3])

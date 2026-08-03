@@ -58,3 +58,23 @@ test_that("the trajectory wrapper builds an open population from projections", {
   expect_true(all(tr$population > 0))
   expect_true(all(tr$prev_pop >= 0 & tr$prev_pop <= 1))
 })
+
+test_that("a single-year window builds no entrant cohorts", {
+  # `(start + 1):end` counts DOWN when start == end, so the wrapper built cohorts
+  # for start_year + 1 AND start_year -- the latter duplicating the base
+  # population's entry-age group. The engine discarded both, but the frame was
+  # wrong.
+  pop <- do.call(rbind, lapply(2025:2026, function(y)
+    data.frame(year = y, age = 40:70, population = 1e5)))
+  pop <- tibble::as_tibble(pop)
+
+  one <- dmdm_open_prevalence_trajectory(pop, 2025, 2025, n_init = 800,
+                                         n_entrants = 100, seed = 1)
+  expect_equal(nrow(one), 1L)
+  expect_equal(one$year, 2025)
+  # The base year's population must be exactly the base population: no entrant
+  # cohort may be folded into it.
+  init_only <- dmdm_open_prevalence_trajectory(pop, 2025, 2026, n_init = 800,
+                                               n_entrants = 100, seed = 1)
+  expect_equal(one$population, init_only$population[1])
+})
