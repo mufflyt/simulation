@@ -1,8 +1,13 @@
 # Fast structural checks that do not need the full package toolchain: duplicate
 # function definitions, hardcoded personal paths, install.packages() in library
 # code, and source-time file reads. These guard defects the repository has
-# actually had.
+# actually had. One ubuntu job with no package build, so it is the cheapest gate
+# here and runs automatically.
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 name: repo-hygiene

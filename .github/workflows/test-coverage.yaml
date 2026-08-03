@@ -4,6 +4,11 @@
 #   Rscript -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"))'
 #   Rscript -e 'pkgload::load_all("."); testthat::test_file("tests/testthat/test-repo-hygiene.R", package = "urpssim")'
 # Re-enable push/pull_request triggers when minutes are available again.
+#
+# R-CMD-check and repo-hygiene DO now run on push to main and on pull requests,
+# on a single ubuntu job each, because they gate correctness. Coverage is a
+# reporting metric rather than a gate and catches nothing R CMD check does not,
+# so it stays manual until minutes are less scarce.
 on:
   workflow_dispatch:
 
