@@ -78,3 +78,75 @@ test_that("a single-year window builds no entrant cohorts", {
                                                n_entrants = 100, seed = 1)
   expect_equal(one$population, init_only$population[1])
 })
+
+# ---- Population-conservation audit ----------------------------------------
+
+open_pop_grid <- function(years, ages, n = 1e5) {
+  tibble::as_tibble(do.call(rbind, lapply(years, function(y)
+    data.frame(year = y, age = ages, population = n))))
+}
+
+test_that("reweighting audits how much population escapes the projection", {
+  # The projection stops at 85; the cohort ages past it every year, so the
+  # unanchored share must grow monotonically and sit at the OLDEST ages -- the
+  # ones carrying the highest prevalence.
+  pop <- open_pop_grid(2025:2035, 40:85)
+  init <- .dmdm_open_agents(pop[pop$year == 2025, c("age", "population")],
+                            2025, 40, 3000, seed = 1)
+  # expect_message() returns the CONDITION, not the value, so the run and the
+  # message assertion are separate calls.
+  expect_message(simulate_dmdm_open(init, NULL, 2025, 2035, pop_by_age_year = pop),
+                 "Population conservation")
+  r <- suppressMessages(
+    simulate_dmdm_open(init, NULL, 2025, 2035, pop_by_age_year = pop))
+
+  aud <- dmdm_population_audit(r)
+  expect_equal(nrow(aud), 11L)
+  expect_equal(aud$share_unanchored[1], 0)             # year 0: nothing has aged out
+  expect_true(all(diff(aud$share_unanchored) > 0))     # leak grows every year
+  expect_gt(max(aud$share_unanchored), 0.15)
+  expect_true(all(aud$age_min_unanchored[-1] > 85))    # only ages past the top
+  # The headline column must be visible on the result, not only the attribute.
+  expect_true("share_unanchored" %in% names(r))
+  expect_equal(r$share_unanchored, aud$share_unanchored)
+  # Anchored + unanchored is the whole simulated population, by construction.
+  expect_equal(aud$population_anchored + aud$population_unanchored,
+               aud$population_simulated)
+})
+
+test_that("a projection covering every simulated age conserves exactly", {
+  # Ages 40-120 covers everything an 11-year run can reach from age 40-85.
+  pop <- open_pop_grid(2025:2035, 40:120)
+  init <- .dmdm_open_agents(pop[pop$year == 2025 & pop$age <= 85, c("age", "population")],
+                            2025, 40, 3000, seed = 1)
+  r <- simulate_dmdm_open(init, NULL, 2025, 2035, pop_by_age_year = pop)
+  aud <- dmdm_population_audit(r)
+  expect_true(all(aud$share_unanchored == 0))
+  expect_true(all(aud$population_unanchored == 0))
+  # Fully anchored means the reported population IS the projection's total over
+  # the ages the model spans.
+  expect_equal(r$population[1], sum(pop$population[pop$year == 2025 & pop$age %in% 40:85]))
+})
+
+test_that("strict mode refuses a leaking reweight, and the tolerance is a knob", {
+  pop <- open_pop_grid(2025:2032, 40:85)
+  init <- .dmdm_open_agents(pop[pop$year == 2025, c("age", "population")],
+                            2025, 40, 2000, seed = 2)
+  old <- Sys.getenv("REPRODUCIBILITY_MODE", unset = NA)
+  on.exit(if (is.na(old)) Sys.unsetenv("REPRODUCIBILITY_MODE")
+          else Sys.setenv(REPRODUCIBILITY_MODE = old), add = TRUE)
+
+  Sys.setenv(REPRODUCIBILITY_MODE = "strict")
+  expect_error(simulate_dmdm_open(init, NULL, 2025, 2032, pop_by_age_year = pop),
+               "Population conservation")
+  # Declaring a wider tolerance proceeds knowingly.
+  expect_silent(simulate_dmdm_open(init, NULL, 2025, 2032, pop_by_age_year = pop,
+                                   conservation_tolerance = 0.9))
+})
+
+test_that("a run without reweighting has no audit and no conservation claim", {
+  i <- mk_agents(40:84, 2, 1e5)
+  r <- simulate_dmdm_open(i, NULL, 2025, 2030)
+  expect_null(dmdm_population_audit(r))
+  expect_false("share_unanchored" %in% names(r))
+})

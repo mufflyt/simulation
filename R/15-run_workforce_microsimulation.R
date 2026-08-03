@@ -434,6 +434,10 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       ssot_provenance = ssot_provenance(),
       ssot_coverage = ssot_coverage_report(),
       workload_status = urps_service_workload_status(),
+      # Validation status of the engine that produced `supply`, carried on the
+      # run itself so it reaches anyone reading the projection or the gap.
+      backtest = backtest_status(),
+      interval_label = interval_label(),
       calibration = calibration_status_report(),
       hours_status = reference_hours_status(),
       mode = mode,

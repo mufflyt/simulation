@@ -10,7 +10,8 @@ simulate_dmdm_open(
   start_year,
   end_year,
   transitions = dmdm_default_transitions(),
-  pop_by_age_year = NULL
+  pop_by_age_year = NULL,
+  conservation_tolerance = 0.01
 )
 }
 \arguments{
@@ -30,11 +31,19 @@ marginal \code{p_ui}/\code{p_pop}/\code{p_ai}.}
 supplied, each year's age-specific weights are rescaled to it, so population
 counts follow the Census projection while the model supplies the disease
 rates. \code{NULL} (default) runs the internal cohort-component demography.}
+
+\item{conservation_tolerance}{Largest share of a year's simulated population
+that may sit at ages the projection does not carry, and so escape
+reweighting. Exceeding it warns (strict: errors), because beyond that point
+\code{population} and the weighted prevalences mix Census-anchored with
+free-floating mass. Only consulted when \code{pop_by_age_year} is supplied.}
 }
 \value{
 A data frame, one row per year: \code{year}, \code{population} (sum of weights),
 \code{prev_ui}/\code{prev_pop}/\code{prev_ai} (weighted population prevalence) and
-\code{inc_ui}/\code{inc_pop}/\code{inc_ai} (expected national new cases in the year).
+\code{inc_ui}/\code{inc_pop}/\code{inc_ai} (expected national new cases in the year). When
+reweighting, also \code{share_unanchored}, with the full per-year audit on the
+\code{population_audit} attribute (see \code{\link[=dmdm_population_audit]{dmdm_population_audit()}}).
 }
 \description{
 Deterministic cohort-component engine. Each agent-track carries a survival
