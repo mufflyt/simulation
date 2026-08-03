@@ -232,3 +232,72 @@ test_that("implied_urps_share reports the consistent level", {
   expect_equal(s, mean(URPS_DELEGATION_MATRIX$urps_share[
     URPS_DELEGATION_MATRIX$service != "indirect_clinical_work"]), tolerance = 0.05)
 })
+
+# ---- Which inputs actually move the deliverable ----------------------------
+
+test_that("required FTE is invariant to the LEVEL of the service volumes", {
+  # wrvu_per_fte is SOLVED against the base-year anchor, so a proportional error
+  # in every volume cancels exactly. This bounds how much the illustrative
+  # volumes can distort the deliverable: for the level, not at all.
+  vol <- tibble::tibble(year = c(2025L, 2050L),
+                        service = "new_consultation",
+                        volume = c(1e6, 1.4e6))
+  req <- function(v) {
+    k <- calibrate_wrvu_per_fte(
+      service_volume_to_wrvu(dplyr::filter(v, .data$year == 2025L))$work_rvu, 1377.3)
+    convert_workload_to_fte(v, wrvu_per_fte = k)$required_fte
+  }
+  base <- req(vol)
+  expect_equal(req(dplyr::mutate(vol, volume = .data$volume * 2)), base)
+  expect_equal(req(dplyr::mutate(vol, volume = .data$volume * 0.5)), base)
+})
+
+test_that("required FTE is invariant to a uniform delegation rescaling", {
+  # The 0.434 capacity correction changes wrvu_per_fte and the URPS share by the
+  # same factor, so it cancels. It fixes the interpretability of the shares and
+  # the plausibility of the productivity denominator -- it does NOT move the gap.
+  vol <- tibble::tibble(year = c(2025L, 2050L), service = "new_consultation",
+                        volume = c(1e6, 1.4e6))
+  scaled <- URPS_DELEGATION_MATRIX
+  keep <- scaled$service != "indirect_clinical_work"
+  moved <- scaled$urps_share[keep] * 0.2
+  scaled$urps_share[keep] <- scaled$urps_share[keep] - moved
+  scaled$other_clinician_share[keep] <- scaled$other_clinician_share[keep] + moved
+
+  req <- function(dg) {
+    k <- calibrate_wrvu_per_fte(
+      service_volume_to_wrvu(dplyr::filter(vol, .data$year == 2025L),
+                             delegation = dg)$work_rvu, 1377.3)
+    convert_workload_to_fte(vol, wrvu_per_fte = k, delegation = dg)$required_fte
+  }
+  expect_equal(req(scaled), req(URPS_DELEGATION_MATRIX))
+})
+
+test_that("the base-year gap is a pass-through of the adequacy estimate", {
+  # gap = supply - supply/adequacy, so base gap% is exactly -(1 - adequacy).
+  # The headline base-year number is therefore NOT modelled: it is whatever the
+  # capacity survey says, with a coefficient of one.
+  for (a in c(0.90, 0.948, 0.97)) {
+    g <- baseline_gap(1306, a, method = "capacity_survey")
+    expect_equal(100 * (1306 - g$required_fte) / g$required_fte,
+                 -100 * (1 - a), tolerance = 1e-8)
+  }
+})
+
+test_that("an inconsistent hours intercept warns instead of exceeding headcount", {
+  skip_if_not_installed("mufflyaccess")
+  set.seed(11)
+  a <- agents_from_certification_cohorts(2023L)
+  # Default intercept: general-internal-medicine hours against a 37.2 hr FTE
+  # definition gives more FTE than people.
+  expect_message(
+    run_supply_microsimulation(a, 2023:2024, 88, "FPMRS", n_iterations = 3,
+                               verbose = FALSE),
+    "FTE supply will exceed headcount")
+  # Calibrated intercept: no warning, and the ratio is 1.
+  ic <- calibrate_hours_intercept(a$age, a$sex)
+  r <- run_supply_microsimulation(a, 2023:2024, 88, "FPMRS", n_iterations = 3,
+                                  hours_intercept = ic, verbose = FALSE)
+  expect_equal(r$summary$effective_fte_median[1] / r$summary$headcount_median[1],
+               1, tolerance = 0.01)
+})

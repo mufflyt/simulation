@@ -76,6 +76,48 @@ interval everywhere. Two distinct causes, both reported honestly:
 
 Read projected intervals from this engine with that result in mind.
 
+### What the back-test did *not* test
+
+It scored **headcount only**. The deliverable is `fte_gap`, and three of its four
+components were never validated:
+
+| Component | Back-tested? |
+|---|---|
+| Provider headcount | **yes** — −8.5%, outside the 95% interval |
+| headcount → supplied FTE | no — the hours schedule is `derived_by_analogy` and drifts FTE-per-head ~3% over the horizon |
+| Required FTE | no |
+| The gap itself | no |
+
+So the back-test validates roughly one component of four. Treating it as a
+verdict on the whole model overstates what it covers.
+
+## Which inputs actually move the answer
+
+Because `wrvu_per_fte` is *solved* against the base-year anchor, several inputs
+that look alarming cancel out. Measured, not asserted — `test-workload-to-fte.R`
+locks each of these:
+
+| Perturbation | Effect on required FTE |
+|---|---|
+| All service volumes ×2 or ×0.5 | **exactly none** — bit-identical |
+| Uniform 20% cut to every URPS delegation share | **exactly none** |
+| Tripling one service (mix shift) | ≤ 0.91% on 25-year growth |
+| Base-year adequacy 0.948 → 1.000 | **4.4 pp** on the 2050 gap |
+| Supply error of −8.5% (the back-test's) | **6.7 pp** on the 2050 gap |
+
+Two consequences worth stating plainly:
+
+**The base-year gap is a pass-through, not a model output.** `gap% = −(1 −
+adequacy)` to the decimal. The headline base-year number *is* the capacity-survey
+estimate, with a coefficient of one — and that estimate is currently a
+**physical-therapy** distribution standing in for urogynecology. It is the single
+largest unmeasured input.
+
+**The 0.434 delegation rescaling does not move the gap.** It matters for
+interpretability and for making the solved productivity plausible, but a uniform
+rescaling cancels through the solved denominator. The same goes for the level of
+the illustrative service volumes.
+
 ## Calibration status
 
 Every input carries one of four tiers, reported by `calibration_status_report()`
@@ -284,16 +326,25 @@ to `<name>_variant1` and flagged. See `inst/legacy/README.md`.
 
 ## What is still missing
 
-- **Service volumes are illustrative.** This is what
-  `check_productivity_plausible()` keeps flagging, and it will keep flagging until
-  MEPS-derived ambulatory volumes and an HCUP SASD / Medicare Part B procedure
-  basket replace them. NIS is inpatient and carries ICD-10-PCS rather than CPT —
-  it is the wrong instrument for outpatient slings.
-- **No URPS practice survey.** The base-year capacity distribution stands in from
-  physical therapy, and the hours schedule from general internal medicine.
-- **No individual provider roster.** The contract ships aggregate counts only.
-- **Retirement and hours uncertainty are unquantified.** Both are published as
-  point estimates with no standard errors; `hazard_cv` defaults to zero and says so.
+Ordered by how much each actually moves the deliverable, which is not the order
+you would guess:
+
+1. **No URPS capacity survey.** The base-year adequacy is a physical-therapy
+   distribution, and it passes straight through to the headline gap with a
+   coefficient of one. Highest-value missing input by a wide margin.
+2. **The headcount → FTE step is unvalidated.** The hours schedule comes from
+   general internal medicine and drifts FTE-per-head ~3% over the horizon. The
+   back-test never scored it.
+3. **No individual provider roster.** The contract ships aggregate counts only,
+   so half the base cohort's ages are assumed.
+4. **Retirement and hours uncertainty are unquantified.** Both are published as
+   point estimates with no standard errors; `hazard_cv` defaults to zero and
+   says so, rather than inventing a spread.
+5. **Service volumes and the case mix are illustrative** — but see the
+   sensitivity table above: the *level* cancels entirely and a mix shift moves
+   25-year growth by under 1%. Worth fixing for credibility; not what is
+   distorting the number. NIS is the wrong instrument for outpatient slings
+   (inpatient, ICD-10-PCS not CPT) when they are replaced.
 
 ## Citation
 
