@@ -1,0 +1,13 @@
+year,certification_count,is_break_window,note
+2012,33,FALSE,placeholder pre-break
+2013,36,FALSE,placeholder pre-break
+2014,41,FALSE,placeholder pre-break
+2015,39,FALSE,placeholder pre-break
+2016,45,FALSE,placeholder pre-break
+2017,44,FALSE,placeholder pre-break
+2018,40,FALSE,README observed
+2019,48,FALSE,README observed
+2020,10,TRUE,README observed COVID trough
+2021,81,TRUE,README observed backlog clearance
+2022,54,TRUE,README observed
+2023,72,TRUE,README observed
