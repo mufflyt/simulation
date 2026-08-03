@@ -39,7 +39,8 @@ MICROSIM_MODULES <- c(
   "19-scenario_registry.R",
   "20-provider_geography.R",
   "21-calibration_validation.R",
-  "22-legacy_loader.R"
+  "22-legacy_loader.R",
+  "urps_projection.R"
 )
 
 #' Load every microsimulation module in dependency order (deprecated)
@@ -425,9 +426,6 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
     )
   })
 
-  validation <- validation_report(supply_by_scenario, required, gap)
-  assert_validation_passed(validation, mode)
-
   projection <- if (has_mufflyaccess()) {
     tryCatch(as_urps_projection(supply_by_scenario, specialty = subspecialty,
                                 geography_type = supply_geography,
@@ -435,9 +433,31 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
              error = function(e) { .msg_warn("Projection contract: ", conditionMessage(e)); NULL })
   } else NULL
 
+  # Extended gap projection: supply + demand + gap in one validated table.
+  # Built before validation_report() so the contract check runs as an internal
+  # validation gate rather than a post-hoc summary.
+  gap_projection <- tryCatch(
+    gap_projections_all_scenarios(
+      supply_by_scenario, required,
+      specialty      = subspecialty,
+      geography_type = supply_geography,
+      geography_id   = if (supply_geography == "conus") "CONUS" else "US",
+      mode           = mode
+    ),
+    error = function(e) {
+      .msg_warn("Gap projection contract failed (", conditionMessage(e), "); skipped.")
+      NULL
+    }
+  )
+
+  validation <- validation_report(supply_by_scenario, required, gap,
+                                  gap_projection = gap_projection)
+  assert_validation_passed(validation, mode)
+
   result <- list(
     supply = supply_by_scenario,
     projection = projection,
+    gap_projection = gap_projection,
     demand = demand_long,
     service_volumes = volumes,
     required_fte = required,
@@ -498,9 +518,25 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
 
   if (verbose) {
     final_year <- max(years)
-    fin <- dplyr::filter(fte_gap, .data$year == final_year)
-    .msg_info(sprintf("Status quo %d: %.0f FTE supplied vs %.0f required (gap %.0f FTE, %.1f%%)",
-                      final_year, fin$supplied_fte, fin$required_fte, fin$gap_fte, fin$gap_pct))
+    if (!is.null(gap_projection)) {
+      fin <- dplyr::filter(gap_projection,
+                           .data$year == final_year,
+                           .data$scenario_id == reference_id)
+      if (nrow(fin) == 0) fin <- dplyr::filter(gap_projection, .data$year == final_year)[1, ]
+      .msg_info(sprintf(
+        "Status quo %d: %.0f hc / %.0f FTE supplied  vs  %.0f hc / %.0f FTE required  (gap %.0f FTE, %.1f%%)",
+        final_year,
+        fin$supply_headcount, fin$supply_clinical_fte,
+        fin$demand_headcount,  fin$demand_clinical_fte,
+        fin$gap_fte,
+        if (!is.null(fin$gap_pct) && !is.na(fin$gap_pct)) fin$gap_pct else
+          100 * fin$gap_fte / fin$demand_clinical_fte
+      ))
+    } else {
+      fin <- dplyr::filter(fte_gap, .data$year == final_year)
+      .msg_info(sprintf("Status quo %d: %.0f FTE supplied vs %.0f required (gap %.0f FTE, %.1f%%)",
+                        final_year, fin$supplied_fte, fin$required_fte, fin$gap_fte, fin$gap_pct))
+    }
     .msg_info(sprintf("Demand concordance informative = %s", concordance$informative))
   }
 

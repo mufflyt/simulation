@@ -331,6 +331,74 @@ test_that("division guards delegate to the contract convention", {
   expect_equal(ssot_safe_percent(1, 0), 0)
 })
 
+# ---- gap projection contract -----------------------------------------------
+
+test_that("as_urps_gap_projection produces all REQUIRED_COLS and correct arithmetic", {
+  supply <- tibble::tibble(
+    year = 2025:2027, scenario = "baseline",
+    headcount_median = c(1300, 1295, 1290),
+    headcount_lo = c(1280, 1275, 1270), headcount_hi = c(1320, 1315, 1310),
+    effective_fte_median = c(1200, 1195, 1190)
+  )
+  req <- tibble::tibble(year = 2025:2027, required_fte = c(1300, 1310, 1320))
+  gap_tbl <- compute_fte_gap(supply, req)
+  gp <- as_urps_gap_projection(supply, gap_tbl)
+
+  expect_true(all(REQUIRED_COLS %in% names(gp)))
+  expect_equal(gp$gap_fte, gp$supply_clinical_fte - gp$demand_clinical_fte)
+  expect_equal(gp$gap_headcount, gp$supply_headcount - gp$demand_headcount)
+  # shortage in all years (supply < demand)
+  expect_true(all(gp$gap_fte < 0))
+})
+
+test_that("validate_urps_gap_projection errors in strict mode on missing columns", {
+  bad <- data.frame(year = 2025L, gap_fte = -100)
+  withr::with_options(list(urpssim.mode = "strict"), {
+    expect_error(validate_urps_gap_projection(bad, mode = "strict"), "missing required column")
+  })
+})
+
+test_that("validate_urps_gap_projection errors in strict mode on arithmetic inconsistency", {
+  gp <- data.frame(
+    year = 2025L, scenario_id = "baseline", specialty = "FPMRS",
+    geography_type = "national", geography_id = "US",
+    supply_headcount = 1300, supply_clinical_fte = 1200,
+    demand_headcount = 1350, demand_clinical_fte = 1300,
+    gap_fte = -50,       # wrong: should be -100
+    gap_headcount = -50
+  )
+  expect_error(validate_urps_gap_projection(gp, mode = "strict"), "gap_fte does not equal")
+})
+
+test_that("validation_report includes gap_projection checks when supplied", {
+  supply <- tibble::tibble(
+    year = 2025L, scenario = "baseline",
+    headcount_median = 1300, effective_fte_median = 1200
+  )
+  req <- tibble::tibble(year = 2025L, required_fte = 1300)
+  gap_tbl <- compute_fte_gap(supply, req)
+  gp <- as_urps_gap_projection(supply, gap_tbl)
+
+  rep <- validation_report(supply, req, gap_projection = gp)
+  expect_true("gap_projection_cols"       %in% rep$check)
+  expect_true("gap_projection_arithmetic" %in% rep$check)
+  expect_true(rep$passed[rep$check == "gap_projection_cols"])
+  expect_true(rep$passed[rep$check == "gap_projection_arithmetic"])
+})
+
+test_that("gap_projections_all_scenarios covers every scenario", {
+  supply <- tibble::tibble(
+    year = rep(2025:2026, 2),
+    scenario = c("baseline","baseline","expanded","expanded"),
+    headcount_median = c(1300, 1295, 1380, 1375),
+    effective_fte_median = c(1200, 1195, 1270, 1265)
+  )
+  req <- tibble::tibble(year = 2025:2026, required_fte = c(1300, 1310))
+  gp <- gap_projections_all_scenarios(supply, req)
+  expect_setequal(unique(gp$scenario_id), c("baseline", "expanded"))
+  expect_true(all(REQUIRED_COLS %in% names(gp)))
+})
+
 test_that("SSOT ownership is reported, including what is NOT owned", {
   r <- ssot_coverage_report()
   expect_true(all(r$owner %in% c("mufflyaccess", "local")))

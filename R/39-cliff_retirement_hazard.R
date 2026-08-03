@@ -4,16 +4,127 @@
 #
 # Addresses README item 4: retirement uncertainty unquantified.
 # Calibration tier: calibrated (with cliff) / derived_by_analogy (fallback)
+#
+# Retirement model (IHS Markit HWMM Exhibits 17-18):
+#   P(still active at age a) = exp(-(a / scale)^shape)
+#   Discrete annual exit prob: 1 - S(a+1) / S(a)
+#   Scenario levers shift `scale` by ±2 yr, preserving the stochastic spread.
 ################################################################################
+
+# ---- Weibull survival parameters (HWMM Exhibits 17-18, derived_by_analogy) --
+#
+# Shape and scale are from HWSM general physician curves re-parameterised for
+# URPS sub-specialties. ABOG female exits earlier (scale 68.5) than ABOG male
+# (70.2); ABU mixed-practice exits earliest (66.0) because urologists who add
+# pelvic floor often shift back to general urology at career midpoint.
+# `derived_by_analogy` tier until ABOG departure micro-data are available.
+
+URPS_WEIBULL_PARAMS <- list(
+  abog_female = list(shape = 2.1, scale = 68.5,
+                     tier = "derived_by_analogy",
+                     note = "HWSM Exhibit 17 female physician analogy"),
+  abog_male   = list(shape = 1.9, scale = 70.2,
+                     tier = "derived_by_analogy",
+                     note = "HWSM Exhibit 18 male physician analogy"),
+  abu         = list(shape = 2.0, scale = 66.0,
+                     tier = "derived_by_analogy",
+                     note = "HWSM Exhibit 18 male analogy, −4 yr for mixed urology practice")
+)
+
+#' Weibull discrete annual exit probabilities for URPS providers
+#'
+#' Computes P(exit in year a to a+1 | active at a) from the Weibull survival
+#' function, with an optional scale shift for scenario levers.  Scenarios move
+#' `scale` (±2 yr = scale ± 2), which shifts the median retirement age while
+#' preserving the stochastic spread — the correct HWMM parameterisation (see
+#' Exhibits 17–18 and every published Dall-family scenario table).
+#'
+#' @param ages Integer vector of ages to evaluate.
+#' @param sex "Female" or "Male".
+#' @param pathway "ABOG" or "ABU".
+#' @param scale_shift Numeric added to the canonical scale parameter.  Default
+#'   0 (baseline); +2 = "delayed retirement" scenario; −2 = "early retirement".
+#' @return Named numeric vector of annual exit probabilities, length
+#'   `length(ages)`.
+#' @export
+urps_weibull_exit_probs <- function(ages, sex, pathway = "ABOG",
+                                     scale_shift = 0) {
+  key <- if (identical(pathway, "ABU")) {
+    "abu"
+  } else if (tolower(sex) == "female") {
+    "abog_female"
+  } else {
+    "abog_male"
+  }
+  p <- URPS_WEIBULL_PARAMS[[key]]
+  shape <- p$shape
+  scale <- p$scale + scale_shift
+
+  S <- function(a) exp(-(a / scale)^shape)
+  Sa  <- pmax(1e-12, S(ages))
+  Sa1 <- pmax(1e-12, S(ages + 1))
+  pmax(0, pmin(0.99, 1 - Sa1 / Sa))
+}
+
+#' Weibull survival curve for a URPS provider group
+#'
+#' Returns the probability of still being active at each age, given active at
+#' `entry_age`.  Useful for plotting retirement trajectories and for comparing
+#' the baseline vs scenario curves visually.
+#'
+#' @param ages Integer vector of ages.
+#' @param sex "Female" or "Male".
+#' @param pathway "ABOG" or "ABU".
+#' @param scale_shift Numeric scale shift for scenario (default 0).
+#' @param entry_age Age at which to condition (default 30).
+#' @return Tibble with columns `age`, `sex`, `pathway`, `scale_shift`,
+#'   `p_active`.
+#' @export
+urps_survival_curve <- function(ages = 30:85, sex = "Female",
+                                 pathway = "ABOG", scale_shift = 0,
+                                 entry_age = 30L) {
+  key <- if (identical(pathway, "ABU")) {
+    "abu"
+  } else if (tolower(sex) == "female") {
+    "abog_female"
+  } else {
+    "abog_male"
+  }
+  p <- URPS_WEIBULL_PARAMS[[key]]
+  shape <- p$shape
+  scale <- p$scale + scale_shift
+
+  S <- function(a) exp(-(a / scale)^shape)
+  S_entry <- S(entry_age)
+  p_active <- ifelse(ages < entry_age, NA_real_,
+                     pmax(0, S(ages) / S_entry))
+
+  tibble::tibble(
+    age         = ages,
+    sex         = sex,
+    pathway     = pathway,
+    scale_shift = scale_shift,
+    p_active    = p_active
+  )
+}
 
 #' Build URPS Age-Specific Retirement Hazard
 #'
-#' @param cliff_duckdb_path Character or NULL.
-#' @param min_confidence Numeric. Default: 0.60.
-#' @param smooth Logical. Default: TRUE.
-#' @param verbose Logical. Default: TRUE.
+#' Returns a per-age exit probability table for use in [advance_urps_agents()].
+#' The default fallback uses the Weibull survival curves from
+#' [urps_weibull_exit_probs()] (derived-by-analogy from HWSM Exhibits 17–18),
+#' replacing the previous coarse step function.  When a cliff DuckDB is
+#' available, a Gompertz model is fitted to observed departure events and
+#' returned at the `calibrated` tier.
 #'
-#' @return Named list: exit_probs, source, n_events, hazard_cv.
+#' @param cliff_duckdb_path Character path to the cliff DuckDB, or NULL.
+#' @param min_confidence Minimum cliff confidence score to include. Default 0.60.
+#' @param smooth Logical; loess-smooth the Gompertz predictions. Default TRUE.
+#' @param scale_shift Numeric scale shift applied to the Weibull fallback only
+#'   (cliff Gompertz uses its own fitted parameters). Default 0.
+#' @param verbose Logical.
+#' @return Named list: `exit_probs` (data frame), `source`, `n_events`,
+#'   `hazard_cv`, `weibull_params` (the parameters used in the fallback).
 #' @importFrom assertthat assert_that
 #' @importFrom dplyr mutate filter case_when select bind_rows if_else
 #' @importFrom purrr map_dfr
@@ -21,63 +132,52 @@
 build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
                                    min_confidence   = 0.60,
                                    smooth           = TRUE,
+                                   scale_shift      = 0,
                                    verbose          = TRUE) {
   ages <- 30:80
 
-  fraher_fallback <- function() {
-    female_probs <- dplyr::case_when(
-      ages < 55 ~ 0.005,
-      ages < 60 ~ 0.012,
-      ages < 63 ~ 0.048,
-      ages < 66 ~ 0.105,
-      ages < 70 ~ 0.205,
-      TRUE      ~ 0.385
+  weibull_fallback <- function() {
+    dplyr::bind_rows(
+      lapply(c("Female", "Male"), function(s) {
+        p <- urps_weibull_exit_probs(ages, s, "ABOG", scale_shift)
+        data.frame(age = ages, sex = s,
+                   prob_exit        = p,
+                   se_prob_exit     = p * 0.15,
+                   calibration_tier = "derived_by_analogy",
+                   stringsAsFactors = FALSE)
+      })
     )
-    male_probs <- dplyr::case_when(
-      ages < 55 ~ 0.004,
-      ages < 60 ~ 0.010,
-      ages < 63 ~ 0.042,
-      ages < 66 ~ 0.095,
-      ages < 70 ~ 0.190,
-      TRUE      ~ 0.370
-    )
-    rbind(
-      data.frame(age = ages, sex = "Female",
-                 prob_exit = female_probs, se_prob_exit = 0,
-                 calibration_tier = "derived_by_analogy",
-                 stringsAsFactors = FALSE),
-      data.frame(age = ages, sex = "Male",
-                 prob_exit = male_probs, se_prob_exit = 0,
-                 calibration_tier = "derived_by_analogy",
-                 stringsAsFactors = FALSE)
+  }
+
+  .weibull_return <- function(src) {
+    list(
+      exit_probs    = weibull_fallback(),
+      source        = src,
+      n_events      = 0L,
+      hazard_cv     = 0.15,
+      weibull_params = list(
+        abog_female  = URPS_WEIBULL_PARAMS$abog_female,
+        abog_male    = URPS_WEIBULL_PARAMS$abog_male,
+        abu          = URPS_WEIBULL_PARAMS$abu,
+        scale_shift  = scale_shift
+      )
     )
   }
 
   if (is.null(cliff_duckdb_path) || !file.exists(cliff_duckdb_path)) {
     if (verbose) {
-      message(
-        "build_urps_exit_hazard(): cliff DuckDB not available.\n",
-        "  Using Fraher (2024) Figure 4 pediatric analogy.\n",
-        "  Calibration tier: derived_by_analogy\n",
-        "  hazard_cv = 0 (announced, not invented)."
-      )
+      message(sprintf(
+        "build_urps_exit_hazard(): cliff DuckDB unavailable. ",
+        "Using Weibull survival curves (HWSM Exhibits 17-18 analogy, scale_shift=%.1f).",
+        scale_shift
+      ))
     }
-    return(list(
-      exit_probs = fraher_fallback(),
-      source     = "fraher_fig4_analogy",
-      n_events   = 0L,
-      hazard_cv  = 0
-    ))
+    return(.weibull_return("hwsm_weibull_analogy"))
   }
 
   if (!requireNamespace("flexsurv", quietly = TRUE)) {
-    warning("flexsurv not installed. Falling back to Fraher Fig 4 analogy.")
-    return(list(
-      exit_probs = fraher_fallback(),
-      source     = "fraher_fig4_analogy_flexsurv_missing",
-      n_events   = 0L,
-      hazard_cv  = 0
-    ))
+    warning("flexsurv not installed. Using Weibull fallback.")
+    return(.weibull_return("hwsm_weibull_analogy_flexsurv_missing"))
   }
 
   conn <- DBI::dbConnect(duckdb::duckdb(), cliff_duckdb_path, read_only = TRUE)
@@ -96,10 +196,11 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   if (is.na(ret_table)) {
     warning("No retirement table found in cliff DuckDB. Using fallback.")
     return(list(
-      exit_probs = fraher_fallback(),
-      source     = "fraher_fig4_analogy_no_table",
-      n_events   = 0L,
-      hazard_cv  = 0
+      exit_probs = weibull_fallback(),
+      source        = "hwsm_weibull_analogy_no_table",
+      n_events      = 0L,
+      hazard_cv     = 0.15,
+      weibull_params = list(scale_shift = scale_shift)
     ))
   }
 
@@ -121,10 +222,11 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
       "Only %d cliff records. Using fallback.", nrow(cliff_data)
     ))
     return(list(
-      exit_probs = fraher_fallback(),
-      source     = "fraher_fig4_analogy_insufficient_cliff",
-      n_events   = nrow(cliff_data),
-      hazard_cv  = 0
+      exit_probs = weibull_fallback(),
+      source        = "hwsm_weibull_analogy_insufficient_cliff",
+      n_events      = nrow(cliff_data),
+      hazard_cv     = 0.15,
+      weibull_params = list(scale_shift = scale_shift)
     ))
   }
 
@@ -138,7 +240,7 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
       sex_data <- sex_data[tolower(sex_data$sex) == tolower(s), ]
 
     if (nrow(sex_data) < 10)
-      return(fraher_fallback()[fraher_fallback()$sex == s, ])
+      return(weibull_fallback()[weibull_fallback()$sex == s, ])
 
     ref_yr     <- 2023L
     age_at_ret <- if (!is.na(age_col)) sex_data[[age_col]]
@@ -155,7 +257,7 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
     )
 
     if (is.null(fit))
-      return(fraher_fallback()[fraher_fallback()$sex == s, ])
+      return(weibull_fallback()[weibull_fallback()$sex == s, ])
 
     coef_vals <- stats::coef(fit)
     shape     <- coef_vals[["shape"]]

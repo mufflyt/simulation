@@ -253,9 +253,14 @@ assert_estimands_independent <- function(long, value_col = "demand_cases",
 #' @param required Required-FTE tibble.
 #' @param gap Optional [baseline_gap()] object.
 #' @param state_totals Optional tibble with `year` and `fte` summed by state.
+#' @param gap_projection Optional data frame from [as_urps_gap_projection()] /
+#'   [gap_projections_all_scenarios()]. When supplied, two internal checks are
+#'   added: (1) all REQUIRED_COLS are present; (2) gap arithmetic is consistent
+#'   (`gap_fte == supply_clinical_fte - demand_clinical_fte` to ±0.01 FTE).
 #' @return Tibble of checks with pass/fail and detail.
 #' @export
-validation_report <- function(supply, required = NULL, gap = NULL, state_totals = NULL) {
+validation_report <- function(supply, required = NULL, gap = NULL,
+                              state_totals = NULL, gap_projection = NULL) {
   checks <- list()
 
   add <- function(name, type, passed, detail) {
@@ -295,6 +300,22 @@ validation_report <- function(supply, required = NULL, gap = NULL, state_totals 
     ok <- all(d < 1e-6 * pmax(state_totals$national_fte, 1), na.rm = TRUE)
     add("state_totals_equal_national", "internal", ok,
         if (ok) "ok" else sprintf("max discrepancy %.4f", max(d, na.rm = TRUE)))
+  }
+
+  if (!is.null(gap_projection)) {
+    missing_cols <- setdiff(REQUIRED_COLS, names(gap_projection))
+    add("gap_projection_cols", "internal", length(missing_cols) == 0L,
+        if (length(missing_cols) == 0L) "ok"
+        else sprintf("missing: %s", paste(missing_cols, collapse = ", ")))
+
+    if (all(c("supply_clinical_fte", "demand_clinical_fte", "gap_fte") %in% names(gap_projection))) {
+      residual <- abs(gap_projection$gap_fte -
+                        (gap_projection$supply_clinical_fte - gap_projection$demand_clinical_fte))
+      ok <- all(residual <= 0.01, na.rm = TRUE)
+      add("gap_projection_arithmetic", "internal", ok,
+          if (ok) "ok"
+          else sprintf("max residual %.4f FTE (tolerance 0.01)", max(residual, na.rm = TRUE)))
+    }
   }
 
   add("conceptual_validation", "conceptual", NA,
