@@ -24,7 +24,7 @@ Named numeric vector of single-year hazards (names = ages as strings).
 Builds a single-year hazard schedule keyed by age (50..terminal-1) for use as
 the \code{retirement_schedule} argument to the supply engine. Ages 50-69 use the
 empirical URPS band hazards; ages 70+ use the HWSM physician tail
-(\link{RETIREMENT_HAZARD_PHYSICIAN}) because cliff has no observed departures past
+(\code{RETIREMENT_HAZARD_PHYSICIAN}) because cliff has no observed departures past
 70 (the sparse cell). This is a principled hybrid: observed where observed,
 literature where the data run out.
 }

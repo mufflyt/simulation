@@ -14,7 +14,7 @@ calculate_proportion_ci(x, n, conf_level = 0.95)
 \item{conf_level}{Confidence level (default 0.95).}
 }
 \value{
-List: \code{proportion}, \code{lower_ci}, \code{upper_ci} (proportions in \link{0,1}),
+List: \code{proportion}, \code{lower_ci}, \code{upper_ci} (proportions in \verb{[0,1]}),
 \code{method}, \code{note}.
 }
 \description{

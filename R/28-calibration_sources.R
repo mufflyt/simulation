@@ -33,7 +33,7 @@
 #' Empirical age-band URPS departure hazards (with the sparse-70+ guard)
 #'
 #' Reads the canonical pooled-hazard file and returns annual departure hazards
-#' over the model's age bands ([MICROSIM_AGE_BAND_LABELS]). Because the observed
+#' over the model's age bands (`MICROSIM_AGE_BAND_LABELS`). Because the observed
 #' 70+ cell is 0/16, hazards are made monotone non-decreasing from the `60-64`
 #' band onward, so `70+` inherits the `65-69` hazard instead of collapsing to 0.
 #'
@@ -75,7 +75,7 @@ urps_empirical_hazard_by_ageband <- function(pooling = c("urps", "pooled", "pool
 #' Builds a single-year hazard schedule keyed by age (50..terminal-1) for use as
 #' the `retirement_schedule` argument to the supply engine. Ages 50-69 use the
 #' empirical URPS band hazards; ages 70+ use the HWSM physician tail
-#' ([RETIREMENT_HAZARD_PHYSICIAN]) because cliff has no observed departures past
+#' (`RETIREMENT_HAZARD_PHYSICIAN`) because cliff has no observed departures past
 #' 70 (the sparse cell). This is a principled hybrid: observed where observed,
 #' literature where the data run out.
 #'
