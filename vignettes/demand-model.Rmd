@@ -81,6 +81,19 @@ fit <- fit_dmdm_transitions(td)                   # status = "fitted"
 dmdm_open_prevalence_trajectory(pop_by_age_year, 2025, 2050, transitions = fit)
 ```
 
+Prolapse is graded (POP-Q 0–4) and regresses, unlike incontinence. Until a POP
+panel is fitted, use the cited literature transitions (`derived_by_analogy`);
+with a staged panel, fit the per-stage progression/regression hazards directly:
+
+```{r pop}
+tr_pop <- dmdm_transitions_with_pop_literature()  # MOAD/WHI/SWEPOP-derived POP row
+tr_pop$pop_progression                             # annual stage k -> k+1
+tr_pop$pop_regression                              # annual stage k -> k-1 (mild POP resolves)
+
+td_st <- dmdm_transition_data(swan_panel, stage_cols = c(pop = "pop_stage"))
+fit_dmdm_transitions(td_st, stage_conditions = "pop")  # + pop_progression/pop_regression
+```
+
 ## 5. Calibration and back-test
 
 ```{r calibration}

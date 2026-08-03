@@ -73,6 +73,23 @@ than a static risk equation.
 - **Fitting** (`R/31`): `dmdm_transition_data()` reshapes a longitudinal panel
   (SWAN is the intended source) into at-risk transition rows; `fit_dmdm_transitions()`
   fits per-condition onset logistics and remission rates.
+- **Prolapse is different** (`R/33`): pelvic organ prolapse is *graded* (POP-Q
+  stage 0–4) and it *regresses* — mild prolapse resolves spontaneously at a high
+  annual rate, unlike incontinence, which is persistent once established. Two
+  additions handle this. (1) A cited, literature-derived POP transition set
+  (`pop_transition_parameters()`, from `inst/extdata/pop/`) supplies onset
+  log-odds (cumulative vaginal deliveries primary; SWEPOP/Gyhagen 2013, WHI/
+  Hendrix 2002, Mant 1997, MOAD/Blomquist 2018) plus explicit per-stage
+  progression (stage k → k+1) and regression (stage k → k−1) probabilities
+  (WHI natural-history cohorts: Handa 2004; Bradley 2007);
+  `dmdm_transitions_with_pop_literature()` overlays these onto the POP row and
+  marks the object `calibration_status = "derived_by_analogy"` (one notch above
+  the placeholder, still below fitted), leaving UI/AI untouched and recording the
+  mixed pedigree in `provenance`. (2) When a graded stage column is available,
+  `dmdm_transition_data(stage_cols = c(pop = "pop_stage"))` carries
+  `from_stage`/`to_stage`, and `fit_dmdm_transitions(stage_conditions = "pop")`
+  fits the per-stage progression/regression hazards from data. The staged fields
+  are inert for the two-state engine and available to a staged consumer.
 
 ## 5. Uncertainty, calibration and validation
 
@@ -129,7 +146,8 @@ epidemiology.
 
 Dall TM et al., IHS Markit Health Workforce Microsimulation Model (HWMM);
 Zarek et al. 2025 (physical-therapy workforce demand);
-Gyhagen 2013; Rortveit et al. 2003 (NEJM); Hendrix et al. (WHI);
-Wu et al. 2009, 2011; Kirby et al. 2013; Nygaard et al. 2008;
-Fraher & Knapton 2017; Forte GJ et al. 2021 (delegation); AAN 2010 Practice
-Profile; CMS Physician Fee Schedule RVU25A.
+Gyhagen 2013 (SWEPOP); Rortveit et al. 2003 (NEJM); Hendrix et al. 2002 (WHI);
+Mant et al. 1997 (Oxford FPA); Handa et al. 2004 and Bradley et al. 2007 (WHI POP
+natural history); Blomquist et al. 2018 (MOAD, JAMA); Wu et al. 2009, 2011;
+Kirby et al. 2013; Nygaard et al. 2008; Fraher & Knapton 2017; Forte GJ et al.
+2021 (delegation); AAN 2010 Practice Profile; CMS Physician Fee Schedule RVU25A.
