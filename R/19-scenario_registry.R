@@ -140,15 +140,31 @@ demand_scenario_registry <- function() {
     insurance_equity = list(
       label = "Insurance equity",
       access_components = "uninsured",
-      utilization_multiplier = NA_real_,
+      # project_urps_demand() access_scenario = "insurance_equity" raises
+      # uninsured cells from 0.58× to 1.0× care-seeking (Richter 2007 AJOG).
+      # utilization_multiplier is documented for reporting; the actual lever is
+      # the per-cell barrier multiplier in project_urps_demand().
+      utilization_multiplier = 1.0 / CARE_SEEKING_BY_INSURANCE[["Uninsured"]],
       care_seeking_multiplier = 1.00,
-      source = "HDMM increased medical insurance coverage; Dall 2021 Improved Access 1"
+      access_scenario = "insurance_equity",
+      source = "HDMM increased medical insurance coverage; Dall 2021 Improved Access 1; Richter 2007 AJOG insurance-access gap"
+    ),
+    income_equity = list(
+      label = "Income equity",
+      access_components = "income",
+      # Raises LT25k cells from 0.72× to 1.0× care-seeking (MEPS 2020).
+      utilization_multiplier = 1.0 / CARE_SEEKING_BY_INCOME[["LT25k"]],
+      care_seeking_multiplier = 1.00,
+      access_scenario = "income_equity",
+      source = "MEPS 2020 specialty visit rate by income quartile"
     ),
     reduced_barriers = list(
       label = "Reduced barriers to care",
-      access_components = c("uninsured", "nonmetro", "racial_equity"),
+      access_components = c("uninsured", "nonmetro", "racial_equity", "income"),
+      # full_equity removes both insurance and income barriers simultaneously.
       utilization_multiplier = NA_real_,
       care_seeking_multiplier = 1.00,
+      access_scenario = "full_equity",
       source = "HDMM utilization equity; Zarek 2025 Reduced Barriers (+12% by 2037)"
     ),
     care_seeking_improved = list(
@@ -251,7 +267,12 @@ scenario_retirement_schedule <- function(scenario,
     h <- build_urps_exit_hazard(cliff_duckdb_path = NULL,
                                 scale_shift = shift,
                                 verbose = FALSE)
-    return(h$exit_probs)
+    ep <- h$exit_probs
+    if (is.data.frame(ep)) {
+      # Average across sex strata, key by age string (departure_hazard contract)
+      ep <- tapply(ep$prob_exit, as.character(ep$age), mean)
+    }
+    return(ep)
   }
   shift_retirement_schedule(shift, schedule)
 }
