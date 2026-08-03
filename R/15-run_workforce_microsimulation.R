@@ -192,6 +192,11 @@ example_capacity_survey <- function() {
 #'   [apply_named_prevention_scenario()] before [convert_workload_to_fte()],
 #'   modelling conservative PFD management (PT/pessary) as a demand-side
 #'   multiplier. Use `"baseline"` to confirm the no-shift reference.
+#' @param setting_scenario Character key in [URPS_SETTING_SCENARIOS], or `NULL`
+#'   (default). When non-NULL, [apply_setting_scenario()] redistributes service
+#'   volumes across care-delivery settings and applies per-setting productivity
+#'   adjustments before [convert_workload_to_fte()]. Scenarios include
+#'   `"telehealth_10pct"`, `"asc_migration_30pct"`, `"combined_shift"`.
 #' @param output_dir If non-NULL, write provenance-tagged artifacts here.
 #' @param seed RNG seed.
 #' @param verbose Logical.
@@ -217,6 +222,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           allow_analogy = TRUE,
                                           brfss_cells = NULL,
                                           prevention_scenario = NULL,
+                                          setting_scenario = NULL,
                                           output_dir = NULL,
                                           seed = 20260801L,
                                           verbose = TRUE) {
@@ -373,6 +379,12 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   } else {
     example_service_volumes(demand_long)
   }
+
+  if (!is.null(setting_scenario)) {
+    if (verbose) .msg_info(sprintf("  setting scenario: %s", setting_scenario))
+    volumes <- apply_setting_scenario(volumes, scenario_id = setting_scenario)
+  }
+
   base_wrvu <- service_volume_to_wrvu(dplyr::filter(volumes, .data$year == base_year))
 
   gap <- baseline_gap_estimate
@@ -501,7 +513,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       hours_status = reference_hours_status(),
       mode = mode,
       seed = seed,
-      prevention_scenario = prevention_scenario
+      prevention_scenario = prevention_scenario,
+      setting_scenario = setting_scenario
     )
   )
 

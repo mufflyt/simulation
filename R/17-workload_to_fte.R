@@ -399,7 +399,14 @@ implied_urps_share <- function(volumes, required_fte,
 #' @param method One of "wrvu", "staffing", "time".
 #' @param staffing_ratios For method = "staffing": tibble with `service` and
 #'   `volume_per_fte` (national volume divided by providers in that setting).
+#' @param by_setting Logical. When `TRUE`, the returned tibble includes a
+#'   `setting` column and reports required FTE separately for each care delivery
+#'   setting (ambulatory, operative, indirect). Requires the `setting` column to
+#'   be present in `volumes` — attach it first with [volumes_with_setting()].
+#'   When `FALSE` (default), behaviour is unchanged: a single aggregate FTE is
+#'   returned.
 #' @return Tibble with `year` (if present), `required_fte`, and the method used.
+#'   When `by_setting = TRUE`, also includes a `setting` column.
 #' @export
 convert_workload_to_fte <- function(volumes,
                                     wrvu_per_fte = NULL,
@@ -408,10 +415,34 @@ convert_workload_to_fte <- function(volumes,
                                     provider_type = "urps",
                                     indirect_share = INDIRECT_TIME_SHARE,
                                     method = c("wrvu", "staffing", "time"),
-                                    staffing_ratios = NULL) {
+                                    staffing_ratios = NULL,
+                                    by_setting = FALSE) {
   method <- match.arg(method)
   assertthat::assert_that(indirect_share >= 0, indirect_share < 1)
   gross_up <- 1 / (1 - indirect_share)
+
+  if (isTRUE(by_setting)) {
+    if (!"setting" %in% names(volumes)) {
+      volumes <- volumes_with_setting(volumes, workload)
+    }
+    settings <- sort(unique(na.omit(volumes$setting)))
+    out_list <- lapply(settings, function(s) {
+      v_s <- dplyr::filter(volumes, .data$setting == s)
+      # Strip setting column before passing to sub-call to avoid recursion
+      v_s <- dplyr::select(v_s, -"setting")
+      sub <- convert_workload_to_fte(
+        v_s, wrvu_per_fte = wrvu_per_fte, workload = workload,
+        delegation = delegation, provider_type = provider_type,
+        indirect_share = indirect_share, method = method,
+        staffing_ratios = staffing_ratios, by_setting = FALSE
+      )
+      dplyr::mutate(sub, setting = s)
+    })
+    out <- dplyr::bind_rows(out_list)
+    col_order <- c(if ("year" %in% names(out)) "year",
+                   "setting", "required_fte", "method", "calibration_status")
+    return(dplyr::select(out, dplyr::any_of(col_order)))
+  }
 
   if (method == "wrvu") {
     if (is.null(wrvu_per_fte)) {
