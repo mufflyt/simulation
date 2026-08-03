@@ -67,42 +67,49 @@ URPS_SETTING_NAMES <- c("office", "telehealth", "hospital_outpatient",
 #' @export
 URPS_DEFAULT_SETTING_MIX <- tibble::tribble(
   ~service,                ~setting,               ~share,
-  "new_consultation",      "office",                0.87,
-  "new_consultation",      "telehealth",            0.08,
-  "new_consultation",      "hospital_outpatient",   0.05,
+  # Office/facility split from CMS MUP_PHY 2024 (PSPS geo-service file).
+  # Telehealth sub-split: illustrative AMA 2022 ratio scaled to PSPS office share.
+  # ASC sub-split: illustrative ASCA 2022 ratio scaled to PSPS facility share.
+  # Surgical CPTs: PSPS F share sub-split into operative/asc at illustrative ratio.
+  # postoperative_care and indirect_clinical_work: not billable HCPCS, kept illustrative.
+  "new_consultation",      "office",                0.8240,
+  "new_consultation",      "telehealth",            0.0758,
+  "new_consultation",      "hospital_outpatient",   0.1002,
 
-  "return_visit",          "office",                0.77,
-  "return_visit",          "telehealth",            0.18,
-  "return_visit",          "hospital_outpatient",   0.05,
+  "return_visit",          "office",                0.7524,
+  "return_visit",          "telehealth",            0.1758,
+  "return_visit",          "hospital_outpatient",   0.0718,
 
-  "pessary_care",          "office",                0.92,
-  "pessary_care",          "telehealth",            0.05,
-  "pessary_care",          "hospital_outpatient",   0.03,
+  "pessary_care",          "office",                0.8635,
+  "pessary_care",          "telehealth",            0.0469,
+  "pessary_care",          "hospital_outpatient",   0.0896,
 
-  "urodynamics",           "office",                0.62,
-  "urodynamics",           "hospital_outpatient",   0.28,
-  "urodynamics",           "asc",                   0.10,
+  "urodynamics",           "office",                0.9137,
+  "urodynamics",           "hospital_outpatient",   0.0636,
+  "urodynamics",           "asc",                   0.0227,
 
-  "cystoscopy",            "office",                0.45,
-  "cystoscopy",            "hospital_outpatient",   0.25,
-  "cystoscopy",            "asc",                   0.30,
+  "cystoscopy",            "office",                0.6666,
+  "cystoscopy",            "hospital_outpatient",   0.1516,
+  "cystoscopy",            "asc",                   0.1818,
 
-  "botox_bladder",         "office",                0.35,
-  "botox_bladder",         "hospital_outpatient",   0.45,
-  "botox_bladder",         "asc",                   0.20,
+  "botox_bladder",         "office",                0.4909,
+  "botox_bladder",         "hospital_outpatient",   0.3524,
+  "botox_bladder",         "asc",                   0.1567,
 
-  "ptns",                  "office",                0.94,
-  "ptns",                  "telehealth",            0.02,
-  "ptns",                  "hospital_outpatient",   0.04,
+  "ptns",                  "office",                0.9214,
+  "ptns",                  "telehealth",            0.0196,
+  "ptns",                  "hospital_outpatient",   0.0590,
 
-  "bladder_instillation",  "office",                0.82,
-  "bladder_instillation",  "hospital_outpatient",   0.18,
+  "bladder_instillation",  "office",                0.8396,
+  "bladder_instillation",  "hospital_outpatient",   0.1604,
 
-  "sling_procedure",       "operative",             0.35,
-  "sling_procedure",       "asc",                   0.65,
+  "sling_procedure",       "office",                0.0178,
+  "sling_procedure",       "operative",             0.3438,
+  "sling_procedure",       "asc",                   0.6384,
 
-  "prolapse_procedure",    "operative",             0.45,
-  "prolapse_procedure",    "asc",                   0.55,
+  "prolapse_procedure",    "office",                0.0137,
+  "prolapse_procedure",    "operative",             0.4438,
+  "prolapse_procedure",    "asc",                   0.5425,
 
   "postoperative_care",    "office",                0.80,
   "postoperative_care",    "telehealth",            0.15,
@@ -111,11 +118,13 @@ URPS_DEFAULT_SETTING_MIX <- tibble::tribble(
   "indirect_clinical_work","office",                1.00
 )
 
-URPS_DEFAULT_SETTING_MIX_STATUS <- "uncalibrated_illustrative"
+URPS_DEFAULT_SETTING_MIX_STATUS <- "calibrated_psps_2024"
 URPS_DEFAULT_SETTING_MIX_SOURCE <- paste(
-  "Illustrative mix pending CMS PSPS place-of-service data.",
-  "See data-raw/cms_psps/DOWNLOAD.md for instructions.",
-  "Replace with load_psps_pos_shares() output once downloaded."
+  "Office/facility split from CMS MUP_PHY 2024 (MUP_PHY_R26_P05_V10_D24_Geo.csv).",
+  "Telehealth sub-split of office share: AMA 2022 Benchmark Survey ratio (scaled).",
+  "ASC sub-split of facility share: ASCA 2022 ratio (scaled).",
+  "Surgical CPT operative/ASC sub-split: HCUP ASC 2020 ratio (scaled).",
+  "postoperative_care and indirect_clinical_work: illustrative (not HCPCS-billed)."
 )
 
 #' Per-setting productivity multipliers relative to office baseline
@@ -493,15 +502,19 @@ load_psps_pos_shares <- function(path,
 
   raw <- utils::read.csv(path, stringsAsFactors = FALSE)
 
-  hcpcs_col <- intersect(c("HCPCS_CD", "hcpcs_cd", "HCPCS", "hcpcs"), names(raw))[1]
-  pos_col   <- intersect(c("PLACE_OF_SRVC", "place_of_srvc", "PLACE_OF_SERVICE",
-                            "place_of_service"), names(raw))[1]
-  svc_col   <- intersect(c("TOT_SRVCS", "tot_srvcs", "TOTAL_SERVICES",
-                            "total_services"), names(raw))[1]
+  # Case-insensitive column matching (CMS uses mixed-case in 2024+ releases)
+  nm_upper <- toupper(names(raw))
+  find_col <- function(candidates) {
+    hit <- which(nm_upper %in% toupper(candidates))
+    if (length(hit)) names(raw)[hit[1]] else NA_character_
+  }
+  hcpcs_col <- find_col(c("HCPCS_CD", "HCPCS_CD", "HCPCS"))
+  pos_col   <- find_col(c("PLACE_OF_SRVC", "PLACE_OF_SERVICE"))
+  svc_col   <- find_col(c("TOT_SRVCS", "TOTAL_SERVICES"))
   if (is.na(hcpcs_col) || is.na(pos_col) || is.na(svc_col)) {
-    stop(sprintf(
+    stop(paste0(
       "load_psps_pos_shares: could not identify HCPCS, place-of-service, or services columns.\n",
-      "Found: %s", paste(names(raw), collapse = ", ")), call. = FALSE)
+      "Found: ", paste(names(raw), collapse = ", ")), call. = FALSE)
   }
 
   # Filter to URPS CPT codes

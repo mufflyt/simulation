@@ -22,31 +22,30 @@ constants in `R/urps_settings.R`.
 1. Go to:
    <https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider-and-service>
 
-2. Select year **2022** (most recent with stable release).
+2. Select year **2024** (most recent stable release as of August 2026; file is
+   `MUP_PHY_R26_P05_V10_D24_Geo.csv` inside the zip).
 
-3. Click **"Download"** → **"CSV"** (the full Provider & Service file).
-   Filename will be something like `MUP_PHY_R24P04_0001_D22_Prov_Svc.csv.zip`
-   (~400 MB compressed, ~2.5 GB uncompressed).
+3. Click **"Download"** → **"ZIP"** (the compressed Geography & Service file,
+   ~13 MB compressed, ~40 MB uncompressed).
 
-4. Place the unzipped CSV here:
+4. Unzip and place the CSV here:
    ```
-   data-raw/cms_psps/MUP_PHY_R24P04_0001_D22_Prov_Svc.csv
+   data-raw/cms_psps/MUP_PHY_R26_P05_V10_D24_Geo.csv
    ```
 
-### Option B — Smaller aggregate file (Geography & Service level)
+### Option B — Full Provider & Service file (~3.2 GB unzipped)
 
-If the full Provider & Service file is too large, download the
-**"By Geography and Service"** aggregate instead (~20 MB compressed).
-It does not have individual provider rows but still carries `place_of_service`.
+Download the **"By Provider and Service"** file if you need individual provider-level
+place-of-service detail. The 2024 filename is `PHY_R26_P05_V10_D24_Prov_Svc.csv`.
 
-URL pattern:
+URL:
 ```
-https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-geography-and-service
+https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider-and-service
 ```
 
 Place the CSV here:
 ```
-data-raw/cms_psps/MUP_PHY_R24P04_0001_D22_Geo_Svc.csv
+data-raw/cms_psps/PHY_R26_P05_V10_D24_Prov_Svc.csv
 ```
 
 Then pass `file_type = "geo_svc"` to `load_psps_pos_shares()`.
@@ -78,14 +77,14 @@ mapping automatically.
 Run from the R console:
 ```r
 pkgload::load_all()
-shares <- load_psps_pos_shares("data-raw/cms_psps/MUP_PHY_R24P04_0001_D22_Prov_Svc.csv")
+source("scripts/calibrate_setting_mix_from_psps.R")
 print(shares)
 # Then copy the output to replace URPS_DEFAULT_SETTING_MIX in R/urps_settings.R
 ```
 
 Add the file to `config/canonical_sources.yml`:
 ```yaml
-cms_psps_2022:
+cms_psps_2024:
   path: data-raw/cms_psps/MUP_PHY_R24P04_0001_D22_Prov_Svc.csv
   sha256: ""   # fill in after download: tools::md5sum() or sha256sum
 ```
