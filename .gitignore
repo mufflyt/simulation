@@ -91,3 +91,5 @@ outputs/
 # Vetted workforce sensitivity datasets (carried from cliff; build-ignored).
 !data-raw/sensitivity/
 !data-raw/sensitivity/*.csv
+data-raw/brfss/*.XPT
+data-raw/brfss/*.xpt
