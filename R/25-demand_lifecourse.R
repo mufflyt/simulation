@@ -295,9 +295,16 @@ lifecourse_required_fte <- function(pop_by_age_year, wrvu_per_fte,
 #' Reshapes a life-course demand summary into the long demand-estimand format used
 #' by [compute_demand_denominators()], [compute_growth_adequacy()] and
 #' [assess_demand_concordance()], so the childbirth-driven pathway can be checked
-#' for concordance against the aging-population denominators D1/D2/D3 as an
-#' independent fourth estimand (its generator differs, so it is not a proportional
-#' rescaling — exactly the real-concordance check the concordance framework wants).
+#' for concordance against the other estimands. Its generator differs, so it is
+#' not a proportional rescaling — exactly the real-concordance check the framework
+#' wants.
+#'
+#' Estimand id note: this is `D5`, the life-course *service* demand (downstream of
+#' the care pathway). It is distinct from `D4` in
+#' [compute_demand_denominators_lifecourse()] (R/13b), which is an obstetric-
+#' exposure-weighted prevalent-case *denominator*. D1–D3 are the published
+#' denominators (R/13); D4 is the obstetric-weighted denominator; D5 is the
+#' dynamic service-demand series.
 #'
 #' @param demand_summary The `demand_summary` from [lifecourse_demand_trajectory()].
 #' @param measure Which series to treat as demand: "service_units" (procedural
@@ -307,8 +314,8 @@ lifecourse_required_fte <- function(pop_by_age_year, wrvu_per_fte,
 #' @export
 lifecourse_demand_estimand <- function(demand_summary,
                                        measure = c("service_units", "care_seeking"),
-                                       estimand = "D4_lifecourse",
-                                       label = "Life-course demand (vaginal-delivery driven)") {
+                                       estimand = "D5_lifecourse_service",
+                                       label = "Life-course service demand (care-pathway, vaginal-delivery driven)") {
   measure <- match.arg(measure)
   col <- if (measure == "service_units") "service_units_national" else "care_seeking_national"
   assertthat::assert_that(is.data.frame(demand_summary),

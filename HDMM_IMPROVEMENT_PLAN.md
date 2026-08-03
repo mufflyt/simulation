@@ -355,3 +355,20 @@ disease, who seeks care, what care they need, which provider type delivers it, a
 how much urogynecologist capacity that implies — with honest uncertainty — and hand a
 single versioned demand series to the workforce models rather than becoming another
 divergent estimate.
+
+---
+
+## Harvest additions (2026-08-02)
+
+- `R/32-geographic_demand.R` — **isochrone (geographic) demand**: distributes
+  pelvic-floor need across 30/60/120/180-minute travel bands, need-weighted access,
+  and accessible-capacity-vs-need — the demand complement to R/14's E2SFCA supply
+  access (the "demand-supply-isochrones" question).
+- Estimand IDs disambiguated: `R/13b` = **D4** (obstetric-exposure-weighted
+  denominator); `R/25` `lifecourse_demand_estimand()` = **D5** (life-course service
+  demand, care-pathway) — distinct constructs, both distinct from D1-D3.
+- `docs/DEMAND_METHODS.md` — manuscript-oriented methods writeup of the demand stack.
+- `vignettes/demand-model.Rmd` — end-to-end vignette (source; renders once the
+  toolchain is available).
+- `scripts/smoke_demand_base_r.R` — base-R smoke test of the demand cores that runs
+  with no tidyverse/testthat (usable when CRAN egress is blocked).
