@@ -234,3 +234,266 @@ benchmark_density_shortfall <- function(per_capita, benchmark, per = 1e6) {
     detail = detail
   )
 }
+
+# ---- Origin-dependent migration -------------------------------------------
+#
+# `apply_provider_migration()` above draws a mover and then assigns a
+# destination from `shares`, a single national vector. That vector does not
+# depend on where the provider currently practises, which makes the implied
+# origin-by-destination matrix rank-1: every row identical. Under that
+# structure a provider leaving Mississippi and one leaving New Jersey face the
+# same destination distribution, and the expected inflow to a geography is the
+# same no matter which geographies the movers came from.
+#
+# The ABP pediatric subspecialty model (Fraher, Knapton, McCartha & Leslie,
+# Pediatrics 2024;153(suppl 2):e2023063678C) is the relevant counter-example.
+# Their Table 3 is an explicit origin-by-destination matrix built by comparing
+# each trainee's program location to their subsequent practice address, and the
+# diagonal dominates: 51% to 68% of trainees stay in the division where they
+# trained. Rank-1 shares cannot represent a dominant diagonal without forcing
+# every origin to have the same stay probability.
+#
+# The distinction changed their published numbers. During model validation they
+# found divisions whose forecasts diverged from historical trend, and traced it
+# to geographies that depend on inflow from *specific* higher-supply
+# geographies rather than on a national pool. They also found a small
+# out-of-country return flow that mattered disproportionately for less-populous
+# divisions. Neither effect is expressible with origin-independent shares.
+#
+# This section adds the matrix form as an opt-in alternative. Nothing above
+# changes: `apply_provider_migration()` keeps its current behaviour and remains
+# the default, so seeded runs reproduce exactly.
+
+#' Validate an origin-by-destination migration matrix
+#'
+#' Checks that `matrix` is a long-format origin/destination/probability table
+#' whose probabilities are in `[0, 1]` and sum to one within each origin.
+#'
+#' A row that sums to less than one silently destroys providers on every
+#' simulated year. Because the loss compounds, a 5% shortfall is invisible in a
+#' single-year check and removes roughly three quarters of that origin's
+#' outflow over a 25-year horizon, so this is checked before any arithmetic
+#' rather than after.
+#'
+#' @param matrix Tibble with `origin`, `destination`, `probability`.
+#' @param tol Absolute tolerance on each origin's row sum.
+#' @return `matrix`, invisibly, or an error naming the offending origins.
+#' @export
+validate_migration_matrix <- function(matrix, tol = 1e-8) {
+  assertthat::assert_that(is.data.frame(matrix))
+  assertthat::assert_that(
+    all(c("origin", "destination", "probability") %in% names(matrix))
+  )
+  if (nrow(matrix) == 0L) {
+    stop("validate_migration_matrix: matrix has no rows", call. = FALSE)
+  }
+  if (any(!is.finite(matrix$probability))) {
+    stop("validate_migration_matrix: probability contains NA/NaN/Inf",
+         call. = FALSE)
+  }
+  # Checked before the row sums: -0.1 and 1.1 sum to exactly 1.0, so a row-sum
+  # test alone accepts a matrix that is not a probability distribution.
+  if (any(matrix$probability < 0) || any(matrix$probability > 1)) {
+    stop("validate_migration_matrix: probability outside [0, 1]", call. = FALSE)
+  }
+  dup <- matrix %>%
+    dplyr::count(.data$origin, .data$destination, name = "n_pairs") %>%
+    dplyr::filter(.data$n_pairs > 1L)
+  if (nrow(dup) > 0L) {
+    stop(sprintf(
+      "validate_migration_matrix: %d duplicated origin-destination pair(s)",
+      nrow(dup)
+    ), call. = FALSE)
+  }
+  sums <- matrix %>%
+    dplyr::group_by(.data$origin) %>%
+    dplyr::summarise(row_sum = sum(.data$probability), .groups = "drop") %>%
+    dplyr::filter(abs(.data$row_sum - 1) > tol)
+  if (nrow(sums) > 0L) {
+    stop(sprintf(
+      paste("validate_migration_matrix: probabilities do not sum to 1",
+            "for origin(s): %s"),
+      paste(sums$origin, collapse = ", ")
+    ), call. = FALSE)
+  }
+  invisible(matrix)
+}
+
+#' Build an origin-by-destination matrix from observed moves
+#'
+#' Row-normalises a table of observed origin-to-destination counts. Origins
+#' with sparse observation are shrunk toward `prior_shares` (an empirical-Bayes
+#' step): with `k` observed moves the fitted row is weighted
+#' `k / (k + shrinkage)` and the prior takes the remainder, so an origin with
+#' two observed moves is not allowed to assert a 100% destination probability.
+#'
+#' This matters for URPS specifically. The subspecialty graduates on the order
+#' of 150 fellows a year, so pooling a decade across a 50-state matrix leaves
+#' most cells empty and many rows resting on a handful of moves. Fraher et al.
+#' avoided the problem by using nine census divisions rather than states; the
+#' shrinkage argument is the alternative when a finer geography is required.
+#'
+#' @param moves Tibble with `origin`, `destination`, and `n` observed moves.
+#' @param prior_shares Tibble with `geo` and `share`, the national destination
+#'   distribution to shrink toward. Defaults to the marginal of `moves`.
+#' @param shrinkage Prior weight in pseudo-moves. `0` disables shrinkage.
+#' @return Tibble with `origin`, `destination`, `probability`, `n_observed`.
+#' @export
+migration_matrix_from_moves <- function(moves, prior_shares = NULL,
+                                        shrinkage = 10) {
+  assertthat::assert_that(is.data.frame(moves))
+  assertthat::assert_that(
+    all(c("origin", "destination", "n") %in% names(moves))
+  )
+  assertthat::assert_that(shrinkage >= 0)
+  if (any(!is.finite(moves$n)) || any(moves$n < 0)) {
+    stop("migration_matrix_from_moves: n must be finite and non-negative",
+         call. = FALSE)
+  }
+
+  if (is.null(prior_shares)) {
+    prior_shares <- moves %>%
+      dplyr::group_by(geo = .data$destination) %>%
+      dplyr::summarise(share = sum(.data$n), .groups = "drop") %>%
+      dplyr::mutate(share = .data$share / sum(.data$share))
+  }
+  assertthat::assert_that(all(c("geo", "share") %in% names(prior_shares)))
+
+  grid <- tidyr::expand_grid(
+    origin = sort(unique(moves$origin)),
+    destination = sort(unique(c(moves$destination, prior_shares$geo)))
+  )
+
+  out <- grid %>%
+    dplyr::left_join(moves, by = c("origin", "destination")) %>%
+    dplyr::mutate(n = dplyr::coalesce(.data$n, 0)) %>%
+    dplyr::left_join(
+      dplyr::select(prior_shares, destination = "geo", prior = "share"),
+      by = "destination"
+    ) %>%
+    dplyr::mutate(prior = dplyr::coalesce(.data$prior, 0)) %>%
+    dplyr::group_by(.data$origin) %>%
+    dplyr::mutate(
+      n_observed = sum(.data$n),
+      empirical  = ssot_safe_divide(.data$n, .data$n_observed),
+      weight     = ssot_safe_divide(.data$n_observed,
+                                    .data$n_observed + shrinkage),
+      weight     = dplyr::coalesce(.data$weight, 0),
+      probability = .data$weight * dplyr::coalesce(.data$empirical, 0) +
+        (1 - .data$weight) * .data$prior
+    ) %>%
+    # Renormalise while still grouped: coalescing a zero-observation row to the
+    # prior can leave the row off 1 when the prior does not cover every column.
+    dplyr::mutate(
+      row_total = sum(.data$probability),
+      probability = ssot_safe_divide(.data$probability, .data$row_total)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::select("origin", "destination", "probability", "n_observed")
+
+  validate_migration_matrix(out, tol = 1e-6)
+  out
+}
+
+#' Apply one year of origin-dependent provider migration
+#'
+#' The origin-dependent counterpart to [apply_provider_migration()]. A mover's
+#' destination is drawn from the row of `matrix` matching their current
+#' geography, so a dominant diagonal, an asymmetric corridor between two
+#' geographies, and an absorbing out-of-country state are all representable.
+#'
+#' Providers whose destination is `out_of_country` have their geography set to
+#' `NA` and are marked `left_country = TRUE`. They remain in the agent table
+#' rather than being deleted, so headcount can be audited; downstream supply
+#' counts should filter them out.
+#'
+#' @param agents Agent tibble with `state` and `entry_year`.
+#' @param year Current calendar year.
+#' @param matrix Origin-by-destination matrix; see
+#'   [migration_matrix_from_moves()].
+#' @param hazards Migration hazards, as in [apply_provider_migration()].
+#' @param out_of_country Destination label treated as an absorbing sink, or
+#'   `NULL` for none.
+#' @return The agent tibble with updated `state`, `n_moves`, `left_country`.
+#' @export
+apply_provider_migration_matrix <- function(agents, year, matrix,
+                                            hazards = PROVIDER_MIGRATION_HAZARD,
+                                            out_of_country = "out_of_country") {
+  if (!"state" %in% names(agents)) return(agents)
+  validate_migration_matrix(matrix)
+  if (!"n_moves" %in% names(agents)) agents$n_moves <- 0L
+  if (!"left_country" %in% names(agents)) agents$left_country <- FALSE
+
+  eligible <- !is.na(agents$state) & !agents$left_country
+  if (!any(eligible)) return(agents)
+
+  orphan <- setdiff(agents$state[eligible], matrix$origin)
+  if (length(orphan)) {
+    stop(sprintf(
+      "apply_provider_migration_matrix: no matrix row for origin(s): %s",
+      paste(sort(unique(orphan)), collapse = ", ")
+    ), call. = FALSE)
+  }
+
+  yrs <- year - agents$entry_year
+  h <- migration_hazard(yrs, agents$age, hazards)
+  moves <- eligible & (stats::runif(nrow(agents)) < h)
+  if (!any(moves)) return(agents)
+
+  # Draw per origin rather than per agent: one sample() call for each distinct
+  # origin instead of one per mover.
+  for (origin_geo in unique(agents$state[moves])) {
+    idx <- which(moves & agents$state == origin_geo)
+    row <- matrix[matrix$origin == origin_geo, ]
+    agents$state[idx] <- sample(row$destination, length(idx),
+                                replace = TRUE, prob = row$probability)
+  }
+
+  agents$n_moves[moves] <- agents$n_moves[moves] + 1L
+
+  if (!is.null(out_of_country)) {
+    gone <- moves & agents$state == out_of_country
+    if (any(gone)) {
+      agents$left_country[gone] <- TRUE
+      agents$state[gone] <- NA_character_
+    }
+  }
+  agents
+}
+
+#' Add returning providers to the roster
+#'
+#' The inflow counterpart to the out-of-country sink. Fraher et al. found that
+#' under-forecast census divisions depended on providers returning from outside
+#' the country, and that although the flow is small nationally it is material
+#' for less-populous geographies.
+#'
+#' @param agents Agent tibble.
+#' @param returners Tibble with `geo` and `n_returners`.
+#' @param year Calendar year recorded as the returners' entry year.
+#' @param age Age assigned to returners.
+#' @return The agent tibble with returners appended.
+#' @export
+add_returning_providers <- function(agents, returners, year, age = 45) {
+  assertthat::assert_that(is.data.frame(returners))
+  assertthat::assert_that(all(c("geo", "n_returners") %in% names(returners)))
+  if (any(!is.finite(returners$n_returners)) ||
+      any(returners$n_returners < 0)) {
+    stop("add_returning_providers: n_returners must be finite, non-negative",
+         call. = FALSE)
+  }
+  total <- sum(returners$n_returners)
+  if (total <= 0) return(agents)
+
+  new_agents <- tibble::tibble(
+    state = rep(returners$geo,
+                times = as.integer(round(returners$n_returners))),
+    entry_year = year,
+    age = age
+  )
+  for (col in setdiff(names(agents), names(new_agents))) {
+    new_agents[[col]] <- if (is.numeric(agents[[col]])) 0 else
+      if (is.logical(agents[[col]])) FALSE else NA
+  }
+  dplyr::bind_rows(agents, new_agents[names(agents)])
+}
