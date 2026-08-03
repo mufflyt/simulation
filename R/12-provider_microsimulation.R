@@ -389,8 +389,15 @@ simulate_provider_career_once <- function(agents,
     v_age[live] <- v_age[live] + 1
 
     # --- Inject entrants for the next year (stochastic fractional part) ---
-    n_new <- floor(effective_entrants) +
-      as.integer(stats::runif(1) < (effective_entrants - floor(effective_entrants)))
+    # Not after the final year: those entrants carry entry_year = max(years) + 1,
+    # are never counted in any panel row, and would leave the returned agent table
+    # -- documented as the reconstructible temporal cohort -- claiming providers
+    # who entered after the projection horizon. Skipping the draw shifts the RNG
+    # stream, so seeded runs change value (not distribution) from this commit.
+    n_new <- if (i < n_years) {
+      floor(effective_entrants) +
+        as.integer(stats::runif(1) < (effective_entrants - floor(effective_entrants)))
+    } else 0L
     if (n_new > 0) {
       slot <- seq.int(n_used + 1L, length.out = n_new)
       if (max(slot) > capacity) {

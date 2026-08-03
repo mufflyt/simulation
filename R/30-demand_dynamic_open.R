@@ -119,9 +119,9 @@ simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
   pop <- .lifecourse_population(pa, year, n, cesarean_rate = 0.32, seed = seed)
   pop <- .lifecourse_risk(pop, risk_params)
   total <- sum(pa$population)
-  dplyr::mutate(pop,
-                weight = total / dplyr::n(),
-                p_ui = .data$p_ui, p_pop = .data$p_pop, p_ai = .data$p_ai)
+  # p_ui/p_pop/p_ai already come from .lifecourse_risk() above; re-assigning them
+  # to themselves was a no-op that read as if the marginals were being derived here.
+  dplyr::mutate(pop, weight = total / dplyr::n())
 }
 
 #' Open-population prevalence + incidence trajectory
@@ -153,7 +153,13 @@ dmdm_open_prevalence_trajectory <- function(pop_by_age_year, start_year, end_yea
   init <- .dmdm_open_agents(pa0, start_year, entry_age, n_init, seed = seed,
                             risk_params = risk_params)
 
-  entry_years <- (start_year + 1L):end_year
+  # seq_len, not `(start+1):end`: the colon operator counts DOWN when the window
+  # is a single year, so start_year == end_year built entrant cohorts for
+  # start_year + 1 and start_year -- the second duplicating the base population's
+  # entry-age group. Neither is ever added (the engine only admits entrants for
+  # y > start_year), but the frame was wrong and one bad indexing change away
+  # from double-counting.
+  entry_years <- start_year + seq_len(max(end_year - start_year, 0L))
   ent_list <- lapply(entry_years, function(y) {
     pae <- pop_by_age_year[pop_by_age_year$year == y & pop_by_age_year$age == entry_age,
                            c("age", "population"), drop = FALSE]
@@ -162,7 +168,12 @@ dmdm_open_prevalence_trajectory <- function(pop_by_age_year, start_year, end_yea
                             risk_params = risk_params)
     dplyr::mutate(ag, entry_year = y)
   })
+  # bind_rows() of an empty (or all-NULL) list is a 0x0 frame with no columns,
+  # which trips the engine's column contract. "No entrants" is NULL, not an empty
+  # frame -- reachable both for a single-year window and when no entrant year is
+  # present in `pop_by_age_year`.
   entrants <- dplyr::bind_rows(ent_list)
+  if (!nrow(entrants)) entrants <- NULL
 
   simulate_dmdm_open(init, entrants, start_year, end_year, transitions = transitions,
                      pop_by_age_year = if (reweight_to_projection) pop_by_age_year else NULL)

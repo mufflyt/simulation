@@ -154,15 +154,26 @@ safe_left_join <- function(x, y, by, allow_fanout = FALSE,
   }
 
   if (!is.null(min_match_rate)) {
-    new_cols <- setdiff(names(y), if (is.null(names(by))) by else unname(by))
-    if (length(new_cols) > 0) {
-      match_rate <- mean(!is.na(result[[new_cols[1]]]))
-      if (match_rate < min_match_rate) {
-        msg <- sprintf("safe_left_join: match rate %.1f%% below required %.1f%%",
-                       100 * match_rate, 100 * min_match_rate)
-        if (identical(mode, "strict")) stop(msg, call. = FALSE)
-        .msg_warn(msg)
-      }
+    # Measure whether each left row found a MATCHING KEY in `y`, not whether one
+    # joined column happens to be non-NA. Probing `new_cols[1]` (the previous
+    # behaviour) passed a 100% gate whenever that first column was populated even
+    # if every other joined column was entirely NA, and reported a false miss
+    # whenever the right table legitimately carried NA there. Keying directly is
+    # both stricter and correct, and it works when `y` carries only key columns.
+    x_keys <- if (is.null(names(by))) by else names(by)
+    y_keys <- if (is.null(names(by))) by else unname(by)
+    key_of <- function(d, cols) {
+      do.call(paste, c(lapply(as.data.frame(d)[, cols, drop = FALSE], as.character),
+                       sep = "\r"))
+    }
+    match_rate <- if (n_left > 0) {
+      mean(key_of(x, x_keys) %in% key_of(y, y_keys))
+    } else 1
+    if (match_rate < min_match_rate) {
+      msg <- sprintf("safe_left_join: match rate %.1f%% below required %.1f%%",
+                     100 * match_rate, 100 * min_match_rate)
+      if (identical(mode, "strict")) stop(msg, call. = FALSE)
+      .msg_warn(msg)
     }
   }
 
