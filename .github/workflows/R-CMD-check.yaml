@@ -66,7 +66,10 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, any::testthat, any::pkgload
+          # knitr + rmarkdown are the (public) vignette builders: R CMD build
+          # fails outright with "vignette builder 'knitr' not found" without
+          # them, since they sit in Suggests and we install hard deps only.
+          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown
           # mufflyaccess (Suggests) is a private repo the CI token cannot
           # reach. Hard dependencies only; tests needing it skip themselves.
           dependencies: '"hard"'
