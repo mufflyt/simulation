@@ -434,3 +434,93 @@ summarise_stratum_coverage <- function(cells) {
     n_total_cells    = nrow(cells)
   )
 }
+
+# ---- Crosswalk to DEMAND_AGE_BANDS ------------------------------------------
+#
+# URPS_POP_AGE_BANDS ("18-34","35-44","45-64","65-74","75+") and
+# DEMAND_AGE_BANDS   ("20-39","40-59","60-64","65-79","80+") do not align.
+# The crosswalk uses year-width splits to apportion BRFSS cell weights:
+#
+#   DEMAND band   ← URPS bands contributing (fraction of 5-yr cells)
+#   "20-39"       ← "18-34" (years 20-34 = 15/17) + tiny fraction ignored
+#   "40-59"       ← "35-44" (years 40-44 = 5/10 = 0.5) +
+#                   "45-64" (years 45-59 = 15/20 = 0.75)
+#   "60-64"       ← "45-64" (years 60-64 = 5/20 = 0.25)
+#   "65-79"       ← "65-74" (years 65-74 = 10/10 = 1.0, ignores 75-79)
+#   "80+"         ← "75+"   (years 80+ ≈ "75+" tail)
+#
+# Weights are approximate; the crosswalk is documented here, not hidden.
+
+.URPS_TO_DEMAND_XWALK <- list(
+  "20-39" = c("18-34" = 1.0),
+  "40-59" = c("35-44" = 0.5, "45-64" = 0.75),
+  "60-64" = c("45-64" = 0.25),
+  "65-79" = c("65-74" = 1.0),
+  "80+"   = c("75+"   = 1.0)
+)
+
+#' Aggregate BRFSS cell UI prevalence to DEMAND_AGE_BANDS
+#'
+#' Computes a survey-weight-averaged UI prevalence for each of the five
+#' `DEMAND_AGE_BANDS` used by [compute_demand_denominators()], using the
+#' approximate crosswalk from `URPS_POP_AGE_BANDS`. The result slots directly
+#' into the `pfd_prevalence` argument of `compute_demand_denominators()` so
+#' BRFSS-derived prevalence can replace the Nygaard 2008 constants without
+#' restructuring the demand pipeline.
+#'
+#' @param cells Population cell table from [build_urps_population_cells()].
+#' @param condition One of `"ui"` (default), `"pop"`, `"fi"`, or `"any_pfd"`
+#'   (unweighted sum of the three rates, capped at 1).
+#' @return Named numeric vector over `DEMAND_AGE_BANDS` (same structure as
+#'   `pfd_prevalence_by_band()`).
+#' @export
+brfss_pfd_prevalence_for_demand_bands <- function(cells,
+                                                   condition = c("ui", "pop", "fi",
+                                                                 "any_pfd")) {
+  condition <- match.arg(condition)
+  prev_col <- switch(condition,
+    ui      = "ui_prevalence",
+    pop     = "pop_prevalence",
+    fi      = "fi_prevalence",
+    any_pfd = NULL
+  )
+
+  if (is.null(prev_col)) {
+    cells$any_pfd_prevalence <- pmin(
+      cells$ui_prevalence + cells$pop_prevalence + cells$fi_prevalence, 1
+    )
+    prev_col <- "any_pfd_prevalence"
+  }
+
+  DEMAND_AGE_BANDS <- c("20-39", "40-59", "60-64", "65-79", "80+")
+  out <- setNames(numeric(length(DEMAND_AGE_BANDS)), DEMAND_AGE_BANDS)
+
+  for (dband in DEMAND_AGE_BANDS) {
+    contributors <- .URPS_TO_DEMAND_XWALK[[dband]]
+    wt_sum  <- 0
+    prev_wt <- 0
+    for (uband in names(contributors)) {
+      frac  <- contributors[[uband]]
+      sub   <- cells[!is.na(cells$age_group) & as.character(cells$age_group) == uband, ]
+      if (nrow(sub) == 0) next
+      w <- sub$pop_weight * frac
+      wt_sum  <- wt_sum  + sum(w,                        na.rm = TRUE)
+      prev_wt <- prev_wt + sum(w * sub[[prev_col]],      na.rm = TRUE)
+    }
+    out[[dband]] <- if (wt_sum > 0) prev_wt / wt_sum else NA_real_
+  }
+
+  missing <- is.na(out)
+  if (any(missing)) {
+    fallback <- .UI_PREVALENCE_BY_BAND
+    fallback_demand <- c(
+      "20-39" = fallback[["18-34"]],
+      "40-59" = mean(c(fallback[["35-44"]], fallback[["45-64"]])),
+      "60-64" = fallback[["45-64"]],
+      "65-79" = fallback[["65-74"]],
+      "80+"   = fallback[["75+"]]
+    )
+    out[missing] <- fallback_demand[missing]
+  }
+  out
+}

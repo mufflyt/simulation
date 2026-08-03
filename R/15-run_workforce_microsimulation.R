@@ -180,6 +180,12 @@ example_capacity_survey <- function() {
 #'   built from the observed certification series.
 #' @param allow_analogy Permit inputs derived by analogy from another specialty
 #'   (currently the delegation matrix). Declared in the run metadata either way.
+#' @param brfss_cells Optional population cell table from
+#'   [build_urps_population_cells()].  When non-NULL, a fourth demand estimand
+#'   D4 (BRFSS survey-weighted UI care-seeking demand) is appended to
+#'   `demand_long` and flows through concordance assessment alongside D1-D3.
+#'   Requires that [brfss_pfd_prevalence_for_demand_bands()] is available (i.e.
+#'   that R/44-urps_population.R is loaded).
 #' @param output_dir If non-NULL, write provenance-tagged artifacts here.
 #' @param seed RNG seed.
 #' @param verbose Logical.
@@ -203,6 +209,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           calibration = NULL,
                                           parameter_spec = NULL,
                                           allow_analogy = TRUE,
+                                          brfss_cells = NULL,
                                           output_dir = NULL,
                                           seed = 20260801L,
                                           verbose = TRUE) {
@@ -326,6 +333,27 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
 
   # --- Demand: three estimands with DISTINCT age profiles ------------------
   demand_long <- compute_demand_denominators(pop_by_band)
+
+  # D4: BRFSS-derived UI care-seeking demand (appended when cells supplied).
+  # assert_estimands_independent() is re-run after appending so the four-
+  # estimand concordance check is not skipped.
+  if (!is.null(brfss_cells)) {
+    d4 <- tryCatch(
+      compute_brfss_demand_estimand(pop_by_band, brfss_cells),
+      error = function(e) {
+        .msg_warn("D4 BRFSS estimand failed (", conditionMessage(e), "); using D1-D3 only")
+        NULL
+      }
+    )
+    if (!is.null(d4)) {
+      demand_long <- dplyr::bind_rows(demand_long, d4)
+      if (verbose) {
+        d4_2025 <- d4$demand_cases[d4$year == min(years)]
+        .msg_info(sprintf("  D4 (BRFSS UI): %.0f cases in %d", d4_2025[1], min(years)))
+      }
+    }
+  }
+
   assert_estimands_independent(demand_long, "demand_cases", mode)
 
   # --- Workload -> required FTE (FTE on both sides) ------------------------

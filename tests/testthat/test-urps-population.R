@@ -141,6 +141,40 @@ test_that("summarise_stratum_coverage returns share in (0, 1]", {
   expect_true(cov["complete_cell_share"] <= 1)
 })
 
+test_that("brfss_pfd_prevalence_for_demand_bands returns named vector over DEMAND_AGE_BANDS", {
+  mini <- .harmonise_mini(.mini_brfss())
+  cells <- build_urps_population_cells(mini, verbose = FALSE)
+  prev <- brfss_pfd_prevalence_for_demand_bands(cells, "ui")
+  expected_bands <- c("20-39", "40-59", "60-64", "65-79", "80+")
+  expect_equal(sort(names(prev)), sort(expected_bands))
+  expect_true(all(prev >= 0 & prev <= 1, na.rm = TRUE))
+})
+
+test_that("brfss_pfd_prevalence_for_demand_bands: any_pfd capped at 1", {
+  mini <- .harmonise_mini(.mini_brfss())
+  cells <- build_urps_population_cells(mini, verbose = FALSE)
+  prev <- brfss_pfd_prevalence_for_demand_bands(cells, "any_pfd")
+  expect_true(all(prev <= 1.0 + .Machine$double.eps))
+})
+
+test_that("compute_brfss_demand_estimand returns D4 in correct format", {
+  mini <- .harmonise_mini(.mini_brfss())
+  cells <- build_urps_population_cells(mini, verbose = FALSE)
+  pop <- example_female_population_by_band(2025:2030)
+  d4 <- compute_brfss_demand_estimand(pop, cells)
+  expect_true(all(d4$estimand == "D4"))
+  expect_equal(nrow(d4), 6L)
+  expect_true(all(d4$demand_cases > 0))
+})
+
+test_that("D4 grows monotonically with population (no referral change)", {
+  mini <- .harmonise_mini(.mini_brfss())
+  cells <- build_urps_population_cells(mini, verbose = FALSE)
+  pop <- example_female_population_by_band(2025:2040)
+  d4 <- compute_brfss_demand_estimand(pop, cells)
+  expect_false(is.unsorted(d4$demand_cases))
+})
+
 test_that("HALL_OF_SHAME: zero-weight row does not inflate FTE", {
   mini <- .harmonise_mini(.mini_brfss(50L))
   mini$survey_wt[1:5] <- 0

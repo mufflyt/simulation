@@ -545,6 +545,61 @@ assess_demand_concordance <- function(adequacy, demand_long = NULL) {
   )
 }
 
+# ---- D4: BRFSS-derived demand estimand ------------------------------------
+
+#' Compute D4 demand estimand from BRFSS population cells
+#'
+#' Produces a fourth demand series (D4) using BRFSS survey-weighted UI
+#' prevalence crossed with care-seeking and referral rates, scaled to the
+#' Census-NPP female population projection.  D4 is returned in the same long
+#' format as [compute_demand_denominators()] so it can be appended to the
+#' D1/D2/D3 tibble and flow through [assert_estimands_independent()] and
+#' [assess_demand_concordance()] without modification.
+#'
+#' D4 differs from D1 in three ways: (1) prevalence is BRFSS survey-weighted
+#' rather than a Nygaard 2008 scalar, (2) the rate includes an explicit
+#' care-seeking × referral step so the unit is urogynecology visits, not
+#' prevalent cases, and (3) coverage of 18-39 year-olds is included via the
+#' BRFSS "18-34" band rather than starting at 20.
+#'
+#' @param pop_by_band Tibble from [npp_female_by_band()] with columns
+#'   `year`, `age_band`, `female_pop`.
+#' @param brfss_cells Population cell table from
+#'   [build_urps_population_cells()].
+#' @param condition PFD condition to use; passed to
+#'   [brfss_pfd_prevalence_for_demand_bands()].  Default `"ui"`.
+#' @param care_seeking_rate Fraction of prevalent women seeking care annually.
+#'   Default 0.25 (Nygaard 2008 supplemental).
+#' @param referral_rate Fraction of care-seeking women reaching a
+#'   urogynecologist.  Default 0.50 (placeholder; calibrate to Kirby 2013).
+#' @return Long tibble: `year`, `estimand = "D4"`, `label`, `demand_cases`.
+#' @export
+compute_brfss_demand_estimand <- function(pop_by_band,
+                                           brfss_cells,
+                                           condition = "ui",
+                                           care_seeking_rate = 0.25,
+                                           referral_rate = 0.50) {
+  prev <- brfss_pfd_prevalence_for_demand_bands(brfss_cells, condition = condition)
+  rate <- prev * care_seeking_rate * referral_rate
+
+  pop_by_band %>%
+    dplyr::mutate(rate = unname(rate[as.character(.data$age_band)])) %>%
+    dplyr::group_by(.data$year) %>%
+    dplyr::summarise(
+      demand_cases = sum(.data$female_pop * .data$rate, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(
+      estimand = "D4",
+      label    = sprintf(
+        "BRFSS %s care-seeking demand (%.0f%% seek, %.0f%% refer)",
+        condition, care_seeking_rate * 100, referral_rate * 100
+      )
+    ) %>%
+    dplyr::select("year", "estimand", "label", "demand_cases") %>%
+    dplyr::arrange(.data$year)
+}
+
 # ---- Backward-compatible visit-based demand -------------------------------
 
 #' Visit-based demand (legacy denominator, retained for continuity)
