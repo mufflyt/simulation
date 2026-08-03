@@ -49,8 +49,12 @@ test_that("fit_dmdm_transitions recovers onset coefficients and is engine-usable
   rem <- df[1:2000, ]; rem$from <- 1L; rem$event <- rbinom(2000, 1, 0.05)
   tr <- fit_dmdm_transitions(rbind(df, rem), conditions = "pop")
   expect_identical(tr$status, "fitted")
-  expect_equal(unname(tr$onset$pop["avag"]), 0.30, tolerance = 0.05)
-  expect_equal(unname(tr$remission[["pop"]]), 0.05, tolerance = 0.02)
+  # ABSOLUTE recovery bands (point +/- tol). expect_equal()'s `tolerance` is
+  # RELATIVE, which on a ~0.05 estimate demands a 2% match and fails on ordinary
+  # binomial sampling noise (the remission fit lands near 0.056); assert the
+  # intended absolute window instead.
+  expect_lt(abs(unname(tr$onset$pop["avag"]) - 0.30), 0.05)
+  expect_lt(abs(unname(tr$remission[["pop"]]) - 0.05), 0.02)
   # usable directly by the engine
   co <- mk_agents(50:70, 2, 1e5)[, setdiff(names(mk_agents(50, 2, 1)), c("weight","p_ui","p_pop","p_ai"))]
   full <- dmdm_default_transitions(); full$onset$pop <- tr$onset$pop
