@@ -24,6 +24,16 @@
 #   fitted models     QUANTIFIED. Any model with coef/vcov (an hours model from
 #                     fit_clinical_hours_model(), a demand model from PR #8)
 #                     goes through .param_draw().
+#                     WHERE THE HOURS DRAW LANDS: run_supply_microsimulation()
+#                     substitutes the drawn coefficients back into the fitted
+#                     model (.hours_model_with_coef) and passes it to the engine,
+#                     which consults it only inside fte_of(). It therefore widens
+#                     `effective_fte` and NOTHING else -- headcount is the size of
+#                     the active set and cannot move with hours. This wiring was
+#                     missing until the draw was traced end-to-end: the
+#                     coefficients were drawn, discarded, and still reported as a
+#                     quantified parameter, which is the too-narrow-interval
+#                     defect this module exists to prevent, in its own code.
 #   retirement hazard NOT QUANTIFIED from the published sources. HWSM Exhibit 17
 #                     and the FutureDocs curve are printed without sample sizes
 #                     or standard errors, so there is no defensible sampling
@@ -107,6 +117,13 @@ print.urps_param_spec <- function(x, ...) {
 
 #' Draw one parameter set for a Monte Carlo iteration
 #'
+#' `hours_coef` is the COEFFICIENT VECTOR of the fitted weekly-clinical-hours
+#' model (`clinical_hours ~ ns(age, df) + sex`), drawn from its own `coef`/`vcov`
+#' -- not a scalar multiplier. The no-uncertainty case is therefore
+#' `hours_coef == coef(spec$hours_model)`, which reproduces the point-estimate
+#' fit exactly. Substitute it into the model with `.hours_model_with_coef()`
+#' rather than applying it to anything by hand.
+#'
 #' @param spec A [supply_parameter_spec()].
 #' @param schedule Base retirement hazard schedule.
 #' @return List with `entrants`, `retirement_schedule`, `hours_coef`.
@@ -133,9 +150,38 @@ draw_supply_parameters <- function(spec, schedule = RETIREMENT_HAZARD_BY_AGE) {
   hours_coef <- NULL
   if (isTRUE(spec$quantified[["hours"]])) {
     hours_coef <- .param_draw(spec$hours_model, 1L)[1, , drop = TRUE]
+    # A non-finite draw means the covariance was singular or ill-conditioned.
+    # Returning it would produce NA weekly hours, hence NA clinical FTE, hence a
+    # silently missing replicate in the effective-FTE quantiles. Fail closed.
+    if (!all(is.finite(hours_coef))) {
+      stop("draw_supply_parameters(): the hours-coefficient draw is non-finite, ",
+           "which means the fitted model's covariance is singular or ill-",
+           "conditioned. Refit the hours model on data that identifies every ",
+           "term rather than propagating a draw that yields NA clinical FTE.",
+           call. = FALSE)
+    }
   }
 
   list(entrants = entrants, retirement_schedule = sched, hours_coef = hours_coef)
+}
+
+# Substitute a drawn coefficient vector into a fitted hours model, so the ordinary
+# predict() path -- terms, spline basis, contrasts, xlevels -- is reused unchanged
+# and the drawn coefficients enter the estimand through exactly the same code the
+# point-estimate model uses. `predict.lm()` reads `object$coefficients`, so
+# replacing that slot is sufficient and leaves the rest of the fit intact.
+# Internal.
+.hours_model_with_coef <- function(model, coefs) {
+  if (is.null(model) || is.null(coefs)) return(model)
+  b <- stats::coef(model)
+  common <- intersect(names(b)[!is.na(b)], names(coefs))
+  if (!length(common)) {
+    stop(".hours_model_with_coef(): the drawn coefficients share no names with ",
+         "the fitted model, so they cannot be substituted.", call. = FALSE)
+  }
+  b[common] <- coefs[common]
+  model$coefficients <- b
+  model
 }
 
 #' Warn when the interval will describe only sampling noise

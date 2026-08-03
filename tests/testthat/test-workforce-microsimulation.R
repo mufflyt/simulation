@@ -116,6 +116,103 @@ test_that("E2SFCA zero-demand provider yields ratio NA, not 0 capacity", {
   expect_equal(res$audit$n_zero_demand_origins, 1L)
 })
 
+test_that("the deterministic backbone tracks the stochastic engine", {
+  # R/12 keeps project_supply_deterministic() alongside the microsimulation so the
+  # stochastic engine can be validated against its analytic expectation. That
+  # agreement was previously asserted only in a comment, and the two once diverged
+  # by 37% at 2050 because conversion_floor was missing from one of them. Lock it.
+  set.seed(20260801)
+  agents <- initialize_provider_agents(600, "FPMRS", 2025)
+  agents$sex <- rep(c("female", "male"), length.out = nrow(agents))
+  ic <- calibrate_hours_intercept(agents$age, agents$sex)
+
+  agree_within <- function(conversion, tol_pct) {
+    det <- project_supply_deterministic(agents, 2025:2050, 40,
+                                        conversion_floor = conversion,
+                                        hours_intercept = ic)
+    sto <- run_supply_microsimulation(agents, 2025:2050, 40, "FPMRS",
+                                      n_iterations = 60, conversion_floor = conversion,
+                                      hours_intercept = ic, verbose = FALSE)
+    j <- dplyr::inner_join(det, sto$summary, by = "year")
+    expect_lt(max(abs(100 * (j$headcount_median - j$headcount) / j$headcount)), tol_pct)
+    expect_lt(max(abs(100 * (j$effective_fte_median - j$effective_fte) / j$effective_fte)),
+              tol_pct)
+  }
+
+  agree_within(1.0, 3)
+  # The conversion haircut must be applied by BOTH engines, or they diverge as the
+  # entrant cohorts accumulate.
+  agree_within(0.7, 3)
+})
+
+test_that("SPAR rescales access to a national mean of 1", {
+  access <- tibble::tibble(
+    demand_id = c("a", "b", "c", "d"),
+    population = c(1000, 1000, 2000, 1000),
+    access_scaled = c(0, 10, 20, 30)
+  )
+  s <- summarize_access(access)
+  # Population-weighted mean: (0*1000 + 10*1000 + 20*2000 + 30*1000) / 5000
+  expect_equal(s$mean_access, 16)
+  expect_equal(s$zero_access_share, 0.2)          # one 1000-person unit at zero
+
+  spar <- spatial_access_ratio(access)
+  expect_equal(spar$relative_access, c(0, 10, 20, 30) / 16)
+  # The SPAR of the population-weighted mean is 1.0 by construction.
+  expect_equal(sum(spar$relative_access * spar$population) / sum(spar$population), 1)
+})
+
+test_that("access thresholds report population shares at or above each cut", {
+  access <- tibble::tibble(
+    demand_id = letters[1:4], population = c(100, 100, 100, 100),
+    access_scaled = c(0, 1, 5, 50)
+  )
+  ts <- summarize_access(access, thresholds = c(0, 1, 5, 50))$threshold_shares
+  expect_equal(ts$pop_share_at_or_above, c(1.00, 0.75, 0.50, 0.25))
+})
+
+test_that("access categories are a zero class plus QUARTILES of positive access", {
+  # Documented contract: category 1 is zero-access, 2-5 are quartiles of the
+  # POSITIVE distribution -- not quintiles of everything.
+  cats <- assign_access_category(c(0, 0, 1, 2, 3, 4, 5, 6, 7, 8))
+  expect_equal(cats[1:2], c(1L, 1L))
+  expect_equal(sort(unique(cats)), 1:5)
+  expect_true(all(diff(cats[-(1:2)]) >= 0))       # monotone in access
+  # All-zero input collapses to the zero class rather than erroring.
+  expect_equal(assign_access_category(c(0, 0, 0)), rep(1L, 3))
+})
+
+test_that("migration hazard is highest early-career and lowest late-career", {
+  expect_equal(migration_hazard(2, 40), unname(PROVIDER_MIGRATION_HAZARD[["early_career"]]))
+  expect_equal(migration_hazard(20, 45), unname(PROVIDER_MIGRATION_HAZARD[["mid_career"]]))
+  expect_equal(migration_hazard(20, 65), unname(PROVIDER_MIGRATION_HAZARD[["late_career"]]))
+  # Vectorised, and age must be honoured element-wise.
+  h <- migration_hazard(c(1, 20, 20), c(35, 45, 65))
+  expect_equal(h, unname(PROVIDER_MIGRATION_HAZARD[c("early_career", "mid_career",
+                                                     "late_career")]))
+})
+
+test_that("provider migration moves only some providers and never invents states", {
+  agents <- tibble::tibble(
+    provider_id = sprintf("P%02d", 1:200),
+    entry_year = 2023, age = 40,
+    state = rep(c("CO", "NY"), 100)
+  )
+  shares <- tibble::tibble(geo = c("CO", "NY", "TX"), share = c(0.4, 0.4, 0.2))
+  set.seed(11)
+  moved <- apply_provider_migration(agents, 2025, shares)
+
+  expect_equal(nrow(moved), nrow(agents))
+  expect_true(all(moved$state %in% shares$geo))
+  expect_true(all(moved$n_moves %in% c(0L, 1L)))   # one move per provider per year
+  # Early-career hazard is 4.5%/yr, so most providers must stay put.
+  expect_lt(sum(moved$n_moves), nrow(agents) * 0.2)
+  expect_gt(sum(moved$n_moves), 0)
+  # A roster with no state column is passed through untouched.
+  expect_identical(apply_provider_migration(dplyr::select(agents, -"state"), 2025, shares),
+                   dplyr::select(agents, -"state"))
+})
+
 test_that("safe_left_join blocks unintended fan-out", {
   x <- tibble::tibble(k = c(1, 2, 3), v = c("a", "b", "c"))
   y_dup <- tibble::tibble(k = c(1, 1, 2), w = c(10, 11, 12))
