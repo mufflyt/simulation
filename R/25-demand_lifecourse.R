@@ -17,9 +17,12 @@
 # delegation matrix and the work-RVU FTE conversion already live there, so demand
 # is NOT converted to FTE here and provider substitution is NOT duplicated here.
 #
-# All coefficient/parameter tables are explicit and marked
-# calibration_status = "placeholder_uncalibrated": swap in obstetric and
-# urogynecologic epidemiology before using any number.
+# The DEMOGRAPHIC EXPOSURE marginals (completed parity and cesarean share) are
+# CALIBRATED from cited birth-cohort series -- .lifecourse_population() reuses
+# R/13b cohort_vaginal_exposure() rather than the old crude parity formula and
+# scalar cesarean rate. The risk/pathway COEFFICIENT tables remain placeholders
+# by default; lifecourse_risk_params_cited() supplies literature-anchored
+# vaginal-delivery log-odds (with ranges) as a documented option.
 
 # ---- Parameter tables (placeholder) ---------------------------------------
 
@@ -38,6 +41,32 @@ lifecourse_risk_params <- function() {
     pop = mk(-2.40, 0.42, 0.30, 0.08, 0.08, 0.45, 0.20, 0.05),
     ai  = mk(-2.90, 0.22, 0.25, 0.04, 0.06, 0.05, 0.10, 0.20)
   )
+}
+
+#' Literature-anchored life-course risk coefficients (cited option)
+#'
+#' An explicit, documented alternative to [lifecourse_risk_params()]: the
+#' vaginal-delivery log-odds (`bvag`, the primary term) and the BMI modifier
+#' (`bbmi`) are anchored to cited urogynecologic epidemiology; all other terms
+#' inherit the internal placeholder set. Pass via `risk_params` to
+#' [simulate_lifecourse_demand()]. `bvag` per cumulative vaginal delivery
+#' (log-odds), with the literature RANGE noted:
+#'   POP OR ~1.35/delivery (log 0.30); range 1.10-1.21 (Hendrix WHI, per birth)
+#'          up to steeper (Mant Oxford-FPA RR 8.4 at 2 / 10.9 at 4 vaginal births).
+#'   UI  OR ~1.16/delivery (log 0.15) (Rortveit 2001/2003, EPINCONT).
+#'   AI  OR ~1.10/delivery (log 0.10), weak/uncertain; OASI-specific OR 2.66
+#'          (LaCross 2015) is a distinct, stronger contrast.
+#' `bbmi` per +5 kg/m^2 from Giri 2017 AJOG (obese vs normal RR ~1.47). All
+#' PROVISIONAL: full-text verification recommended before publication.
+#' @return A risk-params list in the shape of [lifecourse_risk_params()].
+#' @export
+lifecourse_risk_params_cited <- function() {
+  base <- lifecourse_risk_params()
+  base$status   <- "obstetric_literature_anchored"
+  base$ui$bvag  <- 0.15; base$ui$bbmi  <- 0.26
+  base$pop$bvag <- 0.30; base$pop$bbmi <- 0.26
+  base$ai$bvag  <- 0.10
+  base
 }
 
 # Care-pathway probabilities per condition (recognition -> seek -> referral ->
@@ -81,14 +110,23 @@ lifecourse_service_map <- function() {
 # Build a synthetic person-year panel centered on vaginal-delivery exposure.
 # Base R vectors assembled into a tibble (no survey/tidyverse NSE), so the
 # marginals are transparent and swappable.
-.lifecourse_population <- function(pop_by_age, year, n, cesarean_rate, seed = NULL) {
+.lifecourse_population <- function(pop_by_age, year, n, cesarean_rate = NULL, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   stopifnot(all(c("age", "population") %in% names(pop_by_age)))
   idx <- sample(seq_len(nrow(pop_by_age)), size = n, replace = TRUE,
                 prob = pop_by_age$population)
   age <- pop_by_age$age[idx]
-  parity <- stats::rpois(n, pmin(2.1, pmax(0, (age - 20) / 12)))
-  cesarean_births <- stats::rbinom(n, parity, cesarean_rate)
+  # CITED cohort marginals (reuse R/13b's cohort_vaginal_exposure; do not redefine):
+  # completed parity and cesarean share BY BIRTH COHORT replace the crude
+  # (age-20)/12 parity formula and the single scalar cesarean rate. An 85-year-old
+  # in 2040 was born 1955 and delivered when cesarean was ~10-19%, not 32%.
+  cohort <- year - age
+  ex <- cohort_vaginal_exposure(sort(unique(cohort)))
+  m <- match(cohort, ex$birth_cohort)
+  parity <- stats::rpois(n, pmax(0, ex$mean_total_parity[m]))
+  # Explicit scalar cesarean_rate overrides the cited baseline (delivery_mode lever).
+  ces_p <- if (is.null(cesarean_rate)) ex$cohort_cesarean_fraction[m] else cesarean_rate
+  cesarean_births <- stats::rbinom(n, parity, ces_p)
   vaginal_births <- parity - cesarean_births
   age_at_last_vaginal <- pmin(age, 26L + stats::rpois(n, 4))
   ysl <- ifelse(vaginal_births > 0, pmax(0, age - age_at_last_vaginal), 0)
@@ -171,7 +209,8 @@ lifecourse_service_map <- function() {
 #' @param n Number of synthetic persons.
 #' @param seed Optional RNG seed.
 #' @param cesarean_rate Share of live births delivered by cesarean (delivery-mode
-#'   lever). Default 0.32.
+#'   lever). Default `NULL` uses the CITED cohort-varying cesarean baseline (via
+#'   R/13b `cohort_vaginal_exposure()`); pass a scalar to override it.
 #' @param access_gain Multiplier on care-seeking for high-barrier women
 #'   (reduced-barriers lever). Default 1; the "reduced_barriers" scenario sets 1.6
 #'   when left at 1.
@@ -184,7 +223,7 @@ lifecourse_service_map <- function() {
 #' @export
 simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
                                        n = 1e5, seed = NULL,
-                                       cesarean_rate = 0.32, access_gain = 1,
+                                       cesarean_rate = NULL, access_gain = 1,
                                        prevention_target = c("pop", "ui", "ai", "bmi"),
                                        prevention_effect = 0.20,
                                        risk_params = lifecourse_risk_params(),
@@ -225,8 +264,12 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
     care_seeking_national = sum(pop$care_seeking_state) * scale_factor,
     treated_national      = treated_national,
     meta = list(scenario = scenario, year = year, n = n,
-                cesarean_rate = cesarean_rate, access_gain = access_gain,
-                status = "placeholder_uncalibrated")
+                cesarean_rate = if (is.null(cesarean_rate)) "cited_cohort_varying"
+                                else cesarean_rate,
+                access_gain = access_gain,
+                status = if (identical(risk_params$status, "obstetric_literature_anchored"))
+                           "cohort_marginals_cited; risk_coeffs_literature_anchored"
+                         else "cohort_marginals_cited; risk_coeffs_placeholder")
   )
 }
 
