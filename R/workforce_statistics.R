@@ -36,7 +36,7 @@
 #' @param x Successes (at-risk count).
 #' @param n Sample size.
 #' @param conf_level Confidence level (default 0.95).
-#' @return List: `proportion`, `lower_ci`, `upper_ci` (proportions in [0,1]),
+#' @return List: `proportion`, `lower_ci`, `upper_ci` (proportions in `[0,1]`),
 #'   `method`, `note`.
 #' @export
 calculate_proportion_ci <- function(x, n, conf_level = 0.95) {

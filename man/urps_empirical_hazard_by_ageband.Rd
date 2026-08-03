@@ -22,7 +22,7 @@ Named numeric vector of annual hazards over \code{MICROSIM_AGE_BAND_LABELS}.
 }
 \description{
 Reads the canonical pooled-hazard file and returns annual departure hazards
-over the model's age bands (\link{MICROSIM_AGE_BAND_LABELS}). Because the observed
+over the model's age bands (\code{MICROSIM_AGE_BAND_LABELS}). Because the observed
 70+ cell is 0/16, hazards are made monotone non-decreasing from the \code{60-64}
 band onward, so \verb{70+} inherits the \code{65-69} hazard instead of collapsing to 0.
 }

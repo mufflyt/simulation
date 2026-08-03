@@ -12,7 +12,7 @@ zero_access_share(access, w)
 \item{w}{Numeric weights.}
 }
 \value{
-Percent in \link{0, 100} under non-negative weights, or NA.
+Percent in \verb{[0, 100]} under non-negative weights, or NA.
 }
 \description{
 The workforce-adequacy KPI "share of women with no modelled access". Distinct

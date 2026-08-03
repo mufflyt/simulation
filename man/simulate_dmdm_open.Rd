@@ -25,6 +25,11 @@ marginal \code{p_ui}/\code{p_pop}/\code{p_ai}.}
 \item{start_year, end_year}{Simulation window (inclusive).}
 
 \item{transitions}{Transition parameters; see \code{\link[=dmdm_default_transitions]{dmdm_default_transitions()}}.}
+
+\item{pop_by_age_year}{Optional tibble of \code{year}, \code{age}, \code{population}. When
+supplied, each year's age-specific weights are rescaled to it, so population
+counts follow the Census projection while the model supplies the disease
+rates. \code{NULL} (default) runs the internal cohort-component demography.}
 }
 \value{
 A data frame, one row per year: \code{year}, \code{population} (sum of weights),

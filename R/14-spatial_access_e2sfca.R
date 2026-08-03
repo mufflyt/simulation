@@ -394,7 +394,7 @@ weighted_mean_all <- function(a, w) {
 #'
 #' @param access Numeric accessibility values.
 #' @param w Numeric weights.
-#' @return Percent in [0, 100] under non-negative weights, or NA.
+#' @return Percent in `[0, 100]` under non-negative weights, or NA.
 #' @export
 zero_access_share <- function(access, w) {
   stopifnot(length(access) == length(w))

@@ -43,6 +43,10 @@
 #'   `entry_year` (added at the start of that year); or `NULL`.
 #' @param start_year,end_year Simulation window (inclusive).
 #' @param transitions Transition parameters; see [dmdm_default_transitions()].
+#' @param pop_by_age_year Optional tibble of `year`, `age`, `population`. When
+#'   supplied, each year's age-specific weights are rescaled to it, so population
+#'   counts follow the Census projection while the model supplies the disease
+#'   rates. `NULL` (default) runs the internal cohort-component demography.
 #' @return A data frame, one row per year: `year`, `population` (sum of weights),
 #'   `prev_ui`/`prev_pop`/`prev_ai` (weighted population prevalence) and
 #'   `inc_ui`/`inc_pop`/`inc_ai` (expected national new cases in the year).
