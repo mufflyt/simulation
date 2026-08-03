@@ -85,7 +85,7 @@ Prolapse is graded (POP-Q 0–4) and regresses, unlike incontinence. Until a POP
 panel is fitted, use the cited literature transitions (`derived_by_analogy`);
 with a staged panel, fit the per-stage progression/regression hazards directly:
 
-```{r pop}
+```{r pop_staged}
 tr_pop <- dmdm_transitions_with_pop_literature()  # MOAD/WHI/SWEPOP-derived POP row
 tr_pop$pop_progression                             # annual stage k -> k+1
 tr_pop$pop_regression                              # annual stage k -> k-1 (mild POP resolves)

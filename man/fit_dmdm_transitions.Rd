@@ -7,7 +7,8 @@
 fit_dmdm_transitions(
   transition_data,
   mortality = dmdm_default_transitions()$mortality,
-  conditions = c("ui", "pop", "ai")
+  conditions = c("ui", "pop", "ai"),
+  stage_conditions = character(0)
 )
 }
 \arguments{
@@ -17,10 +18,14 @@ fit_dmdm_transitions(
 placeholder. Fit separately from a life table.}
 
 \item{conditions}{Conditions to fit. Default all three.}
+
+\item{stage_conditions}{Conditions for which to also fit per-stage
+progression/regression (requires \code{from_stage}/\code{to_stage}). Default none.}
 }
 \value{
 A transitions list: \code{status}, \code{onset} (per-condition coef vectors),
-\code{remission} (per-condition annual probabilities), \code{mortality}.
+\code{remission} (per-condition annual probabilities), \code{mortality}, and for each
+staged condition \verb{<cc>_progression}/\verb{<cc>_regression} per-stage vectors.
 }
 \description{
 Fits, per condition, an onset logistic (among at-risk, \code{from == 0}) whose
@@ -28,4 +33,14 @@ coefficients map directly onto the engine's onset parameterisation, and a
 remission probability (the observed annual \code{from == 1 -> 0} rate). Returns a
 \code{transitions} object with \code{status = "fitted"}, usable directly by
 \code{\link[=simulate_dmdm]{simulate_dmdm()}} / \code{\link[=simulate_dmdm_open]{simulate_dmdm_open()}}.
+}
+\details{
+For a graded condition (e.g. POP, whose transition rows carry
+\code{from_stage}/\code{to_stage} from \code{\link[=dmdm_transition_data]{dmdm_transition_data()}}), naming it in
+\code{stage_conditions} additionally fits per-stage annual progression
+(stage k -> k+1) and regression (stage k -> k-1) probabilities, attached as
+\verb{<cc>_progression} and \verb{<cc>_regression} named vectors. This captures the two
+features that distinguish POP from incontinence: it is graded, and mild stages
+regress. The extra elements are inert for the two-state engine and available to
+a staged consumer.
 }

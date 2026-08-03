@@ -92,8 +92,20 @@ dmdm_transition_data <- function(panel, conditions = c("ui", "pop", "ai"),
   zero <- c(a0 = -6, avag = 0, aage = 0, absl = 0, abmi = 0, ahyst = 0, ameno = 0, acom = 0)
   d <- df[df$from == 0L, , drop = FALSE]
   # Fall back to an intercept-only estimate when the model cannot be identified
-  # (no at-risk person-years, or no variation in the outcome).
-  if (nrow(d) < 2L || length(unique(d$event)) < 2L) {
+  # (no at-risk person-years, no variation in the outcome, or -- the case a
+  # staged-transition table hits -- no covariate columns at all). Reaching for an
+  # absent column on a tibble yields NULL, so `d$age_c <- (d$age - 50)/10`
+  # assigned numeric(0) and errored instead of taking this documented path.
+  covars <- c("age", "cumulative_vaginal_deliveries", "years_since_last_vaginal_birth",
+              "bmi", "hysterectomy", "menopause_status", "comorbidity")
+  missing_covars <- setdiff(covars, names(d))
+  if (nrow(d) < 2L || length(unique(d$event)) < 2L || length(missing_covars)) {
+    if (length(missing_covars) && nrow(d)) {
+      .msg_warn(sprintf(paste(
+        "Onset fit falls back to intercept-only: %s absent. Every covariate slope",
+        "is returned as 0, so onset depends on nothing but the baseline rate."),
+        paste(missing_covars, collapse = ", ")))
+    }
     rate <- if (nrow(d)) mean(d$event) else 0
     zero["a0"] <- if (rate > 0 && rate < 1) stats::qlogis(rate) else -6
     return(zero)

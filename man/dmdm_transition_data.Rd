@@ -4,7 +4,11 @@
 \alias{dmdm_transition_data}
 \title{Reshape a disease-state panel into at-risk transition rows}
 \usage{
-dmdm_transition_data(panel, conditions = c("ui", "pop", "ai"))
+dmdm_transition_data(
+  panel,
+  conditions = c("ui", "pop", "ai"),
+  stage_cols = NULL
+)
 }
 \arguments{
 \item{panel}{Data frame with \code{person_id}, \code{year}, the covariates \code{age},
@@ -13,14 +17,29 @@ dmdm_transition_data(panel, conditions = c("ui", "pop", "ai"))
 \code{has_pop}, \code{has_ai}.}
 
 \item{conditions}{Conditions to build. Default all three.}
+
+\item{stage_cols}{Optional named character vector mapping a condition to a
+graded-stage column in \code{panel}, e.g. \code{c(pop = "pop_stage")}. The column must
+hold integer stages (0 = none). Conditions not named here are treated as
+two-state.}
 }
 \value{
 Tibble: \code{person_id}, \code{condition}, \code{year}, the covariates at t, \code{from}
-(0/1 at-risk state), and \code{event} (1 if the state changed by t+1).
+(0/1 at-risk state), \code{event} (1 if the binary state changed by t+1), and
+\code{from_stage}/\code{to_stage} (graded stage at t and t+1, or \code{NA}).
 }
 \description{
 From a longitudinal panel of women (one row per person-year) with binary
 condition states, build the year-to-year transitions: for each consecutive
 observed year, a row per condition carrying the covariates at time t, the
 at-risk state (\code{from}), and whether a transition occurred (\code{event}).
+}
+\details{
+Pelvic organ prolapse is graded (POP-Q stage 0-4), not merely present/absent,
+and it can regress. When a graded stage column is available for a condition,
+pass it via \code{stage_cols} to additionally carry the stage at t (\code{from_stage})
+and t+1 (\code{to_stage}); the binary \code{from}/\code{event} are then derived from the stage
+(present := stage > 0) so existing two-state consumers are unaffected. The
+staged columns feed \code{\link[=fit_dmdm_transitions]{fit_dmdm_transitions()}}'s per-stage progression/regression
+fit. \code{from_stage}/\code{to_stage} are \code{NA} for conditions without a stage column.
 }
