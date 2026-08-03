@@ -10,6 +10,7 @@ export_dmdm_demand_contract(
   model_version = DMDM_DEMAND_CONTRACT_VERSION,
   base_year = 2025L,
   calibration_status = "placeholder_uncalibrated",
+  transitions = NULL,
   population_scope = "us_adult_women",
   verbose = TRUE
 )
@@ -25,7 +26,18 @@ export_dmdm_demand_contract(
 \item{base_year}{Calendar year the index is normalized to (= 100). Default 2025.}
 
 \item{calibration_status}{Provenance guard. Keep "placeholder_uncalibrated"
-until the onset/remission hazards are fitted (see \code{\link[=fit_dmdm_transitions]{fit_dmdm_transitions()}}).}
+until the onset/remission hazards are fitted (see \code{\link[=fit_dmdm_transitions]{fit_dmdm_transitions()}}).
+Ignored (and derived from \code{transitions}) when \code{transitions} carries its own
+\code{calibration_status}.}
+
+\item{transitions}{Optional transition object actually used to produce
+\code{trajectory} (e.g. \code{\link[=dmdm_transitions_with_pop_literature]{dmdm_transitions_with_pop_literature()}}). When supplied,
+its \code{calibration_status} becomes the object-level status and its per-condition
+\code{provenance} is stamped per tier in a \code{tier_calibration_status} column, so a
+downstream consumer can gate on the provenance of the specific tier it reads
+(e.g. \code{dmdm_pop} = "derived_by_analogy" while \code{dmdm_ui}/\code{dmdm_ai} stay
+placeholder). The any-PFD \code{tier3} is stamped with the \emph{weakest} provenance
+across the conditions that compose it.}
 
 \item{population_scope}{Population denominator label. Default "us_adult_women".}
 
