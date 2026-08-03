@@ -153,7 +153,11 @@ advance_urps_agents <- function(agents,
                                 year_seed    = NULL,
                                 verbose      = FALSE) {
   registered <- tryCatch(
-    urpssim::urps_scenarios(),
+    {
+      reg <- mufflyaccess::urps_scenarios()
+      if (is.null(reg$id) && !is.null(reg$scenario_id)) reg$id <- reg$scenario_id
+      reg
+    },
     error = function(e) data.frame(id = "status_quo", stringsAsFactors = FALSE)
   )
   assertthat::assert_that(
