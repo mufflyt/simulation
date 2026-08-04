@@ -15,6 +15,18 @@ Extracted from `twostep/data/urogyn_tract_fem65_centroids.rds` (itself derived
 in the isochrones pipeline). Registered as canonical `tract_fem65_centroids`
 (path + SHA-256); loaded via `load_tract_demand()` — no `sf` needed.
 
+## `acs5_2023_tract_female_by_ageband.csv` (downloaded, not vendored)
+
+Tract female population by the model's **demand age bands**
+(20-39 / 40-59 / 60-64 / 65-79 / 80+, plus `female_40plus`), from ACS 5-year
+table B01001. Produced by `scripts/data_acquisition/08_download_acs_tracts.R`
+(free Census API key). The `fem65` centroids above cover only 65+; this carries
+the full 40+ structure the life-course / DMDM demand is defined over. Join to the
+centroids on `GEOID` (or a TIGER/Line tract layer) for coordinates, then build
+tract need as `sum_band(female_pop[band] * age_band_rate[band])` and feed
+`demand_by_travel_band()` / `geographic_demand_summary()` (`R/32`). Not vendored
+(size) — download locally; the script writes a manifest with the md5.
+
 ## Provider isochrone polygons (NOT vendored)
 
 The **supply-side** catchment geometry — provider drive-time isochrone polygons
