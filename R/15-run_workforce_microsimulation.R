@@ -180,7 +180,20 @@ example_capacity_survey <- function() {
 #'   Selecting "hwsm" is an affirmative choice to model URPS attrition with
 #'   another population's curve, and is recorded in the run metadata.
 #' @param calibration Optional calibration scalars from
-#'   [fit_calibration_scalars()].
+#'   [fit_calibration_scalars()]. Checked by [assert_demand_calibrated()]: demand
+#'   totals that were never anchored to an independent national estimate
+#'   (NAMCS/NHAMCS/NIS or claims) warn, and are refused in strict mode.
+#' @param placement_shares Optional tibble of `geo` and `share` that enables the
+#'   geographic layer: entrants are placed by this distribution and providers may
+#'   migrate mid-career. Build it with [opportunity_placement_shares()] for the
+#'   HWSM rule (demand growth plus retirements, which lets existing
+#'   maldistribution persist), [historical_placement_shares()] for the
+#'   reproduce-today's-distribution comparison, or [blend_placement_shares()].
+#'   Requires a cohort carrying `state`.
+#' @param seed_base_geography When `placement_shares` is supplied but the cohort
+#'   has no `state` column, draw the base cohort's states from those shares
+#'   rather than leaving the layer inert. A declared assumption, not an
+#'   observation: geographic output is then conditional on it.
 #' @param parameter_spec Optional [supply_parameter_spec()]; defaults to one
 #'   built from the observed certification series.
 #' @param allow_analogy Permit inputs derived by analogy from another specialty
@@ -225,6 +238,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           baseline_entrants = 55,
                                           retirement_source = c("urps_empirical", "hwsm"),
                                           calibration = NULL,
+                                          placement_shares = NULL,
+                                          seed_base_geography = FALSE,
                                           parameter_spec = NULL,
                                           allow_analogy = FALSE,
                                           brfss_cells = NULL,
@@ -336,6 +351,37 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   }
 
   # Keep the hours schedule and the FTE threshold internally consistent.
+  # --- Geographic placement ------------------------------------------------
+  # The geography layer (opportunity_placement_shares(), entrant placement,
+  # mid-career migration) has existed in R/20 since the port and was reachable
+  # from nothing: this orchestrator never passed `placement_shares`, so every
+  # run was national-headcount-only. Wiring it is most of the work; the rest is
+  # making its precondition explicit.
+  #
+  # The engine keys entrant placement and migration off a `state` column. A
+  # cohort built from the certification contract has none -- the contract ships
+  # aggregate counts with no geography -- so passing shares alone would leave the
+  # layer silently inert, which is the failure mode this repository keeps
+  # rediscovering. Say so, and offer an explicit, labelled way to seed it.
+  placement_active <- !is.null(placement_shares)
+  if (placement_active && !"state" %in% names(agents)) {
+    if (isTRUE(seed_base_geography)) {
+      agents$state <- assign_entrant_geography(nrow(agents), placement_shares)
+      .msg_warn("seed_base_geography = TRUE: the base cohort's states were DRAWN ",
+                "from placement_shares, not observed. Geographic results are then ",
+                "conditional on that assumption and must not be read as the ",
+                "observed distribution of the current workforce.")
+    } else {
+      placement_active <- FALSE
+      .msg_warn("placement_shares was supplied but the cohort has no `state` ",
+                "column, so entrant placement and migration would do nothing. ",
+                "Supply a roster via agents_from_roster(), or pass ",
+                "seed_base_geography = TRUE to draw the base cohort's states ",
+                "from the shares as a declared assumption.")
+    }
+  }
+  if (!placement_active) placement_shares <- NULL
+
   hours_intercept <- calibrate_hours_intercept(agents$age, agents$sex)
 
   # Parameter uncertainty: the entrant rate is drawn from the observed series'
@@ -367,6 +413,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       param_spec = param_spec,
       late_career_fte_factor = params$late_career_fte_factor %||% 1.0,
       late_career_fte_onset_age = params$late_career_fte_onset_age %||% NA_real_,
+      placement_shares = placement_shares,
       seed = seed,
       verbose = FALSE
     )
@@ -397,6 +444,15 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   }
 
   assert_estimands_independent(demand_long, "demand_cases", mode)
+
+  # Demand totals must be anchored to an independent national estimate, which is
+  # the HDMM's own step (Exhibit 11: scalar = observed / model-predicted). The
+  # machinery has been here all along -- fit_calibration_scalars() is used by
+  # R/28 -- but nothing in a workforce run ever called the guard, so `calibration`
+  # was accepted, stored in the metadata, and never checked. An uncalibrated
+  # demand total is not anchored to any observed quantity, so it is gated here
+  # like the base-year gap and the estimand independence check.
+  assert_demand_calibrated(calibration, mode)
 
   # --- Workload -> required FTE (FTE on both sides) ------------------------
   assert_publishable_workload(mode = mode)
@@ -562,6 +618,14 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       example_only = example_only,
       cohort_provenance = cohort,
       cohort_composition = cohort_composition(agents),
+      # Whether the run was national-only or geographically resolved, and on what
+      # basis -- a reader cannot tell from the supply panel alone.
+      geographic_placement = list(
+        active = placement_active,
+        n_geographies = if (placement_active) nrow(placement_shares) else 0L,
+        base_geography_seeded = placement_active && isTRUE(seed_base_geography)
+      ),
+      demand_calibrated = is.data.frame(calibration) && nrow(calibration) > 0,
       fte_definition = fte_definition(),
       hours_intercept = hours_intercept,
       parameter_spec = param_spec,
