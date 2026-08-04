@@ -118,7 +118,7 @@ URPS_P_ACTIVE_COEF <- list(
 #' @param years_certified Numeric years since first board certification (≥ 0).
 #'   Recycled to `length(age)`.
 #' @param scenario_id Character scenario identifier from the supply scenario
-#'   registry (e.g. `"status_quo"`, `"retirement_2_years_later"`). `NULL`
+#'   registry (e.g. `"status_quo"`, `"retire_2yr_later"`). `NULL`
 #'   (default) applies no age-axis shift.
 #' @param coef Named list of logistic coefficients; see [URPS_P_ACTIVE_COEF].
 #'   Pass a list returned by [fit_p_active_model()] to use empirically fitted
@@ -139,7 +139,7 @@ URPS_P_ACTIVE_COEF <- list(
 #' urps_p_active(c(35, 50, 65, 75), "female", c(2, 17, 32, 42))
 #'
 #' # Scenario: retiring 2 years later raises P(active) at age 65
-#' urps_p_active(65, "male", 32, scenario_id = "retirement_2_years_later")
+#' urps_p_active(65, "male", 32, scenario_id = "retire_2yr_later")
 urps_p_active <- function(age,
                            sex             = "female",
                            years_certified = 10,
