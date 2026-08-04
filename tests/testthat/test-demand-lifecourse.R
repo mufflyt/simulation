@@ -5,8 +5,13 @@ pop_by_age <- tibble::tibble(age = 40:85,
 pop_by_age_year <- dplyr::bind_rows(lapply(c(2025L, 2030L), function(y)
   dplyr::mutate(pop_by_age, year = y)))
 
-BASKET <- c("new_consultation", "return_visit", "pessary_care", "urodynamics",
-            "cystoscopy", "botox_bladder", "ptns", "sling_procedure", "prolapse_procedure")
+# Assert against the canonical workload basket rather than a hand-copied list.
+# The literal here named nine services and went stale the moment the staged
+# condition pathway (R/51) started emitting postoperative_care -- which IS in the
+# basket, carries work RVU 0 (090-day global period), and is exactly what
+# convert_workload_to_fte() consumes. A copy of a canonical list fails as soon as
+# the list grows, and it fails by accusing the model rather than itself.
+BASKET <- urps_service_workload()$service
 
 run <- function(scenario = "baseline", ...) {
   simulate_lifecourse_demand(pop_by_age, year = 2025L, scenario = scenario,

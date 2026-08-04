@@ -17,7 +17,9 @@ simulate_lifecourse_demand(
   prevention_effect = 0.2,
   risk_params = lifecourse_risk_params(),
   pathway_params = lifecourse_pathway_params(),
-  service_map = lifecourse_service_map()
+  service_map = lifecourse_service_map(),
+  use_condition_pathway = TRUE,
+  pathway = NULL
 )
 }
 \arguments{
@@ -52,10 +54,21 @@ observed uninsured/low-income rates rather than a fixed assumption.}
 
 \item{risk_params, pathway_params, service_map}{Parameter tables; defaults are
 placeholders — override to calibrate.}
+
+\item{use_condition_pathway}{Route treated patients through the staged
+condition pathway (\code{\link[=condition_service_pathway]{condition_service_pathway()}}) instead of the flat
+\code{service_map}. \code{TRUE} by default: the flat map emitted conservative,
+procedural and device services as parallel annual rates with no dependency
+between them, and generated no post-operative follow-up or recurrence at
+all. Set \code{FALSE} to reproduce the pre-pathway volumes.}
+
+\item{pathway}{Staged pathway table used when \code{use_condition_pathway} is TRUE.}
 }
 \value{
 A list with \code{person_years}, \code{service_volumes} (tibble \code{year},
 \code{service}, \code{volume}), \code{care_seeking_national}, \code{treated_national}, and \code{meta}.
+When the staged pathway is used, \code{meta$stage_volumes} carries the same
+volumes broken out by condition and stage.
 }
 \description{
 Runs the reproductive life-course pipeline (childbirth exposure -> pelvic-floor

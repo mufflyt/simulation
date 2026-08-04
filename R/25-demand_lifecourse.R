@@ -223,8 +223,17 @@ lifecourse_service_map <- function() {
 #' @param prevention_effect Fractional reduction applied by the prevention lever.
 #' @param risk_params,pathway_params,service_map Parameter tables; defaults are
 #'   placeholders — override to calibrate.
+#' @param use_condition_pathway Route treated patients through the staged
+#'   condition pathway ([condition_service_pathway()]) instead of the flat
+#'   `service_map`. `TRUE` by default: the flat map emitted conservative,
+#'   procedural and device services as parallel annual rates with no dependency
+#'   between them, and generated no post-operative follow-up or recurrence at
+#'   all. Set `FALSE` to reproduce the pre-pathway volumes.
+#' @param pathway Staged pathway table used when `use_condition_pathway` is TRUE.
 #' @return A list with `person_years`, `service_volumes` (tibble `year`,
 #'   `service`, `volume`), `care_seeking_national`, `treated_national`, and `meta`.
+#'   When the staged pathway is used, `meta$stage_volumes` carries the same
+#'   volumes broken out by condition and stage.
 #' @export
 simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
                                        n = 1e5, seed = NULL,
@@ -234,7 +243,9 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
                                        prevention_effect = 0.20,
                                        risk_params = lifecourse_risk_params(),
                                        pathway_params = lifecourse_pathway_params(),
-                                       service_map = lifecourse_service_map()) {
+                                       service_map = lifecourse_service_map(),
+                                       use_condition_pathway = TRUE,
+                                       pathway = NULL) {
   scenario <- match.arg(scenario,
                         c("baseline", "delivery_mode", "reduced_barriers", "prevention"))
   prevention_target <- match.arg(prevention_target)
@@ -256,13 +267,25 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
                         pop = sum(pop$treated_pop),
                         ai  = sum(pop$treated_ai)) * scale_factor
 
-  treated_tbl <- tibble::tibble(condition = names(treated_national),
-                                treated = as.numeric(treated_national))
-  vols <- dplyr::inner_join(service_map, treated_tbl, by = "condition")
-  vols <- dplyr::mutate(vols, volume = .data$per_treated * .data$treated, year = year)
-  service_volumes <- dplyr::summarise(
-    dplyr::group_by(vols, .data$year, .data$service),
-    volume = sum(.data$volume), .groups = "drop")
+  stage_volumes <- NULL
+  if (isTRUE(use_condition_pathway)) {
+    if (is.null(pathway)) pathway <- condition_service_pathway()
+    # Validate against the workload basket here rather than letting the
+    # min_match_rate = 1.0 join in convert_workload_to_fte() fail later: the
+    # error there names a join, not the pathway row that caused it.
+    validate_condition_pathway(pathway, known_services = urps_service_workload()$service)
+    service_volumes <- pathway_service_volumes(treated_national, year, pathway)
+    stage_volumes <- pathway_service_volumes(treated_national, year, pathway,
+                                             by_stage = TRUE)
+  } else {
+    treated_tbl <- tibble::tibble(condition = names(treated_national),
+                                  treated = as.numeric(treated_national))
+    vols <- dplyr::inner_join(service_map, treated_tbl, by = "condition")
+    vols <- dplyr::mutate(vols, volume = .data$per_treated * .data$treated, year = year)
+    service_volumes <- dplyr::summarise(
+      dplyr::group_by(vols, .data$year, .data$service),
+      volume = sum(.data$volume), .groups = "drop")
+  }
 
   list(
     person_years          = pop,
@@ -270,6 +293,11 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
     care_seeking_national = sum(pop$care_seeking_state) * scale_factor,
     treated_national      = treated_national,
     meta = list(scenario = scenario, year = year, n = n,
+                service_pathway = if (isTRUE(use_condition_pathway))
+                  "condition_staged" else "flat_service_map",
+                pathway_status = if (isTRUE(use_condition_pathway))
+                  condition_pathway_status(pathway) else NA_character_,
+                stage_volumes = stage_volumes,
                 cesarean_rate = if (is.null(cesarean_rate)) "cited_cohort_varying"
                                 else cesarean_rate,
                 access_gain = access_gain,
