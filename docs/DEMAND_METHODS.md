@@ -72,7 +72,13 @@ than a static risk equation.
   official demography while the model supplies the rates.
 - **Fitting** (`R/31`): `dmdm_transition_data()` reshapes a longitudinal panel
   (SWAN is the intended source) into at-risk transition rows; `fit_dmdm_transitions()`
-  fits per-condition onset logistics and remission rates.
+  fits per-condition onset logistics and remission rates. `build_swan_dmdm_panel()`
+  (`R/47`) builds that panel from the wide SWAN frame, and
+  `scripts/run_swan_dmdm_fit.R` runs the whole path — fit the UI hazards, assemble
+  a full transition object (UI `fitted`, POP `derived_by_analogy`, AI
+  `placeholder`; object status = the weakest), and emit the caveats that must
+  travel with it (SWAN carries no delivery mode, so parity proxies vaginal parity;
+  it has no POP-Q staging and does not follow AI).
 - **Prolapse is different** (`R/33`): pelvic organ prolapse is *graded* (POP-Q
   stage 0–4) and it *regresses* — mild prolapse resolves spontaneously at a high
   annual rate, unlike incontinence, which is persistent once established. Two

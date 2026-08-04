@@ -31,14 +31,29 @@ prolapse. For POP keep the cited literature transitions
 
 ## Reshape → fit
 
-Build a person-year panel matching `dmdm_transition_data()`'s schema
-(`person_id, year, age, cumulative_vaginal_deliveries,
-years_since_last_vaginal_birth, bmi, hysterectomy, menopause_status,
-comorbidity, has_ui`), then:
+The reshape and fit are wired end to end — `build_swan_dmdm_panel()` (`R/47`)
+turns the wide SWAN frame into the person-year panel
+`dmdm_transition_data()` needs, and one runner does the rest:
 
 ```r
-td  <- dmdm_transition_data(swan_panel, conditions = "ui")
-fit <- fit_dmdm_transitions(td, conditions = "ui")   # status = "fitted"
+Sys.setenv(SWAN_WIDE_PATH = "data-raw/swan/swan_all_visits.rds")
+source("scripts/run_swan_dmdm_fit.R")
+# -> artifacts/swan_dmdm_transitions.rds   (engine-ready: fitted UI + literature POP)
+#    artifacts/swan_dmdm_ui_coefficients.csv
+#    artifacts/swan_dmdm_fit_caveats.txt
+```
+
+It fits the UI onset/remission hazards, assembles a full transition object
+(UI = `fitted`, POP = `derived_by_analogy`, AI = `placeholder`, object status =
+the weakest of the three), and prints the caveats that must travel with the fit
+(parity is a proxy for vaginal parity; `years_since_last_vaginal_birth` is
+unmeasured). Or run the steps by hand:
+
+```r
+panel <- build_swan_dmdm_panel(swan_wide, conditions = "ui")
+td    <- dmdm_transition_data(panel, conditions = "ui")
+fit   <- fit_dmdm_transitions(td, conditions = "ui")   # status = "fitted"
+swan_panel_fit_caveats(panel)
 ```
 
 ## Build note
