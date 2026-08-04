@@ -158,6 +158,38 @@ Rscript scripts/plot_medicare_sling_workload.R
 Set `MEDICARE_SLING_CACHE` to use another `provider_volume.rds` location and
 `MEDICARE_SLING_FIGURE` to choose a different output path.
 
+## Medicare realized-care trajectories
+
+![Observed Medicare FFS URPS procedures, 2013–2016](figures/medicare_realized_care_2013_2016.png)
+
+This is a separate **realized-care** validation series: annual Medicare
+fee-for-service procedure counts in the URPS CPT basket. It is not a prevalence
+estimate, total clinical capacity, or latent all-payer demand. Generic E/M visit
+codes are excluded because the Provider-and-Service PUF has neither diagnosis
+codes nor beneficiary age; it cannot tell whether a 99213 line was for pelvic
+floor care. Low-volume PUF lines are also suppressed by CMS.
+
+[`scripts/plot_medicare_realized_care.R`](scripts/plot_medicare_realized_care.R)
+documents the full workflow: it derives years from CMS filenames, filters the
+multi-gigabyte CSV files with DuckDB before collecting records into R, maps only
+procedure-specific HCPCS codes through `urps_medicare_service_crosswalk()`,
+writes a checksum-protected RDS artifact, exports national totals, and renders
+the faceted trend plot. To reproduce the figure shown above from the mounted
+external drive:
+
+```bash
+MEDICARE_PROVIDER_SERVICE_DIR="/Volumes/MufflySamsung 1/sling-volume-patterns/data/raw" \
+MEDICARE_REALIZED_CARE_OUTPUT_DIR="figures" \
+MEDICARE_REALIZED_CARE_YEARS="2013,2014,2015,2016" \
+MEDICARE_REALIZED_CARE_PREFIX="medicare_realized_care_2013_2016" \
+Rscript scripts/plot_medicare_realized_care.R
+```
+
+For all available years, omit `MEDICARE_REALIZED_CARE_YEARS`. On a laptop, use
+small year batches (for example `2017,2018`) because each raw annual file is
+about 2.7 GB; the batch output remains provenance-tagged and can be combined
+only after preserving its payer-scope label.
+
 ## Exploratory model outputs and mechanics
 
 ![Exploratory supply versus required-FTE trajectory](figures/readme_supply_demand_trajectory.png)
@@ -185,6 +217,54 @@ Rebuild these figures with:
 
 ```bash
 Rscript scripts/plot_readme_model_overview.R
+```
+
+### Condition-specific service pathway
+
+UI, prolapse and anal incontinence have always been modelled separately — the
+model has never used one pooled "PFD demand" rate. What was missing was pathway
+*structure*: the old service map was a flat annual rate per treated patient, so a
+UI patient contributed PTNS and a sling in the same year as independent draws,
+and nothing generated post-operative follow-up or recurrence at all.
+
+`R/51-condition_service_pathway.R` replaces that with an explicit cascade —
+conservative → testing → procedure → follow-up → recurrence — where each stage
+carries one `p_advance` and the entrants to stage *k+1* are the entrants to stage
+*k* times that probability.
+
+![Condition-specific service pathway versus the flat service map](figures/condition_service_pathway.png)
+
+Panel A is the cascade: a procedure accrues only to patients who failed
+conservative care **and** completed testing. Each condition is scaled to its own
+maximum, so bars compare within a panel, not across — AI is an order of magnitude
+smaller than UI and POP. Panel B is what that does to service volume: procedures
+thin out while `postoperative_care` appears for the first time.
+
+Every number in this section comes from one reproducible run — the synthetic
+illustrative population defined in the plot script (ages 40–85,
+`2e6 * exp(-0.02 * (age - 40))`), `n = 5e4`, `seed = 1`, year 2025, both arms on
+the same seed so they differ only by the pathway argument. Regenerate and check
+with the command below; these are **not** production figures and do not use the
+Census-NPP series:
+
+| Quantity | Flat | Staged | Ratio |
+|---|---:|---:|---:|
+| PTNS service units | 1,358,052 | 95,820 | 0.071× |
+| Botox (bladder) units | 233,878 | 42,098 | 0.180× |
+| `postoperative_care` units | 0 (never generated) | 1,527,937 | — |
+| Required clinical FTE | 1,862.0 | 1,596.7 | −14.2% |
+
+**This figure shows structure, not a workforce estimate.** Every pathway rate is
+expert judgement (`confidence = "low"`), so `condition_pathway_status()` returns
+`"uncalibrated_illustrative"` and `assert_publishable_workload()` still refuses
+these numbers. Two AI stages use stand-in CPT codes because anorectal manometry,
+endoanal ultrasound, sacral neuromodulation and sphincteroplasty are absent from
+`URPS_CPT_BASKET`, so AI procedural workload is understated.
+
+Rebuild it with:
+
+```bash
+Rscript scripts/plot_condition_service_pathway.R
 ```
 
 ## Historical validation

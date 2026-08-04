@@ -218,6 +218,10 @@ build_swan_dmdm_panel <- function(swan_wide,
   attr(panel, "swan_dmdm_provenance") <- list(
     visits_used = visits,
     n_participants = length(unique(panel$person_id)),
+    # Carried forward from load_swan_archive() when the input came through it, so
+    # a fitted transition set can be traced to specific bytes on a specific disk.
+    # NULL when the caller read the .rds themselves.
+    archive = attr(swan_wide, "swan_archive_provenance"),
     comorbidity_items = comorbidity_items,
     measured = c("age", "bmi", "hysterectomy", "menopause_status", "comorbidity",
                  "has_ui", if ("pop" %in% conditions) "has_pop"),
@@ -265,6 +269,18 @@ swan_panel_fit_caveats <- function(panel) {
   c(
     sprintf("SWAN panel: %s participants, visits %s.",
             prov$n_participants, paste(range(prov$visits_used), collapse = "-")),
+    # Name the bytes when they are known. An unverified or absent archive record
+    # is stated rather than omitted: "we did not check" and "it checked out" must
+    # not look the same in a methods note.
+    if (is.null(prov$archive)) {
+      "SOURCE: archive provenance not recorded (input did not come through load_swan_archive())."
+    } else if (isTRUE(prov$archive$verified)) {
+      sprintf("SOURCE: %s, sha256 %s, verified against %s.",
+              prov$archive$file, substr(prov$archive$sha256, 1, 16),
+              prov$archive$reference_source)
+    } else {
+      sprintf("SOURCE: %s, NOT verified against a reference checksum.", prov$archive$file)
+    },
     "PROXY: cumulative_vaginal_deliveries is TOTAL parity (NUMCHILD). SWAN records no delivery mode, so the fitted `avag` coefficient assumes cesarean and vaginal delivery carry equal pelvic-floor risk.",
     "UNMEASURED: years_since_last_vaginal_birth is constant; its fitted slope (`absl`) is structurally 0 and means 'not measured', not 'no effect'.",
     if (!is.null(prov$pop_basis)) paste0("POP: ", prov$pop_basis, ". Crude onset/remission only -- do not read as graded POP-Q hazards."),
