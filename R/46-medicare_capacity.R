@@ -43,7 +43,7 @@ medicare_work_rvu_by_provider <- function(claims, roster, provider_id = "npi",
     stop(sprintf("medicare_work_rvu_by_provider: coverage column absent from roster: %s", coverage_col), call. = FALSE)
   }
 
-  roster_ids <- unique(roster[, c(provider_id, "year", coverage_col), drop = FALSE])
+  roster_ids <- roster
   if (anyDuplicated(roster_ids[c(provider_id, "year")])) {
     stop("medicare_work_rvu_by_provider: roster must contain one row per provider-year", call. = FALSE)
   }
