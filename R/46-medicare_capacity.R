@@ -28,7 +28,8 @@ medicare_work_rvu_by_provider <- function(claims, roster, provider_id = "npi",
                                           services = "services", hcpcs = "hcpcs",
                                           rvu = CMS_WORK_RVU, minimum_wrvu = 100,
                                           coverage_col = NULL) {
-  required_claims <- c(provider_id, "year", hcpcs)
+  required_claims <- c(provider_id, "year")
+  if (!"work_rvu" %in% names(claims)) required_claims <- c(required_claims, hcpcs)
   missing_claims <- setdiff(required_claims, names(claims))
   missing_roster <- setdiff(c(provider_id, "year"), names(roster))
   if (length(missing_claims) || length(missing_roster)) {

@@ -82,6 +82,10 @@ outputs/
 !artifacts/backtest_*.parquet
 !artifacts/backtest_*.json
 !figures/backtest_*.png
+!figures/medicare_sling_workload_index.png
+!figures/readme_supply_demand_trajectory.png
+!figures/readme_baseline_cohort_composition.png
+!figures/readme_demand_to_fte_pathway.png
 
 # Canonical Census NPP inputs (vetted reference data; build-ignored so the
 # package build stays small -- see .Rbuildignore ^data-raw$).
