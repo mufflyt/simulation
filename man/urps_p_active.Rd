@@ -23,7 +23,7 @@ Recycled to \code{length(age)}.}
 Recycled to \code{length(age)}.}
 
 \item{scenario_id}{Character scenario identifier from the supply scenario
-registry (e.g. \code{"status_quo"}, \code{"retirement_2_years_later"}). \code{NULL}
+registry (e.g. \code{"status_quo"}, \code{"retire_2yr_later"}). \code{NULL}
 (default) applies no age-axis shift.}
 
 \item{coef}{Named list of logistic coefficients; see \link{URPS_P_ACTIVE_COEF}.
@@ -63,7 +63,7 @@ urps_p_active(45, "male", 12)
 urps_p_active(c(35, 50, 65, 75), "female", c(2, 17, 32, 42))
 
 # Scenario: retiring 2 years later raises P(active) at age 65
-urps_p_active(65, "male", 32, scenario_id = "retirement_2_years_later")
+urps_p_active(65, "male", 32, scenario_id = "retire_2yr_later")
 }
 \seealso{
 \code{\link[=departure_hazard]{departure_hazard()}}, \code{\link[=shift_retirement_schedule]{shift_retirement_schedule()}},
