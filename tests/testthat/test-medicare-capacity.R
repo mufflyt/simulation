@@ -5,6 +5,7 @@ test_that("Medicare workload is roster-linked and does not infer specialty from 
     hcpcs = c("99204", "57288", "99213", "99213"), services = c(10, 2, 20, 99))
   p <- medicare_work_rvu_by_provider(claims, roster, coverage_col = "coverage", minimum_wrvu = 10)
   expect_equal(nrow(p), 3)
+  expect_true("age_band" %in% names(p))
   expect_equal(p$medicare_work_rvu[p$npi == "c"], 0)
   expect_false(p$included_in_reference[p$npi == "c"])
   expect_equal(p$coverage_adjusted_work_rvu[p$npi == "a"], 2 * (10 * 2.6 + 2 * 12.13))
