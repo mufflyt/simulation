@@ -267,6 +267,59 @@ Rebuild it with:
 Rscript scripts/plot_condition_service_pathway.R
 ```
 
+## Care seeking is estimated, not assumed
+
+Prevalence does not create demand — care seeking does. That step used to be two
+hard-coded constants (`CARE_SEEKING_BY_INSURANCE`, `CARE_SEEKING_BY_INCOME`).
+`R/48-meps_care_seeking.R` estimates it instead, from MEPS 2023, as the two-part
+structure the quantity actually has: **P(any pelvic-floor ambulatory visit)**,
+and **visits given that care was sought**. Both are survey-weighted
+(`VARPSU`/`VARSTR`/`PERWT23F`); expected visits per woman is their product.
+
+Pelvic-floor visits are office-based events (HC-248G) linked through the
+condition and condition–event files to ICD-10 `N39`/`N81`/`R32`/`R15`. The 2023
+analytic sample is **8,123 adult women carrying 299 care-seeking events**, a
+weighted rate of **3.33% of adult women per year**.
+
+![Care-seeking multipliers with 95% intervals](figures/meps_care_seeking_multipliers.png)
+
+The sample identifies three gradients and cannot identify the rest, which is the
+point of the figure: intervals that cover 1.0 are drawn muted.
+
+| Effect | Multiplier | 95% interval | Identified |
+|---|---|---|---|
+| Income < 100% FPL | 0.59 | 0.28 – 0.90 | yes |
+| Non-Hispanic Black | 0.35 | 0.18 – 0.53 | yes |
+| Non-Hispanic Asian | 0.44 | 0.08 – 0.79 | yes |
+| Uninsured | 1.14 | 0.00 – 3.35 | **no** |
+| Public insurance | 0.53 | 0.00 – 1.19 | **no** |
+
+Two consequences. **The shipped uninsured multiplier of 0.58 is not supported by
+these data** — its interval runs from 0 to 3.35, so the estimate cannot be
+distinguished from no effect in either direction, and replacing an assumed
+constant with an unidentified estimate would be no improvement. And the effects
+the data *do* identify — income and race/ethnicity — are gradients the demand
+model does not currently carry at all.
+
+![Expected pelvic-floor visits by comorbidity burden](figures/meps_care_seeking_comorbidity.png)
+
+Comorbidity burden is the strongest predictor, and it moves **both** parts:
+across 0 → 12 recorded conditions, P(any visit) rises 0.020 → 0.104 and visits
+per woman in care rise 1.40 → 2.52, so expected visits per woman rise **0.027 →
+0.263, a factor of 9.6**. A single care-seeking rate cannot represent that,
+because it cannot separate "more women enter care" from "each woman is seen more
+often".
+
+Every number above is regenerated, with its interval, into
+`data-raw/meps/meps_2023_care_seeking_manifest.txt` by:
+
+```bash
+Rscript scripts/plot_meps_care_seeking.R
+```
+
+That script's header documents the file lineage, the model specification, and
+why each figure takes the form it does.
+
 ## Historical validation
 
 `docs/BACKTEST_2020_TO_2023.md` — fit on information available through 2020 only,
