@@ -66,7 +66,11 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, any::testthat, any::pkgload
+          # knitr/rmarkdown are the VignetteBuilder. They live in Suggests, which
+          # dependencies: "hard" excludes, so R CMD build fails in
+          # loadVignetteBuilder() before any check runs. Named explicitly rather
+          # than widening to "all", which would drag in sf/arrow for no gain here.
+          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown
           # mufflyaccess (Suggests) is a private repo the CI token cannot
           # reach. Hard dependencies only; tests needing it skip themselves.
           dependencies: '"hard"'
