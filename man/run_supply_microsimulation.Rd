@@ -35,7 +35,9 @@ run_supply_microsimulation(
 
 \item{years}{Integer vector of years to project.}
 
-\item{entrants_per_year}{Annual entrants.}
+\item{entrants_per_year}{Annual entrants. IGNORED when \code{param_spec} carries an
+\code{entrant_mean}, which takes precedence; passing both with different values
+warns. A spec that carries no \code{entrant_mean} leaves this argument in force.}
 
 \item{subspecialty}{Subspecialty label (selects the baseline hazard).}
 
@@ -100,7 +102,9 @@ hard in/out split.}
 }
 \value{
 List: \code{summary} (per-year quantiles), \code{iterations} (all replicate
-panels), and \code{scenario} metadata.
+panels), and \code{scenario} metadata. \code{scenario$entrants_per_year} is the rate
+the engine RESOLVED (the spec's mean when the spec won, not the argument),
+and \code{scenario$entrants_source} names which input supplied it.
 }
 \description{
 Repeats \code{\link[=simulate_provider_career_once]{simulate_provider_career_once()}} \code{n_iterations} times and summarises

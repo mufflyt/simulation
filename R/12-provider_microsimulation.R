@@ -479,7 +479,9 @@ simulate_provider_career_once <- function(agents,
 #'
 #' @param initial_workforce Base-year workforce size, OR a prebuilt agent tibble.
 #' @param years Integer vector of years to project.
-#' @param entrants_per_year Annual entrants.
+#' @param entrants_per_year Annual entrants. IGNORED when `param_spec` carries an
+#'   `entrant_mean`, which takes precedence; passing both with different values
+#'   warns. A spec that carries no `entrant_mean` leaves this argument in force.
 #' @param subspecialty Subspecialty label (selects the baseline hazard).
 #' @param n_iterations Number of Monte-Carlo replicates.
 #' @param conversion_floor cliff graduate-to-practice conversion (0.70-1.0).
@@ -522,7 +524,9 @@ simulate_provider_career_once <- function(agents,
 #' @param seed Integer RNG seed.
 #' @param verbose Logical.
 #' @return List: `summary` (per-year quantiles), `iterations` (all replicate
-#'   panels), and `scenario` metadata.
+#'   panels), and `scenario` metadata. `scenario$entrants_per_year` is the rate
+#'   the engine RESOLVED (the spec's mean when the spec won, not the argument),
+#'   and `scenario$entrants_source` names which input supplied it.
 #' @export
 run_supply_microsimulation <- function(initial_workforce = 1306,
                                         years = 2025:2050,
@@ -551,11 +555,71 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
 
   baseline_rate <- microsim_baseline_rate(subspecialty)
 
+  # ---- Entrant precedence, resolved ONCE and out loud -----------------------
+  # The iteration loop takes its entrant count from the parameter spec when one
+  # is supplied, which silently discards `entrants_per_year`. That override was
+  # unconditional and unannounced, and it failed two ways:
+  #
+  #   * spec$entrant_mean NULL (a spec built with no arguments) propagated
+  #     `numeric(0)` into the preallocation arithmetic and died four frames down
+  #     in simulate_provider_career_once() with "invalid 'times' argument" --
+  #     a message naming neither entrants nor the spec.
+  #   * spec$entrant_mean set but the entrant rate NOT quantified overrode an
+  #     explicit `entrants_per_year` with no warning at all, while the verbose
+  #     log went on printing the argument. A run asked for 0 entrants/yr, logged
+  #     "Entrants 0/yr", and injected ~196/yr.
+  #
+  # The second is the dangerous one: a wrong number with a log line confirming
+  # it. So resolve precedence here, state which source won, and report the value
+  # actually used rather than the argument that was passed.
+  entrants_declared <- !missing(entrants_per_year)
+  entrants_drawn <- !is.null(param_spec) &&
+    isTRUE(param_spec$quantified[["entrant_rate"]])
+  spec_entrants <- if (!is.null(param_spec)) param_spec$entrant_mean else NULL
+  spec_supplies_entrants <- !is.null(spec_entrants)
+
+  if (!is.null(param_spec) && !spec_supplies_entrants && entrants_drawn) {
+    stop("param_spec quantifies the entrant rate but carries no `entrant_mean`, ",
+         "so there is no point estimate to draw around. Build the spec with ",
+         "supply_parameter_spec(entrant_series = , entrant_mean = ) or use ",
+         "entrant_spec_from_series().", call. = FALSE)
+  }
+
+  # A spec that quantifies nothing and carries no entrant_mean has nothing to say
+  # about entrants: leave the caller's value alone rather than overwriting it
+  # with NULL.
+  if (spec_supplies_entrants && entrants_declared &&
+      !isTRUE(all.equal(as.numeric(spec_entrants), as.numeric(entrants_per_year)))) {
+    .msg_warn(sprintf(
+      paste("entrants_per_year = %s was passed but param_spec carries entrant_mean = %s,",
+            "which takes precedence: the run uses %s. Drop entrants_per_year, or drop",
+            "entrant_mean from the spec, so the call states one entrant rate."),
+      format(entrants_per_year), format(spec_entrants), format(spec_entrants)))
+  }
+  entrants_used <- if (spec_supplies_entrants) spec_entrants else entrants_per_year
+  if (!is.numeric(entrants_used) || length(entrants_used) != 1L ||
+      !is.finite(entrants_used)) {
+    stop("The resolved entrant rate is not a single finite number (got ",
+         utils::capture.output(utils::str(entrants_used)), "). Check ",
+         "`entrants_per_year` and `param_spec$entrant_mean`.", call. = FALSE)
+  }
+
   if (verbose) {
     .msg_info(sprintf("Supply microsimulation: %s, %d iterations, %d-%d",
                       subspecialty, n_iterations, min(years), max(years)))
-    .msg_info(sprintf("Entrants %s/yr; conversion %.2f; FTE method '%s'",
-                      format(entrants_per_year), conversion_floor, fte_method))
+    # Report what the engine will use, and its source, not the argument. When the
+    # rate is drawn there is no single value, so name the distribution instead of
+    # printing a number the run never uses.
+    entrants_desc <- if (entrants_drawn) {
+      sprintf("drawn per iteration, mean %s (SE %.1f) [param_spec]",
+              format(round(entrants_used, 1)), param_spec$entrant_se)
+    } else if (spec_supplies_entrants) {
+      sprintf("%s/yr [param_spec entrant_mean]", format(entrants_used))
+    } else {
+      sprintf("%s/yr [entrants_per_year]", format(entrants_used))
+    }
+    .msg_info(sprintf("Entrants %s; conversion %.2f; FTE method '%s'",
+                      entrants_desc, conversion_floor, fte_method))
   }
 
   # Build the starting cohort ONCE when a size was supplied, so replicate-to-
@@ -663,12 +727,21 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
 
     # Draw the parameters for THIS iteration before simulating individuals, so
     # the replicate spread reflects both sources of variation.
-    it_entrants <- entrants_per_year
+    it_entrants <- entrants_used
     it_schedule <- retirement_schedule
     it_hours_model <- hours_model
     if (!is.null(param_spec)) {
       d <- draw_supply_parameters(param_spec, retirement_schedule)
-      it_entrants <- d$entrants
+      # Take the draw ONLY when it is a usable number. `d$entrants` is
+      # `spec$entrant_mean` verbatim when the entrant rate is not quantified, so
+      # for a spec that quantifies nothing it is NULL -- and assigning that here
+      # is what produced `numeric(0)` capacity and the crash. `entrants_used` is
+      # already the resolved precedence, so falling through to it is correct in
+      # every case rather than merely safe.
+      if (is.numeric(d$entrants) && length(d$entrants) == 1L &&
+          is.finite(d$entrants)) {
+        it_entrants <- d$entrants
+      }
       it_schedule <- d$retirement_schedule
       # The drawn hours coefficients enter the estimand HERE and nowhere else.
       # simulate_provider_career_once() consults the model only inside fte_of(),
@@ -723,7 +796,16 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
     scenario = list(
       subspecialty = subspecialty,
       initial_workforce = if (is.data.frame(initial_workforce)) nrow(initial_workforce) else initial_workforce,
-      entrants_per_year = entrants_per_year,
+      # The RESOLVED rate, not the argument. Recording the argument here had the
+      # same defect as the verbose log: a run driven by the spec's entrant_mean
+      # reported the `entrants_per_year` it ignored, so the run metadata
+      # certified a number the engine never used. `entrants_source` says which
+      # input won, and when the rate is drawn this is the mean, not a realised
+      # draw -- each iteration used its own.
+      entrants_per_year = entrants_used,
+      entrants_source = if (entrants_drawn) "param_spec (drawn per iteration)"
+        else if (spec_supplies_entrants) "param_spec$entrant_mean"
+        else "entrants_per_year argument",
       conversion_floor = conversion_floor,
       n_iterations = n_iterations,
       baseline_rate = baseline_rate,
