@@ -176,7 +176,12 @@ URPS_DELEGATION_SOURCE <- paste(
   "2021;100:866-876 Table 4 (physiatry); subspecialist LEVEL rescaled by",
   "0.434 so base-year productivity is physically plausible (see",
   "rescale_delegation_to_capacity). NOT a urogynaecology survey:",
-  "field one to move this to \"calibrated\"."
+  "field one to move this to \"calibrated\".",
+  "Partially corroborated: Medicare realized care ranks the APP share across",
+  "procedures in the same order (Spearman rho 0.72) but 2-4x lower in level,",
+  "and claims understate delegation because incident-to work bills under the",
+  "physician. urps_share is NOT identifiable from claims -- Medicare has no",
+  "urogynaecology provider type. See medicare_delegation_corroboration()."
 )
 
 # Only numeric columns named *_share are shares; the matrix also carries

@@ -254,3 +254,57 @@ test_that("the written summary carries its provenance to disk", {
   expect_setequal(unlist(m$retired_values_rejected), c(1332, 1329))
   expect_false(m$observed_series_applies_attrition)
 })
+
+# ---- Interval construction -------------------------------------------------
+
+test_that("a fixed-parameter arm produces a degenerate interval", {
+  skip_if_not_installed("mufflyaccess")
+  # THE DEFECT THIS PINS. Without a param_spec the entrant rate is identical in
+  # every replicate, so with attrition switched off there is nothing left to
+  # vary and the "95% interval" collapses to a point. An interval like this
+  # cannot fail coverage informatively -- which is why run_backtest() scoring
+  # 0/8 against it told us nothing about the forecast.
+  fixed <- run_backtest_arm("derived", entrants_per_year = 55, n_iterations = 40,
+                            apply_attrition = FALSE, param_spec = NULL)
+  final <- fixed$iterations$headcount[fixed$iterations$year == BACKTEST_TARGET_YEAR]
+  expect_equal(diff(range(final)), 0)
+  expect_false(fixed$settings$parameter_uncertainty)
+})
+
+test_that("drawing the entrant rate widens the interval without moving the centre", {
+  skip_if_not_installed("mufflyaccess")
+  spec <- supply_parameter_spec(entrant_series = c(40, 48, 10), entrant_mean = 55)
+  drawn <- run_backtest_arm("derived", entrants_per_year = 55, n_iterations = 400,
+                            apply_attrition = FALSE, param_spec = spec, seed = 11L)
+  fixed <- run_backtest_arm("derived", entrants_per_year = 55, n_iterations = 400,
+                            apply_attrition = FALSE, param_spec = NULL, seed = 11L)
+  d <- drawn$iterations$headcount[drawn$iterations$year == BACKTEST_TARGET_YEAR]
+  f <- fixed$iterations$headcount[fixed$iterations$year == BACKTEST_TARGET_YEAR]
+
+  expect_gt(stats::sd(d), 20)
+  expect_true(drawn$settings$parameter_uncertainty)
+  # The draw is centred on entrant_mean, so it adds spread and NOT bias. A
+  # centre that moved would mean the reported median no longer matched the
+  # point estimate the model claims to be reporting.
+  expect_lt(abs(stats::median(d) - stats::median(f)), 3 * stats::sd(d) / sqrt(length(d)))
+})
+
+test_that("run_backtest gives every arm uncertainty but keeps its own centre", {
+  skip_if_not_installed("mufflyaccess")
+  skip_on_cran()
+  bt <- run_backtest(n_iterations = 40L)
+
+  # Every arm must carry a spec: passing none was the original defect.
+  widths <- bt$summary$pi95_upper - bt$summary$pi95_lower
+  expect_true(all(widths > 0))
+
+  # ...and the prespecified contrast must survive it. A single shared spec would
+  # overwrite entrants_per_year on every iteration, silently collapsing the
+  # assumed-entrant arms into the estimated-entrant arms.
+  expect_equal(length(unique(bt$summary$entrants_per_year)), 2)
+  assumed <- bt$summary$predicted_median[bt$summary$entrants_per_year == 55 &
+                                           !bt$summary$apply_attrition]
+  estimated <- bt$summary$predicted_median[bt$summary$entrants_per_year != 55 &
+                                             !bt$summary$apply_attrition]
+  expect_gt(min(assumed), max(estimated))
+})

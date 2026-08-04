@@ -5,12 +5,18 @@
 # stamping as much as the arithmetic.
 
 test_that("the recorded status reports the coverage failure it actually has", {
+  # Coverage moved 0/8 -> 2/8 when the entrant rate began being DRAWN per
+  # iteration (run_backtest() accepted a param_spec and passed none, so the old
+  # intervals were 0-40 providers wide). These expectations track a regenerated
+  # artifact, not a hand-edited target: "the frozen record reproduces the live
+  # artifact" below re-derives them from artifacts/ and fails if they drift.
   s <- backtest_status()
   expect_s3_class(s, "urps_backtest_status")
   expect_false(s$validated)
   expect_equal(s$n_arms, 8L)
-  expect_equal(s$coverage_95, 0)
-  expect_equal(s$coverage_80, 0)
+  expect_equal(s$coverage_95, 0.25)
+  expect_equal(s$coverage_80, 0.25)
+  expect_lt(s$coverage_95, s$coverage_required)
   # Every arm under-predicted: a level problem, not scatter around the truth.
   expect_true(s$all_same_direction)
   expect_lt(s$worst_percent_error, -12)
@@ -40,7 +46,7 @@ test_that("status is derived from the arms, so passing coverage flips the verdic
 test_that("interval language is refused while coverage fails", {
   s <- backtest_status()
   expect_match(interval_label(s), "NOT a validated forecast interval")
-  expect_match(interval_label(s), "8 of 8")
+  expect_match(interval_label(s), "6 of 8")
   expect_error(assert_forecast_intervals_validated(s, mode = "strict"),
                "not validated")
   expect_message(assert_forecast_intervals_validated(s, mode = "relaxed"),
@@ -79,4 +85,56 @@ test_that("the stamp survives on an object and reads back", {
   # validated on a fixed 13-column schema.
   expect_equal(as.data.frame(y)[, names(x), drop = FALSE], x)
   expect_identical(names(y), names(x))
+})
+
+test_that("the definition-matched subset is reported without loosening the bar", {
+  # Half the arms score an attrition-applied projection against a series that
+  # removes nobody. Reporting them together averages two different estimands.
+  s <- tibble::tibble(
+    arm = c("1. Derived [no-attrition]", "1. Derived", "2. Derived [no-attrition]", "2. Derived"),
+    percent_error = c(-3, -9, -8, -15),
+    within_80 = c(TRUE, FALSE, FALSE, FALSE),
+    within_95 = c(TRUE, FALSE, FALSE, FALSE)
+  )
+  st <- backtest_status_from_summary(s)
+  expect_equal(st$n_definition_matched, 2)
+  expect_equal(st$coverage_95_definition_matched, 0.5)
+  # `validated` is still computed over ALL arms: the subset must not be a
+  # back door to a pass.
+  expect_equal(st$coverage_95, 0.25)
+  expect_false(st$validated)
+})
+
+test_that("a subset that would pass cannot validate the engine on its own", {
+  s <- tibble::tibble(
+    arm = c("A [no-attrition]", "B [no-attrition]", "C", "D"),
+    percent_error = c(-1, -2, -14, -15),
+    within_80 = c(TRUE, TRUE, FALSE, FALSE),
+    within_95 = c(TRUE, TRUE, FALSE, FALSE)
+  )
+  st <- backtest_status_from_summary(s)
+  expect_equal(st$coverage_95_definition_matched, 1)   # subset is perfect
+  expect_false(st$validated)                            # and it still fails
+})
+
+test_that("the status records that one target year cannot estimate coverage", {
+  st <- backtest_status()
+  expect_false(st$coverage_is_estimable)
+  expect_match(st$coverage_caveat, "not independent trials")
+  expect_output(print(st), "not a coverage estimate")
+})
+
+test_that("the frozen record reproduces the live artifact", {
+  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
+                 c(".", "..", file.path("..", "..")))
+  skip_if(length(root) == 0)
+  path <- file.path(root[1], "artifacts", "backtest_2020_to_2023_summary.csv")
+  skip_if_not(file.exists(path))
+  live <- backtest_status_from_summary(utils::read.csv(path, stringsAsFactors = FALSE))
+  frozen <- backtest_status()
+  # If these drift, the transcribed record in this file is stale and every
+  # projection is carrying a status that no artifact supports.
+  expect_equal(frozen$coverage_95, live$coverage_95)
+  expect_equal(frozen$worst_percent_error, live$worst_percent_error, tolerance = 1e-6)
+  expect_equal(frozen$n_arms, live$n_arms)
 })

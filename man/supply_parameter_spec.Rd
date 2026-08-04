@@ -13,13 +13,15 @@ supply_parameter_spec(
 )
 }
 \arguments{
-\item{entrant_series}{Observed annual net-growth values behind the entrant
-rate. Supplying it turns the entrant rate into a drawn parameter.}
+\item{entrant_series}{Observed annual entrant counts behind the entrant rate.
+Supplying it turns the entrant rate into a drawn parameter.}
 
 \item{entrant_mean}{Point estimate of gross annual entrants.}
 
-\item{departures}{Expected annual departures added to net growth to give
-gross entrants; held fixed unless \code{hazard_cv} is set.}
+\item{departures}{Expected annual departures, recorded for reporting only.
+NOT added to \code{entrant_mean}: the certification series is a gross flow that
+never nets departures out, so adding them double-counts (see
+\code{\link[=observed_entrant_rate]{observed_entrant_rate()}}).}
 
 \item{hazard_cv}{Coefficient of variation on a multiplicative factor applied
 to the whole retirement schedule. 0 means the hazard is treated as known,

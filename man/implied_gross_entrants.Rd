@@ -2,9 +2,15 @@
 % Please edit documentation in R/33-roster.R
 \name{implied_gross_entrants}
 \alias{implied_gross_entrants}
-\title{Gross annual entrants implied by observed growth and modelled attrition}
+\title{Gross annual entrants implied by the observed certification series}
 \usage{
-implied_gross_entrants(agents, from_year = 2018L, assumed = NA_real_, ...)
+implied_gross_entrants(
+  agents,
+  from_year = 2018L,
+  assumed = NA_real_,
+  series_applies_attrition = NULL,
+  ...
+)
 }
 \arguments{
 \item{agents}{Base-year agent cohort (supplies the age structure).}
@@ -13,12 +19,30 @@ implied_gross_entrants(agents, from_year = 2018L, assumed = NA_real_, ...)
 
 \item{assumed}{Value the model would otherwise use, for comparison.}
 
+\item{series_applies_attrition}{Whether the source series removes departures.
+\code{NULL} (default) reads the flag from \code{\link[=observed_entrant_rate]{observed_entrant_rate()}}.}
+
 \item{...}{Passed to \code{\link[=observed_entrant_rate]{observed_entrant_rate()}}.}
 }
 \value{
-List with \code{gross_entrants}, \code{net_growth}, \code{departures}, \code{assumed}.
+List with \code{gross_entrants}, \code{observed_flow}, \code{departures}, \code{assumed}.
 }
 \description{
-entrants = observed net growth + expected departures. Reported alongside the
-assumed value so a divergence is visible rather than buried.
+Reported alongside the assumed value so a divergence is visible rather than
+buried.
+}
+\details{
+THE DEPARTURE BALANCE DEPENDS ON THE SOURCE SERIES. The identity
+\verb{gross = net growth + departures} holds only when the source series actually
+nets departures out. The URPS certification series does not: it is a flow of
+new certifications that nothing is ever subtracted from (see
+\code{\link[=observed_entrant_rate]{observed_entrant_rate()}}, and \code{observed_series_applies_attrition = FALSE} in
+\code{\link[=validate_backtest_target]{validate_backtest_target()}}). For that series the observed flow IS the gross
+entrant rate, and adding modelled departures inflates it -- previously from
+51/yr to 87/yr, a spurious 37\% divergence from the shipped assumption that
+was reported to users on every run.
+
+\code{series_applies_attrition} therefore selects the correct balance rather than
+hardcoding one, so a future stock-based series can be passed without
+reintroducing the error.
 }

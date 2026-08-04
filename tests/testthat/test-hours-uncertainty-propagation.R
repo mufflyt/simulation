@@ -240,14 +240,14 @@ test_that("strict mode refuses a run that holds every parameter fixed", {
     expect_error(
       run_supply_microsimulation(agents, 2025:2027, 20, "FPMRS", n_iterations = 3,
                                  hours_model = m, verbose = FALSE),
-      "6.5-8.2x too narrow")
+      "individual stochasticity ONLY")
   })
   # Relaxed mode still only warns.
   hu_with_mode("relaxed", {
     expect_message(
       run_supply_microsimulation(agents, 2025:2027, 20, "FPMRS", n_iterations = 3,
                                  hours_model = m, verbose = FALSE),
-      "6.5-8.2x too narrow")
+      "individual stochasticity ONLY")
   })
 })
 

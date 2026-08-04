@@ -186,7 +186,16 @@ namcs_urps_stratum_visits <- function(namcs) {
     dplyr::filter(.data$is_urps, !is.na(.data$PATWT)) |>
     dplyr::mutate(
       age_band       = .namcs_age_to_band(.data$AGE),
-      sex            = dplyr::if_else(.data$SEX == 2L, "Female", "Male"),
+      # NAMCS CODES SEX 1 = FEMALE, 2 = MALE -- the OPPOSITE of Census, ACS,
+      # BRFSS and MEPS, all of which use 2 = Female and all of which this
+      # package also reads. This was inverted here, so every NAMCS-derived
+      # "female" quantity was actually built from male visits: for a
+      # female-predominant subspecialty that silently replaced the estimand with
+      # its complement. Verified against sex-specific diagnoses in the 2019 PUF:
+      # N40 benign prostatic hyperplasia 0/136 and C61 prostate cancer 0/68 fall
+      # entirely in SEX = 2, while Z34 pregnancy supervision 108/0, N81 genital
+      # prolapse 18/0 and C50 breast cancer 43/0 fall entirely in SEX = 1.
+      sex            = dplyr::if_else(.data$SEX == 1L, "Female", "Male"),
       race_eth       = .namcs_racereth_label(.data$RACERETH),
       insurance_2tier = .namcs_insurance_2tier(.data$PAYTYPER)
     ) |>

@@ -266,10 +266,19 @@ backtest_cohorts_through <- function(through_year = BACKTEST_CUTOFF_YEAR,
 #' over 2014-2017 while the initial certification backlog cleared, which is not a
 #' rate that could persist. That judgement uses only pre-cutoff information.
 #'
+#' NO DEPARTURE ADD-BACK. `n_certified` is a flow of new certifications that
+#' nothing is subtracted from, so its mean is already the gross entrant rate;
+#' the previous `net + departures` added modelled departures to a series that
+#' had never removed them. Correcting this LOWERS the pre-cutoff estimate from
+#' 60.7 to 32.7/yr, because the 2018-2020 window contains the COVID-collapsed
+#' 2020 cohort (n = 10). The old double-count happened to mask a genuinely
+#' unrepresentative estimation window; the fix exposes it, which is the point of
+#' a back-test. Neither quantity is re-tuned after seeing the 2023 value.
+#'
 #' @param through_year Cutoff year.
 #' @param steady_from First year of the steady-state window.
 #' @param agents Cohort supplying the age structure for the departure estimate.
-#' @return List with `gross_entrants`, `net_growth`, `departures`, `window`.
+#' @return List with `gross_entrants`, `departures`, `window`, `sd_entrants`.
 #' @export
 backtest_entrant_estimate <- function(through_year = BACKTEST_CUTOFF_YEAR,
                                       steady_from = 2018L,
@@ -280,16 +289,21 @@ backtest_entrant_estimate <- function(through_year = BACKTEST_CUTOFF_YEAR,
     stop("backtest_entrant_estimate: no years between ", steady_from, " and ",
          through_year, call. = FALSE)
   }
-  net <- mean(steady$n_certified)
+  flow <- mean(steady$n_certified)
   rate <- implied_annual_departure_rate(
     agents$age, if ("sex" %in% names(agents)) agents$sex else "female")
   departures <- nrow(agents) * rate
 
   list(
-    gross_entrants = net + departures,
-    net_growth = net,
+    gross_entrants = flow,
+    observed_flow = flow,
+    # Deprecated alias: never a net quantity. Retained so existing readers of
+    # the field do not silently get NULL.
+    net_growth = flow,
+    sd_entrants = if (nrow(steady) > 1) stats::sd(steady$n_certified) else NA_real_,
     departures = departures,
     departure_rate = rate,
+    departures_added = FALSE,
     window = c(steady_from, through_year),
     n_years = nrow(steady),
     yearly = stats::setNames(steady$n_certified, steady$cert_year)

@@ -68,7 +68,11 @@ test_that("fitted models are drawn through the shared .param_draw()", {
 })
 
 test_that("running with fixed parameters is refused in strict mode", {
-  expect_error(assert_parameter_uncertainty(NULL, mode = "strict"), "6.5-8.2x too narrow")
+  # Match the claim, not the back-test figures quoted alongside it: those are
+  # re-scored whenever the back-test is re-run, and a test that breaks on a
+  # regenerated artifact teaches people to edit the assertion.
+  expect_error(assert_parameter_uncertainty(NULL, mode = "strict"),
+               "individual stochasticity ONLY")
   expect_false(assert_parameter_uncertainty(NULL, mode = "relaxed"))
   spec <- supply_parameter_spec(entrant_series = c(40, 48, 10), entrant_mean = 60)
   expect_true(assert_parameter_uncertainty(spec, mode = "strict"))

@@ -1,10 +1,29 @@
 # Back-Test Status Stamping ----
 #
 # The 2020->2023 back-test is the only external validation this engine has, and
-# it FAILED coverage: the observed 2023 count fell outside the 95% interval in
-# every one of the eight arms, and outside the 80% interval in every arm too.
-# That result is written up honestly in docs/BACKTEST_2020_TO_2023.md and scored
-# in artifacts/backtest_2020_to_2023_summary.csv.
+# it STILL FAILS coverage: the observed 2023 count falls inside the 95% interval
+# in 2 of 8 arms (25%, against a required 80%). That result is written up
+# honestly in docs/BACKTEST_2020_TO_2023.md and scored in
+# artifacts/backtest_2020_to_2023_summary.csv.
+#
+# The 2/8 replaces an earlier 0/8, and the improvement is NOT a modelling win --
+# it is the removal of two defects that made the earlier score meaningless:
+#
+#   * The arms carried no parameter uncertainty at all. `run_backtest_arm()`
+#     accepted a `param_spec` and `run_backtest()` never passed one, so the
+#     intervals were Monte Carlo noise around a pinned entrant rate: PI95 widths
+#     of 0-40 providers on a count near 1,300, two arms with LITERALLY zero
+#     width. Failing coverage against an interval like that says nothing about
+#     the forecast. Widths are now 129-148.
+#   * The pre-cutoff entrant estimate added modelled departures to a series that
+#     never removed them, inflating it from 32.7 to 60.7/yr. Correcting the
+#     double-count moved arms 2 and 4 FURTHER from the observation, because the
+#     2018-2020 estimation window contains the COVID-collapsed 2020 cohort
+#     (n = 10). The old error was masking an unrepresentative window.
+#
+# What survives both fixes is the finding that matters: all eight arms still
+# under-predict, by 3.1% to 17.6%. A one-sided miss across every arm is not
+# noise, and no interval widening will fix it.
 #
 # Neither of those travels with a projection object. A reader handed a table of
 # medians and 95% bands has no way to know the bands are unvalidated, and the
@@ -26,20 +45,21 @@
 # `backtest_status_from_summary(run_backtest()$summary)`.
 BACKTEST_RECORD_2020_2023 <- tibble::tribble(
   ~arm,                                        ~percent_error, ~within_80, ~within_95,
-  "1. Derived cohort, assumed entrants",              -9.800919,      FALSE,      FALSE,
-  "1. Derived cohort [no-attrition]",                 -3.215926,      FALSE,      FALSE,
-  "2. Derived cohort, pre-cutoff entrants",           -8.499234,      FALSE,      FALSE,
-  "2. Derived cohort [no-attrition]",                 -1.914242,      FALSE,      FALSE,
-  "3. Synthetic cohort, assumed entrants",           -12.557427,      FALSE,      FALSE,
-  "3. Synthetic cohort [no-attrition]",               -3.215926,      FALSE,      FALSE,
-  "4. Synthetic cohort, pre-cutoff entrants",        -11.255743,      FALSE,      FALSE,
-  "4. Synthetic cohort [no-attrition]",               -1.914242,      FALSE,      FALSE
+  "1. Derived cohort, assumed entrants",              -9.724349,      FALSE,      FALSE,
+  "1. Derived cohort [no-attrition]",                 -3.139357,       TRUE,       TRUE,
+  "2. Derived cohort, pre-cutoff entrants",          -14.969372,      FALSE,      FALSE,
+  "2. Derived cohort [no-attrition]",                 -8.269525,      FALSE,      FALSE,
+  "3. Synthetic cohort, assumed entrants",           -12.633997,      FALSE,      FALSE,
+  "3. Synthetic cohort [no-attrition]",               -3.177642,       TRUE,       TRUE,
+  "4. Synthetic cohort, pre-cutoff entrants",        -17.611026,      FALSE,      FALSE,
+  "4. Synthetic cohort [no-attrition]",               -8.269525,      FALSE,      FALSE
 )
 
 BACKTEST_RECORD_SOURCE <- paste(
   "artifacts/backtest_2020_to_2023_summary.csv; cutoff 2020, target 2023",
   "(observed 1306, national/ABOG_PLUS_ABU/board_certified_active, contract",
-  "v3.0.0), 1000 iterations per arm, seed 20260802"
+  "v3.0.0), 1000 iterations per arm, seed 20260802, entrant rate drawn per",
+  "iteration from the pre-cutoff series (PI95 widths 129-148)"
 )
 
 # Share of arms whose 95% interval must contain the observed value before the
@@ -75,6 +95,34 @@ backtest_status_from_summary <- function(summary,
   } else NA_real_
   pe <- summary$percent_error[is.finite(summary$percent_error)]
 
+  # DEFINITION-MATCHED SUBSET, reported separately as a diagnostic.
+  #
+  # Half the arms apply attrition to project an ACTIVE workforce, then score it
+  # against a cumulative certification series that removes nobody
+  # (`observed_series_applies_attrition = FALSE`). Those arms are expected to
+  # under-predict for a reason that has nothing to do with interval quality, and
+  # that was knowable before the target was read -- the code already labels the
+  # others "definition-matched".
+  #
+  # This does NOT loosen the bar. `validated` is still computed over ALL arms,
+  # and the subset coverage is worse than the headline in any case, so nothing
+  # here can turn a failure into a pass. It exists so a reader can see WHICH
+  # comparison failed rather than averaging two different estimands together.
+  # Neither column is required: `backtest_status_from_summary()` accepts any
+  # table carrying within_95/percent_error, so a caller that supplies neither
+  # `apply_attrition` nor `arm` gets no subset rather than a warning about a
+  # column that was never promised.
+  matched <- if ("apply_attrition" %in% names(summary)) {
+    !as.logical(summary$apply_attrition)
+  } else if ("arm" %in% names(summary)) {
+    grepl("no-attrition", summary$arm, fixed = TRUE)
+  } else {
+    rep(FALSE, n)
+  }
+  cov95_matched <- if (any(matched)) {
+    mean(as.logical(summary$within_95[matched]), na.rm = TRUE)
+  } else NA_real_
+
   structure(
     list(
       validated = isTRUE(cov95 >= required),
@@ -82,6 +130,18 @@ backtest_status_from_summary <- function(summary,
       coverage_95 = cov95,
       coverage_80 = cov80,
       coverage_required = required,
+      n_definition_matched = sum(matched),
+      coverage_95_definition_matched = cov95_matched,
+      # A SINGLE observation (the target year) is scored by every arm, so the
+      # arms are not independent trials and k/n does not estimate coverage.
+      # Recorded so the number is never read as a calibration statistic.
+      coverage_is_estimable = FALSE,
+      coverage_caveat = paste(
+        "All arms score the SAME single observation (one target year), so they",
+        "are not independent trials and k/n does not estimate interval",
+        "coverage. Read it as: which configurations were consistent with the",
+        "one value we can check."
+      ),
       worst_percent_error = if (length(pe)) pe[which.max(abs(pe))] else NA_real_,
       median_percent_error = if (length(pe)) stats::median(pe) else NA_real_,
       # All eight arms under-predicted. A one-sided miss is a different problem
@@ -185,6 +245,14 @@ print.urps_backtest_status <- function(x, ...) {
               100 * x$coverage_95, 100 * x$coverage_required))
   if (is.finite(x$coverage_80)) {
     cat(sprintf("  80%% coverage        %.0f%%\n", 100 * x$coverage_80))
+  }
+  if (!is.null(x$coverage_95_definition_matched) &&
+      is.finite(x$coverage_95_definition_matched)) {
+    cat(sprintf("  of which definition-matched: %.0f%% of %d arms\n",
+                100 * x$coverage_95_definition_matched, x$n_definition_matched))
+  }
+  if (isFALSE(x$coverage_is_estimable)) {
+    cat("  NOTE: one target year, so k/n is not a coverage estimate\n")
   }
   cat(sprintf("  worst error         %.1f%%\n", x$worst_percent_error))
   cat(sprintf("  median error        %.1f%%\n", x$median_percent_error))
