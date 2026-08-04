@@ -12,6 +12,7 @@ export_hdmm_demand_contract(
   scenario = "baseline",
   calibration_status = "placeholder_uncalibrated",
   population_scope = "us_adult_women",
+  allow_uncalibrated = FALSE,
   verbose = TRUE
 )
 }
@@ -33,6 +34,11 @@ Defaults to \code{HDMM_DEMAND_CONTRACT_VERSION}.}
 until the obstetric/urogynecologic transition equations are fitted.}
 
 \item{population_scope}{Population denominator label. Default "us_adult_women".}
+
+\item{allow_uncalibrated}{Declare an exploratory export. Defaults to FALSE, so
+the contract is refused unless \code{calibration_status} is \code{"fitted"} or
+\code{"calibrated"}; see \code{\link[=assert_calibrated_transitions]{assert_calibrated_transitions()}}. The HDMM path carries
+one status for the whole artifact rather than per-tier provenance.}
 
 \item{verbose}{Log progress. Default TRUE.}
 }

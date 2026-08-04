@@ -12,6 +12,7 @@ export_dmdm_demand_contract(
   calibration_status = "placeholder_uncalibrated",
   transitions = NULL,
   population_scope = "us_adult_women",
+  allow_uncalibrated = FALSE,
   verbose = TRUE
 )
 }
@@ -40,6 +41,12 @@ placeholder). The any-PFD \code{tier3} is stamped with the \emph{weakest} proven
 across the conditions that compose it.}
 
 \item{population_scope}{Population denominator label. Default "us_adult_women".}
+
+\item{allow_uncalibrated}{Declare an exploratory export. Defaults to FALSE, so
+the contract is refused unless every tier it would write is \code{"fitted"} or
+\code{"calibrated"}; see \code{\link[=assert_calibrated_transitions]{assert_calibrated_transitions()}}. This mirrors the gate
+on the engines that produce \code{trajectory} -- without it, a hand-assembled
+trajectory could still reach downstream consumers as a demand contract.}
 
 \item{verbose}{Log progress. Default TRUE.}
 }

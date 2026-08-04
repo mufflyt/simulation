@@ -130,8 +130,18 @@ geographic_demand_summary(geo_need)  # need within 30/60/120/180 min; need-weigh
 
 ## 8. Versioned demand contract (feeds cliff / twostep / isochrones)
 
+Both exporters refuse to write a contract built on uncalibrated transitions. Every
+transition set shipped with the package is still a placeholder, so these calls
+pass `allow_uncalibrated = TRUE` to declare the artifact exploratory. Drop that
+argument once the hazards are fitted (see `fit_dmdm_transitions()`) and the
+export becomes publication-facing on its own.
+
 ```{r contract}
 traj <- lifecourse_demand_trajectory(pop_by_age_year, n = 2e4, seed = 1)
-export_hdmm_demand_contract(traj$demand_summary, output_directory = tempdir())  # tiers 5-6
-export_dmdm_demand_contract(tr, output_directory = tempdir())                    # tier 3 + per-condition
+# tiers 5-6
+export_hdmm_demand_contract(traj$demand_summary, output_directory = tempdir(),
+                            allow_uncalibrated = TRUE)
+# tier 3 + per-condition
+export_dmdm_demand_contract(tr, output_directory = tempdir(),
+                            allow_uncalibrated = TRUE)
 ```

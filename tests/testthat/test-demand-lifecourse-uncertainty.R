@@ -51,7 +51,9 @@ test_that("a degenerate interval is refused outright", {
 
 test_that("the CI trajectory feeds the exporter's lo/hi contract columns", {
   ci <- lifecourse_demand_trajectory_ci(pop_by_age_year, n = 3000, n_draws = 30, seed = 3)
-  out <- export_hdmm_demand_contract(ci, output_directory = tempfile("hdmm_"), verbose = FALSE)
+  # Placeholder transitions: declared exploratory so the calibration gate writes it.
+  out <- suppressMessages(export_hdmm_demand_contract(
+    ci, output_directory = tempfile("hdmm_"), verbose = FALSE, allow_uncalibrated = TRUE))
   expect_true(all(c("national_cases_lo", "national_cases_hi",
                     "denominator_index_lo", "denominator_index_hi") %in% names(out$data)))
   t6 <- out$data[out$data$denominator_tier == "tier6_procedural", ]

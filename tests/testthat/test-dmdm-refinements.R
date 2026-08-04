@@ -87,12 +87,19 @@ test_that("dmdm_transition_data reshapes a state panel into at-risk rows", {
 
 # ---- 3. DMDM -> demand-contract bridge ------------------------------------
 
+# These assert the contract SCHEMA and the provenance stamping, on deliberately
+# placeholder trajectories -- so each export declares itself exploratory, which
+# the calibration gate now requires before it will write a contract file.
+export_dmdm <- function(...) {
+  suppressMessages(export_dmdm_demand_contract(..., allow_uncalibrated = TRUE))
+}
+
 test_that("export_dmdm_demand_contract emits tier3 + per-condition tiers", {
   tr <- data.frame(year = 2025:2030, population = seq(45e6, 48e6, length.out = 6),
                    prev_ui = seq(.20, .26, length.out = 6),
                    prev_pop = seq(.08, .14, length.out = 6),
                    prev_ai = seq(.05, .07, length.out = 6))
-  out <- export_dmdm_demand_contract(tr, output_directory = tempfile("dm_"), verbose = FALSE)
+  out <- export_dmdm(tr, output_directory = tempfile("dm_"), verbose = FALSE)
   dc <- out$data
   expect_setequal(unique(dc$denominator_tier),
                   c("tier3_prevalent_pfd", "dmdm_ui", "dmdm_pop", "dmdm_ai"))
@@ -108,7 +115,7 @@ test_that("export_dmdm_demand_contract stamps per-tier provenance from `transiti
                    prev_ui = seq(.20, .26, length.out = 6),
                    prev_pop = seq(.08, .14, length.out = 6),
                    prev_ai = seq(.05, .07, length.out = 6))
-  out <- export_dmdm_demand_contract(
+  out <- export_dmdm(
     tr, output_directory = tempfile("dmp_"), verbose = FALSE,
     transitions = dmdm_transitions_with_pop_literature())
   dc <- out$data
@@ -126,6 +133,6 @@ test_that("export_dmdm_demand_contract stamps per-tier provenance from `transiti
 test_that("without `transitions`, the per-tier status mirrors the object status (back-compat)", {
   tr <- data.frame(year = 2025:2027, population = 45e6,
                    prev_ui = .2, prev_pop = .1, prev_ai = .05)
-  out <- export_dmdm_demand_contract(tr, output_directory = tempfile("dmn_"), verbose = FALSE)
+  out <- export_dmdm(tr, output_directory = tempfile("dmn_"), verbose = FALSE)
   expect_true(all(out$data$tier_calibration_status == "placeholder_uncalibrated"))
 })
