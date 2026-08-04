@@ -20,6 +20,8 @@ run_workforce_microsimulation(
   baseline_entrants = 55,
   retirement_source = c("urps_empirical", "hwsm"),
   calibration = NULL,
+  placement_shares = NULL,
+  seed_base_geography = FALSE,
   parameter_spec = NULL,
   allow_analogy = FALSE,
   brfss_cells = NULL,
@@ -74,7 +76,22 @@ Selecting "hwsm" is an affirmative choice to model URPS attrition with
 another population's curve, and is recorded in the run metadata.}
 
 \item{calibration}{Optional calibration scalars from
-\code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}}.}
+\code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}}. Checked by \code{\link[=assert_demand_calibrated]{assert_demand_calibrated()}}: demand
+totals that were never anchored to an independent national estimate
+(NAMCS/NHAMCS/NIS or claims) warn, and are refused in strict mode.}
+
+\item{placement_shares}{Optional tibble of \code{geo} and \code{share} that enables the
+geographic layer: entrants are placed by this distribution and providers may
+migrate mid-career. Build it with \code{\link[=opportunity_placement_shares]{opportunity_placement_shares()}} for the
+HWSM rule (demand growth plus retirements, which lets existing
+maldistribution persist), \code{\link[=historical_placement_shares]{historical_placement_shares()}} for the
+reproduce-today's-distribution comparison, or \code{\link[=blend_placement_shares]{blend_placement_shares()}}.
+Requires a cohort carrying \code{state}.}
+
+\item{seed_base_geography}{When \code{placement_shares} is supplied but the cohort
+has no \code{state} column, draw the base cohort's states from those shares
+rather than leaving the layer inert. A declared assumption, not an
+observation: geographic output is then conditional on it.}
 
 \item{parameter_spec}{Optional \code{\link[=supply_parameter_spec]{supply_parameter_spec()}}; defaults to one
 built from the observed certification series.}
