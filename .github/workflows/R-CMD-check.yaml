@@ -70,7 +70,12 @@ jobs:
           # dependencies: "hard" excludes, so R CMD build fails in
           # loadVignetteBuilder() before any check runs. Named explicitly rather
           # than widening to "all", which would drag in sf/arrow for no gain here.
-          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown
+          # mufflyaccess is a Suggests, which dependencies: "hard" does not
+          # install -- the Remotes entry only made the ref RESOLVABLE. Named here
+          # so it is actually installed, which is the point of the PAT: the
+          # roster, SSOT, scenario-registry and projection-contract paths are all
+          # gated behind has_mufflyaccess() and have never run in CI.
+          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown, mufflyt/mufflyaccess
           # mufflyaccess (Suggests) is a private repo the CI token cannot
           # reach. Hard dependencies only; tests needing it skip themselves.
           dependencies: '"hard"'

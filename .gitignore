@@ -46,6 +46,14 @@ processed_data/
 *_bands.png
 *_confidence.png
 
+# ...but never package sources or documentation. These patterns are unanchored,
+# so `*_projections*` also swallowed man/gap_projections_all_scenarios.Rd, and
+# R CMD check reported that function as an undocumented code object no matter
+# how many times the docs were regenerated -- the Rd could not be committed.
+!R/**
+!man/*.Rd
+!tests/**
+
 # Simulation folders
 */dppm_25_year_test/
 */manuscript/
