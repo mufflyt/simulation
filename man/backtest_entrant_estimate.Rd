@@ -18,7 +18,7 @@ backtest_entrant_estimate(
 \item{agents}{Cohort supplying the age structure for the departure estimate.}
 }
 \value{
-List with \code{gross_entrants}, \code{net_growth}, \code{departures}, \code{window}.
+List with \code{gross_entrants}, \code{departures}, \code{window}, \code{sd_entrants}.
 }
 \description{
 The main model estimates this from 2018-2023, which would leak the entire
@@ -28,4 +28,13 @@ validation window. Here the window ends at the cutoff.
 The steady-state window still starts at 2018: net growth averaged 86.5/yr
 over 2014-2017 while the initial certification backlog cleared, which is not a
 rate that could persist. That judgement uses only pre-cutoff information.
+
+NO DEPARTURE ADD-BACK. \code{n_certified} is a flow of new certifications that
+nothing is subtracted from, so its mean is already the gross entrant rate;
+the previous \code{net + departures} added modelled departures to a series that
+had never removed them. Correcting this LOWERS the pre-cutoff estimate from
+60.7 to 32.7/yr, because the 2018-2020 window contains the COVID-collapsed
+2020 cohort (n = 10). The old double-count happened to mask a genuinely
+unrepresentative estimation window; the fix exposes it, which is the point of
+a back-test. Neither quantity is re-tuned after seeing the 2023 value.
 }

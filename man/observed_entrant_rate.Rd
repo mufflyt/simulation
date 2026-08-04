@@ -16,7 +16,8 @@ observed_entrant_rate(
 \item{geography, board_pathway}{Contract dimensions.}
 }
 \value{
-List with \code{mean_net_growth}, \code{window}, and the cohort table.
+List with \code{mean_gross_entrants}, \code{window}, and the cohort table.
+\code{mean_net_growth} is retained as a deprecated alias of the same value.
 }
 \description{
 The model previously carried a hardcoded \code{baseline_entrants = 55}. The
@@ -26,4 +27,16 @@ observed series implies a materially different number, and it is derivable.
 The early years are excluded by default: net growth averaged 86.5/yr over
 2014-2017 while the initial certification backlog was cleared, against 53/yr
 from 2018. Fitting on the ramp-up would badly over-project.
+
+WHAT \code{n_certified} IS. An annual FLOW of newly certified subspecialists, not
+a stock and not a net change. The stock series is its cumulative sum: summing
+2013-2020 reproduces the contract's 2020 count of 1,099 exactly, and the
+2020->2023 stock change (1,306 - 1,099 = 207) equals the 2021-2023 flows
+(81 + 54 + 72 = 207) to the person. Nothing is ever removed. This matches
+\code{validate_backtest_target()}, which reports
+\code{observed_series_applies_attrition = FALSE} for the same contract.
+
+The consequence matters for anything downstream: because no departures are
+netted out, the mean of this flow IS the gross entrant rate. Adding modelled
+departures on top double-counts them -- see \code{\link[=implied_gross_entrants]{implied_gross_entrants()}}.
 }

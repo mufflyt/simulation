@@ -17,7 +17,7 @@ run_workforce_microsimulation(
   demand_scenarios = NULL,
   baseline_gap_estimate = NULL,
   n_iterations = 200,
-  baseline_entrants = 55,
+  baseline_entrants = NULL,
   retirement_source = c("urps_empirical", "hwsm"),
   calibration = NULL,
   placement_shares = NULL,
@@ -63,8 +63,11 @@ fail-closed guard.}
 
 \item{n_iterations}{Monte-Carlo replicates per scenario.}
 
-\item{baseline_entrants}{Baseline annual entrants. \code{nrmp_entrants("URPS")}
-supplies the real NRMP-matched value (70).}
+\item{baseline_entrants}{Baseline annual entrants. \code{NULL} (default) resolves
+the real NRMP-matched value via \code{\link[=nrmp_entrants]{nrmp_entrants()}} (70/yr for URPS) and
+records \code{entrants_source = "nrmp_matched"} in the run metadata. Pass a
+number to override; \code{55} reproduces runs made before the default became
+measured rather than assumed.}
 
 \item{retirement_source}{Base retirement hazard: "urps_empirical" (default,
 cliff's observed URPS hazards for ages 50-69 with the HWSM tail past 70) or
@@ -75,10 +78,13 @@ are derivable: they are measured on this subspecialty rather than borrowed.
 Selecting "hwsm" is an affirmative choice to model URPS attrition with
 another population's curve, and is recorded in the run metadata.}
 
-\item{calibration}{Optional calibration scalars from
-\code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}}. Checked by \code{\link[=assert_demand_calibrated]{assert_demand_calibrated()}}: demand
-totals that were never anchored to an independent national estimate
-(NAMCS/NHAMCS/NIS or claims) warn, and are refused in strict mode.}
+\item{calibration}{Demand calibration. \code{NULL} (default) leaves demand
+uncalibrated, which \code{\link[=assert_demand_calibrated]{assert_demand_calibrated()}} warns about and strict
+mode refuses -- this is the uncalibrated comparator. The string \code{"namcs"}
+fits scalars internally from the base-year volumes against the NAMCS
+national anchor (\code{\link[=namcs_demand_calibration]{namcs_demand_calibration()}}). A tibble from
+\code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}} is used as supplied. Scalars are APPLIED to the
+comparable service rows, not merely recorded.}
 
 \item{placement_shares}{Optional tibble of \code{geo} and \code{share} that enables the
 geographic layer: entrants are placed by this distribution and providers may

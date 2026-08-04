@@ -169,8 +169,11 @@ example_capacity_survey <- function() {
 #' @param baseline_gap_estimate A [baseline_gap()] object; NULL triggers the
 #'   fail-closed guard.
 #' @param n_iterations Monte-Carlo replicates per scenario.
-#' @param baseline_entrants Baseline annual entrants. `nrmp_entrants("URPS")`
-#'   supplies the real NRMP-matched value (70).
+#' @param baseline_entrants Baseline annual entrants. `NULL` (default) resolves
+#'   the real NRMP-matched value via [nrmp_entrants()] (70/yr for URPS) and
+#'   records `entrants_source = "nrmp_matched"` in the run metadata. Pass a
+#'   number to override; `55` reproduces runs made before the default became
+#'   measured rather than assumed.
 #' @param retirement_source Base retirement hazard: "urps_empirical" (default,
 #'   cliff's observed URPS hazards for ages 50-69 with the HWSM tail past 70) or
 #'   "hwsm" (the HWSM/FutureDocs literature curve, an external analogue fitted on
@@ -179,10 +182,13 @@ example_capacity_survey <- function() {
 #'   are derivable: they are measured on this subspecialty rather than borrowed.
 #'   Selecting "hwsm" is an affirmative choice to model URPS attrition with
 #'   another population's curve, and is recorded in the run metadata.
-#' @param calibration Optional calibration scalars from
-#'   [fit_calibration_scalars()]. Checked by [assert_demand_calibrated()]: demand
-#'   totals that were never anchored to an independent national estimate
-#'   (NAMCS/NHAMCS/NIS or claims) warn, and are refused in strict mode.
+#' @param calibration Demand calibration. `NULL` (default) leaves demand
+#'   uncalibrated, which [assert_demand_calibrated()] warns about and strict
+#'   mode refuses -- this is the uncalibrated comparator. The string `"namcs"`
+#'   fits scalars internally from the base-year volumes against the NAMCS
+#'   national anchor ([namcs_demand_calibration()]). A tibble from
+#'   [fit_calibration_scalars()] is used as supplied. Scalars are APPLIED to the
+#'   comparable service rows, not merely recorded.
 #' @param placement_shares Optional tibble of `geo` and `share` that enables the
 #'   geographic layer: entrants are placed by this distribution and providers may
 #'   migrate mid-career. Build it with [opportunity_placement_shares()] for the
@@ -235,7 +241,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           demand_scenarios = NULL,
                                           baseline_gap_estimate = NULL,
                                           n_iterations = 200,
-                                          baseline_entrants = 55,
+                                          baseline_entrants = NULL,
                                           retirement_source = c("urps_empirical", "hwsm"),
                                           calibration = NULL,
                                           placement_shares = NULL,
@@ -298,6 +304,37 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   } else {
     population_source <- "caller_supplied"
   }
+  # --- Baseline entrants: measured, not assumed ----------------------------
+  # The shipped default was a round 55/yr that matched no source. NRMP filled
+  # fellowship positions are the actual entry pathway into this subspecialty and
+  # are already carried as a canonical input, so resolve them and say so. The
+  # observed certification flow corroborates the magnitude independently: 2021-23
+  # averaged 69/yr against NRMP's 70. `baseline_entrants = 55` remains available
+  # to reproduce any earlier run.
+  entrants_source <- "caller_supplied"
+  if (is.null(baseline_entrants)) {
+    baseline_entrants <- tryCatch({
+      n <- nrmp_entrants(subspecialty, mode = mode)
+      entrants_source <- "nrmp_matched"
+      if (verbose) {
+        .msg_info(sprintf("Baseline entrants: %d/yr from the NRMP match (observed).", n))
+      }
+      n
+    }, error = function(e) {
+      if (identical(mode, "strict")) {
+        stop(sprintf(paste("baseline_entrants could not be resolved from the NRMP",
+                           "match (%s), and strict mode will not substitute an",
+                           "assumption. Pass baseline_entrants explicitly."),
+                     conditionMessage(e)), call. = FALSE)
+      }
+      entrants_source <<- "assumed_fallback"
+      .msg_warn(sprintf(paste("NRMP entrants unavailable (%s); falling back to the",
+                              "legacy assumption of 55/yr, which matches no source."),
+                        conditionMessage(e)))
+      55
+    })
+  }
+
   if (is.null(supply_scenarios)) supply_scenarios <- supply_scenario_registry(baseline_entrants)
   if (is.null(demand_scenarios)) demand_scenarios <- demand_scenario_registry()
   validate_scenario_registry(supply_scenarios, "supply")
@@ -388,8 +425,11 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   # own sampling distribution each iteration. Without this the intervals are
   # sampling noise only, which the 2020->2023 back-test showed to be 6.5-8.2x
   # too narrow.
+  # Centred on the resolved `baseline_entrants` so the documented argument
+  # actually controls the run; the series supplies only the sampling spread.
   param_spec <- if (is.null(parameter_spec) && has_mufflyaccess()) {
-    tryCatch(entrant_spec_from_series(agents), error = function(e) NULL)
+    tryCatch(entrant_spec_from_series(agents, entrant_mean = baseline_entrants),
+             error = function(e) NULL)
   } else parameter_spec
   # Unconditional, for the same reason as in run_supply_microsimulation(): a NULL
   # spec is the case the guard exists to catch, and here it is reachable whenever
@@ -410,7 +450,13 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       retirement_schedule = scenario_retirement_schedule(params, base_retirement_schedule),
       hours_multiplier = params$hours_multiplier %||% 1.0,
       hours_intercept = hours_intercept,
-      param_spec = param_spec,
+      # Re-centred on THIS scenario's entrant level. `entrant_mean` takes
+      # precedence over `entrants_per_year` inside the engine, so sharing one
+      # spec across scenarios silently overrode every scenario's entrant value:
+      # "Fellowship output +10%" and "-10%" returned results identical to
+      # Baseline to the last digit. The scenario now sets the LEVEL and the
+      # observed series still sets the SPREAD.
+      param_spec = recentre_entrant_spec(param_spec, params$entrants),
       late_career_fte_factor = params$late_career_fte_factor %||% 1.0,
       late_career_fte_onset_age = params$late_career_fte_onset_age %||% NA_real_,
       placement_shares = placement_shares,
@@ -452,7 +498,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   # was accepted, stored in the metadata, and never checked. An uncalibrated
   # demand total is not anchored to any observed quantity, so it is gated here
   # like the base-year gap and the estimand independence check.
-  assert_demand_calibrated(calibration, mode)
+  # The guard moved below the volume build: `calibration = "namcs"` fits the
+  # scalar FROM those volumes, so it cannot be checked before they exist.
 
   # --- Workload -> required FTE (FTE on both sides) ------------------------
   assert_publishable_workload(mode = mode)
@@ -465,6 +512,41 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
     example_service_volumes(demand_long)
   }
 
+  # --- Demand calibration against an independent national anchor -----------
+  # HDMM Exhibit 11: scalar = observed / model-predicted, fitted on the base
+  # year. `calibration` was previously accepted, stored and CHECKED but never
+  # APPLIED -- `apply_calibration_scalars()` was called by nothing in a
+  # workforce run -- so a caller who supplied scalars silently got uncalibrated
+  # output that reported itself as calibrated.
+  if (identical(calibration, "namcs")) {
+    calibration <- tryCatch(
+      namcs_demand_calibration(volumes, base_year = base_year),
+      error = function(e) {
+        if (identical(mode, "strict")) {
+          stop(sprintf("calibration = 'namcs' could not be fitted: %s",
+                       conditionMessage(e)), call. = FALSE)
+        }
+        .msg_warn("NAMCS calibration unavailable (", conditionMessage(e),
+                  "); continuing UNCALIBRATED.")
+        NULL
+      })
+  }
+  assert_demand_calibrated(calibration, mode)
+  if (is.data.frame(calibration) && nrow(calibration) > 0) {
+    volumes <- apply_demand_calibration(volumes, calibration)
+    if (verbose) {
+      .msg_info(sprintf(
+        "Demand calibrated to %s: scalar %.3f on %s (anchor %d, %d records).",
+        attr(calibration, "provenance")$source %||% "an independent anchor",
+        calibration$scalar[1],
+        paste(attr(calibration, "services") %||% "visit services", collapse = " + "),
+        attr(calibration, "anchor_year") %||% NA_integer_,
+        attr(calibration, "anchor_records") %||% NA_integer_))
+    }
+  }
+
+  # Setting mix is applied AFTER the level correction: calibration fixes how
+  # many encounters there are, the setting scenario redistributes them.
   if (!is.null(setting_scenario)) {
     if (verbose) .msg_info(sprintf("  setting scenario: %s", setting_scenario))
     volumes <- apply_setting_scenario(volumes, scenario_id = setting_scenario)
@@ -632,6 +714,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       wrvu_per_fte = wrvu_per_fte,
       productivity_plausible = productivity_ok,
       crude_departure_rate = crude_rate,
+      baseline_entrants = baseline_entrants,
+      entrants_source = entrants_source,
       entrant_reconciliation = entrant_check,
       years = range(years),
       n_iterations = n_iterations,

@@ -8,6 +8,7 @@ entrant_spec_from_series(
   agents,
   from_year = 2018L,
   through_year = NULL,
+  entrant_mean = NULL,
   hazard_cv = 0,
   hours_model = NULL
 )
@@ -19,6 +20,11 @@ entrant_spec_from_series(
 
 \item{through_year}{Last year that may be used.}
 
+\item{entrant_mean}{Point estimate to centre the draw on. \code{NULL} (default)
+uses the series mean. Supply it to keep a caller's or a scenario's entrant
+level while still taking the SPREAD from the observed series -- see
+\code{\link[=recentre_entrant_spec]{recentre_entrant_spec()}}.}
+
 \item{hazard_cv}{Coefficient of variation on the retirement hazard.}
 
 \item{hours_model}{Optional fitted hours model.}
@@ -27,7 +33,12 @@ entrant_spec_from_series(
 A \code{\link[=supply_parameter_spec]{supply_parameter_spec()}}.
 }
 \description{
-Convenience wrapper: reads the net-growth series through the contract, adds
-modelled departures, and returns a spec whose entrant rate is drawn from the
-series' own sampling distribution.
+Convenience wrapper: reads the annual certification flow through the contract
+and returns a spec whose entrant rate is drawn from the series' own sampling
+distribution.
+}
+\details{
+The flow is used as-is. It is a GROSS entrant count -- the source series never
+removes departures -- so modelled departures are recorded but not added; see
+\code{\link[=observed_entrant_rate]{observed_entrant_rate()}}.
 }

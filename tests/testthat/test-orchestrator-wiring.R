@@ -100,3 +100,51 @@ test_that("entrants are placed by the supplied shares, not uniformly", {
   expect_setequal(unique(ent$state), c("CO", "NY"))
   expect_gt(mean(ent$state == "CO"), 0.75)   # 0.9 target, multinomial spread
 })
+
+test_that("the entrant-policy scenarios are not inert", {
+  skip_if_not_installed("mufflyaccess")
+  skip_on_cran()
+  # THE REGRESSION THIS LOCKS. A single param_spec was shared across scenarios,
+  # and `entrant_mean` takes precedence over `entrants_per_year` inside the
+  # engine, so every scenario ran at the same entrant rate: "Fellowship output
+  # +10%" and "-10%" returned results IDENTICAL TO BASELINE to the last digit.
+  # The most policy-relevant lever in the model did nothing.
+  r <- run_workforce_microsimulation(
+    years = 2025:2030, n_iterations = 12, baseline_entrants = 70,
+    baseline_gap_estimate = baseline_gap(
+      base_supply_fte = 1306, adequacy = 0.95, method = "capacity_survey",
+      evidence = "test"),
+    allow_analogy = TRUE, verbose = FALSE
+  )
+  fin <- r$supply[r$supply$year == max(r$supply$year), ]
+  get <- function(pat) fin$effective_fte_median[grepl(pat, fin$scenario_label)]
+  base <- get("^Baseline")
+  up <- get("Fellowship output \\+10")
+  down <- get("Fellowship output constrained")
+
+  expect_length(base, 1); expect_length(up, 1); expect_length(down, 1)
+  expect_gt(up, base)
+  expect_lt(down, base)
+})
+
+test_that("baseline_entrants controls the run rather than being overridden", {
+  skip_if_not_installed("mufflyaccess")
+  skip_on_cran()
+  # The spec's entrant_mean used to win silently, so passing baseline_entrants
+  # changed nothing and the run warned about its own inconsistency every time.
+  mk <- function(e) {
+    r <- run_workforce_microsimulation(
+      years = 2025:2030, n_iterations = 12, baseline_entrants = e,
+      baseline_gap_estimate = baseline_gap(
+        base_supply_fte = 1306, adequacy = 0.95, method = "capacity_survey",
+        evidence = "test"),
+      allow_analogy = TRUE, verbose = FALSE)
+    fin <- r$supply[r$supply$year == max(r$supply$year) &
+                      grepl("^Baseline", r$supply$scenario_label), ]
+    list(fte = fin$effective_fte_median, meta = r$scenario_meta)
+  }
+  lo <- mk(40); hi <- mk(100)
+  expect_gt(hi$fte, lo$fte)
+  expect_equal(lo$meta$baseline_entrants, 40)
+  expect_equal(lo$meta$entrants_source, "caller_supplied")
+})

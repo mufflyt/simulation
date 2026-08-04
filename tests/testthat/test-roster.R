@@ -90,16 +90,49 @@ test_that("the entrant rate excludes the certification ramp-up", {
   expect_gt(observed_entrant_rate()$window[1], 2013)
 })
 
-test_that("the hardcoded entrant assumption is reconciled against the series", {
+test_that("modelled departures are NOT added to the certification flow", {
   skip_if_not_installed("mufflyaccess")
   set.seed(7)
   a <- agents_from_certification_cohorts(baseline_year = 2023L)
-  # gross entrants = observed net growth + modelled departures
   e <- suppressMessages(implied_gross_entrants(a, assumed = 55))
-  expect_equal(e$gross_entrants, e$net_growth + e$departures)
-  expect_gt(e$gross_entrants, 70)
 
-  # A materially wrong assumption must warn rather than pass silently.
-  expect_message(implied_gross_entrants(a, assumed = 55), "differ from the observed-series")
+  # THE REGRESSION THIS LOCKS. `n_certified` is a flow of new certifications
+  # that nothing is ever subtracted from, so it is already gross. Adding
+  # modelled departures inflated it from ~51/yr to ~87/yr and produced a
+  # spurious "assumption is 37% wrong" warning on every run.
+  expect_equal(e$gross_entrants, e$observed_flow)
+  expect_false(e$departures_added)
+  expect_gt(e$departures, 0)              # still computed, just not added
+  expect_lt(e$gross_entrants, e$observed_flow + e$departures)
+
+  # The identity holds only for a series that genuinely nets departures out,
+  # which the caller must assert explicitly.
+  net <- suppressMessages(implied_gross_entrants(a, series_applies_attrition = TRUE))
+  expect_equal(net$gross_entrants, net$observed_flow + net$departures)
+})
+
+test_that("the stock series is the cumulative flow, with no attrition removed", {
+  skip_if_not_installed("mufflyaccess")
+  # The premise the fix above rests on, asserted against the contract rather
+  # than trusted: if the stock ever removed departures, this fails and the
+  # no-add-back balance becomes wrong.
+  coh <- urps_certification_cohorts()
+  flow_21_23 <- sum(coh$n_certified[coh$cert_year >= 2021 & coh$cert_year <= 2023])
+  stock_change <- mufflyaccess::urps_count(2023, geography = "national",
+                                           include_urology = TRUE) -
+                  mufflyaccess::urps_count(2020, geography = "national",
+                                           include_urology = TRUE)
+  expect_equal(stock_change, flow_21_23)
+})
+
+test_that("a materially different entrant rate is reconciled, naming the window", {
+  skip_if_not_installed("mufflyaccess")
+  set.seed(7)
+  a <- agents_from_certification_cohorts(baseline_year = 2023L)
+  e <- suppressMessages(implied_gross_entrants(a))
+  # The message must carry the window and the competing-series explanation, so a
+  # windowing artifact is not read as a modelling error.
+  expect_message(implied_gross_entrants(a, assumed = 55 * 3), "window")
+  expect_message(implied_gross_entrants(a, assumed = 55 * 3), "exam-scheduling")
   expect_silent(implied_gross_entrants(a, assumed = e$gross_entrants))
 })

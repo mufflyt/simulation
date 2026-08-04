@@ -78,9 +78,22 @@ urps_certification_cohorts <- function(geography = "national",
 #' 2014-2017 while the initial certification backlog was cleared, against 53/yr
 #' from 2018. Fitting on the ramp-up would badly over-project.
 #'
+#' WHAT `n_certified` IS. An annual FLOW of newly certified subspecialists, not
+#' a stock and not a net change. The stock series is its cumulative sum: summing
+#' 2013-2020 reproduces the contract's 2020 count of 1,099 exactly, and the
+#' 2020->2023 stock change (1,306 - 1,099 = 207) equals the 2021-2023 flows
+#' (81 + 54 + 72 = 207) to the person. Nothing is ever removed. This matches
+#' `validate_backtest_target()`, which reports
+#' `observed_series_applies_attrition = FALSE` for the same contract.
+#'
+#' The consequence matters for anything downstream: because no departures are
+#' netted out, the mean of this flow IS the gross entrant rate. Adding modelled
+#' departures on top double-counts them -- see [implied_gross_entrants()].
+#'
 #' @param from_year First year of the steady-state window.
 #' @param geography,board_pathway Contract dimensions.
-#' @return List with `mean_net_growth`, `window`, and the cohort table.
+#' @return List with `mean_gross_entrants`, `window`, and the cohort table.
+#'   `mean_net_growth` is retained as a deprecated alias of the same value.
 #' @export
 observed_entrant_rate <- function(from_year = 2018L,
                                   geography = "national",
@@ -89,48 +102,90 @@ observed_entrant_rate <- function(from_year = 2018L,
   steady <- coh[coh$cert_year >= from_year, ]
   if (!nrow(steady)) stop("observed_entrant_rate: no years in the window", call. = FALSE)
 
+  mean_flow <- mean(steady$n_certified)
+
   list(
-    mean_net_growth = mean(steady$n_certified),
+    mean_gross_entrants = mean_flow,
+    # Deprecated alias. The name was wrong: this was never a net quantity, and
+    # callers that read it as one added departures to it a second time.
+    mean_net_growth = mean_flow,
+    sd_gross_entrants = if (nrow(steady) > 1) stats::sd(steady$n_certified) else NA_real_,
+    series_applies_attrition = FALSE,
     window = range(steady$cert_year),
     n_years = nrow(steady),
     cohorts = coh,
-    note = paste("Net growth in new certifications. Gross entrants are this plus",
-                 "departures; use implied_annual_departure_rate() on the base",
-                 "cohort to complete the balance.")
+    note = paste("Mean annual GROSS entrants: new certifications per year. The",
+                 "source series never removes departures, so this is already a",
+                 "gross flow -- do not add modelled departures to it.")
   )
 }
 
-#' Gross annual entrants implied by observed growth and modelled attrition
+#' Gross annual entrants implied by the observed certification series
 #'
-#' entrants = observed net growth + expected departures. Reported alongside the
-#' assumed value so a divergence is visible rather than buried.
+#' Reported alongside the assumed value so a divergence is visible rather than
+#' buried.
+#'
+#' THE DEPARTURE BALANCE DEPENDS ON THE SOURCE SERIES. The identity
+#' `gross = net growth + departures` holds only when the source series actually
+#' nets departures out. The URPS certification series does not: it is a flow of
+#' new certifications that nothing is ever subtracted from (see
+#' [observed_entrant_rate()], and `observed_series_applies_attrition = FALSE` in
+#' [validate_backtest_target()]). For that series the observed flow IS the gross
+#' entrant rate, and adding modelled departures inflates it -- previously from
+#' 51/yr to 87/yr, a spurious 37% divergence from the shipped assumption that
+#' was reported to users on every run.
+#'
+#' `series_applies_attrition` therefore selects the correct balance rather than
+#' hardcoding one, so a future stock-based series can be passed without
+#' reintroducing the error.
 #'
 #' @param agents Base-year agent cohort (supplies the age structure).
 #' @param from_year First year of the steady-state window.
 #' @param assumed Value the model would otherwise use, for comparison.
+#' @param series_applies_attrition Whether the source series removes departures.
+#'   `NULL` (default) reads the flag from [observed_entrant_rate()].
 #' @param ... Passed to [observed_entrant_rate()].
-#' @return List with `gross_entrants`, `net_growth`, `departures`, `assumed`.
+#' @return List with `gross_entrants`, `observed_flow`, `departures`, `assumed`.
 #' @export
-implied_gross_entrants <- function(agents, from_year = 2018L, assumed = NA_real_, ...) {
+implied_gross_entrants <- function(agents, from_year = 2018L, assumed = NA_real_,
+                                   series_applies_attrition = NULL, ...) {
   obs <- observed_entrant_rate(from_year = from_year, ...)
   rate <- implied_annual_departure_rate(
     agents$age, if ("sex" %in% names(agents)) agents$sex else "female"
   )
   departures <- nrow(agents) * rate
-  gross <- obs$mean_net_growth + departures
+
+  nets_out <- series_applies_attrition %||% obs$series_applies_attrition
+  gross <- if (isTRUE(nets_out)) obs$mean_gross_entrants + departures else obs$mean_gross_entrants
 
   if (is.finite(assumed) && abs(gross - assumed) / gross > 0.15) {
+    # Name the window. The certification flow spans a structural break -- URPS
+    # fellowship expansion, and a COVID examination disruption that pushed the
+    # 2020 cohort (n = 10) into 2021 (n = 81) -- so a 2018-start window and a
+    # recent window give materially different answers for reasons that have
+    # nothing to do with the entrant rate. A bare percentage invites the reader
+    # to treat a windowing artifact as a modelling error.
     .msg_warn(sprintf(
-      "Assumed entrants (%s/yr) differ from the observed-series implication (%s/yr) by %.0f%%. The observed value is derivable from mufflyaccess::urps_counts_long(); prefer it.",
-      format(round(assumed)), format(round(gross)),
-      100 * abs(gross - assumed) / gross))
+      paste("Entrants in use (%s/yr) differ by %.0f%% from the certification flow",
+            "over %d-%d (%s/yr). These are different observed series, not a right",
+            "and a wrong one: NRMP counts filled fellowship positions, the",
+            "contract counts board certifications ~2 years later. Check the window",
+            "before treating the gap as an error -- 2020-21 is an exam-scheduling",
+            "artifact, and 2021-23 averages %s/yr."),
+      format(round(assumed)), 100 * abs(gross - assumed) / gross,
+      obs$window[1], obs$window[2], format(round(gross, 1)),
+      format(round(mean(utils::tail(
+        obs$cohorts$n_certified[obs$cohorts$cert_year >= obs$window[1]], 3)), 1))))
   }
 
   list(
     gross_entrants = gross,
-    net_growth = obs$mean_net_growth,
+    observed_flow = obs$mean_gross_entrants,
+    # Deprecated alias retained for callers written against the old field name.
+    net_growth = obs$mean_gross_entrants,
     departures = departures,
     departure_rate = rate,
+    departures_added = isTRUE(nets_out),
     assumed = assumed,
     window = obs$window
   )

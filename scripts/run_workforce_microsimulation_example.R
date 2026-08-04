@@ -52,7 +52,12 @@ result <- run_workforce_microsimulation(
   subspecialty = "FPMRS",
   baseline_gap_estimate = gap,
   n_iterations = 200,
-  baseline_entrants = 55,
+  # baseline_entrants defaults to the NRMP-matched value (70/yr) rather than the
+  # old round 55, which matched no source.
+  # Demand is anchored to the NAMCS national URPS visit total. Drop this
+  # argument to see the uncalibrated comparator (and the guard that refuses it
+  # in strict mode).
+  calibration = "namcs",
   output_dir = "outputs",
   verbose = TRUE
 )

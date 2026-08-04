@@ -71,7 +71,15 @@ run_backtest_arm <- function(cohort = c("derived", "synthetic"),
     it_sched <- sched
     if (!is.null(param_spec)) {
       d <- draw_supply_parameters(param_spec, sched)
-      it_entrants <- d$entrants
+      # Take the draw ONLY when it is a usable number, matching
+      # run_supply_microsimulation(). `d$entrants` is `spec$entrant_mean`
+      # verbatim when the entrant rate is not quantified, so a spec that
+      # quantifies only the hazard carries NULL here; assigning it produced a
+      # zero-length capacity and an unreadable `rep()` error deep in the engine.
+      if (is.numeric(d$entrants) && length(d$entrants) == 1L &&
+          is.finite(d$entrants)) {
+        it_entrants <- d$entrants
+      }
       it_sched <- d$retirement_schedule
     }
     sim <- simulate_provider_career_once(
@@ -183,8 +191,10 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
   cohort0 <- backtest_cohort_at(cutoff_year)
   est <- backtest_entrant_estimate(cutoff_year, agents = cohort0)
   .msg_info(sprintf(
-    "Pre-cutoff entrant estimate: net %.1f + departures %.1f = %.1f/yr (window %d-%d).",
-    est$net_growth, est$departures, est$gross_entrants, est$window[1], est$window[2]))
+    paste("Pre-cutoff entrant estimate: %.1f/yr, the observed certification flow",
+          "over %d-%d (modelled departures %.1f/yr are NOT added -- the series is",
+          "already gross)."),
+    est$gross_entrants, est$window[1], est$window[2], est$departures))
 
   # 3. Assert no read touched the validation window.
   assert_no_leakage(cutoff_year)
@@ -202,6 +212,36 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
 
   entrant_of <- function(kind) if (kind == "assumed") assumed_entrants else est$gross_entrants
 
+  # PARAMETER UNCERTAINTY IN THE INTERVALS.
+  #
+  # `run_backtest_arm()` has always accepted a `param_spec`, and nothing ever
+  # passed one. Every arm therefore reported intervals built from individual
+  # stochasticity alone -- Bernoulli retirement, the fractional entrant draw --
+  # with the entrant rate pinned at a single value across all 1,000 replicates.
+  # The result was PI95 widths of 0-40 providers on a count near 1,300, two arms
+  # with LITERALLY ZERO width (no attrition, integral entrant rate: nothing left
+  # to vary), and 0/8 coverage. Those were never forecast intervals, so failing
+  # coverage told us nothing about the forecast.
+  #
+  # The spec is built from PRE-CUTOFF certifications only, so it adds no
+  # information about the validation window, and it does NOT move the point
+  # estimate -- the draw is centred on the same mean the fixed run uses. Coverage
+  # is therefore re-scored fairly rather than tuned into passing.
+  #
+  # EACH ARM KEEPS ITS OWN CENTRE. The spec is built per arm so the draw is
+  # centred on that arm's entrant value and takes only the SPREAD from the
+  # observed series. Passing one shared spec would overwrite `entrants_per_year`
+  # with the estimated rate on every iteration, silently collapsing arms 1 and 3
+  # (the shipped assumption) into arms 2 and 4 and destroying the prespecified
+  # contrast the design exists to measure.
+  arm_spec <- function(entrants) {
+    supply_parameter_spec(
+      entrant_series = unname(est$yearly),
+      entrant_mean = entrants,
+      departures = est$departures
+    )
+  }
+
   rows <- list(); iter_rows <- list(); traj_rows <- list()
   for (i in seq_len(nrow(BACKTEST_ARMS))) {
     a <- BACKTEST_ARMS[i, ]
@@ -210,6 +250,7 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
         cohort = a$cohort, entrants_per_year = entrant_of(a$entrants),
         cutoff_year = cutoff_year, target_year = target_year,
         n_iterations = n_iterations, apply_attrition = att,
+        param_spec = arm_spec(entrant_of(a$entrants)),
         seed = seed + i
       )
       lab <- sprintf("%d. %s%s", a$arm, a$label,

@@ -37,7 +37,10 @@ NAMCS_2019_COLS <- readr::fwf_positions(
     "VMONTH",    # 1-2   Visit month (1-12)
     "VDAYR",     # 3     Day of week (1=Sunday)
     "AGE",       # 4-6   Patient age in years
-    "SEX",       # 11    Sex (1=Male, 2=Female)
+    "SEX",       # 11    Sex (1=FEMALE, 2=MALE -- NAMCS convention, the reverse
+                 #       of Census/ACS/BRFSS/MEPS. Confirmed against N40 and C61
+                 #       (male-only, all SEX=2) and Z34/N81/C50 (female-only,
+                 #       all SEX=1) in this file.)
     "ETHUN",     # 16-17 Ethnicity unimputed
     "RACEUN",    # 18-19 Race unimputed
     "ETHIM",     # 20    Ethnicity imputed

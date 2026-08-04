@@ -46,6 +46,13 @@
 # Inventing a spread for the last two would manufacture confidence intervals
 # that look rigorous and mean nothing. They are named, defaulted off, and
 # reported as unquantified.
+#
+# STATUS. The entrant draw is now wired through run_backtest() as well as the
+# main projections, so the back-test scores real intervals: PI95 widths went
+# from 0-40 to 129-148 providers, and coverage from 0/8 to 2/8. Two arms is
+# still far short of the required 80%, and every arm continues to under-predict
+# by 3.1-17.6%. Widening intervals cannot fix a one-sided level error, and this
+# module deliberately does not try to -- see R/38-backtest_status.R.
 
 #' Standard error of a mean estimated from an observed annual series
 #'
@@ -60,11 +67,13 @@ series_mean_se <- function(x) {
 
 #' Specify which supply parameters vary across Monte Carlo iterations
 #'
-#' @param entrant_series Observed annual net-growth values behind the entrant
-#'   rate. Supplying it turns the entrant rate into a drawn parameter.
+#' @param entrant_series Observed annual entrant counts behind the entrant rate.
+#'   Supplying it turns the entrant rate into a drawn parameter.
 #' @param entrant_mean Point estimate of gross annual entrants.
-#' @param departures Expected annual departures added to net growth to give
-#'   gross entrants; held fixed unless `hazard_cv` is set.
+#' @param departures Expected annual departures, recorded for reporting only.
+#'   NOT added to `entrant_mean`: the certification series is a gross flow that
+#'   never nets departures out, so adding them double-counts (see
+#'   [observed_entrant_rate()]).
 #' @param hazard_cv Coefficient of variation on a multiplicative factor applied
 #'   to the whole retirement schedule. 0 means the hazard is treated as known,
 #'   which it is not -- see the module note.
@@ -133,10 +142,13 @@ draw_supply_parameters <- function(spec, schedule = RETIREMENT_HAZARD_BY_AGE) {
 
   entrants <- spec$entrant_mean
   if (isTRUE(spec$quantified[["entrant_rate"]])) {
-    # The net-growth mean is drawn from its sampling distribution; departures are
-    # added back to recover gross entrants.
-    net_draw <- stats::rnorm(1, mean(spec$entrant_series), spec$entrant_se)
-    entrants <- max(net_draw + spec$departures, 0)
+    # Draw around `entrant_mean` itself, NOT around mean(entrant_series) with
+    # departures added back. The two differ whenever the series is already a
+    # gross flow, and centring the draw anywhere other than the point estimate
+    # silently biases every interval away from the median the model reports.
+    # Tying them together makes that class of mismatch unrepresentable: whatever
+    # balance the constructor chose, the draw inherits it.
+    entrants <- max(stats::rnorm(1, spec$entrant_mean, spec$entrant_se), 0)
   }
 
   sched <- schedule
@@ -196,9 +208,13 @@ assert_parameter_uncertainty <- function(spec, mode = resolve_reproducibility_mo
     msg <- paste(
       "No parameter varies across Monte Carlo iterations, so the reported",
       "intervals describe individual stochasticity ONLY, not forecast",
-      "uncertainty. The 2020->2023 back-test found intervals of this kind",
-      "6.5-8.2x too narrow and outside coverage in every arm. Supply a",
-      "supply_parameter_spec() or do not report intervals."
+      "uncertainty. In the 2020->2023 back-test, intervals of this kind were",
+      "0-40 providers wide on a count near 1,300 -- two arms had zero width --",
+      "and covered the observation in 0 of 8 arms; drawing the entrant rate",
+      "widens them to 129-148. Supply a",
+      "supply_parameter_spec() with an entrant_series and entrant_mean (or a fitted",
+      "hours_model), or do not report intervals. An empty supply_parameter_spec()",
+      "does not quantify any parameter."
     )
     if (identical(mode, "strict")) stop(msg, call. = FALSE)
     .msg_warn(msg)
@@ -216,19 +232,28 @@ assert_parameter_uncertainty <- function(spec, mode = resolve_reproducibility_mo
 
 #' Entrant-rate spec built from the observed certification series
 #'
-#' Convenience wrapper: reads the net-growth series through the contract, adds
-#' modelled departures, and returns a spec whose entrant rate is drawn from the
-#' series' own sampling distribution.
+#' Convenience wrapper: reads the annual certification flow through the contract
+#' and returns a spec whose entrant rate is drawn from the series' own sampling
+#' distribution.
+#'
+#' The flow is used as-is. It is a GROSS entrant count -- the source series never
+#' removes departures -- so modelled departures are recorded but not added; see
+#' [observed_entrant_rate()].
 #'
 #' @param agents Base-year cohort (supplies the age structure for departures).
 #' @param from_year First year of the steady-state window.
 #' @param through_year Last year that may be used.
+#' @param entrant_mean Point estimate to centre the draw on. `NULL` (default)
+#'   uses the series mean. Supply it to keep a caller's or a scenario's entrant
+#'   level while still taking the SPREAD from the observed series -- see
+#'   [recentre_entrant_spec()].
 #' @param hazard_cv Coefficient of variation on the retirement hazard.
 #' @param hours_model Optional fitted hours model.
 #' @return A [supply_parameter_spec()].
 #' @export
 entrant_spec_from_series <- function(agents, from_year = 2018L,
                                      through_year = NULL,
+                                     entrant_mean = NULL,
                                      hazard_cv = 0,
                                      hours_model = NULL) {
   coh <- if (is.null(through_year)) {
@@ -245,9 +270,37 @@ entrant_spec_from_series <- function(agents, from_year = 2018L,
 
   supply_parameter_spec(
     entrant_series = series,
-    entrant_mean = mean(series) + departures,
+    entrant_mean = entrant_mean %||% mean(series),
     departures = departures,
     hazard_cv = hazard_cv,
     hours_model = hours_model
   )
+}
+
+#' Re-centre a parameter spec on a new entrant level
+#'
+#' Keeps the observed series (and therefore the SPREAD) while moving the point
+#' estimate the draw is centred on.
+#'
+#' WHY THIS EXISTS. `run_supply_microsimulation()` lets `entrant_mean` take
+#' precedence over `entrants_per_year`, so a single spec shared across scenarios
+#' silently overrode every scenario's entrant level. The "Fellowship output
+#' +10%" and "-10%" scenarios returned results identical to Baseline to the last
+#' digit -- the entrant-policy lever, which is the most policy-relevant knob in
+#' the model, did nothing at all. Re-centring per scenario keeps the scenario
+#' definition authoritative for the LEVEL and the observed series authoritative
+#' for the UNCERTAINTY.
+#'
+#' @param spec A [supply_parameter_spec()], or NULL.
+#' @param entrant_mean New point estimate.
+#' @return The spec with `entrant_mean` replaced; NULL passes through.
+#' @export
+recentre_entrant_spec <- function(spec, entrant_mean) {
+  if (!inherits(spec, "urps_param_spec")) return(spec)
+  if (!is.numeric(entrant_mean) || length(entrant_mean) != 1L ||
+      !is.finite(entrant_mean)) {
+    return(spec)
+  }
+  spec$entrant_mean <- entrant_mean
+  spec
 }
