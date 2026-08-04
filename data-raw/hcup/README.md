@@ -42,6 +42,20 @@ CPT sets are editable at the top of the script — **verify against your NASS
 year's coding**. After ingest, refresh the `sha256` fields for the split files in
 `config/calibration_targets.yml`.
 
+Once the anchors are in `data/anchors/`, run the whole calibration + back-test in
+one command:
+
+```r
+Sys.setenv(DEMAND_BASE_YEAR = "2021")   # a year your anchors cover
+source("scripts/run_demand_calibration_backtest.R")
+# -> artifacts/demand_calibration_scalars.csv + demand_backtest_*.csv
+```
+
+It prints the `observed / predicted` scalars and the held-out-year MAPE, and
+stamps every output with whether real anchors or the illustrative fallback were
+used. For a real back-test, give the anchor CSVs a `year` column with the
+`fit_through_year` and `target_year` from `config/calibration_targets.yml`.
+
 ## Build note
 
 `data-raw/` is `.Rbuildignore`d; the licensed NASS microdata is **not** committed
