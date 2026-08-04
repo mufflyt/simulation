@@ -105,6 +105,13 @@ than a static risk equation.
 - **Back-test** (`R/28`): fit through a cutoff year, project to a held-out year,
   and score MAPE against observed totals — the credibility check the Dall-family
   models stop short of.
+- **Runner** (`scripts/run_demand_calibration_backtest.R`): one command runs both
+  steps — builds life-course service volumes, loads the independent anchors from
+  `data/anchors/` (produced by `10_ingest_hcup_nass.R`; NAMCS/MEPS for office
+  visits), fits the base-year scalars, and back-tests to the held-out year from
+  `config/calibration_targets.yml`. Falls back to illustrative anchors (loudly
+  flagged) when the files are absent, so it runs before the pulls land but never
+  passes placeholder output off as a result.
 
 ## 6. Denominator hierarchy and concordance
 
