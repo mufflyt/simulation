@@ -115,36 +115,62 @@ medicare_delegation_corroboration <- function(realized = NULL,
   do.call(rbind, parts)
 }
 
-#' Sensitivity of required FTE to the delegation capacity factor
+#' Sensitivity to the delegation capacity factor
 #'
 #' The subspecialist LEVEL in the matrix is a single rescaling constant
 #' (`URPS_DELEGATION_CAPACITY_FACTOR`, 0.434) chosen so base-year productivity is
-#' physically plausible. It is the least evidenced number in the workload path,
-#' so its influence should be reported rather than assumed small.
+#' physically plausible.
+#'
+#' IT DOES NOT MOVE REQUIRED FTE, AND THAT IS THE POINT OF REPORTING IT.
+#' `calibrate_wrvu_per_fte()` SOLVES productivity so base-year required FTE
+#' equals the base-year demand anchor. Raising the subspecialist share raises
+#' base-year URPS work RVUs and the solved wRVU/FTE denominator in exactly the
+#' same proportion, so the ratio -- required FTE -- is invariant in every year.
+#' The gap is therefore robust to this constant, which is a genuinely reassuring
+#' result and the opposite of what a work-RVU-only sweep suggests.
+#'
+#' What the constant DOES move is the implied productivity, and that is a
+#' falsifiable quantity: at 0.434 the model implies 8,147 wRVU per clinical FTE
+#' (inside the 3,500-12,000 benchmark), while the Medicare-measured sling share
+#' of 0.473 implies a factor near 0.69 and 12,934 wRVU/FTE -- ABOVE the
+#' benchmark ceiling. That tension is evidence about the service-volume basket,
+#' not about the delegation matrix.
 #'
 #' @param volumes Service-volume tibble with `year`, `service`, `volume`.
-#' @param year Year to evaluate; defaults to the earliest.
+#' @param year Base year for the productivity solve; defaults to the earliest.
+#' @param target_year Year at which required FTE is evaluated; defaults to the
+#'   latest.
+#' @param anchor_fte Base-year required-FTE anchor the solve targets.
 #' @param factors Capacity factors to sweep.
-#' @return Tibble with `capacity_factor`, `urps_wrvu`, `relative_to_default`.
+#' @return Tibble with `capacity_factor`, `urps_wrvu`, `solved_wrvu_per_fte`,
+#'   `required_fte_base`, `required_fte_target`, `productivity_plausible`.
 #' @export
 delegation_capacity_sensitivity <- function(volumes,
                                             year = NULL,
-                                            factors = c(0.30, 0.35, 0.434, 0.50, 0.60)) {
+                                            target_year = NULL,
+                                            anchor_fte = 1377.3,
+                                            factors = c(0.30, 0.434, 0.50, 0.60, 0.689)) {
   assertthat::assert_that(is.data.frame(volumes),
                           all(c("year", "service", "volume") %in% names(volumes)))
   if (is.null(year)) year <- min(volumes$year, na.rm = TRUE)
-  v <- volumes[volumes$year == year, , drop = FALSE]
+  if (is.null(target_year)) target_year <- max(volumes$year, na.rm = TRUE)
+  v0 <- volumes[volumes$year == year, , drop = FALSE]
+  vT <- volumes[volumes$year == target_year, , drop = FALSE]
+  lo <- min(WRVU_PER_FTE_BENCHMARK); hi <- max(WRVU_PER_FTE_BENCHMARK)
 
   rows <- lapply(factors, function(f) {
     mat <- rescale_delegation_to_capacity(URPS_DELEGATION_FORTE_RAW, f)
     # service_volume_to_wrvu() apportions by the matrix, keeps the `urps`
     # provider rows, and returns a `work_rvu` column (one row per year).
-    w <- service_volume_to_wrvu(v, delegation = mat)
+    w0 <- sum(service_volume_to_wrvu(v0, delegation = mat)$work_rvu, na.rm = TRUE)
+    wT <- sum(service_volume_to_wrvu(vT, delegation = mat)$work_rvu, na.rm = TRUE)
+    wpf <- suppressMessages(calibrate_wrvu_per_fte(w0, anchor_fte))
     tibble::tibble(capacity_factor = f,
-                   urps_wrvu = sum(w$work_rvu, na.rm = TRUE))
+                   urps_wrvu = w0,
+                   solved_wrvu_per_fte = wpf,
+                   required_fte_base = w0 / wpf,
+                   required_fte_target = wT / wpf,
+                   productivity_plausible = wpf >= lo & wpf <= hi)
   })
-  out <- dplyr::bind_rows(rows)
-  base <- out$urps_wrvu[out$capacity_factor == URPS_DELEGATION_CAPACITY_FACTOR]
-  out$relative_to_default <- if (length(base) == 1) out$urps_wrvu / base else NA_real_
-  out
+  dplyr::bind_rows(rows)
 }

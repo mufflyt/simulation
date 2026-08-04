@@ -148,3 +148,32 @@ test_that("baseline_entrants controls the run rather than being overridden", {
   expect_equal(lo$meta$baseline_entrants, 40)
   expect_equal(lo$meta$entrants_source, "caller_supplied")
 })
+
+test_that("a roster with state does not require placement shares", {
+  # THE DEFECT THIS PINS. Carrying `state` turns the engine's geography vector
+  # on, but placement_shares is NULL whenever the geographic layer is inactive.
+  # Entrant placement then threw an assertion from inside
+  # assign_entrant_geography() -- reachable ONLY by a caller supplying a real
+  # roster, so it stayed latent until the first production cohort was used.
+  agents <- tibble::tibble(
+    provider_id = sprintf("P%03d", 1:60),
+    subspecialty = "FPMRS",
+    sex = rep(c("female", "male"), 30),
+    state = rep(c("CO", "TX", "NY"), 20),
+    age = seq(40, 69, length.out = 60),
+    entry_year = 2015L, retirement_year = NA_real_,
+    origin_cohort = "roster", clinical_fte = 1
+  )
+  sim <- simulate_provider_career_once(agents, 2025:2028, entrants_per_year = 10,
+                                       fte_method = "hours")
+  expect_gt(nrow(sim$panel), 0)
+
+  # Existing providers keep their observed state; entrants get NA, because where
+  # a future graduate practises is unknown without a placement rule. Inventing
+  # one would let a geographic result appear that nobody asked for.
+  ent <- sim$agents[sim$agents$origin_cohort == "entrant", ]
+  expect_gt(nrow(ent), 0)
+  expect_true(all(is.na(ent$state)))
+  base <- sim$agents[sim$agents$origin_cohort == "roster", ]
+  expect_true(all(base$state %in% c("CO", "TX", "NY")))
+})

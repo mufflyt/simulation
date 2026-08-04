@@ -2,27 +2,50 @@
 % Please edit documentation in R/53-delegation_evidence.R
 \name{delegation_capacity_sensitivity}
 \alias{delegation_capacity_sensitivity}
-\title{Sensitivity of required FTE to the delegation capacity factor}
+\title{Sensitivity to the delegation capacity factor}
 \usage{
 delegation_capacity_sensitivity(
   volumes,
   year = NULL,
-  factors = c(0.3, 0.35, 0.434, 0.5, 0.6)
+  target_year = NULL,
+  anchor_fte = 1377.3,
+  factors = c(0.3, 0.434, 0.5, 0.6, 0.689)
 )
 }
 \arguments{
 \item{volumes}{Service-volume tibble with \code{year}, \code{service}, \code{volume}.}
 
-\item{year}{Year to evaluate; defaults to the earliest.}
+\item{year}{Base year for the productivity solve; defaults to the earliest.}
+
+\item{target_year}{Year at which required FTE is evaluated; defaults to the
+latest.}
+
+\item{anchor_fte}{Base-year required-FTE anchor the solve targets.}
 
 \item{factors}{Capacity factors to sweep.}
 }
 \value{
-Tibble with \code{capacity_factor}, \code{urps_wrvu}, \code{relative_to_default}.
+Tibble with \code{capacity_factor}, \code{urps_wrvu}, \code{solved_wrvu_per_fte},
+\code{required_fte_base}, \code{required_fte_target}, \code{productivity_plausible}.
 }
 \description{
 The subspecialist LEVEL in the matrix is a single rescaling constant
 (\code{URPS_DELEGATION_CAPACITY_FACTOR}, 0.434) chosen so base-year productivity is
-physically plausible. It is the least evidenced number in the workload path,
-so its influence should be reported rather than assumed small.
+physically plausible.
+}
+\details{
+IT DOES NOT MOVE REQUIRED FTE, AND THAT IS THE POINT OF REPORTING IT.
+\code{calibrate_wrvu_per_fte()} SOLVES productivity so base-year required FTE
+equals the base-year demand anchor. Raising the subspecialist share raises
+base-year URPS work RVUs and the solved wRVU/FTE denominator in exactly the
+same proportion, so the ratio -- required FTE -- is invariant in every year.
+The gap is therefore robust to this constant, which is a genuinely reassuring
+result and the opposite of what a work-RVU-only sweep suggests.
+
+What the constant DOES move is the implied productivity, and that is a
+falsifiable quantity: at 0.434 the model implies 8,147 wRVU per clinical FTE
+(inside the 3,500-12,000 benchmark), while the Medicare-measured sling share
+of 0.473 implies a factor near 0.69 and 12,934 wRVU/FTE -- ABOVE the
+benchmark ceiling. That tension is evidence about the service-volume basket,
+not about the delegation matrix.
 }
