@@ -73,6 +73,16 @@ geo <- data.frame(need = c(100, 400, 250), nearest_provider_min = c(15, 90, 240)
 gd <- geographic_demand_summary(geo)
 ok(abs(gd$beyond_share - 250 / 750) < 1e-9, "need beyond 180 min computed")
 ok(gd$need_weighted_access < mean(geo$access_ratio), "need-weighted access below unweighted")
+# tract age-band population -> need bridge (script 08 -> R/32)
+tr_pop <- data.frame(GEOID = c("A", "B", "C"),
+  female_20_39 = c(1000, 500, 200), female_40_59 = c(2000, 800, 300),
+  female_60_64 = c(500, 200, 100), female_65_79 = c(800, 400, 150),
+  female_80plus = c(300, 150, 50), nearest_provider_min = c(15, 90, 240))
+prev_band <- c("20-39" = .05, "40-59" = .20, "60-64" = .35, "65-79" = .45, "80+" = .50)
+nt <- tract_need_from_population(tr_pop, prevalence = prev_band)
+ok(abs(nt$need[1] - 1135) < 1e-9, "tract need = sum(pop_band * prevalence_band)")
+gs <- isochrone_demand_from_tracts(tr_pop, prevalence = prev_band)
+ok(abs(gs$total_need - sum(nt$need)) < 1e-9, "isochrone assembly totals the tract need")
 
 cat("== literature POP transitions (R/33) ==\n")
 ptr <- dmdm_transitions_with_pop_literature()

@@ -42,3 +42,48 @@ test_that("access/capacity columns are optional", {
   expect_null(s$adequacy)
   expect_equal(s$total_need, 1000)
 })
+
+# ---- tract population -> need bridge (script 08 -> R/32) --------------------
+
+tracts <- data.frame(
+  GEOID = c("A", "B", "C"),
+  female_20_39  = c(1000, 500, 200),
+  female_40_59  = c(2000, 800, 300),
+  female_60_64  = c( 500, 200, 100),
+  female_65_79  = c( 800, 400, 150),
+  female_80plus = c( 300, 150,  50),
+  nearest_provider_min = c(15, 90, 240),
+  access_ratio = c(3, 0.5, 0.1),
+  capacity = c(400, 200, 20))
+prev <- c("20-39" = 0.05, "40-59" = 0.20, "60-64" = 0.35, "65-79" = 0.45, "80+" = 0.50)
+
+test_that("tract_need_from_population sums population x age-band prevalence", {
+  nt <- tract_need_from_population(tracts, prevalence = prev)
+  # tract A: 1000*.05 + 2000*.20 + 500*.35 + 800*.45 + 300*.50 = 1135
+  # tract C: 200*.05 + 300*.20 + 100*.35 + 150*.45 + 50*.50 = 197.5
+  expect_equal(nt$need[1], 1135)
+  expect_equal(nt$need, c(1135, 510, 197.5))
+  # other columns are carried through so it flows into the summary
+  expect_true(all(c("GEOID", "nearest_provider_min", "access_ratio", "capacity") %in% names(nt)))
+})
+
+test_that("tract_need_from_population treats NA population as zero", {
+  t2 <- tracts; t2$female_40_59[2] <- NA
+  nt <- tract_need_from_population(t2, prevalence = prev)
+  expect_equal(nt$need[2], 510 - 800 * 0.20)
+})
+
+test_that("tract_need_from_population validates columns and prevalence coverage", {
+  expect_error(tract_need_from_population(tracts[, -2], prevalence = prev),
+               "missing population column")
+  expect_error(tract_need_from_population(tracts, prevalence = prev[1:3]),
+               "no value for band")
+})
+
+test_that("isochrone_demand_from_tracts builds need then summarises it", {
+  s <- isochrone_demand_from_tracts(tracts, prevalence = prev)
+  expect_equal(s$total_need, 1135 + 510 + 197.5)
+  expect_equal(s$by_band$need_within[s$by_band$threshold_min == 30], 1135)   # tract A only
+  expect_false(is.null(s$need_weighted_access))
+  expect_false(is.null(s$adequacy))
+})

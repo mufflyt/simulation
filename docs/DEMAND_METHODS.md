@@ -133,6 +133,14 @@ a **need-weighted** access ratio, and accessible-capacity-vs-need by geography.
 This is the demand half of the "demand–supply–isochrones" question; production use
 requires tract-level population, provider locations and drive-time isochrones.
 
+`tract_need_from_population()` is the bridge from demographics to that need: it
+turns a tract table of female population by demand age band — as produced by
+`scripts/data_acquisition/08_download_acs_tracts.R` — into expected prevalent PFD
+cases per tract using the SSOT age-band prevalence (`pfd_prevalence_by_band()`,
+i.e. the D1 rates applied to *local* population). Joined to tract centroids and a
+nearest-provider drive time, the result feeds `geographic_demand_summary()`;
+`isochrone_demand_from_tracts()` runs both steps in one call.
+
 ## 8. Downstream contract
 
 All demand outputs are emitted into a single versioned demand contract

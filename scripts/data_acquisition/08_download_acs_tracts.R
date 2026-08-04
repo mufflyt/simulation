@@ -37,7 +37,10 @@
 #   data-raw/spatial/acs5_2023_tract_female_by_ageband_manifest.txt
 #
 #   Join to tract_fem65_centroids.csv on GEOID for lon/lat, or to a TIGER/Line
-#   tract shapefile, to obtain the coordinates the isochrone overlay needs.
+#   tract shapefile, to obtain the coordinates the isochrone overlay needs. Then
+#   turn the age-band population into per-tract NEED with
+#   tract_need_from_population() and summarise with isochrone_demand_from_tracts()
+#   / geographic_demand_summary() (R/32).
 # =============================================================================
 
 suppressPackageStartupMessages({
