@@ -14,7 +14,7 @@ tract_need_from_population(
 \arguments{
 \item{tracts}{Data frame with a geography id and one female-population column
 per demand age band (default columns are those written by
-\code{scripts/data_acquisition/08_download_acs_tracts.R}). Any other columns
+\verb{scripts/data_acquisition/08_download_acs_tracts.R}). Any other columns
 (centroids, \code{nearest_provider_min}, \code{access_ratio}, \code{capacity}) are carried
 through untouched so the result flows straight into
 \code{\link[=geographic_demand_summary]{geographic_demand_summary()}}.}
@@ -25,7 +25,7 @@ in \code{band_cols}.}
 
 \item{band_cols}{Named character vector mapping each demand age band to its
 population column in \code{tracts}. Default \code{TRACT_AGE_BAND_COLUMNS} (the columns
-written by \code{08_download_acs_tracts.R}).}
+written by \verb{08_download_acs_tracts.R}).}
 
 \item{need_col}{Name of the output need column. Default \code{"need"}.}
 }
