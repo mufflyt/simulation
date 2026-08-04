@@ -6,8 +6,10 @@
 \usage{
 build_calibrated_population_cells(
   use_mcbs = TRUE,
+  use_nhanes = TRUE,
   brfss_rds = NULL,
   mcbs_rds = NULL,
+  nhanes_age_rds = NULL,
   verbose = TRUE
 )
 }
@@ -15,7 +17,12 @@ build_calibrated_population_cells(
 \item{use_mcbs}{Logical; if TRUE (default) and the MCBS RDS is present,
 blend MCBS 2022 prevalence into the 65+ cells.}
 
-\item{brfss_rds, mcbs_rds}{Paths to the respective RDS files.  NULL = default.}
+\item{use_nhanes}{Logical; if TRUE (default) and the NHANES RDS is present,
+blend national UI prevalence into all age cells. This is used when BRFSS
+lacks its optional UI module.}
+
+\item{brfss_rds, mcbs_rds, nhanes_age_rds}{Paths to the respective RDS files.
+NULL = default.}
 
 \item{verbose}{Logical.}
 }
@@ -24,6 +31,7 @@ Calibrated population cell table.
 }
 \description{
 Convenience wrapper that calls \code{\link[=load_brfss_women]{load_brfss_women()}}, \code{\link[=build_urps_population_cells]{build_urps_population_cells()}},
-and optionally \code{\link[=blend_mcbs_prevalence]{blend_mcbs_prevalence()}}, returning a single calibrated table
+then \code{\link[=blend_nhanes_ui_prevalence]{blend_nhanes_ui_prevalence()}} when needed, and optionally
+\code{\link[=blend_mcbs_prevalence]{blend_mcbs_prevalence()}}, returning a single calibrated table
 ready for \code{\link[=project_urps_demand]{project_urps_demand()}} or \code{\link[=compute_brfss_demand_estimand]{compute_brfss_demand_estimand()}}.
 }

@@ -9,12 +9,12 @@
 #      for the two most recent cycles: 2017-2018 (J) and 2021-2023 (L).
 #   2. Restrict to women 20+.
 #   3. Compute survey-weighted prevalence of:
-#        - Any urinary incontinence  (KIQ022 == 1)
-#        - Stress UI                 (KIQ046 == 1 among incontinent)
-#        - Urgency UI                (KIQ048 == 1 among incontinent)
+#        - Any urinary incontinence  (KIQ005 != "Never")
+#        - Stress UI                 (KIQ042 == "Yes")
+#        - Urgency UI                (KIQ044 == "Yes")
 #        - Mixed UI                  (both stress + urgency)
-#        - Bothersome UI             (KIQ044 >= 2)
-#        - Nocturia ≥2               (KIQ480 >= 2)
+#        - Bothersome UI             (KIQ052: at least "Somewhat")
+#        - Nocturia ≥2               (KIQ480/KIQ481 >= 2)
 #        - Accidental bowel leakage  (KIQ042 == 1)
 #        - Pelvic organ prolapse     (RHQ740 == 1, 2017-2018 only)
 #   4. Stratify by URPS demand bands:
@@ -47,14 +47,12 @@
 #   PSU: SDMVPSU, Strata: SDMVSTRA, nest=TRUE.
 #
 # KEY VARIABLES (KIQ_U module):
-#   KIQ022  Any UI in past 12 months   (1=Yes 2=No 7=Refused 9=DK)
-#   KIQ025  UI frequency               (1=<monthly 2=few/month 3=few/week 4=daily)
-#   KIQ026  UI amount                  (1=drops 2=small splashes 3=more)
-#   KIQ044  UI bother                  (0=not at all ... 4=greatly)
-#   KIQ046  Stress UI                  (1=Yes 2=No) [asked only if KIQ022==1]
-#   KIQ048  Urgency UI                 (1=Yes 2=No) [asked only if KIQ022==1]
-#   KIQ042  Bowel leakage              (1=Yes 2=No)
-#   KIQ480  Nocturia times/night       (0,1,2,3,4,5+)
+#   KIQ005  Urinary leakage frequency (Never -> Every day/night)
+#   KIQ010  Urine amount per leakage episode
+#   KIQ042  Stress UI: leak with physical activity
+#   KIQ044  Urgency UI: leak before reaching toilet
+#   KIQ052  Activity impact of leakage
+#   KIQ481  Nocturia times/night (KIQ480 in the earlier cycle)
 #   RHQ740  Pelvic organ prolapse      (1=Yes 2=No) — RHQ module, cycle J only
 #
 # INSTALL:
@@ -121,8 +119,8 @@ harmonise_cycle <- function(dat, weight_divisor = 1) {
 
   kiq <- dat$kiq %>%
     select(SEQN,
-           any_of(c("KIQ022", "KIQ025", "KIQ026", "KIQ044",
-                    "KIQ046", "KIQ048", "KIQ042", "KIQ480")))
+           any_of(c("KIQ005", "KIQ010", "KIQ042", "KIQ044", "KIQ052",
+                    "KIQ480", "KIQ481")))
 
   bmx <- dat$bmx %>% select(SEQN, BMXBMI)
 
@@ -137,7 +135,8 @@ harmonise_cycle <- function(dat, weight_divisor = 1) {
   }
 
   # Ensure all KIQ/RHQ columns exist (asked-only-if questions may be absent)
-  for (col in c("KIQ022","KIQ025","KIQ026","KIQ044","KIQ046","KIQ048","KIQ042","KIQ480","RHQ740")) {
+  for (col in c("KIQ005", "KIQ010", "KIQ042", "KIQ044", "KIQ052",
+                "KIQ480", "KIQ481", "RHQ740")) {
     if (!col %in% names(merged)) merged[[col]] <- NA_character_
   }
 
@@ -147,34 +146,40 @@ harmonise_cycle <- function(dat, weight_divisor = 1) {
   merged %>%
     filter(chr(RIAGENDR) == "Female", RIDAGEYR >= 20) %>%
     mutate(
-      # --- UI flags (KIQ022 labels: "Yes" / "No" / "Don't know") -----------
-      ui         = case_when(chr(KIQ022) == "Yes" ~ 1L, chr(KIQ022) == "No" ~ 0L, TRUE ~ NA_integer_),
-      stress_ui  = if_else(ui == 1L & chr(KIQ046) == "Yes", 1L,
-                   if_else(ui == 1L & chr(KIQ046) == "No",  0L, NA_integer_)),
-      urgency_ui = if_else(ui == 1L & chr(KIQ048) == "Yes", 1L,
-                   if_else(ui == 1L & chr(KIQ048) == "No",  0L, NA_integer_)),
+      # KIQ022 is kidney disease. KIQ005 is the NHANES urinary-leakage
+      # frequency item; any response other than Never is urinary incontinence.
+      ui         = case_when(chr(KIQ005) == "Never" ~ 0L,
+                             chr(KIQ005) %in% c("Less than once a month", "A few times a month",
+                                                "A few times a week", "Every day and/or night") ~ 1L,
+                             TRUE ~ NA_integer_),
+      stress_ui  = if_else(chr(KIQ042) == "Yes", 1L,
+                   if_else(chr(KIQ042) == "No",  0L, NA_integer_)),
+      urgency_ui = if_else(chr(KIQ044) == "Yes", 1L,
+                   if_else(chr(KIQ044) == "No",  0L, NA_integer_)),
       mixed_ui   = if_else(stress_ui == 1L & urgency_ui == 1L, 1L,
                    if_else(!is.na(stress_ui) & !is.na(urgency_ui), 0L, NA_integer_)),
-      # KIQ044: "Yes"=UI affects daily life, "No"=does not (binary in J cycle)
-      bothersome = if_else(ui == 1L & chr(KIQ044) == "Yes", 1L,
-                   if_else(ui == 1L & chr(KIQ044) == "No",  0L, NA_integer_)),
-      # KIQ480: factor with numeric-looking levels ("0","1","2",...,"5 or more")
-      nocturia_n = suppressWarnings(as.integer(chr(KIQ480))),
+      bothersome = if_else(chr(KIQ052) %in% c("Somewhat", "Very much", "Greatly"), 1L,
+                   if_else(chr(KIQ052) %in% c("Not at all", "Only a little"), 0L, NA_integer_)),
+      # KIQ481 replaced KIQ480 in the later cycle.
+      nocturia_n = suppressWarnings(as.integer(if_else(!is.na(KIQ481), chr(KIQ481), chr(KIQ480)))),
       nocturia2  = if_else(!is.na(nocturia_n) & nocturia_n >= 2L, 1L,
                    if_else(!is.na(nocturia_n), 0L, NA_integer_)),
-      bowel_leak = if_else(chr(KIQ042) == "Yes", 1L, if_else(chr(KIQ042) == "No", 0L, NA_integer_)),
+      # The urinary KIQ_U files do not contain a bowel-leakage item.
+      bowel_leak = NA_integer_,
       prolapse   = if_else(chr(RHQ740) == "Yes", 1L, if_else(chr(RHQ740) == "No", 0L, NA_integer_)),
 
-      # --- URPS age bands ---------------------------------------------------
+        # --- BRFSS-compatible age bands --------------------------------------
+        # NHANES KIQ_U analysis begins at age 20. The 20-34 target is blended
+        # into BRFSS's 18-34 cell with that small coverage mismatch declared.
       age_band = factor(
         case_when(
-          RIDAGEYR < 40 ~ "20-39",
-          RIDAGEYR < 50 ~ "40-49",
-          RIDAGEYR < 65 ~ "50-64",
+          RIDAGEYR < 35 ~ "20-34",
+          RIDAGEYR < 45 ~ "35-44",
+          RIDAGEYR < 65 ~ "45-64",
           RIDAGEYR < 75 ~ "65-74",
           TRUE          ~ "75+"
         ),
-        levels = c("20-39","40-49","50-64","65-74","75+")
+        levels = c("20-34","35-44","45-64","65-74","75+")
       ),
 
       # --- Race/ethnicity (nhanesA labels) ----------------------------------
