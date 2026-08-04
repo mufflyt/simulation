@@ -60,8 +60,9 @@ prev <- c("20-39" = 0.05, "40-59" = 0.20, "60-64" = 0.35, "65-79" = 0.45, "80+" 
 test_that("tract_need_from_population sums population x age-band prevalence", {
   nt <- tract_need_from_population(tracts, prevalence = prev)
   # tract A: 1000*.05 + 2000*.20 + 500*.35 + 800*.45 + 300*.50 = 1135
+  # tract C: 200*.05 + 300*.20 + 100*.35 + 150*.45 + 50*.50 = 197.5
   expect_equal(nt$need[1], 1135)
-  expect_equal(nt$need, c(1135, 510, 198))
+  expect_equal(nt$need, c(1135, 510, 197.5))
   # other columns are carried through so it flows into the summary
   expect_true(all(c("GEOID", "nearest_provider_min", "access_ratio", "capacity") %in% names(nt)))
 })
@@ -81,7 +82,7 @@ test_that("tract_need_from_population validates columns and prevalence coverage"
 
 test_that("isochrone_demand_from_tracts builds need then summarises it", {
   s <- isochrone_demand_from_tracts(tracts, prevalence = prev)
-  expect_equal(s$total_need, 1135 + 510 + 198)
+  expect_equal(s$total_need, 1135 + 510 + 197.5)
   expect_equal(s$by_band$need_within[s$by_band$threshold_min == 30], 1135)   # tract A only
   expect_false(is.null(s$need_weighted_access))
   expect_false(is.null(s$adequacy))
