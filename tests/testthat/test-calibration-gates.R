@@ -126,3 +126,96 @@ test_that("a roster cohort is the only production source", {
                     origin_cohort = "roster", stringsAsFactors = FALSE)
   expect_true(cohort_provenance(ros)$is_production)
 })
+
+# ---- contract exporters (R/export_demand_contract.R) -----------------------
+#
+# The engines refuse uncalibrated transitions, but the exporters take a bare
+# data frame. Without their own gate, a hand-assembled trajectory still reached
+# cliff/twostep/isochrones as a demand contract with real-looking numbers in it.
+
+mk_dmdm_traj <- function() {
+  data.frame(year = 2025:2030, population = seq(45e6, 48e6, length.out = 6),
+             prev_ui = seq(.20, .26, length.out = 6),
+             prev_pop = seq(.08, .14, length.out = 6),
+             prev_ai = seq(.05, .07, length.out = 6))
+}
+mk_hdmm_traj <- function() {
+  data.frame(year = 2025:2030,
+             care_seeking_national  = seq(4.0e6, 4.6e6, length.out = 6),
+             service_units_national = seq(9.0e6, 10.8e6, length.out = 6))
+}
+
+test_that("the DMDM exporter refuses placeholder tiers in strict mode", {
+  with_mode("strict", {
+    expect_error(
+      export_dmdm_demand_contract(mk_dmdm_traj(), output_directory = tempfile("g_"),
+                                  verbose = FALSE),
+      "placeholder_uncalibrated")
+  })
+})
+
+test_that("a refused export writes nothing at all", {
+  # The gate runs before dir.create(), so a refusal must not leave an artifact
+  # directory behind for a later run to find and mistake for a real export.
+  d <- tempfile("norun_")
+  with_mode("strict", {
+    expect_error(export_dmdm_demand_contract(mk_dmdm_traj(), output_directory = d,
+                                             verbose = FALSE))
+  })
+  expect_false(dir.exists(d))
+})
+
+test_that("the override lets the DMDM export through and still stamps status", {
+  out <- suppressMessages(export_dmdm_demand_contract(
+    mk_dmdm_traj(), output_directory = tempfile("ok_"), verbose = FALSE,
+    allow_uncalibrated = TRUE))
+  expect_true(file.exists(out$csv_path))
+  expect_true(all(out$data$tier_calibration_status == "placeholder_uncalibrated"))
+})
+
+test_that("the gate reads the WEAKEST tier, not the object-level status", {
+  # The literature POP object is "derived_by_analogy" at the object level, but
+  # its UI and AI tiers are still placeholders. Gating on the object status
+  # alone would let a placeholder tier be written under an analogy label.
+  with_mode("strict", {
+    expect_error(
+      export_dmdm_demand_contract(
+        mk_dmdm_traj(), output_directory = tempfile("w_"), verbose = FALSE,
+        transitions = dmdm_transitions_with_pop_literature()),
+      "placeholder_uncalibrated")
+  })
+})
+
+test_that("fitted transitions export with no override needed", {
+  fitted <- dmdm_transitions_with_pop_literature()
+  fitted$status <- "fitted"
+  fitted$calibration_status <- "fitted"
+  fitted$provenance <- list(ui = "fitted", pop = "fitted", ai = "fitted")
+  out <- expect_silent(export_dmdm_demand_contract(
+    mk_dmdm_traj(), output_directory = tempfile("fit_"), verbose = FALSE,
+    transitions = fitted))
+  expect_true(all(out$data$tier_calibration_status == "fitted"))
+})
+
+test_that("the HDMM exporter is gated the same way", {
+  with_mode("strict", {
+    expect_error(
+      export_hdmm_demand_contract(mk_hdmm_traj(), output_directory = tempfile("h_"),
+                                  verbose = FALSE),
+      "placeholder_uncalibrated")
+  })
+  out <- suppressMessages(export_hdmm_demand_contract(
+    mk_hdmm_traj(), output_directory = tempfile("h_"), verbose = FALSE,
+    allow_uncalibrated = TRUE))
+  expect_true(file.exists(out$csv_path))
+})
+
+test_that("the shape check still runs before the calibration gate", {
+  # A malformed trajectory must report the column problem, not the calibration
+  # one: the caller has a different bug and the message has to say which.
+  bad <- data.frame(year = 2025:2026, care_seeking_national = c(1, 2))
+  with_mode("strict", {
+    expect_error(export_hdmm_demand_contract(bad, output_directory = tempfile("b_")),
+                 "trajectory needs columns")
+  })
+})

@@ -47,6 +47,11 @@ DPMM_DEMAND_CONTRACT_VERSION <- "0.1.0"
 #'   counts (persons). Default 85e6, matching the DPMM national scale-up.
 #' @param calibration_status Provenance guard for downstream gating. Keep
 #'   "uncalibrated_illustrative" until the transition model is validated.
+#' @param allow_uncalibrated Declare an exploratory export. Defaults to FALSE, so
+#'   the contract is refused unless `calibration_status` is `"fitted"` or
+#'   `"calibrated"`; see [assert_calibrated_transitions()]. The default status
+#'   here is `"uncalibrated_illustrative"`, so this path requires the override
+#'   until the transition model is validated.
 #' @param verbose Log progress. Default TRUE.
 #' @return (invisibly) a list with `csv_path`, `manifest_path`, and the tidy `data`.
 export_dpmm_demand_contract <- function(dpmm_results,
@@ -56,6 +61,7 @@ export_dpmm_demand_contract <- function(dpmm_results,
                                         calendar_year_offset = 2024L,
                                         us_women_40plus = 85e6,
                                         calibration_status = "uncalibrated_illustrative",
+                                        allow_uncalibrated = FALSE,
                                         verbose = TRUE) {
 
   ps <- dpmm_results$composite_scores$population_statistics
@@ -67,6 +73,12 @@ export_dpmm_demand_contract <- function(dpmm_results,
     stop("export_dpmm_demand_contract(): population_statistics needs `year` and ",
          "`incontinence_prevalence`.", call. = FALSE)
   }
+  # Gated before dir.create() for the same reason as the HDMM/DMDM exporters.
+  assert_calibrated_transitions(
+    list(status = calibration_status),
+    allow_uncalibrated = allow_uncalibrated,
+    what = "DPMM demand-contract tiers")
+
   if (!dir.exists(output_directory)) {
     dir.create(output_directory, recursive = TRUE)
   }
@@ -192,6 +204,10 @@ HDMM_DEMAND_CONTRACT_VERSION <- "0.1.0"
 #' @param calibration_status Provenance guard; keep "placeholder_uncalibrated"
 #'   until the obstetric/urogynecologic transition equations are fitted.
 #' @param population_scope Population denominator label. Default "us_adult_women".
+#' @param allow_uncalibrated Declare an exploratory export. Defaults to FALSE, so
+#'   the contract is refused unless `calibration_status` is `"fitted"` or
+#'   `"calibrated"`; see [assert_calibrated_transitions()]. The HDMM path carries
+#'   one status for the whole artifact rather than per-tier provenance.
 #' @param verbose Log progress. Default TRUE.
 #' @return (invisibly) a list with `csv_path`, `manifest_path`, and the tidy `data`.
 #' @keywords internal
@@ -202,12 +218,21 @@ export_hdmm_demand_contract <- function(trajectory,
                                         scenario = "baseline",
                                         calibration_status = "placeholder_uncalibrated",
                                         population_scope = "us_adult_women",
+                                        allow_uncalibrated = FALSE,
                                         verbose = TRUE) {
   need <- c("year", "care_seeking_national", "service_units_national")
   if (!is.data.frame(trajectory) || !all(need %in% names(trajectory))) {
     stop("export_hdmm_demand_contract(): trajectory needs columns ",
          paste(need, collapse = ", "), ".", call. = FALSE)
   }
+  # Same gate as the DMDM exporter, and for the same reason: this writes a
+  # publication-facing artifact from a bare data frame. Gated before dir.create()
+  # so a refused export leaves nothing behind.
+  assert_calibrated_transitions(
+    list(status = calibration_status),
+    allow_uncalibrated = allow_uncalibrated,
+    what = "HDMM demand-contract tiers")
+
   if (!dir.exists(output_directory)) dir.create(output_directory, recursive = TRUE)
   trajectory <- trajectory[order(trajectory$year), , drop = FALSE]
 
@@ -308,6 +333,11 @@ export_hdmm_demand_contract <- function(trajectory,
 
 DMDM_DEMAND_CONTRACT_VERSION <- "0.1.0"
 
+# The tiers every DMDM contract export writes. Named here so the calibration
+# gate below and make_tier() below that cannot drift apart: a tier added to one
+# and not the other would ship ungated numbers.
+DMDM_CONTRACT_TIERS <- c("tier3_prevalent_pfd", "dmdm_ui", "dmdm_pop", "dmdm_ai")
+
 #' Export a DMDM open-population trajectory as demand-contract tiers
 #'
 #' @description Formats a dynamic-prevalence trajectory (from
@@ -334,6 +364,11 @@ DMDM_DEMAND_CONTRACT_VERSION <- "0.1.0"
 #'   placeholder). The any-PFD `tier3` is stamped with the *weakest* provenance
 #'   across the conditions that compose it.
 #' @param population_scope Population denominator label. Default "us_adult_women".
+#' @param allow_uncalibrated Declare an exploratory export. Defaults to FALSE, so
+#'   the contract is refused unless every tier it would write is `"fitted"` or
+#'   `"calibrated"`; see [assert_calibrated_transitions()]. This mirrors the gate
+#'   on the engines that produce `trajectory` -- without it, a hand-assembled
+#'   trajectory could still reach downstream consumers as a demand contract.
 #' @param verbose Log progress. Default TRUE.
 #' @return (invisibly) a list with `csv_path`, `manifest_path`, and the tidy `data`.
 #' @keywords internal
@@ -344,13 +379,13 @@ export_dmdm_demand_contract <- function(trajectory,
                                         calibration_status = "placeholder_uncalibrated",
                                         transitions = NULL,
                                         population_scope = "us_adult_women",
+                                        allow_uncalibrated = FALSE,
                                         verbose = TRUE) {
   need <- c("year", "population", "prev_ui", "prev_pop", "prev_ai")
   if (!is.data.frame(trajectory) || !all(need %in% names(trajectory))) {
     stop("export_dmdm_demand_contract(): trajectory needs columns ",
          paste(need, collapse = ", "), ".", call. = FALSE)
   }
-  if (!dir.exists(output_directory)) dir.create(output_directory, recursive = TRUE)
   trajectory <- trajectory[order(trajectory$year), , drop = FALSE]
 
   # Provenance: object-level status + per-condition status from `transitions`.
@@ -376,6 +411,28 @@ export_dmdm_demand_contract <- function(trajectory,
            tier3_prevalent_pfd = weakest(c(prov$ui, prov$pop, prov$ai)),
            calibration_status)
   }
+
+  # Fail closed before writing anything. The engines in R/29 and R/30 already
+  # refuse uncalibrated transitions, but this function takes a bare data frame,
+  # so a caller who assembles a trajectory by hand -- or holds one produced
+  # before the gate existed -- could still emit a CSV that downstream consumers
+  # (cliff, twostep, isochrones) read as a demand contract. Stamping the status
+  # into the file is not enough: the numbers still leave the function, and a
+  # consumer that does not gate on tier_calibration_status reads them as real.
+  #
+  # Gate on the WEAKEST status written, not the object-level one: the CSV is a
+  # single artifact, and any row in it is a number someone can lift. The
+  # per-tier column stays useful for consumers that do discriminate.
+  # The directory is created only after this passes, so a refused export leaves
+  # no empty artifact directory behind.
+  contract_statuses <- c(calibration_status,
+                         vapply(DMDM_CONTRACT_TIERS, tier_status, character(1)))
+  assert_calibrated_transitions(
+    list(status = unname(weakest(contract_statuses))),
+    allow_uncalibrated = allow_uncalibrated,
+    what = "DMDM demand-contract tiers")
+
+  if (!dir.exists(output_directory)) dir.create(output_directory, recursive = TRUE)
 
   any_pfd <- 1 - (1 - trajectory$prev_ui) * (1 - trajectory$prev_pop) * (1 - trajectory$prev_ai)
   make_tier <- function(tier, prev_vec) {

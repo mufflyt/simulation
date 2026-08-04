@@ -99,17 +99,18 @@ cat("== contract exporters (R/export_demand_contract.R) ==\n")
 hd <- export_hdmm_demand_contract(
   data.frame(year = 2025:2030, care_seeking_national = seq(4e6, 4.6e6, length.out = 6),
              service_units_national = seq(9e6, 10.8e6, length.out = 6)),
-  output_directory = tempfile("h_"), verbose = FALSE)
+  output_directory = tempfile("h_"), verbose = FALSE, allow_uncalibrated = TRUE)
 ok(all(c("tier5_care_seeking", "tier6_procedural") %in% hd$data$denominator_tier), "HDMM tiers 5-6 emitted")
 dm_traj <- data.frame(year = 2025:2030, population = seq(45e6, 48e6, length.out = 6),
                       prev_ui = seq(.2, .26, length.out = 6), prev_pop = seq(.08, .14, length.out = 6),
                       prev_ai = seq(.05, .07, length.out = 6))
-dm <- export_dmdm_demand_contract(dm_traj, output_directory = tempfile("d_"), verbose = FALSE)
+dm <- export_dmdm_demand_contract(dm_traj, output_directory = tempfile("d_"), verbose = FALSE,
+                                  allow_uncalibrated = TRUE)
 ok("tier3_prevalent_pfd" %in% dm$data$denominator_tier, "DMDM tier3 emitted")
 # Built from the literature POP transitions -> per-tier provenance is stamped.
 dmp <- export_dmdm_demand_contract(dm_traj, output_directory = tempfile("dp_"),
                                    transitions = dmdm_transitions_with_pop_literature(),
-                                   verbose = FALSE)
+                                   verbose = FALSE, allow_uncalibrated = TRUE)
 pop_row <- dmp$data[dmp$data$denominator_tier == "dmdm_pop", ][1, ]
 ui_row  <- dmp$data[dmp$data$denominator_tier == "dmdm_ui", ][1, ]
 ok(pop_row$tier_calibration_status == "derived_by_analogy", "dmdm_pop tier is derived_by_analogy")

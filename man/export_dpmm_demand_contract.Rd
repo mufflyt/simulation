@@ -12,6 +12,7 @@ export_dpmm_demand_contract(
   calendar_year_offset = 2024L,
   us_women_40plus = 8.5e+07,
   calibration_status = "uncalibrated_illustrative",
+  allow_uncalibrated = FALSE,
   verbose = TRUE
 )
 }
@@ -36,6 +37,12 @@ counts (persons). Default 85e6, matching the DPMM national scale-up.}
 
 \item{calibration_status}{Provenance guard for downstream gating. Keep
 "uncalibrated_illustrative" until the transition model is validated.}
+
+\item{allow_uncalibrated}{Declare an exploratory export. Defaults to FALSE, so
+the contract is refused unless \code{calibration_status} is \code{"fitted"} or
+\code{"calibrated"}; see \code{\link[=assert_calibrated_transitions]{assert_calibrated_transitions()}}. The default status
+here is \code{"uncalibrated_illustrative"}, so this path requires the override
+until the transition model is validated.}
 
 \item{verbose}{Log progress. Default TRUE.}
 }

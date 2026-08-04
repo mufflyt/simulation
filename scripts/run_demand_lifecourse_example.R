@@ -48,7 +48,10 @@ out$required_fte %>%
 # --- Step 2: write the versioned demand contract (tiers 5-6) ----------------
 contract <- export_hdmm_demand_contract(
   out$demand_summary, output_directory = file.path("outputs", "demand_contracts"),
-  scenario = "baseline"
+  scenario = "baseline",
+  # The life-course transition equations are not fitted yet, so the contract is
+  # written as an explicitly exploratory artifact rather than refused.
+  allow_uncalibrated = TRUE
 )
 cat("Wrote demand contract:", contract$csv_path, "\n")
 
