@@ -105,6 +105,39 @@ test_that("pfd_source is 'imputed_nygaard_wu' when no PFD module", {
   expect_true(all(cells$pfd_source == "imputed_nygaard_wu"))
 })
 
+test_that("NHANES UI prevalence replaces only the UI component of BRFSS cells", {
+  mini <- .harmonise_mini(.mini_brfss())
+  cells <- build_urps_population_cells(mini, verbose = FALSE)
+  nhanes <- tibble::tibble(
+    group = c("20-34", "35-44", "45-64", "65-74", "75+"),
+    prevalence = c(.10, .20, .30, .40, .50), outcome = "ui"
+  )
+  out <- blend_nhanes_ui_prevalence(cells, nhanes, verbose = FALSE)
+  expect_true(all(out$ui_source == "nhanes_2017_2023_pooled"))
+  expect_true(all(out$pfd_source == "mixed_nhanes_ui_nygaard_wu"))
+  expect_equal(unique(out$ui_prevalence[as.character(out$age_group) == "18-34"]), .10)
+  expect_equal(unique(out$ui_prevalence[as.character(out$age_group) == "75+"]), .50)
+  expect_equal(out$pop_prevalence, cells$pop_prevalence)
+  expect_equal(out$fi_prevalence, cells$fi_prevalence)
+})
+
+test_that("MCBS preserves mixed-source provenance for 65+ UI calibration", {
+  cells <- data.frame(
+    age_group = factor(c("45-64", "65-74", "75+"), levels = c("45-64", "65-74", "75+")),
+    ui_prevalence = c(.3, .4, .5),
+    pfd_source = rep("mixed_nhanes_ui_nygaard_wu", 3),
+    ui_source = rep("nhanes_2017_2023_pooled", 3)
+  )
+  mcbs <- data.frame(
+    age_group = factor(c("65-74", "65-74", "75+", "75+"), levels = c("65-74", "75+")),
+    ui_loss = c(1L, 0L, 1L, 1L), survey_wt = rep(1, 4)
+  )
+  out <- blend_mcbs_prevalence(cells, mcbs, verbose = FALSE)
+  expect_equal(out$ui_prevalence, c(.3, .5, 1))
+  expect_equal(out$ui_source, c("nhanes_2017_2023_pooled", "mcbs_2022_calibrated", "mcbs_2022_calibrated"))
+  expect_equal(out$pfd_source, c("mixed_nhanes_ui_nygaard_wu", "mixed_mcbs_ui_nygaard_wu", "mixed_mcbs_ui_nygaard_wu"))
+})
+
 test_that("pop_weight sums are positive and finite", {
   mini <- .harmonise_mini(.mini_brfss())
   cells <- build_urps_population_cells(mini, verbose = FALSE)

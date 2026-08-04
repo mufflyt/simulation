@@ -1,7 +1,7 @@
-Generated: 2026-08-03 23:40:23.479798
+Generated: 2026-08-03 19:20:25.24587
 Cycles pooled: 2017-2018 (J), 2021-2023 (L)
 Women 20+ observations: 7188
-Weighted UI prevalence (all ages): 3.1 %
+Weighted UI prevalence (all ages): 52.4 %
 
 Output files:
   nhanes_ui_prevalence_by_age.rds

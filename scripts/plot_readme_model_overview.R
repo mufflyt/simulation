@@ -94,28 +94,30 @@ ggsave(fig_path("readme_baseline_cohort_composition.png"), p_cohort,
 # 3. Dimensionally explicit demand-to-FTE pathway.
 nodes <- tibble::tribble(
   ~x, ~y, ~label,
-  1, 3, "Female population\nby age band",
-  3, 3, "PFD risk and\ncare-seeking",
-  5, 3, "Service volumes\nby setting",
-  7, 3, "CMS work-RVU\nbasket",
-  9, 3, "Required\nclinical FTE"
+  1.0, 3, "Female population\nby age band",
+  3.3, 3, "PFD risk and\ncare-seeking",
+  5.6, 3, "Service volumes\nby setting",
+  7.9, 3, "CMS work-RVU\nbasket",
+  10.2, 3, "Required\nclinical FTE"
 )
-edges <- tibble::tibble(x = c(1, 3, 5, 7), xend = c(3, 5, 7, 9), y = 3, yend = 3)
+edges <- tibble::tibble(x = c(1.7, 4.0, 6.3, 8.6), xend = c(2.6, 4.9, 7.2, 9.5), y = 2.55, yend = 2.55)
 
 p_pathway <- ggplot() +
   geom_segment(data = edges, aes(.data$x, .data$y, xend = .data$xend, yend = .data$yend),
                arrow = grid::arrow(length = grid::unit(3, "mm")), linewidth = .7, colour = "grey45") +
-  geom_label(data = nodes, aes(.data$x, .data$y, label = .data$label),
-             fill = "#F7F7F7", colour = "#1B1B1B", linewidth = .35, size = 4.1, lineheight = .95) +
-  annotate("text", x = 5, y = 1.85,
+  geom_text(data = nodes, aes(.data$x, .data$y, label = .data$label),
+            colour = "#1B1B1B", size = 4.1, lineheight = .95, fontface = "bold") +
+  annotate("text", x = 5.6, y = 1.85,
            label = "Demand is converted to FTE only after services are specified and valued in work RVUs.",
            size = 4.2, colour = "grey25") +
-  coord_cartesian(xlim = c(.3, 9.7), ylim = c(1.4, 4), clip = "off") +
+  coord_cartesian(xlim = c(.3, 10.9), ylim = c(1.4, 4), clip = "off") +
   labs(title = "Demand-to-FTE pathway", subtitle = "The model never divides provider FTE by cases, visits, or procedures") +
   theme_void(base_size = 12) +
   theme(plot.title = element_text(face = "bold"), plot.subtitle = element_text(colour = "grey25"),
-        plot.margin = margin(18, 18, 18, 18))
+        plot.margin = margin(18, 18, 18, 18),
+        plot.background = element_rect(fill = "white", colour = NA),
+        panel.background = element_rect(fill = "white", colour = NA))
 ggsave(fig_path("readme_demand_to_fte_pathway.png"), p_pathway,
-       width = 11, height = 3.8, dpi = 200)
+       width = 11, height = 3.8, dpi = 200, bg = "white")
 
 message("Wrote README model-overview figures to figures/")

@@ -460,10 +460,14 @@ DEMAND_AGE_BANDS crosswalk (approximate, year-width splits):
 ```
 
 The BRFSS 2023 core file does not include the state-optional UI/POP/FI module
-(BLADCON/URINCON), so `pfd_source = "imputed_nygaard_wu"` for the 2023 run. D4
-still adds value: it uses BRFSS survey-weighted demographics (BMI, smoking,
-income, insurance) to adjust the population weights, and will use observed
-prevalence when a module-year is supplied.
+(BLADCON/URINCON). `build_calibrated_population_cells()` therefore blends
+nationally weighted NHANES UI prevalence into the BRFSS demographic cells when
+the NHANES acquisition output is available; it records this explicitly as
+`ui_source = "nhanes_2017_2023_pooled"` and
+`pfd_source = "mixed_nhanes_ui_nygaard_wu"`. BRFSS still supplies the
+survey-weighted BMI, smoking, income, insurance, and geographic composition;
+POP and FI retain their separately documented published inputs until comparable
+observed national data are wired.
 
 ---
 
@@ -547,16 +551,25 @@ Run `check_external_data()` before starting a long job.
 
 ## Data sources
 
-| Source | Use |
-|---|---|
-| CMS Physician Fee Schedule RVU file | work RVUs for the service basket |
-| US Census 2023 National Population Projections | demand denominator by age band (D1–D3) |
-| CDC BRFSS 2023 (229,541 women) | D4 survey-weighted UI prevalence; population cell table |
-| `mufflyaccess` URPS contract | base-year supply, scenarios, PFD prevalence, provenance |
-| CDC/NCHS natality and Census fertility series | birth-cohort vaginal parity |
-| NAMCS 2019 | utilization anchors (download script provided) |
-| SWAN (Study of Women's Health Across the Nation) | incontinence panel (`R/42-swan_incontinence_panel.R`) |
-| MEPS / NHAMCS / HCUP SASD | procedure anchors (**download scripts provided; not yet wired**) |
+The detailed [data download guide](docs/DATA_DOWNLOAD_GUIDE.md) records expected
+files, transformations, and access requirements. The table below links both the
+original source and the repository entry point that obtains or documents it.
+
+| Source | Use | Original data | Reproducible entry point |
+|---|---|---|---|
+| CMS Physician Fee Schedule RVU file | work RVUs for the service basket | [CMS RVU25A release](https://www.cms.gov/files/zip/rvu25a.zip) | [`R/23-cms_rvu.R`](R/23-cms_rvu.R) and [`config/service_workload.yml`](config/service_workload.yml) |
+| CMS Medicare Physician & Other Practitioners PUF | CPT 57288 sling-activity figure | [CMS data portal](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners) | [`scripts/plot_medicare_sling_workload.R`](scripts/plot_medicare_sling_workload.R); processed cache is configured with `MEDICARE_SLING_CACHE` |
+| US Census 2023 National Population Projections | demand denominator by age band (D1–D3) | [Census 2023 population projections](https://www.census.gov/data/datasets/2023/demo/popproj/2023-summary-tables.html) | [`data-raw/census/README.md`](data-raw/census/README.md) |
+| CDC BRFSS 2023 | D4 survey-weighted UI prevalence and population cells | [BRFSS 2023 annual data](https://www.cdc.gov/brfss/annual_data/annual_2023.html) | [`scripts/data_acquisition/01_download_brfss.R`](scripts/data_acquisition/01_download_brfss.R) |
+| Census ACS 2023 5-year and PUMS | demographic and insurance/income population cells | [Census API](https://api.census.gov/data/key_signup.html) | [`scripts/data_acquisition/02_download_acs.R`](scripts/data_acquisition/02_download_acs.R) and [`scripts/data_acquisition/08_download_acs_tracts.R`](scripts/data_acquisition/08_download_acs_tracts.R) |
+| `mufflyaccess` URPS contract | base-year supply, scenarios, PFD prevalence, provenance | [`mufflyt/mufflyaccess`](https://github.com/mufflyt/mufflyaccess) | [`R/24-ssot.R`](R/24-ssot.R) |
+| CDC/NCHS natality and Census fertility series | birth-cohort vaginal parity | [NCHS natality data](https://www.cdc.gov/nchs/nvss/births.htm) | [`inst/extdata/obstetric/`](inst/extdata/obstetric/) |
+| NAMCS and NHAMCS | ambulatory-care utilization anchors | [NCHS ambulatory health-care data](https://www.cdc.gov/nchs/ahcd/index.htm) | [`scripts/data_acquisition/04_download_nhamcs_namcs.R`](scripts/data_acquisition/04_download_nhamcs_namcs.R) |
+| SWAN (Study of Women's Health Across the Nation) | incontinence panel | [ICPSR SWAN series](https://www.icpsr.umich.edu/web/ICPSR/series/253) | [`scripts/data_acquisition/09_download_swan_icpsr.R`](scripts/data_acquisition/09_download_swan_icpsr.R) and [`R/42-swan_incontinence_panel.R`](R/42-swan_incontinence_panel.R) |
+| MEPS | care-seeking and access calibration | [AHRQ MEPS data](https://meps.ahrq.gov/mepsweb/data_stats/download_data_files.jsp) | [`scripts/data_acquisition/05_download_meps_2022.R`](scripts/data_acquisition/05_download_meps_2022.R) and [`scripts/data_acquisition/06_download_meps_2023.R`](scripts/data_acquisition/06_download_meps_2023.R) |
+| MCBS | Medicare-aged demand calibration | [CMS MCBS public-use files](https://www.cms.gov/data-research/research/medicare-current-beneficiary-survey) | [`scripts/data_acquisition/03_download_mcbs.R`](scripts/data_acquisition/03_download_mcbs.R) |
+| NHANES | urinary-symptom prevalence | [CDC NHANES](https://www.cdc.gov/nchs/nhanes/) | [`scripts/data_acquisition/07_download_nhanes_urinary.R`](scripts/data_acquisition/07_download_nhanes_urinary.R) |
+| HCUP NASS / Fast Stats | surgical procedure anchors | [HCUP Central Distributor](https://hcup-us.ahrq.gov/tech_assist/centdist.jsp) / [HCUP Fast Stats](https://datatools.ahrq.gov/hcup-fast-stats) | [`scripts/data_acquisition/10_ingest_hcup_nass.R`](scripts/data_acquisition/10_ingest_hcup_nass.R) |
 
 ---
 

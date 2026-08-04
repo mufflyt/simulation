@@ -25,6 +25,6 @@ residential-care segment that BRFSS undercounts, and the UI module is in
 the core (not optional) questionnaire.
 }
 \details{
-Cells outside "65-74" / "75+" are unchanged.  The \code{pfd_source} column is
-updated to \code{"mcbs_calibrated"} for affected rows.
+Cells outside "65-74" / "75+" are unchanged. Source fields identify MCBS
+as the UI source and preserve the fact that POP/FI use separate inputs.
 }

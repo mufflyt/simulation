@@ -472,6 +472,9 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
     out$pop_prevalence <- out$n_pop_obs / pmax(out$n_pfd_eligible, 1)
     out$fi_prevalence  <- out$n_fi_obs  / pmax(out$n_pfd_eligible, 1)
     out$pfd_source     <- "brfss_observed"
+    out$ui_source      <- "brfss_observed"
+    out$pop_source     <- "brfss_observed"
+    out$fi_source      <- "brfss_observed"
   } else {
     # Impute from published estimates merged by age_group
     band <- as.character(out$age_group)
@@ -479,13 +482,16 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
     out$pop_prevalence <- .POP_PREVALENCE_BY_BAND[band]
     out$fi_prevalence  <- .FI_PREVALENCE_BY_BAND[band]
     out$pfd_source     <- "imputed_nygaard_wu"
+    out$ui_source      <- "imputed_nygaard_wu"
+    out$pop_source     <- "imputed_nygaard_wu"
+    out$fi_source      <- "imputed_nygaard_wu"
   }
 
   keep_cols <- c(grp_cols,
                  "n_respondents", "pop_weight",
                  "pct_smoker", "mean_children",
                  "ui_prevalence", "pop_prevalence", "fi_prevalence",
-                 "pfd_source",
+                 "pfd_source", "ui_source", "pop_source", "fi_source",
                  intersect(cc_cols, names(out)))
   out <- out[, keep_cols]
 
@@ -498,6 +504,60 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
     ))
   }
   out
+}
+
+#' Blend nationally weighted NHANES UI prevalence into BRFSS population cells
+#'
+#' BRFSS 2023's core file has no urinary-incontinence module. NHANES has a
+#' nationally representative urinary questionnaire, while BRFSS retains the
+#' age, race, insurance, income, and geography strata used for the population
+#' cell architecture. This function replaces only the UI prevalence component;
+#' POP and FI remain on their separately documented sources.
+#'
+#' @param cells Population cells from [build_urps_population_cells()].
+#' @param nhanes_age A tibble from `nhanes_ui_prevalence_by_age.rds`, or NULL to
+#'   load `data-raw/nhanes/nhanes_ui_prevalence_by_age.rds`.
+#' @param verbose Logical.
+#' @return `cells` with nationally weighted UI prevalence by age, `ui_source =
+#'   "nhanes_2017_2023_pooled"`, and an explicitly mixed `pfd_source`.
+#' @details The youngest NHANES stratum is 20--34 because the KIQ_U analysis
+#' starts at age 20. It is used for the BRFSS 18--34 stratum and that small
+#' coverage mismatch is recorded in the source label rather than hidden.
+#' @export
+blend_nhanes_ui_prevalence <- function(cells, nhanes_age = NULL, verbose = TRUE) {
+  if (is.null(nhanes_age)) {
+    path <- file.path("data-raw", "nhanes", "nhanes_ui_prevalence_by_age.rds")
+    if (!file.exists(path)) {
+      stop("NHANES UI prevalence file not found: ", path,
+           "\nRun: Rscript scripts/data_acquisition/07_download_nhanes_urinary.R", call. = FALSE)
+    }
+    nhanes_age <- readRDS(path)
+  }
+  if ("outcome" %in% names(nhanes_age)) nhanes_age <- nhanes_age[nhanes_age$outcome == "ui", ]
+  band_col <- intersect(c("age_band", "group"), names(nhanes_age))[1]
+  if (is.na(band_col) || !"prevalence" %in% names(nhanes_age)) {
+    stop("NHANES prevalence input needs age_band (or group) and prevalence columns", call. = FALSE)
+  }
+  targets <- c("18-34" = "20-34", "35-44" = "35-44", "45-64" = "45-64",
+               "65-74" = "65-74", "75+" = "75+")
+  observed <- stats::setNames(nhanes_age$prevalence, as.character(nhanes_age[[band_col]]))
+  missing <- setdiff(unname(targets), names(observed))
+  if (length(missing)) {
+    stop("NHANES UI prevalence is missing age band(s): ", paste(missing, collapse = ", "),
+         ". Re-run the NHANES acquisition script.", call. = FALSE)
+  }
+  if (any(!is.finite(observed[unname(targets)]) | observed[unname(targets)] < 0 |
+          observed[unname(targets)] > 1)) {
+    stop("NHANES UI prevalence must be finite proportions in [0, 1]", call. = FALSE)
+  }
+  for (band in names(targets)) {
+    rows <- as.character(cells$age_group) == band
+    cells$ui_prevalence[rows] <- observed[[targets[[band]]]]
+    cells$ui_source[rows] <- "nhanes_2017_2023_pooled"
+    cells$pfd_source[rows] <- "mixed_nhanes_ui_nygaard_wu"
+  }
+  if (verbose) message("[blend_nhanes_ui_prevalence] replaced UI prevalence in all age bands with pooled NHANES 2017-2018 + 2021-2023 estimates")
+  cells
 }
 
 #' Project URPS demand from population cell table
@@ -810,8 +870,8 @@ load_mcbs_women65 <- function(mcbs_rds = NULL, verbose = TRUE) {
 #' residential-care segment that BRFSS undercounts, and the UI module is in
 #' the core (not optional) questionnaire.
 #'
-#' Cells outside "65-74" / "75+" are unchanged.  The `pfd_source` column is
-#' updated to `"mcbs_calibrated"` for affected rows.
+#' Cells outside "65-74" / "75+" are unchanged. Source fields identify MCBS
+#' as the UI source and preserve the fact that POP/FI use separate inputs.
 #'
 #' @param cells Population cell table from [build_urps_population_cells()].
 #' @param mcbs Optional MCBS tibble from [load_mcbs_women65()].  When NULL,
@@ -831,7 +891,8 @@ blend_mcbs_prevalence <- function(cells, mcbs = NULL, verbose = TRUE) {
     rows <- !is.na(cells$age_group) & as.character(cells$age_group) == band
     if (any(rows)) {
       cells$ui_prevalence[rows] <- prev
-      cells$pfd_source[rows]    <- "mcbs_calibrated"
+      cells$pfd_source[rows]    <- "mixed_mcbs_ui_nygaard_wu"
+      if ("ui_source" %in% names(cells)) cells$ui_source[rows] <- "mcbs_2022_calibrated"
     }
     if (verbose) {
       message(sprintf(
@@ -846,21 +907,37 @@ blend_mcbs_prevalence <- function(cells, mcbs = NULL, verbose = TRUE) {
 #' Load all population data sources and return a fully calibrated cell table
 #'
 #' Convenience wrapper that calls [load_brfss_women()], [build_urps_population_cells()],
-#' and optionally [blend_mcbs_prevalence()], returning a single calibrated table
+#' then [blend_nhanes_ui_prevalence()] when needed, and optionally
+#' [blend_mcbs_prevalence()], returning a single calibrated table
 #' ready for [project_urps_demand()] or [compute_brfss_demand_estimand()].
 #'
 #' @param use_mcbs Logical; if TRUE (default) and the MCBS RDS is present,
 #'   blend MCBS 2022 prevalence into the 65+ cells.
-#' @param brfss_rds,mcbs_rds Paths to the respective RDS files.  NULL = default.
+#' @param use_nhanes Logical; if TRUE (default) and the NHANES RDS is present,
+#'   blend national UI prevalence into all age cells. This is used when BRFSS
+#'   lacks its optional UI module.
+#' @param brfss_rds,mcbs_rds,nhanes_age_rds Paths to the respective RDS files.
+#'   NULL = default.
 #' @param verbose Logical.
 #' @return Calibrated population cell table.
 #' @export
 build_calibrated_population_cells <- function(use_mcbs  = TRUE,
+                                               use_nhanes = TRUE,
                                                brfss_rds = NULL,
                                                mcbs_rds  = NULL,
+                                               nhanes_age_rds = NULL,
                                                verbose   = TRUE) {
   brfss <- load_brfss_women(brfss_rds, verbose = verbose)
   cells <- build_urps_population_cells(brfss, verbose = verbose)
+
+  if (isTRUE(use_nhanes)) {
+    nhanes_path <- nhanes_age_rds %||% file.path("data-raw", "nhanes", "nhanes_ui_prevalence_by_age.rds")
+    if (file.exists(nhanes_path)) {
+      cells <- blend_nhanes_ui_prevalence(cells, readRDS(nhanes_path), verbose = verbose)
+    } else if (verbose) {
+      message("[build_calibrated_population_cells] NHANES UI prevalence not found; retaining published UI imputation")
+    }
+  }
 
   if (isTRUE(use_mcbs)) {
     mcbs_path <- mcbs_rds %||% file.path("data-raw", "mcbs", "mcbs_2022_women65plus.rds")
@@ -868,7 +945,7 @@ build_calibrated_population_cells <- function(use_mcbs  = TRUE,
       mcbs <- load_mcbs_women65(mcbs_path, verbose = verbose)
       cells <- blend_mcbs_prevalence(cells, mcbs, verbose = verbose)
     } else if (verbose) {
-      message("[build_calibrated_population_cells] MCBS RDS not found; 65+ cells use BRFSS imputation")
+      message("[build_calibrated_population_cells] MCBS RDS not found; 65+ cells retain their current UI calibration")
     }
   }
   cells
