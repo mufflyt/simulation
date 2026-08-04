@@ -7,10 +7,10 @@
 lifecourse_risk_params_cited()
 }
 \value{
-A risk-params list in the shape of \code{\link[=lifecourse_risk_params]{lifecourse_risk_params()}}.
+A risk-params list in the shape of \code{lifecourse_risk_params()}.
 }
 \description{
-An explicit, documented alternative to \code{\link[=lifecourse_risk_params]{lifecourse_risk_params()}}: the
+An explicit, documented alternative to \code{lifecourse_risk_params()}: the
 vaginal-delivery log-odds (\code{bvag}, the primary term) and the BMI modifier
 (\code{bbmi}) are anchored to cited urogynecologic epidemiology; all other terms
 inherit the internal placeholder set. Pass via \code{risk_params} to

@@ -21,6 +21,12 @@ ok <- function(cond, msg) {
 src <- function(f) if (file.exists(f)) source(f) else stop("missing ", f, call. = FALSE)
 
 # --- load base-R modules ----------------------------------------------------
+# R/10 first: it defines .msg_warn() and resolve_reproducibility_mode(), which
+# the provenance guards in R/29 (calibration) and R/30 (population conservation)
+# call. R/30's guard only fires when a reweight leaks, so the dependency went
+# unnoticed until R/29's calibration gate started running on every call. R/10 is
+# base R and sources under --vanilla, so the "no tidyverse" contract holds.
+src("R/10-repro_provenance.R")             # .msg_warn, resolve_reproducibility_mode
 src("R/29-demand_dynamic_multistate.R")   # dmdm_default_transitions, simulate_dmdm
 src("R/30-demand_dynamic_open.R")          # simulate_dmdm_open (+ helpers)
 src("R/31-dmdm_fit_transitions.R")         # .fit_onset_coefs, .fit_stage_transitions
@@ -35,8 +41,8 @@ mk <- function(ages, vag) data.frame(
   hysterectomy = 0, menopause_status = as.integer(ages >= 51), comorbidity = 0)
 
 cat("== DMDM closed engine (R/29) ==\n")
-lo <- simulate_dmdm(mk(sample(45:70, 8000, TRUE), 0L), 2025, 2045, seed = 42)
-hi <- simulate_dmdm(mk(sample(45:70, 8000, TRUE), 3L), 2025, 2045, seed = 42)
+lo <- simulate_dmdm(mk(sample(45:70, 8000, TRUE), 0L), 2025, 2045, seed = 42, allow_uncalibrated = TRUE)
+hi <- simulate_dmdm(mk(sample(45:70, 8000, TRUE), 3L), 2025, 2045, seed = 42, allow_uncalibrated = TRUE)
 ok(nrow(lo) == 21L, "one row per year")
 ok(all(diff(lo$living) <= 0), "closed cohort shrinks via mortality")
 ok(hi$prev_pop[21] > lo$prev_pop[21], "more vaginal deliveries -> higher prolapse prevalence")
@@ -45,10 +51,10 @@ cat("== DMDM open engine (R/30) ==\n")
 agents <- function(ages, vag, w) cbind(mk(ages, vag), weight = w, p_ui = .05, p_pop = .025, p_ai = .025)
 init <- agents(40:84, 2L, 1e5)
 ent <- do.call(rbind, lapply(2026:2035, function(y) { d <- agents(40, 2L, 1e5); d$entry_year <- y; d }))
-op <- simulate_dmdm_open(init, ent, 2025, 2035)
+op <- simulate_dmdm_open(init, ent, 2025, 2035, allow_uncalibrated = TRUE)
 ok(all(op$population > 0.5 * op$population[1]), "open population replenishes (no collapse)")
 proj <- do.call(rbind, lapply(2025:2035, function(y) data.frame(year = y, age = 40:90, population = 1e6)))
-opr <- simulate_dmdm_open(init, ent, 2025, 2035, pop_by_age_year = proj)
+opr <- simulate_dmdm_open(init, ent, 2025, 2035, pop_by_age_year = proj, allow_uncalibrated = TRUE)
 ok(abs(opr$population[1] - 45e6) < 1, "reweighting: counts match the projection")
 
 cat("== onset fitter core (R/31) ==\n")
@@ -75,8 +81,8 @@ ok(ptr$provenance$ui == "placeholder_uncalibrated", "UI/AI left as placeholders"
 ok(ptr$onset$pop[["avag"]] > 0, "vaginal delivery is a positive POP onset driver")
 ok(ptr$pop_regression[["1"]] > ptr$pop_progression[["1"]],
    "mild POP regresses more than it progresses (the feature UI lacks)")
-plo <- simulate_dmdm(mk(sample(45:70, 4000, TRUE), 0L), 2025, 2035, transitions = ptr, seed = 7)
-phi <- simulate_dmdm(mk(sample(45:70, 4000, TRUE), 3L), 2025, 2035, transitions = ptr, seed = 7)
+plo <- simulate_dmdm(mk(sample(45:70, 4000, TRUE), 0L), 2025, 2035, transitions = ptr, seed = 7, allow_uncalibrated = TRUE)
+phi <- simulate_dmdm(mk(sample(45:70, 4000, TRUE), 3L), 2025, 2035, transitions = ptr, seed = 7, allow_uncalibrated = TRUE)
 ok(phi$prev_pop[11] > plo$prev_pop[11], "literature transitions: more vaginal deliveries -> more POP")
 
 cat("== staged POP transition fit (R/31 .fit_stage_transitions) ==\n")

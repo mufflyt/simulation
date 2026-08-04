@@ -126,7 +126,7 @@ URPS_P_ACTIVE_COEF <- list(
 #' @param registry Optional pre-fetched scenario registry list. When `NULL`
 #'   (default) the function calls [supply_scenario_registry()] once per call.
 #' @return Numeric vector of probabilities in \[0, 1\], one per provider.
-#'   Returns 0 for ages ≥ [MICROSIM_TERMINAL_AGE] and for ages < 18.
+#'   Returns 0 for ages ≥ `MICROSIM_TERMINAL_AGE` and for ages < 18.
 #' @seealso [departure_hazard()], [shift_retirement_schedule()],
 #'   [participation_fte()], [URPS_P_ACTIVE_COEF], [fit_p_active_model()]
 #' @export

@@ -4,7 +4,7 @@
 \alias{verify_cms_work_rvu}
 \title{Compare the shipped work RVUs against a CMS release}
 \usage{
-verify_cms_work_rvu(path, shipped = CMS_WORK_RVU, tol = 0.00000001)
+verify_cms_work_rvu(path, shipped = CMS_WORK_RVU, tol = 1e-08)
 }
 \arguments{
 \item{path}{Path to a \code{PPRRVU*.csv}.}

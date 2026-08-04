@@ -7,7 +7,7 @@
 dmdm_initial_cohort(
   pop_by_age,
   year,
-  n = 100000,
+  n = 1e+05,
   cesarean_rate = 0.32,
   seed = NULL,
   risk_params = lifecourse_risk_params()

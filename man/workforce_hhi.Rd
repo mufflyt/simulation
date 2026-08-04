@@ -12,7 +12,7 @@ workforce_hhi(counts, normalized = FALSE)
 \item{normalized}{If TRUE, size-corrected HHI* = (H - 1/n)/(1 - 1/n).}
 }
 \value{
-HHI in \link{0, 1}; \code{NA_real_} if the total is 0.
+HHI in \verb{[0, 1]}; \code{NA_real_} if the total is 0.
 }
 \description{
 Herfindahl-Hirschman Index of provider share

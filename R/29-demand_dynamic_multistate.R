@@ -19,6 +19,12 @@
 #
 # All coefficients are placeholders (status = "placeholder_uncalibrated"); fit the
 # onset/remission hazards from longitudinal data (SWAN) before using any number.
+#
+# That instruction used to be a comment only, and the engine ran on placeholders
+# regardless -- producing a well-formed trajectory that is numerically
+# indistinguishable from a fitted one. assert_calibrated_transitions() now makes
+# it a gate: the engines refuse anything below "fitted" unless the caller passes
+# allow_uncalibrated = TRUE, which declares the run exploratory in the output.
 
 #' Default annual transition parameters for the DMDM (placeholder)
 #'
@@ -44,6 +50,66 @@ dmdm_default_transitions <- function() {
   )
 }
 
+# ---- calibration gate ------------------------------------------------------
+
+#' Refuse to run the DMDM on uncalibrated transitions
+#'
+#' The onset and remission coefficients above are placeholders. A run built on
+#' them produces a well-formed prevalence trajectory that means nothing, and the
+#' output is numerically indistinguishable from a fitted run -- there is no shape
+#' in the result that reveals the inputs were invented. Labelling alone has
+#' therefore proven insufficient: [export_dmdm_demand_contract()] propagates the
+#' status into metadata, but the numbers still leave the function.
+#'
+#' So the engine fails closed. Supply transitions whose `status` is `"fitted"` or
+#' `"calibrated"`, or pass `allow_uncalibrated = TRUE` to declare an exploratory
+#' run. This mirrors [assert_publishable_workload()] and
+#' [assert_parameter_uncertainty()]: strict mode stops, permissive mode warns
+#' loudly, and the override is always an affirmative argument rather than a
+#' default the caller can inherit without noticing.
+#'
+#' @param transitions Transition parameters; see [dmdm_default_transitions()].
+#' @param allow_uncalibrated Declare an exploratory run on placeholder inputs.
+#' @param what Label naming the caller, used in the message.
+#' @param mode Reproducibility mode; strict errors.
+#' @return (Invisibly) TRUE when the transitions are fit to report.
+#' @export
+assert_calibrated_transitions <- function(transitions,
+                                          allow_uncalibrated = FALSE,
+                                          what = "DMDM transitions",
+                                          mode = resolve_reproducibility_mode()) {
+  status <- if (is.list(transitions) && !is.null(transitions$status)) {
+    as.character(transitions$status)[1]
+  } else "unknown"
+
+  if (status %in% c("fitted", "calibrated")) return(invisible(TRUE))
+
+  detail <- switch(
+    status,
+    placeholder_uncalibrated = "the onset, remission and mortality coefficients are invented placeholders, not estimates",
+    uncalibrated_illustrative = "the coefficients are illustrative, not estimated",
+    derived_by_analogy = "the coefficients are borrowed from another population rather than estimated on this one",
+    unknown = "the object declares no calibration status, so its coefficients cannot be vouched for",
+    sprintf("the coefficients carry status '%s', which is not an estimated tier", status))
+
+  msg <- sprintf(paste(
+    "The %s carry status '%s': %s. No prevalence, FTE-gap or adequacy number",
+    "built on them is publishable. Fit the hazards from longitudinal data (SWAN)",
+    "and set status to 'fitted', or pass allow_uncalibrated = TRUE to declare an",
+    "exploratory run."), what, status, detail)
+
+  if (isTRUE(allow_uncalibrated)) {
+    .msg_warn(sprintf(paste(
+      "EXPLORATORY %s run on '%s' coefficients (declared via allow_uncalibrated).",
+      "Every number produced is illustrative and must not be reported as a",
+      "projection."), what, status))
+    return(invisible(FALSE))
+  }
+  if (identical(mode, "strict")) stop(msg, call. = FALSE)
+  .msg_warn(msg)
+  invisible(FALSE)
+}
+
 # ---- the engine (base R; executable without the tidyverse) -----------------
 
 #' Simulate a closed cohort forward through the pelvic-floor multistate model
@@ -54,13 +120,21 @@ dmdm_default_transitions <- function() {
 #'   states `has_ui`/`has_pop`/`has_ai` (default absent).
 #' @param start_year,end_year Simulation window (inclusive).
 #' @param transitions Transition parameters; see [dmdm_default_transitions()].
+#'   Must be `"fitted"`/`"calibrated"` unless `allow_uncalibrated = TRUE`; see
+#'   [assert_calibrated_transitions()].
 #' @param seed Optional RNG seed (the engine is deterministic given it).
+#' @param allow_uncalibrated Declare an exploratory run on placeholder
+#'   transitions. Defaults to FALSE, so strict mode stops rather than returning
+#'   numbers built on invented coefficients.
 #' @return A data frame, one row per year: `year`, `living`, `deaths`,
 #'   `prev_ui`/`prev_pop`/`prev_ai` (prevalence among the living at the start of
 #'   the year) and `inc_ui`/`inc_pop`/`inc_ai` (new onsets during the year).
 #' @export
 simulate_dmdm <- function(cohort0, start_year, end_year,
-                          transitions = dmdm_default_transitions(), seed = NULL) {
+                          transitions = dmdm_default_transitions(), seed = NULL,
+                          allow_uncalibrated = FALSE) {
+  assert_calibrated_transitions(transitions, allow_uncalibrated,
+                                what = "DMDM closed-cohort transitions")
   if (!is.null(seed)) set.seed(seed)
   req <- c("age", "cumulative_vaginal_deliveries", "years_since_last_vaginal_birth",
            "bmi", "hysterectomy", "menopause_status", "comorbidity")
@@ -165,14 +239,22 @@ dmdm_initial_cohort <- function(pop_by_age, year, n = 1e5, cesarean_rate = 0.32,
 #' @param start_year,end_year Simulation window.
 #' @param n Cohort size.
 #' @param cesarean_rate,seed,risk_params,transitions Passed through.
+#' @param allow_uncalibrated Declare an exploratory run; passed through to
+#'   [simulate_dmdm()].
 #' @return The per-year data frame from [simulate_dmdm()].
 #' @export
 dmdm_prevalence_trajectory <- function(pop_by_age, start_year, end_year, n = 1e5,
                                        cesarean_rate = 0.32, seed = NULL,
                                        risk_params = lifecourse_risk_params(),
-                                       transitions = dmdm_default_transitions()) {
+                                       transitions = dmdm_default_transitions(),
+                                       allow_uncalibrated = FALSE) {
+  # Gate before building the cohort: a 1e5-row draw is wasted work when the run
+  # is going to be refused anyway, and the error should name the real problem.
+  assert_calibrated_transitions(transitions, allow_uncalibrated,
+                                what = "DMDM trajectory transitions")
   cohort0 <- dmdm_initial_cohort(pop_by_age, start_year, n = n,
                                  cesarean_rate = cesarean_rate, seed = seed,
                                  risk_params = risk_params)
-  simulate_dmdm(cohort0, start_year, end_year, transitions = transitions, seed = seed)
+  simulate_dmdm(cohort0, start_year, end_year, transitions = transitions, seed = seed,
+                allow_uncalibrated = allow_uncalibrated)
 }

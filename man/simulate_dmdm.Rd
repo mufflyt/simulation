@@ -9,7 +9,8 @@ simulate_dmdm(
   start_year,
   end_year,
   transitions = dmdm_default_transitions(),
-  seed = NULL
+  seed = NULL,
+  allow_uncalibrated = FALSE
 )
 }
 \arguments{
@@ -20,9 +21,15 @@ states \code{has_ui}/\code{has_pop}/\code{has_ai} (default absent).}
 
 \item{start_year, end_year}{Simulation window (inclusive).}
 
-\item{transitions}{Transition parameters; see \code{\link[=dmdm_default_transitions]{dmdm_default_transitions()}}.}
+\item{transitions}{Transition parameters; see \code{\link[=dmdm_default_transitions]{dmdm_default_transitions()}}.
+Must be \code{"fitted"}/\code{"calibrated"} unless \code{allow_uncalibrated = TRUE}; see
+\code{\link[=assert_calibrated_transitions]{assert_calibrated_transitions()}}.}
 
 \item{seed}{Optional RNG seed (the engine is deterministic given it).}
+
+\item{allow_uncalibrated}{Declare an exploratory run on placeholder
+transitions. Defaults to FALSE, so strict mode stops rather than returning
+numbers built on invented coefficients.}
 }
 \value{
 A data frame, one row per year: \code{year}, \code{living}, \code{deaths},

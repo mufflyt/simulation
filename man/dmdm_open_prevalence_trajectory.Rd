@@ -14,7 +14,8 @@ dmdm_open_prevalence_trajectory(
   seed = NULL,
   risk_params = lifecourse_risk_params(),
   transitions = dmdm_default_transitions(),
-  reweight_to_projection = FALSE
+  reweight_to_projection = FALSE,
+  allow_uncalibrated = FALSE
 )
 }
 \arguments{
@@ -33,6 +34,9 @@ cohort.}
 to \code{pop_by_age_year} so population counts match the Census projection while
 the model supplies the disease rates. Default FALSE (internal cohort-component
 demography).}
+
+\item{allow_uncalibrated}{Declare an exploratory run; passed through to
+\code{\link[=simulate_dmdm_open]{simulate_dmdm_open()}}.}
 }
 \value{
 The per-year data frame from \code{\link[=simulate_dmdm_open]{simulate_dmdm_open()}}.

@@ -18,10 +18,10 @@ run_workforce_microsimulation(
   baseline_gap_estimate = NULL,
   n_iterations = 200,
   baseline_entrants = 55,
-  retirement_source = c("hwsm", "urps_empirical"),
+  retirement_source = c("urps_empirical", "hwsm"),
   calibration = NULL,
   parameter_spec = NULL,
-  allow_analogy = TRUE,
+  allow_analogy = FALSE,
   brfss_cells = NULL,
   prevention_scenario = NULL,
   setting_scenario = NULL,
@@ -64,10 +64,14 @@ fail-closed guard.}
 \item{baseline_entrants}{Baseline annual entrants. \code{nrmp_entrants("URPS")}
 supplies the real NRMP-matched value (70).}
 
-\item{retirement_source}{Base retirement hazard: "hwsm" (default, the
-HWSM/FutureDocs literature curve) or "urps_empirical" (cliff's observed
-URPS hazards for ages 50-69 with the HWSM tail past 70). Scenario age-shifts
-apply on top of whichever base is chosen.}
+\item{retirement_source}{Base retirement hazard: "urps_empirical" (default,
+cliff's observed URPS hazards for ages 50-69 with the HWSM tail past 70) or
+"hwsm" (the HWSM/FutureDocs literature curve, an external analogue fitted on
+a different physician population). Scenario age-shifts apply on top of
+whichever base is chosen. The empirical hazards are preferred whenever they
+are derivable: they are measured on this subspecialty rather than borrowed.
+Selecting "hwsm" is an affirmative choice to model URPS attrition with
+another population's curve, and is recorded in the run metadata.}
 
 \item{calibration}{Optional calibration scalars from
 \code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}}.}
@@ -76,7 +80,10 @@ apply on top of whichever base is chosen.}
 built from the observed certification series.}
 
 \item{allow_analogy}{Permit inputs derived by analogy from another specialty
-(currently the delegation matrix). Declared in the run metadata either way.}
+(currently the delegation matrix). Declared in the run metadata either way.
+Defaults to FALSE: passing TRUE suppresses the strict-mode stop in
+\code{\link[=assert_publishable_workload]{assert_publishable_workload()}}, so a publication-facing run must opt in
+deliberately rather than inherit the exemption from the default.}
 
 \item{brfss_cells}{Optional population cell table from
 \code{\link[=build_urps_population_cells]{build_urps_population_cells()}}.  When non-NULL, a fourth demand estimand

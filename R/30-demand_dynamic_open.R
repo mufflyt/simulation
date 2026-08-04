@@ -43,6 +43,12 @@
 #'   `entry_year` (added at the start of that year); or `NULL`.
 #' @param start_year,end_year Simulation window (inclusive).
 #' @param transitions Transition parameters; see [dmdm_default_transitions()].
+#'   Must be `"fitted"`/`"calibrated"` unless `allow_uncalibrated = TRUE`; see
+#'   [assert_calibrated_transitions()].
+#' @param allow_uncalibrated Declare an exploratory run on placeholder
+#'   transitions. Defaults to FALSE. Reweighting to a Census projection anchors
+#'   the population counts but does nothing for the disease rates, so an
+#'   uncalibrated open run is exactly as illustrative as a closed one.
 #' @param pop_by_age_year Optional tibble of `year`, `age`, `population`. When
 #'   supplied, each year's age-specific weights are rescaled to it, so population
 #'   counts follow the Census projection while the model supplies the disease
@@ -61,7 +67,10 @@
 simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
                                transitions = dmdm_default_transitions(),
                                pop_by_age_year = NULL,
-                               conservation_tolerance = 0.01) {
+                               conservation_tolerance = 0.01,
+                               allow_uncalibrated = FALSE) {
+  assert_calibrated_transitions(transitions, allow_uncalibrated,
+                                what = "DMDM open-population transitions")
   req <- c("age", "cumulative_vaginal_deliveries", "years_since_last_vaginal_birth",
            "bmi", "hysterectomy", "menopause_status", "comorbidity",
            "weight", "p_ui", "p_pop", "p_ai")
@@ -221,13 +230,21 @@ dmdm_population_audit <- function(x) {
 #'   to `pop_by_age_year` so population counts match the Census projection while
 #'   the model supplies the disease rates. Default FALSE (internal cohort-component
 #'   demography).
+#' @param allow_uncalibrated Declare an exploratory run; passed through to
+#'   [simulate_dmdm_open()].
 #' @return The per-year data frame from [simulate_dmdm_open()].
 #' @export
 dmdm_open_prevalence_trajectory <- function(pop_by_age_year, start_year, end_year,
                                             entry_age = 40L, n_init = 5e4, n_entrants = 2e3,
                                             seed = NULL, risk_params = lifecourse_risk_params(),
                                             transitions = dmdm_default_transitions(),
-                                            reweight_to_projection = FALSE) {
+                                            reweight_to_projection = FALSE,
+                                            allow_uncalibrated = FALSE) {
+  # Gate before building agent tracks: n_init defaults to 5e4, so a refused run
+  # should be refused before that work, and before the message names the engine
+  # rather than the wrapper the caller actually invoked.
+  assert_calibrated_transitions(transitions, allow_uncalibrated,
+                                what = "DMDM open-trajectory transitions")
   stopifnot(all(c("year", "age", "population") %in% names(pop_by_age_year)))
   pa0 <- pop_by_age_year[pop_by_age_year$year == start_year, c("age", "population")]
   init <- .dmdm_open_agents(pa0, start_year, entry_age, n_init, seed = seed,
@@ -256,5 +273,6 @@ dmdm_open_prevalence_trajectory <- function(pop_by_age_year, start_year, end_yea
   if (!nrow(entrants)) entrants <- NULL
 
   simulate_dmdm_open(init, entrants, start_year, end_year, transitions = transitions,
-                     pop_by_age_year = if (reweight_to_projection) pop_by_age_year else NULL)
+                     pop_by_age_year = if (reweight_to_projection) pop_by_age_year else NULL,
+                     allow_uncalibrated = allow_uncalibrated)
 }

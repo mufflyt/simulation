@@ -483,7 +483,7 @@ apply_setting_scenario <- function(volumes,
 #' See `data-raw/cms_psps/DOWNLOAD.md` for download instructions.
 #'
 #' @param path Path to the unzipped MUP_PHY CSV.
-#' @param basket CPT basket; defaults to [URPS_CPT_BASKET].
+#' @param basket CPT basket; defaults to `URPS_CPT_BASKET`.
 #' @param file_type `"prov_svc"` (default, Provider & Service level) or
 #'   `"geo_svc"` (Geography & Service aggregate).
 #' @return Tibble: `service`, `setting`, `share` in the shape of

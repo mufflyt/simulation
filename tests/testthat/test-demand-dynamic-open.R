@@ -1,5 +1,27 @@
 # Open-population DMDM (R/30-demand_dynamic_open.R). The engine is deterministic
 # base R; the trajectory wrapper uses R/25.
+#
+# These test demography and reweighting mechanics, which hold whatever the
+# transition coefficients are, so every call declares the exploratory override
+# that assert_calibrated_transitions() now requires. Without the declaration the
+# calibration gate would pre-empt the conservation gate and the strict-mode test
+# below would catch the wrong error.
+#
+# Only the declaration notice is muffled, not every message: the conservation
+# tests assert on messages, so a blanket suppressMessages() would make them
+# vacuous. Muffling by pattern keeps "Population conservation" observable.
+
+.muffle_declaration <- function(expr) {
+  withCallingHandlers(expr, message = function(m) {
+    if (grepl("EXPLORATORY", conditionMessage(m), fixed = TRUE)) {
+      invokeRestart("muffleMessage")
+    }
+  })
+}
+sim_open  <- function(...) .muffle_declaration(
+  simulate_dmdm_open(..., allow_uncalibrated = TRUE))
+traj_open <- function(...) .muffle_declaration(
+  dmdm_open_prevalence_trajectory(..., allow_uncalibrated = TRUE))
 
 mk_agents <- function(ages, vag, w, seedp = 0.05) {
   data.frame(
@@ -15,7 +37,7 @@ entrants_for <- function(vag, w, years = 2026:2050) {
 }
 
 test_that("the open population does not collapse and prevalence is valid", {
-  out <- simulate_dmdm_open(mk_agents(40:84, 2, 1e5), entrants_for(2, 1e5), 2025, 2050)
+  out <- sim_open(mk_agents(40:84, 2, 1e5), entrants_for(2, 1e5), 2025, 2050)
   expect_equal(nrow(out), 26L)
   expect_true(all(out$population > 0.5 * out$population[1]))   # replenished
   expect_true(all(out$prev_pop >= 0 & out$prev_pop <= 1))
@@ -23,28 +45,28 @@ test_that("the open population does not collapse and prevalence is valid", {
 })
 
 test_that("prevalence reaches a quasi-steady state (unlike a closed cohort)", {
-  out <- simulate_dmdm_open(mk_agents(40:84, 2, 1e5), entrants_for(2, 1e5), 2025, 2050)
+  out <- sim_open(mk_agents(40:84, 2, 1e5), entrants_for(2, 1e5), 2025, 2050)
   early <- abs(out$prev_pop[6]  - out$prev_pop[2])
   late  <- abs(out$prev_pop[26] - out$prev_pop[22])
   expect_lt(late, early)
 })
 
 test_that("more cumulative vaginal deliveries raise population prolapse prevalence", {
-  hi <- simulate_dmdm_open(mk_agents(40:84, 2, 1e5), entrants_for(2, 1e5), 2025, 2050)
-  lo <- simulate_dmdm_open(mk_agents(40:84, 0, 1e5), entrants_for(0, 1e5), 2025, 2050)
+  hi <- sim_open(mk_agents(40:84, 2, 1e5), entrants_for(2, 1e5), 2025, 2050)
+  lo <- sim_open(mk_agents(40:84, 0, 1e5), entrants_for(0, 1e5), 2025, 2050)
   expect_gt(hi$prev_pop[26], lo$prev_pop[26])
 })
 
 test_that("without entrants the population declines (open vs closed contrast)", {
-  open   <- simulate_dmdm_open(mk_agents(40:84, 2, 1e5), entrants_for(2, 1e5), 2025, 2050)
-  closed <- simulate_dmdm_open(mk_agents(40:84, 2, 1e5), NULL, 2025, 2050)
+  open   <- sim_open(mk_agents(40:84, 2, 1e5), entrants_for(2, 1e5), 2025, 2050)
+  closed <- sim_open(mk_agents(40:84, 2, 1e5), NULL, 2025, 2050)
   expect_lt(closed$population[26], open$population[26])
 })
 
 test_that("the engine is deterministic (no RNG)", {
   i <- mk_agents(40:84, 2, 1e5); en <- entrants_for(2, 1e5)
-  expect_equal(simulate_dmdm_open(i, en, 2025, 2035),
-               simulate_dmdm_open(i, en, 2025, 2035))
+  expect_equal(sim_open(i, en, 2025, 2035),
+               sim_open(i, en, 2025, 2035))
 })
 
 test_that("the trajectory wrapper builds an open population from projections", {
@@ -52,8 +74,8 @@ test_that("the trajectory wrapper builds an open population from projections", {
     data.frame(year = y, age = 40:85,
                population = round(2e6 * exp(-0.02 * (40:85 - 40)) * (1 + 0.01 * (y - 2025))))))
   pop_by_age_year <- tibble::as_tibble(pop_by_age_year)
-  tr <- dmdm_open_prevalence_trajectory(pop_by_age_year, 2025, 2030,
-                                        n_init = 4000, n_entrants = 500, seed = 1)
+  tr <- traj_open(pop_by_age_year, 2025, 2030,
+                  n_init = 4000, n_entrants = 500, seed = 1)
   expect_equal(nrow(tr), 6L)
   expect_true(all(tr$population > 0))
   expect_true(all(tr$prev_pop >= 0 & tr$prev_pop <= 1))
@@ -68,14 +90,14 @@ test_that("a single-year window builds no entrant cohorts", {
     data.frame(year = y, age = 40:70, population = 1e5)))
   pop <- tibble::as_tibble(pop)
 
-  one <- dmdm_open_prevalence_trajectory(pop, 2025, 2025, n_init = 800,
-                                         n_entrants = 100, seed = 1)
+  one <- traj_open(pop, 2025, 2025, n_init = 800,
+                   n_entrants = 100, seed = 1)
   expect_equal(nrow(one), 1L)
   expect_equal(one$year, 2025)
   # The base year's population must be exactly the base population: no entrant
   # cohort may be folded into it.
-  init_only <- dmdm_open_prevalence_trajectory(pop, 2025, 2026, n_init = 800,
-                                               n_entrants = 100, seed = 1)
+  init_only <- traj_open(pop, 2025, 2026, n_init = 800,
+                         n_entrants = 100, seed = 1)
   expect_equal(one$population, init_only$population[1])
 })
 
@@ -95,10 +117,10 @@ test_that("reweighting audits how much population escapes the projection", {
                             2025, 40, 3000, seed = 1)
   # expect_message() returns the CONDITION, not the value, so the run and the
   # message assertion are separate calls.
-  expect_message(simulate_dmdm_open(init, NULL, 2025, 2035, pop_by_age_year = pop),
+  expect_message(sim_open(init, NULL, 2025, 2035, pop_by_age_year = pop),
                  "Population conservation")
   r <- suppressMessages(
-    simulate_dmdm_open(init, NULL, 2025, 2035, pop_by_age_year = pop))
+    sim_open(init, NULL, 2025, 2035, pop_by_age_year = pop))
 
   aud <- dmdm_population_audit(r)
   expect_equal(nrow(aud), 11L)
@@ -119,7 +141,7 @@ test_that("a projection covering every simulated age conserves exactly", {
   pop <- open_pop_grid(2025:2035, 40:120)
   init <- .dmdm_open_agents(pop[pop$year == 2025 & pop$age <= 85, c("age", "population")],
                             2025, 40, 3000, seed = 1)
-  r <- simulate_dmdm_open(init, NULL, 2025, 2035, pop_by_age_year = pop)
+  r <- sim_open(init, NULL, 2025, 2035, pop_by_age_year = pop)
   aud <- dmdm_population_audit(r)
   expect_true(all(aud$share_unanchored == 0))
   expect_true(all(aud$population_unanchored == 0))
@@ -137,16 +159,21 @@ test_that("strict mode refuses a leaking reweight, and the tolerance is a knob",
           else Sys.setenv(REPRODUCIBILITY_MODE = old), add = TRUE)
 
   Sys.setenv(REPRODUCIBILITY_MODE = "strict")
-  expect_error(simulate_dmdm_open(init, NULL, 2025, 2032, pop_by_age_year = pop),
+  expect_error(sim_open(init, NULL, 2025, 2032, pop_by_age_year = pop),
                "Population conservation")
-  # Declaring a wider tolerance proceeds knowingly.
-  expect_silent(simulate_dmdm_open(init, NULL, 2025, 2032, pop_by_age_year = pop,
-                                   conservation_tolerance = 0.9))
+  # Declaring a wider tolerance proceeds knowingly. Assert on the absence of the
+  # conservation message specifically rather than on total silence: the run also
+  # emits the exploratory-transitions declaration, which expect_silent would
+  # catch without saying anything about conservation.
+  msgs <- capture_messages(
+    sim_open(init, NULL, 2025, 2032, pop_by_age_year = pop,
+             conservation_tolerance = 0.9))
+  expect_false(any(grepl("Population conservation", msgs)))
 })
 
 test_that("a run without reweighting has no audit and no conservation claim", {
   i <- mk_agents(40:84, 2, 1e5)
-  r <- simulate_dmdm_open(i, NULL, 2025, 2030)
+  r <- sim_open(i, NULL, 2025, 2030)
   expect_null(dmdm_population_audit(r))
   expect_false("share_unanchored" %in% names(r))
 })

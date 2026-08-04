@@ -9,32 +9,39 @@
 #     state, metro) cross-walked to BRFSS self-reported risk factors (BMI class,
 #     smoking, approximate parity, UI/POP/FI where the state optional module
 #     was administered).
-#   * Match strata: age_group × sex × race_eth × insurance × income_tier.
+#   * Match strata: age_group x sex x race_eth x insurance x income_tier.
 #     Each stratum carries a population weight derived from ACS PUMS or, when
 #     BRFSS is the only source, the BRFSS survey-design-adjusted cell weight.
 #   * PFD prevalence imputation: when the BRFSS UI/POP/FI module is missing
-#     (true for the 2023 core file — optional module only), published age-band
+#     (true for the 2023 core file -- optional module only), published age-band
 #     prevalence (Nygaard 2008 JAMA / Wu 2014) is merged by age_group to give
 #     a cell-level prevalence column without fabricating individual responses.
 #
 # References
 #   Dall TM et al. (2013) The supply and demand for professional athletes.
-#   Health Affairs 32(11):1993–2000. [HWMM architecture]
+#   Health Affairs 32(11):1993-2000. [HWMM architecture]
 #   IHS Markit (2020) Complexities of physician supply and demand.
 #   Nygaard I et al. (2008) Prevalence of symptomatic pelvic floor disorders.
-#   JAMA 300(11):1311–1316.
+#   JAMA 300(11):1311-1316.
 #   Wu JM et al. (2014) Forecasting the prevalence of pelvic floor disorders.
-#   Obstet Gynecol 123(4):697–703.
+#   Obstet Gynecol 123(4):697-703.
 
 # ---- HWMM age bands (HDMM Exhibit 5) ----------------------------------------
 #
 # Five adult bands used throughout demand modules.  The upper two align with
 # mufflyaccess::pfd_prevalence() contract bands (65-79, 80+).
 
+#' Adult age bands used across the demand modules
+#'
+#' Five HWMM/HDMM adult bands (Exhibit 5). The upper two align exactly with the
+#' `mufflyaccess::pfd_prevalence()` contract bands (65-79, 80+) so prevalence can
+#' be joined without a wrong-grain error.
+#'
+#' @format Character vector of five band labels.
 #' @export
 URPS_POP_AGE_BANDS <- c("18-34", "35-44", "45-64", "65-74", "75+")
 
-# BRFSS _AGEG5YR codes → URPS_POP_AGE_BANDS mapping
+# BRFSS _AGEG5YR codes -> URPS_POP_AGE_BANDS mapping
 .AGEG5YR_TO_URPS_BAND <- c(
   "1"  = "18-34",   # 18-24
   "2"  = "18-34",   # 25-29
@@ -69,10 +76,10 @@ URPS_POP_AGE_BANDS <- c("18-34", "35-44", "45-64", "65-74", "75+")
   "9" = "Unknown"
 )
 
-# ---- Income tier (BRFSS INCOME3, 11-level → 4-tier) -------------------------
+# ---- Income tier (BRFSS INCOME3, 11-level -> 4-tier) -------------------------
 #
 # INCOME3 1-11 map to <$25k, $25-50k, $50-100k, $100k+ roughly.
-# 77 = Don't know; 99 = Refused → NA.
+# 77 = Don't know; 99 = Refused -> NA.
 .income3_to_tier <- function(income3) {
   tier <- rep(NA_character_, length(income3))
   tier[income3 %in% 1:4]  <- "LT25k"
@@ -91,6 +98,12 @@ URPS_POP_AGE_BANDS <- c("18-34", "35-44", "45-64", "65-74", "75+")
 # Insurance multiplier: Richter 2007 AJOG; HCUP SASD specialty-access gap.
 # Income multiplier: MEPS 2020 specialty visit rate by income quartile.
 
+#' Care-seeking multiplier by insurance status
+#'
+#' Applied per demand cell in `project_urps_demand()` before aggregation.
+#' Source: Richter 2007 AJOG; HCUP SASD specialty-access gap.
+#'
+#' @format Named numeric vector; 1.00 is the insured reference level.
 #' @export
 CARE_SEEKING_BY_INSURANCE <- c(
   Insured   = 1.00,
@@ -98,6 +111,12 @@ CARE_SEEKING_BY_INSURANCE <- c(
   Unknown   = 0.80
 )
 
+#' Care-seeking multiplier by income tier
+#'
+#' Applied per demand cell in `project_urps_demand()` before aggregation.
+#' Source: MEPS 2020 specialty visit rate by income quartile.
+#'
+#' @format Named numeric vector; 1.00 is the highest-income reference level.
 #' @export
 CARE_SEEKING_BY_INCOME <- c(
   LT25k     = 0.72,
@@ -269,7 +288,7 @@ load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
   n_ch <- raw[["CHILDREN"]]
   n_ch[n_ch %in% c(88L, 99L)] <- NA_integer_
 
-  # PFD self-report: optional BRFSS module — absent in 2023 core
+  # PFD self-report: optional BRFSS module -- absent in 2023 core
   ui_flag  <- .extract_pfd_flag(raw, c("BLADCON", "URINCON", "INCONTI"))
   pop_flag <- .extract_pfd_flag(raw, c("PROPLAP", "PELVORGAN"))
   fi_flag  <- .extract_pfd_flag(raw, c("BOWLLEA", "BOWLINC"))
@@ -333,7 +352,7 @@ load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
 # Extract a binary chronic-condition flag from a BRFSS column.
 # yes_codes: values that mean "has condition" (default 1).
 # no_codes:  values that mean "does not have" (default 2).
-# All other values → NA (don't know / refused / inapplicable).
+# All other values -> NA (don't know / refused / inapplicable).
 .extract_chronic_flag <- function(raw, col, yes_codes = 1L, no_codes = 2L) {
   if (!col %in% names(raw)) return(NA_integer_)
   vals <- raw[[col]]
@@ -483,13 +502,13 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
 
 #' Project URPS demand from population cell table
 #'
-#' Multiplies each cell's effective-population count (pop_weight / total ×
+#' Multiplies each cell's effective-population count (pop_weight / total x
 #' US female population) by age-band PFD prevalence, a care-seeking rate, and a
 #' referral rate to get expected urogynecology visits per year.  Output is by
 #' age_group so it can be compared directly to the supply FTE series.
 #'
 #' When `access_scenario` is not `"status_quo"`, insurance and/or income barrier
-#' multipliers ([CARE_SEEKING_BY_INSURANCE], [CARE_SEEKING_BY_INCOME]) are applied
+#' multipliers (`CARE_SEEKING_BY_INSURANCE`, `CARE_SEEKING_BY_INCOME`) are applied
 #' per cell before aggregation, so the scenario lift is anchored to the actual
 #' uninsured/low-income share in the demand cells rather than a population scalar.
 #'
@@ -565,7 +584,7 @@ project_urps_demand <- function(cells,
   if (verbose) {
     tot_fte <- sum(agg$demand_fte, na.rm = TRUE)
     message(sprintf(
-      "[project_urps_demand] %s — total demand %.0f FTE (%.2f base care-seeking, %.2f referral)",
+      "[project_urps_demand] %s -- total demand %.0f FTE (%.2f base care-seeking, %.2f referral)",
       access_scenario, tot_fte, care_seeking_rate, referral_rate
     ))
   }
@@ -596,7 +615,7 @@ summarise_stratum_coverage <- function(cells) {
 #' Compute the high-barrier prevalence from demand cells
 #'
 #' Returns the survey-weight-averaged fraction of the population that is
-#' uninsured OR in the lowest income tier (LT25k) — the "high_barrier" concept
+#' uninsured OR in the lowest income tier (LT25k) -- the "high_barrier" concept
 #' used by [simulate_lifecourse_demand()] in R/25.  Replaces the hardcoded 0.35
 #' with a value anchored to actual BRFSS insurance/income data.
 #'
@@ -626,13 +645,13 @@ brfss_barrier_prevalence <- function(cells,
 # DEMAND_AGE_BANDS   ("20-39","40-59","60-64","65-79","80+") do not align.
 # The crosswalk uses year-width splits to apportion BRFSS cell weights:
 #
-#   DEMAND band   ← URPS bands contributing (fraction of 5-yr cells)
-#   "20-39"       ← "18-34" (years 20-34 = 15/17) + tiny fraction ignored
-#   "40-59"       ← "35-44" (years 40-44 = 5/10 = 0.5) +
+#   DEMAND band   <- URPS bands contributing (fraction of 5-yr cells)
+#   "20-39"       <- "18-34" (years 20-34 = 15/17) + tiny fraction ignored
+#   "40-59"       <- "35-44" (years 40-44 = 5/10 = 0.5) +
 #                   "45-64" (years 45-59 = 15/20 = 0.75)
-#   "60-64"       ← "45-64" (years 60-64 = 5/20 = 0.25)
-#   "65-79"       ← "65-74" (years 65-74 = 10/10 = 1.0, ignores 75-79)
-#   "80+"         ← "75+"   (years 80+ ≈ "75+" tail)
+#   "60-64"       <- "45-64" (years 60-64 = 5/20 = 0.25)
+#   "65-79"       <- "65-74" (years 65-74 = 10/10 = 1.0, ignores 75-79)
+#   "80+"         <- "75+"   (years 80+ ~ "75+" tail)
 #
 # Weights are approximate; the crosswalk is documented here, not hidden.
 
@@ -711,7 +730,7 @@ brfss_pfd_prevalence_for_demand_bands <- function(cells,
 }
 
 # =============================================================================
-# MCBS 2022 integration — Medicare women 65+
+# MCBS 2022 integration -- Medicare women 65+
 # =============================================================================
 
 #' Load and harmonise the MCBS 2022 women 65+ sub-file
@@ -745,7 +764,7 @@ load_mcbs_women65 <- function(mcbs_rds = NULL, verbose = TRUE) {
   }
   raw <- readRDS(mcbs_rds)
 
-  # MCBS uses "65-74", "75-84", "85+" → collapse to URPS_POP_AGE_BANDS
+  # MCBS uses "65-74", "75-84", "85+" -> collapse to URPS_POP_AGE_BANDS
   age_raw <- as.character(raw$age_group)
   age_urps <- ifelse(age_raw == "65-74", "65-74",
                ifelse(age_raw %in% c("75-84", "85+"), "75+", NA_character_))

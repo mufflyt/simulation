@@ -8,7 +8,7 @@ simulate_lifecourse_demand(
   pop_by_age,
   year,
   scenario = "baseline",
-  n = 100000,
+  n = 1e+05,
   seed = NULL,
   cesarean_rate = NULL,
   access_gain = 1,

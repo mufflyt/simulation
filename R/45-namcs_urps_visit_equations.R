@@ -1,6 +1,6 @@
 # NAMCS-based URPS Visit-Rate Equations (HWMM Gap #1 Partial) ----
 #
-# HWMM HDMM §3 fits negative binomial prediction equations from MEPS
+# HWMM HDMM section 3 fits negative binomial prediction equations from MEPS
 # (Medical Expenditure Panel Survey) person-level data: outcome = annual
 # visits to URPS provider; covariates = age, sex, race/ethnicity, insurance,
 # income, BMI, smoking, chronic conditions.
@@ -8,10 +8,10 @@
 # MEPS person-level data are not available in this repo.  This module
 # approximates that approach using two available survey sources:
 #
-#   * NAMCS 2019 (visit-level): 8,250 sampled office visits → national totals
+#   * NAMCS 2019 (visit-level): 8,250 sampled office visits -> national totals
 #     via PATWT patient weights.  Identifies URPS visits by ICD-10-CM code.
-#   * BRFSS 2023 (person-level): 229,541 women 18+ → population denominators
-#     by demographic stratum (age × race/eth × insurance).
+#   * BRFSS 2023 (person-level): 229,541 women 18+ -> population denominators
+#     by demographic stratum (age x race/eth x insurance).
 #
 # Rate estimation: visits_weighted[stratum] / population_weighted[stratum]
 # gives annual per-capita URPS visits.  A log-linear model on strata
@@ -24,7 +24,7 @@
 #
 # References:
 #   NCHS (2021) 2019 NAMCS Public Use File Documentation (doc2019-508.pdf).
-#   IHS Markit (2020) Health Workforce Microsimulation Model v5.19.20, §HDMM.
+#   IHS Markit (2020) Health Workforce Microsimulation Model v5.19.20, section HDMM.
 #   Dall et al. (2013) Health Affairs 32(11):1993-2000.
 
 # ---- URPS ICD-10-CM code prefixes -------------------------------------------
@@ -64,7 +64,7 @@ URPS_ICD10_PREFIXES <- c(
 
 # ---- Insurance harmonisation -------------------------------------------------
 #
-# NAMCS PAYTYPER → simplified insurance tier for stratum matching with BRFSS.
+# NAMCS PAYTYPER -> simplified insurance tier for stratum matching with BRFSS.
 
 .namcs_insurance_tier <- function(paytyper) {
   dplyr::case_when(
@@ -171,7 +171,7 @@ flag_urps_visits <- function(namcs,
 #' Compute survey-weighted URPS visit totals by demographic stratum
 #'
 #' Applies PATWT patient weights to produce nationally representative visit
-#' counts per stratum.  Strata are age_band × sex × race_eth × insurance_2tier.
+#' counts per stratum.  Strata are age_band x sex x race_eth x insurance_2tier.
 #'
 #' @param namcs Tibble from [flag_urps_visits()].
 #' @return Tibble with columns: `age_band`, `sex`, `race_eth`,
@@ -247,12 +247,12 @@ brfss_population_by_stratum <- function(brfss) {
 
 # ---- Visit rate estimation --------------------------------------------------
 
-#' Join NAMCS visit totals with BRFSS denominators → per-capita visit rates
+#' Join NAMCS visit totals with BRFSS denominators -> per-capita visit rates
 #'
 #' @param stratum_visits Output of [namcs_urps_stratum_visits()].
 #' @param stratum_pop   Output of [brfss_population_by_stratum()].
 #' @return Tibble with stratum covariates plus:
-#'   `visits_per_1000` — NAMCS-estimated annual URPS visits per 1,000 persons.
+#'   `visits_per_1000` -- NAMCS-estimated annual URPS visits per 1,000 persons.
 #' @export
 compute_urps_visit_rates <- function(stratum_visits, stratum_pop) {
   join_cols <- c("age_band", "sex", "race_eth", "insurance_2tier")
@@ -284,7 +284,7 @@ fit_urps_visit_rate_model <- function(rate_table) {
 
   ok <- rate_table$visits_per_1000 > 0 & rate_table$n_visits_unweighted >= 1
   if (sum(ok) < 4) {
-    stop("fit_urps_visit_rate_model: too few strata with positive rates (need ≥ 4, got ",
+    stop("fit_urps_visit_rate_model: too few strata with positive rates (need >= 4, got ",
          sum(ok), ")", call. = FALSE)
   }
 
@@ -358,7 +358,7 @@ predict_urps_annual_visits <- function(model, newdata, ci = FALSE) {
 #'   `insurance_2tier`, `population` (projected women 18+).
 #' @param model Object from [fit_urps_visit_rate_model()].
 #' @param visits_per_fte Annual URPS visits one FTE can handle; defaults to
-#'   2800 (4 visits/day × 700 provider-days/FTE).
+#'   2800 (4 visits/day x 700 provider-days/FTE).
 #' @param fte_fraction  Fraction of visits attributable to FPMRS specialists
 #'   (vs primary care or general OB/GYN).  Defaults to 0.35, consistent with
 #'   the share of URPS visits in NAMCS with SPECCAT 2/3.

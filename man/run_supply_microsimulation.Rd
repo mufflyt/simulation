@@ -86,6 +86,17 @@ resulting \code{effective_fte_lo}/\verb{_hi} are not forecast intervals.}
 \item{seed}{Integer RNG seed.}
 
 \item{verbose}{Logical.}
+
+\item{p_active_coef}{Optional logistic coefficients for \code{\link[=urps_p_active]{urps_p_active()}},
+overriding \code{URPS_P_ACTIVE_COEF}. Supplying them switches clinical FTE onto
+the P(active) formulation.}
+
+\item{p_active_scenario_id}{Scenario id whose \code{retirement_shift_years} shifts
+the P(active) age axis.}
+
+\item{thin_by_p_active}{Multiply each provider's clinical FTE by their
+probability of remaining active, rather than treating the active set as a
+hard in/out split.}
 }
 \value{
 List: \code{summary} (per-year quantiles), \code{iterations} (all replicate

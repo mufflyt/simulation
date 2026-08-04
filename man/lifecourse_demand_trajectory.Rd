@@ -8,7 +8,7 @@ lifecourse_demand_trajectory(
   pop_by_age_year,
   years = sort(unique(pop_by_age_year$year)),
   scenario = "baseline",
-  n = 100000,
+  n = 1e+05,
   seed = NULL,
   ...
 )

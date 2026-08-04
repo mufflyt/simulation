@@ -266,6 +266,11 @@ initialize_provider_agents <- function(n,
 #' @param entrant_female_share Share of new entrants drawn as female.
 #' @param placement_shares Optional tibble of `geo` and `share` enabling entrant
 #'   placement and mid-career migration.
+#' @param p_active_coef Optional logistic coefficients for [urps_p_active()],
+#'   overriding `URPS_P_ACTIVE_COEF`. Supplying them switches clinical FTE onto
+#'   the P(active) formulation.
+#' @param p_active_scenario_id Scenario id whose `retirement_shift_years` shifts
+#'   the P(active) age axis.
 #' @return List with `panel` (per-year summary tibble) and `agents` (final agent
 #'   table incl. drawn retirement years) so the temporal cohort is reconstructible.
 #' @export
@@ -500,6 +505,14 @@ simulate_provider_career_once <- function(agents,
 #'   `hours_model`, its coefficients are redrawn per iteration and take
 #'   precedence over the `hours_model` argument; they widen `effective_fte` only
 #'   and leave `headcount` untouched.
+#' @param p_active_coef Optional logistic coefficients for [urps_p_active()],
+#'   overriding `URPS_P_ACTIVE_COEF`. Supplying them switches clinical FTE onto
+#'   the P(active) formulation.
+#' @param p_active_scenario_id Scenario id whose `retirement_shift_years` shifts
+#'   the P(active) age axis.
+#' @param thin_by_p_active Multiply each provider's clinical FTE by their
+#'   probability of remaining active, rather than treating the active set as a
+#'   hard in/out split.
 #' @param allow_fixed_parameters Declare an exploratory run in which every
 #'   parameter is held fixed. The uncertainty guard runs UNCONDITIONALLY -- a
 #'   missing `param_spec` is precisely the case it exists to catch -- so this is

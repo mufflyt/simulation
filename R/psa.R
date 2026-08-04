@@ -97,7 +97,7 @@ psa_discrete <- function(name, values, probs = NULL) {
 #' Each input's marginal is stratified into `n` equal-probability bins; inputs
 #' are permuted independently so joint draws are near-orthogonal.
 #'
-#' @param inputs List of [psa_input] specs.
+#' @param inputs List of `psa_input()` specs.
 #' @param n Number of draws.
 #' @param seed RNG seed (the caller's stream is restored on exit).
 #' @return Tibble with `n` rows: one numeric column per input (discrete inputs
@@ -127,7 +127,7 @@ psa_sample <- function(inputs, n, seed = 20260801L) {
 #'
 #' Samples the inputs jointly (LHS) and evaluates `evaluate` once per draw.
 #'
-#' @param inputs List of [psa_input] specs.
+#' @param inputs List of `psa_input()` specs.
 #' @param evaluate Function taking a named list of input values (discrete inputs
 #'   passed as their mapped value) and returning a numeric scalar, or a named
 #'   numeric vector of several outputs.

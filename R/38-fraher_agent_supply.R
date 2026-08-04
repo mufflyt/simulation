@@ -152,10 +152,13 @@ advance_urps_agents <- function(agents,
                                 scenario_id  = "status_quo",
                                 year_seed    = NULL,
                                 verbose      = FALSE) {
-  registered <- tryCatch(
-    urpssim::urps_scenarios(),
-    error = function(e) data.frame(id = "status_quo", stringsAsFactors = FALSE)
-  )
+  # This called urpssim::urps_scenarios(), which does not exist, so the tryCatch
+  # ALWAYS fell through to the one-row fallback: the scenario check has never
+  # validated against a real registry. Made explicit rather than wired to
+  # mufflyaccess::urps_scenarios(), whose ids are baseline / retire_2yr_* and
+  # would reject this function's own default of "status_quo" -- picking the right
+  # registry is a modelling decision, not a lint fix.
+  registered <- data.frame(id = "status_quo", stringsAsFactors = FALSE)
   assertthat::assert_that(
     scenario_id %in% registered$id,
     msg = sprintf(

@@ -13,7 +13,7 @@ load_psps_pos_shares(
 \arguments{
 \item{path}{Path to the unzipped MUP_PHY CSV.}
 
-\item{basket}{CPT basket; defaults to \link{URPS_CPT_BASKET}.}
+\item{basket}{CPT basket; defaults to \code{URPS_CPT_BASKET}.}
 
 \item{file_type}{\code{"prov_svc"} (default, Provider & Service level) or
 \code{"geo_svc"} (Geography & Service aggregate).}

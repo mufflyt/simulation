@@ -171,16 +171,23 @@ example_capacity_survey <- function() {
 #' @param n_iterations Monte-Carlo replicates per scenario.
 #' @param baseline_entrants Baseline annual entrants. `nrmp_entrants("URPS")`
 #'   supplies the real NRMP-matched value (70).
-#' @param retirement_source Base retirement hazard: "hwsm" (default, the
-#'   HWSM/FutureDocs literature curve) or "urps_empirical" (cliff's observed
-#'   URPS hazards for ages 50-69 with the HWSM tail past 70). Scenario age-shifts
-#'   apply on top of whichever base is chosen.
+#' @param retirement_source Base retirement hazard: "urps_empirical" (default,
+#'   cliff's observed URPS hazards for ages 50-69 with the HWSM tail past 70) or
+#'   "hwsm" (the HWSM/FutureDocs literature curve, an external analogue fitted on
+#'   a different physician population). Scenario age-shifts apply on top of
+#'   whichever base is chosen. The empirical hazards are preferred whenever they
+#'   are derivable: they are measured on this subspecialty rather than borrowed.
+#'   Selecting "hwsm" is an affirmative choice to model URPS attrition with
+#'   another population's curve, and is recorded in the run metadata.
 #' @param calibration Optional calibration scalars from
 #'   [fit_calibration_scalars()].
 #' @param parameter_spec Optional [supply_parameter_spec()]; defaults to one
 #'   built from the observed certification series.
 #' @param allow_analogy Permit inputs derived by analogy from another specialty
 #'   (currently the delegation matrix). Declared in the run metadata either way.
+#'   Defaults to FALSE: passing TRUE suppresses the strict-mode stop in
+#'   [assert_publishable_workload()], so a publication-facing run must opt in
+#'   deliberately rather than inherit the exemption from the default.
 #' @param brfss_cells Optional population cell table from
 #'   [build_urps_population_cells()].  When non-NULL, a fourth demand estimand
 #'   D4 (BRFSS survey-weighted UI care-seeking demand) is appended to
@@ -216,10 +223,10 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           baseline_gap_estimate = NULL,
                                           n_iterations = 200,
                                           baseline_entrants = 55,
-                                          retirement_source = c("hwsm", "urps_empirical"),
+                                          retirement_source = c("urps_empirical", "hwsm"),
                                           calibration = NULL,
                                           parameter_spec = NULL,
-                                          allow_analogy = TRUE,
+                                          allow_analogy = FALSE,
                                           brfss_cells = NULL,
                                           prevention_scenario = NULL,
                                           setting_scenario = NULL,
@@ -232,8 +239,16 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   seed_microsimulation(seed, mode)
   run_id <- make_run_id(paste0("workforce_", tolower(subspecialty)), seed, mode)
 
-  # Base retirement schedule: the HWSM/FutureDocs literature curve by default, or
-  # cliff's empirical URPS hazards (observed 50-69 + HWSM tail past 70) opt-in.
+  # Base retirement schedule: cliff's empirical URPS hazards (observed 50-69 +
+  # HWSM tail past 70) by default, because they are measured on this subspecialty.
+  # "hwsm" is the external analogue and must now be asked for by name; taking it
+  # is a modelling choice, so say so rather than letting it pass silently.
+  if (identical(retirement_source, "hwsm")) {
+    .msg_info(paste(
+      "retirement_source='hwsm': modelling URPS attrition with the HWSM/FutureDocs",
+      "literature curve, fitted on a different physician population, in place of",
+      "the observed URPS hazards (declared)."))
+  }
   base_retirement_schedule <- if (identical(retirement_source, "urps_empirical")) {
     tryCatch(
       urps_empirical_retirement_schedule(mode = mode),
@@ -304,7 +319,21 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   }
   cohort <- cohort_provenance(agents)
   example_only <- !cohort$is_production
-  if (example_only) .msg_warn("Cohort source '", cohort$source, "': ", cohort$note)
+  if (example_only) {
+    # Only agents_from_roster() yields a production cohort. The certification
+    # series is a CUMULATIVE certification count -- n_retired is 0 in every row
+    # and n_active == n_ever_certified -- so a cohort built from it has never had
+    # attrition removed, and the synthetic draw is a placeholder outright. Both
+    # are legitimate for examples and tests; neither may seed a run whose numbers
+    # are meant to be published, which is exactly what strict mode declares.
+    msg <- paste0(
+      "Cohort source '", cohort$source, "' is not a production cohort: ",
+      cohort$note, " Supply agents_from_roster() with a true active roster, or ",
+      "treat every output of this run as exploratory."
+    )
+    if (identical(mode, "strict")) stop(msg, call. = FALSE)
+    .msg_warn(msg)
+  }
 
   # Keep the hours schedule and the FTE threshold internally consistent.
   hours_intercept <- calibrate_hours_intercept(agents$age, agents$sex)
@@ -524,6 +553,11 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       supply_geography = supply_geography,
       population_source = population_source,
       retirement_source = retirement_source,
+      # The @param has always said allow_analogy is declared in the metadata; it
+      # was not actually carried here. It is the one argument that can suppress a
+      # strict-mode stop, so a reader of the artifact must be able to see whether
+      # it was set without re-reading the call that produced it.
+      allow_analogy = allow_analogy,
       supply_contract = contract,
       example_only = example_only,
       cohort_provenance = cohort,

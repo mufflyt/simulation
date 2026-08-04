@@ -4,7 +4,7 @@
 \alias{validate_migration_matrix}
 \title{Validate an origin-by-destination migration matrix}
 \usage{
-validate_migration_matrix(matrix, tol = 0.00000001)
+validate_migration_matrix(matrix, tol = 1e-08)
 }
 \arguments{
 \item{matrix}{Tibble with \code{origin}, \code{destination}, \code{probability}.}

@@ -8,11 +8,12 @@ dmdm_prevalence_trajectory(
   pop_by_age,
   start_year,
   end_year,
-  n = 100000,
+  n = 1e+05,
   cesarean_rate = 0.32,
   seed = NULL,
   risk_params = lifecourse_risk_params(),
-  transitions = dmdm_default_transitions()
+  transitions = dmdm_default_transitions(),
+  allow_uncalibrated = FALSE
 )
 }
 \arguments{
@@ -23,6 +24,9 @@ dmdm_prevalence_trajectory(
 \item{n}{Cohort size.}
 
 \item{cesarean_rate, seed, risk_params, transitions}{Passed through.}
+
+\item{allow_uncalibrated}{Declare an exploratory run; passed through to
+\code{\link[=simulate_dmdm]{simulate_dmdm()}}.}
 }
 \value{
 The per-year data frame from \code{\link[=simulate_dmdm]{simulate_dmdm()}}.

@@ -151,8 +151,12 @@ test_that("scenario registries are contract-checked", {
 
 test_that("the reduced-barriers scenario names the components it relaxes", {
   dem <- demand_scenario_registry()
-  expect_setequal(dem$reduced_barriers$access_components,
-                  c("uninsured", "nonmetro", "racial_equity"))
+  # Assert against ACCESS_COMPONENTS rather than a hand-copied list: "income"
+  # was added to both the constant and the scenario, and this literal was the
+  # only place left saying three. A copy of a canonical list goes stale the
+  # moment the list grows.
+  expect_setequal(dem$reduced_barriers$access_components, ACCESS_COMPONENTS)
+  expect_true("income" %in% dem$reduced_barriers$access_components)
   # Urogynaecology-specific lever: only 25-45% of women with UI seek care.
   expect_gt(dem$care_seeking_improved$care_seeking_multiplier, 1)
 })

@@ -43,8 +43,12 @@ test_that("the engine runs unchanged in shape with the literature POP transition
   co <- data.frame(age = 50:70, cumulative_vaginal_deliveries = 3L,
                    years_since_last_vaginal_birth = 20, bmi = 28, hysterectomy = 0,
                    menopause_status = as.integer(50:70 >= 51), comorbidity = 0)
-  out <- simulate_dmdm(co, 2025, 2035,
-                       transitions = dmdm_transitions_with_pop_literature(), seed = 1)
+  # A shape assertion. The literature POP transitions carry status
+  # "derived_by_analogy", which the calibration gate does not accept as an
+  # estimated tier, so the run is declared exploratory.
+  out <- suppressMessages(simulate_dmdm(
+    co, 2025, 2035, transitions = dmdm_transitions_with_pop_literature(), seed = 1,
+    allow_uncalibrated = TRUE))
   expect_equal(nrow(out), 11L)
   expect_true(all(out$prev_pop >= 0 & out$prev_pop <= 1))
 })

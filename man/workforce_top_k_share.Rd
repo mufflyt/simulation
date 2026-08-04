@@ -12,7 +12,7 @@ workforce_top_k_share(counts, k = 5L)
 \item{k}{Number of top units. Default 5.}
 }
 \value{
-Fraction in \link{0, 1}, or \code{NA_real_} if the total is 0.
+Fraction in \verb{[0, 1]}, or \code{NA_real_} if the total is 0.
 }
 \description{
 Share of the total held by the k largest units

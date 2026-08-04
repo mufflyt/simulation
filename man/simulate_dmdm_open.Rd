@@ -11,7 +11,8 @@ simulate_dmdm_open(
   end_year,
   transitions = dmdm_default_transitions(),
   pop_by_age_year = NULL,
-  conservation_tolerance = 0.01
+  conservation_tolerance = 0.01,
+  allow_uncalibrated = FALSE
 )
 }
 \arguments{
@@ -25,7 +26,9 @@ marginal \code{p_ui}/\code{p_pop}/\code{p_ai}.}
 
 \item{start_year, end_year}{Simulation window (inclusive).}
 
-\item{transitions}{Transition parameters; see \code{\link[=dmdm_default_transitions]{dmdm_default_transitions()}}.}
+\item{transitions}{Transition parameters; see \code{\link[=dmdm_default_transitions]{dmdm_default_transitions()}}.
+Must be \code{"fitted"}/\code{"calibrated"} unless \code{allow_uncalibrated = TRUE}; see
+\code{\link[=assert_calibrated_transitions]{assert_calibrated_transitions()}}.}
 
 \item{pop_by_age_year}{Optional tibble of \code{year}, \code{age}, \code{population}. When
 supplied, each year's age-specific weights are rescaled to it, so population
@@ -37,6 +40,11 @@ that may sit at ages the projection does not carry, and so escape
 reweighting. Exceeding it warns (strict: errors), because beyond that point
 \code{population} and the weighted prevalences mix Census-anchored with
 free-floating mass. Only consulted when \code{pop_by_age_year} is supplied.}
+
+\item{allow_uncalibrated}{Declare an exploratory run on placeholder
+transitions. Defaults to FALSE. Reweighting to a Census projection anchors
+the population counts but does nothing for the disease rates, so an
+uncalibrated open run is exactly as illustrative as a closed one.}
 }
 \value{
 A data frame, one row per year: \code{year}, \code{population} (sum of weights),

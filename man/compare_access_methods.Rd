@@ -9,7 +9,7 @@ compare_access_methods(
   supply,
   demand,
   weights = E2SFCA_DEFAULT_WEIGHTS,
-  per_capita_scale = 100000
+  per_capita_scale = 1e+05
 )
 }
 \arguments{

@@ -35,7 +35,7 @@ parameters.}
 }
 \value{
 Numeric vector of probabilities in [0, 1], one per provider.
-Returns 0 for ages ≥ \link{MICROSIM_TERMINAL_AGE} and for ages < 18.
+Returns 0 for ages ≥ \code{MICROSIM_TERMINAL_AGE} and for ages < 18.
 }
 \description{
 Logistic regression estimate of P(clinician is actively practising) given

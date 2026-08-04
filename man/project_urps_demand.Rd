@@ -6,7 +6,7 @@
 \usage{
 project_urps_demand(
   cells,
-  us_female_pop = 138000000,
+  us_female_pop = 1.38e+08,
   care_seeking_rate = 0.25,
   referral_rate = 0.5,
   access_scenario = c("status_quo", "insurance_equity", "income_equity", "full_equity"),
@@ -37,14 +37,14 @@ A tibble with columns: \code{age_group}, \code{pop_women}, \code{n_pfd},
 the workload constant from R/17-workload_to_fte.R).
 }
 \description{
-Multiplies each cell's effective-population count (pop_weight / total ×
+Multiplies each cell's effective-population count (pop_weight / total x
 US female population) by age-band PFD prevalence, a care-seeking rate, and a
 referral rate to get expected urogynecology visits per year.  Output is by
 age_group so it can be compared directly to the supply FTE series.
 }
 \details{
 When \code{access_scenario} is not \code{"status_quo"}, insurance and/or income barrier
-multipliers (\link{CARE_SEEKING_BY_INSURANCE}, \link{CARE_SEEKING_BY_INCOME}) are applied
+multipliers (\code{CARE_SEEKING_BY_INSURANCE}, \code{CARE_SEEKING_BY_INCOME}) are applied
 per cell before aggregation, so the scenario lift is anchored to the actual
 uninsured/low-income share in the demand cells rather than a population scalar.
 }

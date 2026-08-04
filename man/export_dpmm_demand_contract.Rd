@@ -10,7 +10,7 @@ export_dpmm_demand_contract(
   model_version = DPMM_DEMAND_CONTRACT_VERSION,
   base_year = 2025L,
   calendar_year_offset = 2024L,
-  us_women_40plus = 85000000,
+  us_women_40plus = 8.5e+07,
   calibration_status = "uncalibrated_illustrative",
   verbose = TRUE
 )

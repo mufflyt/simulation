@@ -10,7 +10,7 @@ compute_access_preset(
   demand,
   preset = "base",
   step2_power = 1,
-  per_capita_scale = 100000
+  per_capita_scale = 1e+05
 )
 }
 \arguments{

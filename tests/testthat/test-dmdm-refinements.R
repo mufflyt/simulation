@@ -11,14 +11,20 @@ entrants_for <- function(vag, w, years) {
   do.call(rbind, lapply(years, function(y) { d <- mk_agents(40, vag, w); d$entry_year <- y; d }))
 }
 
+# Reweighting arithmetic holds whatever the transition coefficients are, so the
+# reweighting tests declare the exploratory override the calibration gate wants.
+sim_open <- function(...) {
+  suppressMessages(simulate_dmdm_open(..., allow_uncalibrated = TRUE))
+}
+
 # ---- 1. Census reweighting ------------------------------------------------
 
 test_that("reweighting makes population match the projection while rates stay model-driven", {
   init <- mk_agents(40:84, 2, 1e5); ent <- entrants_for(2, 1e5, 2026:2030)
   proj <- do.call(rbind, lapply(2025:2030, function(y)
     data.frame(year = y, age = 40:90, population = 1e6)))
-  rw <- simulate_dmdm_open(init, ent, 2025, 2030, pop_by_age_year = proj)
-  no <- simulate_dmdm_open(init, ent, 2025, 2030)
+  rw <- sim_open(init, ent, 2025, 2030, pop_by_age_year = proj)
+  no <- sim_open(init, ent, 2025, 2030)
   expect_equal(rw$population[1], 45e6, tolerance = 1)          # 45 ages x 1e6
   expect_equal(rw$prev_pop[1], no$prev_pop[1], tolerance = 1e-9)  # year-1 uniform mix preserved
   expect_true(rw$population[6] != no$population[6])            # counts track the projection
@@ -29,7 +35,7 @@ test_that("population follows a rising projection", {
   init <- mk_agents(40:84, 2, 1e5); ent <- entrants_for(2, 1e5, 2026:2030)
   proj <- do.call(rbind, lapply(2025:2030, function(y)
     data.frame(year = y, age = 40:90, population = 1e6 * (1 + 0.05 * (y - 2025)))))
-  rw <- simulate_dmdm_open(init, ent, 2025, 2030, pop_by_age_year = proj)
+  rw <- sim_open(init, ent, 2025, 2030, pop_by_age_year = proj)
   expect_gt(rw$population[6], rw$population[1])
 })
 
@@ -58,7 +64,11 @@ test_that("fit_dmdm_transitions recovers onset coefficients and is engine-usable
   # usable directly by the engine
   co <- mk_agents(50:70, 2, 1e5)[, setdiff(names(mk_agents(50, 2, 1)), c("weight","p_ui","p_pop","p_ai"))]
   full <- dmdm_default_transitions(); full$onset$pop <- tr$onset$pop
-  out <- simulate_dmdm(co, 2025, 2030, transitions = full, seed = 1)
+  # Only the POP onset block was fitted here; UI and AI are still placeholders,
+  # so the object's status is unchanged and the run is declared exploratory.
+  out <- suppressMessages(
+    simulate_dmdm(co, 2025, 2030, transitions = full, seed = 1,
+                  allow_uncalibrated = TRUE))
   expect_equal(nrow(out), 6L)
 })
 

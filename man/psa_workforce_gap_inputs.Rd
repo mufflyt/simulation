@@ -7,7 +7,7 @@
 psa_workforce_gap_inputs()
 }
 \value{
-List of \link{psa_input} specs.
+List of \code{psa_input()} specs.
 }
 \description{
 Default PSA input set for the workforce 2050 gap

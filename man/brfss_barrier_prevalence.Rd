@@ -21,7 +21,7 @@ Named numeric scalar \code{barrier_prevalence}.
 }
 \description{
 Returns the survey-weight-averaged fraction of the population that is
-uninsured OR in the lowest income tier (LT25k) — the "high_barrier" concept
+uninsured OR in the lowest income tier (LT25k) -- the "high_barrier" concept
 used by \code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}} in R/25.  Replaces the hardcoded 0.35
 with a value anchored to actual BRFSS insurance/income data.
 }

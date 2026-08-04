@@ -66,6 +66,13 @@ applies; NA disables it.}
 
 \item{placement_shares}{Optional tibble of \code{geo} and \code{share} enabling entrant
 placement and mid-career migration.}
+
+\item{p_active_coef}{Optional logistic coefficients for \code{\link[=urps_p_active]{urps_p_active()}},
+overriding \code{URPS_P_ACTIVE_COEF}. Supplying them switches clinical FTE onto
+the P(active) formulation.}
+
+\item{p_active_scenario_id}{Scenario id whose \code{retirement_shift_years} shifts
+the P(active) age axis.}
 }
 \value{
 List with \code{panel} (per-year summary tibble) and \code{agents} (final agent
