@@ -128,6 +128,16 @@ geo_need <- data.frame(geo_id = 1:4, need = c(100, 400, 150, 100),
 geographic_demand_summary(geo_need)  # need within 30/60/120/180 min; need-weighted access
 ```
 
+From real tract population (ACS table B01001 by demand age band, via
+`scripts/data_acquisition/08_download_acs_tracts.R`) build the need surface with
+the SSOT age-band prevalence, then summarise in one call:
+
+```{r geo_tracts}
+tracts <- read.csv("data-raw/spatial/acs5_2023_tract_female_by_ageband.csv")
+# add nearest_provider_min per GEOID from the isochrone pipeline, then:
+isochrone_demand_from_tracts(tracts)      # need = sum_band(pop_band * pfd_prevalence_band)
+```
+
 ## 8. Versioned demand contract (feeds cliff / twostep / isochrones)
 
 Both exporters refuse to write a contract built on uncalibrated transitions. Every

@@ -13,6 +13,19 @@
 # unit-testable without the tidyverse. Real use needs tract-level population,
 # provider locations and drive-time isochrones; this operates on the resulting
 # per-geography tables.
+#
+# tract_need_from_population() is the bridge from the demographic inputs to that
+# per-geography NEED: it turns a tract table of female population by demand age
+# band (as produced by scripts/data_acquisition/08_download_acs_tracts.R) into
+# expected prevalent PFD cases per tract, using the package's SSOT age-band
+# prevalence (pfd_prevalence_by_band(), R/13). Join the result to tract centroids
+# + a nearest-provider drive time and hand it to geographic_demand_summary().
+
+# Default map from DEMAND_AGE_BANDS (R/13) to the wide population columns emitted
+# by 08_download_acs_tracts.R. Kept as a literal so R/32 sources standalone.
+TRACT_AGE_BAND_COLUMNS <- c(
+  "20-39" = "female_20_39", "40-59" = "female_40_59", "60-64" = "female_60_64",
+  "65-79" = "female_65_79", "80+" = "female_80plus")
 
 #' Distribute pelvic-floor NEED across travel-time (isochrone) bands
 #'
@@ -85,6 +98,71 @@ accessible_need_vs_capacity <- function(geo, need_col = "need", capacity_col = "
       sum(need[underserved], na.rm = TRUE) / tot_need else NA_real_,
     by_geo = by_geo
   )
+}
+
+#' Expected prevalent PFD NEED per geography from age-band population
+#'
+#' Bridges the demographic inputs to the per-geography `need` the rest of this
+#' module consumes: for each row (e.g. a census tract) it multiplies the female
+#' population in each demand age band by that band's PFD prevalence and sums, so
+#' `need` is the expected number of prevalent pelvic-floor cases. This is the
+#' geographic analogue of the D1 prevalent-PFD denominator (`R/13`), applied to
+#' local population instead of the national age structure.
+#'
+#' @param tracts Data frame with a geography id and one female-population column
+#'   per demand age band (default columns are those written by
+#'   `scripts/data_acquisition/08_download_acs_tracts.R`). Any other columns
+#'   (centroids, `nearest_provider_min`, `access_ratio`, `capacity`) are carried
+#'   through untouched so the result flows straight into
+#'   [geographic_demand_summary()].
+#' @param prevalence Named numeric PFD prevalence over the demand age bands.
+#'   Defaults to the package SSOT [pfd_prevalence_by_band()]; must name every band
+#'   in `band_cols`.
+#' @param band_cols Named character vector mapping each demand age band to its
+#'   population column in `tracts`. Default `TRACT_AGE_BAND_COLUMNS` (the columns
+#'   written by `08_download_acs_tracts.R`).
+#' @param need_col Name of the output need column. Default `"need"`.
+#' @return `tracts` with a numeric `need` column added.
+#' @export
+tract_need_from_population <- function(tracts,
+                                       prevalence = pfd_prevalence_by_band(),
+                                       band_cols = TRACT_AGE_BAND_COLUMNS,
+                                       need_col = "need") {
+  stopifnot(is.data.frame(tracts), length(band_cols) > 0, !is.null(names(band_cols)))
+  bands <- names(band_cols)
+  missing_cols <- setdiff(unname(band_cols), names(tracts))
+  if (length(missing_cols))
+    stop("tract_need_from_population(): missing population column(s): ",
+         paste(missing_cols, collapse = ", "), call. = FALSE)
+  missing_prev <- setdiff(bands, names(prevalence))
+  if (length(missing_prev))
+    stop("tract_need_from_population(): prevalence has no value for band(s): ",
+         paste(missing_prev, collapse = ", "), call. = FALSE)
+
+  pop <- as.matrix(tracts[, unname(band_cols), drop = FALSE])
+  pop[is.na(pop)] <- 0
+  rate <- as.numeric(prevalence[bands])            # align rate order to band_cols
+  tracts[[need_col]] <- as.numeric(pop %*% rate)   # sum_band(pop_band * prevalence_band)
+  tracts
+}
+
+#' One-call isochrone demand from a tract age-band population table
+#'
+#' Convenience wrapper: build per-tract `need` with [tract_need_from_population()]
+#' then summarise it with [geographic_demand_summary()]. `tracts` must already
+#' carry a nearest-provider travel-time column (from the isochrone pipeline);
+#' access-ratio / capacity columns are used when present.
+#'
+#' @param tracts Tract table with age-band population + `nearest_provider_min`.
+#' @param prevalence,band_cols Passed to [tract_need_from_population()].
+#' @param ... Passed to [geographic_demand_summary()] (e.g. `bands`, `time_col`).
+#' @return The [geographic_demand_summary()] list for the tract need surface.
+#' @export
+isochrone_demand_from_tracts <- function(tracts,
+                                         prevalence = pfd_prevalence_by_band(),
+                                         band_cols = TRACT_AGE_BAND_COLUMNS, ...) {
+  need_tbl <- tract_need_from_population(tracts, prevalence, band_cols)
+  geographic_demand_summary(need_tbl, ...)
 }
 
 #' One-call geographic (isochrone) demand summary
