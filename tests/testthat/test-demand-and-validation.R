@@ -120,10 +120,21 @@ test_that("an unregistered scenario id is refused", {
 test_that("the local fallback still rejects scalar hazard multipliers", {
   reg <- local_supply_scenario_registry(55)
   expect_silent(validate_scenario_registry(reg, "supply"))
-  expect_equal(reg$retirement_2_years_later$retirement_shift_years, 2)
+  expect_equal(reg$retire_2yr_later$retirement_shift_years, 2)
   bad <- reg
   bad$status_quo$hazard_mult <- 0.73
   expect_error(validate_scenario_registry(bad, "supply"), "scalar hazard multiplier")
+})
+
+test_that("the local fallback carries the SSOT retirement-shift contract ids", {
+  # Regression guard for the scenario-id drift: urps_p_active()/p_active_by_age()
+  # fall back to this registry when mufflyaccess is absent (e.g. on CI), so it
+  # must answer the SSOT ids `retire_2yr_later`/`retire_2yr_earlier` — not older
+  # local names — or the age-axis shift silently resolves to 0.
+  reg <- local_supply_scenario_registry(55)
+  expect_equal(reg$retire_2yr_later$retirement_shift_years, 2)
+  expect_equal(reg$retire_2yr_earlier$retirement_shift_years, -2)
+  expect_null(reg$retirement_2_years_later)   # old drifted id is gone
 })
 
 test_that("the local registry version cannot collide with the SSOT version", {

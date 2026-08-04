@@ -84,7 +84,12 @@ local_supply_scenario_registry <- function(baseline_entrants = 55) {
       conversion = 1.00,
       source = "HWSM / Dall 2013 / Dall 2021 / Zarek 2025"
     ),
-    retirement_2_years_later = list(
+    # Retirement-shift scenarios use the mufflyaccess SSOT contract ids
+    # (`retire_2yr_later` / `retire_2yr_earlier`) so urps_p_active() and
+    # p_active_by_age() resolve them identically whether the SSOT registry is
+    # installed or this local fallback is in use. The reference scenario stays
+    # `status_quo` (the fallback's own reference name; see validate_scenario_registry).
+    retire_2yr_later = list(
       label = "Retire 2 years later",
       entrants = baseline_entrants,
       retirement_shift_years = 2,
@@ -92,7 +97,7 @@ local_supply_scenario_registry <- function(baseline_entrants = 55) {
       conversion = 1.00,
       source = "HWSM: one- or two-year shift in retirement patterns"
     ),
-    retirement_2_years_earlier = list(
+    retire_2yr_earlier = list(
       label = "Retire 2 years earlier",
       entrants = baseline_entrants,
       retirement_shift_years = -2,
