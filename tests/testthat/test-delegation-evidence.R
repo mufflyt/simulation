@@ -52,22 +52,44 @@ test_that("the delegation matrix is still declared an assumption", {
   expect_match(URPS_DELEGATION_SOURCE, "NOT a urogynaecology survey")
 })
 
-test_that("the capacity factor is a first-order lever, and the sweep shows it", {
-  v <- tibble::tibble(
-    year = 2025,
+de_volumes <- function() {
+  tidyr::expand_grid(
+    year = c(2025, 2050),
     service = c("new_consultation", "return_visit", "sling_procedure",
                 "urodynamics", "pessary_care", "cystoscopy", "botox_bladder",
                 "ptns", "bladder_instillation", "prolapse_procedure",
-                "postoperative_care"),
-    volume = c(3e6, 7e6, 3e5, 9e5, 1e6, 5e5, 1e5, 3e5, 2e5, 2e5, 1e6)
-  )
-  s <- delegation_capacity_sensitivity(v)
-  expect_equal(s$relative_to_default[s$capacity_factor == 0.434], 1)
+                "postoperative_care")
+  ) |>
+    dplyr::mutate(volume = rep(c(3e6, 7e6, 3e5, 9e5, 1e6, 5e5, 1e5, 3e5, 2e5,
+                                 2e5, 1e6), 2) * rep(c(1, 1.15), each = 11))
+}
+
+test_that("required FTE is INVARIANT to the delegation capacity factor", {
+  s <- delegation_capacity_sensitivity(de_volumes())
+
+  # THE CONTRACT, and it corrects an intuition worth stating: work RVUs scale
+  # linearly with the factor, but calibrate_wrvu_per_fte() SOLVES productivity
+  # against the base-year anchor, so the denominator scales identically and the
+  # ratio cancels. The projected gap is therefore robust to the least-evidenced
+  # constant in the workload path. A sweep that reported only work RVUs would
+  # imply the opposite.
   expect_true(all(diff(s$urps_wrvu) > 0))
-  # The rescale is linear in the factor, so a 0.30-0.60 sweep moves URPS work
-  # RVUs (and therefore required FTE) by about a factor of two. Reporting that
-  # is the point: it is the least evidenced number in the workload path.
-  expect_gt(max(s$relative_to_default) / min(s$relative_to_default), 1.8)
+  expect_equal(diff(range(s$required_fte_base)), 0, tolerance = 1e-8)
+  expect_equal(diff(range(s$required_fte_target)), 0, tolerance = 1e-8)
+  # Productivity absorbs it, in proportion.
+  expect_equal(s$solved_wrvu_per_fte / s$urps_wrvu,
+               rep(s$solved_wrvu_per_fte[1] / s$urps_wrvu[1], nrow(s)),
+               tolerance = 1e-8)
+})
+
+test_that("the capacity factor is falsifiable through implied productivity", {
+  s <- delegation_capacity_sensitivity(de_volumes())
+  # It moves nothing in the gap, but it does move a quantity with a published
+  # plausible range -- which is what makes the Medicare-measured share testable
+  # rather than merely different.
+  expect_true(all(diff(s$solved_wrvu_per_fte) > 0))
+  expect_true(any(s$productivity_plausible))
+  expect_false(all(s$productivity_plausible))
 })
 
 test_that("the real artifact corroborates the borrowed ordering", {
