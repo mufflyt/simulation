@@ -86,6 +86,8 @@ outputs/
 !figures/readme_supply_demand_trajectory.png
 !figures/readme_baseline_cohort_composition.png
 !figures/readme_demand_to_fte_pathway.png
+!figures/meps_care_seeking_multipliers.png
+!figures/meps_care_seeking_comorbidity.png
 
 # Canonical Census NPP inputs (vetted reference data; build-ignored so the
 # package build stays small -- see .Rbuildignore ^data-raw$).
