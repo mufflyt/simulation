@@ -29,3 +29,10 @@ test_that("Medicare capacity rejects unobserved CPTs and invalid coverage", {
   claims$hcpcs <- "99213"
   expect_error(medicare_work_rvu_by_provider(claims, roster, coverage_col = "coverage"), "coverage")
 })
+
+test_that("precomputed work RVUs do not require a redundant HCPCS column", {
+  roster <- tibble::tibble(npi = "a", year = 2024L)
+  claims <- tibble::tibble(npi = "a", year = 2024L, work_rvu = 125)
+  out <- medicare_work_rvu_by_provider(claims, roster, minimum_wrvu = 0)
+  expect_equal(out$medicare_work_rvu, 125)
+})

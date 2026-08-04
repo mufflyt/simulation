@@ -138,6 +138,55 @@ narrow.
 
 ---
 
+## Medicare sling-activity comparison
+
+![Annual Medicare sling workload by clinician tag](figures/medicare_sling_workload_index.png)
+
+This figure uses the Medicare fee-for-service cache for **CPT 57288** (sling
+procedures), not a complete URPS claims file. Within each year, 1.0 is the
+average sling volume across the combined observed cohort. The lower panel shows
+the number of clinicians with a reported CPT 57288 line. It is a service-specific
+activity comparison—not total URPS capacity, all-payer productivity, or
+clinical-hours FTE.
+
+Rebuild it when the external drive is mounted:
+
+```bash
+Rscript scripts/plot_medicare_sling_workload.R
+```
+
+Set `MEDICARE_SLING_CACHE` to use another `provider_volume.rds` location and
+`MEDICARE_SLING_FIGURE` to choose a different output path.
+
+## Exploratory model outputs and mechanics
+
+![Exploratory supply versus required-FTE trajectory](figures/readme_supply_demand_trajectory.png)
+
+This status-quo trajectory shows the model's intended output: supplied and
+required workforce expressed in the same FTE units. It is **exploratory** because
+the starting population is reconstructed from certification cohorts and the
+baseline adequacy uses an analogy-derived capacity-survey stand-in. It should not
+be read as externally validated FTE-gap evidence.
+
+![Baseline certification-cohort composition](figures/readme_baseline_cohort_composition.png)
+
+The baseline supply cohort is reconstructed from certification years. Fellowship
+cohort ages are derived from their certification years, the pre-2014 backlog is
+assumed, and sex is simulated at the configured share. This is deliberately not
+presented as an observed active-provider roster.
+
+![Demand-to-FTE pathway](figures/readme_demand_to_fte_pathway.png)
+
+The demand path keeps the units explicit: population and care-seeking are first
+translated to services, then to work RVUs, and only then to required clinical
+FTE. This prevents dimensionally invalid ratios such as providers per case.
+
+Rebuild these figures with:
+
+```bash
+Rscript scripts/plot_readme_model_overview.R
+```
+
 ## Historical validation
 
 `docs/BACKTEST_2020_TO_2023.md` — fit on information available through 2020 only,
@@ -156,6 +205,12 @@ interval everywhere. Two distinct causes, both reported honestly:
   3.7× and improved coverage from ~6.5× too narrow to ~1.7×, **without moving the
   point estimate** — but it still does not cover. The residual is structural
   break, not sampling error.
+
+![Historical workforce back-test trajectories](figures/backtest_2020_to_2023.png)
+
+The figure makes the limitation visible: the observed 2021–2023 count falls
+outside every model arm's 95% prediction interval. It is a headcount back-test;
+it does not validate clinical-hours FTE, required FTE, or the projected gap.
 
 ### Rolling-origin interval coverage
 

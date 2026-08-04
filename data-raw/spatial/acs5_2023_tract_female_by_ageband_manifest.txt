@@ -1,0 +1,11 @@
+ACS 2023 5-Year — tract female population by demand age band
+Generated: 2026-08-03 19:01:50.19215
+Survey: acs5 | Year: 2023 | Table: B01001
+Tracts: 84,400
+Total female 40+: 83,536,334
+md5: df69beefcead6aa84d629ca9862ba011
+
+Bands: 20-39 / 40-59 / 60-64 / 65-79 / 80+ (match data-raw/census/README.md).
+Consumed by R/32-geographic_demand.R after a GEOID join to tract centroids
+(data-raw/spatial/tract_fem65_centroids.csv) or a TIGER/Line tract layer.
+API key: https://api.census.gov/data/key_signup.html | DUA required: NO
