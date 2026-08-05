@@ -512,6 +512,36 @@ assert_baseline_gap_estimated <- function(gap, mode = resolve_reproducibility_mo
     return(refuse(msg))
   }
 
+  # THE CLASS IS NOT THE CONTRACT. `structure(list(required_fte = 1), class =
+  # "urps_baseline_gap")` satisfied the check above and walked straight through
+  # the gate protecting the single most leveraged input in the model -- the
+  # base-year anchor, the only one that can still change the sign of the gap.
+  # Anything that did not come from a real estimator is refused here.
+  need <- c("required_fte", "adequacy", "method")
+  absent <- setdiff(need, names(gap))
+  if (length(absent)) {
+    return(refuse(paste0(
+      "Base-year gap object is missing required field(s): ",
+      paste(absent, collapse = ", "),
+      ". Build it with capacity_survey_adequacy(), hpsa_removal_shortfall(), ",
+      "external_anchor_gap() or assumed_baseline_gap() rather than by hand.")))
+  }
+  if (!is.numeric(gap$required_fte) || length(gap$required_fte) != 1L ||
+      !is.finite(gap$required_fte) || gap$required_fte <= 0) {
+    return(refuse(paste(
+      "Base-year gap carries a required_fte of",
+      paste0(format(gap$required_fte), ";"),
+      "it must be a single finite positive number. Required FTE is the LEVEL",
+      "every projected year is scaled from, so a non-finite or non-positive",
+      "value silently voids the whole trajectory.")))
+  }
+  if (!is.numeric(gap$adequacy) || length(gap$adequacy) != 1L ||
+      !is.finite(gap$adequacy) || gap$adequacy <= 0) {
+    return(refuse(paste(
+      "Base-year gap carries an adequacy of", paste0(format(gap$adequacy), ";"),
+      "it must be a single finite positive number.")))
+  }
+
   tier <- gap$calibration_status %||% NA_character_
   if (identical(tier, "calibrated")) return(invisible(TRUE))
 
