@@ -254,7 +254,16 @@ validate_backtest_target <- function(target_year = BACKTEST_TARGET_YEAR,
     measure = measure,
     contract_version = det$contract_version,
     basis = current$basis,
-    observed_series_applies_attrition = !no_attrition,
+    # `!no_attrition` collapsed two different states into one. With retirement
+    # UNASCERTAINED, retired_all_zero is FALSE, so no_attrition is FALSE, and the
+    # negation asserted that the observed series DOES net out departures -- the
+    # strongest of the three claims, from the weakest evidence. Unknown is not
+    # evidence of attrition any more than it is evidence of none: the series may
+    # be said to apply attrition only when retirement was actually ascertained
+    # and is non-zero.
+    observed_series_applies_attrition =
+      !retired_unascertained && !retired_all_zero && !stock_is_cumulative,
+    retirement_ascertained = !retired_unascertained,
     retired_values_rejected = retired,
     candidates = backtest_target_candidates(),
     rationale = sprintf(paste(
