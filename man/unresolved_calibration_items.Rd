@@ -7,10 +7,17 @@
 unresolved_calibration_items()
 }
 \value{
-Tibble with \code{item}, \code{resolved}, \code{cancels_out}, \code{leverage}.
+Tibble with \code{item}, \code{resolved}, \code{in_reported_estimand},
+\code{cancels_out}, \code{resolved_by}, \code{leverage}.
 }
 \description{
 The one place to ask "what is still borrowed, and does it matter?". Ordered
 by leverage: an item that cancels out of the reported estimand is a
 provenance problem, and an item that does not is a results problem.
+}
+\details{
+\code{in_reported_estimand} separates two things that both read as "does not
+affect the answer" and are not the same. Delegation IS in the estimand and
+cancels arithmetically. Geographic access is not in it at all, because the
+layer is dormant -- so it cannot be wrong, only absent.
 }

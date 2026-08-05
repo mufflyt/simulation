@@ -1,10 +1,13 @@
-# The URPS Practice Survey: One Instrument, Two Open Items ----
+# The Open-Items Register ----
 #
-# Two calibration inputs in this model are borrowed from other specialties, and
-# neither can be resolved from any data the repository has or could derive. They
-# are registered here TOGETHER because a single fielded instrument answers both,
-# and fielding two surveys to answer one questionnaire's worth of questions is
-# how neither gets done.
+# Three items are open, and they are open in two different WAYS. Keeping that
+# distinction visible is the point of the file: the first two are answered by
+# collecting data the model has never had, the third by connecting data it
+# already holds.
+#
+# TWO INPUTS BORROWED FROM OTHER SPECIALTIES, both answerable by ONE fielded
+# instrument -- registered together because fielding two surveys to collect one
+# questionnaire's worth of questions is how neither gets done:
 #
 #   1. BASE-YEAR CAPACITY ANCHOR   `capacity_status()`
 #      Currently `capacity_survey_adequacy(example_capacity_survey())`, whose
@@ -27,6 +30,13 @@
 # 1.0000 -> 0.9597 -> 0.9231 across 2025/2035/2050, which removes 176 FTE from
 # the 2050 supply. That is larger than the entire demand-growth lever across the
 # full Census low-to-high range, and it rests on another specialty's gradient.
+#
+# ONE CAPABILITY THAT IS BUILT BUT UNREACHABLE:
+#
+#   3. GEOGRAPHIC ACCESS           `geographic_access_status()`
+#      Not an analogy and not a wrong value -- an absent one. The layer exists
+#      and is called by nothing, so it cannot be miscalibrated, only missing.
+#      No questionnaire fixes it; see that function for the ordering trap.
 #
 # DO NOT "FIX" R/40-hrsa_fte_calibration.R. It carries TODO-FTE-001 and the
 # `derived_by_analogy` tier, so it looks like the thing to replace. It is
@@ -107,14 +117,82 @@ fte_curve_status <- function() {
 #' by leverage: an item that cancels out of the reported estimand is a
 #' provenance problem, and an item that does not is a results problem.
 #'
-#' @return Tibble with `item`, `resolved`, `cancels_out`, `leverage`.
+#' `in_reported_estimand` separates two things that both read as "does not
+#' affect the answer" and are not the same. Delegation IS in the estimand and
+#' cancels arithmetically. Geographic access is not in it at all, because the
+#' layer is dormant -- so it cannot be wrong, only absent.
+#'
+#' @return Tibble with `item`, `resolved`, `in_reported_estimand`,
+#'   `cancels_out`, `resolved_by`, `leverage`.
 #' @export
 unresolved_calibration_items <- function() {
   tibble::tribble(
-    ~item,               ~resolved, ~cancels_out, ~leverage,
-    "capacity_anchor",   FALSE,     FALSE,        "Sets the LEVEL of required FTE. The only input that can still change the SIGN of the projected gap (adequacy 0.708 vs 0.948 erases the 2050 surplus).",
-    "fte_curve",         FALSE,     FALSE,        "Level absorbed by intercept calibration; SHAPE removes 176 FTE from 2050 supply. Larger than the demand-growth lever across the full Census range.",
-    "delegation_matrix", FALSE,     TRUE,         "Cancels: calibrate_wrvu_per_fte() solves productivity against the anchor, so required FTE is invariant to it. A provenance problem, not a results problem.",
-    "demand_calibration", TRUE,     TRUE,         "Fitted to NAMCS (scalar 0.467), and cancels for the same reason -- a 2.1x level correction moved 2050 required FTE by 0.25%."
+    ~item,                ~resolved, ~in_reported_estimand, ~cancels_out, ~resolved_by,        ~leverage,
+    "capacity_anchor",    FALSE,     TRUE,                  FALSE,        "practice survey",   "Sets the LEVEL of required FTE. The only input that can still change the SIGN of the projected gap (adequacy 0.708 vs 0.948 erases the 2050 surplus).",
+    "fte_curve",          FALSE,     TRUE,                  FALSE,        "practice survey",   "Level absorbed by intercept calibration; SHAPE removes 176 FTE from 2050 supply. Larger than the demand-growth lever across the full Census range.",
+    "geographic_access",  FALSE,     FALSE,                 NA,           "data integration",  "Not in any reported result: R/14 is loaded and called by nothing. Cannot be wrong, only absent. Basis for every distributional claim the model might make. See geographic_access_status().",
+    "delegation_matrix",  FALSE,     TRUE,                  TRUE,         "practice survey",   "Cancels: calibrate_wrvu_per_fte() solves productivity against the anchor, so required FTE is invariant to it. A provenance problem, not a results problem.",
+    "demand_calibration", TRUE,      TRUE,                  TRUE,         "NAMCS (done)",      "Fitted to NAMCS (scalar 0.467), and cancels for the same reason -- a 2.1x level correction moved 2050 required FTE by 0.25%."
+  )
+}
+
+# ---- Geographic access -----------------------------------------------------
+#
+# A different KIND of open item from the two above, and the register has to say
+# so or it will be "fixed" wrongly. The capacity anchor and the FTE curve are
+# inputs resolved BY ANALOGY: they have values, and the values come from another
+# specialty. Geographic access has no value at all -- the layer is built, loaded,
+# and reachable from nothing. It is a capability gap, not a calibration error.
+
+#' Status of the geographic access layer
+#'
+#' `docs/DEMAND_METHODS.md` says production use "requires tract-level population,
+#' provider locations and drive-time isochrones". Two of those three now exist,
+#' so the remaining work is cross-repo INTEGRATION and WIRING, not construction.
+#'
+#' THE ORDERING TRAP, which is why this is registered rather than left as a TODO.
+#' `R/14-spatial_access_e2sfca.R` is loaded by the orchestrator's module list and
+#' called by nothing outside its own tests. Wiring it up is a small change and
+#' looks like the obvious first step. Do it BEFORE provider coordinates exist and
+#' the layer runs on state-level centroids, producing a geographic access ratio
+#' that is fully plausible and means nothing. A dormant module produces no
+#' number; a wired one running on the wrong geometry produces a publishable one.
+#' Coordinates and isochrones come first.
+#'
+#' @return List with `resolved`, per-component state, the trap, and what remains.
+#' @export
+geographic_access_status <- function() {
+  components <- tibble::tribble(
+    ~component,              ~state,     ~detail,
+    "tract_population",      "PRESENT",  "data-raw/spatial/acs5_2023_tract_female_by_ageband.csv -- 84,400 tracts, 83.5M women 40+, md5 df69beefcead6aa84d629ca9862ba011, regenerated by scripts/data_acquisition/08_download_acs_tracts.R.",
+    "tract_centroids",       "PRESENT",  "data-raw/spatial/tract_fem65_centroids.csv, joined to the ACS table by GEOID.",
+    "demand_machinery",      "WIRED",    "R/32: tract_need_from_population(), demand_by_travel_band(), need_weighted_access(), isochrone_demand_from_tracts(). Called from scripts/run_demand_pipeline.R.",
+    "supply_machinery",      "DORMANT",  "R/14: compute_access(), match_points_to_isochrones(), compare_access_methods(), access_moe_ci(). Present in the orchestrator's module load list and called by NOTHING outside tests.",
+    "provider_coordinates",  "MISSING",  "The roster carries state and rurality only. The cliff source adds county_fips, zcta and tract but no lat/lon, so point locations require geocoding from NPI -- which mufflyt/isochrones already does.",
+    "drive_time_isochrones", "MISSING",  "Absent from this repository entirely. They exist in mufflyt/isochrones and were expensive to generate; import rather than recompute.",
+    "validation_gate",       "MISSING",  "validation_report() runs six internal checks, none geographic. two_method_agreement() exists to compare geographic adequacy rankings and is called with geographic data by nothing."
+  )
+
+  list(
+    resolved = FALSE,
+    components = components,
+    n_present = sum(components$state %in% c("PRESENT", "WIRED")),
+    n_missing = sum(components$state %in% c("MISSING", "DORMANT")),
+    why_unresolved = paste(
+      "Two of the three inputs the methods document names are now present and",
+      "checksummed. What is missing is provider point locations and drive-time",
+      "isochrones -- both of which exist in mufflyt/isochrones -- plus the wiring",
+      "that would make geography a gate rather than a downstream feature."),
+    ordering_trap = paste(
+      "Do NOT wire R/14 first. Running it before provider coordinates exist",
+      "falls back to state-level geometry and yields a plausible access ratio",
+      "that means nothing. A dormant module produces no number; a wired one on",
+      "the wrong geometry produces a publishable one."),
+    # Deliberately NOT resolved by the practice survey: this is an integration
+    # task, and listing it there would imply a questionnaire could fix it.
+    resolved_by = c("provider point locations geocoded from roster NPIs",
+                    "drive-time isochrones imported from mufflyt/isochrones",
+                    "R/14 called from the orchestrator, not merely loaded",
+                    "a geographic check added to validation_report()")
   )
 }
