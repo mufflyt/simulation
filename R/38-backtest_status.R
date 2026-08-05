@@ -301,3 +301,170 @@ print.urps_backtest_status <- function(x, ...) {
   cat(sprintf("  source              %s\n", x$source))
   invisible(x)
 }
+
+# ---- Keeping the record and the artifact in step ----------------------------
+#
+# `BACKTEST_RECORD_2020_2023` is a hand-transcribed copy of the scored artifact,
+# carried in the package because artifacts/ is .Rbuildignore'd and the status
+# stamp must travel with an installed build. That makes DRIFT the central risk:
+# re-running run_backtest() rewrites the artifact and leaves the constant
+# unchanged, so every projection then carries a status no artifact supports.
+#
+# It has already happened once. Extending the NRMP series moved arm 5 from
+# -2.53% to -4.36%, and for one commit the record and the artifact disagreed.
+#
+# The prior test compared three AGGREGATE fields -- coverage, worst error, arm
+# count. Two different records can agree on all three and differ arm by arm, and
+# the check skipped silently wherever artifacts/ was absent, which is every
+# installed build. What follows verifies row by row and records the checksum of
+# the artifact the record was taken from, so drift is detectable rather than
+# merely improbable.
+
+#' SHA-256 of the scored artifact `BACKTEST_RECORD_2020_2023` was transcribed from
+#'
+#' Regenerating the artifact changes this. If it no longer matches, the record
+#' is stale until proven otherwise -- update both together, in one commit.
+#' @export
+BACKTEST_RECORD_SHA256 <- "d9a895446d24d6debdb8ff6f634f652123003de0918e428f9c99cf1346b01d8d"
+
+# Tolerance on the transcribed percentage errors. The record carries six decimal
+# places, so anything looser would let a genuine re-score pass as a rounding
+# difference.
+BACKTEST_RECORD_TOLERANCE <- 1e-6
+
+#' Locate the scored back-test artifact, if it is present
+#'
+#' Returns NULL rather than erroring: artifacts/ does not ship, so absence is
+#' the normal case in an installed package and is not itself a fault.
+#'
+#' @param start Directory to search upward from.
+#' @return Path, or NULL.
+#' @export
+backtest_artifact_path <- function(start = ".") {
+  candidates <- c(start, file.path(start, ".."), file.path(start, "..", ".."))
+  for (p in candidates) {
+    f <- file.path(p, "artifacts", "backtest_2020_to_2023_summary.csv")
+    if (file.exists(f)) return(normalizePath(f))
+  }
+  NULL
+}
+
+#' Verify the frozen record against the scored artifact, row by row
+#'
+#' @param path Artifact path; located automatically when NULL.
+#' @param record Frozen record to check.
+#' @param tolerance Absolute tolerance on `percent_error`.
+#' @return List with `checked`, `current`, `checksum_matches`, and `mismatches`
+#'   (a tibble, empty when the record is current).
+#' @export
+verify_backtest_record <- function(path = NULL,
+                                   record = BACKTEST_RECORD_2020_2023,
+                                   tolerance = BACKTEST_RECORD_TOLERANCE) {
+  if (is.null(path)) path <- backtest_artifact_path()
+  if (is.null(path) || !file.exists(path)) {
+    return(list(checked = FALSE, current = NA, checksum_matches = NA,
+                path = NULL, mismatches = NULL,
+                detail = "artifact not present; nothing to verify against"))
+  }
+  live <- utils::read.csv(path, stringsAsFactors = FALSE)
+
+  # openssl returns a classed object, and as.character() KEEPS the class. The
+  # result prints as a plain hex string and compares TRUE under ==, but FALSE
+  # under identical() -- so an attribute, not a digest, decided whether the
+  # record looked stale. Strip to a bare character before comparing.
+  # digest is already a declared Import, so this needs no new dependency, and
+  # digest(file = ) returns a BARE character -- unlike openssl::sha256(), whose
+  # classed return survived as.character() and compared TRUE under `==` but
+  # FALSE under identical(), letting an attribute rather than a digest decide
+  # whether the record looked stale.
+  sha <- tryCatch(digest::digest(file = path, algo = "sha256"),
+                  error = function(e) NA_character_)
+  if (is.na(sha)) {
+    sha <- tryCatch(unname(tools::md5sum(path)), error = function(e) NA_character_)
+    checksum_matches <- NA   # md5 is not comparable with the stored sha256
+  } else {
+    checksum_matches <- identical(sha, BACKTEST_RECORD_SHA256)
+  }
+
+  problems <- list()
+  if (nrow(live) != nrow(record)) {
+    problems[[length(problems) + 1L]] <- tibble::tibble(
+      field = "n_arms", record = as.character(nrow(record)),
+      artifact = as.character(nrow(live)), arm = NA_character_)
+  } else {
+    # Row ORDER is the join key: the record is a transcription of this file in
+    # this order, and the emitter preserves it. A reordered artifact is itself a
+    # mismatch worth surfacing rather than silently matching on labels.
+    for (i in seq_len(nrow(live))) {
+      # Pull the label OUT before building the row. Inside tibble(), `record`
+      # names the column being defined, so `record$arm[i]` resolves against a
+      # character scalar and errors -- the same data-mask shadowing that
+      # score_backtest_arm() documents for `arm = label`.
+      arm_i <- record$arm[i]
+      if (abs(record$percent_error[i] - live$percent_error[i]) > tolerance) {
+        problems[[length(problems) + 1L]] <- tibble::tibble(
+          field = "percent_error",
+          record = sprintf("%.6f", record$percent_error[i]),
+          artifact = sprintf("%.6f", live$percent_error[i]),
+          arm = arm_i)
+      }
+      for (f in c("within_80", "within_95")) {
+        rec_f <- as.logical(record[[f]][i])
+        if (!identical(rec_f, as.logical(live[[f]][i]))) {
+          problems[[length(problems) + 1L]] <- tibble::tibble(
+            field = f, record = as.character(rec_f),
+            artifact = as.character(live[[f]][i]), arm = arm_i)
+        }
+      }
+    }
+  }
+
+  mism <- if (length(problems)) dplyr::bind_rows(problems) else
+    tibble::tibble(field = character(), record = character(),
+                   artifact = character(), arm = character())
+
+  list(checked = TRUE, current = nrow(mism) == 0L,
+       checksum_matches = checksum_matches, path = path,
+       observed_sha256 = sha, expected_sha256 = BACKTEST_RECORD_SHA256,
+       mismatches = mism, n_arms = nrow(live))
+}
+
+#' Refuse to ship a status stamp the artifact does not support
+#'
+#' Call after regenerating the back-test, and before publishing anything that
+#' carries [backtest_status()].
+#'
+#' @param mode Reproducibility mode; strict errors, relaxed warns.
+#' @param path Artifact path; located automatically when NULL.
+#' @return (Invisibly) TRUE when the record is current or unverifiable.
+#' @export
+assert_backtest_record_current <- function(mode = resolve_reproducibility_mode(),
+                                           path = NULL) {
+  v <- verify_backtest_record(path)
+  if (!isTRUE(v$checked)) return(invisible(TRUE))
+  if (isTRUE(v$current) && !isFALSE(v$checksum_matches)) return(invisible(TRUE))
+
+  lines <- character()
+  if (isFALSE(v$checksum_matches)) {
+    lines <- c(lines, sprintf(
+      "The artifact has been regenerated: sha256 %s, record transcribed from %s.",
+      substr(v$observed_sha256, 1, 16), substr(v$expected_sha256, 1, 16)))
+  }
+  if (nrow(v$mismatches)) {
+    lines <- c(lines, sprintf("%d field(s) differ, including:", nrow(v$mismatches)))
+    show <- utils::head(v$mismatches, 4)
+    lines <- c(lines, sprintf("  %s [%s]: record %s, artifact %s",
+                              show$arm, show$field, show$record, show$artifact))
+  }
+  msg <- paste(c(
+    "BACKTEST_RECORD_2020_2023 does not match the scored artifact, so",
+    "backtest_status() is reporting a validation result no artifact supports.",
+    lines,
+    "Regenerate the constant with scripts/diagnostics/emit_backtest_record.R and",
+    "update BACKTEST_RECORD_SHA256, in the SAME commit as the artifact."),
+    collapse = "\n  ")
+
+  if (identical(mode, "strict")) stop(msg, call. = FALSE)
+  .msg_warn(msg)
+  invisible(FALSE)
+}

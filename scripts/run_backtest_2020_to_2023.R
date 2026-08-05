@@ -39,6 +39,37 @@ bt <- if (file.exists(cached) && !nzchar(Sys.getenv("BACKTEST_FORCE"))) {
 
 utils::write.csv(bt$summary, "artifacts/backtest_2020_to_2023_summary.csv",
                  row.names = FALSE)
+
+# THE DRIFT GATE, placed here because THIS is the moment drift is created.
+# BACKTEST_RECORD_2020_2023 is a transcription of the file just overwritten, and
+# every projection carries a status derived from that constant. Re-scoring
+# without updating it leaves the package reporting a validation result no
+# artifact supports -- which happened once already, when extending the NRMP
+# series moved arm 5 from -2.53% to -4.36%.
+#
+# Loud, and non-fatal: the artifact is legitimately regenerated before the
+# constant can be updated from it, so failing here would block the very step
+# that fixes it.
+cat("\n===== RECORD DRIFT CHECK =====\n")
+.drift <- verify_backtest_record("artifacts/backtest_2020_to_2023_summary.csv")
+if (isTRUE(.drift$current) && isTRUE(.drift$checksum_matches)) {
+  cat("BACKTEST_RECORD_2020_2023 matches this artifact. Nothing to update.\n")
+} else {
+  cat("!! BACKTEST_RECORD_2020_2023 IS NOW STALE.\n")
+  if (isFALSE(.drift$checksum_matches)) {
+    cat(sprintf("   artifact sha256 %s, record transcribed from %s\n",
+                substr(.drift$observed_sha256, 1, 16),
+                substr(.drift$expected_sha256, 1, 16)))
+  }
+  if (!is.null(.drift$mismatches) && nrow(.drift$mismatches)) {
+    cat(sprintf("   %d field(s) differ:\n", nrow(.drift$mismatches)))
+    print(as.data.frame(.drift$mismatches), row.names = FALSE)
+  }
+  cat("\n   TO FIX, in the SAME commit as this artifact:\n")
+  cat("     Rscript scripts/diagnostics/emit_backtest_record.R\n")
+  cat("     ...paste into R/38-backtest_status.R, then update\n")
+  cat(sprintf("     BACKTEST_RECORD_SHA256 <- \"%s\"\n", .drift$observed_sha256))
+}
 utils::write.csv(bt$trajectory, "artifacts/backtest_2020_to_2023_trajectory.csv",
                  row.names = FALSE)
 
