@@ -7,8 +7,11 @@
 legacy_dir()
 }
 \value{
-Path to \code{inst/legacy} (installed or source tree).
+Path to \code{inst/legacy} in the source tree.
 }
 \description{
-Directory holding the legacy scripts
+Source checkouts only. The scripts are frozen reference material and are
+excluded from the built package, so \code{system.file()} will not find them in an
+installation and this errors with that explanation rather than a bare
+not-found.
 }

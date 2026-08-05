@@ -6,7 +6,7 @@
 ^artifacts$
 ^figures$
 ^docs$
-^inst/legacy/README\.md$
+^inst/legacy$
 ^scripts$
 ^outputs$
 ^HDMM_IMPROVEMENT_PLAN\.md$

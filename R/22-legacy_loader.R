@@ -4,6 +4,26 @@
 # part of the package: they carry top-level executable code (`workforce.R` alone
 # has ~196 top-level statements), so loading the package must not run them.
 #
+# FROZEN, AND NOT SHIPPED. Two facts establish that nothing here is load-bearing,
+# and both are checked rather than asserted:
+#
+#   * no call sites. Every name in this file is referenced from exactly one
+#     place in the repository -- test-repo-hygiene.R. No module, script or
+#     vignette calls the loader.
+#   * no shared surface. The legacy scripts define 131 function names, the
+#     package defines 468, and the intersection is EMPTY. R/42 and R/47 are
+#     reimplementations of the SWAN work, not extractions of it.
+#
+# The scripts are therefore reference material: a record of what the analysis
+# used to be, kept so a published number can be traced back to its origin. They
+# are excluded from the built package by .Rbuildignore, which means this loader
+# works in a SOURCE CHECKOUT ONLY. That is deliberate -- shipping 25,588 lines of
+# frozen script to every installation bought nothing, and the previous
+# .Rbuildignore shipped all of it while stripping the README that explains it.
+#
+# Adding a call to load_legacy() from package code would un-freeze the directory.
+# Extract what you need into a tested module instead.
+#
 # They also share 15 function names across three files. Sourcing several of them
 # in sequence silently redefines those names, and WHICH IMPLEMENTATION YOU GET
 # DEPENDS ON SOURCE ORDER. That is the failure mode this loader exists to remove:
@@ -57,15 +77,29 @@ LEGACY_CANONICAL <- c(
 )
 
 #' Directory holding the legacy scripts
-#' @return Path to `inst/legacy` (installed or source tree).
+#'
+#' Source checkouts only. The scripts are frozen reference material and are
+#' excluded from the built package, so `system.file()` will not find them in an
+#' installation and this errors with that explanation rather than a bare
+#' not-found.
+#'
+#' @return Path to `inst/legacy` in the source tree.
 #' @export
 legacy_dir <- function() {
+  # system.file() is still tried first so an installation that deliberately
+  # carries the directory (a vendored copy, an .Rbuildignore edit) keeps working.
   installed <- system.file("legacy", package = "urpssim")
   if (nzchar(installed) && dir.exists(installed)) return(installed)
   for (p in c("inst/legacy", file.path("..", "..", "inst", "legacy"))) {
     if (dir.exists(p)) return(p)
   }
-  stop("Legacy script directory not found.", call. = FALSE)
+  stop(paste(
+    "Legacy script directory not found. inst/legacy is FROZEN reference material",
+    "and is excluded from the built package (.Rbuildignore), so it is reachable",
+    "from a source checkout only. Nothing in the package depends on it: the",
+    "legacy scripts share no function name with R/. If you need one of those",
+    "implementations, extract it into a tested module rather than restoring the",
+    "directory to the build."), call. = FALSE)
 }
 
 #' Inventory every function defined by the legacy scripts

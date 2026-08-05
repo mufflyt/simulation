@@ -183,6 +183,60 @@ test_that("declared Imports cover the namespaces the package calls", {
                info = paste("Add to DESCRIPTION Imports:", paste(missing, collapse = ", ")))
 })
 
+test_that("no two modules claim the same number prefix", {
+  # THIS DEFECT HAS RECURRED ONCE ALREADY. 46f5b56 resolved four collisions
+  # (25/26/27/28) and named the mechanism exactly: "Every one was added the same
+  # day by a different feature branch taking 'the next number'." Within days
+  # three more appeared -- 27, 33 and 38 -- one of them on a file that commit had
+  # just moved. A convention that has failed twice is not a convention, it is a
+  # test that was never written.
+  #
+  # Collation is alphabetical with no Collate field, so a collision breaks
+  # nothing functionally. What it breaks is the prefix's only job: naming one
+  # module. Sub-modules are distinguished by their whole token, so 13 and 13b are
+  # different prefixes and both may exist.
+  files <- basename(.r_files("R"))
+  numbered <- grep("^[0-9]", files, value = TRUE)
+  prefixes <- sub("-.*", "", numbered)
+  dup <- unique(prefixes[duplicated(prefixes)])
+  offenders <- sort(numbered[prefixes %in% dup])
+  expect_equal(
+    offenders, character(0),
+    info = paste("Prefix collision -- renumber one of each pair to a free number:",
+                 paste(offenders, collapse = ", "))
+  )
+})
+
+MAX_MODULE_CODE_LINES <- 700L
+
+test_that("no package module exceeds the code-line ceiling", {
+  # Counted on CODE lines, deliberately. 40% of R/ is comment, because this
+  # repository records why each guard exists rather than leaving the next reader
+  # to rediscover it. A ceiling on total lines would tax exactly the practice
+  # that makes the modules readable, and the incentive it creates -- delete the
+  # explanation to fit the budget -- is the opposite of the one wanted.
+  #
+  # The ceiling is a growth brake, not a mandate to split what exists: the
+  # largest module today is well inside it. A file that trips this has usually
+  # acquired a second concern rather than grown a longer version of its first.
+  # Note that co-locating a guard with what it guards is NOT a second concern --
+  # guards that drift away from their subject are how this repository ends up
+  # with validators nothing calls.
+  over <- character(0)
+  for (f in .r_files("R")) {
+    x <- trimws(readLines(f, warn = FALSE))
+    code <- sum(nzchar(x) & !startsWith(x, "#"))
+    if (code > MAX_MODULE_CODE_LINES) {
+      over <- c(over, sprintf("%s (%d code lines)", basename(f), code))
+    }
+  }
+  expect_equal(
+    over, character(0),
+    info = sprintf("Over the %d code-line ceiling: %s",
+                   MAX_MODULE_CODE_LINES, paste(over, collapse = ", "))
+  )
+})
+
 test_that("the package does not redefine operators that base or rlang provide", {
   # Defining `%||%` locally shadows base R (>= 4.4) and rlang, so behaviour would
   # depend on attach order.

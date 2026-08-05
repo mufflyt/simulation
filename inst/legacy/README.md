@@ -1,15 +1,44 @@
-# Legacy scripts
+# Legacy scripts — FROZEN, reference only
 
-These are the original DPMM / SWAN / early-workforce scripts. They are **not part
-of the package**: they interleave function definitions with analysis code that
-runs at top level (`workforce.R` alone has ~196 top-level statements, several of
-them `load()` / `read_rds()` / `read_excel()` calls). Loading the package must
-not run any of that.
+These are the original DPMM / SWAN / early-workforce scripts: 25,588 lines across
+nine files, the largest being `dppm_validate_SWAN.R` at 12,186. They are kept so
+a published number can be traced back to the analysis it came from. They are
+**not part of the package**, they are **not maintained**, and **nothing in the
+package depends on them**.
 
-## How to load them
+## Frozen means two specific things, both checked rather than claimed
+
+**No call sites.** The whole loader API — `legacy_dir()`, `legacy_definitions()`,
+`legacy_collisions()`, `load_legacy()`, `check_legacy_canonical()`,
+`LEGACY_LOAD_ORDER`, `LEGACY_CANONICAL` — is referenced from exactly one place in
+the repository: `tests/testthat/test-repo-hygiene.R`. No module, script, or
+vignette calls any of it.
+
+**No shared surface.** These scripts define 131 function names. The package
+defines 468. The intersection is **empty**. `R/42-swan_incontinence_panel.R` and
+`R/47-swan_dmdm_panel.R` are reimplementations of the SWAN work, not extractions
+of it, so there is no path by which a change here reaches a model output.
+
+The rule that follows: **do not add a call to `load_legacy()` from package
+code.** Doing so un-freezes the directory and puts 25,588 unmaintained lines back
+on the dependency graph. If you need one of these implementations, extract it
+into a small tested module in `R/` — which is what was done for SWAN.
+
+## Not shipped
+
+`.Rbuildignore` excludes this whole directory from the built package, so
+`load_legacy()` works in a **source checkout only**.
+
+This used to be backwards. The ignore rule named `inst/legacy/README.md` and
+nothing else, so every installation carried all 980 KB of frozen script while
+stripping out the one document explaining what it was. `legacy_dir()` now says
+so explicitly when it cannot find the directory, rather than failing with a bare
+not-found.
+
+## How to load them (source checkout)
 
 ```r
-library(urpssim)
+pkgload::load_all(".")
 load_legacy()            # definitions only — safe, touches no files
 load_legacy(functions_only = FALSE)   # runs them as scripts; needs the external data
 ```
