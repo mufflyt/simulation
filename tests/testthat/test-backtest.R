@@ -117,7 +117,10 @@ test_that("the attrition definition mismatch fails closed by default", {
   skip_if_not_installed("mufflyaccess")
   # The observed series applies no attrition; the model does. Proceeding
   # requires an explicit acknowledgement.
-  expect_error(validate_backtest_target(), "NO ATTRITION")
+  # Under the shipped contract n_retired is NA throughout, so the guard stops on
+  # the UNASCERTAINED branch rather than the all-zero one. Both refuse without
+  # the acknowledgement; they differ in what they claim to know.
+  expect_error(validate_backtest_target(), "UNASCERTAINED")
   expect_silent(validate_backtest_target(acknowledge_no_attrition = TRUE))
   t <- validate_backtest_target(acknowledge_no_attrition = TRUE)
   expect_false(t$observed_series_applies_attrition)
@@ -396,26 +399,28 @@ test_that("unascertained retirement is not treated as zero retirement", {
   #   all(series$n_retired == 0, na.rm = TRUE)
   # which is VACUOUSLY TRUE when the column is all NA, because na.rm empties the
   # vector and all(logical(0)) is TRUE. Under mufflyaccess 0.10.0 n_retired is
-  # integer with no NAs and every value 0, so the old form was correct by
-  # accident; a future contract serving retirement as unascertained would have
-  # flipped the && and silently dropped the acknowledgement requirement.
+  # integer and NA in EVERY row, so the old form was not merely fragile -- it was
+  # already reaching the right verdict for the wrong reason, and would have
+  # flipped the && and silently dropped the acknowledgement requirement the
+  # moment n_active stopped equalling n_ever_certified.
   expect_true(all(c(NA, NA) == 0, na.rm = TRUE))   # the trap, demonstrated
   expect_true(any(is.na(c(NA, NA))))               # what the guard now tests
 
   skip_if_not_installed("mufflyaccess")
   s <- mufflyaccess::urps_counts_long()
-  # Documents the schema this repo was verified against. If a future contract
-  # changes it, this fails and the comments describing it must be re-checked.
+  # Documents the schema this repo was verified against. Keyed on the contract's
+  # own accessor, not on a literal, so a contract that starts ascertaining
+  # retirement fails here loudly instead of drifting out of sync with the guard.
   expect_true("n_retired" %in% names(s))
-  expect_false(any(is.na(s$n_retired)))
-  expect_true(all(s$n_retired == 0))
+  expect_true(all(is.na(s$n_retired)))
+  expect_identical(mufflyaccess::urps_retirement_status(), "not_ascertained")
   expect_true(all(s$n_active == s$n_ever_certified))
 })
 
 test_that("the no-attrition acknowledgement is still required", {
   skip_if_not_installed("mufflyaccess")
   expect_error(validate_backtest_target(acknowledge_no_attrition = FALSE),
-               "NO ATTRITION")
+               "UNASCERTAINED")
   v <- validate_backtest_target(acknowledge_no_attrition = TRUE)
   expect_false(v$observed_series_applies_attrition)
 })
