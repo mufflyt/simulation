@@ -144,3 +144,50 @@ urps_age_productivity_curve <- function(mode = resolve_reproducibility_mode()) {
   df <- utils::read.csv(path, stringsAsFactors = FALSE)
   tibble::as_tibble(df)
 }
+
+# ---- NRMP fellowship entrant series ---------------------------------------
+
+# Frozen transcription of data-raw/calibration/nrmp_urps_entrants_series.csv,
+# regenerable with scripts/data_acquisition/07_fetch_nrmp_urps_series.R. Carried
+# here rather than read at run time because data-raw/ is .Rbuildignore'd and the
+# back-test needs the series in an installed package.
+#
+# `positions_filled` is NRMP "Matches, All" -- fellows who actually matched, not
+# positions offered. Each report is published IN its appointment year, so
+# `available_by_year` is what a leakage audit should test against a cutoff.
+NRMP_URPS_ENTRANT_SERIES <- tibble::tribble(
+  ~appointment_year, ~positions_offered, ~positions_filled, ~available_by_year,
+              2017L,                64L,               59L,             2017L,
+              2018L,                60L,               59L,             2018L,
+              2019L,                64L,               58L,             2019L,
+              2020L,                65L,               56L,             2020L,
+              2025L,                70L,               70L,             2025L
+)
+
+#' NRMP fellowship entrants for URPS, as an annual series
+#'
+#' The entering-cohort series behind [nrmp_entrants()], which returns only the
+#' most recent value. Fellowship is three years, so appointment year Y feeds
+#' certifications around Y+3 to Y+4: the series is a LEADING INDICATOR of the
+#' certification counts the contract reports.
+#'
+#' @param available_by Keep only reports published by this year. Supply the
+#'   back-test cutoff to guarantee no post-cutoff report is used.
+#' @return Tibble with `appointment_year`, `positions_offered`,
+#'   `positions_filled`, `available_by_year`.
+#' @export
+nrmp_entrant_series <- function(available_by = NULL) {
+  s <- NRMP_URPS_ENTRANT_SERIES
+  if (!is.null(available_by)) {
+    s <- s[s$available_by_year <= available_by, , drop = FALSE]
+    if (nrow(s) == 0) {
+      stop(sprintf("nrmp_entrant_series(): no NRMP report published by %s",
+                   available_by), call. = FALSE)
+    }
+  }
+  s
+}
+
+# Fellowship length in years: appointment year + this = graduation, with
+# certification following shortly after.
+URPS_FELLOWSHIP_YEARS <- 3L

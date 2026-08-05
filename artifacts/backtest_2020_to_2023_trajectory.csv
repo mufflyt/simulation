@@ -31,3 +31,11 @@
 2021,1132,1117,1146,1107,1154,"4. Synthetic rnorm(52, 9), entrants from pre-2021 data [no-attrition, definition-matched]",FALSE,1180
 2022,1165,1134,1193,1115,1209,"4. Synthetic rnorm(52, 9), entrants from pre-2021 data [no-attrition, definition-matched]",FALSE,1234
 2023,1198,1151,1240,1123.975,1263.025,"4. Synthetic rnorm(52, 9), entrants from pre-2021 data [no-attrition, definition-matched]",FALSE,1306
+2020,1099,1099,1099,1099,1099,"5. Derived cohort, entrants from pre-cutoff NRMP match",TRUE,1099
+2021,1130,1123,1136,1119.975,1139,"5. Derived cohort, entrants from pre-cutoff NRMP match",TRUE,1180
+2022,1158,1149,1168,1144,1171,"5. Derived cohort, entrants from pre-cutoff NRMP match",TRUE,1234
+2023,1186,1173,1197,1168,1203,"5. Derived cohort, entrants from pre-cutoff NRMP match",TRUE,1306
+2020,1099,1099,1099,1099,1099,"5. Derived cohort, entrants from pre-cutoff NRMP match [no-attrition, definition-matched]",FALSE,1099
+2021,1157,1156,1158,1156,1159,"5. Derived cohort, entrants from pre-cutoff NRMP match [no-attrition, definition-matched]",FALSE,1180
+2022,1215,1213,1217,1212,1218,"5. Derived cohort, entrants from pre-cutoff NRMP match [no-attrition, definition-matched]",FALSE,1234
+2023,1273,1270,1276,1269,1277,"5. Derived cohort, entrants from pre-cutoff NRMP match [no-attrition, definition-matched]",FALSE,1306

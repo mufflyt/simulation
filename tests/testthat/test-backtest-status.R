@@ -13,9 +13,9 @@ test_that("the recorded status reports the coverage failure it actually has", {
   s <- backtest_status()
   expect_s3_class(s, "urps_backtest_status")
   expect_false(s$validated)
-  expect_equal(s$n_arms, 8L)
-  expect_equal(s$coverage_95, 0.25)
-  expect_equal(s$coverage_80, 0.25)
+  expect_equal(s$n_arms, 10L)
+  expect_equal(s$coverage_95, 0.20)
+  expect_equal(s$coverage_80, 0.20)
   expect_lt(s$coverage_95, s$coverage_required)
   # Every arm under-predicted: a level problem, not scatter around the truth.
   expect_true(s$all_same_direction)
@@ -46,7 +46,7 @@ test_that("status is derived from the arms, so passing coverage flips the verdic
 test_that("interval language is refused while coverage fails", {
   s <- backtest_status()
   expect_match(interval_label(s), "NOT a validated forecast interval")
-  expect_match(interval_label(s), "6 of 8")
+  expect_match(interval_label(s), "8 of 10")
   expect_error(assert_forecast_intervals_validated(s, mode = "strict"),
                "not validated")
   expect_message(assert_forecast_intervals_validated(s, mode = "relaxed"),
