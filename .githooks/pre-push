@@ -1,0 +1,22 @@
+#!/bin/bash
+# ---------------------------------------------------------------------------
+# Opt-in pre-push gate: run the CI check locally before pushing, so a broken
+# push never reaches a PR (and never lands main red).
+#
+# Enable once per clone:   git config core.hooksPath .githooks
+# Skip for a single push:  git push --no-verify
+#
+# It runs `make check` -- the exact CI invocation (R CMD check --as-cran,
+# error on warning). If make or Rscript is unavailable, it steps aside rather
+# than blocking the push.
+# ---------------------------------------------------------------------------
+set -euo pipefail
+
+if ! command -v make >/dev/null 2>&1 || ! command -v Rscript >/dev/null 2>&1; then
+  echo "[pre-push] make or Rscript not found; skipping local check." >&2
+  exit 0
+fi
+
+echo "[pre-push] running 'make check' (mirrors CI; skip with: git push --no-verify) ..."
+make check
+echo "[pre-push] check passed."
