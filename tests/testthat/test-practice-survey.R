@@ -99,3 +99,79 @@ test_that("the unresolved register separates provenance problems from results pr
   expect_true(u$cancels_out[u$item == "delegation_matrix"])
   expect_true(all(nzchar(u$leverage)))
 })
+
+# ---- Geographic access -------------------------------------------------------
+
+test_that("geographic access is registered as absent, not as miscalibrated", {
+  g <- geographic_access_status()
+  expect_false(g$resolved)
+  expect_equal(nrow(g$components), 7L)
+  expect_equal(g$n_present + g$n_missing, nrow(g$components))
+
+  st <- stats::setNames(g$components$state, g$components$component)
+  # Two of the three inputs the methods doc names are DONE. Reporting this item
+  # as "build a geographic bundle" would send someone to rebuild them.
+  expect_equal(unname(st["tract_population"]), "PRESENT")
+  expect_equal(unname(st["tract_centroids"]), "PRESENT")
+  expect_equal(unname(st["demand_machinery"]), "WIRED")
+  # What is actually missing.
+  expect_equal(unname(st["provider_coordinates"]), "MISSING")
+  expect_equal(unname(st["drive_time_isochrones"]), "MISSING")
+  expect_equal(unname(st["supply_machinery"]), "DORMANT")
+  expect_equal(unname(st["validation_gate"]), "MISSING")
+})
+
+test_that("the ordering trap is recorded, because the wrong step looks easiest", {
+  g <- geographic_access_status()
+  # Wiring R/14 is a one-line change and is the obvious first move. Done before
+  # coordinates exist it falls back to state geometry and emits a plausible
+  # access ratio that means nothing -- worse than dormancy, which emits none.
+  expect_match(g$ordering_trap, "Do NOT wire R/14 first")
+  expect_match(g$ordering_trap, "state-level geometry")
+  expect_true(any(grepl("isochrones", g$resolved_by)))
+  expect_true(any(grepl("validation_report", g$resolved_by)))
+})
+
+test_that("geographic access is NOT listed as survey-resolvable", {
+  # It is an integration task. Putting it in the instrument would imply a
+  # questionnaire could fix it, and someone would add questions instead of
+  # importing isochrones.
+  instrument <- urps_practice_survey_requirements()
+  expect_false(any(grepl("isochrone|coordinate|geocod", instrument$variable)))
+  u <- unresolved_calibration_items()
+  expect_equal(u$resolved_by[u$item == "geographic_access"], "data integration")
+  expect_true(all(u$resolved_by[u$item %in% c("capacity_anchor", "fte_curve")] ==
+                    "practice survey"))
+})
+
+test_that("the register distinguishes 'cancels out' from 'not in the estimand'", {
+  u <- unresolved_calibration_items()
+  # Both read as "does not affect the answer" and they are not the same thing.
+  # Delegation IS in the estimand and cancels arithmetically; geographic access
+  # is absent from it entirely.
+  expect_true(u$in_reported_estimand[u$item == "delegation_matrix"])
+  expect_true(u$cancels_out[u$item == "delegation_matrix"])
+  expect_false(u$in_reported_estimand[u$item == "geographic_access"])
+  expect_true(is.na(u$cancels_out[u$item == "geographic_access"]))
+})
+
+test_that("R/14 really is dormant, so the trap warning stays true", {
+  # If a future change calls the access layer from R/ or scripts/, this fails
+  # and geographic_access_status() must be re-checked -- especially whether
+  # provider coordinates arrived first.
+  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
+                 c(".", "..", file.path("..", "..")))
+  skip_if(length(root) == 0)
+  files <- c(list.files(file.path(root[1], "R"), pattern = "[.]R$", full.names = TRUE),
+             list.files(file.path(root[1], "scripts"), pattern = "[.]R$",
+                        full.names = TRUE, recursive = TRUE))
+  files <- files[!grepl("14-spatial_access_e2sfca|56-practice_survey", files)]
+  called_in <- function(f) {
+    code <- sub("#.*$", "", readLines(f, warn = FALSE))
+    any(grepl("(compute_access|match_points_to_isochrones)\\s*\\(", code))
+  }
+  hits <- vapply(files, called_in, logical(1))
+  expect_false(any(hits),
+               info = paste("access layer now called from:",
+                            paste(basename(files[hits]), collapse = ", ")))
+})
