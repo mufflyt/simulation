@@ -1,4 +1,4 @@
-# Guards for R/27-workforce_concentration.R (Gini / HHI / Lorenz / top-k).
+# Guards for R/57-workforce_concentration.R (Gini / HHI / Lorenz / top-k).
 
 test_that("gini is 0 for equality and (n-1)/n for a monopoly", {
   expect_equal(workforce_gini(c(25, 25, 25, 25)), 0)

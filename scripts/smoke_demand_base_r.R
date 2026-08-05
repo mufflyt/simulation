@@ -31,7 +31,7 @@ src("R/29-demand_dynamic_multistate.R")   # dmdm_default_transitions, simulate_d
 src("R/30-demand_dynamic_open.R")          # simulate_dmdm_open (+ helpers)
 src("R/31-dmdm_fit_transitions.R")         # .fit_onset_coefs, .fit_stage_transitions
 src("R/32-geographic_demand.R")            # geographic (isochrone) demand
-src("R/33-pop_transitions.R")              # literature POP onset + staged transitions
+src("R/58-pop_transitions.R")              # literature POP onset + staged transitions
 src("R/export_demand_contract.R")          # export_hdmm/dmdm_demand_contract
 
 set.seed(1)

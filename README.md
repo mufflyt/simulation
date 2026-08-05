@@ -474,18 +474,15 @@ refuses `uncalibrated_illustrative` outright.
 | `25-demand_lifecourse.R` | reproductive life-course demand pathway |
 | `26-utilization_models.R` | survey-weighted utilization and offset-Poisson rate models |
 | `27-demand_lifecourse_uncertainty.R` | life-course demand prediction intervals |
-| `27-workforce_concentration.R` | Herfindahl index and geographic concentration |
 | `28-demand_lifecourse_calibration.R` | life-course anchoring to national totals |
 | `29-demand_dynamic_multistate.R` | multistate PFD transition model |
 | `30-demand_dynamic_open.R` | open-cohort dynamic demand |
 | `31-dmdm_fit_transitions.R` | multistate transition fitters |
 | `32-geographic_demand.R` | geographic demand apportionment |
-| `33-pop_transitions.R` | population transition helpers |
 | `33-roster.R` | base-year cohort from the observed certification series |
 | `34-backtest.R`, `35-backtest_run.R` | leakage-free historical back-test |
 | `36-parameter_uncertainty.R` | per-iteration parameter draws for the supply engine |
 | `37-calibration_sources.R` | empirical `cliff` hazards, NRMP entrants, age-productivity curve |
-| `38-fraher_agent_supply.R` | Fraher (2024) individual-level agent engine; `initialize_urps_agents()`, `advance_urps_agents()` |
 | `38-backtest_status.R` | back-test status reporting |
 | `39-cliff_retirement_hazard.R` | `build_urps_exit_hazard()` — Gompertz fit from cliff or Fraher fallback |
 | `40-hrsa_fte_calibration.R` | `apply_hrsa_surgical_fte()` — HRSA hours by age/sex → relative FTE |
@@ -493,6 +490,9 @@ refuses `uncalibrated_illustrative` outright.
 | `42-swan_incontinence_panel.R` | SWAN visit harmonisation, evidence-gated crosswalk (DAYSLEA/LEKDAYS) |
 | `43-severity_sandvik.R` | Sandvik Incontinence Severity Index (frequency × amount) |
 | `44-urps_population.R` | HWMM-style population file: BRFSS cells, DEMAND_AGE_BAND crosswalk, D4 prevalence weights |
+| `57-workforce_concentration.R` | Herfindahl index and geographic concentration |
+| `58-pop_transitions.R` | population transition helpers |
+| `59-fraher_agent_supply.R` | Fraher (2024) individual-level agent engine; `initialize_urps_agents()`, `advance_urps_agents()` |
 | `urps_flows.R` | URPS patient flow functions for demand modeling |
 | `urps_prevention.R` | DPMM-lite: conservative management diversion multipliers (PT / pessary) |
 | `partial_pooling_hazard.R` | empirical-Bayes partial pooling for sparse hazard cells |
@@ -540,7 +540,7 @@ age × sex × census-division distributions.
 
 ## Retirement modeling
 
-Retirement is drawn from a **Weibull survival curve** (`R/38-fraher_agent_supply.R`,
+Retirement is drawn from a **Weibull survival curve** (`R/59-fraher_agent_supply.R`,
 `R/39-cliff_retirement_hazard.R`), not a binary age-shift:
 
 ```

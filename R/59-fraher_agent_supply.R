@@ -1,5 +1,5 @@
 ################################################################################
-# R/38-fraher_agent_supply.R
+# R/59-fraher_agent_supply.R
 # Fraher (2024) agent-based supply engine
 #
 # Complementary to the existing Dall HWMM stochastic engine in
