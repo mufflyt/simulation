@@ -15,7 +15,7 @@
 #     intervals were Monte Carlo noise around a pinned entrant rate: PI95 widths
 #     of 0-40 providers on a count near 1,300, two arms with LITERALLY zero
 #     width. Failing coverage against an interval like that says nothing about
-#     the forecast. Widths are now 8-148.
+#     the forecast. Widths are now 34-148.
 #   * The pre-cutoff entrant estimate added modelled departures to a series that
 #     never removed them, inflating it from 32.7 to 60.7/yr. Correcting the
 #     double-count moved arms 2 and 4 FURTHER from the observation, because the
@@ -23,12 +23,13 @@
 #     (n = 10). The old error was masking an unrepresentative window.
 #
 #   * Arm 5 was ADDED: entrants estimated from NRMP fellowship matches published
-#     before the cutoff. Fellowship is three years, so those appointment cohorts
-#     are exactly the people certifying across the validation window, and every
-#     report was in print by 2020. See the note on the frozen record below.
+#     before the cutoff (appointment years 2010-2020, mean 49.73/yr). Fellowship
+#     is three years, so those cohorts are exactly the people certifying across
+#     the validation window, and every report was in print by 2020. See the note
+#     on the frozen record below -- extending that series made the arm WORSE.
 #
 # What survives all three is the finding that matters: all ten arms still
-# under-predict, by 2.5% to 17.6%. A one-sided miss across every arm is not
+# under-predict, by 3.1% to 17.6%. A one-sided miss across every arm is not
 # noise, and no interval widening will fix it.
 #
 # Neither of those travels with a projection object. A reader handed a table of
@@ -50,42 +51,53 @@
 # rather than read at run time. Re-derive from a live run with
 # `backtest_status_from_summary(run_backtest()$summary)`.
 BACKTEST_RECORD_2020_2023 <- tibble::tribble(
-  ~arm,                                        ~percent_error, ~within_80, ~within_95,
-  "1. Derived cohort, assumed entrants",              -9.724349,      FALSE,      FALSE,
-  "1. Derived cohort [no-attrition]",                 -3.139357,       TRUE,       TRUE,
-  "2. Derived cohort, pre-cutoff entrants",          -14.969372,      FALSE,      FALSE,
-  "2. Derived cohort [no-attrition]",                 -8.269525,      FALSE,      FALSE,
-  "3. Synthetic cohort, assumed entrants",           -12.633997,      FALSE,      FALSE,
-  "3. Synthetic cohort [no-attrition]",               -3.177642,       TRUE,       TRUE,
-  "4. Synthetic cohort, pre-cutoff entrants",        -17.611026,      FALSE,      FALSE,
-  "4. Synthetic cohort [no-attrition]",               -8.269525,      FALSE,      FALSE,
-  "5. Derived cohort, pre-cutoff NRMP entrants",      -9.188361,      FALSE,      FALSE,
-  "5. Derived cohort, NRMP [no-attrition]",           -2.526799,      FALSE,      FALSE
+  ~arm,                                          ~percent_error,  ~within_80,  ~within_95,
+  "1. Derived cohort, assumed entrants",              -9.724349,       FALSE,       FALSE,
+  "1. Derived cohort [no-attrition]",                 -3.139357,        TRUE,        TRUE,
+  "2. Derived cohort, pre-cutoff entrants",          -14.969372,       FALSE,       FALSE,
+  "2. Derived cohort [no-attrition]",                 -8.269525,       FALSE,       FALSE,
+  "3. Synthetic cohort, assumed entrants",           -12.633997,       FALSE,       FALSE,
+  "3. Synthetic cohort [no-attrition]",               -3.177642,        TRUE,        TRUE,
+  "4. Synthetic cohort, pre-cutoff entrants",        -17.611026,       FALSE,       FALSE,
+  "4. Synthetic cohort [no-attrition]",               -8.269525,       FALSE,       FALSE,
+  "5. Derived cohort, pre-cutoff NRMP entrants",     -11.026034,       FALSE,       FALSE,
+  "5. Derived cohort [no-attrition]",                 -4.364472,       FALSE,       FALSE
 )
 
-# COVERAGE IS NOT ACCURACY, AND ARM 5 PROVES IT.
+# WHAT EXTENDING THE NRMP SERIES DID, AND IT WAS NOT FLATTERING.
 #
-# Arm 5 estimates entrants from NRMP fellowship matches published BEFORE the
-# cutoff -- a leading indicator, since fellowship is three years -- and it is the
-# most accurate arm in the whole design: -2.53% against the next best -3.14%.
-# Its 95% interval is 8 providers wide, because the NRMP series (59, 59, 58, 56)
-# barely varies. It does NOT cover.
+# Arm 5 was scored first on NRMP appointment years 2017-2020 (mean 58.0/yr) and
+# was then the most accurate arm in the design at -2.53%. Fetching the full
+# pre-cutoff series back to 2010 dropped its rate to 49.73/yr, because the mean
+# now spans the establishment ramp -- FPMRS filled only 30 positions in 2010,
+# against a 57.0 plateau from 2015. Arm 5 moved to -4.36% and its interval
+# widened from 8 to 34, since eleven years of a growing series carry far more
+# spread than four years of a flat one.
 #
-# Arms 1 and 3 cover. They are LESS accurate, and they cover because their
-# entrant estimate inherits the certification series' enormous spread (40, 48,
-# 10) and produces intervals 138-145 wide. Coverage was bought with a noisy
-# estimator, not earned with a right answer.
+# So MORE pre-cutoff evidence made the NRMP arm worse on both axes. That is the
+# honest cost of refusing to select an estimation window after seeing the
+# outcome: restricting to the 2015+ plateau would score better, and would be a
+# choice made with the answer in hand.
 #
-# So the honest reading of "2 of 10" is not "the model is 20% validated". It is:
-# the sharpest and most accurate configuration misses, which means the residual
-# error is BIAS, and the uncertainty that actually matters -- how many matched
-# fellows go on to certify -- is not quantified by any of these arms.
+# The most accurate arm is now arm 1 [no-attrition] at -3.14% -- the SHIPPED
+# ASSUMPTION of 55/yr, which matched no source. It lands closest to a rate of
+# ~69/yr implied by the observed certifications for no better reason than that
+# 55 happened to sit between the ramp-diluted NRMP mean and the truth.
+#
+# Coverage still tracks interval WIDTH more than accuracy. The two arms that
+# cover (1 and 3, widths 145 and 138) inherit the certification series' large
+# spread; arm 5 is four times sharper at width 34 and fails. A criterion that
+# rewards the blunter estimator is not measuring calibration.
+#
+# The finding that survives every re-scoring: all ten arms under-predict, by
+# 3.1% to 17.6%. A one-sided miss across every arm is bias, not noise, and no
+# interval widening addresses it.
 
 BACKTEST_RECORD_SOURCE <- paste(
   "artifacts/backtest_2020_to_2023_summary.csv; cutoff 2020, target 2023",
   "(observed 1306, national/ABOG_PLUS_ABU/board_certified_active, contract",
   "v3.0.0), 1000 iterations per arm, seed 20260802, entrant rate drawn per",
-  "iteration from the pre-cutoff series (PI95 widths 8-148 across 10 arms)"
+  "iteration from the pre-cutoff series (PI95 widths 34-148 across 10 arms)"
 )
 
 # Share of arms whose 95% interval must contain the observed value before the
