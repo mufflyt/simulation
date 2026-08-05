@@ -278,7 +278,8 @@ test_that("the base-year gap is a pass-through of the adequacy estimate", {
   # The headline base-year number is therefore NOT modelled: it is whatever the
   # capacity survey says, with a coefficient of one.
   for (a in c(0.90, 0.948, 0.97)) {
-    g <- baseline_gap(1306, a, method = "capacity_survey")
+    g <- baseline_gap(1306, a, method = "capacity_survey",
+                      calibration_status = "calibrated")
     expect_equal(100 * (1306 - g$required_fte) / g$required_fte,
                  -100 * (1 - a), tolerance = 1e-8)
   }

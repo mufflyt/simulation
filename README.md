@@ -105,13 +105,23 @@ ABOG+ABU roster (aggregate counts, 2023)
 
 ## The rules this model enforces
 
-**1. The base-year shortfall is estimated, never assumed.** Rebasing supply and
-demand to 1.0 in the base year guarantees adequacy of 1.0 whether or not the
-workforce is short. The HWMM documentation names this as a conceptual limitation:
-base-year equilibrium *"essentially presents future adequacy relative to current
-levels."* `R/18-baseline_gap.R` implements the three sanctioned routes — a
-provider capacity survey, HPSA-removal counts, or a labelled assumption with an
+**1. The base-year shortfall is estimated, never assumed — and it says whose
+data it came from.** Rebasing supply and demand to 1.0 in the base year
+guarantees adequacy of 1.0 whether or not the workforce is short. The HWMM
+documentation names this as a conceptual limitation: base-year equilibrium
+*"essentially presents future adequacy relative to current levels."*
+`R/18-baseline_gap.R` implements four routes — a provider capacity survey,
+HPSA-removal counts, an external anchor, or a labelled assumption with an
 evidence ledger. Without one, `REPRODUCIBILITY_MODE=strict` refuses to run.
+
+Every gap object also carries a `calibration_status` separate from its `method`,
+because the method names only the arithmetic. Zarek's instrument fielded on
+urogynaecologists and Zarek's published physical-therapy distribution borrowed
+wholesale produce identical output, and the base-year shortfall passes through to
+the headline gap **with a coefficient of one** — so a borrowed number must not be
+reportable as a measurement. `baseline_gap()` refuses to guess the tier for any
+method but `assumed`, and `validation_report()` reports `base_year_gap_estimated`
+and `base_year_gap_measured` as two separate checks.
 
 **2. Every supply/demand comparison has FTE on both sides.** Provider FTE divided
 by a count of prevalent cases, consultations, or procedures is dimensionally
@@ -395,6 +405,7 @@ locks each of these:
 | Uniform 20% cut to every URPS delegation share | **exactly none** |
 | Tripling one service (mix shift) | ≤ 0.91% on 25-year growth |
 | Base-year adequacy 0.948 → 1.000 | **4.4 pp** on the 2050 gap |
+| Donor specialty for base-year adequacy (PT → physiatry) | **71 → 155 FTE** base-year shortfall |
 | Supply error of −8.5% (the back-test's) | **6.7 pp** on the 2050 gap |
 | Weibull scale ±2 yr (retirement scenario) | **~3–5 pp** on 2050 FTE |
 
@@ -426,7 +437,16 @@ and enforced by `assert_publishable_workload()`:
 | Service case mix | `derived_by_analogy` | declared CPT mix; replace with claims-derived shares |
 | Delegation shares | `derived_by_analogy` | Forte 2021 physiatry shape, level rescaled |
 | Clinical hours schedule | `derived_by_analogy` | HWSM Exhibit 14 (general internal medicine levels) |
+| Base-year adequacy | `derived_by_analogy` | Zarek 2025 PTJ physical-therapy capacity distribution |
 | PFD prevalence < 65 | local | not in the contract; Nygaard-derived literals |
+
+The base-year gap carries its tier on the gap object itself
+(`BASELINE_GAP_TIERS`, `R/18-baseline_gap.R`), which adds
+`assumed_with_evidence` for the Dall 2013 route — an assumption defended by
+indirect indicators — and drops `solved`, since no internal constraint can
+determine a base-year shortfall. `assert_baseline_gap_estimated()` accepts
+`calibrated`, requires `allow_analogy = TRUE` for the middle two tiers, and
+refuses `uncalibrated_illustrative` outright.
 
 ---
 
@@ -712,7 +732,13 @@ Ordered by how much each actually moves the deliverable:
 
 1. **No URPS capacity survey.** The base-year adequacy is a physical-therapy
    distribution, and it passes straight through to the headline gap with a
-   coefficient of one. Highest-value missing input by a wide margin.
+   coefficient of one. Highest-value missing input by a wide margin. The choice
+   of donor specialty alone moves the base-year shortfall from 71 FTE (Zarek,
+   physical therapy) to 155 FTE (Dall, physiatry) to 161 FTE (Dall, neurology) —
+   nothing in the model narrows that range. Note that HRSA designates HPSAs for
+   primary medical care, dental and mental health, **not subspecialties**, so
+   `hpsa_removal_shortfall()` has no URPS input to read: a fielded survey or an
+   `external_anchor_gap()` citation are the only routes to a `calibrated` tier.
 2. **The headcount → FTE step is unvalidated.** The hours schedule comes from
    general internal medicine and drifts FTE-per-head ~3% over the horizon.
 3. **No individual provider roster.** The contract ships aggregate counts only,

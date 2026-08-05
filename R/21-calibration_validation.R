@@ -286,13 +286,37 @@ validation_report <- function(supply, required = NULL, gap = NULL,
         if (ok) "ok" else "non-positive required FTE")
   }
 
+  # Two separate questions, and reporting only the first is how a borrowed
+  # physical-therapy distribution came to be recorded as "capacity_survey: 5.2%
+  # shortfall" -- indistinguishable in the artifact from a URPS survey that was
+  # actually fielded. `method` names the arithmetic; `calibration_status` says
+  # whether the number was measured on urogynaecologists, and both belong here.
   if (!is.null(gap)) {
-    measured <- inherits(gap, "urps_baseline_gap") && !isTRUE(all.equal(gap$adequacy, 1))
-    add("base_year_gap_estimated", "internal", measured,
-        if (measured) sprintf("%s: %.1f%% shortfall", gap$method, gap$shortfall_pct)
+    is_gap <- inherits(gap, "urps_baseline_gap")
+    tier <- if (is_gap) gap$calibration_status %||% NA_character_ else NA_character_
+    estimated <- is_gap && !isTRUE(all.equal(gap$adequacy, 1)) &&
+      !identical(tier, "uncalibrated_illustrative")
+    add("base_year_gap_estimated", "internal", estimated,
+        if (estimated) sprintf("%s (%s): %.1f%% shortfall",
+                               gap$method, tier, gap$shortfall_pct)
+        else if (identical(tier, "uncalibrated_illustrative"))
+          "shortfall assumed with no evidence ledger"
         else "base-year equilibrium assumed")
+
+    measured <- identical(tier, "calibrated")
+    add("base_year_gap_measured", "external", measured,
+        if (measured) sprintf("measured on urogynaecologists: %s%s",
+                              gap$method,
+                              if (!is.na(gap$source %||% NA_character_))
+                                paste0(" -- ", gap$source) else "")
+        else sprintf(paste("NOT measured on urogynaecologists (%s). The base-year",
+                           "shortfall passes through to the headline gap with a",
+                           "coefficient of one: field a URPS capacity survey or",
+                           "cite an external anchor."),
+                     if (is.na(tier)) "no calibration_status recorded" else tier))
   } else {
     add("base_year_gap_estimated", "internal", FALSE, "no base-year gap supplied")
+    add("base_year_gap_measured", "external", FALSE, "no base-year gap supplied")
   }
 
   if (!is.null(state_totals) && all(c("year", "fte", "national_fte") %in% names(state_totals))) {

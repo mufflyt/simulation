@@ -89,9 +89,93 @@ test_that("base-year equilibrium is refused, not silently accepted", {
   expect_error(assert_baseline_gap_estimated(NULL, mode = "strict"),
                "No base-year supply-adequacy estimate")
 
-  measured <- baseline_gap(1306, 0.948, method = "capacity_survey")
+  measured <- baseline_gap(1306, 0.948, method = "capacity_survey",
+                           calibration_status = "calibrated",
+                           source = "fielded URPS practice-capacity survey")
   expect_true(assert_baseline_gap_estimated(measured, mode = "strict"))
   expect_gt(measured$shortfall_fte, 0)
+})
+
+test_that("the evidence tier must be declared; the method cannot imply it", {
+  # A URPS survey and a borrowed physical-therapy distribution produce identical
+  # arithmetic, so silence has to be an error rather than a guess in either
+  # direction. Only the "assumed" route describes itself.
+  expect_error(baseline_gap(1306, 0.948, method = "capacity_survey"),
+               "calibration_status.*must be declared")
+  expect_error(baseline_gap(1306, 0.948, method = "external_anchor"),
+               "calibration_status.*must be declared")
+  expect_error(baseline_gap(1306, 0.948, method = "capacity_survey",
+                            calibration_status = "probably_fine"),
+               "unknown calibration_status")
+
+  # Inferred for "assumed", and the ledger decides which way.
+  expect_identical(baseline_gap(1306, 0.90, method = "assumed",
+                                evidence = "12-month recruitment vacancies")$calibration_status,
+                   "assumed_with_evidence")
+  expect_identical(baseline_gap(1306, 0.90, method = "assumed")$calibration_status,
+                   "uncalibrated_illustrative")
+})
+
+test_that("a non-measured base-year gap needs the same opt-in as any other analogy", {
+  # The gap is a pass-through with a coefficient of one, so a borrowed value
+  # reaches the headline shortage undamped. It gets the treatment
+  # assert_publishable_workload() gives the delegation matrix.
+  borrowed <- baseline_gap(1306, 0.948, method = "capacity_survey",
+                           calibration_status = "derived_by_analogy",
+                           source = "Zarek 2025 PTJ (physical therapists)")
+  expect_error(assert_baseline_gap_estimated(borrowed, mode = "strict"),
+               "derived_by_analogy")
+  expect_false(assert_baseline_gap_estimated(borrowed, mode = "relaxed"))
+  expect_true(assert_baseline_gap_estimated(borrowed, mode = "strict",
+                                            allow_analogy = TRUE))
+
+  # An assumption with no ledger behind it is refused even with the opt-in.
+  hollow <- baseline_gap(1306, 0.90, method = "assumed")
+  expect_error(assert_baseline_gap_estimated(hollow, mode = "strict",
+                                             allow_analogy = TRUE),
+               "uncalibrated_illustrative")
+
+  # A measured gap needs no opt-in at all.
+  expect_true(assert_baseline_gap_estimated(
+    baseline_gap(1306, 0.948, method = "capacity_survey",
+                 calibration_status = "calibrated"),
+    mode = "strict"))
+})
+
+test_that("an external anchor is the fourth route and must be attributable", {
+  # HRSA designates HPSAs for primary care, dental and mental health, not
+  # subspecialties, so hpsa_removal_shortfall() has no URPS input to read. The
+  # anchor route is what remains until a survey is fielded.
+  g <- external_anchor_gap(
+    base_supply_fte = 1306,
+    required_fte = 1500,
+    anchor = "urogynaecologists per 100,000 women benchmark",
+    citation = "Example benchmark, 2024",
+    calibration_status = "calibrated"
+  )
+  expect_s3_class(g, "urps_baseline_gap")
+  expect_equal(g$adequacy, 1306 / 1500)
+  expect_equal(g$shortfall_fte, 194)
+  expect_identical(g$method, "external_anchor")
+  expect_true(assert_baseline_gap_estimated(g, mode = "strict"))
+
+  # The two parameterisations agree.
+  by_adequacy <- external_anchor_gap(1306, adequacy = 1306 / 1500,
+                                     anchor = "same", citation = "same")
+  expect_equal(by_adequacy$required_fte, g$required_fte)
+
+  # An anchor with no attribution is an assumption wearing an anchor's label.
+  expect_error(
+    external_anchor_gap(1306, adequacy = 0.9, anchor = "a benchmark", citation = ""),
+    "citation.* is required"
+  )
+  expect_error(
+    external_anchor_gap(1306, adequacy = 0.9, required_fte = 1500,
+                        anchor = "a", citation = "b"),
+    "exactly one of"
+  )
+  expect_error(external_anchor_gap(1306, anchor = "a", citation = "b"),
+               "exactly one of")
 })
 
 test_that("an access deficit cannot be counted twice", {
@@ -99,6 +183,7 @@ test_that("an access deficit cannot be counted twice", {
   # assumed current shortfall" -- adding a reduced-barriers scenario on top of a
   # gap derived from access indicators books the same deficit twice.
   gap <- baseline_gap(1306, 0.90, method = "capacity_survey",
+                      calibration_status = "calibrated",
                       access_components_counted = c("nonmetro", "uninsured"))
   expect_error(
     assert_access_not_double_counted(gap, c("nonmetro", "racial_equity"), mode = "strict"),

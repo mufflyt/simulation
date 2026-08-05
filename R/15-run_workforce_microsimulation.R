@@ -131,8 +131,15 @@ example_service_volumes <- function(demand_long) {
 #' Example capacity-survey responses (Zarek 2025 published distribution)
 #'
 #' Stands in for a URPS practice-capacity survey until one is fielded. Using the
-#' physical-therapy distribution for urogynaecology is an explicit assumption and
-#' is recorded as one in the returned gap object's evidence ledger.
+#' physical-therapy distribution for urogynaecology is an explicit assumption:
+#' a gap built on it must be constructed with
+#' `calibration_status = "derived_by_analogy"`, which is what stops the run
+#' artifacts from reporting it as a survey fielded in urogynaecology.
+#'
+#' The choice of donor specialty is not incidental. On the 1,306-FTE base-year
+#' supply this distribution implies a 71 FTE shortfall; Dall's physiatry survey
+#' implies 155 and Dall's neurology assumption 161. Nothing in the model narrows
+#' that range -- see [published_baseline_gaps()].
 #'
 #' @return Tibble in the shape [capacity_survey_adequacy()] expects.
 #' @export
@@ -202,10 +209,12 @@ example_capacity_survey <- function() {
 #'   observation: geographic output is then conditional on it.
 #' @param parameter_spec Optional [supply_parameter_spec()]; defaults to one
 #'   built from the observed certification series.
-#' @param allow_analogy Permit inputs derived by analogy from another specialty
-#'   (currently the delegation matrix). Declared in the run metadata either way.
-#'   Defaults to FALSE: passing TRUE suppresses the strict-mode stop in
-#'   [assert_publishable_workload()], so a publication-facing run must opt in
+#' @param allow_analogy Permit inputs derived by analogy from another specialty:
+#'   the delegation matrix, and a base-year gap whose `calibration_status` is
+#'   `derived_by_analogy` or `assumed_with_evidence`. Declared in the run
+#'   metadata either way. Defaults to FALSE: passing TRUE suppresses the
+#'   strict-mode stop in [assert_publishable_workload()] and
+#'   [assert_baseline_gap_estimated()], so a publication-facing run must opt in
 #'   deliberately rather than inherit the exemption from the default.
 #' @param brfss_cells Optional population cell table from
 #'   [build_urps_population_cells()].  When non-NULL, a fourth demand estimand
@@ -555,7 +564,10 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
   base_wrvu <- service_volume_to_wrvu(dplyr::filter(volumes, .data$year == base_year))
 
   gap <- baseline_gap_estimate
-  assert_baseline_gap_estimated(gap, mode)
+  # allow_analogy gates the delegation matrix above; the base-year gap needs the
+  # same opt-in and needs it more, because it is the one analogy that reaches the
+  # headline shortage undamped.
+  assert_baseline_gap_estimated(gap, mode, allow_analogy = allow_analogy)
   base_required <- if (inherits(gap, "urps_baseline_gap")) {
     gap$required_fte
   } else {

@@ -269,7 +269,9 @@ test_that("the validation report fails closed on internal checks", {
   supply <- tibble::tibble(year = 2025:2026, scenario = "status_quo",
                            effective_fte_median = c(1300, 1310))
   required <- tibble::tibble(year = 2025:2026, required_fte = c(1400, 1450))
-  gap <- baseline_gap(1306, 0.948, method = "capacity_survey")
+  gap <- baseline_gap(1306, 0.948, method = "capacity_survey",
+                      calibration_status = "calibrated",
+                      source = "fielded URPS practice-capacity survey")
 
   rep_ok <- validation_report(supply, required, gap)
   expect_true(all(rep_ok$passed[rep_ok$type == "internal" & !is.na(rep_ok$passed)]))
@@ -289,7 +291,41 @@ test_that("the validation report fails closed on internal checks", {
 test_that("the report records the validation types that cannot be automated", {
   rep <- validation_report(tibble::tibble(year = 2025, effective_fte_median = 1))
   expect_setequal(unique(rep$type), c("internal", "conceptual", "external", "data"))
-  expect_true(all(is.na(rep$passed[rep$type %in% c("conceptual", "external", "data")])))
+  # The placeholders for manual review stay NA. base_year_gap_measured is the one
+  # external check that IS decidable from the run: whether the base-year gap was
+  # measured on urogynaecologists is a property of the gap object, not a judgement.
+  manual <- rep$type %in% c("conceptual", "external", "data") &
+    rep$check != "base_year_gap_measured"
+  expect_true(all(is.na(rep$passed[manual])))
+})
+
+test_that("the validation report distinguishes an estimated gap from a measured one", {
+  supply <- tibble::tibble(year = 2025, scenario = "status_quo", effective_fte_median = 1300)
+
+  borrowed <- baseline_gap(1306, 0.948, method = "capacity_survey",
+                           calibration_status = "derived_by_analogy",
+                           source = "Zarek 2025 PTJ (physical therapists)")
+  rep <- validation_report(supply, gap = borrowed)
+
+  # It is a real estimate -- the internal check still passes and strict mode runs.
+  expect_true(rep$passed[rep$check == "base_year_gap_estimated"])
+  expect_silent(assert_validation_passed(rep, mode = "strict"))
+  # ...but the artifact can no longer read as a survey fielded in urogynaecology.
+  expect_false(rep$passed[rep$check == "base_year_gap_measured"])
+  expect_match(rep$detail[rep$check == "base_year_gap_estimated"], "derived_by_analogy")
+  expect_match(rep$detail[rep$check == "base_year_gap_measured"], "NOT measured")
+
+  fielded <- baseline_gap(1306, 0.948, method = "capacity_survey",
+                          calibration_status = "calibrated",
+                          source = "fielded URPS practice-capacity survey")
+  rep2 <- validation_report(supply, gap = fielded)
+  expect_true(rep2$passed[rep2$check == "base_year_gap_measured"])
+  expect_match(rep2$detail[rep2$check == "base_year_gap_measured"], "fielded URPS")
+
+  # An assumption with no ledger fails the internal check outright.
+  hollow <- validation_report(supply, gap = baseline_gap(1306, 0.90, method = "assumed"))
+  expect_false(hollow$passed[hollow$check == "base_year_gap_estimated"])
+  expect_error(assert_validation_passed(hollow, mode = "strict"), "no evidence ledger")
 })
 
 # ---- mufflyaccess SSOT hookups ---------------------------------------------
