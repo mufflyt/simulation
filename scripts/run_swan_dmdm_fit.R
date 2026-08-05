@@ -38,19 +38,38 @@ if (!requireNamespace("urpssim", quietly = TRUE)) {
 }
 
 # ---- Resolve + read the SWAN wide frame -------------------------------------
-swan_path <- Sys.getenv("SWAN_WIDE_PATH", "data-raw/swan/swan_all_visits.rds")
-if (!file.exists(swan_path)) {
-  stop("SWAN wide frame not found at '", swan_path, "'.\n",
-       "  Download SWAN (ICPSR series 253) first:\n",
+# Resolution order: explicit override, then the repo-local copy, then
+# swan_path() -- which already resolves the configured external location and is
+# where the archive actually lives. Consulting only the hardcoded repo path made
+# this script report "download SWAN first" on a machine that had SWAN mounted.
+#
+# The local variable is `swan_file`, not `swan_path`: naming it after the
+# function would shadow swan_path() for the rest of the script.
+swan_file <- Sys.getenv("SWAN_WIDE_PATH", "")
+if (!nzchar(swan_file)) {
+  candidates <- c(file.path("data-raw", "swan", "swan_all_visits.rds"),
+                  tryCatch(swan_path("swan_all_visits.rds"),
+                           error = function(e) NA_character_))
+  found <- candidates[!is.na(candidates) & file.exists(candidates)]
+  swan_file <- if (length(found)) found[1] else candidates[1]
+}
+if (!file.exists(swan_file)) {
+  stop("SWAN wide frame not found at '", swan_file, "'.\n",
+       "  Looked in data-raw/swan/ and swan_path() (the configured external\n",
+       "  location). Download SWAN (ICPSR series 253) first:\n",
        "    Sys.setenv(icpsr_email=..., icpsr_password=...)\n",
        "    source('scripts/data_acquisition/09_download_swan_icpsr.R')\n",
        "  then set SWAN_WIDE_PATH to the wide file (swan_all_visits.rds).",
        call. = FALSE)
 }
-swan_wide <- if (grepl("\\.rds$", swan_path, ignore.case = TRUE)) {
-  readRDS(swan_path)
+# Read through load_swan_archive() so the SHA-256 is verified and recorded.
+# readRDS() on the same bytes produces an identical frame and a fit whose
+# caveats say "archive provenance not recorded" -- an artifact that cannot say
+# which file it came from.
+swan_wide <- if (grepl("\\.rds$", swan_file, ignore.case = TRUE)) {
+  load_swan_archive(path = swan_file, verbose = TRUE)
 } else {
-  utils::read.csv(swan_path, stringsAsFactors = FALSE)
+  utils::read.csv(swan_file, stringsAsFactors = FALSE)
 }
 message("Loaded SWAN wide frame: ", nrow(swan_wide), " participants x ",
         ncol(swan_wide), " columns")

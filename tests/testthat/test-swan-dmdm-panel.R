@@ -39,12 +39,19 @@ test_that("the panel carries exactly the columns dmdm_transition_data requires",
   expect_s3_class(dmdm_transition_data(p, conditions = "ui"), "data.frame")
 })
 
-test_that("visits 7-9 are read through LEKINVO, not dropped", {
-  # swan_ui_modeling.csv loses these three visits by looking only for INVOLEA.
-  # Recovering them is the point of reading the items directly.
-  p <- build_swan_dmdm_panel(mk_swan_wide(), verbose = FALSE)
+test_that("visits 7-9 are READABLE through LEKINVO, though quarantined by default", {
+  # swan_ui_modeling.csv loses these three visits by looking only for INVOLEA,
+  # and reading the items directly still recovers them -- the crosswalk is
+  # correct about which column holds the answer.
+  #
+  # This test used to assert they were INCLUDED, which was the wrong lesson from
+  # a right observation. Being able to read a column is not evidence it measures
+  # the same thing as the column it replaces; here it does not, so the default
+  # excludes them and this asserts only that the rename is still resolved.
+  p <- build_swan_dmdm_panel(mk_swan_wide(), visits = 0:10, verbose = FALSE)
   expect_true(all(7:9 %in% unique(p$year)))
   expect_equal(sort(unique(p$year)), 0:10)
+  expect_false(all(is.na(p$has_ui[p$year %in% 7:9])))
 })
 
 test_that("visit 0 hysterectomy comes from the unsuffixed column", {
@@ -111,4 +118,66 @@ test_that("participant-visits with no observed state are dropped", {
   w$INVOLEA3 <- NA_character_
   p <- build_swan_dmdm_panel(w, verbose = FALSE)
   expect_equal(sum(p$year == 3), 0L)
+})
+
+# ---- LEKINVO quarantine (visits 7-9) ---------------------------------------
+#
+# Visits 7-9 gate UI on LEKINVO instead of INVOLEA. Recovering them looked like
+# a win -- three extra visits the pre-built CSV drops -- and it was wrong: the
+# two items disagree by ~25 points of prevalence in adjacent visits, and
+# including them flips the fitted age coefficient from -0.05 to +0.43, charging
+# a questionnaire change to age. These lock the exclusion in.
+
+test_that("the default visit set excludes the LEKINVO visits", {
+  expect_equal(SWAN_UI_QUARANTINED_VISITS, 7:9)
+  expect_equal(SWAN_UI_DEFAULT_VISITS, c(0:6, 10))
+  p <- build_swan_dmdm_panel(mk_swan_wide(), verbose = FALSE)
+  expect_false(any(p$year %in% 7:9))
+  expect_setequal(unique(p$year), c(0:6, 10))
+})
+
+test_that("asking for a LEKINVO visit is possible but never silent", {
+  # Quarantine, not prohibition: someone inspecting the discontinuity needs
+  # these rows. They just must not arrive by accident.
+  expect_message(
+    p <- build_swan_dmdm_panel(mk_swan_wide(), visits = 0:10, verbose = FALSE),
+    "LEKINVO")
+  expect_true(any(p$year %in% 7:9))
+
+  # A visit set that touches the boundary from either side stays quiet.
+  expect_no_message(build_swan_dmdm_panel(mk_swan_wide(), visits = c(0:6, 10),
+                                          verbose = FALSE))
+})
+
+test_that("the 6->10 gap costs no transitions, so the exclusion is free", {
+  # dmdm_transition_data() keeps only pairs one visit apart, so the gap left by
+  # the quarantine drops itself. If that ever changed, the exclusion would start
+  # silently fabricating a four-year interval as a one-year transition.
+  p <- build_swan_dmdm_panel(mk_swan_wide(), verbose = FALSE)
+  d <- dmdm_transition_data(p, conditions = "ui")
+  expect_false(any(d$year == 6L))
+  expect_true(all(d$year %in% 0:5))
+})
+
+test_that("UI prevalence is continuous across the visit-7 boundary in real SWAN", {
+  # THE CHECK THAT WOULD HAVE CAUGHT THIS. On the real archive, prevalence at
+  # visits 6, 7 and 10 was 0.650 / 0.906 / 0.673 -- a 25-point jump on a 1.1-year
+  # age gap, reversing at visit 10 while the cohort got older. Skipped wherever
+  # the archive is absent; it is a data-integrity assertion, not a unit test.
+  archive <- swan_path("swan_all_visits.rds")
+  skip_if_not(file.exists(archive), "SWAN archive not present")
+
+  wide <- load_swan_archive(path = archive, verbose = FALSE)
+  p <- build_swan_dmdm_panel(wide, visits = 0:10, verbose = FALSE)
+  prev <- vapply(split(p$has_ui, p$year), mean, numeric(1))
+
+  # Within INVOLEA, four years of ageing moved prevalence ~2 points. Any gate
+  # swapped in for a quarantined visit must sit inside that envelope, not 25
+  # points above it.
+  involea <- prev[as.character(c(0:6, 10))]
+  expect_lt(max(diff(involea)), 0.10)
+
+  # And the quarantined visits must still look different -- if they ever stop
+  # looking different, the quarantine can be revisited on evidence.
+  expect_gt(mean(prev[as.character(7:9)]) - mean(involea), 0.15)
 })
