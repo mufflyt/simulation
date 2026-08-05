@@ -343,6 +343,14 @@ test_that("the NRMP series filters on PUBLICATION year, not appointment year", {
   full <- nrmp_entrant_series()
   expect_equal(full$positions_filled[full$appointment_year == 2025], 70L)
   skip_if_not_installed("mufflyaccess")
+  # nrmp_entrants() goes through resolve_canonical(), which reads
+  # config/canonical_sources.yml. `config/` is excluded from the built package by
+  # .Rbuildignore, so under R CMD check the registry does not exist and the
+  # resolver fails closed -- correctly. Skip on that rather than assert through
+  # it: the frozen series above is checked unconditionally, and this line only
+  # adds the round trip via the registry, which needs a source checkout.
+  skip_if_not(file.exists(.canonical_config_path()),
+              "canonical source registry not reachable (config/ is not shipped)")
   expect_equal(nrmp_entrants("URPS"), 70L)
 })
 

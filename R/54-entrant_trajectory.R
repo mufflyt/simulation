@@ -39,6 +39,10 @@ compound_growth_rate <- function(first, last, years) {
 #' Growth rates implied by the NRMP fellowship series
 #'
 #' @param series Tibble from [nrmp_entrant_series()].
+#' @param from First appointment year to estimate on. Defaults to
+#'   `NRMP_PLATEAU_FROM`, which excludes the 2010-2014 establishment ramp: growth
+#'   over that stretch reflects programs being accredited, not fellowship output
+#'   expanding, and fitting on it badly overstates the trend.
 #' @return List with `offered`, `filled`, `fill_rate_first`, `fill_rate_last`,
 #'   `sustainable` and `headroom_exhausted`.
 #' @export
