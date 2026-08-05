@@ -157,12 +157,35 @@ urps_age_productivity_curve <- function(mode = resolve_reproducibility_mode()) {
 # `available_by_year` is what a leakage audit should test against a cutoff.
 NRMP_URPS_ENTRANT_SERIES <- tibble::tribble(
   ~appointment_year, ~positions_offered, ~positions_filled, ~available_by_year,
+              2010L,                34L,               30L,             2010L,
+              2011L,                40L,               40L,             2011L,
+              2012L,                39L,               37L,             2012L,
+              2013L,                51L,               48L,             2013L,
+              2014L,                55L,               50L,             2014L,
+              2015L,                58L,               57L,             2015L,
+              2016L,                54L,               53L,             2016L,
               2017L,                64L,               59L,             2017L,
               2018L,                60L,               59L,             2018L,
               2019L,                64L,               58L,             2019L,
               2020L,                65L,               56L,             2020L,
               2025L,                70L,               70L,             2025L
 )
+
+# THE SERIES HAS AN ESTABLISHMENT RAMP AND THEN A PLATEAU, and conflating them
+# misstates every growth rate derived from it.
+#
+#   2010-2014  30 -> 50 filled   FPMRS was becoming a subspecialty; ABOG/ABU
+#                                certification began in 2013 and programs were
+#                                still being accredited. Growth of ~13%/yr.
+#   2015-2020  57, 53, 59, 59, 58, 56   Flat. Mean 57.0, sd 2.4.
+#   2021-2024  NOT FETCHED -- see the acquisition script.
+#   2025       70               A step above the plateau that the gap years
+#                               cannot currently explain.
+#
+# A first-to-last CAGR across 2010-2025 returns ~4.9%/yr, which is an artifact
+# of averaging a one-off establishment ramp with a plateau. Rates for projection
+# must be estimated on the PLATEAU era; see NRMP_PLATEAU_FROM.
+NRMP_PLATEAU_FROM <- 2015L
 
 #' NRMP fellowship entrants for URPS, as an annual series
 #'

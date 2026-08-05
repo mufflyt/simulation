@@ -145,3 +145,56 @@ roster_workload_concentration <- function(roster = load_urps_roster(),
 
 #' @export
 print.default_roster_concentration <- function(x, ...) invisible(x)
+
+# ---- The unresolved capacity anchor ----------------------------------------
+
+#' Variables a URPS capacity survey must collect
+#'
+#' The base-year adequacy anchor is the single input that can still change the
+#' sign of the projected gap -- adequacy of 0.708 rather than 0.948 erases the
+#' 2050 surplus -- and its evidence is a PHYSICAL-THERAPY capacity distribution
+#' used as a stand-in. Nothing in this package resolves it, and nothing should
+#' pretend to: observed workload measures delivery, not capacity, so deriving
+#' adequacy from it assumes the answer.
+#'
+#' This function exists so the requirement is a machine-readable part of the
+#' package rather than a sentence in a document. `capacity_status()` reports it
+#' as UNRESOLVED until a fielded instrument replaces the stand-in.
+#'
+#' @return Tibble of required variables with the quantity each identifies.
+#' @export
+urps_capacity_survey_requirements <- function() {
+  tibble::tribble(
+    ~variable,                ~why_needed,
+    "clinical_fte",           "Denominator for every per-provider quantity; the model defines 1.0 FTE as 37.2 clinical hours/week and cannot verify that against practice.",
+    "annual_visits",          "Separates delivered volume from capacity: the gap between them IS the adequacy the anchor asserts.",
+    "annual_procedures",      "Office and diagnostic volume, which claims undercount because incident-to work bills under the physician.",
+    "operative_volume",       "Theatre capacity is the binding constraint on surgical throughput and is invisible in visit counts.",
+    "new_patient_capacity",   "Distinguishes a full panel from an accessible one; a workforce can be busy and still inaccessible.",
+    "panel_size",             "Converts prevalence-based demand into providers without routing through work RVUs.",
+    "wait_time",              "The only direct observable of unmet demand, and the natural external validation target.",
+    "payer_mix_constraints",  "Capacity is not fungible across payers; Medicaid and uninsured access can bind where total capacity does not.",
+    "practice_constraints",   "Call, academic and administrative obligations that reduce deliverable clinical FTE below contracted FTE."
+  )
+}
+
+#' Status of the base-year capacity anchor
+#'
+#' @return List with `resolved`, the current source, and what would resolve it.
+#' @export
+capacity_status <- function() {
+  list(
+    resolved = FALSE,
+    current_source = paste("Zarek 2025 physical-therapy capacity distribution,",
+                           "used as a stand-in via capacity_survey_adequacy()."),
+    why_unresolved = paste(
+      "Observed workload cannot substitute: it measures what the workforce does",
+      "deliver, not what it could. An adequacy ratio derived from it returns 1.0",
+      "for any workforce in any year, because it assumes the question."),
+    leverage = paste(
+      "Sole remaining input that can change the SIGN of the projected gap:",
+      "required FTE = anchor x wRVU(t)/wRVU(base), so the anchor sets the level",
+      "while delegation, demand calibration and workload levels all cancel."),
+    resolved_by = urps_capacity_survey_requirements()$variable
+  )
+}

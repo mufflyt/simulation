@@ -1,0 +1,3 @@
+"method","eligible_origins","coverage","mean_signed_error","sd_signed_error","median_abs_pct_error","p25_abs_pct_error","p75_abs_pct_error","mean_width"
+"leave-one-out (leaky)",8,0.875,-57.7230046796399,63.8716578254133,2.83161350070646,1.86540202754295,6.85803455657223,411.702476742894
+"rolling origin (honest)",4,1,-88.4870286769282,17.5278187071807,7.54802959957289,6.75236932353659,8.18290767887689,1465.56746825246

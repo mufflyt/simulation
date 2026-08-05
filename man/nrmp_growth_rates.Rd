@@ -4,7 +4,7 @@
 \alias{nrmp_growth_rates}
 \title{Growth rates implied by the NRMP fellowship series}
 \usage{
-nrmp_growth_rates(series = nrmp_entrant_series())
+nrmp_growth_rates(series = nrmp_entrant_series(), from = NULL)
 }
 \arguments{
 \item{series}{Tibble from \code{\link[=nrmp_entrant_series]{nrmp_entrant_series()}}.}

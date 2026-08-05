@@ -1,0 +1,7 @@
+"spec","median","abs_error","pct_error","lo95","hi95","width95","covered","d_width","d_pct_error"
+"S0 frozen: process + NRMP sampling",1273,-33,-2.52679938744257,1269,1277,8,FALSE,NA,NA
+"S1 + extend NRMP series to 2015-2020",1273,-33,-2.52679938744257,1269,1276,7,FALSE,-1,0
+"S2 + fellowship non-completion (ACGME)",1269,-37,-2.83307810107198,1262,1273,11,FALSE,4,-0.31
+"S3 + appointment->certification lag",1270,-36,-2.75650842266462,1263,1274,11,FALSE,0,0.08
+"S4 + matched->certified conversion",1243,-63,-4.82388973966309,1208,1277,69,FALSE,58,-2.07
+"S5 + baseline-stock completeness",1242.53807098819,-63.4619290118108,-4.85925949554447,1197.04448625233,1288.10323747621,91.0587512238806,FALSE,22.1,-0.04
