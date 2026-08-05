@@ -361,18 +361,34 @@ test_that("filled never exceeds offered, and the frozen series matches data-raw"
   expect_equal(m$positions_offered_csv, m$positions_offered_pkg)
 })
 
-test_that("the NRMP arm is scored and is the most accurate one", {
+test_that("the NRMP arm is scored, and is NO LONGER the most accurate one", {
   skip_if_not_installed("mufflyaccess")
   # Arm 5 exists to test whether pre-cutoff information that DID exist would
-  # have helped. It should be the best point estimate; if it ever stops being so,
-  # something upstream of the entrant rate has changed.
+  # have helped. On appointment years 2017-2020 it was the best arm (-2.53%).
+  # Extending the series to its full pre-cutoff extent (2010-2020) dropped its
+  # rate from 58.0 to 49.73 -- the mean now spans the establishment ramp -- and
+  # moved it to -4.36%. More evidence made it worse, which is the cost of
+  # refusing to pick an estimation window after seeing the outcome.
   expect_true(any(grepl("NRMP", BACKTEST_ARMS$label)))
   rec <- BACKTEST_RECORD_2020_2023
   best <- rec$arm[which.min(abs(rec$percent_error))]
-  expect_match(best, "NRMP")
-  # ...and it still fails coverage, because its interval is sharp rather than
-  # wide. Accuracy and coverage are different things and this pins that.
-  expect_false(rec$within_95[rec$arm == best])
+  expect_false(grepl("NRMP", best))
+  expect_match(best, "1\\. Derived cohort \\[no-attrition\\]")
+
+  nrmp_matched <- rec$percent_error[rec$arm == "5. Derived cohort [no-attrition]"]
+  expect_lt(nrmp_matched, rec$percent_error[rec$arm == best])   # further below
+  expect_false(rec$within_95[rec$arm == "5. Derived cohort [no-attrition]"])
+})
+
+test_that("coverage tracks interval width rather than accuracy", {
+  rec <- BACKTEST_RECORD_2020_2023
+  covering <- rec[rec$within_95, ]
+  expect_equal(nrow(covering), 2L)
+  # Both covering arms inherit the certification series' large spread. The
+  # sharper NRMP arm misses. A criterion that rewards the blunter estimator is
+  # not measuring calibration, which is why `validated` is not the whole story.
+  expect_true(all(grepl("no-attrition", covering$arm)))
+  expect_false(any(grepl("NRMP", covering$arm)))
 })
 
 test_that("unascertained retirement is not treated as zero retirement", {
