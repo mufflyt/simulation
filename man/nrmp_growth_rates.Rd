@@ -8,6 +8,11 @@ nrmp_growth_rates(series = nrmp_entrant_series(), from = NULL)
 }
 \arguments{
 \item{series}{Tibble from \code{\link[=nrmp_entrant_series]{nrmp_entrant_series()}}.}
+
+\item{from}{First appointment year to estimate on. Defaults to
+\code{NRMP_PLATEAU_FROM}, which excludes the 2010-2014 establishment ramp: growth
+over that stretch reflects programs being accredited, not fellowship output
+expanding, and fitting on it badly overstates the trend.}
 }
 \value{
 List with \code{offered}, \code{filled}, \code{fill_rate_first}, \code{fill_rate_last},
