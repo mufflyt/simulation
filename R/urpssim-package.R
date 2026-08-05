@@ -6,7 +6,7 @@
 #' @importFrom rlang .data
 #' @importFrom rlang %||%
 #' @importFrom splines ns
-#' @importFrom stats median quantile runif rnorm setNames cut lm predict cor uniroot na.omit as.formula
+#' @importFrom stats median quantile runif rnorm setNames lm predict cor uniroot na.omit as.formula
 #' @importFrom utils combn modifyList packageVersion write.csv head
 ## usethis namespace: end
 NULL

@@ -478,6 +478,11 @@ test_that("namcs_urps_stratum_visits returns non-negative weighted totals", {
 
 test_that("compute_urps_visit_rates produces positive rates in plausible range", {
   skip_if_not(file.exists(.namcs_rds_path()), "NAMCS 2019 cleaned file not present")
+  # Guard BOTH inputs. Guarding only NAMCS made these tests ERROR rather than
+  # skip on any checkout that has NAMCS but not BRFSS -- readRDS() on a missing
+  # path, reported as "cannot open the connection", which reads like a broken
+  # test rather than an absent optional data file.
+  skip_if_not(file.exists(.brfss_rds_path()), "BRFSS 2023 cleaned file not present")
   namcs <- flag_urps_visits(load_namcs_2019(.namcs_rds_path()))
   sv    <- namcs_urps_stratum_visits(namcs)
   brfss <- readRDS(.brfss_rds_path())
@@ -490,6 +495,11 @@ test_that("compute_urps_visit_rates produces positive rates in plausible range",
 
 test_that("fit_urps_visit_rate_model produces a fitted lm with R2 > 0.5", {
   skip_if_not(file.exists(.namcs_rds_path()), "NAMCS 2019 cleaned file not present")
+  # Guard BOTH inputs. Guarding only NAMCS made these tests ERROR rather than
+  # skip on any checkout that has NAMCS but not BRFSS -- readRDS() on a missing
+  # path, reported as "cannot open the connection", which reads like a broken
+  # test rather than an absent optional data file.
+  skip_if_not(file.exists(.brfss_rds_path()), "BRFSS 2023 cleaned file not present")
   namcs <- flag_urps_visits(load_namcs_2019(.namcs_rds_path()))
   sv    <- namcs_urps_stratum_visits(namcs)
   brfss <- readRDS(.brfss_rds_path())
@@ -502,6 +512,11 @@ test_that("fit_urps_visit_rate_model produces a fitted lm with R2 > 0.5", {
 
 test_that("compute_namcs_demand_estimand returns monotonically growing D5 FTE", {
   skip_if_not(file.exists(.namcs_rds_path()), "NAMCS 2019 cleaned file not present")
+  # Guard BOTH inputs. Guarding only NAMCS made these tests ERROR rather than
+  # skip on any checkout that has NAMCS but not BRFSS -- readRDS() on a missing
+  # path, reported as "cannot open the connection", which reads like a broken
+  # test rather than an absent optional data file.
+  skip_if_not(file.exists(.brfss_rds_path()), "BRFSS 2023 cleaned file not present")
   namcs <- flag_urps_visits(load_namcs_2019(.namcs_rds_path()))
   sv    <- namcs_urps_stratum_visits(namcs)
   brfss <- readRDS(.brfss_rds_path())
