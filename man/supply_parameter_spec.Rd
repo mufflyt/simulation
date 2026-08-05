@@ -9,7 +9,9 @@ supply_parameter_spec(
   entrant_mean = NULL,
   departures = 0,
   hazard_cv = 0,
-  hours_model = NULL
+  hours_model = NULL,
+  entrant_regime = NULL,
+  entrant_regime_include = c("trend", "dispersion", "break", "release_timing")
 )
 }
 \arguments{
@@ -29,6 +31,16 @@ which it is not -- see the module note.}
 
 \item{hours_model}{Optional fitted hours model; its coefficients are drawn
 through the shared internal \code{.param_draw()} helper.}
+
+\item{entrant_regime}{Optional \code{\link[=fit_entrant_regime_model]{fit_entrant_regime_model()}} object. Supplying
+it REPLACES the scalar entrant draw with a whole per-year entrant path, so
+the iteration carries trend-coefficient, overdispersion, and regime-break
+uncertainty rather than sampling variation in a three-year mean. This is the
+component the back-test addendum found missing: variation WITHIN the fitting
+window cannot represent a change of regime BETWEEN windows.}
+
+\item{entrant_regime_include}{Components of the regime draw to switch on; see
+\code{\link[=draw_entrant_paths]{draw_entrant_paths()}}.}
 }
 \value{
 An object of class \code{urps_param_spec}.
