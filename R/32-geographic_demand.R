@@ -138,10 +138,16 @@ tract_need_from_population <- function(tracts,
   if (length(missing_prev))
     stop("tract_need_from_population(): prevalence has no value for band(s): ",
          paste(missing_prev, collapse = ", "), call. = FALSE)
+  rate <- as.numeric(prevalence[bands])            # align rate order to band_cols
+  # Reject a non-finite prevalence up front: it would otherwise poison EVERY
+  # tract's need via the matrix product (0 * NA = NA), silently, including tracts
+  # with no population in that band. A missing SSOT band should fail loudly.
+  if (any(!is.finite(rate)))
+    stop("tract_need_from_population(): non-finite prevalence for band(s): ",
+         paste(bands[!is.finite(rate)], collapse = ", "), call. = FALSE)
 
   pop <- as.matrix(tracts[, unname(band_cols), drop = FALSE])
   pop[is.na(pop)] <- 0
-  rate <- as.numeric(prevalence[bands])            # align rate order to band_cols
   tracts[[need_col]] <- as.numeric(pop %*% rate)   # sum_band(pop_band * prevalence_band)
   tracts
 }

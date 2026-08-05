@@ -118,6 +118,22 @@ than a static risk equation.
   `config/calibration_targets.yml`. Falls back to illustrative anchors (loudly
   flagged) when the files are absent, so it runs before the pulls land but never
   passes placeholder output off as a result.
+- **External validity vs software validity.** A green R CMD check validates the
+  *software*, not the *science*. Temporal back-tests are additionally weakened
+  where a model component was specified after inspecting the miss it is scored
+  against (e.g. the entrant-regime model and the 2021–2023 miss), which is model
+  selection on the test set. `geographic_holdout_cv()`
+  (`R/geographic_holdout_validation.R`) adds a genuinely out-of-sample check
+  along a dimension that played *no* part in that selection: refit on a training
+  set of geographies, predict the held-out ones' observed stock, and score OOS
+  (MAPE, out-of-sample R², calibration slope, Spearman) via
+  leave-one-geography-out, leave-one-region-out, or k-fold. Leakage-free by
+  construction — each fold's fit never sees the held-out rows. Feed it observed
+  provider counts by geography (ABOG/NPPES state distribution) plus a
+  demand/population predictor. It does not repair the temporal contamination; it
+  supplies an independent, uncontaminated external signal alongside it. Prospective
+  and preregistered rolling-origin evaluations remain the stronger next steps once
+  an untouched data vintage is available.
 
 ## 6. Denominator hierarchy and concordance
 

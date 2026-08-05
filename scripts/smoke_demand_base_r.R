@@ -31,6 +31,7 @@ src("R/29-demand_dynamic_multistate.R")   # dmdm_default_transitions, simulate_d
 src("R/30-demand_dynamic_open.R")          # simulate_dmdm_open (+ helpers)
 src("R/31-dmdm_fit_transitions.R")         # .fit_onset_coefs, .fit_stage_transitions
 src("R/32-geographic_demand.R")            # geographic (isochrone) demand
+src("R/geographic_holdout_validation.R")   # geographic held-out (spatial CV)
 src("R/58-pop_transitions.R")              # literature POP onset + staged transitions
 src("R/export_demand_contract.R")          # export_hdmm/dmdm_demand_contract
 
@@ -83,6 +84,15 @@ nt <- tract_need_from_population(tr_pop, prevalence = prev_band)
 ok(abs(nt$need[1] - 1135) < 1e-9, "tract need = sum(pop_band * prevalence_band)")
 gs <- isochrone_demand_from_tracts(tr_pop, prevalence = prev_band)
 ok(abs(gs$total_need - sum(nt$need)) < 1e-9, "isochrone assembly totals the tract need")
+
+cat("== geographic held-out CV (R/geographic_holdout_validation.R) ==\n")
+set.seed(42); Gh <- 60; xh <- runif(Gh, 0.5, 5)
+gh <- data.frame(geo = paste0("g", 1:Gh), x = xh, obs = rpois(Gh, exp(1.2 + 0.5 * xh)))
+rh <- geographic_holdout_cv(gh, "obs", "x", geo = "geo", scheme = "loo")
+ok(rh$metrics$r2_oos > 0.3 && rh$metrics$spearman > 0.6, "recovers a real spatial relationship out-of-sample")
+gh2 <- gh; gh2$obs[1] <- 100000L
+p1 <- geographic_holdout_cv(gh2, "obs", "x", geo = "geo", scheme = "loo")$predictions
+ok(p1$predicted[p1$geo == "g1"] < 1000, "leakage-free: outlier geo cannot predict its own value")
 
 cat("== literature POP transitions (R/33) ==\n")
 ptr <- dmdm_transitions_with_pop_literature()
