@@ -5,9 +5,9 @@
 # decomposition deliberately runs configurations the package refuses to ship
 # (an invented retirement-hazard CV) in order to measure how much each
 # parameter family could contribute; measuring a contribution is not a licence
-# to adopt the spread. See scratchpad/backtest_debug_log.md.
+# to adopt the spread. See docs/BACKTEST_CALIBRATION_AUDIT.md.
 #
-#   Rscript scratchpad/backtest_diagnostics.R
+#   Rscript scripts/diagnostics/backtest_uncertainty_decomposition.R
 
 suppressPackageStartupMessages({ library(dplyr) })
 pkgload::load_all(".", quiet = TRUE)
@@ -63,7 +63,7 @@ tbl <- dplyr::bind_rows(
 )
 cat("\n===== FULL ARM TABLE =====\n")
 print(as.data.frame(tbl %>% mutate(across(where(is.numeric), ~round(.x, 2)))))
-utils::write.csv(tbl, "scratchpad/backtest_arm_table.csv", row.names = FALSE)
+utils::write.csv(tbl, "artifacts/diagnostics/backtest_arm_table.csv", row.names = FALSE)
 
 # ---- 2. Uncertainty decomposition (queue item 4) ---------------------------
 # One parameter family at a time, holding the arm fixed at the definition-

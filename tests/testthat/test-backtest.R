@@ -312,10 +312,14 @@ test_that("run_backtest gives every arm uncertainty but keeps its own centre", {
   expect_length(assumed, 2); expect_length(estimated, 2)
   expect_gt(min(assumed), max(estimated))
 
-  # The NRMP arm sits above both, because 58 > 55 > 32.7.
+  # The NRMP arm sits between them. Extending the series back to 2010 pulled its
+  # rate from 58.0 to 49.7, because the mean now spans the establishment ramp
+  # (30/yr in 2010) as well as the plateau. That moved the arm FURTHER from the
+  # observed endpoint, which is what an untuned change looks like.
   nrmp <- bt$summary$predicted_median[matched & grepl("NRMP", bt$summary$arm)]
   expect_length(nrmp, 1)
-  expect_gt(nrmp, max(assumed))
+  expect_gt(nrmp, max(estimated))
+  expect_lt(nrmp, max(assumed))
 })
 
 # ---- NRMP pre-cutoff entrant series ----------------------------------------
@@ -327,8 +331,9 @@ test_that("the NRMP series filters on PUBLICATION year, not appointment year", {
   s <- nrmp_entrant_series(available_by = 2020)
   expect_true(all(s$available_by_year <= 2020))
   expect_false(any(s$appointment_year == 2025))
-  expect_equal(nrow(s), 4L)
-  expect_equal(s$positions_filled, c(59L, 59L, 58L, 56L))
+  expect_equal(nrow(s), 11L)                       # 2010-2020
+  expect_equal(range(s$appointment_year), c(2010L, 2020L))
+  expect_equal(utils::tail(s$positions_filled, 4), c(59L, 59L, 58L, 56L))
 
   # The 2025 value must be reachable when no cutoff is imposed, and must equal
   # the value nrmp_entrants() reports.
@@ -368,4 +373,33 @@ test_that("the NRMP arm is scored and is the most accurate one", {
   # ...and it still fails coverage, because its interval is sharp rather than
   # wide. Accuracy and coverage are different things and this pins that.
   expect_false(rec$within_95[rec$arm == best])
+})
+
+test_that("unascertained retirement is not treated as zero retirement", {
+  # THE na.rm TRAP. The guard used to read
+  #   all(series$n_retired == 0, na.rm = TRUE)
+  # which is VACUOUSLY TRUE when the column is all NA, because na.rm empties the
+  # vector and all(logical(0)) is TRUE. Under mufflyaccess 0.10.0 n_retired is
+  # integer with no NAs and every value 0, so the old form was correct by
+  # accident; a future contract serving retirement as unascertained would have
+  # flipped the && and silently dropped the acknowledgement requirement.
+  expect_true(all(c(NA, NA) == 0, na.rm = TRUE))   # the trap, demonstrated
+  expect_true(any(is.na(c(NA, NA))))               # what the guard now tests
+
+  skip_if_not_installed("mufflyaccess")
+  s <- mufflyaccess::urps_counts_long()
+  # Documents the schema this repo was verified against. If a future contract
+  # changes it, this fails and the comments describing it must be re-checked.
+  expect_true("n_retired" %in% names(s))
+  expect_false(any(is.na(s$n_retired)))
+  expect_true(all(s$n_retired == 0))
+  expect_true(all(s$n_active == s$n_ever_certified))
+})
+
+test_that("the no-attrition acknowledgement is still required", {
+  skip_if_not_installed("mufflyaccess")
+  expect_error(validate_backtest_target(acknowledge_no_attrition = FALSE),
+               "NO ATTRITION")
+  v <- validate_backtest_target(acknowledge_no_attrition = TRUE)
+  expect_false(v$observed_series_applies_attrition)
 })

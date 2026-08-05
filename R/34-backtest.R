@@ -207,15 +207,43 @@ validate_backtest_target <- function(target_year = BACKTEST_TARGET_YEAR,
   }
 
   # Attrition: a definition mismatch, not a wrong target.
+  #
+  # THE na.rm TRAP. This test used to be
+  #   all(series$n_retired == 0, na.rm = TRUE) && all(n_active == n_ever_certified)
+  # which passes VACUOUSLY when `n_retired` is all NA: na.rm empties the vector
+  # and all(logical(0)) is TRUE. Under the installed contract (mufflyaccess
+  # 0.10.0) n_retired is integer with no NAs and every value 0, so the guard is
+  # correct today -- but a future contract that serves retirement as
+  # unascertained NA would flip the `&&` and silently drop the acknowledgement
+  # requirement. Retirement being UNKNOWN is not evidence that it is ZERO, and
+  # the two must not collapse into the same branch.
   series <- mufflyaccess::urps_counts_long()
-  no_attrition <- all(series$n_retired == 0, na.rm = TRUE) && all(series$n_active == series$n_ever_certified, na.rm = TRUE)
+  if (!"n_retired" %in% names(series)) {
+    fail(paste("the contract series carries no n_retired column, so whether the",
+               "observed series applies attrition cannot be established. Refusing",
+               "to assume it does not."))
+  }
+  retired_unascertained <- any(is.na(series$n_retired))
+  retired_all_zero <- !retired_unascertained && all(series$n_retired == 0)
+  stock_is_cumulative <- all(series$n_active == series$n_ever_certified, na.rm = TRUE)
+
+  if (retired_unascertained && !isTRUE(acknowledge_no_attrition)) {
+    fail(paste(
+      "the contract serves n_retired as NA for at least one row, so attrition is",
+      "UNASCERTAINED rather than known to be zero. An unascertained departure",
+      "count cannot be compared with a simulation that applies retirement",
+      "hazards. Pass acknowledge_no_attrition = TRUE to proceed with this",
+      "recorded caveat."))
+  }
+  no_attrition <- retired_all_zero && stock_is_cumulative
   if (no_attrition && !isTRUE(acknowledge_no_attrition)) {
     fail(paste(
-      "the observed series applies NO ATTRITION -- n_retired is 0 in every row and",
-      "n_active equals n_ever_certified in every row, so it is a cumulative",
-      "certification series. The simulation DOES apply retirement hazards, so the",
-      "two are not the same quantity and the model will structurally under-predict.",
-      "Pass acknowledge_no_attrition = TRUE to proceed with this recorded caveat."))
+      "the observed series applies NO ATTRITION -- n_retired is 0 in every row",
+      "(verified non-NA) and n_active equals n_ever_certified in every row, so it",
+      "is a cumulative certification series. The simulation DOES apply retirement",
+      "hazards, so the two are not the same quantity and the model will",
+      "structurally under-predict. Pass acknowledge_no_attrition = TRUE to",
+      "proceed with this recorded caveat."))
   }
 
   list(
@@ -348,4 +376,218 @@ backtest_cohort_at <- function(through_year = BACKTEST_CUTOFF_YEAR,
     )
   })
   dplyr::bind_rows(parts)
+}
+
+# ---- Multi-window validation ------------------------------------------------
+
+#' Validate the stock-flow projection across several cutoff/target windows
+#'
+#' A single endpoint cannot support a calibration claim. This scores the same
+#' 3-year stock-flow projection at every cutoff the certification series allows,
+#' under two competing entrant predictors, so that direction and magnitude of
+#' error can be read across windows rather than from one number.
+#'
+#' WHAT IT SHOWED. The 2020->2023 back-test has every arm under-predicting, which
+#' reads as a structural downward bias. It is not: across cutoffs 2016-2020 the
+#' certification-flow predictor errs +17.6%, +6.6%, -2.5%, -1.9%, -8.4%. The
+#' direction FLIPS. The apparent bias is a property of the 2020 window, whose
+#' pre-cutoff years contain the COVID-collapsed 2020 examination cohort, not of
+#' the engine.
+#'
+#' @param cutoffs Cutoff years to score.
+#' @param horizon Years projected from each cutoff.
+#' @param predictor "certification" (trailing mean of the certification flow) or
+#'   "nrmp" (mean of NRMP filled positions published by the cutoff).
+#' @param lookback Trailing years used by the certification predictor.
+#' @return Tibble with one row per window.
+#' @export
+backtest_multi_window <- function(cutoffs = 2017:2020, horizon = 3L,
+                                  predictor = c("certification", "nrmp"),
+                                  lookback = 3L) {
+  predictor <- match.arg(predictor)
+  coh <- urps_certification_cohorts()
+  nr <- nrmp_entrant_series()
+
+  rows <- lapply(cutoffs, function(cut) {
+    target <- cut + horizon
+    observed <- tryCatch(
+      mufflyaccess::urps_count(target, geography = "national", include_urology = TRUE),
+      error = function(e) NA_real_)
+    if (!is.finite(observed)) return(NULL)
+    n0 <- sum(coh$n_certified[coh$cert_year <= cut])
+
+    rate <- if (identical(predictor, "certification")) {
+      mean(coh$n_certified[coh$cert_year > cut - lookback & coh$cert_year <= cut])
+    } else {
+      # Filter on PUBLICATION year: a report issued after the cutoff cannot be
+      # used, however much better the resulting prediction would be.
+      avail <- nr$positions_filled[nr$available_by_year <= cut]
+      if (length(avail) == 0) return(NULL)
+      mean(avail)
+    }
+    pred <- n0 + horizon * rate
+    tibble::tibble(cutoff_year = cut, target_year = target, predictor = predictor,
+                   baseline_stock = n0, entrant_rate = rate, predicted = pred,
+                   observed = observed, absolute_error = pred - observed,
+                   percent_error = 100 * (pred - observed) / observed)
+  })
+  out <- dplyr::bind_rows(Filter(Negate(is.null), rows))
+  if (nrow(out) == 0) stop("backtest_multi_window: no scorable windows", call. = FALSE)
+  out
+}
+
+#' Out-of-sample predictive interval from other validation windows
+#'
+#' Arm 5's interval contains the sampling error of a four-observation mean and
+#' nothing else -- 8 providers wide on a count near 1,300. The uncertainty it
+#' omits is the PREDICTOR'S OWN out-of-sample error, which is estimable only by
+#' scoring other windows.
+#'
+#' The scored window is EXCLUDED from the error estimate, so the interval is not
+#' fitted to the endpoint it is judged against.
+#'
+#' @param target_cutoff Cutoff whose prediction is being bounded.
+#' @param cutoffs Candidate windows; `target_cutoff` is dropped from training.
+#' @param predictor Entrant predictor, as in [backtest_multi_window()].
+#' @param conf Interval level.
+#' @return List with the raw and bias-corrected prediction, interval, and the
+#'   training errors it rests on.
+#' @export
+backtest_oos_interval <- function(target_cutoff = 2020L, cutoffs = 2017:2020,
+                                  predictor = "nrmp", conf = 0.95) {
+  w <- backtest_multi_window(cutoffs = cutoffs, predictor = predictor)
+  test <- w[w$cutoff_year == target_cutoff, , drop = FALSE]
+  train <- w[w$cutoff_year != target_cutoff, , drop = FALSE]
+  if (nrow(test) != 1L) stop("backtest_oos_interval: target window not scored", call. = FALSE)
+  if (nrow(train) < 2L) {
+    stop("backtest_oos_interval: fewer than two training windows; the error ",
+         "spread is not estimable", call. = FALSE)
+  }
+
+  e <- train$percent_error / 100
+  mu <- mean(e); s <- stats::sd(e)
+  # t rather than normal: the spread rests on a handful of windows, and with
+  # n = 3 the t(2) critical value is 4.30 against the normal's 1.96. That is not
+  # conservatism, it is the honest cost of having almost no validation history.
+  tq <- stats::qt(1 - (1 - conf) / 2, df = nrow(train) - 1L)
+
+  list(
+    target_cutoff = target_cutoff,
+    raw_prediction = test$predicted,
+    bias_corrected = test$predicted * (1 + mu),
+    lower = test$predicted * (1 + mu - tq * s),
+    upper = test$predicted * (1 + mu + tq * s),
+    observed = test$observed,
+    covered = test$observed >= test$predicted * (1 + mu - tq * s) &&
+      test$observed <= test$predicted * (1 + mu + tq * s),
+    train_errors_pct = train$percent_error,
+    n_train = nrow(train),
+    mean_error = mu, sd_error = s, t_quantile = tq
+  )
+}
+
+#' Rolling-origin validation: train only on outcomes known at the origin
+#'
+#' The distinction from leave-one-out is not pedantry, and it is the reason this
+#' function exists separately.
+#'
+#' A naive LOO estimates the error distribution for window `c` from every OTHER
+#' window, including later ones. But a window with cutoff `c'` has target
+#' `c' + horizon`, and its error is not OBSERVABLE until that target year. Using
+#' it to bound a forecast made at origin `c` requires knowing an outcome that
+#' had not happened yet. That is future leakage even though each individual
+#' prediction respected its own cutoff.
+#'
+#' Rolling origin admits a training window only when `target_year <= origin`, so
+#' every error in the training set was measurable at the moment of forecast.
+#'
+#' @param cutoffs Candidate windows.
+#' @param horizon Projection length.
+#' @param predictor Entrant predictor, as in [backtest_multi_window()].
+#' @param min_train Minimum training windows; origins with fewer are excluded
+#'   rather than scored on a spread that is not estimable.
+#' @param conf Interval level.
+#' @return Tibble, one row per eligible origin.
+#' @export
+backtest_rolling_origin <- function(cutoffs = 2013:2020, horizon = 3L,
+                                    predictor = "nrmp", min_train = 2L,
+                                    conf = 0.95) {
+  w <- backtest_multi_window(cutoffs = cutoffs, horizon = horizon,
+                             predictor = predictor)
+  w <- w[order(w$cutoff_year), , drop = FALSE]
+
+  rows <- lapply(seq_len(nrow(w)), function(i) {
+    origin <- w$cutoff_year[i]
+    # THE HONESTY CONSTRAINT: the training window's own outcome must already
+    # have happened by the origin.
+    train <- w[w$target_year <= origin, , drop = FALSE]
+    if (nrow(train) < min_train) return(NULL)
+
+    e <- train$percent_error / 100
+    mu <- mean(e); s <- stats::sd(e)
+    tq <- stats::qt(1 - (1 - conf) / 2, df = nrow(train) - 1L)
+    pred <- w$predicted[i]
+    lo <- pred * (1 + mu - tq * s); hi <- pred * (1 + mu + tq * s)
+    obs <- w$observed[i]
+
+    tibble::tibble(
+      origin = origin, target_year = w$target_year[i], n_train = nrow(train),
+      train_targets = paste(train$target_year, collapse = ","),
+      observed = obs, raw_prediction = pred,
+      median_prediction = pred * (1 + mu),
+      lower = lo, upper = hi, width = hi - lo,
+      signed_error = pred * (1 + mu) - obs,
+      abs_pct_error = abs(100 * (pred * (1 + mu) - obs) / obs),
+      covered = obs >= lo && obs <= hi
+    )
+  })
+  out <- dplyr::bind_rows(Filter(Negate(is.null), rows))
+  if (nrow(out) == 0) {
+    stop("backtest_rolling_origin: no origin has ", min_train,
+         " training windows whose outcomes precede it", call. = FALSE)
+  }
+  out
+}
+
+#' Leave-one-out validation across windows (leaky by construction)
+#'
+#' Retained ONLY as the comparator that shows what rolling origin corrects.
+#' Training uses every other window regardless of whether its outcome had
+#' occurred by the origin, so the interval for an early window can be informed
+#' by outcomes from years after it. Do not report this as predictive
+#' calibration.
+#'
+#' @inheritParams backtest_rolling_origin
+#' @return Tibble, one row per window.
+#' @export
+backtest_loo_validation <- function(cutoffs = 2013:2020, horizon = 3L,
+                                    predictor = "nrmp", min_train = 2L,
+                                    conf = 0.95) {
+  w <- backtest_multi_window(cutoffs = cutoffs, horizon = horizon,
+                             predictor = predictor)
+  w <- w[order(w$cutoff_year), , drop = FALSE]
+
+  rows <- lapply(seq_len(nrow(w)), function(i) {
+    train <- w[-i, , drop = FALSE]
+    if (nrow(train) < min_train) return(NULL)
+    e <- train$percent_error / 100
+    mu <- mean(e); s <- stats::sd(e)
+    tq <- stats::qt(1 - (1 - conf) / 2, df = nrow(train) - 1L)
+    pred <- w$predicted[i]
+    lo <- pred * (1 + mu - tq * s); hi <- pred * (1 + mu + tq * s)
+    obs <- w$observed[i]
+    tibble::tibble(
+      origin = w$cutoff_year[i], target_year = w$target_year[i],
+      n_train = nrow(train),
+      # Training targets AFTER this origin are the leak, counted explicitly.
+      n_train_future = sum(train$target_year > w$cutoff_year[i]),
+      observed = obs, raw_prediction = pred,
+      median_prediction = pred * (1 + mu),
+      lower = lo, upper = hi, width = hi - lo,
+      signed_error = pred * (1 + mu) - obs,
+      abs_pct_error = abs(100 * (pred * (1 + mu) - obs) / obs),
+      covered = obs >= lo && obs <= hi
+    )
+  })
+  dplyr::bind_rows(Filter(Negate(is.null), rows))
 }

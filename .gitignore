@@ -81,6 +81,16 @@ outputs/
 !artifacts/backtest_*.csv
 !artifacts/backtest_*.parquet
 !artifacts/backtest_*.json
+
+# Frozen validation snapshots and validation diagnostics are deliverables for
+# the same reason: a back-test result that cannot be re-read against the code
+# that produced it is not reproducible. Total is well under a megabyte.
+!artifacts/frozen_*/
+!artifacts/frozen_*/*.csv
+!artifacts/frozen_*/*.json
+!artifacts/frozen_*/*.parquet
+!artifacts/diagnostics/
+!artifacts/diagnostics/*.csv
 !figures/backtest_*.png
 !figures/medicare_sling_workload_index.png
 !figures/readme_supply_demand_trajectory.png

@@ -42,8 +42,21 @@ compound_growth_rate <- function(first, last, years) {
 #' @return List with `offered`, `filled`, `fill_rate_first`, `fill_rate_last`,
 #'   `sustainable` and `headroom_exhausted`.
 #' @export
-nrmp_growth_rates <- function(series = nrmp_entrant_series()) {
+nrmp_growth_rates <- function(series = nrmp_entrant_series(), from = NULL) {
   s <- series[order(series$appointment_year), , drop = FALSE]
+  # ESTIMATE ON THE PLATEAU, NOT THE ESTABLISHMENT RAMP. Extending the series
+  # back to 2010 exposed a structural break: filled positions grew 30 -> 50
+  # across 2010-2014 while FPMRS was becoming a subspecialty and programs were
+  # still being accredited (~13.6%/yr), then went flat at 57.0 (sd 2.3) across
+  # 2015-2020. A first-to-last CAGR over the whole series returns ~4.9%/yr,
+  # which is an artifact of averaging a one-off ramp with a plateau and would
+  # project establishment-era growth forward for twenty-five years.
+  from <- from %||% NRMP_PLATEAU_FROM
+  s <- s[s$appointment_year >= from, , drop = FALSE]
+  if (nrow(s) < 2L) {
+    stop("nrmp_growth_rates(): fewer than two observations at or after ", from,
+         call. = FALSE)
+  }
   n <- nrow(s)
   span <- s$appointment_year[n] - s$appointment_year[1]
   fr_first <- s$positions_filled[1] / s$positions_offered[1]
@@ -58,7 +71,8 @@ nrmp_growth_rates <- function(series = nrmp_entrant_series()) {
     # The sustainable rate is the POSITIONS rate. Filled cannot outgrow offered
     # once the fill rate is at its ceiling, and it effectively is.
     sustainable = compound_growth_rate(s$positions_offered[1], s$positions_offered[n], span),
-    headroom_exhausted = fr_last >= 0.995
+    headroom_exhausted = fr_last >= 0.995,
+    estimated_from = from
   )
 }
 
