@@ -82,6 +82,15 @@ outputs/
 !artifacts/backtest_*.parquet
 !artifacts/backtest_*.json
 
+# The fitted SWAN UI coefficients, for the same reason and one more: they are
+# the numbers the caveats file describes. Tracking the caveats alone records how
+# a fit was made without recording what came out, and the failure that made this
+# worth tracking -- visits 7-9 flipping ui.aage from -0.05 to +0.43 -- is
+# invisible in the caveats and obvious in a coefficient diff. Nine terms.
+# The fitted transition object stays ignored: it is a binary, so it would not
+# diff, and it is reconstructible from these coefficients.
+!artifacts/swan_dmdm_ui_coefficients.csv
+
 # Frozen validation snapshots and validation diagnostics are deliverables for
 # the same reason: a back-test result that cannot be re-read against the code
 # that produced it is not reproducible. Total is well under a megabyte.
