@@ -11,12 +11,24 @@
 # isolate the effect of the entrant estimate. No parameter is re-tuned after the
 # result is seen.
 
+#   5  derived   entrants from the NRMP fellowship match, pre-cutoff reports
+#
+# ARM 5 IS AN ADDITION, NOT A REPLACEMENT, and it is scored alongside the
+# original four rather than instead of them. Its justification is prospective:
+# the certification flow is a LAGGING measure of entry that was corrupted in
+# exactly the estimation window (the COVID-disrupted 2020 examination produced a
+# cohort of 10 whose backlog cleared in 2021), whereas NRMP counts fellows at
+# APPOINTMENT and publishes each report in its own appointment year. Fellowship
+# is three years, so the 2017-2020 appointment cohorts are precisely the people
+# who certify across the validation window -- and every one of those reports was
+# in print before the cutoff. No parameter is re-tuned after seeing 2023.
 BACKTEST_ARMS <- tibble::tribble(
   ~arm, ~cohort,      ~entrants,   ~label,
   1L,   "derived",    "assumed",   "Derived cohort, entrants = 55 (shipped assumption)",
   2L,   "derived",    "estimated", "Derived cohort, entrants from pre-2021 data",
   3L,   "synthetic",  "assumed",   "Synthetic rnorm(52, 9), entrants = 55",
-  4L,   "synthetic",  "estimated", "Synthetic rnorm(52, 9), entrants from pre-2021 data"
+  4L,   "synthetic",  "estimated", "Synthetic rnorm(52, 9), entrants from pre-2021 data",
+  5L,   "derived",    "nrmp",      "Derived cohort, entrants from pre-cutoff NRMP match"
 )
 
 #' Run one back-test arm
@@ -210,7 +222,30 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
     as.character(obs_years)
   )
 
-  entrant_of <- function(kind) if (kind == "assumed") assumed_entrants else est$gross_entrants
+  # NRMP reports published by the cutoff ONLY. `available_by` is the leakage
+  # guard: it filters on publication year, not appointment year, so a report
+  # that appeared after the cutoff cannot enter however tempting its value.
+  nrmp <- tryCatch(nrmp_entrant_series(available_by = cutoff_year),
+                   error = function(e) NULL)
+  if (!is.null(nrmp)) {
+    .msg_info(sprintf(
+      "Pre-cutoff NRMP series (appointment years %s): %s filled, mean %.1f/yr.",
+      paste(range(nrmp$appointment_year), collapse = "-"),
+      paste(nrmp$positions_filled, collapse = ", "),
+      mean(nrmp$positions_filled)))
+  }
+
+  entrant_of <- function(kind) {
+    switch(kind,
+      assumed = assumed_entrants,
+      estimated = est$gross_entrants,
+      nrmp = if (is.null(nrmp)) NA_real_ else mean(nrmp$positions_filled),
+      stop("unknown entrant kind: ", kind, call. = FALSE))
+  }
+  series_of <- function(kind) {
+    if (identical(kind, "nrmp") && !is.null(nrmp)) nrmp$positions_filled
+    else unname(est$yearly)
+  }
 
   # PARAMETER UNCERTAINTY IN THE INTERVALS.
   #
@@ -234,9 +269,9 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
   # with the estimated rate on every iteration, silently collapsing arms 1 and 3
   # (the shipped assumption) into arms 2 and 4 and destroying the prespecified
   # contrast the design exists to measure.
-  arm_spec <- function(entrants) {
+  arm_spec <- function(entrants, series) {
     supply_parameter_spec(
-      entrant_series = unname(est$yearly),
+      entrant_series = series,
       entrant_mean = entrants,
       departures = est$departures
     )
@@ -250,7 +285,7 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
         cohort = a$cohort, entrants_per_year = entrant_of(a$entrants),
         cutoff_year = cutoff_year, target_year = target_year,
         n_iterations = n_iterations, apply_attrition = att,
-        param_spec = arm_spec(entrant_of(a$entrants)),
+        param_spec = arm_spec(entrant_of(a$entrants), series_of(a$entrants)),
         seed = seed + i
       )
       lab <- sprintf("%d. %s%s", a$arm, a$label,

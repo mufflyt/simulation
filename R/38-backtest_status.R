@@ -2,27 +2,33 @@
 #
 # The 2020->2023 back-test is the only external validation this engine has, and
 # it STILL FAILS coverage: the observed 2023 count falls inside the 95% interval
-# in 2 of 8 arms (25%, against a required 80%). That result is written up
+# in 2 of 10 arms (20%, against a required 80%). That result is written up
 # honestly in docs/BACKTEST_2020_TO_2023.md and scored in
 # artifacts/backtest_2020_to_2023_summary.csv.
 #
-# The 2/8 replaces an earlier 0/8, and the improvement is NOT a modelling win --
-# it is the removal of two defects that made the earlier score meaningless:
+# The 2/10 replaces an earlier 0/8, and the improvement is NOT a modelling win --
+# it is the removal of two defects that made the earlier score meaningless, plus
+# one added arm:
 #
 #   * The arms carried no parameter uncertainty at all. `run_backtest_arm()`
 #     accepted a `param_spec` and `run_backtest()` never passed one, so the
 #     intervals were Monte Carlo noise around a pinned entrant rate: PI95 widths
 #     of 0-40 providers on a count near 1,300, two arms with LITERALLY zero
 #     width. Failing coverage against an interval like that says nothing about
-#     the forecast. Widths are now 129-148.
+#     the forecast. Widths are now 8-148.
 #   * The pre-cutoff entrant estimate added modelled departures to a series that
 #     never removed them, inflating it from 32.7 to 60.7/yr. Correcting the
 #     double-count moved arms 2 and 4 FURTHER from the observation, because the
 #     2018-2020 estimation window contains the COVID-collapsed 2020 cohort
 #     (n = 10). The old error was masking an unrepresentative window.
 #
-# What survives both fixes is the finding that matters: all eight arms still
-# under-predict, by 3.1% to 17.6%. A one-sided miss across every arm is not
+#   * Arm 5 was ADDED: entrants estimated from NRMP fellowship matches published
+#     before the cutoff. Fellowship is three years, so those appointment cohorts
+#     are exactly the people certifying across the validation window, and every
+#     report was in print by 2020. See the note on the frozen record below.
+#
+# What survives all three is the finding that matters: all ten arms still
+# under-predict, by 2.5% to 17.6%. A one-sided miss across every arm is not
 # noise, and no interval widening will fix it.
 #
 # Neither of those travels with a projection object. A reader handed a table of
@@ -52,14 +58,34 @@ BACKTEST_RECORD_2020_2023 <- tibble::tribble(
   "3. Synthetic cohort, assumed entrants",           -12.633997,      FALSE,      FALSE,
   "3. Synthetic cohort [no-attrition]",               -3.177642,       TRUE,       TRUE,
   "4. Synthetic cohort, pre-cutoff entrants",        -17.611026,      FALSE,      FALSE,
-  "4. Synthetic cohort [no-attrition]",               -8.269525,      FALSE,      FALSE
+  "4. Synthetic cohort [no-attrition]",               -8.269525,      FALSE,      FALSE,
+  "5. Derived cohort, pre-cutoff NRMP entrants",      -9.188361,      FALSE,      FALSE,
+  "5. Derived cohort, NRMP [no-attrition]",           -2.526799,      FALSE,      FALSE
 )
+
+# COVERAGE IS NOT ACCURACY, AND ARM 5 PROVES IT.
+#
+# Arm 5 estimates entrants from NRMP fellowship matches published BEFORE the
+# cutoff -- a leading indicator, since fellowship is three years -- and it is the
+# most accurate arm in the whole design: -2.53% against the next best -3.14%.
+# Its 95% interval is 8 providers wide, because the NRMP series (59, 59, 58, 56)
+# barely varies. It does NOT cover.
+#
+# Arms 1 and 3 cover. They are LESS accurate, and they cover because their
+# entrant estimate inherits the certification series' enormous spread (40, 48,
+# 10) and produces intervals 138-145 wide. Coverage was bought with a noisy
+# estimator, not earned with a right answer.
+#
+# So the honest reading of "2 of 10" is not "the model is 20% validated". It is:
+# the sharpest and most accurate configuration misses, which means the residual
+# error is BIAS, and the uncertainty that actually matters -- how many matched
+# fellows go on to certify -- is not quantified by any of these arms.
 
 BACKTEST_RECORD_SOURCE <- paste(
   "artifacts/backtest_2020_to_2023_summary.csv; cutoff 2020, target 2023",
   "(observed 1306, national/ABOG_PLUS_ABU/board_certified_active, contract",
   "v3.0.0), 1000 iterations per arm, seed 20260802, entrant rate drawn per",
-  "iteration from the pre-cutoff series (PI95 widths 129-148)"
+  "iteration from the pre-cutoff series (PI95 widths 8-148 across 10 arms)"
 )
 
 # Share of arms whose 95% interval must contain the observed value before the
@@ -144,7 +170,7 @@ backtest_status_from_summary <- function(summary,
       ),
       worst_percent_error = if (length(pe)) pe[which.max(abs(pe))] else NA_real_,
       median_percent_error = if (length(pe)) stats::median(pe) else NA_real_,
-      # All eight arms under-predicted. A one-sided miss is a different problem
+      # Every arm under-predicted. A one-sided miss is a different problem
       # from scatter around the truth: it points at the entrant rate, not noise.
       all_same_direction = length(pe) > 0 && length(unique(sign(pe))) == 1L,
       source = source

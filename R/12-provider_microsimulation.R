@@ -337,7 +337,35 @@ simulate_provider_career_once <- function(agents,
     base
   }
 
-  effective_entrants <- entrants_per_year * conversion_floor
+  # Exported, so this is reachable without run_supply_microsimulation()'s checks.
+  # A negative rate makes the preallocated capacity smaller than the starting
+  # cohort and rep() dies on "invalid 'times' argument", naming neither entrants
+  # nor conversion; a conversion_floor above 1 manufactures entrants instead of
+  # discounting them, and succeeds silently.
+  if (length(entrants_per_year) == 1L) {
+    .check_scalar_num(entrants_per_year, "entrants_per_year", lo = 0)
+  }
+  .check_scalar_num(conversion_floor, "conversion_floor", lo = 0, hi = 1,
+                    lo_open = TRUE)
+  # A TRAJECTORY IS ALLOWED, not just a level. Fellowship output is a policy
+  # variable that has moved -- NRMP filled positions ran 59, 59, 58, 56 across
+  # 2017-2020 and reached 70 by 2025 -- so holding one number for 25 years is
+  # itself an assumption, and it used to be the only representable one. A vector
+  # is recycled to one value per projected year and indexed inside the loop.
+  if (length(entrants_per_year) > 1L) {
+    if (!is.numeric(entrants_per_year) || !all(is.finite(entrants_per_year)) ||
+        any(entrants_per_year < 0)) {
+      stop("`entrants_per_year` must be finite and non-negative throughout.",
+           call. = FALSE)
+    }
+    ny <- length(years)
+    if (!length(entrants_per_year) %in% c(ny, ny - 1L)) {
+      stop(sprintf(paste("`entrants_per_year` has length %d; supply 1, %d (one",
+                         "per projected year) or %d (one per transition)."),
+                   length(entrants_per_year), ny, ny - 1L), call. = FALSE)
+    }
+  }
+  effective_entrants <- rep_len(entrants_per_year * conversion_floor, length(years))
 
   # ---- Preallocated plain-vector state --------------------------------------
   # The inner loop previously grew a tibble with dplyr::bind_rows() once per
@@ -347,7 +375,9 @@ simulate_provider_career_once <- function(agents,
   # constructed once, at the end.
   n0 <- nrow(agents)
   n_years <- length(years)
-  capacity <- n0 + n_years * (as.integer(ceiling(effective_entrants)) + 1L)
+  # Sum over the trajectory rather than n_years * a single rate: a rising path
+  # would otherwise overflow the preallocation partway through.
+  capacity <- n0 + sum(as.integer(ceiling(effective_entrants)) + 1L)
 
   v_age <- c(as.numeric(agents$age), rep(NA_real_, capacity - n0))
   v_sex <- c(as.character(agents$sex), rep(NA_character_, capacity - n0))
@@ -416,8 +446,8 @@ simulate_provider_career_once <- function(agents,
     # who entered after the projection horizon. Skipping the draw shifts the RNG
     # stream, so seeded runs change value (not distribution) from this commit.
     n_new <- if (i < n_years) {
-      floor(effective_entrants) +
-        as.integer(stats::runif(1) < (effective_entrants - floor(effective_entrants)))
+      floor(effective_entrants[i]) +
+        as.integer(stats::runif(1) < (effective_entrants[i] - floor(effective_entrants[i])))
     } else 0L
     if (n_new > 0) {
       slot <- seq.int(n_used + 1L, length.out = n_new)
@@ -437,7 +467,20 @@ simulate_provider_career_once <- function(agents,
       v_id[slot] <- sprintf("E%d_%06d", year, seq.int(next_entrant_seq, length.out = n_new))
       v_origin[slot] <- "entrant"
       if (!is.null(v_state)) {
-        v_state[slot] <- assign_entrant_geography(n_new, placement_shares)
+        # A cohort carrying `state` turns the geography vector on, but that is
+        # NOT the same as having a placement distribution: `placement_shares` is
+        # NULL whenever the geographic layer is inactive. Placing entrants then
+        # threw an assertion from inside assign_entrant_geography(), which only
+        # a caller supplying a real roster would ever hit -- so it stayed latent
+        # until one did. Entrants keep NA state instead: where a future graduate
+        # practises is genuinely unknown without a placement rule, and inventing
+        # one here would let a geographic result appear that nobody asked for.
+        v_state[slot] <- if (is.data.frame(placement_shares) &&
+                             all(c("geo", "share") %in% names(placement_shares))) {
+          assign_entrant_geography(n_new, placement_shares)
+        } else {
+          NA_character_
+        }
       }
       n_used <- n_used + n_new
       next_entrant_seq <- next_entrant_seq + n_new
@@ -466,6 +509,34 @@ simulate_provider_career_once <- function(agents,
     ),
     agents = final_agents
   )
+}
+
+# Scalar-argument check shared by the supply entry points. Bounds are inclusive
+# unless the matching *_open flag is set; `lo_open` exists because a rate of
+# exactly 0 is meaningful for entrants but not for a conversion factor.
+.check_scalar_num <- function(x, name, lo = -Inf, hi = Inf,
+                              lo_open = FALSE, hi_open = FALSE) {
+  if (!is.numeric(x) || length(x) != 1L || !is.finite(x)) {
+    stop("`", name, "` must be a single finite number; got ",
+         paste(utils::capture.output(utils::str(x)), collapse = " "),
+         call. = FALSE)
+  }
+  below <- if (lo_open) x <= lo else x < lo
+  above <- if (hi_open) x >= hi else x > hi
+  if (below || above) {
+    # Render one-sided bounds as an inequality: "must be in [0, Inf]" is
+    # technically true and awful to read.
+    want <- if (is.finite(lo) && is.finite(hi)) {
+      paste0("in ", if (lo_open) "(" else "[", lo, ", ", hi,
+             if (hi_open) ")" else "]")
+    } else if (is.finite(lo)) {
+      paste0(if (lo_open) "> " else ">= ", lo)
+    } else {
+      paste0(if (hi_open) "< " else "<= ", hi)
+    }
+    stop("`", name, "` must be ", want, "; got ", x, ".", call. = FALSE)
+  }
+  invisible(x)
 }
 
 # ---- Monte-Carlo supply microsimulation -----------------------------------
@@ -551,6 +622,45 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
                                         p_active_coef = NULL,
                                         p_active_scenario_id = NULL,
                                         thin_by_p_active = FALSE) {
+  # ---- Input validation ----------------------------------------------------
+  # Every argument below reaches arithmetic that either crashes several frames
+  # down with a message naming none of them, or -- worse -- succeeds on a value
+  # that means something the caller did not intend. Checked here so the error
+  # names the argument.
+  if (length(entrants_per_year) == 1L) {
+    .check_scalar_num(entrants_per_year, "entrants_per_year", lo = 0)
+  }
+  .check_scalar_num(conversion_floor, "conversion_floor", lo = 0, hi = 1,
+                    lo_open = TRUE)
+  # ci is a band WIDTH, so both endpoints are excluded: 1 puts the quantiles at
+  # 0 and 1 (the observed extremes, not an interval) and 0 collapses lo and hi
+  # onto the median, which would still be reported as a credible band.
+  .check_scalar_num(ci, "ci", lo = 0, hi = 1, lo_open = TRUE, hi_open = TRUE)
+  .check_scalar_num(n_iterations, "n_iterations", lo = 1)
+
+  if (!is.numeric(years) || !length(years) || anyNA(years)) {
+    stop("`years` must be a non-empty numeric vector with no NA.", call. = FALSE)
+  }
+  # The engine ages the cohort once per loop pass and labels that pass years[i],
+  # so the sequence has to be strictly increasing for the labels to mean elapsed
+  # time. Unsorted years age forward while the labels run backward; a duplicated
+  # year is aged twice but summarised once, collapsing two different cohort
+  # states into one row. Both produce a plausible-looking trajectory.
+  if (any(diff(years) <= 0)) {
+    stop("`years` must be strictly increasing (sorted, no duplicates); got ",
+         paste(years, collapse = ", "), ".", call. = FALSE)
+  }
+
+  # A single replicate has no distribution: every quantile returns that one
+  # value, so lo == hi and the run would publish a zero-width band still
+  # labelled with `ci`. The parameter-uncertainty guard does not cover this --
+  # it asks whether parameters vary, not whether there are draws to vary over.
+  if (n_iterations < 2) {
+    .msg_warn("n_iterations = ", n_iterations, ": a single replicate has no ",
+              "distribution, so effective_fte_lo/hi collapse onto the median. ",
+              "The reported band is not an interval of any width.")
+  }
+
   seed_microsimulation(seed)
 
   baseline_rate <- microsim_baseline_rate(subspecialty)
@@ -589,6 +699,7 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
   # about entrants: leave the caller's value alone rather than overwriting it
   # with NULL.
   if (spec_supplies_entrants && entrants_declared &&
+      length(entrants_per_year) == 1L &&
       !isTRUE(all.equal(as.numeric(spec_entrants), as.numeric(entrants_per_year)))) {
     .msg_warn(sprintf(
       paste("entrants_per_year = %s was passed but param_spec carries entrant_mean = %s,",
@@ -596,12 +707,29 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
             "entrant_mean from the spec, so the call states one entrant rate."),
       format(entrants_per_year), format(spec_entrants), format(spec_entrants)))
   }
-  entrants_used <- if (spec_supplies_entrants) spec_entrants else entrants_per_year
-  if (!is.numeric(entrants_used) || length(entrants_used) != 1L ||
-      !is.finite(entrants_used)) {
-    stop("The resolved entrant rate is not a single finite number (got ",
-         utils::capture.output(utils::str(entrants_used)), "). Check ",
-         "`entrants_per_year` and `param_spec$entrant_mean`.", call. = FALSE)
+  # The argument was validated above, but the spec can override it, so the
+  # RESOLVED value is what has to be checked -- a negative entrant_mean would
+  # otherwise walk straight past the argument check.
+  # A TRAJECTORY KEEPS ITS SHAPE. When `entrants_per_year` is a vector the spec's
+  # scalar `entrant_mean` must not flatten it back to a constant -- that would
+  # silently discard the whole point of a time-varying path. The spec sets the
+  # LEVEL (the trajectory is rescaled so its mean matches) and the trajectory
+  # keeps the SHAPE, which is the same division of labour used for scenarios and
+  # for the back-test arms.
+  entrants_used <- if (!spec_supplies_entrants) {
+    entrants_per_year
+  } else if (length(entrants_per_year) > 1L) {
+    m <- mean(entrants_per_year)
+    if (is.finite(m) && m > 0) entrants_per_year * (spec_entrants / m) else entrants_per_year
+  } else {
+    spec_entrants
+  }
+  if (length(entrants_used) == 1L) {
+    .check_scalar_num(entrants_used, "the resolved entrant rate (entrants_per_year / param_spec$entrant_mean)",
+                      lo = 0)
+  } else if (any(!is.finite(entrants_used)) || any(entrants_used < 0)) {
+    stop("the resolved entrant trajectory contains negative or non-finite values",
+         call. = FALSE)
   }
 
   if (verbose) {
@@ -882,6 +1010,14 @@ project_supply_deterministic <- function(agents, years, entrants_per_year,
                           legacy_norm = prod_norm, hours_intercept = hours_intercept)
   }
 
+  # Exported, so this is reachable without run_supply_microsimulation()'s checks.
+  # A negative rate makes the preallocated capacity smaller than the starting
+  # cohort and rep() dies on "invalid 'times' argument", naming neither entrants
+  # nor conversion; a conversion_floor above 1 manufactures entrants instead of
+  # discounting them, and succeeds silently.
+  .check_scalar_num(entrants_per_year, "entrants_per_year", lo = 0)
+  .check_scalar_num(conversion_floor, "conversion_floor", lo = 0, hi = 1,
+                    lo_open = TRUE)
   effective_entrants <- entrants_per_year * conversion_floor
 
   out <- vector("list", length(years))

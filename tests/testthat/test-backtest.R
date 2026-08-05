@@ -301,10 +301,71 @@ test_that("run_backtest gives every arm uncertainty but keeps its own centre", {
   # ...and the prespecified contrast must survive it. A single shared spec would
   # overwrite entrants_per_year on every iteration, silently collapsing the
   # assumed-entrant arms into the estimated-entrant arms.
-  expect_equal(length(unique(bt$summary$entrants_per_year)), 2)
-  assumed <- bt$summary$predicted_median[bt$summary$entrants_per_year == 55 &
-                                           !bt$summary$apply_attrition]
-  estimated <- bt$summary$predicted_median[bt$summary$entrants_per_year != 55 &
-                                             !bt$summary$apply_attrition]
+  #
+  # Compare arms BY NAME, not by rate: arm 5 draws on NRMP and sits at 58/yr,
+  # above the shipped assumption of 55, so an "everything that isn't 55 is the
+  # low arm" test would silently invert once that arm exists.
+  expect_gte(length(unique(bt$summary$entrants_per_year)), 3)
+  matched <- !bt$summary$apply_attrition
+  assumed <- bt$summary$predicted_median[matched & grepl("entrants = 55", bt$summary$arm)]
+  estimated <- bt$summary$predicted_median[matched & grepl("pre-2021 data", bt$summary$arm)]
+  expect_length(assumed, 2); expect_length(estimated, 2)
   expect_gt(min(assumed), max(estimated))
+
+  # The NRMP arm sits above both, because 58 > 55 > 32.7.
+  nrmp <- bt$summary$predicted_median[matched & grepl("NRMP", bt$summary$arm)]
+  expect_length(nrmp, 1)
+  expect_gt(nrmp, max(assumed))
+})
+
+# ---- NRMP pre-cutoff entrant series ----------------------------------------
+
+test_that("the NRMP series filters on PUBLICATION year, not appointment year", {
+  # THE LEAKAGE GUARD. Appointment year and publication year happen to coincide
+  # for these reports, but the filter must be on availability: a report issued
+  # after the cutoff cannot enter a back-test arm however tempting its value.
+  s <- nrmp_entrant_series(available_by = 2020)
+  expect_true(all(s$available_by_year <= 2020))
+  expect_false(any(s$appointment_year == 2025))
+  expect_equal(nrow(s), 4L)
+  expect_equal(s$positions_filled, c(59L, 59L, 58L, 56L))
+
+  # The 2025 value must be reachable when no cutoff is imposed, and must equal
+  # the value nrmp_entrants() reports.
+  full <- nrmp_entrant_series()
+  expect_equal(full$positions_filled[full$appointment_year == 2025], 70L)
+  skip_if_not_installed("mufflyaccess")
+  expect_equal(nrmp_entrants("URPS"), 70L)
+})
+
+test_that("filled never exceeds offered, and the frozen series matches data-raw", {
+  s <- nrmp_entrant_series()
+  expect_true(all(s$positions_filled <= s$positions_offered))
+
+  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
+                 c(".", "..", file.path("..", "..")))
+  skip_if(length(root) == 0)
+  path <- file.path(root[1], "data-raw", "calibration", "nrmp_urps_entrants_series.csv")
+  skip_if_not(file.exists(path))
+  csv <- utils::read.csv(path, stringsAsFactors = FALSE)
+  # If these drift, the constant compiled into the package no longer matches the
+  # artifact the fetcher produces, and the back-test is scoring a stale series.
+  expect_equal(sort(csv$appointment_year), sort(s$appointment_year))
+  m <- merge(csv, s, by = "appointment_year", suffixes = c("_csv", "_pkg"))
+  expect_equal(m$positions_filled_csv, m$positions_filled_pkg)
+  expect_equal(m$positions_offered_csv, m$positions_offered_pkg)
+})
+
+test_that("the NRMP arm is scored and is the most accurate one", {
+  skip_if_not_installed("mufflyaccess")
+  # Arm 5 exists to test whether pre-cutoff information that DID exist would
+  # have helped. It should be the best point estimate; if it ever stops being so,
+  # something upstream of the entrant rate has changed.
+  expect_true(any(grepl("NRMP", BACKTEST_ARMS$label)))
+  rec <- BACKTEST_RECORD_2020_2023
+  best <- rec$arm[which.min(abs(rec$percent_error))]
+  expect_match(best, "NRMP")
+  # ...and it still fails coverage, because its interval is sharp rather than
+  # wide. Accuracy and coverage are different things and this pins that.
+  expect_false(rec$within_95[rec$arm == best])
 })
