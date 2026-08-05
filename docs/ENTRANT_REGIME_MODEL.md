@@ -160,14 +160,32 @@ Two things this module still supplies that arm 5 does not:
 2. **The deferral mechanism**, which is what moves the point estimate: the 2020
    deficit is scheduled to return rather than being averaged away or ignored.
 
-One observation about arm 5's level, offered rather than acted on: it averages
-`positions_filled` across the whole pre-cutoff series (2010–2020, mean 49.7),
-which includes the 2010–2014 establishment ramp (30, 40, 37, 48, 50). That is the
-same dilution `nrmp_growth_rates()` documents and excludes via
-`NRMP_PLATEAU_FROM` when computing growth, but the back-test arm applies no such
-cut to the level. Restricting to the plateau (2015–2020) gives a mean of 57.0
-rather than 49.7. Whether that is right is arm 5's call to make, not this
-module's.
+### Two objections this module has to answer, not dodge
+
+**1. The screen is a cut made with the answer in hand.** Arm 5's rate fell from
+58.0 to 49.73 when its series was extended to 2010–2020, because the mean now
+spans the establishment ramp. Restricting it to the 2015+ plateau would score
+better, and `b0a3d61` deliberately refused to do that: *"would be a choice made
+with the answer in hand. It is not made here."*
+
+That refusal is the right standard, and this module does not obviously meet it.
+The leave-one-out screen, `screen_alpha = 0.01`, the two-year release window, and
+the log-linear family are all choices made by someone who had read 2021–2023.
+The screen is at least a general rule rather than a hand-picked year range, and
+`classify_certification_regimes()` flags 2020 on a mechanism visible before the
+cutoff — but that is a difference of degree, not a clean exemption. §6 is the
+honest accounting.
+
+**2. Coverage here tracks interval width, as it does everywhere else in this
+back-test.** `b0a3d61` makes the point precisely: the two covering arms have
+widths 145 and 138, while the four-times-sharper arm 5 misses. This module's
+definition-matched interval is **292 wide** — the widest in the comparison — so
+its coverage is partly bought, not purely earned.
+
+What distinguishes it from "just wider" is that the point estimate moved too:
+−0.08% against the best other arm's −3.14%. Width alone does not do that; the
+deferral term does. But a reader should hold both facts at once, and should not
+read ✓✓ in the coverage columns as vindication of the interval.
 
 ## 6. Honest status of these numbers
 
