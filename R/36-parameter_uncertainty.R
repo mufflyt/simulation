@@ -79,14 +79,30 @@ series_mean_se <- function(x) {
 #'   which it is not -- see the module note.
 #' @param hours_model Optional fitted hours model; its coefficients are drawn
 #'   through the shared internal `.param_draw()` helper.
+#' @param entrant_regime Optional [fit_entrant_regime_model()] object. Supplying
+#'   it REPLACES the scalar entrant draw with a whole per-year entrant path, so
+#'   the iteration carries trend-coefficient, overdispersion, and regime-break
+#'   uncertainty rather than sampling variation in a three-year mean. This is the
+#'   component the back-test addendum found missing: variation WITHIN the fitting
+#'   window cannot represent a change of regime BETWEEN windows.
+#' @param entrant_regime_include Components of the regime draw to switch on; see
+#'   [draw_entrant_paths()].
 #' @return An object of class `urps_param_spec`.
 #' @export
 supply_parameter_spec <- function(entrant_series = NULL,
                                   entrant_mean = NULL,
                                   departures = 0,
                                   hazard_cv = 0,
-                                  hours_model = NULL) {
+                                  hours_model = NULL,
+                                  entrant_regime = NULL,
+                                  entrant_regime_include = c("trend", "dispersion",
+                                                             "break", "release_timing")) {
   se <- if (!is.null(entrant_series)) series_mean_se(entrant_series) else NA_real_
+  if (!is.null(entrant_regime) &&
+      !inherits(entrant_regime, "urps_entrant_regime")) {
+    stop("supply_parameter_spec(): entrant_regime must come from ",
+         "fit_entrant_regime_model().", call. = FALSE)
+  }
   structure(
     list(
       entrant_series = entrant_series,
@@ -95,8 +111,13 @@ supply_parameter_spec <- function(entrant_series = NULL,
       departures = departures,
       hazard_cv = hazard_cv,
       hours_model = hours_model,
+      entrant_regime = entrant_regime,
+      entrant_regime_include = entrant_regime_include,
       quantified = c(
-        entrant_rate = is.finite(se),
+        entrant_rate = is.finite(se) || !is.null(entrant_regime),
+        entrant_regime_break = !is.null(entrant_regime) &&
+          "break" %in% entrant_regime_include &&
+          is.finite(entrant_regime$break_surviving_share),
         retirement_hazard = hazard_cv > 0,
         hours = !is.null(hours_model)
       )
@@ -109,10 +130,22 @@ supply_parameter_spec <- function(entrant_series = NULL,
 print.urps_param_spec <- function(x, ...) {
   cat("Supply parameter uncertainty\n")
   cat(sprintf("  entrant rate      %s\n",
-              if (isTRUE(x$quantified[["entrant_rate"]]))
+              if (!is.null(x$entrant_regime))
+                sprintf("drawn as a PATH from the regime model (fitted through %d, %s trend)",
+                        x$entrant_regime$fit_through_year,
+                        x$entrant_regime$trend_family)
+              else if (isTRUE(x$quantified[["entrant_rate"]]))
                 sprintf("drawn: mean %.1f, SE %.1f (n = %d observed years)",
                         x$entrant_mean, x$entrant_se, length(x$entrant_series))
               else "FIXED (no observed series supplied)"))
+  cat(sprintf("  regime break      %s\n",
+              if (isTRUE(x$quantified[["entrant_regime_break"]]))
+                sprintf("drawn: %.3f/yr, surviving share %.2f, deficit deferred",
+                        x$entrant_regime$break_probability,
+                        x$entrant_regime$break_surviving_share)
+              else if (!is.null(x$entrant_regime))
+                "NOT simulated -- no disruption in the fitting window"
+              else "FIXED -- no regime model supplied"))
   cat(sprintf("  retirement hazard %s\n",
               if (isTRUE(x$quantified[["retirement_hazard"]]))
                 sprintf("drawn: CV %.2f on a multiplicative factor", x$hazard_cv)
@@ -135,13 +168,36 @@ print.urps_param_spec <- function(x, ...) {
 #'
 #' @param spec A [supply_parameter_spec()].
 #' @param schedule Base retirement hazard schedule.
+#' @param years Simulated years. Required when `spec` carries an entrant regime
+#'   model, because that draw is a per-year path rather than a scalar rate. The
+#'   returned `entrants` is then one value per TRANSITION -- `length(years) - 1`,
+#'   element i being the cohort entering between `years[i]` and `years[i + 1]` --
+#'   which is one of the lengths [simulate_provider_career_once()] accepts.
 #' @return List with `entrants`, `retirement_schedule`, `hours_coef`.
 #' @export
-draw_supply_parameters <- function(spec, schedule = RETIREMENT_HAZARD_BY_AGE) {
+draw_supply_parameters <- function(spec, schedule = RETIREMENT_HAZARD_BY_AGE,
+                                   years = NULL) {
   stopifnot(inherits(spec, "urps_param_spec"))
 
   entrants <- spec$entrant_mean
-  if (isTRUE(spec$quantified[["entrant_rate"]])) {
+  if (!is.null(spec$entrant_regime)) {
+    if (is.null(years)) {
+      stop("draw_supply_parameters(): the spec carries an entrant regime model, ",
+           "whose draw is a per-year path, so `years` must be supplied. Passing ",
+           "a scalar mean instead would discard the regime structure the model ",
+           "exists to represent.", call. = FALSE)
+    }
+    years <- sort(unique(as.integer(years)))
+    # ONE VALUE PER TRANSITION, which is the length
+    # simulate_provider_career_once() documents alongside one-per-projected-year:
+    # element i is the cohort entering between years[i] and years[i + 1]. The
+    # base year needs no entrant count, because its cohort arrives in `agents`.
+    projected <- years[-1]
+    entrants <- if (length(projected)) {
+      as.numeric(draw_entrant_paths(spec$entrant_regime, projected, 1L,
+                                    include = spec$entrant_regime_include))
+    } else numeric(0)
+  } else if (isTRUE(spec$quantified[["entrant_rate"]])) {
     # Draw around `entrant_mean` itself, NOT around mean(entrant_series) with
     # departures added back. The two differ whenever the series is already a
     # gross flow, and centring the draw anywhere other than the point estimate

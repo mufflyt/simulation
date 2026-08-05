@@ -186,6 +186,46 @@ published (HWSM Exhibits 14 and 17, FutureDocs Figure 10) as point estimates
 with no sample sizes or standard errors. `supply_parameter_spec()` exposes a
 `hazard_cv` that defaults to zero and reports the omission.
 
+### Addendum 2: both failures are addressed by an entrant regime model
+
+`R/49-entrant_regime.R` takes up the two failures above, and
+**`docs/ENTRANT_REGIME_MODEL.md` is the write-up**. In brief:
+
+- The point estimate missed because a **cancelled board examination** was
+  averaged into the steady-state rate. `urps_entry_counts()` shows ABOG
+  certifications falling 35 → 3 in 2020 while ABU held at 13 → 7 — an
+  examination failure, not a pipeline contraction. Disrupted years are now
+  screened out of the fit and their deficit is **deferred**, because candidates
+  who miss a cancelled exam sit the next one.
+- The interval missed because coefficients were fixed. The regime model draws
+  trend coefficients, overdispersion, deferral timing, and a per-year regime
+  break whose deficit carries forward.
+
+**Arm 5 reached the same diagnosis first, and from a better direction.** The NRMP
+fellowship-match arm names the identical defect — the certification flow is a
+lagging measure corrupted in exactly the estimation window — and answers it with
+a leading indicator published before the cutoff rather than a repaired lagging
+one. The two are complements: arm 5 supplies the cleaner entrant level, the
+regime model supplies the deferral mechanism and the regime-break uncertainty
+arm 5's scalar draw has no way to express. `docs/ENTRANT_REGIME_MODEL.md` §5
+scores the regime model **against arm 5**, not against the superseded shipped
+assumption: −0.08% versus −4.36% definition-matched, and covering where arm 5's
+34-wide interval misses.
+
+**Nothing above is re-scored or re-tuned.** The five arms, the
+frozen record in `BACKTEST_RECORD_2020_2023`, and `run_backtest()` are unchanged,
+because the value of this document is that no parameter moved after the error was
+seen. The regime estimator runs through a separate entry point,
+`run_entrant_regime_backtest()`, whose every output row is stamped
+`out_of_sample = FALSE` — it was built after this miss was examined, so the 2020
+cutoff is a refit and is reported as one. Its out-of-sample evidence is
+`entrant_regime_rolling_validation()`, and that evidence is thin: the series
+admits two folds at a three-year horizon, and
+`assert_interval_coverage_publishable()` still refuses it.
+
+The conclusion in §6 therefore stands unchanged for this engine's published
+intervals.
+
 ## 5. What the back-test does establish
 
 **The derived cohort beats the synthetic one in both matched pairs** — −9.8% vs

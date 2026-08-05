@@ -82,14 +82,19 @@ run_backtest_arm <- function(cohort = c("derived", "synthetic"),
     it_entrants <- entrants_per_year
     it_sched <- sched
     if (!is.null(param_spec)) {
-      d <- draw_supply_parameters(param_spec, sched)
+      d <- draw_supply_parameters(param_spec, sched, years = years)
       # Take the draw ONLY when it is a usable number, matching
       # run_supply_microsimulation(). `d$entrants` is `spec$entrant_mean`
       # verbatim when the entrant rate is not quantified, so a spec that
       # quantifies only the hazard carries NULL here; assigning it produced a
       # zero-length capacity and an unreadable `rep()` error deep in the engine.
-      if (is.numeric(d$entrants) && length(d$entrants) == 1L &&
-          is.finite(d$entrants)) {
+      #
+      # A spec carrying an entrant regime model returns a PATH -- one value per
+      # transition -- rather than a scalar, and the engine accepts either. The
+      # test is therefore "non-empty and finite throughout", not "length one";
+      # requiring a scalar here would silently discard the regime structure.
+      if (is.numeric(d$entrants) && length(d$entrants) >= 1L &&
+          all(is.finite(d$entrants))) {
         it_entrants <- d$entrants
       }
       it_sched <- d$retirement_schedule
@@ -147,6 +152,7 @@ score_backtest_arm <- function(arm, observed, label = "") {
     arm = label,
     cohort = st$cohort,
     entrants_per_year = st$entrants_per_year,
+    parameter_uncertainty = isTRUE(st$parameter_uncertainty),
     apply_attrition = st$apply_attrition,
     n_iterations = st$n_iterations,
     baseline_year = cy,

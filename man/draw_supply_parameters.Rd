@@ -4,12 +4,18 @@
 \alias{draw_supply_parameters}
 \title{Draw one parameter set for a Monte Carlo iteration}
 \usage{
-draw_supply_parameters(spec, schedule = RETIREMENT_HAZARD_BY_AGE)
+draw_supply_parameters(spec, schedule = RETIREMENT_HAZARD_BY_AGE, years = NULL)
 }
 \arguments{
 \item{spec}{A \code{\link[=supply_parameter_spec]{supply_parameter_spec()}}.}
 
 \item{schedule}{Base retirement hazard schedule.}
+
+\item{years}{Simulated years. Required when \code{spec} carries an entrant regime
+model, because that draw is a per-year path rather than a scalar rate. The
+returned \code{entrants} is then one value per TRANSITION -- \code{length(years) - 1},
+element i being the cohort entering between \code{years[i]} and \code{years[i + 1]} --
+which is one of the lengths \code{\link[=simulate_provider_career_once]{simulate_provider_career_once()}} accepts.}
 }
 \value{
 List with \code{entrants}, \code{retirement_schedule}, \code{hours_coef}.

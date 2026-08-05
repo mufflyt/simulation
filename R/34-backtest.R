@@ -266,6 +266,76 @@ validate_backtest_target <- function(target_year = BACKTEST_TARGET_YEAR,
   )
 }
 
+# ---- Attrition ascertainment ------------------------------------------------
+
+#' What the contract must supply before the primary comparison is like-for-like
+#'
+#' The primary back-test arm scores an active headcount, net of retirement,
+#' against a series that retires nobody. The gap is not a modelling error and no
+#' change to the engine can close it: the observed side is a cumulative
+#' certification count, and the contract says so itself --
+#' `mufflyaccess::urps_retirement_status()` returns `"not_ascertained"` and
+#' `n_retired` is unpopulated in every row.
+#'
+#' This reports that state as data rather than prose, so a caller can branch on
+#' it and so the day the upstream artifact starts ascertaining retirement, the
+#' back-test stops apologising automatically. Until then the primary comparison
+#' is biased AGAINST the model by roughly the departure rate, and the
+#' definition-matched arm is the one that isolates what the observed series can
+#' actually test.
+#'
+#' @return An object of class `urps_attrition_requirement`.
+#' @export
+backtest_attrition_requirement <- function() {
+  .require_mufflyaccess("The attrition ascertainment status")
+
+  status <- tryCatch(as.character(mufflyaccess::urps_retirement_status())[1],
+                     error = function(e) NA_character_)
+  series <- mufflyaccess::urps_counts_long()
+  n_retired_populated <- "n_retired" %in% names(series) &&
+    any(is.finite(series$n_retired) & series$n_retired > 0)
+  active_equals_ever <- all(series$n_active == series$n_ever_certified, na.rm = TRUE)
+
+  ascertained <- identical(status, "ascertained") && n_retired_populated
+
+  structure(
+    list(
+      ascertained = ascertained,
+      retirement_status = status,
+      n_retired_populated = n_retired_populated,
+      active_equals_ever_certified = active_equals_ever,
+      required = c(
+        "n_retired populated per year, not NA or zero throughout",
+        "n_active reported net of departures, so it differs from n_ever_certified",
+        "urps_retirement_status() reporting 'ascertained'"
+      ),
+      consequence = paste(
+        "Until then the primary arm compares an active count against a",
+        "cumulative certification count. The model is biased low against that",
+        "series by approximately the annual departure rate, and the",
+        "definition-matched (no-attrition) arm is the comparison the observed",
+        "series can support."
+      )
+    ),
+    class = "urps_attrition_requirement"
+  )
+}
+
+#' @export
+print.urps_attrition_requirement <- function(x, ...) {
+  cat(sprintf("Attrition ascertainment: %s\n",
+              if (isTRUE(x$ascertained)) "AVAILABLE" else "NOT AVAILABLE"))
+  cat(sprintf("  contract status            %s\n", x$retirement_status))
+  cat(sprintf("  n_retired populated        %s\n", x$n_retired_populated))
+  cat(sprintf("  n_active net of departures %s\n", !x$active_equals_ever_certified))
+  if (!isTRUE(x$ascertained)) {
+    cat("  still required:\n")
+    for (r in x$required) cat(sprintf("    - %s\n", r))
+    cat(sprintf("  %s\n", x$consequence))
+  }
+  invisible(x)
+}
+
 # ---- Pre-cutoff parameter estimation ---------------------------------------
 
 #' Certification cohorts using information through a cutoff only
