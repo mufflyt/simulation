@@ -6,7 +6,7 @@
 \usage{
 build_swan_dmdm_panel(
   swan_wide,
-  visits = 0:10,
+  visits = SWAN_UI_DEFAULT_VISITS,
   conditions = "ui",
   participant_id_column = "SWANID",
   verbose = TRUE
@@ -16,8 +16,11 @@ build_swan_dmdm_panel(
 \item{swan_wide}{A wide SWAN data frame, one row per participant, with
 visit-suffixed columns. \code{swan_all_visits.rds} is the intended input.}
 
-\item{visits}{Integer visit numbers to include. Defaults to 0:10, the full
-span over which UI is measurable.}
+\item{visits}{Integer visit numbers to include. Defaults to
+\code{SWAN_UI_DEFAULT_VISITS} (0-6 and 10) -- every visit whose UI gate is
+\code{INVOLEA}. Visits 7-9 use \code{LEKINVO}, which is not the same question and
+flips the sign of the fitted age coefficient (see the module header);
+requesting them warns. Pass \code{0:10} to reproduce the earlier, spurious fit.}
 
 \item{conditions}{Conditions to emit state columns for. Defaults to \code{"ui"}
 alone. \code{"pop"} is available but warns: fitting it on this data produces a

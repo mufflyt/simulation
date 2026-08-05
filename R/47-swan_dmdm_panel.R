@@ -13,10 +13,34 @@
 # Verified against swan_all_visits.rds (16,142 x 9,159) rather than assumed from
 # variable names, because the names mislead:
 #
-#  * UI is available at EVERY visit 0-10. The gate is `INVOLEA` at visits 0-6 and
-#    10 but `LEKINVO` at visits 7-9. The pre-built swan_ui_modeling.csv covers
-#    only 0-6 and 10, so it silently drops three visits by missing that rename;
-#    reading the items directly recovers them.
+#  * UI is gated by `INVOLEA` at visits 0-6 and 10 but `LEKINVO` at visits 7-9.
+#    Reading the items directly recovers visits 7-9, which the pre-built
+#    swan_ui_modeling.csv drops by missing the rename -- but those three visits
+#    are QUARANTINED by default, because recovering them was a mistake. The two
+#    items are NOT interchangeable:
+#
+#        visit  6  age 52.0  prevalence 0.650  [INVOLEA]
+#        visit  7  age 53.1  prevalence 0.906  [LEKINVO]
+#        visit 10  age 56.0  prevalence 0.673  [INVOLEA]
+#
+#    Prevalence jumps 25.6 points in 1.1 years when the item changes, then falls
+#    22 points at visit 10 when it changes back -- while the cohort gets OLDER.
+#    Incontinence does not remit en masse, so the jump is the questionnaire.
+#    (n also drops 2295 -> 1535 at visit 7 and recovers to 2088 at visit 10, so
+#    LEKINVO was evidently asked of a subset; selection may compound the wording
+#    difference.)
+#
+#    The cost of including them is not a bias of a few points, it is a SIGN
+#    FLIP on the model's dominant coefficient. Visits 7-9 fall later in calendar
+#    time, so participants are older exactly when the instrument changed, and
+#    the fit charges the questionnaire shift to age:
+#
+#        ui.aage   +0.4278 (visits 0-10)   vs   -0.0542 (INVOLEA only)
+#        ui.ameno  +0.0369                 vs   -0.1043
+#        ui.ahyst  -0.0612                 vs   -0.1992
+#
+#    Omitting 7-9 leaves a 6->10 gap, which costs nothing: dmdm_transition_data()
+#    keeps only pairs with next_year == year + 1 and drops it on its own.
 #  * POP is a BINARY self-report (`PROLAPS`, "(1) No"/"(2) Yes"), present at
 #    visits 2-10 but empty at 6, 8 and 9. It is NOT POP-Q staging, so it supports
 #    crude onset/remission only -- never the graded per-stage hazards that
@@ -76,6 +100,29 @@ swan_covariate_columns <- function(visit) {
 SWAN_POSTMENOPAUSAL_CODES <- c(1L, 2L)
 SWAN_MENOPAUSE_UNKNOWN_CODES <- c(7L, 8L)
 
+# Visits whose UI gate is LEKINVO rather than INVOLEA. Excluded by default: the
+# two items disagree by ~25 points of prevalence in adjacent visits, and
+# including them flips the sign of the age coefficient (module header). Named
+# rather than inlined so the exclusion is greppable from the fit outward.
+SWAN_UI_QUARANTINED_VISITS <- 7:9
+
+# The default visit set: every visit whose UI gate is INVOLEA.
+SWAN_UI_DEFAULT_VISITS <- setdiff(0:10, SWAN_UI_QUARANTINED_VISITS)
+
+# Collapse a visit vector to runs ("0-6, 10") so a caveat line states the set
+# rather than its range. range() would render the default set as "0-10", which
+# is exactly the impression the quarantine exists to prevent.
+.format_visit_set <- function(v) {
+  v <- sort(unique(as.integer(v)))
+  if (!length(v)) return("(none)")
+  brk <- c(0, which(diff(v) != 1L), length(v))
+  runs <- vapply(seq_len(length(brk) - 1L), function(i) {
+    r <- v[(brk[i] + 1L):brk[i + 1L]]
+    if (length(r) == 1L) as.character(r) else paste0(r[1], "-", r[length(r)])
+  }, character(1))
+  paste(runs, collapse = ", ")
+}
+
 # Baseline comorbidity items. SWAN suffixes only some of these at some visits
 # (CANCER2 and DIABETE2 exist; ARTHRIT2 and HEART2 do not), so a per-visit
 # comorbidity index would silently change definition between visits. Baseline is
@@ -98,8 +145,11 @@ SWAN_COMORBIDITY_ITEMS <- c("HIGH_BP", "DIABETE", "HEART",
 #'
 #' @param swan_wide A wide SWAN data frame, one row per participant, with
 #'   visit-suffixed columns. `swan_all_visits.rds` is the intended input.
-#' @param visits Integer visit numbers to include. Defaults to 0:10, the full
-#'   span over which UI is measurable.
+#' @param visits Integer visit numbers to include. Defaults to
+#'   `SWAN_UI_DEFAULT_VISITS` (0-6 and 10) -- every visit whose UI gate is
+#'   `INVOLEA`. Visits 7-9 use `LEKINVO`, which is not the same question and
+#'   flips the sign of the fitted age coefficient (see the module header);
+#'   requesting them warns. Pass `0:10` to reproduce the earlier, spurious fit.
 #' @param conditions Conditions to emit state columns for. Defaults to `"ui"`
 #'   alone. `"pop"` is available but warns: fitting it on this data produces a
 #'   degenerate model (see the module header), so it is opt-in. `"ai"` is an
@@ -112,11 +162,23 @@ SWAN_COMORBIDITY_ITEMS <- c("HIGH_BP", "DIABETE", "HEART",
 #' @seealso [swan_panel_fit_caveats()], [dmdm_transition_data()]
 #' @export
 build_swan_dmdm_panel <- function(swan_wide,
-                                  visits = 0:10,
+                                  visits = SWAN_UI_DEFAULT_VISITS,
                                   conditions = "ui",
                                   participant_id_column = "SWANID",
                                   verbose = TRUE) {
   stopifnot(is.data.frame(swan_wide), length(visits) > 0)
+  # Quarantine, not prohibition: the visits are reachable for anyone inspecting
+  # the discontinuity itself, but they cannot be taken by accident, and taking
+  # them says so out loud.
+  quarantined <- intersect(as.integer(visits), SWAN_UI_QUARANTINED_VISITS)
+  if (length(quarantined)) {
+    .msg_warn(sprintf(paste(
+      "visits %s use the LEKINVO UI gate, not INVOLEA. The two are not the same",
+      "question: prevalence jumps ~25 points at visit 7 and falls back at visit",
+      "10 while the cohort ages, and including them flips the fitted age",
+      "coefficient from -0.05 to +0.43. Any hazard fitted on this panel charges",
+      "a questionnaire change to age."), paste(quarantined, collapse = ", ")))
+  }
   if ("ai" %in% conditions) {
     stop("SWAN does not follow anal incontinence: the only bowel item is ",
          "BOWEL0, baseline-only. Fit AI from another cohort.", call. = FALSE)
@@ -267,8 +329,23 @@ swan_panel_fit_caveats <- function(panel) {
     return("No swan_dmdm_provenance attribute: this panel did not come from build_swan_dmdm_panel().")
   }
   c(
+    # Report the visits USED, not their range. With visits 7-9 quarantined the
+    # range is still "0-10", which reads as eleven contiguous visits and hides
+    # the exclusion in the one line a methods note is most likely to quote.
     sprintf("SWAN panel: %s participants, visits %s.",
-            prov$n_participants, paste(range(prov$visits_used), collapse = "-")),
+            prov$n_participants, .format_visit_set(prov$visits_used)),
+    if (length(intersect(prov$visits_used, SWAN_UI_QUARANTINED_VISITS))) {
+      sprintf(paste("GATE MIXTURE: visits %s use the LEKINVO UI item rather than",
+                    "INVOLEA. The two disagree by ~25 points of prevalence, and",
+                    "including them flips the fitted age coefficient positive."),
+              .format_visit_set(intersect(prov$visits_used,
+                                          SWAN_UI_QUARANTINED_VISITS)))
+    } else {
+      sprintf(paste("GATE: INVOLEA at every visit used; visits %s excluded because",
+                    "their LEKINVO gate is a different question (~25 points higher",
+                    "prevalence, and it flips the age coefficient's sign)."),
+              .format_visit_set(SWAN_UI_QUARANTINED_VISITS))
+    },
     # Name the bytes when they are known. An unverified or absent archive record
     # is stated rather than omitted: "we did not check" and "it checked out" must
     # not look the same in a methods note.
