@@ -7,18 +7,12 @@
 urps_capacity_survey_requirements()
 }
 \value{
-Tibble of required variables with the quantity each identifies.
+Tibble of the instrument's capacity-anchor items.
 }
 \description{
-The base-year adequacy anchor is the single input that can still change the
-sign of the projected gap -- adequacy of 0.708 rather than 0.948 erases the
-2050 surplus -- and its evidence is a PHYSICAL-THERAPY capacity distribution
-used as a stand-in. Nothing in this package resolves it, and nothing should
-pretend to: observed workload measures delivery, not capacity, so deriving
-adequacy from it assumes the answer.
-}
-\details{
-This function exists so the requirement is a machine-readable part of the
-package rather than a sentence in a document. \code{capacity_status()} reports it
-as UNRESOLVED until a fielded instrument replaces the stand-in.
+A VIEW onto \code{\link[=urps_practice_survey_requirements]{urps_practice_survey_requirements()}}, not a second list. The
+capacity anchor and the hours-to-FTE curve are both unresolved, both borrowed
+from other specialties, and both answerable by one questionnaire -- so they
+are registered as one instrument. Fielding two surveys to collect one
+questionnaire's worth of questions is how neither gets fielded.
 }
