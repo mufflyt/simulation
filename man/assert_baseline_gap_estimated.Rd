@@ -4,12 +4,19 @@
 \alias{assert_baseline_gap_estimated}
 \title{Refuse a base-year gap that was never estimated}
 \usage{
-assert_baseline_gap_estimated(gap, mode = resolve_reproducibility_mode())
+assert_baseline_gap_estimated(
+  gap,
+  mode = resolve_reproducibility_mode(),
+  allow_analogy = FALSE
+)
 }
 \arguments{
 \item{gap}{A \code{\link[=baseline_gap]{baseline_gap()}} object, or NULL.}
 
 \item{mode}{Reproducibility mode; strict errors, relaxed warns.}
+
+\item{allow_analogy}{Permit a \code{derived_by_analogy} or \code{assumed_with_evidence}
+base-year gap. \code{uncalibrated_illustrative} is refused regardless.}
 }
 \value{
 (Invisibly) TRUE when a genuine gap estimate is present.
@@ -17,4 +24,11 @@ assert_baseline_gap_estimated(gap, mode = resolve_reproducibility_mode())
 \description{
 Regression guard for the whole point of this module: a projection may not be
 published on an assumption of base-year equilibrium.
+}
+\details{
+The tier is checked as well as the presence. A gap estimate that exists but
+was borrowed from another specialty is a declared modelling choice, not a
+measurement, and it reaches the headline number undamped -- so it needs the
+same explicit opt-in \code{\link[=assert_publishable_workload]{assert_publishable_workload()}} requires of an
+analogy-derived delegation matrix.
 }

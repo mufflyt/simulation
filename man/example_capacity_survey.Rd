@@ -11,6 +11,14 @@ Tibble in the shape \code{\link[=capacity_survey_adequacy]{capacity_survey_adequ
 }
 \description{
 Stands in for a URPS practice-capacity survey until one is fielded. Using the
-physical-therapy distribution for urogynaecology is an explicit assumption and
-is recorded as one in the returned gap object's evidence ledger.
+physical-therapy distribution for urogynaecology is an explicit assumption:
+a gap built on it must be constructed with
+\code{calibration_status = "derived_by_analogy"}, which is what stops the run
+artifacts from reporting it as a survey fielded in urogynaecology.
+}
+\details{
+The choice of donor specialty is not incidental. On the 1,306-FTE base-year
+supply this distribution implies a 71 FTE shortfall; Dall's physiatry survey
+implies 155 and Dall's neurology assumption 161. Nothing in the model narrows
+that range -- see \code{\link[=published_baseline_gaps]{published_baseline_gaps()}}.
 }

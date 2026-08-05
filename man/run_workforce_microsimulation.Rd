@@ -102,10 +102,12 @@ observation: geographic output is then conditional on it.}
 \item{parameter_spec}{Optional \code{\link[=supply_parameter_spec]{supply_parameter_spec()}}; defaults to one
 built from the observed certification series.}
 
-\item{allow_analogy}{Permit inputs derived by analogy from another specialty
-(currently the delegation matrix). Declared in the run metadata either way.
-Defaults to FALSE: passing TRUE suppresses the strict-mode stop in
-\code{\link[=assert_publishable_workload]{assert_publishable_workload()}}, so a publication-facing run must opt in
+\item{allow_analogy}{Permit inputs derived by analogy from another specialty:
+the delegation matrix, and a base-year gap whose \code{calibration_status} is
+\code{derived_by_analogy} or \code{assumed_with_evidence}. Declared in the run
+metadata either way. Defaults to FALSE: passing TRUE suppresses the
+strict-mode stop in \code{\link[=assert_publishable_workload]{assert_publishable_workload()}} and
+\code{\link[=assert_baseline_gap_estimated]{assert_baseline_gap_estimated()}}, so a publication-facing run must opt in
 deliberately rather than inherit the exemption from the default.}
 
 \item{brfss_cells}{Optional population cell table from

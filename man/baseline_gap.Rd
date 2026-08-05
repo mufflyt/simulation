@@ -9,7 +9,9 @@ baseline_gap(
   adequacy,
   method = c("capacity_survey", "hpsa_removal", "assumed", "external_anchor"),
   evidence = character(0),
-  access_components_counted = character(0)
+  access_components_counted = character(0),
+  calibration_status = NULL,
+  source = NA_character_
 )
 }
 \arguments{
@@ -17,12 +19,20 @@ baseline_gap(
 
 \item{adequacy}{Base-year adequacy ratio.}
 
-\item{method}{One of \code{BASELINE_GAP_METHODS}.}
+\item{method}{One of \code{BASELINE_GAP_METHODS}. Names the arithmetic only.}
 
 \item{evidence}{Character vector of supporting indicators.}
 
 \item{access_components_counted}{Character vector naming access deficits
 already embedded in this gap (e.g. "nonmetro", "uninsured", "racial_equity").}
+
+\item{calibration_status}{One of \code{BASELINE_GAP_TIERS}: whether this number was
+measured on urogynaecologists, borrowed from another specialty, or assumed.
+Inferred only for \code{method = "assumed"} (from whether an evidence ledger is
+present); for every other method it must be declared, because the method
+cannot distinguish a fielded URPS survey from a borrowed distribution.}
+
+\item{source}{Attribution for the number (the study, survey or anchor).}
 }
 \value{
 An object of class \code{urps_baseline_gap}.

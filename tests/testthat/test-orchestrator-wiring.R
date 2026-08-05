@@ -23,6 +23,9 @@ ow_run <- function(...) {
     pop_by_band = example_female_population_by_band(2025:2027),
     baseline_gap_estimate = baseline_gap(120, 0.95, method = "assumed",
                                          evidence = "test fixture"),
+    # The fixture gap is "assumed_with_evidence", which the gate now asks a
+    # caller to declare rather than inherit silently.
+    allow_analogy = TRUE,
     verbose = FALSE,
     ...
   )

@@ -23,6 +23,10 @@ gap <- baseline_gap(
   base_supply_fte = supply$national,
   adequacy = capacity_survey_adequacy(example_capacity_survey())$adequacy,
   method = "capacity_survey",
+  # The arithmetic is a capacity survey's; the DISTRIBUTION is physical therapy's.
+  # Only the tier records that, and the figure is exploratory because of it.
+  calibration_status = "derived_by_analogy",
+  source = "Zarek 2025 PTJ (physical therapists, n = 1,423)",
   evidence = "Illustrative physical-therapy capacity distribution; replace with URPS survey"
 )
 run <- run_workforce_microsimulation(

@@ -30,6 +30,35 @@
 
 BASELINE_GAP_METHODS <- c("capacity_survey", "hpsa_removal", "assumed", "external_anchor")
 
+# THE METHOD IS NOT THE EVIDENCE TIER
+#
+# `method` names the arithmetic; it says nothing about whether the number was
+# measured on urogynaecologists. Zarek's instrument applied to a URPS sample and
+# Zarek's published physical-therapy distribution borrowed wholesale produce
+# byte-identical output through `capacity_survey_adequacy()`, and the base-year
+# shortfall is a pass-through of that number with a coefficient of one
+# (test-workload-to-fte.R, "the base-year gap is a pass-through"). Recording only
+# the method therefore lets a borrowed distribution be reported as a measurement.
+#
+# Every gap object consequently carries a `calibration_status` alongside its
+# method. The vocabulary mirrors `CALIBRATION_TIERS` (R/23) with two differences:
+# "solved" cannot apply -- there is no internal constraint that determines a
+# base-year shortfall, which is the entire reason this module exists -- and
+# "assumed_with_evidence" is added for the Dall 2013 route, an assumption
+# defended by indirect indicators, which has no workload analogue.
+#
+#   "calibrated"                measured on urogynaecologists (a fielded URPS
+#                               capacity survey, a URPS-specific external anchor)
+#   "derived_by_analogy"        the structure or the level comes from another
+#                               specialty (the physical-therapy stand-in)
+#   "assumed_with_evidence"     assumed, with an evidence ledger (Dall 2013)
+#   "uncalibrated_illustrative" assumed with nothing behind it
+#
+# `assert_baseline_gap_estimated()` accepts the first, requires explicit opt-in
+# for the middle two, and refuses the last.
+BASELINE_GAP_TIERS <- c("calibrated", "derived_by_analogy",
+                        "assumed_with_evidence", "uncalibrated_illustrative")
+
 # ---- Method 1: provider capacity survey -----------------------------------
 
 # The four response categories of the Zarek 2025 instrument, with the adequacy
@@ -239,7 +268,93 @@ assumed_baseline_gap <- function(gap_fraction, evidence = character(0),
     adequacy = 1 - gap_fraction,
     gap_fraction = gap_fraction,
     evidence = evidence,
-    method = "assumed"
+    method = "assumed",
+    # An empty ledger is not the same claim as a defended assumption, and the
+    # tier has to say which one this is.
+    calibration_status = if (length(evidence)) "assumed_with_evidence"
+                         else "uncalibrated_illustrative"
+  )
+}
+
+# ---- Method 4: an external anchor -----------------------------------------
+
+#' Base-year shortfall from an external published anchor
+#'
+#' The fourth route, and in practice the reachable one for a surgical
+#' subspecialty. HRSA designates shortage areas for primary medical care, dental
+#' and mental health -- not subspecialties -- so [hpsa_removal_shortfall()] has
+#' no URPS input to read, which leaves a fielded capacity survey or an anchor
+#' borrowed from outside this model.
+#'
+#' An anchor is any externally published estimate that pins the base-year level:
+#' a provider-to-population benchmark, a payer network-adequacy standard, an
+#' access-based required-supply estimate, or another study's URPS shortfall.
+#' Supply exactly one of `adequacy` or `required_fte`; the other is derived.
+#'
+#' Unlike [assumed_baseline_gap()], this route demands a `citation`. An anchor is
+#' external evidence, so it is attributable by construction; an unattributable
+#' one is an assumption and belongs in [assumed_baseline_gap()].
+#'
+#' Returns a finished [baseline_gap()] object rather than a bare list, because
+#' this is the only route that already carries everything the object needs --
+#' the tier and the source travel with the anchor itself.
+#'
+#' @param base_supply_fte Base-year supplied FTE.
+#' @param adequacy Base-year adequacy ratio (supply / demand) implied by the
+#'   anchor. Give this or `required_fte`, not both.
+#' @param required_fte Base-year required FTE implied by the anchor.
+#' @param anchor Short label for what the anchor is (e.g. "ACOG/AUGS
+#'   urogynaecologists per 100,000 women benchmark").
+#' @param citation Attribution for the anchor. Required and non-empty.
+#' @param calibration_status `"calibrated"` when the anchor was measured on
+#'   urogynaecologists, `"derived_by_analogy"` when it comes from another
+#'   specialty.
+#' @param evidence Additional supporting indicators.
+#' @param access_components_counted Access deficits already inside this anchor,
+#'   passed through to [assert_access_not_double_counted()].
+#' @return An object of class `urps_baseline_gap`.
+#' @export
+external_anchor_gap <- function(base_supply_fte,
+                                adequacy = NULL,
+                                required_fte = NULL,
+                                anchor,
+                                citation,
+                                calibration_status = c("calibrated", "derived_by_analogy"),
+                                evidence = character(0),
+                                access_components_counted = character(0)) {
+  assertthat::assert_that(is.numeric(base_supply_fte), length(base_supply_fte) == 1L,
+                          base_supply_fte > 0)
+  calibration_status <- match.arg(calibration_status)
+
+  if (missing(anchor) || !is.character(anchor) || !nzchar(paste(anchor, collapse = ""))) {
+    stop("external_anchor_gap: `anchor` must name what the anchor is.", call. = FALSE)
+  }
+  if (missing(citation) || !is.character(citation) || !nzchar(paste(citation, collapse = ""))) {
+    stop(paste("external_anchor_gap: `citation` is required. An anchor with no",
+               "attribution is an assumption -- use assumed_baseline_gap() with",
+               "an evidence ledger instead."), call. = FALSE)
+  }
+
+  given <- c(!is.null(adequacy), !is.null(required_fte))
+  if (sum(given) != 1L) {
+    stop("external_anchor_gap: supply exactly one of `adequacy` or `required_fte`.",
+         call. = FALSE)
+  }
+  if (is.null(adequacy)) {
+    assertthat::assert_that(is.numeric(required_fte), length(required_fte) == 1L,
+                            required_fte > 0)
+    adequacy <- base_supply_fte / required_fte
+  }
+  assertthat::assert_that(is.numeric(adequacy), length(adequacy) == 1L, adequacy > 0)
+
+  baseline_gap(
+    base_supply_fte = base_supply_fte,
+    adequacy = adequacy,
+    method = "external_anchor",
+    evidence = c(anchor, evidence),
+    access_components_counted = access_components_counted,
+    calibration_status = calibration_status,
+    source = paste(citation, collapse = "; ")
   )
 }
 
@@ -273,17 +388,26 @@ required_fte_base_year <- function(base_supply_fte, adequacy) {
 #'
 #' @param base_supply_fte Base-year supplied FTE.
 #' @param adequacy Base-year adequacy ratio.
-#' @param method One of `BASELINE_GAP_METHODS`.
+#' @param method One of `BASELINE_GAP_METHODS`. Names the arithmetic only.
 #' @param evidence Character vector of supporting indicators.
 #' @param access_components_counted Character vector naming access deficits
 #'   already embedded in this gap (e.g. "nonmetro", "uninsured", "racial_equity").
+#' @param calibration_status One of `BASELINE_GAP_TIERS`: whether this number was
+#'   measured on urogynaecologists, borrowed from another specialty, or assumed.
+#'   Inferred only for `method = "assumed"` (from whether an evidence ledger is
+#'   present); for every other method it must be declared, because the method
+#'   cannot distinguish a fielded URPS survey from a borrowed distribution.
+#' @param source Attribution for the number (the study, survey or anchor).
 #' @return An object of class `urps_baseline_gap`.
 #' @export
 baseline_gap <- function(base_supply_fte, adequacy,
                          method = c("capacity_survey", "hpsa_removal", "assumed", "external_anchor"),
                          evidence = character(0),
-                         access_components_counted = character(0)) {
+                         access_components_counted = character(0),
+                         calibration_status = NULL,
+                         source = NA_character_) {
   method <- match.arg(method)
+  calibration_status <- .resolve_baseline_gap_tier(calibration_status, method, evidence)
   required <- required_fte_base_year(base_supply_fte, adequacy)
   structure(
     list(
@@ -293,6 +417,8 @@ baseline_gap <- function(base_supply_fte, adequacy,
       shortfall_pct = 100 * (required - base_supply_fte) / required,
       adequacy = adequacy,
       method = method,
+      calibration_status = calibration_status,
+      source = source,
       evidence = evidence,
       access_components_counted = access_components_counted
     ),
@@ -300,13 +426,49 @@ baseline_gap <- function(base_supply_fte, adequacy,
   )
 }
 
+# Fail closed on an undeclared tier rather than guessing one.
+#
+# Only the "assumed" route is self-describing: an evidence ledger is either
+# present or it is not. For the other three, identical arithmetic can carry
+# either tier, so silence has to be an error -- a default of "calibrated" would
+# reintroduce exactly the mislabelling this field exists to prevent, and a
+# default of "derived_by_analogy" would understate a survey that was genuinely
+# fielded.
+.resolve_baseline_gap_tier <- function(status, method, evidence) {
+  if (!is.null(status)) {
+    if (length(status) != 1L || !status %in% BASELINE_GAP_TIERS) {
+      stop(sprintf("baseline_gap: unknown calibration_status '%s'. Expected one of: %s",
+                   paste(status, collapse = ", "),
+                   paste(BASELINE_GAP_TIERS, collapse = ", ")), call. = FALSE)
+    }
+    return(status)
+  }
+  if (identical(method, "assumed")) {
+    return(if (length(evidence)) "assumed_with_evidence" else "uncalibrated_illustrative")
+  }
+  stop(sprintf(paste(
+    "baseline_gap: `calibration_status` must be declared for method '%s'.",
+    "It cannot be inferred. A capacity survey fielded in urogynaecology is",
+    "'calibrated'; the same instrument's published distribution borrowed from",
+    "another specialty is 'derived_by_analogy'; the two produce identical",
+    "arithmetic, and the base-year shortfall is a pass-through of the result",
+    "with a coefficient of one. Declare one of: %s."),
+    method, paste(BASELINE_GAP_TIERS, collapse = ", ")), call. = FALSE)
+}
+
 #' @export
 print.urps_baseline_gap <- function(x, ...) {
-  cat(sprintf("Base-year supply adequacy (%s)\n", x$method))
+  tier <- x$calibration_status %||% NA_character_
+  cat(sprintf("Base-year supply adequacy (%s, %s)\n", x$method, tier))
   cat(sprintf("  supplied FTE   %s\n", format(round(x$base_supply_fte, 1), big.mark = ",")))
   cat(sprintf("  required FTE   %s\n", format(round(x$required_fte, 1), big.mark = ",")))
   cat(sprintf("  shortfall      %s FTE (%.1f%% of demand)\n",
               format(round(x$shortfall_fte, 1), big.mark = ","), x$shortfall_pct))
+  if (!identical(tier, "calibrated")) {
+    cat("  NOT MEASURED ON UROGYNAECOLOGISTS: this shortfall passes through to the\n")
+    cat("  headline gap with a coefficient of one.\n")
+  }
+  if (!is.na(x$source %||% NA_character_)) cat("  source:        ", x$source, "\n")
   if (length(x$evidence)) cat("  evidence:      ", paste(x$evidence, collapse = "; "), "\n")
   if (length(x$access_components_counted)) {
     cat("  access already counted: ", paste(x$access_components_counted, collapse = ", "), "\n")
@@ -319,24 +481,66 @@ print.urps_baseline_gap <- function(x, ...) {
 #' Regression guard for the whole point of this module: a projection may not be
 #' published on an assumption of base-year equilibrium.
 #'
+#' The tier is checked as well as the presence. A gap estimate that exists but
+#' was borrowed from another specialty is a declared modelling choice, not a
+#' measurement, and it reaches the headline number undamped -- so it needs the
+#' same explicit opt-in [assert_publishable_workload()] requires of an
+#' analogy-derived delegation matrix.
+#'
 #' @param gap A [baseline_gap()] object, or NULL.
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
+#' @param allow_analogy Permit a `derived_by_analogy` or `assumed_with_evidence`
+#'   base-year gap. `uncalibrated_illustrative` is refused regardless.
 #' @return (Invisibly) TRUE when a genuine gap estimate is present.
 #' @export
-assert_baseline_gap_estimated <- function(gap, mode = resolve_reproducibility_mode()) {
+assert_baseline_gap_estimated <- function(gap, mode = resolve_reproducibility_mode(),
+                                          allow_analogy = FALSE) {
+  refuse <- function(msg) {
+    if (identical(mode, "strict")) stop(msg, call. = FALSE)
+    .msg_warn(msg)
+    invisible(FALSE)
+  }
+
   msg <- paste(
     "No base-year supply-adequacy estimate: the projection would assume base-year",
     "equilibrium, which forces the starting shortfall to zero and can only report",
     "growth relative to current levels. Estimate it with capacity_survey_adequacy(),",
-    "hpsa_removal_shortfall(), or assumed_baseline_gap() with an evidence ledger."
+    "hpsa_removal_shortfall(), external_anchor_gap(), or assumed_baseline_gap()",
+    "with an evidence ledger."
   )
-  ok <- inherits(gap, "urps_baseline_gap") && !isTRUE(all.equal(gap$adequacy, 1))
-  if (!ok) {
-    if (identical(mode, "strict")) stop(msg, call. = FALSE)
-    .msg_warn(msg)
-    return(invisible(FALSE))
+  if (!inherits(gap, "urps_baseline_gap") || isTRUE(all.equal(gap$adequacy, 1))) {
+    return(refuse(msg))
   }
-  invisible(TRUE)
+
+  tier <- gap$calibration_status %||% NA_character_
+  if (identical(tier, "calibrated")) return(invisible(TRUE))
+
+  if (identical(tier, "uncalibrated_illustrative")) {
+    return(refuse(paste(
+      "The base-year gap is 'uncalibrated_illustrative': a shortfall was assumed",
+      "with no evidence ledger behind it. It becomes the headline shortage with a",
+      "coefficient of one, so no published number may rest on it. Field a URPS",
+      "capacity survey, cite an anchor via external_anchor_gap(), or record the",
+      "indicators supporting the assumption in assumed_baseline_gap(evidence = ).")))
+  }
+
+  what <- if (identical(tier, "derived_by_analogy")) {
+    "borrowed from another specialty"
+  } else {
+    "assumed, defended only by indirect indicators"
+  }
+  analogy_msg <- sprintf(paste(
+    "The base-year gap (%s, %.1f%% shortfall) is '%s' -- %s, not measured on",
+    "urogynaecologists. It passes through to the headline shortage with a",
+    "coefficient of one. Report it as an assumption, or pass allow_analogy = TRUE",
+    "to proceed knowingly."),
+    gap$method, gap$shortfall_pct, tier, what)
+
+  if (isTRUE(allow_analogy)) {
+    .msg_info(sprintf("Proceeding with a '%s' base-year gap (declared).", tier))
+    return(invisible(TRUE))
+  }
+  refuse(analogy_msg)
 }
 
 # ---- Double-counting guard for access scenarios ---------------------------

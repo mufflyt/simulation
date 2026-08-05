@@ -36,6 +36,10 @@ gap <- baseline_gap(
   base_supply_fte = supply$national,
   adequacy = adequacy$adequacy,
   method = "capacity_survey",
+  # Declared, not inferred: the tier is what keeps the validation report from
+  # recording a borrowed distribution as a survey fielded in urogynaecology.
+  calibration_status = "derived_by_analogy",
+  source = "Zarek 2025 PTJ (physical therapists, n = 1,423)",
   evidence = c(
     "Stand-in: Zarek 2025 physical-therapy capacity distribution",
     "Replace with a fielded URPS practice-capacity survey"
@@ -58,6 +62,9 @@ result <- run_workforce_microsimulation(
   # argument to see the uncalibrated comparator (and the guard that refuses it
   # in strict mode).
   calibration = "namcs",
+  # Both the delegation matrix and the base-year gap are analogy-derived here.
+  # Opting in is the declaration; it is not a way of making them measured.
+  allow_analogy = TRUE,
   output_dir = "outputs",
   verbose = TRUE
 )

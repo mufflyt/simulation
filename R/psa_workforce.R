@@ -63,11 +63,20 @@ psa_workforce_gap <- function(n = 200,
   final_year <- max(years)
 
   evaluate <- function(p) {
+    # A uniform draw is not a capacity survey. It was labelled as one, which put
+    # "capacity_survey" in the validation artifact of every PSA replicate. The
+    # honest description is an assumption whose range is bracketed by the
+    # published analogues, so that is what the evidence ledger records.
     gap_obj <- baseline_gap(
       base_supply_fte = base_fte,
       adequacy = p$base_adequacy,
-      method = "capacity_survey",
-      evidence = "PSA draw of base-year adequacy"
+      method = "assumed",
+      calibration_status = "assumed_with_evidence",
+      source = "PSA prior; no URPS capacity survey exists",
+      evidence = c(
+        "PSA draw of base-year adequacy over uniform(0.85, 1.02)",
+        "Range brackets the published analogues: physiatry 0.894, PT 0.948"
+      )
     )
     res <- run_workforce_microsimulation(
       baseline_supply = baseline_supply,
@@ -78,6 +87,9 @@ psa_workforce_gap <- function(n = 200,
       retirement_source = p$retirement_source,
       baseline_gap_estimate = gap_obj,
       n_iterations = n_iterations,
+      # Sweeping the base-year adequacy is the point of this analysis, so the
+      # non-measured tier is declared rather than tripping the gate on every draw.
+      allow_analogy = TRUE,
       seed = seed,
       verbose = FALSE
     )
