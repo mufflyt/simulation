@@ -1,0 +1,7 @@
+SWAN panel: 3297 participants, visits 0-6, 10.
+GATE: INVOLEA at every visit used; visits 7-9 excluded because their LEKINVO gate is a different question (~25 points higher prevalence, and it flips the age coefficient's sign).
+SOURCE: swan_all_visits.rds, sha256 9ca085dd516de07a, verified against SWAN_ARCHIVE_SHA256.
+PROXY: cumulative_vaginal_deliveries is TOTAL parity (NUMCHILD). SWAN records no delivery mode, so the fitted `avag` coefficient assumes cesarean and vaginal delivery carry equal pelvic-floor risk.
+UNMEASURED: years_since_last_vaginal_birth is constant; its fitted slope (`absl`) is structurally 0 and means 'not measured', not 'no effect'.
+AI: not fitted from SWAN under any option.
+Comorbidity: baseline-only, time-invariant, from 6 item(s): HIGH_BP, DIABETE, HEART, ARTHRIT, OSTEOPR, CANCER.
