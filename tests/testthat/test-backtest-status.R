@@ -124,17 +124,132 @@ test_that("the status records that one target year cannot estimate coverage", {
   expect_output(print(st), "not a coverage estimate")
 })
 
-test_that("the frozen record reproduces the live artifact", {
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
-  skip_if(length(root) == 0)
-  path <- file.path(root[1], "artifacts", "backtest_2020_to_2023_summary.csv")
-  skip_if_not(file.exists(path))
-  live <- backtest_status_from_summary(utils::read.csv(path, stringsAsFactors = FALSE))
+# ---- Record-vs-artifact drift ----------------------------------------------
+#
+# BACKTEST_RECORD_2020_2023 is a hand transcription of the scored artifact.
+# Re-scoring rewrites the artifact and leaves the constant untouched, so the
+# package can report a validation result no artifact supports. That has already
+# happened once: extending the NRMP series moved arm 5 from -2.53% to -4.36%.
+
+test_that("the frozen record matches the live artifact ARM BY ARM", {
+  path <- backtest_artifact_path()
+  skip_if(is.null(path))
+  live <- utils::read.csv(path, stringsAsFactors = FALSE)
+  rec <- BACKTEST_RECORD_2020_2023
+
+  # The old check compared three AGGREGATE fields. Two different records can
+  # agree on coverage, worst error and arm count while differing arm by arm.
+  expect_equal(nrow(rec), nrow(live))
+  expect_equal(rec$percent_error, live$percent_error, tolerance = 1e-6)
+  expect_equal(as.logical(rec$within_80), as.logical(live$within_80))
+  expect_equal(as.logical(rec$within_95), as.logical(live$within_95))
+
+  # ...and the aggregates the status stamp actually reports.
   frozen <- backtest_status()
-  # If these drift, the transcribed record in this file is stale and every
-  # projection is carrying a status that no artifact supports.
-  expect_equal(frozen$coverage_95, live$coverage_95)
-  expect_equal(frozen$worst_percent_error, live$worst_percent_error, tolerance = 1e-6)
-  expect_equal(frozen$n_arms, live$n_arms)
+  live_status <- backtest_status_from_summary(live)
+  expect_equal(frozen$coverage_95, live_status$coverage_95)
+  expect_equal(frozen$coverage_80, live_status$coverage_80)
+  expect_equal(frozen$worst_percent_error, live_status$worst_percent_error,
+               tolerance = 1e-6)
+  expect_equal(frozen$n_arms, live_status$n_arms)
+})
+
+test_that("the recorded checksum identifies the artifact it was taken from", {
+  path <- backtest_artifact_path()
+  skip_if(is.null(path))
+  skip_if_not_installed("openssl")
+  v <- verify_backtest_record(path)
+  expect_true(v$checked)
+  expect_true(v$checksum_matches)
+  expect_equal(v$observed_sha256, BACKTEST_RECORD_SHA256)
+  expect_equal(nchar(BACKTEST_RECORD_SHA256), 64L)
+})
+
+test_that("verification detects every kind of drift it exists to catch", {
+  path <- backtest_artifact_path()
+  skip_if(is.null(path))
+  base <- utils::read.csv(path, stringsAsFactors = FALSE)
+  write_tmp <- function(d) { f <- tempfile(fileext = ".csv")
+                             utils::write.csv(d, f, row.names = FALSE); f }
+
+  # A re-scored percentage.
+  d <- base; d$percent_error[5] <- d$percent_error[5] - 1.5
+  v <- verify_backtest_record(write_tmp(d))
+  expect_false(v$current)
+  expect_true("percent_error" %in% v$mismatches$field)
+  expect_true(any(grepl("Synthetic", v$mismatches$arm)))
+
+  # A flipped coverage flag -- the field that decides `validated`.
+  d <- base; d$within_95[3] <- !d$within_95[3]
+  v <- verify_backtest_record(write_tmp(d))
+  expect_false(v$current)
+  expect_true("within_95" %in% v$mismatches$field)
+
+  # An added or dropped arm.
+  v <- verify_backtest_record(write_tmp(base[-1, ]))
+  expect_false(v$current)
+  expect_equal(v$mismatches$field, "n_arms")
+
+  # Any change at all breaks the checksum, even one the row check tolerates.
+  d <- base; d$mc_standard_error[1] <- d$mc_standard_error[1] + 1
+  v <- verify_backtest_record(write_tmp(d))
+  expect_false(v$checksum_matches)
+})
+
+test_that("a drift below tolerance is not reported as drift", {
+  path <- backtest_artifact_path()
+  skip_if(is.null(path))
+  d <- utils::read.csv(path, stringsAsFactors = FALSE)
+  d$percent_error[2] <- d$percent_error[2] + 1e-9
+  f <- tempfile(fileext = ".csv"); utils::write.csv(d, f, row.names = FALSE)
+  # Six decimal places are transcribed; a 1e-9 difference is float noise, not a
+  # re-score. Reporting it would train people to ignore the gate.
+  expect_true(verify_backtest_record(f)$current)
+})
+
+test_that("the gate fails closed in strict mode and warns in relaxed", {
+  path <- backtest_artifact_path()
+  skip_if(is.null(path))
+  d <- utils::read.csv(path, stringsAsFactors = FALSE)
+  d$percent_error[1] <- d$percent_error[1] - 5
+  f <- tempfile(fileext = ".csv"); utils::write.csv(d, f, row.names = FALSE)
+
+  expect_error(assert_backtest_record_current(mode = "strict", path = f),
+               "no artifact supports")
+  expect_message(assert_backtest_record_current(mode = "relaxed", path = f),
+                 "no artifact supports")
+  expect_false(suppressMessages(
+    assert_backtest_record_current(mode = "relaxed", path = f)))
+
+  # The message must name the fix, or the gate just annoys people.
+  msg <- tryCatch(assert_backtest_record_current(mode = "strict", path = f),
+                  error = conditionMessage)
+  expect_match(msg, "emit_backtest_record")
+  expect_match(msg, "BACKTEST_RECORD_SHA256")
+  expect_match(msg, "SAME commit")
+})
+
+test_that("a missing artifact is unverifiable, not a failure", {
+  # artifacts/ is .Rbuildignore'd, so absence is the normal case in an installed
+  # build. Erroring there would make the package unusable where it ships.
+  v <- verify_backtest_record(file.path(tempdir(), "definitely-absent.csv"))
+  expect_false(v$checked)
+  expect_true(is.na(v$current))
+  expect_true(assert_backtest_record_current(mode = "strict",
+                                             path = file.path(tempdir(), "nope.csv")))
+})
+
+test_that("the checksum is a bare character, not a classed object", {
+  path <- backtest_artifact_path()
+  skip_if(is.null(path))
+  # WHY THIS IS PINNED. The first implementation used openssl::sha256(), which
+  # returns a CLASSED object whose class survives as.character(). The result
+  # printed as plain hex and compared TRUE under `==` but FALSE under
+  # identical(), so an attribute rather than a digest decided whether the record
+  # looked stale. digest is already a declared Import and returns bare text.
+  h <- digest::digest(file = path, algo = "sha256")
+  expect_identical(class(h), "character")
+  expect_null(attributes(h))
+  expect_equal(nchar(h), 64L)
+  expect_identical(h, BACKTEST_RECORD_SHA256)
 })

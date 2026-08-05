@@ -59,3 +59,9 @@ best <- which.min(abs(s$percent_error))
 cat(sprintf("#   most accurate arm   %s (%.2f%%)\n", lab[best], s$percent_error[best]))
 cat(sprintf("#   entrant rates       %s\n",
             paste(sort(unique(round(s$entrants_per_year, 2))), collapse = ", ")))
+
+# The checksum must move with the record; BACKTEST_RECORD_SHA256 is what lets an
+# installed build detect that the artifact was regenerated underneath it.
+sha <- tryCatch(digest::digest(file = f, algo = "sha256"),
+                error = function(e) NA_character_)
+cat(sprintf('\nBACKTEST_RECORD_SHA256 <- "%s"\n', sha))

@@ -116,6 +116,11 @@ test_that("the entrant-policy scenarios are not inert", {
     years = 2025:2030, n_iterations = 12, baseline_entrants = 70,
     baseline_gap_estimate = baseline_gap(
       base_supply_fte = 1306, adequacy = 0.95, method = "capacity_survey",
+      # baseline_gap() now requires an explicit calibration tier: the same
+      # arithmetic is 'calibrated' from a fielded URPS survey and
+      # 'derived_by_analogy' from another specialty's published distribution,
+      # and it refuses to infer which. These fixtures are neither.
+      calibration_status = "uncalibrated_illustrative",
       evidence = "test"),
     allow_analogy = TRUE, verbose = FALSE
   )
@@ -140,7 +145,7 @@ test_that("baseline_entrants controls the run rather than being overridden", {
       years = 2025:2030, n_iterations = 12, baseline_entrants = e,
       baseline_gap_estimate = baseline_gap(
         base_supply_fte = 1306, adequacy = 0.95, method = "capacity_survey",
-        evidence = "test"),
+        calibration_status = "uncalibrated_illustrative", evidence = "test"),
       allow_analogy = TRUE, verbose = FALSE)
     fin <- r$supply[r$supply$year == max(r$supply$year) &
                       grepl("^Baseline", r$supply$scenario_label), ]

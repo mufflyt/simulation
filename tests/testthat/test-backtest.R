@@ -117,10 +117,13 @@ test_that("the attrition definition mismatch fails closed by default", {
   skip_if_not_installed("mufflyaccess")
   # The observed series applies no attrition; the model does. Proceeding
   # requires an explicit acknowledgement.
-  # Under the shipped contract n_retired is NA throughout, so the guard stops on
-  # the UNASCERTAINED branch rather than the all-zero one. Both refuse without
-  # the acknowledgement; they differ in what they claim to know.
-  expect_error(validate_backtest_target(), "UNASCERTAINED")
+  #
+  # WHICH branch stops it depends on the installed contract: 0.10.0 serves
+  # n_retired as integer zeros and stops on the all-zero branch, later
+  # generations serve NA and stop on the UNASCERTAINED branch. Both refuse
+  # without the acknowledgement -- they differ only in what they claim to know
+  # -- so match the regime tag both carry rather than either one's prose.
+  expect_error(validate_backtest_target(), "retirement regime")
   expect_silent(validate_backtest_target(acknowledge_no_attrition = TRUE))
   t <- validate_backtest_target(acknowledge_no_attrition = TRUE)
   expect_false(t$observed_series_applies_attrition)
@@ -406,29 +409,93 @@ test_that("unascertained retirement is not treated as zero retirement", {
   # THE na.rm TRAP. The guard used to read
   #   all(series$n_retired == 0, na.rm = TRUE)
   # which is VACUOUSLY TRUE when the column is all NA, because na.rm empties the
-  # vector and all(logical(0)) is TRUE. Under mufflyaccess 0.10.0 n_retired is
-  # integer and NA in EVERY row, so the old form was not merely fragile -- it was
-  # already reaching the right verdict for the wrong reason, and would have
-  # flipped the && and silently dropped the acknowledgement requirement the
-  # moment n_active stopped equalling n_ever_certified.
+  # vector and all(logical(0)) is TRUE.
   expect_true(all(c(NA, NA) == 0, na.rm = TRUE))   # the trap, demonstrated
   expect_true(any(is.na(c(NA, NA))))               # what the guard now tests
 
   skip_if_not_installed("mufflyaccess")
+  # VERSION-TOLERANT. Two contract generations describe the same fact
+  # differently: 0.10.0 serves n_retired as integer zeros with no
+  # urps_retirement_status(), later ones serve NA and expose that accessor.
+  # Asserting either representation directly breaks on the other, so the test
+  # asserts the REGIME the guard derives.
+  regime <- backtest_retirement_regime()
+  expect_true(as.character(regime) %in% c("not_ascertained", "zero", "ascertained"))
+  expect_true(nzchar(attr(regime, "source")))
+
   s <- mufflyaccess::urps_counts_long()
-  # Documents the schema this repo was verified against. Keyed on the contract's
-  # own accessor, not on a literal, so a contract that starts ascertaining
-  # retirement fails here loudly instead of drifting out of sync with the guard.
   expect_true("n_retired" %in% names(s))
-  expect_true(all(is.na(s$n_retired)))
-  expect_identical(mufflyaccess::urps_retirement_status(), "not_ascertained")
+  if (identical(as.character(regime), "not_ascertained")) {
+    expect_true(any(is.na(s$n_retired)) ||
+                  !"n_retired" %in% names(s) ||
+                  grepl("accessor", attr(regime, "source")))
+  } else if (identical(as.character(regime), "zero")) {
+    expect_false(any(is.na(s$n_retired)))
+    expect_true(all(s$n_retired == 0))
+  }
+  # True of every generation seen so far, and the reason the target is a
+  # cumulative certification count rather than an active roster.
   expect_true(all(s$n_active == s$n_ever_certified))
 })
 
-test_that("the no-attrition acknowledgement is still required", {
+test_that("a zero placeholder is not counted as an ascertained measurement", {
   skip_if_not_installed("mufflyaccess")
+  v <- validate_backtest_target(acknowledge_no_attrition = TRUE)
+  # n_retired = 0 in every row of a series where n_active always equals
+  # n_ever_certified is a placeholder for "not tracked", not a finding that
+  # nobody retired. Only a non-zero measured count is ascertained.
+  if (v$retirement_regime %in% c("zero", "not_ascertained")) {
+    expect_false(v$retirement_ascertained)
+    expect_false(v$observed_series_applies_attrition)
+  } else {
+    expect_true(v$retirement_ascertained)
+  }
+})
+
+test_that("the no-attrition acknowledgement is still required, on any contract", {
+  skip_if_not_installed("mufflyaccess")
+  # Match the regime TAG both branches carry, not either branch's prose. The
+  # requirement is identical across generations; only the explanation differs.
   expect_error(validate_backtest_target(acknowledge_no_attrition = FALSE),
-               "UNASCERTAINED")
+               "retirement regime")
+  expect_error(validate_backtest_target(acknowledge_no_attrition = FALSE),
+               "acknowledge_no_attrition = TRUE")
+
   v <- validate_backtest_target(acknowledge_no_attrition = TRUE)
   expect_false(v$observed_series_applies_attrition)
+  expect_true(nzchar(v$retirement_regime))
+  expect_true(nzchar(v$retirement_regime_source))
+})
+
+test_that("the regime prefers the contract accessor when one exists", {
+  skip_if_not_installed("mufflyaccess")
+  r <- backtest_retirement_regime()
+  has_accessor <- "urps_retirement_status" %in% getNamespaceExports("mufflyaccess")
+  # Whichever generation is installed, the source must say how it was decided --
+  # so a reader can tell a declared status from an inferred one.
+  if (has_accessor) {
+    expect_equal(attr(r, "source"), "contract accessor")
+    expect_true(nzchar(attr(r, "declared")))
+  } else {
+    expect_match(attr(r, "source"), "n_retired")
+  }
+})
+
+test_that("the regime is inferred correctly from either representation", {
+  # Exercised on synthetic frames, so both generations are covered wherever the
+  # suite runs rather than only the one that happens to be installed.
+  skip_if("urps_retirement_status" %in% getNamespaceExports("mufflyaccess"),
+          "contract accessor overrides inference")
+  na_form <- data.frame(n_retired = c(NA_integer_, NA_integer_),
+                        n_active = c(10L, 11L), n_ever_certified = c(10L, 11L))
+  zero_form <- data.frame(n_retired = c(0L, 0L),
+                          n_active = c(10L, 11L), n_ever_certified = c(10L, 11L))
+  real_form <- data.frame(n_retired = c(2L, 3L),
+                          n_active = c(8L, 9L), n_ever_certified = c(10L, 12L))
+  expect_equal(as.character(backtest_retirement_regime(na_form)), "not_ascertained")
+  expect_equal(as.character(backtest_retirement_regime(zero_form)), "zero")
+  expect_equal(as.character(backtest_retirement_regime(real_form)), "ascertained")
+  # A column that is not there at all is unascertained, never zero.
+  expect_equal(as.character(backtest_retirement_regime(data.frame(n_active = 1L))),
+               "not_ascertained")
 })

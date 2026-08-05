@@ -130,6 +130,48 @@ backtest_target_candidates <- function() {
   )
 }
 
+#' Which retirement regime the contract series is in
+#'
+#' VERSION-TOLERANT BY DESIGN. Two mufflyaccess generations describe the same
+#' fact differently: 0.10.0 serves `n_retired` as integer zeros with no
+#' `urps_retirement_status()`, while later contracts serve NA and expose that
+#' accessor. Both mean "departures were never ascertained", and a guard keyed on
+#' either representation alone breaks on the other -- which is exactly what
+#' happened: tests asserting the NA form failed against 0.10.0.
+#'
+#' The contract's own accessor is authoritative when present; otherwise the
+#' regime is inferred from the data. Callers branch on the RETURNED VALUE rather
+#' than on message text, so neither generation needs a different test.
+#'
+#' @param series Contract series; read from the contract when NULL.
+#' @return One of "not_ascertained", "zero", "ascertained", with a `source`
+#'   attribute recording whether it came from the accessor or from inference.
+#' @export
+backtest_retirement_regime <- function(series = NULL) {
+  declared <- tryCatch({
+    if ("urps_retirement_status" %in% getNamespaceExports("mufflyaccess")) {
+      as.character(mufflyaccess::urps_retirement_status())[1]
+    } else NA_character_
+  }, error = function(e) NA_character_)
+
+  if (!is.na(declared) && nzchar(declared)) {
+    regime <- if (grepl("not_ascertain|unascertain", declared)) "not_ascertained" else "ascertained"
+    return(structure(regime, source = "contract accessor", declared = declared))
+  }
+
+  if (is.null(series)) series <- mufflyaccess::urps_counts_long()
+  if (!"n_retired" %in% names(series)) {
+    return(structure("not_ascertained", source = "absent n_retired column"))
+  }
+  if (any(is.na(series$n_retired))) {
+    return(structure("not_ascertained", source = "n_retired served as NA"))
+  }
+  if (all(series$n_retired == 0)) {
+    return(structure("zero", source = "n_retired is 0 in every row"))
+  }
+  structure("ascertained", source = "n_retired is non-zero")
+}
+
 #' Validate the back-test target against the simulated cohort's contract
 #'
 #' Fails closed on every dimension that could make the comparison invalid. The
@@ -223,26 +265,33 @@ validate_backtest_target <- function(target_year = BACKTEST_TARGET_YEAR,
                "observed series applies attrition cannot be established. Refusing",
                "to assume it does not."))
   }
-  retired_unascertained <- any(is.na(series$n_retired))
-  retired_all_zero <- !retired_unascertained && all(series$n_retired == 0)
+  regime <- backtest_retirement_regime(series)
+  retired_unascertained <- identical(as.character(regime), "not_ascertained")
+  retired_all_zero <- identical(as.character(regime), "zero")
   stock_is_cumulative <- all(series$n_active == series$n_ever_certified, na.rm = TRUE)
+
+  # Both messages carry the tag "[retirement regime: <x>]", so a caller or test
+  # can match either generation's failure without knowing which contract is
+  # installed. Only the explanation differs; the requirement does not.
+  tag <- sprintf("[retirement regime: %s, via %s]", as.character(regime),
+                 attr(regime, "source"))
 
   if (retired_unascertained && !isTRUE(acknowledge_no_attrition)) {
     fail(paste(
-      "the contract serves n_retired as NA for at least one row, so attrition is",
-      "UNASCERTAINED rather than known to be zero. An unascertained departure",
-      "count cannot be compared with a simulation that applies retirement",
-      "hazards. Pass acknowledge_no_attrition = TRUE to proceed with this",
-      "recorded caveat."))
+      tag, "attrition is UNASCERTAINED rather than known to be zero -- the",
+      "contract does not report departures. An unascertained departure count",
+      "cannot be compared with a simulation that applies retirement hazards.",
+      "Pass acknowledge_no_attrition = TRUE to proceed with this recorded",
+      "caveat."))
   }
   no_attrition <- retired_all_zero && stock_is_cumulative
   if (no_attrition && !isTRUE(acknowledge_no_attrition)) {
     fail(paste(
-      "the observed series applies NO ATTRITION -- n_retired is 0 in every row",
-      "(verified non-NA) and n_active equals n_ever_certified in every row, so it",
-      "is a cumulative certification series. The simulation DOES apply retirement",
-      "hazards, so the two are not the same quantity and the model will",
-      "structurally under-predict. Pass acknowledge_no_attrition = TRUE to",
+      tag, "the observed series applies NO ATTRITION -- n_retired is 0 in every",
+      "row (verified non-NA) and n_active equals n_ever_certified in every row,",
+      "so it is a cumulative certification series. The simulation DOES apply",
+      "retirement hazards, so the two are not the same quantity and the model",
+      "will structurally under-predict. Pass acknowledge_no_attrition = TRUE to",
       "proceed with this recorded caveat."))
   }
 
@@ -263,7 +312,16 @@ validate_backtest_target <- function(target_year = BACKTEST_TARGET_YEAR,
     # and is non-zero.
     observed_series_applies_attrition =
       !retired_unascertained && !retired_all_zero && !stock_is_cumulative,
-    retirement_ascertained = !retired_unascertained,
+    # ONLY a non-zero measured count counts as ascertained. Under mufflyaccess
+    # 0.10.0 n_retired is 0 in every row of a series where n_active always
+    # equals n_ever_certified -- that is a placeholder for "not tracked", not a
+    # measurement that nobody retired. Treating it as ascertained would let the
+    # weakest evidence support the strongest claim, which is the same error the
+    # `!no_attrition` collapse made.
+    retirement_ascertained = identical(as.character(regime), "ascertained"),
+    # The regime itself, so callers branch on a value rather than on prose.
+    retirement_regime = as.character(regime),
+    retirement_regime_source = attr(regime, "source"),
     retired_values_rejected = retired,
     candidates = backtest_target_candidates(),
     rationale = sprintf(paste(
@@ -298,9 +356,15 @@ validate_backtest_target <- function(target_year = BACKTEST_TARGET_YEAR,
 backtest_attrition_requirement <- function() {
   .require_mufflyaccess("The attrition ascertainment status")
 
-  status <- tryCatch(as.character(mufflyaccess::urps_retirement_status())[1],
-                     error = function(e) NA_character_)
+  # VERSION-TOLERANT. Calling the accessor directly returns NA on contracts that
+  # do not export it (mufflyaccess 0.10.0), which reported the status as
+  # UNKNOWN when the series plainly shows it is not ascertained. Route through
+  # backtest_retirement_regime(), which prefers the accessor when present and
+  # infers from the data otherwise, so both generations report the same state.
   series <- mufflyaccess::urps_counts_long()
+  regime <- backtest_retirement_regime(series)
+  status <- if (identical(as.character(regime), "ascertained")) "ascertained" else "not_ascertained"
+  status_source <- attr(regime, "source")
   n_retired_populated <- "n_retired" %in% names(series) &&
     any(is.finite(series$n_retired) & series$n_retired > 0)
   active_equals_ever <- all(series$n_active == series$n_ever_certified, na.rm = TRUE)
@@ -311,12 +375,13 @@ backtest_attrition_requirement <- function() {
     list(
       ascertained = ascertained,
       retirement_status = status,
+      retirement_status_source = status_source,
       n_retired_populated = n_retired_populated,
       active_equals_ever_certified = active_equals_ever,
       required = c(
         "n_retired populated per year, not NA or zero throughout",
         "n_active reported net of departures, so it differs from n_ever_certified",
-        "urps_retirement_status() reporting 'ascertained'"
+        "the contract reporting retirement as ascertained (via urps_retirement_status() where exposed, or a populated n_retired otherwise)"
       ),
       consequence = paste(
         "Until then the primary arm compares an active count against a",
