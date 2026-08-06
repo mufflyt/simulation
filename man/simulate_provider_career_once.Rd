@@ -22,7 +22,8 @@ simulate_provider_career_once(
   entrant_female_share = 0.82,
   placement_shares = NULL,
   p_active_coef = NULL,
-  p_active_scenario_id = NULL
+  p_active_scenario_id = NULL,
+  track_career_states = FALSE
 )
 }
 \arguments{
@@ -73,6 +74,14 @@ the P(active) formulation.}
 
 \item{p_active_scenario_id}{Scenario id whose \code{retirement_shift_years} shifts
 the P(active) age axis.}
+
+\item{track_career_states}{Add explicit career-state output (R/16b). When
+TRUE the per-year panel gains \code{n_early_career}/\code{n_mid_career}/\code{n_late_career}
+(active counts, summing to \code{headcount}) and \code{n_retired}, and the returned
+agent table gains a \code{career_state} column. ADDITIVE and output-preserving:
+the existing panel columns and the RNG stream are untouched, so a seeded run
+is byte-identical with tracking on or off (guarded by
+test-provider-state-machine.R).}
 }
 \value{
 List with \code{panel} (per-year summary tibble) and \code{agents} (final agent
