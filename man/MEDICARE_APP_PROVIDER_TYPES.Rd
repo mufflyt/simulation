@@ -13,4 +13,4 @@ MEDICARE_APP_PROVIDER_TYPES
 \description{
 Provider types that are advanced practice providers in the Medicare taxonomy
 }
-\keyword{datasets}
+\keyword{internal}

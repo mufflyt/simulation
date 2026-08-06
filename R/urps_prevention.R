@@ -298,7 +298,7 @@ apply_named_prevention_scenario <- function(volumes,
 #' @param scenario_id Character key in [URPS_PREVENTION_SCENARIOS].
 #' @param registry See [apply_named_prevention_scenario()].
 #' @return Tibble `year`, `service`, `volume` with prevention adjustment applied.
-#' @export
+#' @keywords internal
 prevention_demand_trajectory <- function(demand_long,
                                          scenario_id = "conservative_25pct",
                                          registry    = URPS_PREVENTION_SCENARIOS) {

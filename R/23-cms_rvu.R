@@ -167,7 +167,7 @@ validate_cpt_basket <- function(basket = URPS_CPT_BASKET, tol = 1e-8) {
 #' @param basket Service-to-CPT basket.
 #' @param rvu CMS work-RVU table.
 #' @return Tibble: `service`, `work_rvu`, `n_codes`, `codes`.
-#' @export
+#' @keywords internal
 service_work_rvu <- function(basket = URPS_CPT_BASKET, rvu = CMS_WORK_RVU) {
   validate_cpt_basket(basket)
   j <- merge(basket, rvu[, c("hcpcs", "work_rvu")], by = "hcpcs", all.x = TRUE)
@@ -197,7 +197,7 @@ service_work_rvu <- function(basket = URPS_CPT_BASKET, rvu = CMS_WORK_RVU) {
 #' @param basket Service-to-CPT basket.
 #' @param rvu CMS work-RVU table.
 #' @return Tibble in the shape of `URPS_SERVICE_WORKLOAD`.
-#' @export
+#' @keywords internal
 build_workload_from_cms <- function(basket = URPS_CPT_BASKET, rvu = CMS_WORK_RVU) {
   sw <- service_work_rvu(basket, rvu)
 
@@ -233,7 +233,7 @@ build_workload_from_cms <- function(basket = URPS_CPT_BASKET, rvu = CMS_WORK_RVU
 #' @param path Path to a `PPRRVU*.csv` extracted from a CMS RVU release.
 #' @param skip Header rows to skip; the CMS layout puts the data from row 10.
 #' @return Tibble of `hcpcs`, `mod`, `description`, `work_rvu`, `glob`.
-#' @export
+#' @keywords internal
 load_cms_pprrvu <- function(path, skip = 9L) {
   if (!file.exists(path)) {
     stop(sprintf("CMS PPRRVU file not found: %s\n  Download %s and extract it.",
@@ -254,7 +254,7 @@ load_cms_pprrvu <- function(path, skip = 9L) {
 #' @param path Path to a `PPRRVU*.csv`.
 #' @param codes CPT codes to extract; defaults to those the model uses.
 #' @return Tibble in the shape of [CMS_WORK_RVU].
-#' @export
+#' @keywords internal
 refresh_cms_work_rvu <- function(path, codes = CMS_WORK_RVU$hcpcs) {
   d <- load_cms_pprrvu(path)
   out <- d[d$hcpcs %in% codes, c("hcpcs", "description", "work_rvu", "glob")]
@@ -275,7 +275,7 @@ refresh_cms_work_rvu <- function(path, codes = CMS_WORK_RVU$hcpcs) {
 #' @param shipped The shipped table to compare against.
 #' @param tol Absolute tolerance.
 #' @return Tibble of differing codes (empty when the shipped table is current).
-#' @export
+#' @keywords internal
 verify_cms_work_rvu <- function(path, shipped = CMS_WORK_RVU, tol = 1e-8) {
   fresh <- refresh_cms_work_rvu(path, shipped$hcpcs)
   j <- merge(shipped[, c("hcpcs", "work_rvu")],

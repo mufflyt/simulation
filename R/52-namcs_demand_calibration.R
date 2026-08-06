@@ -28,7 +28,7 @@
 #' purpose, carried with the number rather than in a document beside it.
 #'
 #' @return Named list of provenance fields.
-#' @export
+#' @keywords internal
 namcs_anchor_provenance <- function() {
   list(
     source = "National Ambulatory Medical Care Survey (NAMCS) Public Use File",

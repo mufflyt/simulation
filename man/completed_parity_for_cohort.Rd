@@ -15,3 +15,4 @@ Numeric mean completed parity (clamped outside the anchor range).
 \description{
 Mean completed parity by birth cohort, interpolated across cited anchors
 }
+\keyword{internal}

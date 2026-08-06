@@ -15,3 +15,4 @@ excluded from the built package, so \code{system.file()} will not find them in a
 installation and this errors with that explanation rather than a bare
 not-found.
 }
+\keyword{internal}

@@ -12,3 +12,4 @@ Character version string.
 \description{
 Registry version in force
 }
+\keyword{internal}

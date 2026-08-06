@@ -12,3 +12,4 @@ Logical.
 \description{
 Is the mufflyaccess contract available?
 }
+\keyword{internal}

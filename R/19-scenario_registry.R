@@ -263,7 +263,7 @@ validate_scenario_registry <- function(registry, kind = c("supply", "demand")) {
 #' @param use_weibull Logical; use Weibull survival curves (default TRUE).
 #' @return A hazard schedule data frame with columns `age`, `sex`,
 #'   `prob_exit`, `se_prob_exit`, `calibration_tier`.
-#' @export
+#' @keywords internal
 scenario_retirement_schedule <- function(scenario,
                                           schedule   = RETIREMENT_HAZARD_BY_AGE,
                                           use_weibull = TRUE) {
@@ -285,7 +285,7 @@ scenario_retirement_schedule <- function(scenario,
 #' Summarise a registry as a tibble for reporting
 #' @param registry Scenario registry.
 #' @return Tibble with one row per scenario.
-#' @export
+#' @keywords internal
 scenario_registry_table <- function(registry) {
   dplyr::bind_rows(lapply(names(registry), function(nm) {
     s <- registry[[nm]]
