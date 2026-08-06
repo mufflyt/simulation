@@ -18,6 +18,7 @@ simulate_lifecourse_demand(
   risk_params = lifecourse_risk_params(),
   pathway_params = lifecourse_pathway_params(),
   severity_params = lifecourse_severity_params(),
+  eligibility_params = lifecourse_eligibility_params(),
   service_map = lifecourse_service_map(),
   use_condition_pathway = TRUE,
   pathway = NULL
@@ -60,6 +61,11 @@ placeholders — override to calibrate.}
 care-seeking multipliers (\code{\link[=lifecourse_severity_params]{lifecourse_severity_params()}}). Default is
 NEUTRAL (multipliers = 1), so demand is unchanged; supply non-unit
 multipliers to activate a severity -> care-seeking gradient.}
+
+\item{eligibility_params}{Treatment-eligibility gate
+(\code{\link[=lifecourse_eligibility_params]{lifecourse_eligibility_params()}}). Default is NEUTRAL (\code{p_eligible = 1}),
+so demand is unchanged; supply \code{p_eligible < 1} to gate treatment on
+medical eligibility.}
 
 \item{use_condition_pathway}{Route treated patients through the staged
 condition pathway (\code{\link[=condition_service_pathway]{condition_service_pathway()}}) instead of the flat

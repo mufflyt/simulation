@@ -79,8 +79,9 @@ test_that("the registry exposes the severity stage with canonical tiers", {
   expect_true(all(reg$calibration_tier %in% CALIBRATION_TIERS))
   sev <- reg[reg$stage == "symptom_severity", ]
   expect_equal(nrow(sev), 12L)                                  # 3 conditions x 4 levels
-  expect_true(all(sev$calibration_tier[sev$condition == "ui"] == "derived_by_analogy"))
-  expect_true(all(sev$calibration_tier[sev$condition %in% c("pop", "ai")] == "uncalibrated_illustrative"))
+  # Placeholder shares are uncalibrated for every condition; only Sandvik-derived
+  # UI shares (via a supplied SWAN panel) earn a higher tier.
+  expect_true(all(sev$calibration_tier == "uncalibrated_illustrative"))
   mult <- reg[startsWith(reg$param, "seek_mult_"), ]
   expect_equal(nrow(mult), 12L)
   expect_true(all(mult$value == 1))                            # neutral default

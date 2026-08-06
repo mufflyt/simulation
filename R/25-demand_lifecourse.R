@@ -141,7 +141,8 @@ lifecourse_service_map <- function() {
 
 # Expected treated fraction per condition + care-pathway state fields.
 .lifecourse_treated <- function(pop, pathway, access_gain,
-                                severity = lifecourse_severity_params()) {
+                                severity = lifecourse_severity_params(),
+                                eligibility = lifecourse_eligibility_params()) {
   # Severity-weighted care-seeking (the un-collapsed symptom-severity stage):
   #   p_seek_eff = p_seek * weighted_mean(seek_multiplier; severity shares).
   # NEUTRAL BY DEFAULT -- every multiplier is 1, so p_seek_eff == p_seek exactly
@@ -159,7 +160,8 @@ lifecourse_service_map <- function() {
   }
   treated <- function(cond, prev) {
     prev * pathway$recognition[[cond]] * seek(cond) *
-      pathway$p_referral[[cond]] * pathway$p_treated[[cond]]
+      pathway$p_referral[[cond]] * eligibility$p_eligible[[cond]] *
+      pathway$p_treated[[cond]]
   }
   pop$treated_ui  <- treated("ui",  pop$p_ui)
   pop$treated_pop <- treated("pop", pop$p_pop)
@@ -216,6 +218,10 @@ lifecourse_service_map <- function() {
 #'   care-seeking multipliers ([lifecourse_severity_params()]). Default is
 #'   NEUTRAL (multipliers = 1), so demand is unchanged; supply non-unit
 #'   multipliers to activate a severity → care-seeking gradient.
+#' @param eligibility_params Treatment-eligibility gate
+#'   ([lifecourse_eligibility_params()]). Default is NEUTRAL (`p_eligible = 1`),
+#'   so demand is unchanged; supply `p_eligible < 1` to gate treatment on
+#'   medical eligibility.
 #' @param use_condition_pathway Route treated patients through the staged
 #'   condition pathway ([condition_service_pathway()]) instead of the flat
 #'   `service_map`. `TRUE` by default: the flat map emitted conservative,
@@ -237,6 +243,7 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
                                        risk_params = lifecourse_risk_params(),
                                        pathway_params = lifecourse_pathway_params(),
                                        severity_params = lifecourse_severity_params(),
+                                       eligibility_params = lifecourse_eligibility_params(),
                                        service_map = lifecourse_service_map(),
                                        use_condition_pathway = TRUE,
                                        pathway = NULL) {
@@ -254,7 +261,8 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
     col <- paste0("p_", prevention_target)
     pop[[col]] <- pop[[col]] * (1 - prevention_effect)
   }
-  pop <- .lifecourse_treated(pop, pathway_params, access_gain, severity_params)
+  pop <- .lifecourse_treated(pop, pathway_params, access_gain, severity_params,
+                             eligibility_params)
 
   scale_factor <- sum(pop_by_age$population) / n
   treated_national <- c(ui  = sum(pop$treated_ui),

@@ -95,7 +95,7 @@ demand_transition_registry <- function() {
   }
   risk_note <- function(p) if (p == "bvag") "primary exposure term (cited override available)" else ""
   path_note <- function(p) switch(p,
-    p_treated = "conflates treatment_eligibility + treatment_preference (stages not yet separated)",
+    p_treated = "treatment preference given eligible (eligibility split into the treatment_eligibility stage)",
     recognition = "symptom recognition (pre-severity)",
     p_seek = "base care-seeking; reweighted by the symptom_severity stage (seek_mult_*)",
     "")
@@ -120,10 +120,13 @@ demand_transition_registry <- function() {
     "pop",          1.0,      1.0,     1.0,         1.0,
     "ai",           1.0,      1.0,     1.0,         1.0
   )
-  share_tier <- c(ui = "derived_by_analogy", pop = "uncalibrated_illustrative",
+  # Placeholder shares are uncalibrated_illustrative -- the VALUES here are
+  # illustrative, not computed from data. Only Sandvik-derived shares (supply a
+  # SWAN panel to lifecourse_severity_params()) earn the derived_by_analogy tier.
+  share_tier <- c(ui = "uncalibrated_illustrative", pop = "uncalibrated_illustrative",
                   ai = "uncalibrated_illustrative")
   share_src <- c(
-    ui  = "Sandvik severity distribution over the SWAN incontinence panel (score_sandvik_severity)",
+    ui  = "illustrative placeholder; supply a SWAN panel to lifecourse_severity_params() for Sandvik-derived shares",
     pop = "no severity instrument (SWAN prolapse is binary); illustrative placeholder shares",
     ai  = "no severity instrument (AI unmeasured in SWAN); illustrative placeholder shares")
   melt_sev <- function(wide, stage, prefix, tier_by, src_by, note) {
@@ -146,7 +149,18 @@ demand_transition_registry <- function() {
              uni("uncalibrated_illustrative"),
              uni("scenario lever; no in-domain severity->care-seeking OR (see HDMM plan)"),
              "care-seeking multiplier by severity; 1 = neutral, set != 1 to model a gradient"))
-  default_rows <- rbind(default_rows, severity_rows)
+  # -- Treatment-eligibility gate (the un-collapsed stage 6). Splitting the old
+  #    p_treated scalar into p_eligible x p_treated separates medical eligibility
+  #    from patient preference. NEUTRAL default (p_eligible = 1): all referred
+  #    patients assumed eligible, so p_eligible x p_treated == the old p_treated
+  #    and demand is byte-identical. No eligibility instrument exists.
+  elig_rows <- melt_sev(
+    tibble::tribble(~condition, ~p_eligible, "ui", 1.0, "pop", 1.0, "ai", 1.0),
+    "treatment_eligibility", "",
+    uni("uncalibrated_illustrative"),
+    uni("no eligibility instrument; all referred patients assumed eligible (neutral placeholder)"),
+    "treatment-eligibility gate; 1 = neutral, set < 1 to gate on medical eligibility")
+  default_rows <- rbind(default_rows, severity_rows, elig_rows)
 
   # -- Cited overrides (literature-anchored). These are the evidence-bearing rows
   #    a reviewer diffs. Tier "derived_by_analogy" => publishable only with an
@@ -173,10 +187,18 @@ demand_transition_registry <- function() {
 #' gradient is supplied. Pass to [simulate_lifecourse_demand()] via
 #' `severity_params` to activate a severity -> care-seeking gradient.
 #'
+#' The UI shares are illustrative placeholders unless a `swan_panel` is supplied:
+#' then they are computed from the Sandvik instrument ([score_sandvik_severity()])
+#' as the observed category distribution (not-computable / continent rows are
+#' dropped, not folded into "slight"), and the `status` reflects that.
+#'
+#' @param swan_panel Optional SWAN incontinence panel
+#'   ([build_swan_incontinence_panel()]); when supplied, the UI severity shares
+#'   are derived from it via [score_sandvik_severity()] instead of the placeholder.
 #' @return A list with `status`, `levels`, and per-condition named vectors
 #'   `shares` and `seek_multiplier` (one entry per severity level).
 #' @export
-lifecourse_severity_params <- function() {
+lifecourse_severity_params <- function(swan_panel = NULL) {
   reg <- demand_transition_registry()
   levs <- .DEMAND_SEVERITY_LEVELS
   pick <- function(stage, prefix) {
@@ -186,10 +208,39 @@ lifecourse_severity_params <- function() {
       stats::setNames(v$value[match(paste0(prefix, levs), v$param)], levs)
     }), .DEMAND_CONDITION_ORDER)
   }
-  list(status = "placeholder_uncalibrated",
-       levels = levs,
-       shares = pick("symptom_severity", "sev_share_"),
+  shares <- pick("symptom_severity", "sev_share_")
+  status <- "placeholder_uncalibrated"
+  if (!is.null(swan_panel)) {
+    scored <- score_sandvik_severity(swan_panel, verbose = FALSE)
+    # Drop NA (not-computable / continent) rows; do NOT fold them into "slight".
+    tab <- table(factor(as.character(scored$sandvik_category), levels = levs))
+    if (sum(tab) > 0) {
+      shares$ui <- stats::setNames(as.numeric(tab) / sum(tab), levs)
+      status <- "ui_sandvik_derived"
+    }
+  }
+  list(status = status, levels = levs, shares = shares,
        seek_multiplier = pick("care_seeking", "seek_mult_"))
+}
+
+#' Treatment-eligibility gate parameters
+#'
+#' The per-condition medical-eligibility probability for the (un-collapsed)
+#' treatment-eligibility stage, read from [demand_transition_registry()]. NEUTRAL
+#' by default (`p_eligible = 1`: all referred patients assumed eligible), so
+#' `p_eligible x p_treated` equals the old combined `p_treated` and demand is
+#' unchanged. Pass to [simulate_lifecourse_demand()] via `eligibility_params` to
+#' gate treatment on medical eligibility.
+#'
+#' @return A list with `status` and a per-condition named vector `p_eligible`.
+#' @export
+lifecourse_eligibility_params <- function() {
+  reg <- demand_transition_registry()
+  rows <- reg[reg$stage == "treatment_eligibility" & reg$param == "p_eligible", ]
+  list(status = "placeholder_uncalibrated",
+       p_eligible = stats::setNames(
+         rows$value[match(.DEMAND_CONDITION_ORDER, rows$condition)],
+         .DEMAND_CONDITION_ORDER))
 }
 
 # Effective (condition, param, value, tier) for a variant: default rows, with the
