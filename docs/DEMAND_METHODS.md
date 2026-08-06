@@ -147,6 +147,22 @@ than a static risk equation.
   against an untouched vintage remains the strongest step, and the preregistration
   is exactly what makes that vintage's evaluation clean when it lands. Runner:
   `scripts/run_preregistered_rolling_origin.R`.
+- **Model-comparison scorecard** (`R/forecast_scorecard.R`). Coverage alone is a
+  broken success measure: a deliberately wide interval "passes" 95% coverage while
+  saying almost nothing, so a 292-provider band can beat a sharp, informative model
+  merely because the truth fell somewhere inside it. `forecast_scorecard()` reports
+  the full suite instead — MAPE and RMSE, signed and signed-percent bias, empirical
+  coverage, mean interval width, the mean **interval score** (Gneiting & Raftery
+  2007: width plus a shortfall penalty, so among covering intervals the *sharper*
+  one wins), and the calibration slope. `weighted_interval_score()` is the proper
+  multi-level generalization (Bracher et al. 2021). `compare_forecasts()` ranks
+  competing models, expresses accuracy as **skill vs a simple benchmark**
+  (`1 - model / benchmark`, so "better than green CI" becomes "better than a naive
+  forecast"), and measures **rank stability across cutoffs** — a model that only
+  wins on average but swings between best and worst across origins is not a reliable
+  forecaster. This is how a candidate model is judged: not by a single coverage
+  number, but by sharpness-penalized accuracy that is stable across back-test
+  origins and beats a naive benchmark.
 
 ## 6. Denominator hierarchy and concordance
 

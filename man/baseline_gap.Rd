@@ -39,20 +39,20 @@ cannot distinguish a fielded URPS survey from a borrowed distribution.}
 
 \item{source}{Attribution for the number (the study, survey or anchor).}
 
-\item{population}{Population the estimate refers to (e.g. "adult women").
-\code{NA} is honest and reported as "undeclared"; it is never silently filled in.}
+\item{population}{Population the anchor pertains to (e.g. "US women 65+").
+\code{NA} is reported as "undeclared" and never silently filled in.}
 
-\item{year}{Base year the estimate refers to.}
+\item{year}{Base-year / vintage of the estimate.}
 
-\item{source_specialty}{Specialty the number was actually measured on (URPS
-itself, or the analogue specialty a borrowed distribution came from).}
+\item{source_specialty}{Specialty the number was measured on; distinguishes a
+URPS measurement from one borrowed from another specialty.}
 
-\item{externally_measured}{Logical flag: whether the number was externally
-measured (\code{TRUE}) rather than assumed. \code{NA} when undeclared.}
+\item{externally_measured}{Flag for whether the adequacy/gap was measured
+outside this model rather than assumed within it.}
 
-\item{adequacy_ci}{Optional two-element confidence interval for \code{adequacy}.
-The required-FTE and shortfall intervals are derived from it, with the
-bound swap (the low adequacy bound gives the high required-FTE bound).}
+\item{adequacy_ci}{Optional length-2 confidence interval for \code{adequacy},
+propagated (with the required-FTE inversion) to \code{required_fte_ci} and
+\code{shortfall_fte_ci}.}
 }
 \value{
 An object of class \code{urps_baseline_gap}.

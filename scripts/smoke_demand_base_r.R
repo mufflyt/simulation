@@ -110,6 +110,28 @@ a <- rolling_origin_evaluation(ser, "year", "count", origins = 2015, horizon = 1
 b <- rolling_origin_evaluation(spk, "year", "count", origins = 2015, horizon = 1L, fit_predict = fpp)
 ok(identical(a$by_origin$predicted, b$by_origin$predicted), "leakage-free: a 2020 outlier cannot move the 2015-origin prediction")
 
+cat("== forecast scorecard (R/forecast_scorecard.R) ==\n")
+src("R/forecast_scorecard.R")   # base-R: interval score, WIS, scorecard, model comparison
+ok(.interval_score(10, 9, 11, 0.05) < .interval_score(10, -140, 152, 0.05),
+   "interval score: a sharp covering band beats a 292-wide covering band")
+ok(.interval_score(10, 9, 11, 0.05) < .interval_score(10, 4, 6, 0.05),
+   "interval score: covering beats missing at equal width")
+tau <- c(0.025, 0.25, 0.5, 0.75, 0.975)
+ok(weighted_interval_score(10, matrix(c(9, 9.7, 10, 10.3, 11), nrow = 1), tau) <
+     weighted_interval_score(10, matrix(c(-140, -40, 10, 60, 152), nrow = 1), tau),
+   "WIS rewards sharpness: a diffuse quantile forecast scores worse")
+cts <- 2015:2022
+good <- data.frame(model = "good", cutoff = cts, observed = 100 + (cts - 2015),
+                   predicted = 100 + (cts - 2015) + rep(c(1, -1), 4) * 0.5)
+good$lower <- good$predicted - 3; good$upper <- good$predicted + 3
+naive <- data.frame(model = "naive", cutoff = cts, observed = 100 + (cts - 2015),
+                    predicted = 100, lower = 70, upper = 130)   # wide + biased
+cmp <- compare_forecasts(rbind(good, naive), benchmark = "naive")
+ok(cmp$scorecard$interval_score_skill[cmp$scorecard$model == "good"] > 0,
+   "compare_forecasts: sharp model beats the wide benchmark on interval score, not just coverage")
+ok(cmp$rank_stability$best_fraction[cmp$rank_stability$model == "good"] == 1,
+   "compare_forecasts: rank stability flags the model that wins at every cutoff")
+
 cat("== literature POP transitions (R/33) ==\n")
 ptr <- dmdm_transitions_with_pop_literature()
 ok(ptr$calibration_status == "derived_by_analogy", "POP overlay marked derived_by_analogy")
