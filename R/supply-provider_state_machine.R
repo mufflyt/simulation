@@ -2,7 +2,7 @@
 #
 # Formalises the physician career lifecycle as an EXPLICIT state variable and a
 # single diffable transition registry, replacing the age-implicit staging that
-# R/12-provider_microsimulation.R and R/16-provider_lifecycle.R carry today. The
+# R/supply-provider_microsimulation.R and R/supply-provider_lifecycle.R carry today. The
 # canonical Dall/HWSM supply models define agents through explicit states rather
 # than scattered age conditionals:
 #

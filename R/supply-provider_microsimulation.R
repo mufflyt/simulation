@@ -271,7 +271,7 @@ initialize_provider_agents <- function(n,
 #'   the P(active) formulation.
 #' @param p_active_scenario_id Scenario id whose `retirement_shift_years` shifts
 #'   the P(active) age axis.
-#' @param track_career_states Add explicit career-state output (R/16b). When
+#' @param track_career_states Add explicit career-state output (R/supply-provider_state_machine). When
 #'   TRUE the per-year panel gains `n_early_career`/`n_mid_career`/`n_late_career`
 #'   (active counts, summing to `headcount`) and `n_retired`, and the returned
 #'   agent table gains a `career_state` column. ADDITIVE and output-preserving:

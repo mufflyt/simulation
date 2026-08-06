@@ -75,7 +75,7 @@ the P(active) formulation.}
 \item{p_active_scenario_id}{Scenario id whose \code{retirement_shift_years} shifts
 the P(active) age axis.}
 
-\item{track_career_states}{Add explicit career-state output (R/16b). When
+\item{track_career_states}{Add explicit career-state output (R/supply-provider_state_machine). When
 TRUE the per-year panel gains \code{n_early_career}/\code{n_mid_career}/\code{n_late_career}
 (active counts, summing to \code{headcount}) and \code{n_retired}, and the returned
 agent table gains a \code{career_state} column. ADDITIVE and output-preserving:
