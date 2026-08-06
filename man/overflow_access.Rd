@@ -36,8 +36,10 @@ Positive scalar. Default \code{Inf}.}
 A tibble: the \code{\link[=clear_access]{clear_access()}} outputs computed on the post-overflow
 effective demand, plus \code{demand_workload_pre_overflow}, \code{served_local}
 (each catchment's own demand served at home), \code{spilled_out}, \code{spilled_in},
-and \code{unmet_before_overflow} (the Phase-1 residual). System-level overflow
-totals are attached as \code{attr(x, "overflow")}.
+\code{unmet_before_overflow} (the Phase-1 residual), and \code{overflow_travel_time}
+(mean total travel borne by demand spilled out of the catchment; \code{NA} where
+none spilled). System-level overflow totals are attached as
+\code{attr(x, "overflow")}.
 }
 \description{
 The Phase-2 spatial-overflow step. Each catchment is first cleared locally

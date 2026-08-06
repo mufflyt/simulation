@@ -14,7 +14,9 @@ access_outcomes_national(cleared)
 }
 \value{
 A tidy tibble: \code{estimand} (A1-A5, with \code{A1b}/\code{A5b} auxiliary shares),
-\code{label}, \code{value}, \code{unit}, \code{calibration_status}.
+\code{label}, \code{value}, \code{unit}, \code{calibration_status}. When \code{cleared} carries
+spatial-overflow columns (from \code{\link[=overflow_access]{overflow_access()}}), two more rows are
+appended: \code{A6} (\code{spilled_share}) and \code{A7} (\code{overflow_travel_time}).
 }
 \description{
 Aggregates a per-catchment clearing table to national access outcomes:

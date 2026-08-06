@@ -149,15 +149,26 @@ clear_access <- function(catchments,
 #'   Default `FALSE` (each year cleared independently).
 #' @param backlog_fraction Fraction of a year's unmet demand carried into the
 #'   next year. In 0 to 1. Default 1 (all unmet persists).
+#' @param neighbors Optional overflow edge list (see [overflow_access()]). When
+#'   supplied, each year is cleared with spatial overflow composed underneath
+#'   the backlog step: demand (plus any backlog) is reallocated across catchments
+#'   before the year's outcomes are computed, and the backlog carried into the
+#'   next year is the POST-overflow unmet demand. Needs a `catchment` id. Default
+#'   `NULL` (no overflow; Phase-1 clearing each year).
+#' @param max_travel_penalty Passed to [overflow_access()] when `neighbors` is
+#'   supplied. Default `Inf`.
 #' @param appointment_window,wait_scale,wait_ceiling,status Passed through to
-#'   [clear_access()].
+#'   [clear_access()] / [overflow_access()].
 #' @return A tibble: every [clear_access()] output column across all years, plus
 #'   `backlog_in` (demand carried in from the prior year) and
-#'   `demand_workload_base` (this year's demand before any backlog).
+#'   `demand_workload_base` (this year's demand before any backlog). With
+#'   `neighbors`, also the [overflow_access()] accounting columns.
 #' @export
 clear_access_trajectory <- function(panel,
                                     carry_backlog = FALSE,
                                     backlog_fraction = 1,
+                                    neighbors = NULL,
+                                    max_travel_penalty = Inf,
                                     appointment_window = 30,
                                     wait_scale = 30,
                                     wait_ceiling = Inf,
@@ -172,9 +183,10 @@ clear_access_trajectory <- function(panel,
     length(backlog_fraction) == 1L, is.finite(backlog_fraction),
     backlog_fraction >= 0, backlog_fraction <= 1
   )
-  if (carry_backlog && !"catchment" %in% names(panel)) {
-    stop("clear_access_trajectory(): carry_backlog = TRUE needs a `catchment` id ",
-         "to match unmet demand across years.", call. = FALSE)
+  overflow <- !is.null(neighbors)
+  if ((carry_backlog || overflow) && !"catchment" %in% names(panel)) {
+    stop("clear_access_trajectory(): carry_backlog = TRUE or a `neighbors` edge ",
+         "list needs a `catchment` id to match catchments across years.", call. = FALSE)
   }
   years <- sort(unique(panel$year))
   prev_unmet <- NULL                       # named by catchment, from the prior year
@@ -188,13 +200,23 @@ clear_access_trajectory <- function(panel,
     }
     augmented <- slice
     augmented$demand_workload <- slice$demand_workload + backlog_in
-    cl <- clear_access(augmented, appointment_window = appointment_window,
-                       wait_scale = wait_scale, wait_ceiling = wait_ceiling,
-                       status = status)
+    cl <- if (overflow) {
+      overflow_access(augmented, neighbors, max_travel_penalty = max_travel_penalty,
+                      appointment_window = appointment_window, wait_scale = wait_scale,
+                      wait_ceiling = wait_ceiling, status = status)
+    } else {
+      clear_access(augmented, appointment_window = appointment_window,
+                   wait_scale = wait_scale, wait_ceiling = wait_ceiling,
+                   status = status)
+    }
     cl$backlog_in <- backlog_in
     cl$demand_workload_base <- slice$demand_workload
+    # attr() (overflow system totals) does not survive bind_rows; drop it here so
+    # the stacked result is a clean tibble (per-catchment overflow columns remain).
+    attr(cl, "overflow") <- NULL
     out[[i]] <- cl
     if (carry_backlog) {
+      # POST-overflow unmet is what actually persists into next year's queue.
       prev_unmet <- stats::setNames(cl$unmet_demand, slice$catchment)
     }
   }
@@ -249,8 +271,10 @@ clear_access_trajectory <- function(panel,
 #' @return A tibble: the [clear_access()] outputs computed on the post-overflow
 #'   effective demand, plus `demand_workload_pre_overflow`, `served_local`
 #'   (each catchment's own demand served at home), `spilled_out`, `spilled_in`,
-#'   and `unmet_before_overflow` (the Phase-1 residual). System-level overflow
-#'   totals are attached as `attr(x, "overflow")`.
+#'   `unmet_before_overflow` (the Phase-1 residual), and `overflow_travel_time`
+#'   (mean total travel borne by demand spilled out of the catchment; `NA` where
+#'   none spilled). System-level overflow totals are attached as
+#'   `attr(x, "overflow")`.
 #' @export
 overflow_access <- function(catchments, neighbors,
                             max_travel_penalty = Inf,
@@ -307,6 +331,7 @@ overflow_access <- function(catchments, neighbors,
   resid_cap[known]    <- pmax(0, cap[known] - d[known])
   spilled_out <- stats::setNames(rep(0, n), ids)
   spilled_in  <- stats::setNames(rep(0, n), ids)
+  spill_travel <- stats::setNames(rep(0, n), ids)  # per-origin sum of moved*(travel)
   mtt <- if ("median_travel_time" %in% names(catchments)) {
     stats::setNames(catchments$median_travel_time, ids)
   } else stats::setNames(rep(NA_real_, n), ids)
@@ -325,7 +350,9 @@ overflow_access <- function(catchments, neighbors,
     spilled_out[[i]]  <- spilled_out[[i]] + move
     spilled_in[[j]]   <- spilled_in[[j]] + move
     origin_travel <- if (is.na(mtt[[i]])) 0 else mtt[[i]]
-    travel_load   <- travel_load + move * (origin_travel + nb$travel_penalty[e])
+    moved_travel  <- move * (origin_travel + nb$travel_penalty[e])
+    travel_load       <- travel_load + moved_travel
+    spill_travel[[i]] <- spill_travel[[i]] + moved_travel
   }
 
   eff <- catchments
@@ -338,6 +365,11 @@ overflow_access <- function(catchments, neighbors,
   cleared$spilled_out           <- unname(spilled_out[ids])
   cleared$spilled_in            <- unname(spilled_in[ids])
   cleared$unmet_before_overflow <- ifelse(known, pmax(0, d - cap), NA_real_)
+  # Mean total travel (origin median + edge penalty) borne by demand spilled OUT
+  # of this catchment; NA where nothing spilled. Survives a trajectory roll-up as
+  # a plain column (the system-level scalar on attr() would not).
+  so <- unname(spilled_out[ids])
+  cleared$overflow_travel_time  <- ifelse(so > 0, unname(spill_travel[ids]) / so, NA_real_)
 
   spilled_total <- sum(unname(spilled_out), na.rm = TRUE)
   tot_demand    <- sum(d, na.rm = TRUE)

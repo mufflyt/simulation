@@ -154,3 +154,72 @@ test_that("doubling every catchment's capacity leaves no demand to spill", {
   expect_equal(sum(res$spilled_out), 0)
   expect_equal(sum(res$unmet_demand), 0)
 })
+
+test_that("overflow_travel_time is the demand-weighted travel of spilled demand", {
+  s <- sc()
+  res <- overflow_access(s$catch, s$nb)
+  # A spilled 30 (travel 10+5) + 10 (travel 10+20); the origin carries the
+  # weighted mean, receivers (which shed nothing) are NA.
+  a <- res[res$catchment == "A", ]
+  expect_equal(a$overflow_travel_time, (30 * 15 + 10 * 30) / 40)  # 18.75
+  expect_true(is.na(res$overflow_travel_time[res$catchment == "B"]))
+})
+
+# ---- Item 3: overflow composed into the multi-year trajectory --------------
+
+test_that("clear_access_trajectory composes overflow when given neighbors", {
+  panel <- tibble::tibble(
+    catchment = rep(c("A", "B", "C"), times = 2),
+    year = rep(c(2025L, 2026L), each = 3),
+    demand_workload = c(100, 20, 10,  120, 20, 10),
+    accessible_capacity = c(60, 50, 40, 60, 50, 40),
+    median_travel_time = rep(c(10, 8, 12), times = 2)
+  )
+  nb <- tibble::tibble(from = c("A", "A"), to = c("B", "C"), travel_penalty = c(5, 20))
+  traj <- clear_access_trajectory(panel, neighbors = nb)
+  # Overflow accounting columns are present, and each year conserves demand.
+  expect_true(all(c("spilled_out", "spilled_in", "overflow_travel_time") %in% names(traj)))
+  for (y in unique(traj$year)) {
+    yr <- traj[traj$year == y, ]
+    expect_true(overflow_conservation(yr)$conserved)
+  }
+  # With no neighbors it reduces to the plain per-year clearing (no spill columns).
+  plain <- clear_access_trajectory(panel)
+  expect_false("spilled_out" %in% names(plain))
+})
+
+test_that("overflow + backlog carries the POST-overflow unmet into the next year", {
+  # A is short every year and B/C cannot absorb all of it, so unmet persists and
+  # compounds under backlog -- but only the demand that overflow could not place.
+  panel <- tibble::tibble(
+    catchment = rep(c("A", "B"), times = 2),
+    year = rep(c(2025L, 2026L), each = 2),
+    demand_workload = c(100, 40, 100, 40),
+    accessible_capacity = c(60, 50, 60, 50)
+  )
+  nb <- tibble::tibble(from = "A", to = "B", travel_penalty = 5)
+  traj <- clear_access_trajectory(panel, neighbors = nb, carry_backlog = TRUE)
+  a25 <- traj[traj$year == 2025 & traj$catchment == "A", ]
+  a26 <- traj[traj$year == 2026 & traj$catchment == "A", ]
+  # Yr1: A demand 100, cap 60 -> 40 excess; B spare 10 absorbs 10; 30 unmet.
+  expect_equal(a25$unmet_demand, 30)
+  # Yr2 base demand 100 + backlog 30 = 130 carried in.
+  expect_equal(a26$backlog_in, 30)
+  expect_equal(a26$demand_workload_base, 100)
+})
+
+# ---- Item 6: overflow reported as A6/A7 ------------------------------------
+
+test_that("access_outcomes_national appends A6/A7 for an overflow result", {
+  s <- sc()
+  res <- overflow_access(s$catch, s$nb)
+  nat <- access_outcomes_national(res)
+  expect_true(all(c("A6", "A7") %in% nat$estimand))
+  # 40 of 130 total demand met only via travel.
+  expect_equal(nat$value[nat$estimand == "A6"], 40 / 130)
+  # A7 = demand-weighted overflow travel == the single spilling origin's 18.75.
+  expect_equal(nat$value[nat$estimand == "A7"], 18.75)
+  # A plain (non-overflow) clearing has no A6/A7.
+  plain <- access_outcomes_national(clear_access(s$catch))
+  expect_false(any(c("A6", "A7") %in% plain$estimand))
+})
