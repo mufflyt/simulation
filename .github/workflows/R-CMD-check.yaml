@@ -86,7 +86,7 @@ jobs:
           #
           # test-contract-pin.R asserts this SHA equals MUFFLYACCESS_PINNED_SHA,
           # so the two copies cannot drift apart unnoticed.
-          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown, mufflyt/mufflyaccess@b1f33acf918d71031ed7cbed79cb76d525503d4c
           # mufflyaccess (Suggests) is a private repo the CI token cannot
           # reach. Hard dependencies only; tests needing it skip themselves.
           dependencies: '"hard"'
