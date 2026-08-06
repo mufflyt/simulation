@@ -6,10 +6,11 @@
 \usage{
 entrant_pipeline_transition(
   matches,
-  p_complete_cert = 0.95,
+  p_complete_cert = 0.75,
   p_active_practice = 0.9,
-  cert_lag = 1L,
+  cert_lag = URPS_FELLOWSHIP_YEARS,
   active_lag = 0L,
+  defer_shortfall = TRUE,
   status = "assumed_illustrative"
 )
 }
@@ -18,21 +19,35 @@ entrant_pipeline_transition(
 (NRMP fellowship matches per year).}
 
 \item{p_complete_cert}{Fraction of matched fellows who complete fellowship and
-achieve board certification. In 0 to 1. Default 0.95 (labeled assumption).}
+achieve board certification. Either one value in \link{0, 1}, one value per row of
+\code{matches}, or a data frame of \code{year} and \code{p_complete_cert} keyed on the
+CERTIFICATION year (years it omits fall back to its median). Defaults to
+0.75, the pre-cutoff observed conversion from \code{\link[=nrmp_match_to_cert_ratio]{nrmp_match_to_cert_ratio()}};
+the former default of 0.95 was an assumption that over-predicted every
+observed year by 8 to 18 certifications.}
 
 \item{p_active_practice}{Fraction of newly certified who enter active US
-clinical practice. In 0 to 1. Default 0.90 (labeled assumption).}
+clinical practice. In \link{0, 1}. Default 0.90 (labeled assumption).}
 
-\item{cert_lag}{Years from match to certification. Non-negative integer.}
+\item{cert_lag}{Years from match to certification. Non-negative integer.
+Defaults to the three-year fellowship, \code{URPS_FELLOWSHIP_YEARS}. The former
+default of 1 contradicted the fellowship length this package documents, and
+scored worse against every observed year.}
 
 \item{active_lag}{Years from certification to active practice. Non-negative
 integer. Default 0.}
+
+\item{defer_shortfall}{When \code{p_complete_cert} varies by year, carry each
+year's shortfall against the undisrupted conversion into the next year
+instead of discarding it. A cancelled examination defers fellows; it does
+not remove them from the pipeline.}
 
 \item{status}{Calibration status stamped on the output. Default
 "assumed_illustrative" -- replace the stage fractions with cited values.}
 }
 \value{
-A tibble: \code{year}, \code{matched}, \code{certified}, \code{active_entrants}, plus the
+A tibble: \code{year}, \code{matched}, \code{certified}, \code{active_entrants},
+\code{deferred_in} (fellows carried in from a suppressed earlier year), plus the
 stage fractions and \code{calibration_status}. Years whose source match year is
 absent yield \code{NA} (leading edge of the lag).
 }
