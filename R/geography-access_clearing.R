@@ -200,3 +200,228 @@ clear_access_trajectory <- function(panel,
   }
   dplyr::bind_rows(out)
 }
+
+# Phase 2: spatial overflow (demand-conserving reallocation) -----------------
+#
+# "Unmet demand in a catchment spills to the next-nearest catchment with a
+# travel penalty, raising its rho -- or is censored as lost demand." A scenario
+# switch, not a default: Phase-1 clearing never moves demand across space.
+#
+# The reallocation is a greedy nearest-spare-capacity fill. A shortage
+# catchment's residual demand (demand - capacity) is offered, cheapest edge
+# first, to neighbours that still have spare capacity, until either the demand
+# is placed or no reachable neighbour has room -- and the remainder is censored
+# as lost/unmet. Demand is CONSERVED. Per origin,
+#   demand = served_local + spilled_out + unmet,
+# and across the system every unit spilled out of one catchment is a unit
+# spilled into another, so sum(served) + sum(unmet) = sum(demand). Waits and
+# appointment probabilities are then recomputed by clear_access() on each
+# catchment's POST-OVERFLOW effective demand
+#   demand_effective = demand - spilled_out + spilled_in,
+# reusing the tested Phase-1 queue math rather than re-deriving it: an origin
+# that sheds its excess relaxes toward rho = 1, and a receiver that absorbs
+# spill has its rho (and wait) pushed up toward -- but never past -- saturation.
+
+#' Reallocate unmet demand to neighbouring catchments with spare capacity
+#'
+#' The Phase-2 spatial-overflow step. Each catchment is first cleared locally
+#' (as in [clear_access()]); a shortage catchment's residual demand is then
+#' offered to neighbouring catchments with spare capacity, cheapest edge first,
+#' until it is placed or no reachable neighbour has room. Demand is conserved:
+#' `demand = served_local + spilled_out + unmet` per catchment, and
+#' `sum(spilled_out) == sum(spilled_in)` across the system. Post-overflow waits,
+#' appointment probabilities and utilization are recomputed by [clear_access()]
+#' on each catchment's effective demand (`demand - spilled_out + spilled_in`).
+#'
+#' @param catchments A data frame with a `catchment` id (unique), numeric
+#'   `demand_workload` and `accessible_capacity` (same currency), and the
+#'   optional [clear_access()] columns. `NA` demand/capacity marks a
+#'   non-participating catchment (it neither spills nor absorbs).
+#' @param neighbors A data frame of directed overflow edges: `from` and `to`
+#'   catchment ids and a non-negative `travel_penalty` (extra travel to reach
+#'   the neighbour, in the wait/appointment time unit). Self-edges are rejected;
+#'   every id must be present in `catchments`.
+#' @param max_travel_penalty Edges with `travel_penalty` above this are dropped
+#'   (demand that can reach no neighbour within budget is censored as unmet).
+#'   Positive scalar. Default `Inf`.
+#' @param appointment_window,wait_scale,wait_ceiling,status Passed through to
+#'   [clear_access()] for the post-overflow recompute.
+#' @return A tibble: the [clear_access()] outputs computed on the post-overflow
+#'   effective demand, plus `demand_workload_pre_overflow`, `served_local`
+#'   (each catchment's own demand served at home), `spilled_out`, `spilled_in`,
+#'   and `unmet_before_overflow` (the Phase-1 residual). System-level overflow
+#'   totals are attached as `attr(x, "overflow")`.
+#' @export
+overflow_access <- function(catchments, neighbors,
+                            max_travel_penalty = Inf,
+                            appointment_window = 30,
+                            wait_scale = 30,
+                            wait_ceiling = Inf,
+                            status = "assumed_illustrative") {
+  if (!is.data.frame(catchments) ||
+      !all(c("catchment", "demand_workload", "accessible_capacity") %in% names(catchments))) {
+    stop("overflow_access(): `catchments` needs `catchment` (id), `demand_workload`, ",
+         "and `accessible_capacity`.", call. = FALSE)
+  }
+  if (!is.data.frame(neighbors) ||
+      !all(c("from", "to", "travel_penalty") %in% names(neighbors))) {
+    stop("overflow_access(): `neighbors` needs `from`, `to`, `travel_penalty`.", call. = FALSE)
+  }
+  stopifnot(
+    length(max_travel_penalty) == 1L, !is.na(max_travel_penalty), max_travel_penalty > 0
+  )
+  ids <- as.character(catchments$catchment)
+  if (anyDuplicated(ids)) {
+    stop("overflow_access(): `catchment` ids must be unique (one row per catchment).",
+         call. = FALSE)
+  }
+  n <- nrow(catchments)
+  d   <- catchments$demand_workload
+  cap <- catchments$accessible_capacity
+  bad_d   <- !is.na(d)   & (!is.finite(d)   | d   < 0)
+  bad_cap <- !is.na(cap) & (!is.finite(cap) | cap < 0)
+  if (any(bad_d) || any(bad_cap)) {
+    stop("overflow_access(): `demand_workload`/`accessible_capacity` must be finite ",
+         "and >= 0 where present.", call. = FALSE)
+  }
+
+  nb <- neighbors
+  nb$from <- as.character(nb$from)
+  nb$to   <- as.character(nb$to)
+  if (!all(c(nb$from, nb$to) %in% ids)) {
+    stop("overflow_access(): every neighbour `from`/`to` must be a `catchment` id.",
+         call. = FALSE)
+  }
+  if (any(nb$from == nb$to)) {
+    stop("overflow_access(): a catchment cannot be its own overflow neighbour.",
+         call. = FALSE)
+  }
+  if (any(!is.finite(nb$travel_penalty) | nb$travel_penalty < 0)) {
+    stop("overflow_access(): `travel_penalty` must be finite and >= 0.", call. = FALSE)
+  }
+
+  known <- !is.na(d) & !is.na(cap)
+  resid_demand <- stats::setNames(rep(0, n), ids)
+  resid_cap    <- stats::setNames(rep(0, n), ids)
+  resid_demand[known] <- pmax(0, d[known] - cap[known])
+  resid_cap[known]    <- pmax(0, cap[known] - d[known])
+  spilled_out <- stats::setNames(rep(0, n), ids)
+  spilled_in  <- stats::setNames(rep(0, n), ids)
+  mtt <- if ("median_travel_time" %in% names(catchments)) {
+    stats::setNames(catchments$median_travel_time, ids)
+  } else stats::setNames(rep(NA_real_, n), ids)
+  travel_load <- 0                       # sum of moved * (origin travel + penalty)
+
+  # Greedy fill, cheapest edge first; deterministic tie-break on (from, to).
+  nb <- nb[nb$travel_penalty <= max_travel_penalty, , drop = FALSE]
+  nb <- nb[order(nb$travel_penalty, nb$from, nb$to), , drop = FALSE]
+  for (e in seq_len(nrow(nb))) {
+    i <- nb$from[e]
+    j <- nb$to[e]
+    move <- min(resid_demand[[i]], resid_cap[[j]])
+    if (move <= 0) next
+    resid_demand[[i]] <- resid_demand[[i]] - move
+    resid_cap[[j]]    <- resid_cap[[j]] - move
+    spilled_out[[i]]  <- spilled_out[[i]] + move
+    spilled_in[[j]]   <- spilled_in[[j]] + move
+    origin_travel <- if (is.na(mtt[[i]])) 0 else mtt[[i]]
+    travel_load   <- travel_load + move * (origin_travel + nb$travel_penalty[e])
+  }
+
+  eff <- catchments
+  eff$demand_workload <- ifelse(known, d - spilled_out[ids] + spilled_in[ids], d)
+  cleared <- clear_access(eff, appointment_window = appointment_window,
+                          wait_scale = wait_scale, wait_ceiling = wait_ceiling,
+                          status = status)
+  cleared$demand_workload_pre_overflow <- d
+  cleared$served_local          <- ifelse(known, pmin(d, cap), NA_real_)
+  cleared$spilled_out           <- unname(spilled_out[ids])
+  cleared$spilled_in            <- unname(spilled_in[ids])
+  cleared$unmet_before_overflow <- ifelse(known, pmax(0, d - cap), NA_real_)
+
+  spilled_total <- sum(unname(spilled_out), na.rm = TRUE)
+  tot_demand    <- sum(d, na.rm = TRUE)
+  attr(cleared, "overflow") <- list(
+    spilled_total       = spilled_total,
+    spilled_share       = if (tot_demand > 0) spilled_total / tot_demand else NA_real_,
+    overflow_travel_time = if (spilled_total > 0) travel_load / spilled_total else NA_real_
+  )
+  cleared
+}
+
+#' Check the demand-conservation invariants of an overflow_access() result
+#'
+#' Verifies the Phase-2 accounting from the returned columns alone: the
+#' per-catchment identity `demand = served_local + spilled_out + unmet`, the
+#' transfer balance `sum(spilled_out) = sum(spilled_in)`, and the system
+#' identity `sum(served) + sum(unmet) = sum(demand)`. Returns the residuals so a
+#' caller (or a test) can assert they are ~0 rather than trusting a boolean.
+#'
+#' @param x A tibble returned by [overflow_access()].
+#' @param tol Absolute tolerance for the "conserved" flags. Default 1e-8.
+#' @return A list: `per_catchment_resid` (numeric, one per row), `transfer_resid`
+#'   and `system_resid` (scalars), and `conserved` (all within `tol`).
+#' @export
+overflow_conservation <- function(x, tol = 1e-8) {
+  need <- c("demand_workload_pre_overflow", "served_local", "spilled_out",
+            "unmet_demand", "spilled_in", "served")
+  if (!is.data.frame(x) || !all(need %in% names(x))) {
+    stop("overflow_conservation(): `x` must come from overflow_access() (missing: ",
+         paste(setdiff(need, names(x)), collapse = ", "), ").", call. = FALSE)
+  }
+  known <- !is.na(x$demand_workload_pre_overflow)
+  per <- (x$served_local + x$spilled_out + x$unmet_demand) -
+    x$demand_workload_pre_overflow
+  per[!known] <- 0
+  transfer_resid <- sum(x$spilled_out, na.rm = TRUE) - sum(x$spilled_in, na.rm = TRUE)
+  system_resid <- (sum(x$served, na.rm = TRUE) + sum(x$unmet_demand, na.rm = TRUE)) -
+    sum(x$demand_workload_pre_overflow, na.rm = TRUE)
+  list(
+    per_catchment_resid = per,
+    transfer_resid = transfer_resid,
+    system_resid = system_resid,
+    conserved = max(abs(per), na.rm = TRUE) <= tol &&
+      abs(transfer_resid) <= tol && abs(system_resid) <= tol
+  )
+}
+
+#' Build a k-nearest-neighbour overflow edge list from catchment coordinates
+#'
+#' Convenience constructor for the `neighbors` argument of [overflow_access()]:
+#' links each catchment to its `k` nearest others by great-circle distance
+#' ([haversine_km()]), turning distance into a `travel_penalty` at a flat
+#' `penalty_per_km`. A stand-in for a real drive-time matrix when one is not to
+#' hand; supply a measured matrix directly for production use.
+#'
+#' @param coords A data frame with `catchment`, `lat`, `lon` (decimal degrees).
+#' @param k Number of nearest neighbours to link per catchment. Default 3.
+#' @param penalty_per_km Travel penalty per kilometre. Non-negative. Default 1.
+#' @return A tibble of `from`, `to`, `travel_penalty` edges.
+#' @export
+catchment_neighbors_from_coords <- function(coords, k = 3, penalty_per_km = 1) {
+  if (!is.data.frame(coords) || !all(c("catchment", "lat", "lon") %in% names(coords))) {
+    stop("catchment_neighbors_from_coords(): `coords` needs `catchment`, `lat`, `lon`.",
+         call. = FALSE)
+  }
+  stopifnot(
+    length(k) == 1L, is.finite(k), k >= 1,
+    length(penalty_per_km) == 1L, is.finite(penalty_per_km), penalty_per_km >= 0
+  )
+  ids <- as.character(coords$catchment)
+  n <- length(ids)
+  if (n < 2) {
+    return(tibble::tibble(from = character(0), to = character(0),
+                          travel_penalty = numeric(0)))
+  }
+  rows <- lapply(seq_len(n), function(i) {
+    dkm <- haversine_km(coords$lat[i], coords$lon[i], coords$lat, coords$lon)
+    dkm[i] <- Inf                                  # never a neighbour of itself
+    o <- order(dkm)
+    take <- o[seq_len(min(as.integer(k), n - 1L))]
+    take <- take[is.finite(dkm[take])]
+    if (!length(take)) return(NULL)
+    tibble::tibble(from = ids[i], to = ids[take],
+                   travel_penalty = dkm[take] * penalty_per_km)
+  })
+  dplyr::bind_rows(rows)
+}
