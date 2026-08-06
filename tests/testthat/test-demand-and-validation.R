@@ -6,7 +6,7 @@
 test_that("the three demand estimands are no longer proportional rescalings", {
   # The previous implementation computed every estimand as
   # population_65plus * constant, making D1/D2/D3 the SAME series up to scale.
-  pop <- tidyr::expand_grid(year = 2025:2035, age_band = DEMAND_AGE_BANDS) %>%
+  pop <- tidyr::expand_grid(year = 2025:2035, age_band = urpssim:::DEMAND_AGE_BANDS) %>%
     dplyr::mutate(female_pop = dplyr::case_when(
       age_band == "20-39" ~ 43e6 * 1.001^(year - 2025),
       age_band == "40-59" ~ 41.5e6 * 1.004^(year - 2025),
@@ -34,18 +34,18 @@ test_that("the age profiles genuinely differ in shape", {
   # Surgery peaks at 60-79 and halves at 80+, while prevalence keeps rising.
   # That difference is what makes the estimands informative.
   p <- pfd_prevalence_by_band()
-  expect_gt(WU2011_SURGERY_RATE_PER_1000[["65-79"]],
-            WU2011_SURGERY_RATE_PER_1000[["80+"]])
+  expect_gt(urpssim:::WU2011_SURGERY_RATE_PER_1000[["65-79"]],
+            urpssim:::WU2011_SURGERY_RATE_PER_1000[["80+"]])
   expect_gt(p[["80+"]], p[["65-79"]])
-  expect_gt(CONSULT_RATE_BY_AGE[["65-79"]], CONSULT_RATE_BY_AGE[["80+"]])
+  expect_gt(urpssim:::CONSULT_RATE_BY_AGE[["65-79"]], urpssim:::CONSULT_RATE_BY_AGE[["80+"]])
 })
 
 test_that("age bands align exactly with the SSOT prevalence boundary", {
   # mufflyaccess::pfd_prevalence() owns 65-79 and 80+. The old 60-79 band could
   # not take the contract's 65-79 value without a silent wrong-grain error, so
   # 60-64 is split out.
-  expect_true(all(c("60-64", "65-79", "80+") %in% DEMAND_AGE_BANDS))
-  expect_false("60-79" %in% DEMAND_AGE_BANDS)
+  expect_true(all(c("60-64", "65-79", "80+") %in% urpssim:::DEMAND_AGE_BANDS))
+  expect_false("60-79" %in% urpssim:::DEMAND_AGE_BANDS)
 
   own <- pfd_prevalence_ownership()
   expect_equal(own$owner[own$age_band == "65-79"], "mufflyaccess::pfd_prevalence()")
@@ -140,7 +140,7 @@ test_that("the local fallback carries the SSOT retirement-shift contract ids", {
 test_that("the local registry version cannot collide with the SSOT version", {
   skip_if_not_installed("mufflyaccess")
   # Two different registries sharing "1.0.0" is how silent divergence starts.
-  expect_false(identical(SCENARIO_REGISTRY_VERSION,
+  expect_false(identical(urpssim:::SCENARIO_REGISTRY_VERSION,
                          mufflyaccess::URPS_SCENARIO_REGISTRY_VERSION))
 })
 
@@ -162,11 +162,11 @@ test_that("scenario registries are contract-checked", {
 
 test_that("the reduced-barriers scenario names the components it relaxes", {
   dem <- demand_scenario_registry()
-  # Assert against ACCESS_COMPONENTS rather than a hand-copied list: "income"
+  # Assert against urpssim:::ACCESS_COMPONENTS rather than a hand-copied list: "income"
   # was added to both the constant and the scenario, and this literal was the
   # only place left saying three. A copy of a canonical list goes stale the
   # moment the list grows.
-  expect_setequal(dem$reduced_barriers$access_components, ACCESS_COMPONENTS)
+  expect_setequal(dem$reduced_barriers$access_components, urpssim:::ACCESS_COMPONENTS)
   expect_true("income" %in% dem$reduced_barriers$access_components)
   # Urogynaecology-specific lever: only 25-45% of women with UI seek care.
   expect_gt(dem$care_seeking_improved$care_seeking_multiplier, 1)
@@ -364,7 +364,7 @@ test_that("drive-time bands come from the canonical contract", {
     expect_equal(e2sfca_bands(), as.integer(mufflyaccess::get_canonical_bands()))
   }
   # The shipped decay weights must key to the canonical bands.
-  expect_setequal(as.integer(names(E2SFCA_DEFAULT_WEIGHTS)), e2sfca_bands())
+  expect_setequal(as.integer(names(urpssim:::E2SFCA_DEFAULT_WEIGHTS)), e2sfca_bands())
 })
 
 test_that("rurality has an operational definition", {
@@ -372,7 +372,7 @@ test_that("rurality has an operational definition", {
   expect_equal(ssot_rurality(1), "Metropolitan")
   expect_equal(ssot_rurality(10), "Rural")
   # The nonmetro access component is no longer a bare label.
-  expect_true("nonmetro" %in% ACCESS_COMPONENTS)
+  expect_true("nonmetro" %in% urpssim:::ACCESS_COMPONENTS)
 })
 
 test_that("division guards delegate to the contract convention", {
@@ -395,7 +395,7 @@ test_that("as_urps_gap_projection produces all REQUIRED_COLS and correct arithme
   gap_tbl <- compute_fte_gap(supply, req)
   gp <- as_urps_gap_projection(supply, gap_tbl)
 
-  expect_true(all(REQUIRED_COLS %in% names(gp)))
+  expect_true(all(urpssim:::REQUIRED_COLS %in% names(gp)))
   expect_equal(gp$gap_fte, gp$supply_clinical_fte - gp$demand_clinical_fte)
   expect_equal(gp$gap_headcount, gp$supply_headcount - gp$demand_headcount)
   # shortage in all years (supply < demand)
@@ -447,7 +447,7 @@ test_that("gap_projections_all_scenarios covers every scenario", {
   req <- tibble::tibble(year = 2025:2026, required_fte = c(1300, 1310))
   gp <- gap_projections_all_scenarios(supply, req)
   expect_setequal(unique(gp$scenario_id), c("baseline", "expanded"))
-  expect_true(all(REQUIRED_COLS %in% names(gp)))
+  expect_true(all(urpssim:::REQUIRED_COLS %in% names(gp)))
 })
 
 test_that("SSOT ownership is reported, including what is NOT owned", {

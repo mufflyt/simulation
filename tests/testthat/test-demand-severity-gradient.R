@@ -44,8 +44,8 @@ test_that("severity params are neutral by default", {
 
 test_that("neutral severity leaves care-seeking byte-identical to the flat model", {
   pop <- .demo_pop()
-  path <- lifecourse_pathway_params()
-  new <- .lifecourse_treated(pop, path, access_gain = 1)          # default neutral severity
+  path <- urpssim:::lifecourse_pathway_params()
+  new <- urpssim:::.lifecourse_treated(pop, path, access_gain = 1)          # default neutral severity
   old <- .flat_treated(pop, path, access_gain = 1)
   expect_identical(new$treated_ui, old$treated_ui)
   expect_identical(new$treated_pop, old$treated_pop)
@@ -55,11 +55,11 @@ test_that("neutral severity leaves care-seeking byte-identical to the flat model
 
 test_that("a severity gradient shifts care-seeking by the share-weighted mean, per condition", {
   pop <- .demo_pop(seed = 2L, high_barrier = 0L)   # no access cap -> clean linear scaling
-  path <- lifecourse_pathway_params()
-  base <- .lifecourse_treated(pop, path, access_gain = 1)
+  path <- urpssim:::lifecourse_pathway_params()
+  base <- urpssim:::.lifecourse_treated(pop, path, access_gain = 1)
   sp <- lifecourse_severity_params()
   sp$seek_multiplier$ui <- c(slight = 1, moderate = 1, severe = 2, very_severe = 3)  # severe seek more
-  up <- .lifecourse_treated(pop, path, access_gain = 1, severity = sp)
+  up <- urpssim:::.lifecourse_treated(pop, path, access_gain = 1, severity = sp)
 
   expect_gt(mean(up$treated_ui), mean(base$treated_ui))   # more care-seeking
   expect_identical(up$treated_pop, base$treated_pop)       # UI-only gradient: others untouched
@@ -70,13 +70,13 @@ test_that("a severity gradient shifts care-seeking by the share-weighted mean, p
 
   # A sub-unit gradient (mild dominate) reduces care-seeking.
   sp$seek_multiplier$ui <- c(slight = 0.5, moderate = 1, severe = 1, very_severe = 1)
-  down <- .lifecourse_treated(pop, path, access_gain = 1, severity = sp)
+  down <- urpssim:::.lifecourse_treated(pop, path, access_gain = 1, severity = sp)
   expect_lt(mean(down$treated_ui), mean(base$treated_ui))
 })
 
 test_that("the registry exposes the severity stage with canonical tiers", {
   reg <- demand_transition_registry()
-  expect_true(all(reg$calibration_tier %in% CALIBRATION_TIERS))
+  expect_true(all(reg$calibration_tier %in% urpssim:::CALIBRATION_TIERS))
   sev <- reg[reg$stage == "symptom_severity", ]
   expect_equal(nrow(sev), 12L)                                  # 3 conditions x 4 levels
   # Placeholder shares are uncalibrated for every condition; only Sandvik-derived

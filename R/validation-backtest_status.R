@@ -50,6 +50,15 @@
 # is in .Rbuildignore and does not ship, so the scored numbers are carried here
 # rather than read at run time. Re-derive from a live run with
 # `backtest_status_from_summary(run_backtest()$summary)`.
+#' Frozen record of the prespecified 2020->2023 back-test
+#'
+#' The default `record` for [backtest_status()] and [verify_backtest_record()].
+#' Exported because it is a default argument of exported functions: a caller who
+#' cannot name the default cannot reproduce or audit it.
+#'
+#' @format Tibble of scored arms with `arm`, `percent_error`, `within_80`,
+#'   `within_95`.
+#' @export
 BACKTEST_RECORD_2020_2023 <- tibble::tribble(
   ~arm,                                          ~percent_error,  ~within_80,  ~within_95,
   "1. Derived cohort, assumed entrants",              -9.724349,       FALSE,       FALSE,

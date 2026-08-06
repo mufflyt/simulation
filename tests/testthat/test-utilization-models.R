@@ -54,7 +54,7 @@ test_that("visit model falls back to weighted quasipoisson and warns", {
 
 test_that("param draws recover the coefficient mean and covariance", {
   m <- fit_sling_rate_model(make_cells(), n_slings ~ AgeGrp + Obesity)
-  D <- .param_draw(m, 20000)
+  D <- urpssim:::.param_draw(m, 20000)
   expect_equal(colMeans(D), coef(m)[colnames(D)], tolerance = 0.03)
   expect_equal(cov(D), vcov(m)[colnames(D), colnames(D)], tolerance = 0.03)
 })
@@ -65,12 +65,12 @@ test_that("prediction with uncertainty is obs x draws, centered on the point est
   nd <- tibble::tibble(AgeGrp = factor(c("40-59", "60-79", "80+"), levels = levels(cells$AgeGrp)),
                        Obesity = c(0, 1, 0))
   P  <- predict_count_with_uncertainty(m, nd, n_draws = 4000)
-  pt <- .expected_count(m, nd)
+  pt <- urpssim:::.expected_count(m, nd)
   expect_equal(dim(P), c(3L, 4000L))
-  # rowMeans() names its result from the matrix rows while .expected_count()
+  # rowMeans() names its result from the matrix rows while urpssim:::.expected_count()
   # returns an unnamed vector; compare the values, not the names.
   expect_equal(unname(rowMeans(P)), unname(pt), tolerance = 0.05 * max(pt))
   # offset scales counts: N people => N * per-person rate
-  expect_equal(.expected_count(m, nd[2, , drop = FALSE], offset = log(1000)),
+  expect_equal(urpssim:::.expected_count(m, nd[2, , drop = FALSE], offset = log(1000)),
                pt[2] * 1000, tolerance = 1e-6)
 })

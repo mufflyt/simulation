@@ -113,7 +113,7 @@ test_that("reweighting audits how much population escapes the projection", {
   # unanchored share must grow monotonically and sit at the OLDEST ages -- the
   # ones carrying the highest prevalence.
   pop <- open_pop_grid(2025:2035, 40:85)
-  init <- .dmdm_open_agents(pop[pop$year == 2025, c("age", "population")],
+  init <- urpssim:::.dmdm_open_agents(pop[pop$year == 2025, c("age", "population")],
                             2025, 40, 3000, seed = 1)
   # expect_message() returns the CONDITION, not the value, so the run and the
   # message assertion are separate calls.
@@ -139,7 +139,7 @@ test_that("reweighting audits how much population escapes the projection", {
 test_that("a projection covering every simulated age conserves exactly", {
   # Ages 40-120 covers everything an 11-year run can reach from age 40-85.
   pop <- open_pop_grid(2025:2035, 40:120)
-  init <- .dmdm_open_agents(pop[pop$year == 2025 & pop$age <= 85, c("age", "population")],
+  init <- urpssim:::.dmdm_open_agents(pop[pop$year == 2025 & pop$age <= 85, c("age", "population")],
                             2025, 40, 3000, seed = 1)
   r <- sim_open(init, NULL, 2025, 2035, pop_by_age_year = pop)
   aud <- dmdm_population_audit(r)
@@ -152,7 +152,7 @@ test_that("a projection covering every simulated age conserves exactly", {
 
 test_that("strict mode refuses a leaking reweight, and the tolerance is a knob", {
   pop <- open_pop_grid(2025:2032, 40:85)
-  init <- .dmdm_open_agents(pop[pop$year == 2025, c("age", "population")],
+  init <- urpssim:::.dmdm_open_agents(pop[pop$year == 2025, c("age", "population")],
                             2025, 40, 2000, seed = 2)
   old <- Sys.getenv("REPRODUCIBILITY_MODE", unset = NA)
   on.exit(if (is.na(old)) Sys.unsetenv("REPRODUCIBILITY_MODE")

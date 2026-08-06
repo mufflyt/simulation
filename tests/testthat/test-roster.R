@@ -51,8 +51,8 @@ test_that("the cohort reproduces the contract headcount", {
   a <- agents_from_certification_cohorts(baseline_year = 2023L)
   expect_equal(nrow(a), mufflyaccess::urps_count(2023, geography = "national",
                                                  include_urology = TRUE))
-  expect_true(all(a$age >= MICROSIM_ENTRY_AGE))
-  expect_true(all(a$age < MICROSIM_TERMINAL_AGE))
+  expect_true(all(a$age >= urpssim:::MICROSIM_ENTRY_AGE))
+  expect_true(all(a$age < urpssim:::MICROSIM_TERMINAL_AGE))
 })
 
 test_that("cohort provenance never calls a derived cohort a roster", {

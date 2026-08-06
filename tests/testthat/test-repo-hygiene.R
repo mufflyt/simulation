@@ -124,12 +124,12 @@ test_that("loading the legacy scripts never touches the filesystem", {
 })
 
 test_that("the definition detector rejects statements that do work", {
-  expect_true(.is_definition(quote(f <- function(x) x + 1)))
-  expect_true(.is_definition(quote(K <- c(1, 2, 3))))
-  expect_false(.is_definition(quote(d <- readRDS("x.rds"))))
-  expect_false(.is_definition(quote(load("x.rda"))))
-  expect_false(.is_definition(quote(library(dplyr))))
-  expect_false(.is_definition(quote(plot(1:10))))
+  expect_true(urpssim:::.is_definition(quote(f <- function(x) x + 1)))
+  expect_true(urpssim:::.is_definition(quote(K <- c(1, 2, 3))))
+  expect_false(urpssim:::.is_definition(quote(d <- readRDS("x.rds"))))
+  expect_false(urpssim:::.is_definition(quote(load("x.rda"))))
+  expect_false(urpssim:::.is_definition(quote(library(dplyr))))
+  expect_false(urpssim:::.is_definition(quote(plot(1:10))))
 })
 
 test_that("the package R directory has no top-level executable script code", {

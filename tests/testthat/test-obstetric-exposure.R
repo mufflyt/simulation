@@ -44,7 +44,7 @@ test_that("a larger OR deepens the exposure discount", {
 # ---- D4 estimand ------------------------------------------------------------
 
 test_that("compute_demand_denominators_lifecourse adds D4 alongside D1-D3", {
-  pop <- tidyr::expand_grid(year = c(2025, 2040, 2055), age_band = DEMAND_AGE_BANDS) |>
+  pop <- tidyr::expand_grid(year = c(2025, 2040, 2055), age_band = urpssim:::DEMAND_AGE_BANDS) |>
     dplyr::mutate(female_pop = dplyr::case_when(
       age_band == "20-39" ~ 40e6, age_band == "40-59" ~ 41e6,
       age_band == "60-64" ~ 11e6, age_band == "65-79" ~ 24e6, TRUE ~ 9e6))
@@ -54,7 +54,7 @@ test_that("compute_demand_denominators_lifecourse adds D4 alongside D1-D3", {
 })
 
 test_that("D4 diverges from D1 over time (not a proportional rescaling)", {
-  pop <- tidyr::expand_grid(year = c(2025, 2055), age_band = DEMAND_AGE_BANDS) |>
+  pop <- tidyr::expand_grid(year = c(2025, 2055), age_band = urpssim:::DEMAND_AGE_BANDS) |>
     dplyr::mutate(female_pop = dplyr::case_when(
       age_band == "20-39" ~ 40e6, age_band == "40-59" ~ 41e6,
       age_band == "60-64" ~ 11e6, age_band == "65-79" ~ 24e6, TRUE ~ 9e6))

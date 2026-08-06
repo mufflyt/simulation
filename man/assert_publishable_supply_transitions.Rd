@@ -22,9 +22,9 @@ Default \code{FALSE} (they are off by the neutral identity and drive no output).
 (Invisibly) \code{TRUE} when publishable, \code{FALSE} otherwise.
 }
 \description{
-The supply analogue of \code{\link[=assert_publishable_demand_coefficients]{assert_publishable_demand_coefficients}()}. Reduces the
+The supply analogue of \code{\link[=assert_publishable_demand_coefficients]{assert_publishable_demand_coefficients()}}. Reduces the
 registry to its LEAST-calibrated tier and runs the package's accept / opt-in /
-refuse contract via \code{\link[=assert_publishable_workload]{assert_publishable_workload}()}: \code{calibrated}/\code{solved}
+refuse contract via \code{\link[=assert_publishable_workload]{assert_publishable_workload()}}: \code{calibrated}/\code{solved}
 pass, \code{derived_by_analogy} needs \code{allow_analogy = TRUE}, and
 \code{uncalibrated_illustrative} is refused (strict errors, relaxed warns).
 }

@@ -14,7 +14,7 @@ ndc_volumes <- function(scalar_year = 2025) {
     dplyr::mutate(volume = c(3e6, 7e6, 3e5, 9e5, 1e6, 3.1e6, 7.2e6, 3.1e5, 9.2e5, 1.02e6))
 }
 
-ndc_fake_cal <- function(scalar = 0.5, services = NAMCS_COMPARABLE_SERVICES) {
+ndc_fake_cal <- function(scalar = 0.5, services = urpssim:::NAMCS_COMPARABLE_SERVICES) {
   structure(
     tibble::tibble(category = "ambulatory_visits", predicted = 1e7,
                    observed = 1e7 * scalar, scalar = scalar, flagged = FALSE),
@@ -27,7 +27,7 @@ test_that("calibration scales visit rows and leaves procedures untouched", {
   v <- ndc_volumes()
   out <- apply_demand_calibration(v, ndc_fake_cal(0.5))
 
-  visits <- out$service %in% NAMCS_COMPARABLE_SERVICES
+  visits <- out$service %in% urpssim:::NAMCS_COMPARABLE_SERVICES
   expect_true(all(out$calibration_scalar[visits] == 0.5))
   # THE CONTRACT. A visit-count anchor is evidence about encounters and nothing
   # else; scaling sling volume by it would propagate the anchor past its data.
@@ -113,7 +113,7 @@ test_that("the anchor reports its record count against the NCHS floor", {
   expect_equal(a$category, "ambulatory_visits")
   expect_gt(a$observed, 0)
   expect_true(a$reliable)
-  expect_gte(a$n_records, NAMCS_MIN_RECORDS)
+  expect_gte(a$n_records, urpssim:::NAMCS_MIN_RECORDS)
   p <- attr(a, "provenance")
   expect_equal(attr(a, "data_year"), 2019L)
   expect_match(p$weight, "PATWT")
