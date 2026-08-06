@@ -1,4 +1,10 @@
 test_that("the documented direct-supply example has quantified uncertainty and a coherent hours scale", {
+  # urps_empirical_retirement_schedule() resolves through the canonical registry,
+  # and config/ is .Rbuildignore'd -- so this passes in a source tree and dies
+  # under R CMD check, where tests run inside <pkg>.Rcheck/. Same guard as
+  # test-backtest.R uses for nrmp_entrants().
+  skip_if_not(file.exists(.canonical_config_path()),
+              "canonical source registry not reachable (config/ is not shipped)")
   agents <- initialize_provider_agents(80, "FPMRS", 2025)
   history <- urps_certification_cohorts()
   history <- history$n_certified[history$cert_year >= 2018]
