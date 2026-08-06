@@ -398,6 +398,16 @@ required_fte_base_year <- function(base_supply_fte, adequacy) {
 #'   present); for every other method it must be declared, because the method
 #'   cannot distinguish a fielded URPS survey from a borrowed distribution.
 #' @param source Attribution for the number (the study, survey or anchor).
+#' @param population Population the estimate refers to (e.g. "adult women").
+#'   `NA` is honest and reported as "undeclared"; it is never silently filled in.
+#' @param year Base year the estimate refers to.
+#' @param source_specialty Specialty the number was actually measured on (URPS
+#'   itself, or the analogue specialty a borrowed distribution came from).
+#' @param externally_measured Logical flag: whether the number was externally
+#'   measured (`TRUE`) rather than assumed. `NA` when undeclared.
+#' @param adequacy_ci Optional two-element confidence interval for `adequacy`.
+#'   The required-FTE and shortfall intervals are derived from it, with the
+#'   bound swap (the low adequacy bound gives the high required-FTE bound).
 #' @return An object of class `urps_baseline_gap`.
 #' @export
 baseline_gap <- function(base_supply_fte, adequacy,
