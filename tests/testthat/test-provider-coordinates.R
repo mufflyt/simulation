@@ -42,13 +42,15 @@ test_that("coverage is reported BY PATHWAY, because the overall share hides the 
 
   expect_equal(cv$n_roster, nrow(load_urps_roster()))
   expect_true(all(c("pathway", "n", "with_coord", "share") %in% names(cv$by_pathway)))
-  # THE SUBSTANTIVE CHECK. 72% overall would pass any reasonable threshold. It
-  # is 93.5% in one pathway and 0.0% in the other, which is not 72% coverage --
-  # it is a missing pathway wearing an acceptable average.
-  expect_gt(length(cv$pathways_absent), 0)
+  # The pathway hole is closed (ABU 0% -> 87% once its separate geocoding run
+  # is merged), so no pathway is absent. Coverage is still below the floor, and
+  # the blocker must say SO rather than going quiet -- "not usable, reason NA"
+  # tells a caller they are blocked and not why.
+  expect_equal(length(cv$pathways_absent), 0)
   expect_false(cv$usable_for_access)
   expect_true(nzchar(cv$blocker))
-  expect_match(cv$blocker, "understates access")
+  expect_match(cv$blocker, "floor")
+  expect_true(all(cv$by_pathway$with_coord > 0))
 })
 
 test_that("a pathway at zero blocks the layer even at high overall coverage", {
@@ -61,6 +63,7 @@ test_that("a pathway at zero blocks the layer even at high overall coverage", {
   expect_equal(cv$overall_share, 0.97)
   expect_equal(cv$pathways_absent, "B")
   expect_false(cv$usable_for_access)
+  expect_match(cv$blocker, "NO geocoded provider")   # the pathway reason, not the floor
 
   full <- provider_coordinate_coverage(roster, tibble::tibble(npi = as.character(1:100)))
   expect_true(full$usable_for_access)

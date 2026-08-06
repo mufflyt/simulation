@@ -11,7 +11,13 @@
 # not random:
 #
 #     ABOG (OB/GYN)   1,031 roster  ->  964 geocoded  (93.5%)
-#     ABU  (urology)    308 roster  ->    0 geocoded  ( 0.0%)
+#     ABU  (urology)    308 roster  ->  268 geocoded  (87.0%)   [was 0.0%]
+#
+# The ABU pathway was at ZERO until a second source was found: the same repo
+# geocodes it separately in data/abu_urology/, which the primary run does not
+# include. Merging it moved overall coverage 72% -> 92% and closed the hole.
+# What remains is a roughly uniform ~8% shortfall rather than a missing
+# pathway, which is a different and much less damaging kind of gap.
 #
 # The geocoding run covered the ABOG pathway only. Every urology-pathway URPS
 # provider is absent -- 23% of the workforce, concentrated in whichever markets
@@ -25,6 +31,11 @@
 #
 # So this module reports the coordinates AND refuses to let the coverage gap
 # travel separately from them.
+
+# Minimum share of the model baseline that must carry a coordinate before the
+# access layer may be built. Not a statistical threshold -- a judgement that a
+# surface missing more than one provider in twenty is not an access surface.
+COORD_COVERAGE_MIN <- 0.95
 
 #' Load URPS provider point locations
 #'
@@ -86,10 +97,21 @@ provider_coordinate_coverage <- function(roster = NULL, coords = NULL) {
     overall_share = mean(roster$has_coord),
     by_pathway = tab,
     pathways_absent = empty,
-    usable_for_access = length(empty) == 0 && mean(roster$has_coord) >= 0.95,
-    blocker = if (length(empty)) sprintf(
-      paste("pathway(s) %s have NO geocoded provider, so an access surface built",
-            "on these coordinates omits them entirely and understates access",
-            "wherever they practise"), paste(empty, collapse = ", ")) else NA_character_
+    usable_for_access = length(empty) == 0 && mean(roster$has_coord) >= COORD_COVERAGE_MIN,
+    # The blocker must name WHICHEVER condition failed. Reporting
+    # usable_for_access = FALSE with blocker = NA -- which this did while the
+    # pathway hole was closed but the overall share sat below threshold -- tells
+    # a caller they are blocked and not why.
+    blocker = if (length(empty)) {
+      sprintf(paste("pathway(s) %s have NO geocoded provider, so an access surface",
+                    "built on these coordinates omits them entirely and understates",
+                    "access wherever they practise"), paste(empty, collapse = ", "))
+    } else if (mean(roster$has_coord) < COORD_COVERAGE_MIN) {
+      sprintf(paste("coverage is %.1f%% against a %.0f%% floor; the gap is spread",
+                    "across pathways rather than concentrated in one, so it",
+                    "understates access roughly uniformly rather than in a",
+                    "particular market"),
+              100 * mean(roster$has_coord), 100 * COORD_COVERAGE_MIN)
+    } else NA_character_
   )
 }
