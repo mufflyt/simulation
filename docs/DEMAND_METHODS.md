@@ -163,6 +163,20 @@ than a static risk equation.
   forecaster. This is how a candidate model is judged: not by a single coverage
   number, but by sharpness-penalized accuracy that is stable across back-test
   origins and beats a naive benchmark.
+- **Applied to this project's own out-of-sample runs**
+  (`scripts/diagnostics/interval_honesty_scorecard.R`, on committed artifacts; no
+  private data). The frozen rolling-origin reaches 100% coverage with intervals so
+  wide one lower bound is negative (impossible for a cumulative stock); the
+  headline 2020->2023 backtest uses sharp intervals and covers ~0-25%, missing
+  high every forecast year. Coverage alone would crown the uninformative model.
+  The interval score refuses both: the wide model's score is essentially its width
+  (~1466), the sharp model's is essentially its miss penalty (~1732 on the genuine
+  2021-2023 horizon), so it cannot be gamed by widening *or* narrowing. The signed
+  bias (about -87 in both) names the real defect the intervals only dress over:
+  the point forecast under-predicts a growing series, and no interval width fixes a
+  biased centre. This is the honest way to report the coverage result -- not "100%
+  coverage validates the intervals," but "the point forecast is biased low, and the
+  proper scoring rule shows neither wide nor sharp intervals rescue it."
 
 ## 6. Denominator hierarchy and concordance
 
