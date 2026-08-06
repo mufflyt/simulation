@@ -71,11 +71,23 @@ cesarean_rate_for_year <- function(years) {
 }
 
 #' Mean completed parity by birth cohort, interpolated across cited anchors
+#'
+#' Exported because cliff's life-course demand model needs it. It previously
+#' carried its own byte-identical copy of both this function and the anchor
+#' series (verified: sha256 193aefef...), which is two places for one number to
+#' drift. Re-exported rather than left internal so that duplicate can be deleted.
+#'
 #' @param cohorts Integer birth-cohort years.
+#' @param par Optional data frame with `birth_cohort` and
+#'   `mean_completed_parity`, overriding the packaged anchor series. Present so
+#'   the interpolation can be tested against a known series, and so a caller can
+#'   substitute a revised one without editing the package.
 #' @return Numeric mean completed parity (clamped outside the anchor range).
-#' @keywords internal
-completed_parity_for_cohort <- function(cohorts) {
-  par <- .obstetric_extdata("us_completed_parity_by_cohort.csv")
+#' @export
+completed_parity_for_cohort <- function(cohorts, par = NULL) {
+  if (is.null(par)) par <- .obstetric_extdata("us_completed_parity_by_cohort.csv")
+  assertthat::assert_that(is.data.frame(par),
+                          all(c("birth_cohort", "mean_completed_parity") %in% names(par)))
   par <- par[order(par$birth_cohort), ]
   stats::approx(par$birth_cohort, par$mean_completed_parity, xout = cohorts, rule = 2)$y
 }

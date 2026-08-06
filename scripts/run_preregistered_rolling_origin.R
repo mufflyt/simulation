@@ -51,15 +51,33 @@ cat(sprintf("Preregistered spec %s (frozen_at %s)\n  record: %s\n",
             substr(rec$spec_hash, 1, 12), FROZEN_AT, prereg_path))
 
 # ---- 2. Observed series -----------------------------------------------------
+# Priority: (1) an explicit CSV; (2) the real ABOG/ABU board-certified active
+# count from mufflyaccess, wherever that data package is installed -- so this
+# produces a REAL preregistered evaluation with no extra steps in an equipped
+# environment; (3) a clearly-flagged synthetic fallback, never passed off as a
+# result. `n_active` is the cumulative certification STOCK (its 2020 value is
+# 1099 and 2023 is 1306), which is exactly the `year`/`count` series the frozen
+# log-linear form is specified on.
 series_csv <- Sys.getenv("OBSERVED_SERIES_CSV", "")
+real_data <- FALSE
 if (nzchar(series_csv) && file.exists(series_csv)) {
   series <- utils::read.csv(series_csv)
   src <- series_csv
+  real_data <- TRUE
+} else if (requireNamespace("mufflyaccess", quietly = TRUE)) {
+  x <- mufflyaccess::urps_counts_long()
+  a <- x[x$measure == "board_certified_active" & x$geography == "national" &
+           x$board_pathway == "ABOG_PLUS_ABU", c("year", "n_active")]
+  a <- a[order(a$year), ]
+  series <- data.frame(year = a$year, count = a$n_active)
+  src <- sprintf("mufflyaccess::urps_counts_long() [national/ABOG_PLUS_ABU/board_certified_active, %d-%d]",
+                 min(a$year), max(a$year))
+  real_data <- TRUE
 } else {
   # Documented fallback: a smooth synthetic count series. NOT a result.
   series <- data.frame(year = 2008:2023,
                        count = round(1000 * exp(0.02 * (0:15))))
-  src <- "SYNTHETIC fallback (set OBSERVED_SERIES_CSV to the ABOG/ABU count series)"
+  src <- "SYNTHETIC fallback (install mufflyaccess or set OBSERVED_SERIES_CSV for the real ABOG/ABU series)"
 }
 cat("Observed series: ", src, " (", nrow(series), " years)\n", sep = "")
 
@@ -83,7 +101,7 @@ print(res$by_origin, row.names = FALSE)
 cat(sprintf("\nMAPE %.1f%% over %d origins | horizon %d | all targets future: %s | prereg %s\n",
             res$summary$mape, res$summary$n, res$summary$horizon,
             res$summary$all_targets_future, substr(res$summary$spec_hash, 1, 12)))
-if (!nzchar(series_csv))
+if (!real_data)
   cat("NOTE: synthetic fallback series -- the MAPE is structure, not a result.",
-      "Supply OBSERVED_SERIES_CSV for a real preregistered evaluation.\n")
+      "Install mufflyaccess or set OBSERVED_SERIES_CSV for a real preregistered evaluation.\n")
 cat("\nCommit inst/extdata/preregistration/entrant_regime_v1.txt so the freeze is on record.\n")
