@@ -11,7 +11,12 @@ baseline_gap(
   evidence = character(0),
   access_components_counted = character(0),
   calibration_status = NULL,
-  source = NA_character_
+  source = NA_character_,
+  population = NA_character_,
+  year = NA_integer_,
+  source_specialty = NA_character_,
+  externally_measured = NA,
+  adequacy_ci = NULL
 )
 }
 \arguments{
@@ -33,6 +38,21 @@ present); for every other method it must be declared, because the method
 cannot distinguish a fielded URPS survey from a borrowed distribution.}
 
 \item{source}{Attribution for the number (the study, survey or anchor).}
+
+\item{population}{Population the anchor pertains to (e.g. "US women 65+").
+\code{NA} is reported as "undeclared" and never silently filled in.}
+
+\item{year}{Base-year / vintage of the estimate.}
+
+\item{source_specialty}{Specialty the number was measured on; distinguishes a
+URPS measurement from one borrowed from another specialty.}
+
+\item{externally_measured}{Flag for whether the adequacy/gap was measured
+outside this model rather than assumed within it.}
+
+\item{adequacy_ci}{Optional length-2 confidence interval for \code{adequacy},
+propagated (with the required-FTE inversion) to \code{required_fte_ci} and
+\code{shortfall_fte_ci}.}
 }
 \value{
 An object of class \code{urps_baseline_gap}.
