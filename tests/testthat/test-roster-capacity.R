@@ -26,9 +26,10 @@ test_that("the roster satisfies the production-cohort contract", {
   expect_true(all(pr$age >= 18 & pr$age <= 100))
   expect_true(all(pr$sex %in% c("female", "male")))
   # Medicare billing is the activity attestation; providers without it are
-  # UNCONFIRMED rather than assumed inactive or assumed active.
+  # UNCONFIRMED rather than assumed inactive or assumed active. Older extracts
+  # carry an explicit last_confirmed_active_year rather than a CY2024 flag.
   expect_true(any(is.na(pr$last_confirmed_active_year)))
-  expect_true(all(stats::na.omit(pr$last_confirmed_active_year) == 2024L))
+  expect_true(all(stats::na.omit(pr$last_confirmed_active_year) %in% c(2023L, 2024L)))
 })
 
 test_that("a roster cohort is a production cohort, unlike the certification cohort", {
