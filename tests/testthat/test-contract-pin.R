@@ -27,6 +27,26 @@ test_that("DESCRIPTION pins the contract to a commit, not a bare repo", {
   expect_equal(nchar(MUFFLYACCESS_PINNED_SHA), 40L)
 })
 
+test_that("CI installs the pinned commit, not the repo's HEAD", {
+  # DESCRIPTION's Remotes entry makes the ref RESOLVABLE; it does not decide what
+  # an extra-packages entry installs. r-lib/actions treats each extra-packages
+  # spec on its own, so a bare `mufflyt/mufflyaccess` there resolves HEAD and CI
+  # runs against a different build from every developer -- while both report
+  # 0.10.0. Pinning DESCRIPTION alone therefore does not pin CI.
+  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
+                 c(".", "..", file.path("..", "..")))
+  skip_if(length(root) == 0)
+  wf <- file.path(root[1], ".github", "workflows", "R-CMD-check.yaml")
+  skip_if_not(file.exists(wf), "R-CMD-check workflow not present")
+
+  spec <- grep("^\\s*extra-packages:", readLines(wf, warn = FALSE), value = TRUE)
+  expect_length(spec, 1L)
+  expect_match(spec, "mufflyaccess@[0-9a-f]{40}")
+  # Same commit as DESCRIPTION and R/60. Three copies of a SHA is two chances to
+  # drift; this is the check that removes both.
+  expect_match(spec, MUFFLYACCESS_PINNED_SHA, fixed = TRUE)
+})
+
 test_that("the required-export list matches what the package actually calls", {
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
