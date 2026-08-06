@@ -16,8 +16,10 @@ vaginal-delivery log-odds (\code{bvag}, the primary term) and the BMI modifier
 inherit the internal placeholder set. Pass via \code{risk_params} to
 \code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}}. \code{bvag} per cumulative vaginal delivery
 (log-odds), with the literature RANGE noted:
-POP OR ~1.35/delivery (log 0.30); range 1.10-1.21 (Hendrix WHI, per birth)
-up to steeper (Mant Oxford-FPA RR 8.4 at 2 / 10.9 at 4 vaginal births).
+POP OR ~1.35/delivery (log 0.30); range 1.10-1.21 (Hendrix WHI 2002, per
+birth, CONFIRMED) up to a steeper but UNCONFIRMED Mant Oxford-FPA
+dose-response (exact per-parity RRs not retrievable; do not assume a
+point estimate -- see inst/extdata/obstetric/parity_disease_dose_response.csv).
 UI  OR ~1.16/delivery (log 0.15) (Rortveit 2001/2003, EPINCONT).
 AI  OR ~1.10/delivery (log 0.10), weak/uncertain; OASI-specific OR 2.66
 (LaCross 2015) is a distinct, stronger contrast.

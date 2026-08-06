@@ -8,8 +8,8 @@ lifecourse_severity_params(swan_panel = NULL)
 }
 \arguments{
 \item{swan_panel}{Optional SWAN incontinence panel
-(\code{\link[=build_swan_incontinence_panel]{build_swan_incontinence_panel}()}); when supplied, the UI severity shares
-are derived from it via \code{\link[=score_sandvik_severity]{score_sandvik_severity}()} instead of the placeholder.}
+(\code{\link[=build_swan_incontinence_panel]{build_swan_incontinence_panel()}}); when supplied, the UI severity shares
+are derived from it via \code{\link[=score_sandvik_severity]{score_sandvik_severity()}} instead of the placeholder.}
 }
 \value{
 A list with \code{status}, \code{levels}, and per-condition named vectors
@@ -17,14 +17,15 @@ A list with \code{status}, \code{levels}, and per-condition named vectors
 }
 \description{
 The parameters for the (un-collapsed) symptom-severity stage, read from
-\code{\link[=demand_transition_registry]{demand_transition_registry}()}. \code{shares} is the per-condition severity
+\code{\link[=demand_transition_registry]{demand_transition_registry()}}. \code{shares} is the per-condition severity
 distribution (Sandvik levels); \code{seek_multiplier} scales care-seeking by
 severity and is 1 (NEUTRAL) by default, so demand is unchanged until a
-gradient is supplied. Pass to \code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand}()} via
+gradient is supplied. Pass to \code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}} via
 \code{severity_params} to activate a severity -> care-seeking gradient.
-
+}
+\details{
 The UI shares are illustrative placeholders unless a \code{swan_panel} is supplied:
-then they are computed from the Sandvik instrument (\code{\link[=score_sandvik_severity]{score_sandvik_severity}()})
+then they are computed from the Sandvik instrument (\code{\link[=score_sandvik_severity]{score_sandvik_severity()}})
 as the observed category distribution (not-computable / continent rows are
 dropped, not folded into "slight"), and the \code{status} reflects that.
 }
