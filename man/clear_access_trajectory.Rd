@@ -24,7 +24,7 @@ population/fte/insurance/travel columns). A \code{catchment} id is required when
 Default \code{FALSE} (each year cleared independently).}
 
 \item{backlog_fraction}{Fraction of a year's unmet demand carried into the
-next year. In [0, 1]. Default 1 (all unmet persists).}
+next year. In 0 to 1. Default 1 (all unmet persists).}
 
 \item{appointment_window, wait_scale, wait_ceiling, status}{Passed through to
 \code{\link[=clear_access]{clear_access()}}.}

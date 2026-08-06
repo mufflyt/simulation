@@ -31,7 +31,7 @@
 #' @param catchments A data frame with numeric `demand_workload` and
 #'   `accessible_capacity` in the SAME currency (e.g. annual wRVU-equivalent),
 #'   and optional `accessible_population`, `accessible_fte`,
-#'   `median_travel_time`, and `insurance_fraction` (in [0, 1], default 1). Any
+#'   `median_travel_time`, and `insurance_fraction` (in 0 to 1, default 1). Any
 #'   id columns (e.g. `catchment`, `year`) are carried through untouched. `NA`
 #'   demand or capacity marks an empty/unknown catchment and yields `NA`
 #'   outcomes (not an error).
@@ -80,7 +80,7 @@ clear_access <- function(catchments,
   bad_ins <- !is.na(ins) & (!is.finite(ins) | ins < 0 | ins > 1)
   if (any(bad_d) || any(bad_cap) || any(bad_ins)) {
     stop("clear_access(): `demand_workload`/`accessible_capacity` must be finite ",
-         "and >= 0 where present, and `insurance_fraction` in [0, 1].", call. = FALSE)
+         "and >= 0 where present, and `insurance_fraction` in 0 to 1.", call. = FALSE)
   }
 
   util <- served <- unmet <- wait <- p_appt <- panel <- rep(NA_real_, n)
@@ -148,7 +148,7 @@ clear_access <- function(catchments,
 #' @param carry_backlog If `TRUE`, carry unmet demand forward (Phase-3 behaviour).
 #'   Default `FALSE` (each year cleared independently).
 #' @param backlog_fraction Fraction of a year's unmet demand carried into the
-#'   next year. In [0, 1]. Default 1 (all unmet persists).
+#'   next year. In 0 to 1. Default 1 (all unmet persists).
 #' @param appointment_window,wait_scale,wait_ceiling,status Passed through to
 #'   [clear_access()].
 #' @return A tibble: every [clear_access()] output column across all years, plus

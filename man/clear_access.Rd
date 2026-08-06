@@ -16,7 +16,7 @@ clear_access(
 \item{catchments}{A data frame with numeric \code{demand_workload} and
 \code{accessible_capacity} in the SAME currency (e.g. annual wRVU-equivalent),
 and optional \code{accessible_population}, \code{accessible_fte},
-\code{median_travel_time}, and \code{insurance_fraction} (in [0, 1], default 1). Any
+\code{median_travel_time}, and \code{insurance_fraction} (in 0 to 1, default 1). Any
 id columns (e.g. \code{catchment}, \code{year}) are carried through untouched. \code{NA}
 demand or capacity marks an empty/unknown catchment and yields \code{NA}
 outcomes (not an error).}
