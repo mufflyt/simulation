@@ -1,5 +1,4 @@
-"label","n","coverage","mean_width","mean_interval_score","mape","signed_bias","calibration_slope","scoring_set"
-"rolling-origin (wide)",4,1,1465.56746825246,1465.56746825246,7.3872474028408,-88.4870286769308,0.941327461384244,"all rows (incl. base-year anchor)"
-"backtest arm1 (sharp)",4,0.25,69.0125,1299.0125,5.17471418831534,-65,2.52772131492255,"all rows (incl. base-year anchor)"
-"rolling-origin (wide)",4,1,1465.56746825246,1465.56746825246,7.3872474028408,-88.4870286769308,0.941327461384244,"genuine forecasts only (targets > 2020)"
-"backtest arm1 (sharp)",3,0,92.0166666666667,1732.01666666667,6.89961891775379,-86.6666666666667,2.41744701823558,"genuine forecasts only (targets > 2020)"
+"label","n","coverage","mean_width","mean_interval_score","mape","signed_bias"
+"rolling-origin (wide)",4,1,1465.56746825246,1465.56746825246,7.3872474028408,-88.4870286769308
+"sharp, attrition ON (definition MISMATCH)",3,0,92.0166666666667,1732.01666666667,6.89961891775379,-86.6666666666667
+"sharp, no-attrition (definition-MATCHED)",3,0.666666666666667,97.0166666666667,137.016666666667,2.45622619129902,-30.6666666666667

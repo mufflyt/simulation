@@ -165,18 +165,29 @@ than a static risk equation.
   origins and beats a naive benchmark.
 - **Applied to this project's own out-of-sample runs**
   (`scripts/diagnostics/interval_honesty_scorecard.R`, on committed artifacts; no
-  private data). The frozen rolling-origin reaches 100% coverage with intervals so
-  wide one lower bound is negative (impossible for a cumulative stock); the
-  headline 2020->2023 backtest uses sharp intervals and covers ~0-25%, missing
-  high every forecast year. Coverage alone would crown the uninformative model.
-  The interval score refuses both: the wide model's score is essentially its width
-  (~1466), the sharp model's is essentially its miss penalty (~1732 on the genuine
-  2021-2023 horizon), so it cannot be gamed by widening *or* narrowing. The signed
-  bias (about -87 in both) names the real defect the intervals only dress over:
-  the point forecast under-predicts a growing series, and no interval width fixes a
-  biased centre. This is the honest way to report the coverage result -- not "100%
-  coverage validates the intervals," but "the point forecast is biased low, and the
-  proper scoring rule shows neither wide nor sharp intervals rescue it."
+  private data). Three real evaluations of the certification stock over 2021-2023,
+  and coverage ranks them exactly backwards:
+
+  | evaluation | coverage | mean width | interval score |
+  |---|---:|---:|---:|
+  | rolling-origin (wide) | 100% | 1466 | 1466 |
+  | sharp, attrition ON (definition mismatch) | 0% | 92 | 1732 |
+  | sharp, no-attrition (definition-matched) | 67% | 97 | **137** |
+
+  Coverage crowns the **wide** model (100%), whose intervals are so wide one lower
+  bound is negative (impossible for a cumulative stock). The **interval score**
+  crowns the definition-matched sharp model (137, an order of magnitude better),
+  which coverage ranks only second -- same data, opposite verdict, and the proper
+  score is the right one: it cannot be gamed by widening (you pay the width) or by
+  narrowing without fixing the centre (you pay the `(2/alpha)` miss penalty). Two
+  further lessons fall out. First, **most of the headline miss is a definition
+  error, not calibration**: applying career attrition to a *cumulative* certification
+  count (nobody exits it) drags the forecast low -- fixing it moves coverage
+  0%->67%, interval score 1732->137, bias -87->-31. Second, the residual low bias
+  (-31; +55/yr predicted vs +69/yr observed) is the genuine **entrant-regime**
+  question -- decomposed in `scripts/diagnostics/entrant_regime_bias_decomposition.R`
+  -- and it is a point-forecast problem no interval width can fix. Report the
+  coverage result this way, not as "100% coverage validates the intervals."
 
 ## 6. Denominator hierarchy and concordance
 
