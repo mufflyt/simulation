@@ -113,7 +113,10 @@ test_that("geographic access is registered as absent, not as miscalibrated", {
   g <- geographic_access_status()
   expect_false(g$resolved)
   expect_equal(nrow(g$components), 7L)
-  expect_equal(g$n_present + g$n_missing, nrow(g$components))
+  # PARTIAL counts as neither present nor missing, so the two need not sum to
+  # the row count -- an input can be underway.
+  expect_lte(g$n_present + g$n_missing, nrow(g$components))
+  expect_gt(g$n_present, 0); expect_gt(g$n_missing, 0)
 
   st <- stats::setNames(g$components$state, g$components$component)
   # Two of the three inputs the methods doc names are DONE. Reporting this item
@@ -122,7 +125,10 @@ test_that("geographic access is registered as absent, not as miscalibrated", {
   expect_equal(unname(st["tract_centroids"]), "PRESENT")
   expect_equal(unname(st["demand_machinery"]), "WIRED")
   # What is actually missing.
-  expect_equal(unname(st["provider_coordinates"]), "MISSING")
+  # PARTIAL, not MISSING: coordinates were imported from mufflyt/isochrones and
+  # cover 964 of 1,339 -- but 0% of the ABU pathway, so they are not yet usable.
+  # provider_coordinate_coverage() carries that blocker.
+  expect_equal(unname(st["provider_coordinates"]), "PARTIAL")
   expect_equal(unname(st["drive_time_isochrones"]), "MISSING")
   expect_equal(unname(st["supply_machinery"]), "DORMANT")
   expect_equal(unname(st["validation_gate"]), "MISSING")

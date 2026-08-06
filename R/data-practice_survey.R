@@ -168,7 +168,7 @@ geographic_access_status <- function() {
     "tract_centroids",       "PRESENT",  "data-raw/spatial/tract_fem65_centroids.csv, joined to the ACS table by GEOID.",
     "demand_machinery",      "WIRED",    "R/geography-demand.R: tract_need_from_population(), demand_by_travel_band(), need_weighted_access(), isochrone_demand_from_tracts(). Called from scripts/run_demand_pipeline.R.",
     "supply_machinery",      "DORMANT",  "R/geography-spatial_access_e2sfca.R: compute_access(), match_points_to_isochrones(), compare_access_methods(), access_moe_ci(). Present in the orchestrator's module load list and called by NOTHING outside tests.",
-    "provider_coordinates",  "MISSING",  "The roster carries state and rurality only. The cliff source adds county_fips, zcta and tract but no lat/lon, so point locations require geocoding from NPI -- which mufflyt/isochrones already does.",
+    "provider_coordinates",  "PARTIAL",  "Imported from mufflyt/isochrones: 1,176 geocoded URPS providers, joining to 964 of the 1,339 in the model baseline (72%). NOT usable yet -- coverage is 93.5% for the ABOG pathway and 0.0% for ABU, so an access surface would omit every urology-pathway provider (23% of the workforce) while looking complete. See provider_coordinate_coverage().",
     "drive_time_isochrones", "MISSING",  "Absent from this repository entirely. They exist in mufflyt/isochrones and were expensive to generate; import rather than recompute.",
     "validation_gate",       "MISSING",  "validation_report() runs six internal checks, none geographic. two_method_agreement() exists to compare geographic adequacy rankings and is called with geographic data by nothing."
   )
@@ -190,7 +190,7 @@ geographic_access_status <- function() {
       "the wrong geometry produces a publishable one."),
     # Deliberately NOT resolved by the practice survey: this is an integration
     # task, and listing it there would imply a questionnaire could fix it.
-    resolved_by = c("provider point locations geocoded from roster NPIs",
+    resolved_by = c("geocoding for the ABU (urology) pathway, which the imported run omits entirely",
                     "drive-time isochrones imported from mufflyt/isochrones",
                     "R/geography-spatial_access_e2sfca.R called from the orchestrator, not merely loaded",
                     "a geographic check added to validation_report()")
