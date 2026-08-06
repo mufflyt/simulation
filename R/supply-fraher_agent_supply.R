@@ -88,7 +88,7 @@ initialize_urps_agents <- function(roster_source  = "mufflyaccess",
     roster_raw <- dplyr::bind_rows(recent_cohort, legacy_cohort) %>%
       dplyr::mutate(
         npi            = paste0("SYNTHETIC_", synthetic_id),
-        practice_state = sample(state.abb, dplyr::n(), replace = TRUE)
+        practice_state = sample(datasets::state.abb, dplyr::n(), replace = TRUE)
       )
   }
 

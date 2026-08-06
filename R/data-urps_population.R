@@ -402,7 +402,7 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
 
   pfd_observed <- !all(is.na(brfss_women$ui_flag))
 
-  cells <- aggregate(
+  cells <- stats::aggregate(
     cbind(n_respondents = seq_len(nrow(brfss_women)),
           pop_weight    = brfss_women$survey_wt,
           n_smoker      = as.integer(!is.na(brfss_women$smoker) &
@@ -851,7 +851,7 @@ load_mcbs_women65 <- function(mcbs_rds = NULL, verbose = TRUE) {
   if (verbose) {
     n65 <- sum(out$age_group == "65-74", na.rm = TRUE)
     n75 <- sum(out$age_group == "75+",   na.rm = TRUE)
-    ui_prev <- weighted.mean(out$ui_loss == 1L,
+    ui_prev <- stats::weighted.mean(out$ui_loss == 1L,
                              w = ifelse(is.na(out$survey_wt), 1, out$survey_wt),
                              na.rm = TRUE)
     message(sprintf(
@@ -886,7 +886,7 @@ blend_mcbs_prevalence <- function(cells, mcbs = NULL, verbose = TRUE) {
     sub <- mcbs[!is.na(mcbs$age_group) & as.character(mcbs$age_group) == band, ]
     if (nrow(sub) == 0L) next
     wt   <- ifelse(is.na(sub$survey_wt), 1, sub$survey_wt)
-    prev <- weighted.mean(sub$ui_loss == 1L, w = wt, na.rm = TRUE)
+    prev <- stats::weighted.mean(sub$ui_loss == 1L, w = wt, na.rm = TRUE)
 
     rows <- !is.na(cells$age_group) & as.character(cells$age_group) == band
     if (any(rows)) {
