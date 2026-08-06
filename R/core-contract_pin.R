@@ -19,7 +19,7 @@
 
 #' Commit the contract is pinned to in DESCRIPTION
 #' @export
-MUFFLYACCESS_PINNED_SHA <- "a88dba8f4bafec7659df3f3c1404aca814709208"
+MUFFLYACCESS_PINNED_SHA <- "b1f33acf918d71031ed7cbed79cb76d525503d4c"
 
 #' Contract functions this package calls
 #'
@@ -34,6 +34,7 @@ MUFFLYACCESS_PINNED_SHA <- "a88dba8f4bafec7659df3f3c1404aca814709208"
 #'
 #' @export
 MUFFLYACCESS_REQUIRED_EXPORTS <- c(
+  "calculate_replacement_gap",
   "get_canonical_bands", "get_primary_access_band",
   "pfd_prevalence", "rurality_from_ruca", "safe_divide", "safe_percent",
   "urps_count", "urps_counts_long", "urps_entry_counts", "urps_lineage",
