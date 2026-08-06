@@ -104,3 +104,30 @@ assert_access_outcomes_labeled <- function(x, require_calibrated = FALSE) {
   }
   invisible(x)
 }
+
+#' National access outcomes as a year-by-year time series
+#'
+#' Applies [access_outcomes_national()] to each year of a multi-year clearing
+#' table (from [clear_access_trajectory()]) and stacks the results, so the A1-A5
+#' outcomes can be read as trajectories (e.g. a wait time that climbs as a
+#' shortfall compounds under backlog).
+#'
+#' @param cleared A tibble from [clear_access_trajectory()] (needs a `year`
+#'   column plus the [clear_access()] outputs).
+#' @return The [access_outcomes_national()] tibble per year, stacked, with a
+#'   leading `year` column.
+#' @export
+access_outcomes_trajectory <- function(cleared) {
+  if (!is.data.frame(cleared) || !"year" %in% names(cleared)) {
+    stop("access_outcomes_trajectory(): `cleared` needs a `year` column ",
+         "(from clear_access_trajectory()).", call. = FALSE)
+  }
+  years <- sort(unique(cleared$year))
+  parts <- lapply(years, function(y) {
+    nat <- access_outcomes_national(cleared[cleared$year == y, , drop = FALSE])
+    nat$year <- y
+    nat
+  })
+  res <- dplyr::bind_rows(parts)
+  res[, c("year", setdiff(names(res), "year")), drop = FALSE]
+}
