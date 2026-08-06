@@ -16,3 +16,4 @@
 ^data-raw$
 ^CONTRIBUTING\.md$
 ^Makefile$
+^\.githooks$
