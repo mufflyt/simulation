@@ -77,14 +77,17 @@ urps_provider_roster <- function(roster = load_urps_roster(), unknown_sex = "fem
   }
 
   out <- tibble::tibble(
-    provider_id = as.character(roster$npi),
-    pathway = "FPMRS",
-    age = as.numeric(roster$age_proxy_from_cert),
-    sex = sex,
-    state = as.character(roster$state),
-    certification_year = as.numeric(roster$cert_year),
-    last_confirmed_active_year = ifelse(
-      roster$has_medicare_2024 %in% c(TRUE, "TRUE", "True"), 2024L, NA_integer_)
+      provider_id = as.character(roster$npi),
+      pathway = "FPMRS",
+      age = as.numeric(roster$age_proxy_from_cert),
+      sex = sex,
+      state = as.character(roster$state),
+      certification_year = as.numeric(roster$cert_year),
+    last_confirmed_active_year = if ("last_confirmed_active_year" %in% names(roster)) {
+      as.integer(roster$last_confirmed_active_year)
+    } else {
+      ifelse(roster$has_medicare_2024 %in% c(TRUE, "TRUE", "True"), 2024L, NA_integer_)
+    }
   )
   validate_provider_roster(out)
   out
