@@ -24,6 +24,8 @@ Medicare/Medicaid participation); tier
 }
 \details{
 The "departure" retirement rows are the SSOT for \code{RETIREMENT_HAZARD_PHYSICIAN}
-(R/16): \code{\link[=.career_retirement_schedule]{.career_retirement_schedule()}} reconstructs that constant from them
-byte-identically (regression-guarded).
+(R/16): \code{.career_retirement_schedule()} reconstructs that constant from them
+byte-identically (regression-guarded). Written as code rather than a link
+because it is an unexported internal with no Rd topic to point at, and
+\verb{R CMD check} fails an unresolvable cross-reference as a WARNING.
 }
