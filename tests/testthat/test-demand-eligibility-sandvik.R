@@ -34,8 +34,8 @@ test_that("eligibility params are neutral by default", {
 })
 
 test_that("neutral eligibility leaves treated demand byte-identical", {
-  pop <- .demo_pop(); path <- lifecourse_pathway_params()
-  new <- .lifecourse_treated(pop, path, access_gain = 1)   # neutral severity + eligibility
+  pop <- .demo_pop(); path <- urpssim:::lifecourse_pathway_params()
+  new <- urpssim:::.lifecourse_treated(pop, path, access_gain = 1)   # neutral severity + eligibility
   old <- .flat_treated(pop, path, access_gain = 1)
   expect_identical(new$treated_ui,  old$treated_ui)
   expect_identical(new$treated_pop, old$treated_pop)
@@ -43,10 +43,10 @@ test_that("neutral eligibility leaves treated demand byte-identical", {
 })
 
 test_that("an eligibility gate scales treated demand, per condition", {
-  pop <- .demo_pop(); path <- lifecourse_pathway_params()
-  base <- .lifecourse_treated(pop, path, access_gain = 1)
+  pop <- .demo_pop(); path <- urpssim:::lifecourse_pathway_params()
+  base <- urpssim:::.lifecourse_treated(pop, path, access_gain = 1)
   el <- lifecourse_eligibility_params(); el$p_eligible["ui"] <- 0.5
-  gated <- .lifecourse_treated(pop, path, access_gain = 1, eligibility = el)
+  gated <- urpssim:::.lifecourse_treated(pop, path, access_gain = 1, eligibility = el)
   expect_equal(gated$treated_ui, base$treated_ui * 0.5, tolerance = 1e-12)
   expect_identical(gated$treated_pop, base$treated_pop)   # UI-only gate
   expect_identical(gated$treated_ai,  base$treated_ai)

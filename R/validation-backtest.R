@@ -49,6 +49,10 @@
 # entrant model, which is the part the observed series can genuinely test.
 
 BACKTEST_CUTOFF_YEAR <- 2020L
+#' Target year the back-test scores against
+#'
+#' Default `target_year` for [validate_backtest_target()] and [run_backtest()].
+#' @export
 BACKTEST_TARGET_YEAR <- 2023L
 
 # ---- Leakage control -------------------------------------------------------

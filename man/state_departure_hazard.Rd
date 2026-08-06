@@ -11,13 +11,13 @@ state_departure_hazard(age, sex = "female", ...)
 
 \item{sex}{Character sex.}
 
-\item{...}{Passed to \code{\link[=departure_hazard]{departure_hazard}()}.}
+\item{...}{Passed to \code{\link[=departure_hazard]{departure_hazard()}}.}
 }
 \value{
 Numeric hazard(s).
 }
 \description{
-Reconstructs \code{\link[=departure_hazard]{departure_hazard}()} (R/16) exactly, organised under the state
+Reconstructs \code{\link[=departure_hazard]{departure_hazard()}} (R/16) exactly, organised under the state
 machine. It exists so the transition matrix and the engine read the SAME
 hazard; it is guarded to remain identical to \code{departure_hazard()}.
 }

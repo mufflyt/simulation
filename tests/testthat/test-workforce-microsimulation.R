@@ -41,7 +41,7 @@ test_that("age banding matches cliff WC_BANDS", {
 
 test_that("hazard table scales the reference gradient to a subspecialty rate", {
   fpmrs <- build_hazard_table(0.044)
-  expect_equal(unname(fpmrs), unname(MICROSIM_REFERENCE_HAZARD))
+  expect_equal(unname(fpmrs), unname(urpssim:::MICROSIM_REFERENCE_HAZARD))
   go <- build_hazard_table(0.052)  # higher overall rate -> uniformly higher hazards
   expect_true(all(go >= fpmrs))
   expect_true(all(build_hazard_table(0.034) <= fpmrs))  # MIGS lower
@@ -183,12 +183,12 @@ test_that("access categories are a zero class plus QUARTILES of positive access"
 })
 
 test_that("migration hazard is highest early-career and lowest late-career", {
-  expect_equal(migration_hazard(2, 40), unname(PROVIDER_MIGRATION_HAZARD[["early_career"]]))
-  expect_equal(migration_hazard(20, 45), unname(PROVIDER_MIGRATION_HAZARD[["mid_career"]]))
-  expect_equal(migration_hazard(20, 65), unname(PROVIDER_MIGRATION_HAZARD[["late_career"]]))
+  expect_equal(migration_hazard(2, 40), unname(urpssim:::PROVIDER_MIGRATION_HAZARD[["early_career"]]))
+  expect_equal(migration_hazard(20, 45), unname(urpssim:::PROVIDER_MIGRATION_HAZARD[["mid_career"]]))
+  expect_equal(migration_hazard(20, 65), unname(urpssim:::PROVIDER_MIGRATION_HAZARD[["late_career"]]))
   # Vectorised, and age must be honoured element-wise.
   h <- migration_hazard(c(1, 20, 20), c(35, 45, 65))
-  expect_equal(h, unname(PROVIDER_MIGRATION_HAZARD[c("early_career", "mid_career",
+  expect_equal(h, unname(urpssim:::PROVIDER_MIGRATION_HAZARD[c("early_career", "mid_career",
                                                      "late_career")]))
 })
 

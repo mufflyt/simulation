@@ -48,8 +48,8 @@ test_that("the corroboration carries the limits that stop it being adopted", {
 test_that("the delegation matrix is still declared an assumption", {
   # If this ever flips to "calibrated", it must be because a survey or an
   # NPPES-linked claims extract was fielded -- not because this module exists.
-  expect_equal(URPS_DELEGATION_STATUS, "derived_by_analogy")
-  expect_match(URPS_DELEGATION_SOURCE, "NOT a urogynaecology survey")
+  expect_equal(urpssim:::URPS_DELEGATION_STATUS, "derived_by_analogy")
+  expect_match(urpssim:::URPS_DELEGATION_SOURCE, "NOT a urogynaecology survey")
 })
 
 de_volumes <- function() {
@@ -99,7 +99,7 @@ test_that("the real artifact corroborates the borrowed ordering", {
   skip_if_not(length(list.files(file.path(root[1], "artifacts"),
                                 pattern = "^medicare_realized_care_.*\\.rds$")) > 0)
   c1 <- medicare_delegation_corroboration(
-    .load_realized_medicare(file.path(root[1], "artifacts")))
+    urpssim:::.load_realized_medicare(file.path(root[1], "artifacts")))
   # The Forte SHAPE transfers -- care-management services are the most delegated
   # in both -- while the LEVEL does not, which is the same shape-not-level split
   # rescale_delegation_to_capacity() found for the subspecialist column.

@@ -26,14 +26,14 @@ test_that("gaussian band weights are normalised to the 30-min band and decreasin
 })
 
 test_that("drop180 zeroes the 180-min band; sharper decays faster than slower", {
-  expect_equal(unname(E2SFCA_WEIGHT_PRESETS$drop180[["180"]]), 0)
-  expect_lt(E2SFCA_WEIGHT_PRESETS$sharper[["120"]], E2SFCA_WEIGHT_PRESETS$slower[["120"]])
+  expect_equal(unname(urpssim:::E2SFCA_WEIGHT_PRESETS$drop180[["180"]]), 0)
+  expect_lt(urpssim:::E2SFCA_WEIGHT_PRESETS$sharper[["120"]], urpssim:::E2SFCA_WEIGHT_PRESETS$slower[["120"]])
 })
 
 test_that("compute_access_preset dispatches and rejects unknown presets", {
   io <- .mk_access_inputs()
   base <- compute_access_preset(io$membership, io$supply, io$demand, preset = "base")
-  expect_equal(base$meta$band_weights, E2SFCA_WEIGHT_PRESETS$base[names(base$meta$band_weights)])
+  expect_equal(base$meta$band_weights, urpssim:::E2SFCA_WEIGHT_PRESETS$base[names(base$meta$band_weights)])
   expect_error(compute_access_preset(io$membership, io$supply, io$demand, preset = "nope"),
                "Unknown weight preset")
 })

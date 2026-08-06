@@ -1,7 +1,7 @@
 # Guards for the demand-transition registry (R/demand-transition_registry) and its publication gate.
 #
-# The registry is ADDITIVE and output-preserving: lifecourse_risk_params(),
-# lifecourse_risk_params_cited() and lifecourse_pathway_params() must return
+# The registry is ADDITIVE and output-preserving: urpssim:::lifecourse_risk_params(),
+# lifecourse_risk_params_cited() and urpssim:::lifecourse_pathway_params() must return
 # structures byte-identical to the pre-registry hardcoded lists. The gate
 # assert_publishable_demand_coefficients() must apply the canonical calibration contract.
 
@@ -30,7 +30,7 @@
 }
 
 test_that("registry reconstructs the risk params byte-identically", {
-  expect_identical(lifecourse_risk_params(), .expected_risk())
+  expect_identical(urpssim:::lifecourse_risk_params(), .expected_risk())
 })
 
 test_that("registry reconstructs the cited risk params byte-identically", {
@@ -38,11 +38,11 @@ test_that("registry reconstructs the cited risk params byte-identically", {
 })
 
 test_that("registry reconstructs the pathway params byte-identically", {
-  expect_identical(lifecourse_pathway_params(), .expected_pathway())
+  expect_identical(urpssim:::lifecourse_pathway_params(), .expected_pathway())
 })
 
 test_that("the bespoke status strings survive (meta$status keys off them)", {
-  expect_identical(lifecourse_risk_params()$status, "placeholder_uncalibrated")
+  expect_identical(urpssim:::lifecourse_risk_params()$status, "placeholder_uncalibrated")
   expect_identical(lifecourse_risk_params_cited()$status, "obstetric_literature_anchored")
 })
 
@@ -50,7 +50,7 @@ test_that("the registry is well-formed and uses only canonical tiers", {
   reg <- demand_transition_registry()
   expect_true(all(c("stage", "condition", "param", "variant", "value",
                     "ci_low", "ci_high", "calibration_tier", "source", "notes") %in% names(reg)))
-  expect_true(all(reg$calibration_tier %in% CALIBRATION_TIERS))
+  expect_true(all(reg$calibration_tier %in% urpssim:::CALIBRATION_TIERS))
   # Every transition coefficient in the loaded life-course path is represented.
   expect_setequal(unique(reg$stage[reg$variant == "default"]),
                   c("disease_state", "symptom_severity", "care_seeking", "referral",

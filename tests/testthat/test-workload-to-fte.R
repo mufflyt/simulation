@@ -29,7 +29,7 @@ test_that("APP substitution is modelled by service, not as a blanket ratio", {
   expect_gt(app_routine, 0.30)
   expect_gt(app_routine / app_surgery, 10)
   # The shares are transferred from another specialty and must say so.
-  expect_equal(URPS_DELEGATION_STATUS, "derived_by_analogy")
+  expect_equal(urpssim:::URPS_DELEGATION_STATUS, "derived_by_analogy")
   expect_true("forte_analogue" %in% names(m))
 })
 
@@ -80,7 +80,7 @@ test_that("indirect clinical time is not silently free", {
   without <- convert_workload_to_fte(vol, wrvu_per_fte = 100, indirect_share = 0)
   expect_gt(with_indirect$required_fte, without$required_fte)
   expect_equal(with_indirect$required_fte / without$required_fte,
-               1 / (1 - INDIRECT_TIME_SHARE), tolerance = 1e-8)
+               1 / (1 - urpssim:::INDIRECT_TIME_SHARE), tolerance = 1e-8)
 })
 
 test_that("the staffing-ratio method is available as a second conversion route", {
@@ -92,7 +92,7 @@ test_that("the staffing-ratio method is available as a second conversion route",
   share <- URPS_DELEGATION_MATRIX$urps_share[
     URPS_DELEGATION_MATRIX$service == "new_consultation"]
   expect_equal(res$required_fte,
-               10000 * share / 2860 / (1 - INDIRECT_TIME_SHARE), tolerance = 1e-8)
+               10000 * share / 2860 / (1 - urpssim:::INDIRECT_TIME_SHARE), tolerance = 1e-8)
 })
 
 test_that("setting allocation follows a survey time share summing to one", {
@@ -149,10 +149,10 @@ test_that("the workload basket is calibrated to CMS work RVUs", {
 
 test_that("CPT mix weights sum to one and reference known codes", {
   expect_silent(validate_cpt_basket())
-  bad <- URPS_CPT_BASKET
+  bad <- urpssim:::URPS_CPT_BASKET
   bad$mix[bad$service == "new_consultation"][1] <- 0.9
   expect_error(validate_cpt_basket(bad), "sum to 1")
-  unknown <- rbind(URPS_CPT_BASKET,
+  unknown <- rbind(urpssim:::URPS_CPT_BASKET,
                    data.frame(service = "x", hcpcs = "00000", mix = 1))
   expect_error(validate_cpt_basket(unknown), "absent from CMS_WORK_RVU|sum to 1")
 })
@@ -171,7 +171,7 @@ test_that("the shipped work RVUs match published CMS values", {
 
 test_that("calibration status is reported for every model input", {
   r <- calibration_status_report()
-  expect_true(all(r$status %in% CALIBRATION_TIERS))
+  expect_true(all(r$status %in% urpssim:::CALIBRATION_TIERS))
   expect_true(all(nzchar(r$source)))
   expect_equal(r$status[r$input == "work RVUs"], "calibrated")
   expect_equal(r$status[r$input == "hours intercept"], "solved")
@@ -202,7 +202,7 @@ test_that("the model's own solved productivity is plausible", {
 })
 
 test_that("the capacity correction fixes the level and keeps Forte's shape", {
-  raw <- URPS_DELEGATION_FORTE_RAW
+  raw <- urpssim:::URPS_DELEGATION_FORTE_RAW
   adj <- URPS_DELEGATION_MATRIX
   billable <- raw$service != "indirect_clinical_work"
 

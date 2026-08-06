@@ -41,7 +41,7 @@ test_that("the required-export list matches what the package actually calls", {
   })))
   # A frozen list that drifts from the real call sites is worse than none: it
   # would certify a build as usable while the package calls something it lacks.
-  expect_setequal(called, MUFFLYACCESS_REQUIRED_EXPORTS)
+  expect_setequal(called, urpssim:::MUFFLYACCESS_REQUIRED_EXPORTS)
 })
 
 test_that("the installed build is identified by commit, not by version alone", {

@@ -211,6 +211,7 @@ HDMM_DEMAND_CONTRACT_VERSION <- "0.1.0"
 #' @param verbose Log progress. Default TRUE.
 #' @return (invisibly) a list with `csv_path`, `manifest_path`, and the tidy `data`.
 #' @keywords internal
+#' @export
 export_hdmm_demand_contract <- function(trajectory,
                                         output_directory,
                                         model_version = HDMM_DEMAND_CONTRACT_VERSION,
@@ -372,6 +373,7 @@ DMDM_CONTRACT_TIERS <- c("tier3_prevalent_pfd", "dmdm_ui", "dmdm_pop", "dmdm_ai"
 #' @param verbose Log progress. Default TRUE.
 #' @return (invisibly) a list with `csv_path`, `manifest_path`, and the tidy `data`.
 #' @keywords internal
+#' @export
 export_dmdm_demand_contract <- function(trajectory,
                                         output_directory,
                                         model_version = DMDM_DEMAND_CONTRACT_VERSION,

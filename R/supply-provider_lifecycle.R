@@ -135,6 +135,12 @@ RETIREMENT_HAZARD_ALLIED <- c(
 )
 
 # Default for this repo: URPS providers are physicians.
+#' Default single-year retirement hazard schedule
+#'
+#' The default `retirement_schedule` for [simulate_provider_career_once()],
+#' [run_supply_microsimulation()] and five other exported functions. A user who
+#' cannot name it cannot state what baseline their scenario deviates from.
+#' @export
 RETIREMENT_HAZARD_BY_AGE <- RETIREMENT_HAZARD_PHYSICIAN
 
 # Female physicians retire slightly earlier than male colleagues (HWSM Exhibit

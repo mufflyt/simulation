@@ -91,7 +91,7 @@ test_that("the establishment ramp is excluded from growth estimation", {
   # whole series returns ~4.9%/yr by averaging a one-off ramp with a plateau.
   full <- nrmp_growth_rates(from = 2010L)
   plateau <- nrmp_growth_rates()
-  expect_equal(plateau$estimated_from, NRMP_PLATEAU_FROM)
+  expect_equal(plateau$estimated_from, urpssim:::NRMP_PLATEAU_FROM)
   expect_gt(full$offered, plateau$offered)
   expect_lt(plateau$offered, 0.03)
   expect_error(nrmp_growth_rates(from = 2030L), "fewer than two observations")
