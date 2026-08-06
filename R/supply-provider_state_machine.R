@@ -102,8 +102,10 @@ career_state_of <- function(age, entered = TRUE, retired = FALSE) {
 #'                     "uncalibrated_illustrative", value at the neutral identity.
 #'
 #' The "departure" retirement rows are the SSOT for `RETIREMENT_HAZARD_PHYSICIAN`
-#' (R/16): [.career_retirement_schedule()] reconstructs that constant from them
-#' byte-identically (regression-guarded).
+#' (R/16): `.career_retirement_schedule()` reconstructs that constant from them
+#' byte-identically (regression-guarded). Written as code rather than a link
+#' because it is an unexported internal with no Rd topic to point at, and
+#' `R CMD check` fails an unresolvable cross-reference as a WARNING.
 #'
 #' @return A tibble with `from_state`, `to_state`, `trigger`, `param`, `value`,
 #'   `age_lo`, `age_hi`, `ci_low`, `ci_high`, `calibration_tier`, `source`,
