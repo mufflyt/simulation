@@ -39,6 +39,30 @@ that interval has to be judged by a proper scoring rule (width *and* miss), not 
 coverage alone. Microsimulation is strongest when it communicates uncertainty, not
 a single number.
 
+**What has been validated?** Two different things, and it matters not to conflate
+them. The *software* is fully validated: R CMD check passes clean and the test
+suite (2,000+ assertions) runs on every commit. The *scientific forecast* is not
+yet validated, and the package says so out loud. The 2020→2023 backtest found the
+prediction intervals were not calibrated, and traced most of the miss to a
+definition error (attrition on a cumulative count) and the rest to an entrant-rate
+acceleration that was only visible after the fact
+([`docs/RESULTS_INTERVAL_CALIBRATION.md`](docs/RESULTS_INTERVAL_CALIBRATION.md)).
+What *is* validated on the forecasting side is the machinery to test it honestly
+going forward: a leakage-free geographic hold-out, and a preregistered
+(frozen + hashed) rolling-origin protocol that refuses to score a spec altered
+after the targets were seen. Uncalibrated coefficients are labelled and refuse to
+be reported as results.
+
+**What publications support it?** The architecture follows the IHS Markit / Dall
+**Health Workforce Microsimulation Model** and its applications (Zarek et al.
+2025); the disease and obstetric-exposure inputs are drawn from the pelvic-floor
+literature (Nygaard, Wu, Gyhagen, the Women's Health Initiative, SWAN — cited per
+coefficient in `inst/extdata/` and `docs/DEMAND_METHODS.md`); forecast evaluation
+uses the interval score (Gneiting & Raftery 2007) and the weighted interval score
+(Bracher et al. 2021). The urogynecology model itself is **manuscript in
+preparation** — not yet peer-reviewed — which is exactly why the validation
+scaffolding above is being built before any headline claim is made.
+
 *Deeper reading:* methods in [`docs/DEMAND_METHODS.md`](docs/DEMAND_METHODS.md),
 the module map below, and the validation record in
 [`docs/BACKTEST_2020_TO_2023.md`](docs/BACKTEST_2020_TO_2023.md).
