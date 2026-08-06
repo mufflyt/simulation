@@ -33,3 +33,4 @@ List with \code{model}, \code{rate_table}, \code{estimand} (tibble).
 One-call wrapper that loads NAMCS, flags URPS visits, computes visit rates,
 fits the log-linear model, and applies it to a population projection.
 }
+\keyword{internal}

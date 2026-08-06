@@ -15,3 +15,4 @@ The weights sorted by ascending band.
 \description{
 Validate and order cumulative band weights
 }
+\keyword{internal}

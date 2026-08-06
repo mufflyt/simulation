@@ -137,7 +137,7 @@ CARE_SEEKING_BY_INCOME <- c(
 #' @param verbose Logical.
 #' @return Invisibly a named list with `income` and `insurance` multiplier
 #'   vectors.  Prints a message with the values for confirmation.
-#' @export
+#' @keywords internal
 load_meps_care_seeking_multipliers <- function(year    = 2022L,
                                                meps_dir = NULL,
                                                verbose  = TRUE) {
@@ -684,7 +684,7 @@ summarise_stratum_coverage <- function(cells) {
 #'   barrier flag when insurance == "Uninsured" OR income_tier == "LT25k".
 #'   `"uninsured_only"` uses insurance alone.
 #' @return Named numeric scalar `barrier_prevalence`.
-#' @export
+#' @keywords internal
 brfss_barrier_prevalence <- function(cells,
                                      definition = c("uninsured_or_low_income",
                                                     "uninsured_only")) {
@@ -806,7 +806,7 @@ brfss_pfd_prevalence_for_demand_bands <- function(cells,
 #' @return Tibble with columns: `age_group`, `medicare_adv`, `private_medigap`,
 #'   `ui_loss`, `ui_talked_dr`, `ui_had_surgery`, `had_stroke`, `had_cancer`,
 #'   `had_depression`, `had_osteoporosis`, `income_cat`, `survey_wt`.
-#' @export
+#' @keywords internal
 load_mcbs_women65 <- function(mcbs_rds = NULL, verbose = TRUE) {
   if (is.null(mcbs_rds)) {
     pkg_root <- system.file(package = "urpssim")

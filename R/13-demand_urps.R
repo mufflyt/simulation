@@ -74,17 +74,44 @@ CONSULT_RATE_BY_AGE <- c(
   "80+"   = 0.031
 )
 
-# D3: age-specific SUI+POP surgery rate per 1,000 women (Wu 2011, four bands).
-# The published 60-79 rate of 6.3 is applied to BOTH 60-64 and 65-79. Note the
-# DIFFERENT shape from prevalence: surgery peaks at 60-79 and halves at 80+,
-# while prevalence keeps rising. That difference is what makes the three
+# D3: age-specific SUI+POP surgery rate per 1,000 women/yr (Wu 2011, IP+OP),
+# published in four bands; the 60-79 rate is applied to BOTH 60-64 and 65-79.
+# Note the DIFFERENT shape from prevalence: surgery peaks at 60-79 and halves at
+# 80+, while prevalence keeps rising. That difference is what makes the three
 # estimands informative rather than redundant.
-WU2011_SURGERY_RATE_PER_1000 <- c(
-  "20-39" = 1.5,
-  "40-59" = 4.6,
-  "60-64" = 6.3,
-  "65-79" = 6.3,
-  "80+"   = 3.2
+#
+# CORRECTED 2026-08-05. These were previously carried as rounded whole-band
+# totals (1.5 / 4.6 / 6.3 / 3.2) with no component split and no derivation
+# recorded. They overstated Wu 2011 by ~16%. The values below are the paper's
+# own SUI and POP rates, which reproduce its published counts:
+#
+#   Applied to 2022 NPP-mid US female population by band, against Wu's
+#   376,700 (2010) -> 555,020 (2050) series interpolated to 2022:
+#
+#                       computed     Wu 2011      error
+#     SUI               240,569      240,505      +0.0%
+#     POP               193,022      189,991      +1.6%
+#     TOTAL             433,591      430,196      +0.8%
+#     (previous rates)  500,812      430,196     +16.4%
+#
+# A +0.0% match on SUI is not a coincidence; the old numbers were not a
+# transcription of this source. Re-derive with scripts/validate_wu2011_rates.R
+# before changing them again.
+#
+# Components are kept separately because SUI and POP are DIFFERENT pathways --
+# R/51's condition cascade models them as such, and a summed rate cannot feed
+# it. The summed vector below is derived from the components, never typed, so
+# the two can never disagree.
+WU2011_SURGERY_RATE_COMPONENTS <- data.frame(
+  age_band = c("20-39", "40-59", "60-64", "65-79", "80+"),
+  sui      = c(0.473,   2.390,   3.094,   3.094,   1.684),
+  pop      = c(0.500,   1.645,   2.719,   2.719,   1.069),
+  stringsAsFactors = FALSE
+)
+
+WU2011_SURGERY_RATE_PER_1000 <- stats::setNames(
+  WU2011_SURGERY_RATE_COMPONENTS$sui + WU2011_SURGERY_RATE_COMPONENTS$pop,
+  WU2011_SURGERY_RATE_COMPONENTS$age_band
 )
 
 #' PFD prevalence by demand age band
@@ -378,21 +405,67 @@ compute_demand_denominators_crude <- function(population_65plus,
 
 #' Age-specific surgical demand (Wu 2011)
 #'
-#' Port of cliff::apply_age_specific_surgery_demand. Applies the four-band
-#' Wu 2011 surgery rates to an age-banded female population, yielding an
-#' age-resolved D3 that does not assume a single crude rate.
+#' Applies the Wu 2011 surgery rates to an age-banded female population, yielding
+#' an age-resolved D3 that does not assume a single crude rate. This is now the
+#' single implementation: cliff carried a second copy that was never wired
+#' ("wire this once that population table exists"), and its rate table -- not
+#' this one -- turned out to be the faithful transcription of the source. See
+#' [WU2011_SURGERY_RATE_COMPONENTS] and `scripts/validate_wu2011_rates.R`.
+#'
+#' Set `by_condition = TRUE` to get SUI and POP as separate columns rather than a
+#' single total. They are different clinical pathways with different age curves
+#' (Wu 2014: SUI is bimodal, POP rises monotonically to ~71-73), and R/51's
+#' condition cascade models them separately, so a summed rate cannot feed it.
 #'
 #' @param pop_by_band Tibble with `year`, `age_band` (matching the names of
-#'   `rates`), and `female_pop`.
-#' @param rates Named per-1,000 surgery rates by age band.
-#' @return Tibble `year`, `surgical_cases` (summed over bands).
+#'   `rates`), and `female_pop`. Unrecognised bands are an ERROR, not a silent
+#'   drop -- see the note in the body.
+#' @param rates Named per-1,000 surgery rates by age band. Ignored when
+#'   `by_condition = TRUE`, which reads `components` instead.
+#' @param by_condition Return `sui_cases` and `pop_cases` separately instead of a
+#'   combined `surgical_cases`.
+#' @param components Component rate table used when `by_condition = TRUE`;
+#'   defaults to [WU2011_SURGERY_RATE_COMPONENTS].
+#' @return Tibble of `year` plus either `surgical_cases`, or `sui_cases` and
+#'   `pop_cases` when `by_condition = TRUE`.
 #' @export
 apply_age_specific_surgery_demand <- function(pop_by_band,
-                                              rates = WU2011_SURGERY_RATE_PER_1000) {
+                                              rates = WU2011_SURGERY_RATE_PER_1000,
+                                              by_condition = FALSE,
+                                              components = WU2011_SURGERY_RATE_COMPONENTS) {
   assertthat::assert_that(all(c("year", "age_band", "female_pop") %in% names(pop_by_band)))
+  if (isTRUE(by_condition)) rates <- stats::setNames(components$sui + components$pop,
+                                                     components$age_band)
+
+  # Fail on bands the rate table does not know. This used to be
+  # `filter(!is.na(rate))`, which DROPPED them -- so a label that did not match
+  # silently removed that population from the total and understated demand with
+  # no warning. It is reachable by ordinary means: cliff labels the top band
+  # "80plus" where this table says "80+", and feeding one to the other quietly
+  # lost 15% of the cases (21,900 -> 18,700 on a flat test population).
+  # Dropping population is never the right default for a demand total.
+  unknown <- setdiff(unique(pop_by_band$age_band), names(rates))
+  if (length(unknown)) {
+    stop("age_band value(s) not in the rate table: ",
+         paste(sQuote(unknown), collapse = ", "),
+         ".\n  Rate table covers: ", paste(names(rates), collapse = ", "),
+         ".\n  Dropping them would silently understate surgical demand, so this ",
+         "stops instead. Recode the bands, or pass a `rates` table that covers them.",
+         call. = FALSE)
+  }
+
+  if (isTRUE(by_condition)) {
+    return(pop_by_band %>%
+      dplyr::left_join(components, by = "age_band") %>%
+      dplyr::group_by(.data$year) %>%
+      dplyr::summarise(
+        sui_cases = sum(.data$female_pop * .data$sui / 1000),
+        pop_cases = sum(.data$female_pop * .data$pop / 1000),
+        .groups = "drop"))
+  }
+
   pop_by_band %>%
     dplyr::mutate(rate = unname(rates[.data$age_band])) %>%
-    dplyr::filter(!is.na(.data$rate)) %>%
     dplyr::group_by(.data$year) %>%
     dplyr::summarise(surgical_cases = sum(.data$female_pop * .data$rate / 1000), .groups = "drop")
 }
@@ -612,7 +685,7 @@ compute_brfss_demand_estimand <- function(pop_by_band,
 #' @param hours_per_provider_yearly Provider clinical hours per year.
 #' @param minutes_per_visit Average minutes per visit.
 #' @return Tibble with `year`, `required_fte`.
-#' @export
+#' @keywords internal
 calculate_visit_based_demand <- function(population_65plus,
                                          visits_per_woman_annually = 1.5,
                                          hours_per_provider_yearly = 36 * 48,

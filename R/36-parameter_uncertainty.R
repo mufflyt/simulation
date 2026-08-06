@@ -355,7 +355,7 @@ entrant_spec_from_series <- function(agents, from_year = 2018L,
 #' @param spec A [supply_parameter_spec()], or NULL.
 #' @param entrant_mean New point estimate.
 #' @return The spec with `entrant_mean` replaced; NULL passes through.
-#' @export
+#' @keywords internal
 recentre_entrant_spec <- function(spec, entrant_mean) {
   if (!inherits(spec, "urps_param_spec")) return(spec)
   if (!is.numeric(entrant_mean) || length(entrant_mean) != 1L ||

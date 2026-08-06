@@ -14,4 +14,4 @@ PATHWAY_STAGES
 Order is semantic, not alphabetical: each stage feeds the next, so the
 sequence determines how \code{p_advance} compounds.
 }
-\keyword{datasets}
+\keyword{internal}

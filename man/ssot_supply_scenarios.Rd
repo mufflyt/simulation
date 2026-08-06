@@ -30,3 +30,4 @@ which is more specific than a uniform hours multiplier and is honoured as
 such by \code{\link[=simulate_provider_career_once]{simulate_provider_career_once()}}.
 }
 }
+\keyword{internal}

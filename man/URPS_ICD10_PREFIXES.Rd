@@ -15,4 +15,4 @@ Covers stress, urgency, and mixed urinary incontinence; pelvic organ
 prolapse; unspecified incontinence; and vault prolapse after hysterectomy.
 N39.0 (UTI) is intentionally excluded; overactive bladder (N32.81) included.
 }
-\keyword{datasets}
+\keyword{internal}

@@ -52,7 +52,7 @@ MICROSIM_MODULES <- c(
 #'
 #' @param r_dir Directory holding the numbered R modules.
 #' @return (Invisibly) the sourced file paths.
-#' @export
+#' @keywords internal
 load_workforce_microsimulation <- function(r_dir = "R") {
   .msg_warn("load_workforce_microsimulation() is deprecated: use library(urpssim) ",
             "or pkgload::load_all() instead.")

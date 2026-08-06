@@ -17,3 +17,4 @@ Tibble: \code{service}, \code{work_rvu}, \code{n_codes}, \code{codes}.
 \description{
 Mix-weighted work RVU per unit of each modelled service
 }
+\keyword{internal}

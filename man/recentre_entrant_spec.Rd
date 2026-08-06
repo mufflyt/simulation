@@ -28,3 +28,4 @@ the model, did nothing at all. Re-centring per scenario keeps the scenario
 definition authoritative for the LEVEL and the observed series authoritative
 for the UNCERTAINTY.
 }
+\keyword{internal}

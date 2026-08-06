@@ -44,7 +44,7 @@
 #' sequence determines how `p_advance` compounds.
 #'
 #' @format Character vector.
-#' @export
+#' @keywords internal
 PATHWAY_STAGES <- c("conservative", "testing", "procedure", "followup", "recurrence")
 
 #' Condition-specific service pathway table

@@ -34,7 +34,7 @@
 #' Covers stress, urgency, and mixed urinary incontinence; pelvic organ
 #' prolapse; unspecified incontinence; and vault prolapse after hysterectomy.
 #' N39.0 (UTI) is intentionally excluded; overactive bladder (N32.81) included.
-#' @export
+#' @keywords internal
 URPS_ICD10_PREFIXES <- c(
   "N393",  # Stress urinary incontinence
   "N394",  # Other specified urinary incontinence (urgency, mixed, overflow)
@@ -324,7 +324,7 @@ fit_urps_visit_rate_model <- function(rate_table) {
 #' @param ci        If TRUE, return 95% prediction interval columns.
 #' @return `newdata` with `predicted_visits_per_1000` and, when `ci = TRUE`,
 #'   `predicted_lo` and `predicted_hi`.
-#' @export
+#' @keywords internal
 predict_urps_annual_visits <- function(model, newdata, ci = FALSE) {
   assertthat::assert_that(
     all(c("age_band", "race_eth", "insurance_2tier") %in% names(newdata))
@@ -416,7 +416,7 @@ compute_namcs_demand_estimand <- function(pop_projection,
 #' @param brfss_path Path to BRFSS 2023 women 18+ RDS file.
 #' @inheritParams compute_namcs_demand_estimand
 #' @return List with `model`, `rate_table`, `estimand` (tibble).
-#' @export
+#' @keywords internal
 build_d5_namcs_estimand <- function(pop_projection,
                                     namcs_path    = "data-raw/namcs/namcs2019_clean.rds",
                                     brfss_path    = "data-raw/brfss/brfss_2023_women18plus.rds",

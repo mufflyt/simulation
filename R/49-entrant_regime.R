@@ -64,7 +64,7 @@
 #' @param through_year Latest year the caller may see.
 #' @param geography Contract geography.
 #' @return Tibble of `year`, `count`, `abog`, `abu`.
-#' @export
+#' @keywords internal
 urps_entrant_series <- function(through_year = BACKTEST_CUTOFF_YEAR,
                                 geography = "national") {
   .require_mufflyaccess("The URPS entrant series")
@@ -618,7 +618,7 @@ entrant_regime_rolling_validation <- function(series,
 #' @param trend_family Passed to [fit_entrant_regime_model()].
 #' @param verbose Emit progress via [base::message()].
 #' @return List with `summary`, `model`, and `entrant_path`.
-#' @export
+#' @keywords internal
 run_entrant_regime_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
                                         target_year = BACKTEST_TARGET_YEAR,
                                         n_iterations = 1000L,

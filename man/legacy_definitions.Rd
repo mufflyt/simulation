@@ -15,3 +15,4 @@ Tibble of \code{file}, \code{fn}, \code{line}.
 \description{
 Inventory every function defined by the legacy scripts
 }
+\keyword{internal}

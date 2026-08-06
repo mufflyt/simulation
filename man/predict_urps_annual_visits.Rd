@@ -20,3 +20,4 @@ predict_urps_annual_visits(model, newdata, ci = FALSE)
 \description{
 Predict annual URPS visits per 1,000 persons for a covariate profile
 }
+\keyword{internal}

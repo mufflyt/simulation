@@ -4,14 +4,22 @@
 \alias{completed_parity_for_cohort}
 \title{Mean completed parity by birth cohort, interpolated across cited anchors}
 \usage{
-completed_parity_for_cohort(cohorts)
+completed_parity_for_cohort(cohorts, par = NULL)
 }
 \arguments{
 \item{cohorts}{Integer birth-cohort years.}
+
+\item{par}{Optional data frame with \code{birth_cohort} and
+\code{mean_completed_parity}, overriding the packaged anchor series. Present so
+the interpolation can be tested against a known series, and so a caller can
+substitute a revised one without editing the package.}
 }
 \value{
 Numeric mean completed parity (clamped outside the anchor range).
 }
 \description{
-Mean completed parity by birth cohort, interpolated across cited anchors
+Exported because cliff's life-course demand model needs it. It previously
+carried its own byte-identical copy of both this function and the anchor
+series (verified: sha256 193aefef...), which is two places for one number to
+drift. Re-exported rather than left internal so that duplicate can be deleted.
 }

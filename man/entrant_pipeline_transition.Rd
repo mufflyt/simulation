@@ -18,10 +18,10 @@ entrant_pipeline_transition(
 (NRMP fellowship matches per year).}
 
 \item{p_complete_cert}{Fraction of matched fellows who complete fellowship and
-achieve board certification. In [0, 1]. Default 0.95 (labeled assumption).}
+achieve board certification. In 0 to 1. Default 0.95 (labeled assumption).}
 
 \item{p_active_practice}{Fraction of newly certified who enter active US
-clinical practice. In [0, 1]. Default 0.90 (labeled assumption).}
+clinical practice. In 0 to 1. Default 0.90 (labeled assumption).}
 
 \item{cert_lag}{Years from match to certification. Non-negative integer.}
 
@@ -37,7 +37,6 @@ stage fractions and \code{calibration_status}. Years whose source match year is
 absent yield \code{NA} (leading edge of the lag).
 }
 \description{
-\code{active_entrants[y] = matched[y - cert_lag - active_lag] * p_complete_cert *
-p_active_practice}. Each stage is an explicit, labeled conversion; a fellowship
+\code{active_entrants[y] = matched[y - cert_lag - active_lag] * p_complete_cert * p_active_practice}. Each stage is an explicit, labeled conversion; a fellowship
 MATCH is not an active US clinical entrant.
 }

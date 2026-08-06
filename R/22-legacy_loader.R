@@ -40,7 +40,7 @@
 #' Later files win on collision, so the canonical implementation of a shared name
 #' must be sourced LAST. The validation family is therefore ordered
 #' unsorted-fragments -> dppm_validate_SWAN -> 03-dppm_validate_SWAN_better.
-#' @export
+#' @keywords internal
 LEGACY_LOAD_ORDER <- c(
   "99-unsorted-fragments.R",
   "dppm_validate_SWAN.R",
@@ -84,7 +84,7 @@ LEGACY_CANONICAL <- c(
 #' not-found.
 #'
 #' @return Path to `inst/legacy` in the source tree.
-#' @export
+#' @keywords internal
 legacy_dir <- function() {
   # system.file() is still tried first so an installation that deliberately
   # carries the directory (a vendored copy, an .Rbuildignore edit) keeps working.
@@ -106,7 +106,7 @@ legacy_dir <- function() {
 #'
 #' @param dir Directory holding the scripts.
 #' @return Tibble of `file`, `fn`, `line`.
-#' @export
+#' @keywords internal
 legacy_definitions <- function(dir = legacy_dir()) {
   files <- list.files(dir, pattern = "[.]R$", full.names = TRUE)
   out <- lapply(files, function(f) {

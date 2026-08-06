@@ -15,3 +15,4 @@ fingerprint_object(x)
 \description{
 SHA-256 fingerprint of an in-memory R object
 }
+\keyword{internal}

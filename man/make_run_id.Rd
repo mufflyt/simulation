@@ -24,3 +24,4 @@ Character run identifier.
 Deterministic in \code{strict} mode (derived from the seed + a supplied tag) so
 the same inputs produce the same \code{run_id}; time-stamped in \code{relaxed} mode.
 }
+\keyword{internal}

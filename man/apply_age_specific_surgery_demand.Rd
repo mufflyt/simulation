@@ -6,20 +6,40 @@
 \usage{
 apply_age_specific_surgery_demand(
   pop_by_band,
-  rates = WU2011_SURGERY_RATE_PER_1000
+  rates = WU2011_SURGERY_RATE_PER_1000,
+  by_condition = FALSE,
+  components = WU2011_SURGERY_RATE_COMPONENTS
 )
 }
 \arguments{
 \item{pop_by_band}{Tibble with \code{year}, \code{age_band} (matching the names of
-\code{rates}), and \code{female_pop}.}
+\code{rates}), and \code{female_pop}. Unrecognised bands are an ERROR, not a silent
+drop -- see the note in the body.}
 
-\item{rates}{Named per-1,000 surgery rates by age band.}
+\item{rates}{Named per-1,000 surgery rates by age band. Ignored when
+\code{by_condition = TRUE}, which reads \code{components} instead.}
+
+\item{by_condition}{Return \code{sui_cases} and \code{pop_cases} separately instead of a
+combined \code{surgical_cases}.}
+
+\item{components}{Component rate table used when \code{by_condition = TRUE};
+defaults to \link{WU2011_SURGERY_RATE_COMPONENTS}.}
 }
 \value{
-Tibble \code{year}, \code{surgical_cases} (summed over bands).
+Tibble of \code{year} plus either \code{surgical_cases}, or \code{sui_cases} and
+\code{pop_cases} when \code{by_condition = TRUE}.
 }
 \description{
-Port of cliff::apply_age_specific_surgery_demand. Applies the four-band
-Wu 2011 surgery rates to an age-banded female population, yielding an
-age-resolved D3 that does not assume a single crude rate.
+Applies the Wu 2011 surgery rates to an age-banded female population, yielding
+an age-resolved D3 that does not assume a single crude rate. This is now the
+single implementation: cliff carried a second copy that was never wired
+("wire this once that population table exists"), and its rate table -- not
+this one -- turned out to be the faithful transcription of the source. See
+\link{WU2011_SURGERY_RATE_COMPONENTS} and \code{scripts/validate_wu2011_rates.R}.
+}
+\details{
+Set \code{by_condition = TRUE} to get SUI and POP as separate columns rather than a
+single total. They are different clinical pathways with different age curves
+(Wu 2014: SUI is bimodal, POP rises monotonically to ~71-73), and R/51's
+condition cascade models them separately, so a summed rate cannot feed it.
 }
