@@ -31,17 +31,7 @@
 # carries the strongest vaginal-delivery and hysterectomy effects, reflecting
 # obstetric etiology rather than an obesity-first model. Internal (override by
 # passing your own list to simulate_lifecourse_demand()).
-lifecourse_risk_params <- function() {
-  mk <- function(b0, bvag, bage, bysl, bbmi, bhyst, bmeno, bcomorb)
-    list(b0 = b0, bvag = bvag, bage = bage, bysl = bysl,
-         bbmi = bbmi, bhyst = bhyst, bmeno = bmeno, bcomorb = bcomorb)
-  list(
-    status = "placeholder_uncalibrated",
-    ui  = mk(-1.60, 0.18, 0.35, 0.05, 0.12, 0.10, 0.25, 0.15),
-    pop = mk(-2.40, 0.42, 0.30, 0.08, 0.08, 0.45, 0.20, 0.05),
-    ai  = mk(-2.90, 0.22, 0.25, 0.04, 0.06, 0.05, 0.10, 0.20)
-  )
-}
+lifecourse_risk_params <- function() .demand_risk_params("default")
 
 #' Literature-anchored life-course risk coefficients (cited option)
 #'
@@ -60,26 +50,11 @@ lifecourse_risk_params <- function() {
 #' PROVISIONAL: full-text verification recommended before publication.
 #' @return A risk-params list in the shape of `lifecourse_risk_params()`.
 #' @export
-lifecourse_risk_params_cited <- function() {
-  base <- lifecourse_risk_params()
-  base$status   <- "obstetric_literature_anchored"
-  base$ui$bvag  <- 0.15; base$ui$bbmi  <- 0.26
-  base$pop$bvag <- 0.30; base$pop$bbmi <- 0.26
-  base$ai$bvag  <- 0.10
-  base
-}
+lifecourse_risk_params_cited <- function() .demand_risk_params("cited")
 
 # Care-pathway probabilities per condition (recognition -> seek -> referral ->
 # treated). Internal.
-lifecourse_pathway_params <- function() {
-  list(
-    status      = "placeholder_uncalibrated",
-    recognition = c(ui = 0.55, pop = 0.60, ai = 0.35),
-    p_seek      = c(ui = 0.45, pop = 0.50, ai = 0.30),
-    p_referral  = c(ui = 0.40, pop = 0.55, ai = 0.45),
-    p_treated   = c(ui = 0.70, pop = 0.65, ai = 0.60)
-  )
-}
+lifecourse_pathway_params <- function() .demand_pathway_params()
 
 # Expected annual service units per TREATED patient, by condition and service.
 # Service names must match the workload basket in R/23-cms_rvu.R so the volumes
