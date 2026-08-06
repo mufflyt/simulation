@@ -405,20 +405,51 @@ baseline_gap <- function(base_supply_fte, adequacy,
                          evidence = character(0),
                          access_components_counted = character(0),
                          calibration_status = NULL,
-                         source = NA_character_) {
+                         source = NA_character_,
+                         population = NA_character_,
+                         year = NA_integer_,
+                         source_specialty = NA_character_,
+                         externally_measured = NA,
+                         adequacy_ci = NULL) {
   method <- match.arg(method)
   calibration_status <- .resolve_baseline_gap_tier(calibration_status, method, evidence)
   required <- required_fte_base_year(base_supply_fte, adequacy)
+
+  # THE INTERVAL INVERTS. required = supply / adequacy, so the LOW adequacy bound
+  # gives the HIGH required-FTE bound. Carrying the adequacy CI through without
+  # the swap would report a shortfall interval pointing the wrong way.
+  req_ci <- shortfall_ci <- NULL
+  if (!is.null(adequacy_ci)) {
+    if (!is.numeric(adequacy_ci) || length(adequacy_ci) != 2L ||
+        !all(is.finite(adequacy_ci)) || any(adequacy_ci <= 0)) {
+      stop("baseline_gap: `adequacy_ci` must be two finite positive numbers.",
+           call. = FALSE)
+    }
+    a <- sort(adequacy_ci)
+    req_ci <- c(required_fte_base_year(base_supply_fte, a[2]),
+                required_fte_base_year(base_supply_fte, a[1]))
+    shortfall_ci <- req_ci - base_supply_fte
+  }
+
   structure(
     list(
       base_supply_fte = base_supply_fte,
       required_fte = required,
+      required_fte_ci = req_ci,
       shortfall_fte = required - base_supply_fte,
+      shortfall_fte_ci = shortfall_ci,
       shortfall_pct = 100 * (required - base_supply_fte) / required,
       adequacy = adequacy,
+      adequacy_ci = if (is.null(adequacy_ci)) NULL else sort(adequacy_ci),
       method = method,
       calibration_status = calibration_status,
       source = source,
+      # The provenance fields a headline number has to carry. NA is an honest
+      # answer and is reported as "undeclared"; it is not silently filled in.
+      population = population,
+      year = year,
+      source_specialty = source_specialty,
+      externally_measured = externally_measured,
       evidence = evidence,
       access_components_counted = access_components_counted
     ),
