@@ -6,6 +6,67 @@ States, built to the methodology documented in the IHS Markit / Dall **Health
 Workforce Microsimulation Model** (HWMM v5.19.20) and its published applications
 in physiatry, neurology and physical therapy.
 
+## Orientation (start here)
+
+**What question does this software answer?** Will the US supply of urogynecology /
+reconstructive pelvic surgery providers keep pace with demand for pelvic-floor-
+disorder care over the coming decades, and where will access fall short? It
+projects provider **FTE supply** and **care demand** in the *same FTE units* and
+reports the gap — with an uncertainty interval, by year and by geography.
+
+**What inputs are required?** Nothing external for a first run: the supply engine
+ships with bundled parameters, and `run_workforce_microsimulation_example.R`
+produces a full projection in ~2 minutes. *Calibrated* results additionally need a
+provider roster / certification counts (via the private `mufflyaccess` data
+package), NRMP entrant counts, retirement hazards, and independent demand anchors
+(HCUP, Medicare Part B, NAMCS/MEPS). Public input fixtures live in `inst/extdata/`;
+uncalibrated coefficients are labelled as such and refuse to be reported as results.
+
+**How is it different from a Markov model?** Partly it isn't — the disease side
+(the dynamic multistate model, `R/29`–`R/31`) *is* a multistate model. The
+difference is the **supply** side: it is agent-level, not compartmental. Each
+provider is an individual carrying age, certification cohort, and career history,
+so cohort effects, age-specific attrition, and late-career FTE decline are
+represented directly rather than averaged into aggregate transition rates a Markov
+chain cannot keep apart.
+
+**How does it differ from a deterministic projection?** A deterministic projection
+returns one line; this redraws the uncertain parameters and the provider cohort on
+every iteration and returns a **distribution**. The headline deliverable is an
+interval, not a point forecast — and, as our own validation shows
+([`docs/RESULTS_INTERVAL_CALIBRATION.md`](docs/RESULTS_INTERVAL_CALIBRATION.md)),
+that interval has to be judged by a proper scoring rule (width *and* miss), not by
+coverage alone. Microsimulation is strongest when it communicates uncertainty, not
+a single number.
+
+**What has been validated?** Two different things, and it matters not to conflate
+them. The *software* is fully validated: R CMD check passes clean and the test
+suite (2,000+ assertions) runs on every commit. The *scientific forecast* is not
+yet validated, and the package says so out loud. The 2020→2023 backtest found the
+prediction intervals were not calibrated, and traced most of the miss to a
+definition error (attrition on a cumulative count) and the rest to an entrant-rate
+acceleration that was only visible after the fact
+([`docs/RESULTS_INTERVAL_CALIBRATION.md`](docs/RESULTS_INTERVAL_CALIBRATION.md)).
+What *is* validated on the forecasting side is the machinery to test it honestly
+going forward: a leakage-free geographic hold-out, and a preregistered
+(frozen + hashed) rolling-origin protocol that refuses to score a spec altered
+after the targets were seen. Uncalibrated coefficients are labelled and refuse to
+be reported as results.
+
+**What publications support it?** The architecture follows the IHS Markit / Dall
+**Health Workforce Microsimulation Model** and its applications (Zarek et al.
+2025); the disease and obstetric-exposure inputs are drawn from the pelvic-floor
+literature (Nygaard, Wu, Gyhagen, the Women's Health Initiative, SWAN — cited per
+coefficient in `inst/extdata/` and `docs/DEMAND_METHODS.md`); forecast evaluation
+uses the interval score (Gneiting & Raftery 2007) and the weighted interval score
+(Bracher et al. 2021). The urogynecology model itself is **manuscript in
+preparation** — not yet peer-reviewed — which is exactly why the validation
+scaffolding above is being built before any headline claim is made.
+
+*Deeper reading:* methods in [`docs/DEMAND_METHODS.md`](docs/DEMAND_METHODS.md),
+the module map below, and the validation record in
+[`docs/BACKTEST_2020_TO_2023.md`](docs/BACKTEST_2020_TO_2023.md).
+
 ```r
 # install.packages("pak")
 pak::pak("mufflyt/simulation")
