@@ -27,3 +27,4 @@ function, with an optional scale shift for scenario levers.  Scenarios move
 preserving the stochastic spread — the correct HWMM parameterisation (see
 Exhibits 17–18 and every published Dall-family scenario table).
 }
+\keyword{internal}

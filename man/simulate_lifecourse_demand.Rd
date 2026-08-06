@@ -60,7 +60,7 @@ placeholders — override to calibrate.}
 \item{severity_params}{Symptom-severity distribution + severity-specific
 care-seeking multipliers (\code{\link[=lifecourse_severity_params]{lifecourse_severity_params()}}). Default is
 NEUTRAL (multipliers = 1), so demand is unchanged; supply non-unit
-multipliers to activate a severity -> care-seeking gradient.}
+multipliers to activate a severity → care-seeking gradient.}
 
 \item{eligibility_params}{Treatment-eligibility gate
 (\code{\link[=lifecourse_eligibility_params]{lifecourse_eligibility_params()}}). Default is NEUTRAL (\code{p_eligible = 1}),

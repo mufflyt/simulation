@@ -26,7 +26,7 @@ target.}
 
 \item{horizon}{Steps ahead to forecast. Default 1.}
 
-\item{fit_predict}{\code{function(train, target_time)} returning a prediction for
+\item{fit_predict}{\verb{function(train, target_time)} returning a prediction for
 the target time's row(s); must fit only on \code{train} and never see the target.}
 
 \item{prereg}{Optional preregistration record or path; when given, \code{spec} is

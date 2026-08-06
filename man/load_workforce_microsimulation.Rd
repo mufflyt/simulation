@@ -18,3 +18,4 @@ This repository is now an R package: use \code{library(urpssim)}, or
 bypasses the namespace and masks the package's own exports. Retained so older
 scripts keep working.
 }
+\keyword{internal}

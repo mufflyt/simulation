@@ -28,3 +28,4 @@ The two agree by construction on the combined total; the split matters
 because it is what identifies 2020 as an examination failure rather than a
 pipeline contraction.
 }
+\keyword{internal}

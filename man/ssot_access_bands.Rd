@@ -14,3 +14,4 @@ Sourced from \code{mufflyaccess::get_canonical_bands()} so the access layer cann
 diverge from \code{twostep} and \code{isochrones}. Falls back to the historical values,
 which are identical, when the contract is unavailable.
 }
+\keyword{internal}

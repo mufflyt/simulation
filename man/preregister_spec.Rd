@@ -12,7 +12,7 @@ hyperparameters, predictor set, and the evaluation protocol (origins,
 horizon, metric). Field order does not matter; values do.}
 
 \item{path}{File to write the record to (e.g. under
-\code{inst/extdata/preregistration/}).}
+\verb{inst/extdata/preregistration/}).}
 
 \item{frozen_at}{Freeze date/time as a string (required -- state when the spec
 was frozen relative to the data vintage). It is metadata and does NOT enter

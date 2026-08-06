@@ -15,3 +15,4 @@ Numeric band.
 \description{
 Primary access band
 }
+\keyword{internal}

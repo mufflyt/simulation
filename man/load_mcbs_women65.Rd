@@ -23,3 +23,4 @@ minimal tibble aligned to the URPS strata scheme so it can be used to
 calibrate the 65-74 and 75+ UI prevalence cells via
 \code{\link[=blend_mcbs_prevalence]{blend_mcbs_prevalence()}}.
 }
+\keyword{internal}

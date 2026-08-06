@@ -27,3 +27,4 @@ returns updated income and insurance care-seeking multiplier vectors.  Call
 this at the top of an analysis script to replace the package defaults
 (MEPS 2020 sourced) with the 2022 estimates without editing source code.
 }
+\keyword{internal}

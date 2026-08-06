@@ -94,7 +94,7 @@ seed_microsimulation <- function(seed = NULL, mode = resolve_reproducibility_mod
 #' @param seed Seed used for the run (see [seed_microsimulation()]).
 #' @param mode Reproducibility mode.
 #' @return Character run identifier.
-#' @export
+#' @keywords internal
 make_run_id <- function(tag = "microsim", seed = 20260801L,
                         mode = resolve_reproducibility_mode()) {
   if (mode == "strict") {
@@ -112,7 +112,7 @@ make_run_id <- function(tag = "microsim", seed = 20260801L,
 #'
 #' @param x Any R object.
 #' @return 64-character hex digest.
-#' @export
+#' @keywords internal
 fingerprint_object <- function(x) {
   digest::digest(x, algo = "sha256")
 }
@@ -126,7 +126,7 @@ fingerprint_object <- function(x) {
 #' @param paths Character vector of file paths.
 #' @return 64-character hex digest over the concatenated file contents, or NA if
 #'   no path exists.
-#' @export
+#' @keywords internal
 fingerprint_files <- function(paths) {
   existing <- paths[file.exists(paths)]
   if (length(existing) == 0) {

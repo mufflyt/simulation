@@ -19,3 +19,4 @@ The joined data frame.
 \description{
 Inner join with an explicit key-cardinality guard
 }
+\keyword{internal}

@@ -25,8 +25,7 @@ compare_forecasts(
 \item{cutoff}{Column naming the back-test origin/cutoff (required for rank
 stability; \code{NULL} skips it).}
 
-\item{observed, point, lower, upper, interval_level}{Passed to
-\code{\link[=forecast_scorecard]{forecast_scorecard()}}.}
+\item{observed, point, lower, upper, interval_level}{Passed to \code{\link[=forecast_scorecard]{forecast_scorecard()}}.}
 
 \item{benchmark}{Optional model id to score skill against (e.g. a naive/random-walk
 forecast). \code{NULL} skips skill.}

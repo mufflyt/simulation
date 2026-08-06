@@ -16,3 +16,4 @@ Numeric annual baseline retirement rate.
 Falls back to the reference rate for an unknown subspecialty (a named-vector
 \code{[[} on a missing name would otherwise error, defeating a \verb{\%||\%} guard).
 }
+\keyword{internal}

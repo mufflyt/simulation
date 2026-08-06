@@ -39,7 +39,7 @@
 
 #' Is the mufflyaccess contract available?
 #' @return Logical.
-#' @export
+#' @keywords internal
 has_mufflyaccess <- function() requireNamespace("mufflyaccess", quietly = TRUE)
 
 .require_mufflyaccess <- function(what) {
@@ -69,7 +69,7 @@ has_mufflyaccess <- function() requireNamespace("mufflyaccess", quietly = TRUE)
 #' @param baseline_entrants Annual entrants under the baseline scenario.
 #' @param ids Scenario ids to include; defaults to the whole registry.
 #' @return Named list of scenario definitions.
-#' @export
+#' @keywords internal
 ssot_supply_scenarios <- function(baseline_entrants = 55, ids = NULL) {
   .require_mufflyaccess("The URPS scenario registry")
   reg <- mufflyaccess::urps_scenarios()
@@ -97,7 +97,7 @@ ssot_supply_scenarios <- function(baseline_entrants = 55, ids = NULL) {
 
 #' Registry version in force
 #' @return Character version string.
-#' @export
+#' @keywords internal
 ssot_scenario_registry_version <- function() {
   if (!has_mufflyaccess()) return(NA_character_)
   mufflyaccess::URPS_SCENARIO_REGISTRY_VERSION
@@ -193,7 +193,7 @@ as_urps_projection <- function(supply,
 #'
 #' @param condition Condition passed through to the contract.
 #' @return Tibble of `age_band`, `prevalence`, `owner`.
-#' @export
+#' @keywords internal
 ssot_pfd_prevalence <- function(condition = "any_PFD") {
   .require_mufflyaccess("PFD prevalence")
   p <- mufflyaccess::pfd_prevalence(condition)
@@ -213,7 +213,7 @@ ssot_pfd_prevalence <- function(condition = "any_PFD") {
 #' which are identical, when the contract is unavailable.
 #'
 #' @return Integer vector of drive-time bands in minutes.
-#' @export
+#' @keywords internal
 ssot_access_bands <- function() {
   if (!has_mufflyaccess()) return(c(30L, 60L, 120L, 180L))
   as.integer(mufflyaccess::get_canonical_bands())
@@ -222,7 +222,7 @@ ssot_access_bands <- function() {
 #' Primary access band
 #' @param units "min" or "sec".
 #' @return Numeric band.
-#' @export
+#' @keywords internal
 ssot_primary_access_band <- function(units = c("min", "sec")) {
   units <- match.arg(units)
   if (!has_mufflyaccess()) return(if (units == "min") 60 else 3600)
@@ -252,7 +252,7 @@ ssot_rurality <- function(code) {
 #'
 #' @param detailed Pass through to the contract.
 #' @return List of provenance fields, or NULL when unavailable.
-#' @export
+#' @keywords internal
 ssot_provenance <- function(detailed = FALSE) {
   if (!has_mufflyaccess()) return(NULL)
   p <- mufflyaccess::urps_provenance(detailed = detailed)

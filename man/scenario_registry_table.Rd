@@ -15,3 +15,4 @@ Tibble with one row per scenario.
 \description{
 Summarise a registry as a tibble for reporting
 }
+\keyword{internal}

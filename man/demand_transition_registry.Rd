@@ -13,7 +13,6 @@ A tibble with \code{stage}, \code{condition}, \code{param}, \code{variant}, \cod
 \description{
 Every coefficient/probability that drives a demand transition in the
 life-course pathway, with its calibration tier (from \code{CALIBRATION_TIERS}) and
-source. \code{variant = "default"} rows are the placeholder set; \code{variant = "cited"}
-rows are the literature-anchored overrides applied by
-\code{\link[=lifecourse_risk_params_cited]{lifecourse_risk_params_cited}()}.
+source. \code{variant = "default"} rows are the placeholder set; \code{variant = "cited"} rows are the literature-anchored overrides applied by
+\code{\link[=lifecourse_risk_params_cited]{lifecourse_risk_params_cited()}}.
 }

@@ -402,7 +402,7 @@ hwsm_reference_hours <- function(age, sex = "female", intercept = HWSM_HOURS_INT
 
 #' Calibration status of the reference hours schedule
 #' @return Character status string.
-#' @export
+#' @keywords internal
 reference_hours_status <- function() REFERENCE_HOURS_CALIBRATION_STATUS
 
 #' Fit weekly clinical hours on age and sex
@@ -651,7 +651,7 @@ calibrate_hours_intercept <- function(age, sex = "female",
 #' @param fte_hours Weekly clinical hours defining 1.0 FTE.
 #' @param ... Passed to [predict_clinical_hours()].
 #' @return Numeric clinical FTE per provider.
-#' @export
+#' @keywords internal
 predict_clinical_fte <- function(age, sex = "female", model = NULL,
                                  fte_hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK, ...) {
   assertthat::assert_that(is.numeric(fte_hours), fte_hours > 0)

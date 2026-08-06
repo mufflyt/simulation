@@ -21,7 +21,7 @@ assert_publishable_demand_coefficients(
 (Invisibly) \code{TRUE} when publishable, \code{FALSE} otherwise.
 }
 \description{
-The coefficient analogue of \code{\link{assert_publishable_workload}()}, applied to the
+The coefficient analogue of \code{\link[=assert_publishable_workload]{assert_publishable_workload()}}, applied to the
 demand-transition registry. It reduces the registry (for the chosen \code{variant})
 to its LEAST-calibrated tier and runs the same accept / opt-in / refuse gate:
 \code{calibrated}/\code{solved} pass, \code{derived_by_analogy} needs \code{allow_analogy = TRUE},
@@ -32,5 +32,5 @@ surfaces the tier-mixing the bespoke \code{status} string hid.
 }
 \details{
 This is a standalone gate; it is intentionally NOT auto-wired into
-\code{\link{simulate_lifecourse_demand}()}.
+\code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}}.
 }

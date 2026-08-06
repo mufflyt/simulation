@@ -15,7 +15,7 @@
 #' Default PSA input set for the workforce 2050 gap
 #'
 #' @return List of `psa_input()` specs.
-#' @export
+#' @keywords internal
 psa_workforce_gap_inputs <- function() {
   list(
     psa_uniform("baseline_entrants", 45, 90),          # NRMP URPS ~70; range around it

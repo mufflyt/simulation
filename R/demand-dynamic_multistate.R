@@ -220,7 +220,7 @@ simulate_dmdm <- function(cohort0, start_year, end_year,
 #' @param seed Optional RNG seed.
 #' @param risk_params Cross-sectional risk parameters used to seed year-0 states.
 #' @return A tibble: the person attributes plus integer `has_ui`/`has_pop`/`has_ai`.
-#' @export
+#' @keywords internal
 dmdm_initial_cohort <- function(pop_by_age, year, n = 1e5, cesarean_rate = 0.32,
                                 seed = NULL, risk_params = lifecourse_risk_params()) {
   pop <- .lifecourse_population(pop_by_age, year, n, cesarean_rate, seed)

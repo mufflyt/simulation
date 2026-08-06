@@ -29,3 +29,4 @@ Weibull survival curves in \code{\link[=urps_weibull_exit_probs]{urps_weibull_ex
 = scale ± 2).  When \code{use_weibull = FALSE}, the legacy \code{shift_retirement_schedule()}
 deterministic age-axis shift is applied instead.
 }
+\keyword{internal}

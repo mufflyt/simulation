@@ -25,3 +25,4 @@ uninsured OR in the lowest income tier (LT25k) -- the "high_barrier" concept
 used by \code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}} in R/demand-lifecourse.  Replaces the hardcoded 0.35
 with a value anchored to actual BRFSS insurance/income data.
 }
+\keyword{internal}

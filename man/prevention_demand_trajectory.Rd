@@ -25,3 +25,4 @@ Thin wrapper that calls \code{\link[=example_service_volumes]{example_service_vo
 the named prevention scenario, and returns the adjusted volumes. Suitable as a
 drop-in replacement for \code{\link[=example_service_volumes]{example_service_volumes()}} in a scenario loop.
 }
+\keyword{internal}

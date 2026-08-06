@@ -15,4 +15,4 @@ A named list of calibrated coefficients. Pass a custom list to
 \code{\link[=urps_p_active]{urps_p_active()}} when ABOG recertification data have been fitted with
 \code{\link[=fit_p_active_model]{fit_p_active_model()}}.
 }
-\keyword{datasets}
+\keyword{internal}

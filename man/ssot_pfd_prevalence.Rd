@@ -18,3 +18,4 @@ younger bands are not in the contract and remain local to this package; the
 return value labels which is which so a consumer can never mistake a local
 literal for a contract value.
 }
+\keyword{internal}

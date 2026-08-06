@@ -22,7 +22,7 @@ forecast_scorecard(
 \item{lower, upper}{Column names for the interval bounds, or \code{NULL} to skip
 interval metrics.}
 
-\item{interval_level}{Central coverage of \code{[lower, upper]} (e.g. 0.95, so
+\item{interval_level}{Central coverage of \verb{[lower, upper]} (e.g. 0.95, so
 \code{alpha = 0.05}). Used by the interval score.}
 
 \item{label}{Optional model label carried into the result.}

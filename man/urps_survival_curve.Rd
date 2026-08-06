@@ -32,3 +32,4 @@ Returns the probability of still being active at each age, given active at
 \code{entry_age}.  Useful for plotting retirement trajectories and for comparing
 the baseline vs scenario curves visually.
 }
+\keyword{internal}

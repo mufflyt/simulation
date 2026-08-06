@@ -9,7 +9,7 @@ weighted_interval_score(y, quantiles, quantile_levels)
 \arguments{
 \item{y}{Numeric observation(s), length \code{n} (recycled if length 1).}
 
-\item{quantiles}{Numeric matrix \code{n x m} of quantile forecasts (rows = cases,
+\item{quantiles}{Numeric matrix \verb{n x m} of quantile forecasts (rows = cases,
 columns = \code{quantile_levels}); a length-\code{m} vector is treated as one case.}
 
 \item{quantile_levels}{Numeric length-\code{m} vector of probability levels in

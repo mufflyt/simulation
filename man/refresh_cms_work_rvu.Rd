@@ -17,3 +17,4 @@ Tibble in the shape of \link{CMS_WORK_RVU}.
 \description{
 Re-derive the shipped work-RVU table from a newer CMS release
 }
+\keyword{internal}

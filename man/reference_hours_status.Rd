@@ -12,3 +12,4 @@ Character status string.
 \description{
 Calibration status of the reference hours schedule
 }
+\keyword{internal}

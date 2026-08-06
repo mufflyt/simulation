@@ -184,7 +184,7 @@ safe_left_join <- function(x, y, by, allow_fanout = FALSE,
 #'
 #' @inheritParams safe_left_join
 #' @return The joined data frame.
-#' @export
+#' @keywords internal
 safe_inner_join <- function(x, y, by, allow_fanout = FALSE) {
   .assert_join_keys_present(x, y, by)
   if (!allow_fanout) {

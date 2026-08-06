@@ -15,3 +15,4 @@ Path to the external data root.
 \description{
 Root directory for external (non-repository) data
 }
+\keyword{internal}

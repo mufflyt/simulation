@@ -20,3 +20,4 @@ Tibble of differing codes (empty when the shipped table is current).
 Reports every code whose work RVU has moved, so an annual update is a
 reviewable diff rather than a silent change in every projected number.
 }
+\keyword{internal}

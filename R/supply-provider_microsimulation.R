@@ -55,7 +55,7 @@ MICROSIM_BASELINE_RATES <- c(FPMRS = 0.044, GO = 0.052, MIGS = 0.034)
 #'
 #' @param subspecialty Subspecialty label.
 #' @return Numeric annual baseline retirement rate.
-#' @export
+#' @keywords internal
 microsim_baseline_rate <- function(subspecialty) {
   if (subspecialty %in% names(MICROSIM_BASELINE_RATES)) {
     MICROSIM_BASELINE_RATES[[subspecialty]]
@@ -128,7 +128,7 @@ retirement_hazard <- function(age, hazard_table) {
 #'
 #' @param age Numeric age(s).
 #' @return Numeric relative-productivity weight(s).
-#' @export
+#' @keywords internal
 productivity_weight_raw <- function(age) {
   dplyr::case_when(
     age < 50  ~ 1.00,

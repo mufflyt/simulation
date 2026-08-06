@@ -37,3 +37,4 @@ fitted  <- fit_p_active_model(abog_df)
 urps_p_active(65, "female", 32, coef = fitted)
 }
 }
+\keyword{internal}

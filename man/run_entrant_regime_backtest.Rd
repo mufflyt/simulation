@@ -38,3 +38,4 @@ The result of this function is NOT an out-of-sample test at the 2020 cutoff:
 the estimator was built after that miss was examined. It is a refit, reported
 as one. \code{\link[=entrant_regime_rolling_validation]{entrant_regime_rolling_validation()}} carries the out-of-sample claim.
 }
+\keyword{internal}

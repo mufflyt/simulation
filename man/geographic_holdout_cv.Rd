@@ -39,7 +39,7 @@ predictor column(s), and optionally a \code{region} grouping and an offset colum
 \item{offset_col}{Optional column for a Poisson log-offset (turns the count
 model into a rate model, e.g. providers per capita). Default \code{NULL}.}
 
-\item{fit_predict}{Optional \code{function(train, test)} returning predictions for
+\item{fit_predict}{Optional \verb{function(train, test)} returning predictions for
 \code{test}, overriding the default model. Must not look at \code{test}'s observed.}
 
 \item{seed}{Optional RNG seed for \code{"kfold"} reproducibility.}

@@ -31,7 +31,7 @@
 #'
 #' @param must_work Error when no candidate root exists on this machine.
 #' @return Path to the external data root.
-#' @export
+#' @keywords internal
 simulation_data_root <- function(must_work = FALSE) {
   env <- Sys.getenv("SIMULATION_DATA_ROOT", unset = "")
   if (nzchar(env)) return(normalizePath(env, mustWork = FALSE))
