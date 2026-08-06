@@ -18,10 +18,10 @@ entrant_pipeline_transition(
 (NRMP fellowship matches per year).}
 
 \item{p_complete_cert}{Fraction of matched fellows who complete fellowship and
-achieve board certification. In \link{0, 1}. Default 0.95 (labeled assumption).}
+achieve board certification. In \code{[0, 1]}. Default 0.95 (labeled assumption).}
 
 \item{p_active_practice}{Fraction of newly certified who enter active US
-clinical practice. In \link{0, 1}. Default 0.90 (labeled assumption).}
+clinical practice. In \code{[0, 1]}. Default 0.90 (labeled assumption).}
 
 \item{cert_lag}{Years from match to certification. Non-negative integer.}
 

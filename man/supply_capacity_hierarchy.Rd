@@ -24,10 +24,10 @@ Default the median of \code{WRVU_PER_FTE_BENCHMARK}; prefer a value from
 \code{\link[=calibrate_wrvu_per_fte]{calibrate_wrvu_per_fte()}} solved on a base-year anchor.}
 
 \item{accessible_fraction}{Share of capacity within geographic reach of the
-population (tier 3->4), e.g. from \code{\link[=spatial_access_ratio]{spatial_access_ratio()}}. In \link{0, 1}.}
+population (tier 3->4), e.g. from \code{\link[=spatial_access_ratio]{spatial_access_ratio()}}. In \code{[0, 1]}.}
 
 \item{insurance_fraction}{Share of capacity accepting the relevant insurance
-(tier 3->4). In \link{0, 1}. Default 1 (no restriction modelled).}
+(tier 3->4). In \code{[0, 1]}. Default 1 (no restriction modelled).}
 
 \item{group}{Optional scalar label stamped on every row for easy binding.}
 }

@@ -36,9 +36,9 @@
 #' @param matches Data frame with integer `year` and non-negative `matched`
 #'   (NRMP fellowship matches per year).
 #' @param p_complete_cert Fraction of matched fellows who complete fellowship and
-#'   achieve board certification. In [0, 1]. Default 0.95 (labeled assumption).
+#'   achieve board certification. In `[0, 1]`. Default 0.95 (labeled assumption).
 #' @param p_active_practice Fraction of newly certified who enter active US
-#'   clinical practice. In [0, 1]. Default 0.90 (labeled assumption).
+#'   clinical practice. In `[0, 1]`. Default 0.90 (labeled assumption).
 #' @param cert_lag Years from match to certification. Non-negative integer.
 #' @param active_lag Years from certification to active practice. Non-negative
 #'   integer. Default 0.
