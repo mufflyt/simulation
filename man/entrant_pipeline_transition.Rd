@@ -19,7 +19,7 @@ entrant_pipeline_transition(
 (NRMP fellowship matches per year).}
 
 \item{p_complete_cert}{Fraction of matched fellows who complete fellowship and
-achieve board certification. Either one value in \link{0, 1}, one value per row of
+achieve board certification. Either one value in 0 to 1, one value per row of
 \code{matches}, or a data frame of \code{year} and \code{p_complete_cert} keyed on the
 CERTIFICATION year (years it omits fall back to its median). Defaults to
 0.75, the pre-cutoff observed conversion from \code{\link[=nrmp_match_to_cert_ratio]{nrmp_match_to_cert_ratio()}};
@@ -27,7 +27,7 @@ the former default of 0.95 was an assumption that over-predicted every
 observed year by 8 to 18 certifications.}
 
 \item{p_active_practice}{Fraction of newly certified who enter active US
-clinical practice. In \link{0, 1}. Default 0.90 (labeled assumption).}
+clinical practice. In 0 to 1. Default 0.90 (labeled assumption).}
 
 \item{cert_lag}{Years from match to certification. Non-negative integer.
 Defaults to the three-year fellowship, \code{URPS_FELLOWSHIP_YEARS}. The former
