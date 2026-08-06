@@ -28,6 +28,15 @@
 # and the extensions the contract does not carry.
 SCENARIO_REGISTRY_VERSION <- "2.0.0-local-fallback"
 
+# Policy-lever scenarios modeled as parameter shifts on the supply axes the
+# engine already consumes (clinical hours via `hours_multiplier`, retirement age
+# via `retirement_shift_years`). The mufflyaccess SSOT projection contract does
+# not carry them, so supply_scenario_registry() APPENDS them onto the SSOT
+# registry (never overriding a contract id) so they are first-class in both SSOT
+# and local-fallback modes. Each is ASSUMED/ILLUSTRATIVE until its magnitude is
+# calibrated; the source string says so.
+SUPPLY_SCENARIO_LOCAL_EXTENSIONS <- c("telemedicine", "ai_documentation", "burnout_reduction")
+
 # Access components a demand scenario can relax. Named so the base-year gap can
 # declare which of them it already contains (see assert_access_not_double_counted).
 ACCESS_COMPONENTS <- c("uninsured", "nonmetro", "racial_equity", "income")
@@ -47,7 +56,11 @@ ACCESS_COMPONENTS <- c("uninsured", "nonmetro", "racial_equity", "income")
 #' @export
 supply_scenario_registry <- function(baseline_entrants = 55, prefer_ssot = TRUE) {
   if (isTRUE(prefer_ssot) && has_mufflyaccess()) {
-    return(ssot_supply_scenarios(baseline_entrants))
+    base <- ssot_supply_scenarios(baseline_entrants)
+    # Keep the local policy-lever scenarios first-class in SSOT mode too, without
+    # ever shadowing a contract id.
+    ext <- local_supply_scenario_registry(baseline_entrants)[SUPPLY_SCENARIO_LOCAL_EXTENSIONS]
+    return(c(base, ext[setdiff(names(ext), names(base))]))
   }
   .msg_warn("Using the LOCAL scenario fallback; ids will not validate against ",
             "the mufflyaccess projection contract.")
@@ -120,6 +133,43 @@ local_supply_scenario_registry <- function(baseline_entrants = 55) {
       hours_multiplier = 1.00,
       conversion = 0.70,
       source = "cliff WORKFORCE_CONVERSION_FLOOR"
+    ),
+    # ---- Policy-lever scenarios (SUPPLY_SCENARIO_LOCAL_EXTENSIONS) -----------
+    # Each changes only a handful of parameters on the existing supply axes.
+    # Magnitudes are ASSUMED/ILLUSTRATIVE placeholders, not measured rates.
+    telemedicine = list(
+      label = "Telemedicine expansion",
+      entrants = baseline_entrants,
+      retirement_shift_years = 0,
+      hours_multiplier = 1.05,
+      conversion = 1.00,
+      source = paste(
+        "ASSUMED/ILLUSTRATIVE (magnitude not yet calibrated): telehealth raises",
+        "effective clinical throughput ~5% (fewer no-shows, no room turnover).",
+        "Its GEOGRAPHIC-REACH effect is modeled separately as accessible_fraction",
+        "in the access-clearing layer (clear_access()), not as a supply multiplier here.")
+    ),
+    ai_documentation = list(
+      label = "AI documentation support",
+      entrants = baseline_entrants,
+      retirement_shift_years = 0,
+      hours_multiplier = 1.08,
+      conversion = 1.00,
+      source = paste(
+        "ASSUMED/ILLUSTRATIVE (magnitude not yet calibrated): ambient AI",
+        "documentation frees ~8% of clinical time from clerical burden, modeled",
+        "as an effective clinical-hours gain.")
+    ),
+    burnout_reduction = list(
+      label = "Burnout reduction (retention)",
+      entrants = baseline_entrants,
+      retirement_shift_years = 2,
+      hours_multiplier = 1.03,
+      conversion = 1.00,
+      source = paste(
+        "ASSUMED/ILLUSTRATIVE (magnitude not yet calibrated): wellness /",
+        "burnout-reduction keeps providers in practice ~2 yr longer (retention --",
+        "the opposite sign to retire_2yr_earlier) and restores ~3% clinical hours.")
     )
   )
 }
