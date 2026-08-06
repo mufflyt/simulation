@@ -21,19 +21,19 @@ ok <- function(cond, msg) {
 src <- function(f) if (file.exists(f)) source(f) else stop("missing ", f, call. = FALSE)
 
 # --- load base-R modules ----------------------------------------------------
-# R/10 first: it defines .msg_warn() and resolve_reproducibility_mode(), which
-# the provenance guards in R/29 (calibration) and R/30 (population conservation)
-# call. R/30's guard only fires when a reweight leaks, so the dependency went
-# unnoticed until R/29's calibration gate started running on every call. R/10 is
+# R/core-repro_provenance first: it defines .msg_warn() and resolve_reproducibility_mode(), which
+# the provenance guards in R/demand-dynamic_multistate (calibration) and R/demand-dynamic_open (population conservation)
+# call. R/demand-dynamic_open's guard only fires when a reweight leaks, so the dependency went
+# unnoticed until R/demand-dynamic_multistate's calibration gate started running on every call. R/core-repro_provenance is
 # base R and sources under --vanilla, so the "no tidyverse" contract holds.
-src("R/10-repro_provenance.R")             # .msg_warn, resolve_reproducibility_mode
-src("R/29-demand_dynamic_multistate.R")   # dmdm_default_transitions, simulate_dmdm
-src("R/30-demand_dynamic_open.R")          # simulate_dmdm_open (+ helpers)
-src("R/31-dmdm_fit_transitions.R")         # .fit_onset_coefs, .fit_stage_transitions
-src("R/32-geographic_demand.R")            # geographic (isochrone) demand
-src("R/geographic_holdout_validation.R")   # geographic held-out (spatial CV)
-src("R/58-pop_transitions.R")              # literature POP onset + staged transitions
-src("R/export_demand_contract.R")          # export_hdmm/dmdm_demand_contract
+src("R/core-repro_provenance.R")             # .msg_warn, resolve_reproducibility_mode
+src("R/demand-dynamic_multistate.R")   # dmdm_default_transitions, simulate_dmdm
+src("R/demand-dynamic_open.R")          # simulate_dmdm_open (+ helpers)
+src("R/demand-dmdm_fit_transitions.R")         # .fit_onset_coefs, .fit_stage_transitions
+src("R/geography-demand.R")            # geographic (isochrone) demand
+src("R/validation-geographic_holdout.R")   # geographic held-out (spatial CV)
+src("R/demand-pop_transitions.R")              # literature POP onset + staged transitions
+src("R/reporting-export_demand_contract.R")          # export_hdmm/dmdm_demand_contract
 
 set.seed(1)
 mk <- function(ages, vag) data.frame(
@@ -41,14 +41,14 @@ mk <- function(ages, vag) data.frame(
   years_since_last_vaginal_birth = pmax(0, ages - 30), bmi = 28,
   hysterectomy = 0, menopause_status = as.integer(ages >= 51), comorbidity = 0)
 
-cat("== DMDM closed engine (R/29) ==\n")
+cat("== DMDM closed engine (R/demand-dynamic_multistate) ==\n")
 lo <- simulate_dmdm(mk(sample(45:70, 8000, TRUE), 0L), 2025, 2045, seed = 42, allow_uncalibrated = TRUE)
 hi <- simulate_dmdm(mk(sample(45:70, 8000, TRUE), 3L), 2025, 2045, seed = 42, allow_uncalibrated = TRUE)
 ok(nrow(lo) == 21L, "one row per year")
 ok(all(diff(lo$living) <= 0), "closed cohort shrinks via mortality")
 ok(hi$prev_pop[21] > lo$prev_pop[21], "more vaginal deliveries -> higher prolapse prevalence")
 
-cat("== DMDM open engine (R/30) ==\n")
+cat("== DMDM open engine (R/demand-dynamic_open) ==\n")
 agents <- function(ages, vag, w) cbind(mk(ages, vag), weight = w, p_ui = .05, p_pop = .025, p_ai = .025)
 init <- agents(40:84, 2L, 1e5)
 ent <- do.call(rbind, lapply(2026:2035, function(y) { d <- agents(40, 2L, 1e5); d$entry_year <- y; d }))
@@ -58,7 +58,7 @@ proj <- do.call(rbind, lapply(2025:2035, function(y) data.frame(year = y, age = 
 opr <- simulate_dmdm_open(init, ent, 2025, 2035, pop_by_age_year = proj, allow_uncalibrated = TRUE)
 ok(abs(opr$population[1] - 45e6) < 1, "reweighting: counts match the projection")
 
-cat("== onset fitter core (R/31) ==\n")
+cat("== onset fitter core (R/demand-dmdm_fit_transitions) ==\n")
 N <- 20000; age <- sample(40:85, N, TRUE); vag <- rpois(N, 2)
 df <- data.frame(from = 0L,
   event = rbinom(N, 1, plogis(-3 + 0.30 * vag + 0.30 * ((age - 50) / 10))),
@@ -68,13 +68,13 @@ df <- data.frame(from = 0L,
 est <- .fit_onset_coefs(df)
 ok(abs(est[["avag"]] - 0.30) < 0.06, "recovers vaginal-delivery onset coefficient")
 
-cat("== geographic (isochrone) demand (R/32) ==\n")
+cat("== geographic (isochrone) demand (R/geography-demand) ==\n")
 geo <- data.frame(need = c(100, 400, 250), nearest_provider_min = c(15, 90, 240),
                   access_ratio = c(3, 0.5, 0.1), capacity = c(120, 300, 40))
 gd <- geographic_demand_summary(geo)
 ok(abs(gd$beyond_share - 250 / 750) < 1e-9, "need beyond 180 min computed")
 ok(gd$need_weighted_access < mean(geo$access_ratio), "need-weighted access below unweighted")
-# tract age-band population -> need bridge (script 08 -> R/32)
+# tract age-band population -> need bridge (script 08 -> R/geography-demand)
 tr_pop <- data.frame(GEOID = c("A", "B", "C"),
   female_20_39 = c(1000, 500, 200), female_40_59 = c(2000, 800, 300),
   female_60_64 = c(500, 200, 100), female_65_79 = c(800, 400, 150),
@@ -85,7 +85,7 @@ ok(abs(nt$need[1] - 1135) < 1e-9, "tract need = sum(pop_band * prevalence_band)"
 gs <- isochrone_demand_from_tracts(tr_pop, prevalence = prev_band)
 ok(abs(gs$total_need - sum(nt$need)) < 1e-9, "isochrone assembly totals the tract need")
 
-cat("== geographic held-out CV (R/geographic_holdout_validation.R) ==\n")
+cat("== geographic held-out CV (R/validation-geographic_holdout.R) ==\n")
 set.seed(42); Gh <- 60; xh <- runif(Gh, 0.5, 5)
 gh <- data.frame(geo = paste0("g", 1:Gh), x = xh, obs = rpois(Gh, exp(1.2 + 0.5 * xh)))
 rh <- geographic_holdout_cv(gh, "obs", "x", geo = "geo", scheme = "loo")
@@ -94,8 +94,8 @@ gh2 <- gh; gh2$obs[1] <- 100000L
 p1 <- geographic_holdout_cv(gh2, "obs", "x", geo = "geo", scheme = "loo")$predictions
 ok(p1$predicted[p1$geo == "g1"] < 1000, "leakage-free: outlier geo cannot predict its own value")
 
-cat("== preregistered rolling-origin (R/preregistration.R) ==\n")
-src("R/preregistration.R")   # digest-free cores: canonicalize + rolling_origin_evaluation
+cat("== preregistered rolling-origin (R/validation-preregistration.R) ==\n")
+src("R/validation-preregistration.R")   # digest-free cores: canonicalize + rolling_origin_evaluation
 sa <- list(form = "log(count) ~ year", horizon = 1L, origins = 2015:2020)
 sb <- list(origins = 2015:2020, horizon = 1L, form = "log(count) ~ year")   # reordered
 ok(identical(.canonicalize_spec(sa), .canonicalize_spec(sb)), "spec canonicalization is order-independent")
@@ -110,8 +110,8 @@ a <- rolling_origin_evaluation(ser, "year", "count", origins = 2015, horizon = 1
 b <- rolling_origin_evaluation(spk, "year", "count", origins = 2015, horizon = 1L, fit_predict = fpp)
 ok(identical(a$by_origin$predicted, b$by_origin$predicted), "leakage-free: a 2020 outlier cannot move the 2015-origin prediction")
 
-cat("== forecast scorecard (R/forecast_scorecard.R) ==\n")
-src("R/forecast_scorecard.R")   # base-R: interval score, WIS, scorecard, model comparison
+cat("== forecast scorecard (R/validation-forecast_scorecard.R) ==\n")
+src("R/validation-forecast_scorecard.R")   # base-R: interval score, WIS, scorecard, model comparison
 ok(.interval_score(10, 9, 11, 0.05) < .interval_score(10, -140, 152, 0.05),
    "interval score: a sharp covering band beats a 292-wide covering band")
 ok(.interval_score(10, 9, 11, 0.05) < .interval_score(10, 4, 6, 0.05),
@@ -132,7 +132,7 @@ ok(cmp$scorecard$interval_score_skill[cmp$scorecard$model == "good"] > 0,
 ok(cmp$rank_stability$best_fraction[cmp$rank_stability$model == "good"] == 1,
    "compare_forecasts: rank stability flags the model that wins at every cutoff")
 
-cat("== literature POP transitions (R/33) ==\n")
+cat("== literature POP transitions (R/supply-roster) ==\n")
 ptr <- dmdm_transitions_with_pop_literature()
 ok(ptr$calibration_status == "derived_by_analogy", "POP overlay marked derived_by_analogy")
 ok(ptr$provenance$ui == "placeholder_uncalibrated", "UI/AI left as placeholders")
@@ -143,7 +143,7 @@ plo <- simulate_dmdm(mk(sample(45:70, 4000, TRUE), 0L), 2025, 2035, transitions 
 phi <- simulate_dmdm(mk(sample(45:70, 4000, TRUE), 3L), 2025, 2035, transitions = ptr, seed = 7, allow_uncalibrated = TRUE)
 ok(phi$prev_pop[11] > plo$prev_pop[11], "literature transitions: more vaginal deliveries -> more POP")
 
-cat("== staged POP transition fit (R/31 .fit_stage_transitions) ==\n")
+cat("== staged POP transition fit (R/demand-dmdm_fit_transitions .fit_stage_transitions) ==\n")
 set.seed(11); M <- 60000; fs <- sample(0:3, M, TRUE)
 pu <- c(`0` = .10, `1` = .08, `2` = .05, `3` = .03); pd <- c(`1` = .20, `2` = .08, `3` = .03)
 ts <- vapply(seq_len(M), function(i) { s <- fs[i]; u <- runif(1)
@@ -153,7 +153,7 @@ sf <- .fit_stage_transitions(data.frame(from_stage = fs, to_stage = ts))
 ok(abs(sf$progression[["1"]] - .08) < .02, "recovers stage 1->2 progression rate")
 ok(abs(sf$regression[["1"]] - .20) < .02, "recovers stage 1->0 regression rate")
 
-cat("== contract exporters (R/export_demand_contract.R) ==\n")
+cat("== contract exporters (R/reporting-export_demand_contract.R) ==\n")
 hd <- export_hdmm_demand_contract(
   data.frame(year = 2025:2030, care_seeking_national = seq(4e6, 4.6e6, length.out = 6),
              service_units_national = seq(9e6, 10.8e6, length.out = 6)),

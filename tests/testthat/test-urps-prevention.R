@@ -1,4 +1,4 @@
-# Tests for R/urps_prevention.R — DPMM-lite conservative management module
+# Tests for R/demand-prevention.R — DPMM-lite conservative management module
 #
 # Guards:
 #  1. Baseline (zero uptake): all multipliers equal 1.

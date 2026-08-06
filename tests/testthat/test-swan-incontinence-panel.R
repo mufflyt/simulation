@@ -1,4 +1,4 @@
-# Contract tests for R/38-swan_incontinence_panel.R
+# Contract tests for R/data-swan_incontinence_panel.R
 #
 # Written before the module (TDD). These tests define what
 # build_swan_incontinence_panel() must guarantee. Every fixture is

@@ -1,4 +1,4 @@
-# Tests for R/urps_migration.R — URPS geographic migration module
+# Tests for R/geography-urps_migration.R — URPS geographic migration module
 #
 # Guards:
 #  1. CONUS_STATE_URBANICITY: correct coverage and values.

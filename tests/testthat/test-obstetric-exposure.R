@@ -1,5 +1,5 @@
 # Regression guards for the obstetric-exposure demand estimand (D4) and the
-# birth-cohort vaginal-delivery exposure layer (R/13b-obstetric_exposure.R).
+# birth-cohort vaginal-delivery exposure layer (R/demand-obstetric_exposure.R).
 
 # ---- Cohort exposure --------------------------------------------------------
 

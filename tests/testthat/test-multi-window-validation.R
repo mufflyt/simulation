@@ -1,4 +1,4 @@
-# Multi-window validation and out-of-sample intervals (R/34).
+# Multi-window validation and out-of-sample intervals (R/validation-backtest).
 
 test_that("windows are scored on both predictors and the error direction flips", {
   skip_if_not_installed("mufflyaccess")

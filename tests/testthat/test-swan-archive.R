@@ -1,4 +1,4 @@
-# SWAN archive loader (R/50-swan_archive.R).
+# SWAN archive loader (R/data-swan_archive.R).
 #
 # Every test writes its own tiny .rds to a temp dir and computes the expected
 # checksum from it, so nothing here needs SIMULATION_DATA_ROOT, the external

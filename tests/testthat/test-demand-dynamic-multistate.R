@@ -1,5 +1,5 @@
-# Dynamic multistate disease model (R/29-demand_dynamic_multistate.R).
-# The engine (simulate_dmdm) is base R; the cohort builder/trajectory use R/25.
+# Dynamic multistate disease model (R/demand-dynamic_multistate.R).
+# The engine (simulate_dmdm) is base R; the cohort builder/trajectory use R/demand-lifecourse.
 #
 # Every test here exercises engine MECHANICS -- row counts, monotonicity,
 # determinism, the onset/remission accounting identity -- on the placeholder

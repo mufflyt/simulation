@@ -1,5 +1,5 @@
-# Open-population DMDM (R/30-demand_dynamic_open.R). The engine is deterministic
-# base R; the trajectory wrapper uses R/25.
+# Open-population DMDM (R/demand-dynamic_open.R). The engine is deterministic
+# base R; the trajectory wrapper uses R/demand-lifecourse.
 #
 # These test demography and reweighting mechanics, which hold whatever the
 # transition coefficients are, so every call declares the exploratory override

@@ -1,4 +1,4 @@
-# Geographic (isochrone) demand (R/32-geographic_demand.R).
+# Geographic (isochrone) demand (R/geography-demand.R).
 
 geo <- data.frame(
   geo_id = paste0("t", 1:6),
@@ -43,7 +43,7 @@ test_that("access/capacity columns are optional", {
   expect_equal(s$total_need, 1000)
 })
 
-# ---- tract population -> need bridge (script 08 -> R/32) --------------------
+# ---- tract population -> need bridge (script 08 -> R/geography-demand) --------------------
 
 tracts <- data.frame(
   GEOID = c("A", "B", "C"),

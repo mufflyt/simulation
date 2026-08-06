@@ -1,4 +1,4 @@
-# Entrant-rate precedence in run_supply_microsimulation() (R/12).
+# Entrant-rate precedence in run_supply_microsimulation() (R/supply-provider_microsimulation).
 #
 # The iteration loop takes its entrant count from `param_spec` when one is
 # supplied. That override used to be unconditional and unannounced, which failed

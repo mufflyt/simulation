@@ -1,4 +1,4 @@
-# Parameter-uncertainty intervals for the life-course demand trajectory (R/27).
+# Parameter-uncertainty intervals for the life-course demand trajectory (R/demand-lifecourse_uncertainty).
 
 pop_by_age_year <- tidyr::expand_grid(year = c(2025L, 2030L), age = 40:85) %>%
   dplyr::mutate(population = round(2e6 * exp(-0.02 * (age - 40))))

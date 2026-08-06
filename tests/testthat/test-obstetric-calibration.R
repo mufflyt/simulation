@@ -1,5 +1,5 @@
-# Guards for the cited birth-cohort obstetric calibration of R/25's
-# .lifecourse_population (reuses R/13b cohort_vaginal_exposure()).
+# Guards for the cited birth-cohort obstetric calibration of R/demand-lifecourse's
+# .lifecourse_population (reuses R/demand-obstetric_exposure cohort_vaginal_exposure()).
 
 test_that("the baseline uses the cited cohort-varying cesarean, not a scalar", {
   pa <- tibble::tibble(age = 40:90, population = rep(1e6, 51))

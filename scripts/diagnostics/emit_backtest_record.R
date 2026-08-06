@@ -3,7 +3,7 @@
 #
 #   Rscript scripts/diagnostics/emit_backtest_record.R
 #
-# WHY THIS EXISTS. `BACKTEST_RECORD_2020_2023` in R/38-backtest_status.R is a
+# WHY THIS EXISTS. `BACKTEST_RECORD_2020_2023` in R/validation-backtest_status.R is a
 # hand-transcribed copy of artifacts/backtest_2020_to_2023_summary.csv, carried
 # in the package because artifacts/ is .Rbuildignore'd and the status stamp must
 # travel with an installed build. Hand transcription is a silent-error channel:
@@ -12,7 +12,7 @@
 #
 # This prints the tribble to paste, derived from the CSV, so the transcription
 # step cannot introduce a value the artifact does not contain. It does NOT edit
-# R/38 -- the record is deliberately a reviewed constant, not generated code.
+# R/validation-backtest_status -- the record is deliberately a reviewed constant, not generated code.
 #
 # The arm labels are shortened the same way every time, so re-running after a
 # re-scored back-test produces a minimal diff.

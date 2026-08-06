@@ -36,7 +36,7 @@ npp_women_65plus("mid", years = 2025:2050)
 ```
 
 The SSOT female filter is `SEX == 2 & ORIGIN == 0 & RACE == 0`
-(all origins, all races) — see `R/13-demand_urps.R::npp_total_female()`. A wrong
+(all origins, all races) — see `R/demand-urps.R::npp_total_female()`. A wrong
 `ORIGIN`/`RACE` code silently narrows the denominator to a subgroup, so it is
 guarded, not inlined.
 

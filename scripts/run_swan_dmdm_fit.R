@@ -12,10 +12,10 @@
 #   Rscript scripts/run_swan_dmdm_fit.R
 #
 # Wires the package's own machinery end to end:
-#   build_swan_dmdm_panel()  (R/47)  SWAN wide -> person-year panel (UI)
-#   dmdm_transition_data()   (R/31)  panel -> at-risk transition rows
-#   fit_dmdm_transitions()   (R/31)  rows -> fitted UI onset logistic + remission
-#   swan_panel_fit_caveats() (R/47)  the caveats that MUST travel with the fit
+#   build_swan_dmdm_panel()  (R/data-swan_dmdm_panel)  SWAN wide -> person-year panel (UI)
+#   dmdm_transition_data()   (R/demand-dmdm_fit_transitions)  panel -> at-risk transition rows
+#   fit_dmdm_transitions()   (R/demand-dmdm_fit_transitions)  rows -> fitted UI onset logistic + remission
+#   swan_panel_fit_caveats() (R/data-swan_dmdm_panel)  the caveats that MUST travel with the fit
 #
 # INPUT: a wide SWAN frame (one row per participant, visit-suffixed columns) --
 #   swan_all_visits.rds is the intended input. Download SWAN from ICPSR first with

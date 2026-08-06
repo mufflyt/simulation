@@ -1,4 +1,4 @@
-# Forecast-evaluation scorecard (R/forecast_scorecard.R).
+# Forecast-evaluation scorecard (R/validation-forecast_scorecard.R).
 #
 # Coverage alone is a broken success measure: a deliberately wide interval passes
 # 95% coverage while saying nothing. These tests pin the metric that fixes that

@@ -1,4 +1,4 @@
-# Corrected utilization models (R/26-utilization_models.R).
+# Corrected utilization models (R/demand-utilization_models.R).
 # Base R at the core; the survey/negbin paths are exercised only when those
 # optional packages are installed.
 

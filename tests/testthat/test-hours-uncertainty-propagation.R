@@ -3,7 +3,7 @@
 # `draw_supply_parameters()` drew `hours_coef` from the fitted hours model's
 # coef/vcov, and `run_supply_microsimulation()` then discarded it: the run
 # metadata reported "hours" as a quantified parameter while the intervals
-# contained none of it. That is the exact failure mode R/36 exists to prevent --
+# contained none of it. That is the exact failure mode R/calibration-parameter_uncertainty exists to prevent --
 # an interval that looks rigorous and is too narrow -- so it is locked here.
 #
 # `hours_coef` is the COEFFICIENT VECTOR of lm(clinical_hours ~ ns(age) + sex),

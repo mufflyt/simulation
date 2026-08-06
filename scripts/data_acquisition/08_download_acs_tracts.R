@@ -5,7 +5,7 @@
 # =============================================================================
 #
 # PURPOSE:
-#   The geographic (isochrone) demand layer (R/32-geographic_demand.R) needs
+#   The geographic (isochrone) demand layer (R/geography-demand.R) needs
 #   pelvic-floor NEED distributed across census tracts. Today the repo vendors
 #   only female-65+ per tract (data-raw/spatial/tract_fem65_centroids.csv); the
 #   life-course / DMDM demand is defined over the full 40+ age structure. This
@@ -16,7 +16,7 @@
 #
 #   The existing 02_download_acs.R pulls B01001 at STATE level (+ PUMS); this is
 #   its tract-level complement. Bands match data-raw/census/README.md and
-#   R/13b's .obstetric_band_ages().
+#   R/demand-obstetric_exposure's .obstetric_band_ages().
 #
 # KEY TABLE:
 #   B01001 - Sex by Age. Female branch variables (sex-by-age):
@@ -40,7 +40,7 @@
 #   tract shapefile, to obtain the coordinates the isochrone overlay needs. Then
 #   turn the age-band population into per-tract NEED with
 #   tract_need_from_population() and summarise with isochrone_demand_from_tracts()
-#   / geographic_demand_summary() (R/32).
+#   / geographic_demand_summary() (R/geography-demand).
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -126,7 +126,7 @@ writeLines(c(
   paste("md5:", csv_md5),
   "",
   "Bands: 20-39 / 40-59 / 60-64 / 65-79 / 80+ (match data-raw/census/README.md).",
-  "Consumed by R/32-geographic_demand.R after a GEOID join to tract centroids",
+  "Consumed by R/geography-demand.R after a GEOID join to tract centroids",
   "(data-raw/spatial/tract_fem65_centroids.csv) or a TIGER/Line tract layer.",
   "API key: https://api.census.gov/data/key_signup.html | DUA required: NO"
 ), file.path(out_dir, "acs5_2023_tract_female_by_ageband_manifest.txt"))

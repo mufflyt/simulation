@@ -828,7 +828,7 @@ dpmm_plots <- plot_dpmm_results(future_results)
 # Guarded so it never breaks the plotting pipeline if inputs are missing.
 tryCatch({
   if (!exists("export_dpmm_demand_contract")) {
-    exporter <- "R/export_demand_contract.R"
+    exporter <- "R/reporting-export_demand_contract.R"
     if (file.exists(exporter)) source(exporter)
   }
   if (exists("export_dpmm_demand_contract") && exists("future_results")) {

@@ -1,4 +1,4 @@
-# NAMCS demand calibration (R/52).
+# NAMCS demand calibration (R/calibration-namcs_demand).
 #
 # The anchor needs the real NAMCS file, so anything touching it skips when the
 # file is absent. The apply-side contracts run on a synthetic frame, because

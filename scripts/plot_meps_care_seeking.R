@@ -29,7 +29,7 @@
 #   condition on several COND records, and counting those twice would inflate the
 #   visit count for exactly the women the model is about.
 #
-# ESTIMATION (build_meps_care_seeking_panel + fit_care_seeking_model, R/48):
+# ESTIMATION (build_meps_care_seeking_panel + fit_care_seeking_model, R/data-meps_care_seeking):
 #   Design  svydesign(id = ~VARPSU, strata = ~VARSTR, weights = ~PERWT23F,
 #                     nest = TRUE), options(survey.lonely.psu = "adjust")
 #   Part 1  sought ~ age_c + insurance + income + race + n_comorbid,

@@ -1,4 +1,4 @@
-# Tests for R/urps_settings.R — care delivery setting differentiation
+# Tests for R/supply-urps_settings.R — care delivery setting differentiation
 #
 # Guards:
 #  1. URPS_DEFAULT_SETTING_MIX: shares sum to 1 per service, valid settings.

@@ -53,14 +53,14 @@ sums <- tapply(shares$share, shares$service, sum)
 bad  <- names(sums[abs(sums - 1) > 1e-6])
 if (length(bad)) {
   warning("Shares do not sum to 1 for: ", paste(bad, collapse = ", "),
-          "\nCheck CPT basket coverage before pasting into urps_settings.R.")
+          "\nCheck CPT basket coverage before pasting into supply-urps_settings.R.")
 } else {
-  message("\nAll service shares sum to 1. Ready to paste into R/urps_settings.R.")
+  message("\nAll service shares sum to 1. Ready to paste into R/supply-urps_settings.R.")
 }
 
 # ---- Emit copy-paste block ---------------------------------------------------
 
-message("\n\n# ---- Paste this block into R/urps_settings.R -----------------------\n")
+message("\n\n# ---- Paste this block into R/supply-urps_settings.R -----------------------\n")
 message("URPS_DEFAULT_SETTING_MIX <- tibble::tribble(")
 message("  ~service, ~setting, ~share,")
 for (i in seq_len(nrow(shares))) {

@@ -6,7 +6,7 @@
 #   1. take a DMDM transition object -- the SWAN-fitted one from
 #      run_swan_dmdm_fit.R (artifacts/swan_dmdm_transitions.rds) if present, else
 #      the literature-POP object (dmdm_transitions_with_pop_literature());
-#   2. run the open-population trajectory (R/30);
+#   2. run the open-population trajectory (R/demand-dynamic_open);
 #   3. export the versioned demand contract with per-tier provenance (R/export_);
 #   4. round-trip it through cliff's ingestion (dpmm_tier_status), if a cliff
 #      checkout is found.
