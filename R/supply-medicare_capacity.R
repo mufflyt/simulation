@@ -118,6 +118,7 @@ medicare_workload_index <- function(provider_workload, direct_care_hours = 2063,
 #' @param workload_index Output of [medicare_workload_index()].
 #' @param by Grouping variables, e.g. age band, sex, and practice setting.
 #' @return Roster count, reference-eligible count, and relative capacity total.
+#' @export
 summarise_medicare_capacity <- function(workload_index, by = character()) {
   needed <- c("medicare_workload_index", "included_in_reference", by)
   missing <- setdiff(needed, names(workload_index))
