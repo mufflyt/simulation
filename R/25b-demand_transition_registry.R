@@ -36,6 +36,9 @@
                               "bmeno", "bcomorb")
 .DEMAND_CONDITION_ORDER <- c("ui", "pop", "ai")
 .DEMAND_PATHWAY_ORDER <- c("recognition", "p_seek", "p_referral", "p_treated")
+# Ordered symptom-severity levels, matching the Sandvik category factor
+# (score_sandvik_severity, R/43): slight < moderate < severe < very_severe.
+.DEMAND_SEVERITY_LEVELS <- c("slight", "moderate", "severe", "very_severe")
 
 # Which pipeline stage each parameter belongs to.
 .demand_stage_of <- function(param) {
@@ -93,10 +96,57 @@ demand_transition_registry <- function() {
   risk_note <- function(p) if (p == "bvag") "primary exposure term (cited override available)" else ""
   path_note <- function(p) switch(p,
     p_treated = "conflates treatment_eligibility + treatment_preference (stages not yet separated)",
-    recognition = "symptom recognition; severity gradient not yet modelled",
+    recognition = "symptom recognition (pre-severity)",
+    p_seek = "base care-seeking; reweighted by the symptom_severity stage (seek_mult_*)",
     "")
 
   default_rows <- rbind(melt(risk_wide, risk_note), melt(path_wide, path_note))
+
+  # -- Symptom-severity distribution (the un-collapsed stage 3) + severity-specific
+  #    care-seeking multipliers. UI shares are anchored to the Sandvik instrument
+  #    (score_sandvik_severity over the SWAN panel); POP/AI have no severity
+  #    instrument, so their shares are illustrative placeholders. The multipliers
+  #    default to 1 (NEUTRAL): a severity -> care-seeking gradient is a SCENARIO
+  #    lever, because no in-domain severity -> care-seeking odds ratio exists.
+  sev_share_wide <- tibble::tribble(
+    ~condition, ~slight, ~moderate, ~severe, ~very_severe,
+    "ui",          0.40,     0.35,    0.20,        0.05,
+    "pop",         0.45,     0.35,    0.15,        0.05,
+    "ai",          0.50,     0.30,    0.15,        0.05
+  )
+  seek_mult_wide <- tibble::tribble(
+    ~condition, ~slight, ~moderate, ~severe, ~very_severe,
+    "ui",           1.0,      1.0,     1.0,         1.0,
+    "pop",          1.0,      1.0,     1.0,         1.0,
+    "ai",           1.0,      1.0,     1.0,         1.0
+  )
+  share_tier <- c(ui = "derived_by_analogy", pop = "uncalibrated_illustrative",
+                  ai = "uncalibrated_illustrative")
+  share_src <- c(
+    ui  = "Sandvik severity distribution over the SWAN incontinence panel (score_sandvik_severity)",
+    pop = "no severity instrument (SWAN prolapse is binary); illustrative placeholder shares",
+    ai  = "no severity instrument (AI unmeasured in SWAN); illustrative placeholder shares")
+  melt_sev <- function(wide, stage, prefix, tier_by, src_by, note) {
+    levs <- setdiff(names(wide), "condition")
+    rows <- lapply(levs, function(L) {
+      tibble::tibble(
+        stage = stage, condition = wide$condition, param = paste0(prefix, L),
+        variant = "default", value = wide[[L]],
+        ci_low = NA_real_, ci_high = NA_real_,
+        calibration_tier = unname(tier_by[wide$condition]),
+        source = unname(src_by[wide$condition]), notes = note)
+    })
+    do.call(rbind, rows)
+  }
+  uni <- function(x) stats::setNames(rep(x, length(.DEMAND_CONDITION_ORDER)), .DEMAND_CONDITION_ORDER)
+  severity_rows <- rbind(
+    melt_sev(sev_share_wide, "symptom_severity", "sev_share_", share_tier, share_src,
+             "per-condition symptom-severity distribution; feeds severity-weighted care-seeking"),
+    melt_sev(seek_mult_wide, "care_seeking", "seek_mult_",
+             uni("uncalibrated_illustrative"),
+             uni("scenario lever; no in-domain severity->care-seeking OR (see HDMM plan)"),
+             "care-seeking multiplier by severity; 1 = neutral, set != 1 to model a gradient"))
+  default_rows <- rbind(default_rows, severity_rows)
 
   # -- Cited overrides (literature-anchored). These are the evidence-bearing rows
   #    a reviewer diffs. Tier "derived_by_analogy" => publishable only with an
@@ -112,6 +162,34 @@ demand_transition_registry <- function() {
 
   out <- rbind(default_rows, cited_rows)
   tibble::as_tibble(out)
+}
+
+#' Symptom-severity distribution and severity-specific care-seeking multipliers
+#'
+#' The parameters for the (un-collapsed) symptom-severity stage, read from
+#' [demand_transition_registry()]. `shares` is the per-condition severity
+#' distribution (Sandvik levels); `seek_multiplier` scales care-seeking by
+#' severity and is 1 (NEUTRAL) by default, so demand is unchanged until a
+#' gradient is supplied. Pass to [simulate_lifecourse_demand()] via
+#' `severity_params` to activate a severity -> care-seeking gradient.
+#'
+#' @return A list with `status`, `levels`, and per-condition named vectors
+#'   `shares` and `seek_multiplier` (one entry per severity level).
+#' @export
+lifecourse_severity_params <- function() {
+  reg <- demand_transition_registry()
+  levs <- .DEMAND_SEVERITY_LEVELS
+  pick <- function(stage, prefix) {
+    rows <- reg[reg$stage == stage & startsWith(reg$param, prefix), ]
+    stats::setNames(lapply(.DEMAND_CONDITION_ORDER, function(cc) {
+      v <- rows[rows$condition == cc, ]
+      stats::setNames(v$value[match(paste0(prefix, levs), v$param)], levs)
+    }), .DEMAND_CONDITION_ORDER)
+  }
+  list(status = "placeholder_uncalibrated",
+       levels = levs,
+       shares = pick("symptom_severity", "sev_share_"),
+       seek_multiplier = pick("care_seeking", "seek_mult_"))
 }
 
 # Effective (condition, param, value, tier) for a variant: default rows, with the

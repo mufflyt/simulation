@@ -53,7 +53,8 @@ test_that("the registry is well-formed and uses only canonical tiers", {
   expect_true(all(reg$calibration_tier %in% CALIBRATION_TIERS))
   # Every transition coefficient in the loaded life-course path is represented.
   expect_setequal(unique(reg$stage[reg$variant == "default"]),
-                  c("disease_state", "care_seeking", "referral", "treatment_preference"))
+                  c("disease_state", "symptom_severity", "care_seeking", "referral",
+                    "treatment_preference"))
   # The cited overrides are exactly the five literature-anchored terms.
   cited <- reg[reg$variant == "cited", ]
   expect_equal(nrow(cited), 5L)

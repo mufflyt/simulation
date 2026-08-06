@@ -138,9 +138,21 @@ lifecourse_service_map <- function() {
 }
 
 # Expected treated fraction per condition + care-pathway state fields.
-.lifecourse_treated <- function(pop, pathway, access_gain) {
-  seek <- function(cond) {
+.lifecourse_treated <- function(pop, pathway, access_gain,
+                                severity = lifecourse_severity_params()) {
+  # Severity-weighted care-seeking (the un-collapsed symptom-severity stage):
+  #   p_seek_eff = p_seek * weighted_mean(seek_multiplier; severity shares).
+  # NEUTRAL BY DEFAULT -- every multiplier is 1, so p_seek_eff == p_seek exactly
+  # and demand is byte-identical until a severity gradient is supplied.
+  p_seek_eff <- function(cond) {
     base <- pathway$p_seek[[cond]]
+    mu <- severity$seek_multiplier[[cond]]
+    if (is.null(mu) || isTRUE(all(mu == 1))) return(base)
+    sh <- severity$shares[[cond]]
+    base * sum(sh * mu) / sum(sh)
+  }
+  seek <- function(cond) {
+    base <- p_seek_eff(cond)
     ifelse(pop$high_barrier == 1L, pmin(1, base * access_gain), base)
   }
   treated <- function(cond, prev) {
@@ -198,6 +210,10 @@ lifecourse_service_map <- function() {
 #' @param prevention_effect Fractional reduction applied by the prevention lever.
 #' @param risk_params,pathway_params,service_map Parameter tables; defaults are
 #'   placeholders — override to calibrate.
+#' @param severity_params Symptom-severity distribution + severity-specific
+#'   care-seeking multipliers ([lifecourse_severity_params()]). Default is
+#'   NEUTRAL (multipliers = 1), so demand is unchanged; supply non-unit
+#'   multipliers to activate a severity → care-seeking gradient.
 #' @param use_condition_pathway Route treated patients through the staged
 #'   condition pathway ([condition_service_pathway()]) instead of the flat
 #'   `service_map`. `TRUE` by default: the flat map emitted conservative,
@@ -218,6 +234,7 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
                                        prevention_effect = 0.20,
                                        risk_params = lifecourse_risk_params(),
                                        pathway_params = lifecourse_pathway_params(),
+                                       severity_params = lifecourse_severity_params(),
                                        service_map = lifecourse_service_map(),
                                        use_condition_pathway = TRUE,
                                        pathway = NULL) {
@@ -235,7 +252,7 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
     col <- paste0("p_", prevention_target)
     pop[[col]] <- pop[[col]] * (1 - prevention_effect)
   }
-  pop <- .lifecourse_treated(pop, pathway_params, access_gain)
+  pop <- .lifecourse_treated(pop, pathway_params, access_gain, severity_params)
 
   scale_factor <- sum(pop_by_age$population) / n
   treated_national <- c(ui  = sum(pop$treated_ui),
