@@ -41,3 +41,4 @@ Use this BEFORE passing the roster to \code{\link[=run_supply_microsimulation]{r
 \code{thin_by_p_active = TRUE}, or call it directly when you want a deterministic
 (expected-value) adjustment rather than a stochastic draw.
 }
+\keyword{internal}

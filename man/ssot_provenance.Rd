@@ -17,3 +17,4 @@ Records which URPS artifact a simulation output was built from, including the
 active-in-year definition and the deduplication rule, so a downstream reader
 can tell whether two outputs are comparable.
 }
+\keyword{internal}

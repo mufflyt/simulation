@@ -35,7 +35,7 @@
 # as the matrix.
 
 #' Provider types that are advanced practice providers in the Medicare taxonomy
-#' @export
+#' @keywords internal
 MEDICARE_APP_PROVIDER_TYPES <- c(
   "Nurse Practitioner", "Physician Assistant", "Clinical Nurse Specialist",
   "Certified Nurse Midwife"

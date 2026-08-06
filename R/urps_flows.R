@@ -60,7 +60,7 @@
 #' [urps_p_active()] when ABOG recertification data have been fitted with
 #' [fit_p_active_model()].
 #'
-#' @export
+#' @keywords internal
 URPS_P_ACTIVE_COEF <- list(
   intercept   =  3.620,
   age         =  0.0919,
@@ -219,7 +219,7 @@ urps_p_active <- function(age,
 #'   drop rows — useful for expected-value calculations without randomness.
 #' @return When `stochastic = TRUE`: a subset of `agents` (rows retained).
 #'   When `stochastic = FALSE`: `agents` with an added `p_active` column.
-#' @export
+#' @keywords internal
 thin_roster_by_p_active <- function(agents,
                                      coef        = URPS_P_ACTIVE_COEF,
                                      scenario_id = NULL,
@@ -266,7 +266,6 @@ thin_roster_by_p_active <- function(agents,
 #' @param weights Optional numeric weights (e.g. survey sample weights).
 #' @return A named list with the same structure as [URPS_P_ACTIVE_COEF] plus
 #'   metadata elements `$model` (the fitted `glm` object), `$n`, `$source`.
-#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -274,6 +273,7 @@ thin_roster_by_p_active <- function(agents,
 #' fitted  <- fit_p_active_model(abog_df)
 #' urps_p_active(65, "female", 32, coef = fitted)
 #' }
+#' @keywords internal
 fit_p_active_model <- function(data, weights = NULL) {
   required <- c("active", "age", "sex", "years_certified")
   missing  <- setdiff(required, names(data))

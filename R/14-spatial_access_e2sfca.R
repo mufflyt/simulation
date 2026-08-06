@@ -48,7 +48,7 @@ CONUS_LON_RANGE <- c(-125.0, -66.5)
 #' Validate and order cumulative band weights
 #' @param weights Named numeric vector keyed by drive-time minutes.
 #' @return The weights sorted by ascending band.
-#' @export
+#' @keywords internal
 e2sfca_band_weights <- function(weights = E2SFCA_DEFAULT_WEIGHTS) {
   assertthat::assert_that(is.numeric(weights), length(weights) >= 1)
   ord <- order(as.numeric(names(weights)))

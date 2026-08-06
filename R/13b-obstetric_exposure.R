@@ -73,7 +73,7 @@ cesarean_rate_for_year <- function(years) {
 #' Mean completed parity by birth cohort, interpolated across cited anchors
 #' @param cohorts Integer birth-cohort years.
 #' @return Numeric mean completed parity (clamped outside the anchor range).
-#' @export
+#' @keywords internal
 completed_parity_for_cohort <- function(cohorts) {
   par <- .obstetric_extdata("us_completed_parity_by_cohort.csv")
   par <- par[order(par$birth_cohort), ]

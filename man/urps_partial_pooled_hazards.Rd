@@ -22,3 +22,4 @@ Convenience wrapper: resolves the canonical \code{urps_hazard_pooled} file (wire
 by the calibration harvest), reshapes it, and fits the partial-pooled model.
 Requires that calibration source to be registered/present.
 }
+\keyword{internal}

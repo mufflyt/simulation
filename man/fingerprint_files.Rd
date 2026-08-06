@@ -18,3 +18,4 @@ Lets an artifact record which code produced it (the isochrones
 \code{code_fingerprint} field), so a cache is rejected when the generating logic
 changes even if the inputs did not.
 }
+\keyword{internal}

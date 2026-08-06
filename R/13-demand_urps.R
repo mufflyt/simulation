@@ -386,7 +386,7 @@ compute_demand_denominators_crude <- function(population_65plus,
 #'   `rates`), and `female_pop`.
 #' @param rates Named per-1,000 surgery rates by age band.
 #' @return Tibble `year`, `surgical_cases` (summed over bands).
-#' @export
+#' @keywords internal
 apply_age_specific_surgery_demand <- function(pop_by_band,
                                               rates = WU2011_SURGERY_RATE_PER_1000) {
   assertthat::assert_that(all(c("year", "age_band", "female_pop") %in% names(pop_by_band)))
@@ -612,7 +612,7 @@ compute_brfss_demand_estimand <- function(pop_by_band,
 #' @param hours_per_provider_yearly Provider clinical hours per year.
 #' @param minutes_per_visit Average minutes per visit.
 #' @return Tibble with `year`, `required_fte`.
-#' @export
+#' @keywords internal
 calculate_visit_based_demand <- function(population_65plus,
                                          visits_per_woman_annually = 1.5,
                                          hours_per_provider_yearly = 36 * 48,

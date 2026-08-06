@@ -121,7 +121,7 @@ hazard_shrinkage_summary <- function(hazards) {
 #' @param band_levels Optional ordered band levels.
 #' @param mode Reproducibility mode.
 #' @return The [fit_partial_pooled_hazards()] result.
-#' @export
+#' @keywords internal
 urps_partial_pooled_hazards <- function(band_levels = NULL,
                                         mode = resolve_reproducibility_mode()) {
   path <- resolve_canonical("urps_hazard_pooled", mode = mode)

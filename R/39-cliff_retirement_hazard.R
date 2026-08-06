@@ -57,7 +57,7 @@ URPS_WEIBULL_PARAMS <- list(
 #'   0 (baseline); +2 = "delayed retirement" scenario; −2 = "early retirement".
 #' @return Named numeric vector of annual exit probabilities, length
 #'   `length(ages)`.
-#' @export
+#' @keywords internal
 urps_weibull_exit_probs <- function(ages, sex, pathway = "ABOG",
                                      scale_shift = 0) {
   key <- if (identical(pathway, "ABU")) {
@@ -90,7 +90,7 @@ urps_weibull_exit_probs <- function(ages, sex, pathway = "ABOG",
 #' @param entry_age Age at which to condition (default 30).
 #' @return Tibble with columns `age`, `sex`, `pathway`, `scale_shift`,
 #'   `p_active`.
-#' @export
+#' @keywords internal
 urps_survival_curve <- function(ages = 30:85, sex = "Female",
                                  pathway = "ABOG", scale_shift = 0,
                                  entry_age = 30L) {

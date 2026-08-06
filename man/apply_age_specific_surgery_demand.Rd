@@ -23,3 +23,4 @@ Port of cliff::apply_age_specific_surgery_demand. Applies the four-band
 Wu 2011 surgery rates to an age-banded female population, yielding an
 age-resolved D3 that does not assume a single crude rate.
 }
+\keyword{internal}

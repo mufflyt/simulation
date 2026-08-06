@@ -146,7 +146,7 @@ URPS_DEFAULT_SETTING_MIX_SOURCE <- paste(
 #'   postacute = 0.80: travel time and multi-patient rounds reduce billable
 #'     concentration (physiatry analogy, Zarek 2025).
 #'
-#' @export
+#' @keywords internal
 URPS_SETTING_PRODUCTIVITY <- c(
   office              = 1.00,
   telehealth          = 0.92,

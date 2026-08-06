@@ -15,4 +15,4 @@ Later files win on collision, so the canonical implementation of a shared name
 must be sourced LAST. The validation family is therefore ordered
 unsorted-fragments -> dppm_validate_SWAN -> 03-dppm_validate_SWAN_better.
 }
-\keyword{datasets}
+\keyword{internal}
