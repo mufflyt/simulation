@@ -26,11 +26,13 @@ MUFFLYACCESS_PINNED_SHA <- "a88dba8f4bafec7659df3f3c1404aca814709208"
 #' Derived by grepping `mufflyaccess::` across R/ and scripts/, then frozen
 #' here. An installed build missing any of these is not merely older -- it
 #' cannot run this package, whatever version number it reports.
-#' @export
+#'
 #' `mc_weighted_ci` and `urps_projection_schema` are deliberately ABSENT: both
 #' appear only in roxygen prose, never in a call. A frozen list padded with
 #' documentation mentions would demand capabilities the package does not use,
 #' and reject a build that could run it perfectly well.
+#'
+#' @export
 MUFFLYACCESS_REQUIRED_EXPORTS <- c(
   "get_canonical_bands", "get_primary_access_band",
   "pfd_prevalence", "rurality_from_ruca", "safe_divide", "safe_percent",

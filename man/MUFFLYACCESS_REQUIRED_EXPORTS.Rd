@@ -15,4 +15,10 @@ Derived by grepping \verb{mufflyaccess::} across R/ and scripts/, then frozen
 here. An installed build missing any of these is not merely older -- it
 cannot run this package, whatever version number it reports.
 }
+\details{
+\code{mc_weighted_ci} and \code{urps_projection_schema} are deliberately ABSENT: both
+appear only in roxygen prose, never in a call. A frozen list padded with
+documentation mentions would demand capabilities the package does not use,
+and reject a build that could run it perfectly well.
+}
 \keyword{datasets}
