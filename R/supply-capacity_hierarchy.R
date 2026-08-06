@@ -36,9 +36,9 @@
 #'   Default the median of `WRVU_PER_FTE_BENCHMARK`; prefer a value from
 #'   [calibrate_wrvu_per_fte()] solved on a base-year anchor.
 #' @param accessible_fraction Share of capacity within geographic reach of the
-#'   population (tier 3->4), e.g. from [spatial_access_ratio()]. In [0, 1].
+#'   population (tier 3->4), e.g. from [spatial_access_ratio()]. In 0 to 1.
 #' @param insurance_fraction Share of capacity accepting the relevant insurance
-#'   (tier 3->4). In [0, 1]. Default 1 (no restriction modelled).
+#'   (tier 3->4). In 0 to 1. Default 1 (no restriction modelled).
 #' @param group Optional scalar label stamped on every row for easy binding.
 #' @return A 4-row tibble: `group`, `tier` (1-4), `label`, `value`, `unit`,
 #'   `provider_equivalent`, `retained_vs_headcount`.
