@@ -17,6 +17,7 @@ simulate_lifecourse_demand(
   prevention_effect = 0.2,
   risk_params = lifecourse_risk_params(),
   pathway_params = lifecourse_pathway_params(),
+  severity_params = lifecourse_severity_params(),
   service_map = lifecourse_service_map(),
   use_condition_pathway = TRUE,
   pathway = NULL
@@ -54,6 +55,11 @@ observed uninsured/low-income rates rather than a fixed assumption.}
 
 \item{risk_params, pathway_params, service_map}{Parameter tables; defaults are
 placeholders — override to calibrate.}
+
+\item{severity_params}{Symptom-severity distribution + severity-specific
+care-seeking multipliers (\code{\link[=lifecourse_severity_params]{lifecourse_severity_params()}}). Default is
+NEUTRAL (multipliers = 1), so demand is unchanged; supply non-unit
+multipliers to activate a severity -> care-seeking gradient.}
 
 \item{use_condition_pathway}{Route treated patients through the staged
 condition pathway (\code{\link[=condition_service_pathway]{condition_service_pathway()}}) instead of the flat
