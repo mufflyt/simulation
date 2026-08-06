@@ -6,6 +6,43 @@ States, built to the methodology documented in the IHS Markit / Dall **Health
 Workforce Microsimulation Model** (HWMM v5.19.20) and its published applications
 in physiatry, neurology and physical therapy.
 
+## Orientation (start here)
+
+**What question does this software answer?** Will the US supply of urogynecology /
+reconstructive pelvic surgery providers keep pace with demand for pelvic-floor-
+disorder care over the coming decades, and where will access fall short? It
+projects provider **FTE supply** and **care demand** in the *same FTE units* and
+reports the gap — with an uncertainty interval, by year and by geography.
+
+**What inputs are required?** Nothing external for a first run: the supply engine
+ships with bundled parameters, and `run_workforce_microsimulation_example.R`
+produces a full projection in ~2 minutes. *Calibrated* results additionally need a
+provider roster / certification counts (via the private `mufflyaccess` data
+package), NRMP entrant counts, retirement hazards, and independent demand anchors
+(HCUP, Medicare Part B, NAMCS/MEPS). Public input fixtures live in `inst/extdata/`;
+uncalibrated coefficients are labelled as such and refuse to be reported as results.
+
+**How is it different from a Markov model?** Partly it isn't — the disease side
+(the dynamic multistate model, `R/29`–`R/31`) *is* a multistate model. The
+difference is the **supply** side: it is agent-level, not compartmental. Each
+provider is an individual carrying age, certification cohort, and career history,
+so cohort effects, age-specific attrition, and late-career FTE decline are
+represented directly rather than averaged into aggregate transition rates a Markov
+chain cannot keep apart.
+
+**How does it differ from a deterministic projection?** A deterministic projection
+returns one line; this redraws the uncertain parameters and the provider cohort on
+every iteration and returns a **distribution**. The headline deliverable is an
+interval, not a point forecast — and, as our own validation shows
+([`docs/RESULTS_INTERVAL_CALIBRATION.md`](docs/RESULTS_INTERVAL_CALIBRATION.md)),
+that interval has to be judged by a proper scoring rule (width *and* miss), not by
+coverage alone. Microsimulation is strongest when it communicates uncertainty, not
+a single number.
+
+*Deeper reading:* methods in [`docs/DEMAND_METHODS.md`](docs/DEMAND_METHODS.md),
+the module map below, and the validation record in
+[`docs/BACKTEST_2020_TO_2023.md`](docs/BACKTEST_2020_TO_2023.md).
+
 ```r
 # install.packages("pak")
 pak::pak("mufflyt/simulation")
