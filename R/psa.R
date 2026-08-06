@@ -197,10 +197,22 @@ psa_prcc <- function(psa, output = psa$output_names[1]) {
   vars <- .psa_input_names(psa)
   d <- psa$draws[stats::complete.cases(psa$draws[c(vars, output)]), , drop = FALSE]
   n <- nrow(d)
+  # Degenerate cases are undefined, not zero: too few complete draws to residualise
+  # (df would be <= 0), or a zero-variance output (every rank tied -> the partial
+  # correlation is meaningless, and residualising a constant leaves only
+  # floating-point noise that reads as a spurious non-zero PRCC). Return NA, never
+  # a fabricated sensitivity for an output that does not vary.
+  if (n < 3L || stats::sd(d[[output]]) == 0) {
+    return(tibble::tibble(input = vars, prcc = NA_real_, p_value = NA_real_))
+  }
   R <- as.data.frame(lapply(d[vars], rank))
   ry <- rank(d[[output]])
 
   res <- lapply(vars, function(v) {
+    # A constant input has no rank variance -> its partial correlation is undefined.
+    if (stats::sd(d[[v]]) == 0) {
+      return(tibble::tibble(input = v, prcc = NA_real_, p_value = NA_real_))
+    }
     others <- setdiff(vars, v)
     # Residualise rank(v) and rank(y) on the other ranked inputs.
     if (length(others) > 0) {
@@ -213,7 +225,7 @@ psa_prcc <- function(psa, output = psa$output_names[1]) {
     k <- length(others)
     # t-test on the partial correlation.
     df <- n - k - 2
-    tval <- if (is.na(r) || abs(r) >= 1) NA_real_ else r * sqrt(df / (1 - r^2))
+    tval <- if (is.na(r) || abs(r) >= 1 || df <= 0) NA_real_ else r * sqrt(df / (1 - r^2))
     p <- if (is.na(tval)) NA_real_ else 2 * stats::pt(-abs(tval), df)
     tibble::tibble(input = v, prcc = r, p_value = p)
   })
@@ -236,15 +248,33 @@ psa_prcc <- function(psa, output = psa$output_names[1]) {
 psa_srrc <- function(psa, output = psa$output_names[1]) {
   vars <- .psa_input_names(psa)
   d <- psa$draws[stats::complete.cases(psa$draws[c(vars, output)]), , drop = FALSE]
+  n <- nrow(d)
+  na_out <- list(
+    coefficients = tibble::tibble(input = vars, srrc = NA_real_, var_share = NA_real_),
+    model_r2 = NA_real_)
+  # Degenerate: too few complete draws, or a zero-variance output. Standardising a
+  # constant output divides by zero and would crash lm(); degrade to NA instead.
+  if (n < 3L || stats::sd(d[[output]]) == 0) return(na_out)
   z <- function(x) { r <- rank(x); (r - mean(r)) / stats::sd(r) }
-  Z <- as.data.frame(lapply(d[vars], z)); Z$.y <- z(d[[output]])
+  # A constant input has zero rank variance (z would be NaN and break the fit), so
+  # it cannot enter the regression; it is reported back with an NA share.
+  keep <- vars[vapply(d[vars], function(x) stats::sd(x) > 0, logical(1))]
+  if (length(keep) == 0) return(na_out)
+  Z <- as.data.frame(lapply(d[keep], z)); Z$.y <- z(d[[output]])
   fit <- stats::lm(.y ~ ., data = Z)
   r2 <- summary(fit)$r.squared
   co <- stats::coef(fit)[-1]
-  var_share <- (co^2) / sum(co^2) * r2
-  out <- tibble::tibble(input = names(co), srrc = unname(co),
-                        var_share = unname(var_share))
-  out <- out[order(-abs(out$srrc)), ]
+  denom <- sum(co^2)
+  var_share <- if (denom == 0) rep(0, length(co)) else (co^2) / denom * r2
+  fitted_tbl <- tibble::tibble(input = names(co), srrc = unname(co),
+                               var_share = unname(var_share))
+  dropped <- setdiff(vars, keep)
+  if (length(dropped)) {
+    fitted_tbl <- dplyr::bind_rows(
+      fitted_tbl,
+      tibble::tibble(input = dropped, srrc = NA_real_, var_share = NA_real_))
+  }
+  out <- fitted_tbl[order(-abs(fitted_tbl$srrc)), ]   # NA (dropped inputs) sort last
   list(coefficients = out, model_r2 = r2)
 }
 

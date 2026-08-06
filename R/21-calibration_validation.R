@@ -120,7 +120,27 @@ assert_demand_calibrated <- function(calibration, mode = resolve_reproducibility
     "Predict base-year national totals, compare with NAMCS/NHAMCS/NIS or claims,",
     "and fit scalars with fit_calibration_scalars() (HDMM Exhibit 11)."
   )
-  ok <- is.data.frame(calibration) && nrow(calibration) > 0 && "scalar" %in% names(calibration)
+  # SHAPE IS NOT EVIDENCE. This checked only that a `scalar` column existed, so
+  # a calibration of NA, Inf, 0 or -1 passed and the run reported itself
+  # calibrated. A scalar multiplies demand: non-finite propagates NA through
+  # every downstream total, zero erases demand entirely, and negative inverts it.
+  ok <- is.data.frame(calibration) && nrow(calibration) > 0 &&
+    "scalar" %in% names(calibration)
+  if (ok) {
+    sc <- suppressWarnings(as.numeric(calibration$scalar))
+    if (!all(is.finite(sc)) || any(sc <= 0)) {
+      bad <- paste(format(calibration$scalar[!is.finite(sc) | sc <= 0]), collapse = ", ")
+      msg <- paste(
+        "Demand calibration scalars must be finite and strictly positive; got:",
+        paste0(bad, "."),
+        "A non-finite scalar propagates NA through every demand total, zero",
+        "erases demand, and a negative scalar inverts it. Refusing to treat this",
+        "as a calibration.")
+      if (identical(mode, "strict")) stop(msg, call. = FALSE)
+      .msg_warn(msg)
+      return(invisible(FALSE))
+    }
+  }
   if (!ok) {
     if (identical(mode, "strict")) stop(msg, call. = FALSE)
     .msg_warn(msg)

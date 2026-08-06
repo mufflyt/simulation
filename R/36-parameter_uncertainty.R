@@ -114,7 +114,12 @@ supply_parameter_spec <- function(entrant_series = NULL,
       entrant_regime = entrant_regime,
       entrant_regime_include = entrant_regime_include,
       quantified = c(
-        entrant_rate = is.finite(se) || !is.null(entrant_regime),
+        # SE > 0, not merely finite. A constant series (c(50,50,50,50)) has
+        # sd 0, so se is 0 and `is.finite(0)` is TRUE -- the spec then claimed
+        # the entrant rate was DRAWN while every replicate used the same value.
+        # That is the too-narrow-interval defect this module exists to prevent,
+        # passing this module's own gate.
+        entrant_rate = (is.finite(se) && se > 0) || !is.null(entrant_regime),
         entrant_regime_break = !is.null(entrant_regime) &&
           "break" %in% entrant_regime_include &&
           is.finite(entrant_regime$break_surviving_share),

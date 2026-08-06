@@ -221,9 +221,19 @@ interval_label <- function(status = backtest_status(), ci = 0.95) {
     return(sprintf("%s%% forecast interval (back-test coverage %.0f%% of %d arms)",
                    pct, 100 * status$coverage_95, status$n_arms))
   }
+  # Coverage can be NaN when every arm's flag is NA -- an unscorable back-test.
+  # sprintf("%d", NaN) is an ERROR, not a fallback, so this crashed rather than
+  # degrading: the label that exists to keep an unvalidated interval from being
+  # called a forecast interval was the thing that failed.
+  n_missed <- (1 - status$coverage_95) * status$n_arms
+  if (!is.finite(n_missed)) {
+    return(sprintf(paste("%s%% Monte Carlo range -- NOT a validated forecast",
+                         "interval: coverage could not be scored across the %d",
+                         "back-test arm(s)"), pct, status$n_arms))
+  }
   sprintf(paste("%s%% Monte Carlo range -- NOT a validated forecast interval:",
                 "the observed value fell outside it in %d of %d back-test arms"),
-          pct, round((1 - status$coverage_95) * status$n_arms), status$n_arms)
+          pct, round(n_missed), status$n_arms)
 }
 
 #' Refuse forecast-interval language while coverage fails
