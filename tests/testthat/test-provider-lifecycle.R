@@ -17,13 +17,13 @@ test_that("the physician curve is materially longer than the allied-health curve
   # Using a physical-therapy retirement curve for physicians would overstate
   # attrition badly: PT is >90% retired by 70, physicians only ~70%.
   phys <- retirement_survival(50, 70)
-  allied <- retirement_survival(50, 70, retirement_schedule = RETIREMENT_HAZARD_ALLIED,
-                                terminal_age = MICROSIM_TERMINAL_AGE_ALLIED)
+  allied <- retirement_survival(50, 70, retirement_schedule = urpssim:::RETIREMENT_HAZARD_ALLIED,
+                                terminal_age = urpssim:::MICROSIM_TERMINAL_AGE_ALLIED)
   expect_gt(unname(phys[["70"]]), 2 * unname(allied[["70"]]))
 })
 
 test_that("terminal age forces departure and defaults to the physician value", {
-  expect_equal(MICROSIM_TERMINAL_AGE, 90L)   # HWSM: 90 for physicians and dentists
+  expect_equal(urpssim:::MICROSIM_TERMINAL_AGE, 90L)   # HWSM: 90 for physicians and dentists
   expect_equal(departure_hazard(90), 1)
   expect_equal(departure_hazard(95), 1)
   expect_equal(departure_hazard(75, terminal_age = 75L), 1)
@@ -32,8 +32,8 @@ test_that("terminal age forces departure and defaults to the physician value", {
 
 test_that("retirement and career change are separate processes below age 50", {
   # A 38-year-old must not receive a retirement-shaped hazard.
-  expect_equal(departure_hazard(38), CAREER_CHANGE_HAZARD_UNDER_50)
-  expect_equal(departure_hazard(49), CAREER_CHANGE_HAZARD_UNDER_50)
+  expect_equal(departure_hazard(38), urpssim:::CAREER_CHANGE_HAZARD_UNDER_50)
+  expect_equal(departure_hazard(49), urpssim:::CAREER_CHANGE_HAZARD_UNDER_50)
   expect_gt(departure_hazard(50), departure_hazard(49))
 })
 
@@ -82,26 +82,26 @@ test_that("the sex gap in hours varies with age (interaction terms present)", {
   gap_40 <- hwsm_reference_hours(40, "male") - hwsm_reference_hours(40, "female")
   gap_57 <- hwsm_reference_hours(57, "male") - hwsm_reference_hours(57, "female")
   expect_false(isTRUE(all.equal(gap_40, gap_57)))
-  expect_equal(gap_57, -HWSM_HOURS_FEMALE_MAIN)   # no interaction in the 55-59 band
+  expect_equal(gap_57, -urpssim:::HWSM_HOURS_FEMALE_MAIN)   # no interaction in the 55-59 band
 })
 
 test_that("FTE is an hours threshold, and the intercept calibration is consistent", {
   set.seed(11)
   age <- round(stats::rnorm(500, 52, 9))
   sex <- ifelse(stats::runif(500) < 0.55, "female", "male")
-  ic <- calibrate_hours_intercept(age, sex, fte_hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK)
+  ic <- calibrate_hours_intercept(age, sex, fte_hours = urpssim:::URPS_FTE_CLINICAL_HOURS_PER_WEEK)
   # The cohort mean hours must equal the FTE threshold, so base-year FTE tracks
   # headcount rather than exceeding it.
   expect_equal(mean(hwsm_reference_hours(age, sex, intercept = ic)),
-               URPS_FTE_CLINICAL_HOURS_PER_WEEK, tolerance = 1e-8)
+               urpssim:::URPS_FTE_CLINICAL_HOURS_PER_WEEK, tolerance = 1e-8)
   fte <- provider_clinical_fte(age, sex, method = "hours", hours_intercept = ic)
   expect_equal(mean(fte), 1, tolerance = 1e-8)
 })
 
 test_that("the intercept calibration is not defeated by the non-negativity floor", {
   # hwsm_reference_hours() truncates at 0; solving the intercept through it would
-  # silently mis-calibrate. .hwsm_hours_offset() must be untruncated.
-  expect_true(any(.hwsm_hours_offset(78, "female") < 0))
+  # silently mis-calibrate. urpssim:::.hwsm_hours_offset() must be untruncated.
+  expect_true(any(urpssim:::.hwsm_hours_offset(78, "female") < 0))
 })
 
 test_that("FTE definitions from different studies are not interchangeable", {

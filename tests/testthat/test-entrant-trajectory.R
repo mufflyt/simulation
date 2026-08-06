@@ -46,12 +46,12 @@ test_that("a trajectory grows, is non-negative, and honours a cap", {
 
 test_that("the naive arm is present and carries its warning label", {
   sc <- entrant_trajectory_scenarios(years = 2025:2050)
-  expect_setequal(names(sc), names(ENTRANT_TRAJECTORY_LABELS))
+  expect_setequal(names(sc), names(urpssim:::ENTRANT_TRAJECTORY_LABELS))
   # It must be OFFERED (so its consequence is visible) and LABELLED (so it is
   # never mistaken for an equally supported scenario).
   expect_true("filled_naive" %in% names(sc))
-  expect_match(ENTRANT_TRAJECTORY_LABELS[["filled_naive"]], "NAIVE")
-  expect_match(ENTRANT_TRAJECTORY_LABELS[["filled_naive"]], "double-counts")
+  expect_match(urpssim:::ENTRANT_TRAJECTORY_LABELS[["filled_naive"]], "NAIVE")
+  expect_match(urpssim:::ENTRANT_TRAJECTORY_LABELS[["filled_naive"]], "double-counts")
   # It must be the most aggressive arm, which is why it needs the label.
   totals <- vapply(sc, sum, numeric(1))
   expect_equal(names(which.max(totals)), "filled_naive")

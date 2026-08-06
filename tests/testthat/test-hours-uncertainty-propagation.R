@@ -95,7 +95,7 @@ test_that("the propagated spread matches the coefficient draw, so it is not doub
   analytic <- stats::sd(replicate(300, {
     mm <- urpssim:::.hours_model_with_coef(m, draw_supply_parameters(spec)$hours_coef)
     sum(predict_clinical_hours(agents$age, agents$sex, mm)) /
-      URPS_FTE_CLINICAL_HOURS_PER_WEEK
+      urpssim:::URPS_FTE_CLINICAL_HOURS_PER_WEEK
   }))
   expect_gt(analytic, 0)
 
@@ -165,7 +165,7 @@ test_that("the drawn coefficients are applied exactly once", {
   # expected FTE is closed-form. Applying the coefficients twice (or scaling the
   # FTE as well as the hours) would not reproduce this.
   expected <- sum(predict_clinical_hours(agents$age, agents$sex, drawn)) /
-    URPS_FTE_CLINICAL_HOURS_PER_WEEK
+    urpssim:::URPS_FTE_CLINICAL_HOURS_PER_WEEK
   expect_equal(panel$effective_fte[1], expected, tolerance = 1e-10)
 })
 

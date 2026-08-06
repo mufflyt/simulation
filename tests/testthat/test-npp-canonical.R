@@ -20,10 +20,10 @@ test_that("npp_female_by_band returns the model's age bands with sane magnitudes
   skip_if_not(npp_available(), "Census NPP mid file not present")
   pop <- npp_female_by_band("mid", years = 2025:2050)
 
-  expect_setequal(unique(pop$age_band), DEMAND_AGE_BANDS)
+  expect_setequal(unique(pop$age_band), urpssim:::DEMAND_AGE_BANDS)
   expect_true(all(pop$female_pop > 0))
   # One row per (year, band).
-  expect_equal(nrow(pop), length(2025:2050) * length(DEMAND_AGE_BANDS))
+  expect_equal(nrow(pop), length(2025:2050) * length(urpssim:::DEMAND_AGE_BANDS))
 
   # Women 65+ should be ~33M in 2025 and grow toward ~45M by 2050 (Census NPP).
   w65 <- npp_women_65plus("mid", years = c(2025, 2050))

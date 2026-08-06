@@ -352,7 +352,7 @@ test_that("the NRMP series filters on PUBLICATION year, not appointment year", {
   # resolver fails closed -- correctly. Skip on that rather than assert through
   # it: the frozen series above is checked unconditionally, and this line only
   # adds the round trip via the registry, which needs a source checkout.
-  skip_if_not(file.exists(.canonical_config_path()),
+  skip_if_not(file.exists(urpssim:::.canonical_config_path()),
               "canonical source registry not reachable (config/ is not shipped)")
   expect_equal(nrmp_entrants("URPS"), 70L)
 })
@@ -383,7 +383,7 @@ test_that("the NRMP arm is scored, and is NO LONGER the most accurate one", {
   # rate from 58.0 to 49.73 -- the mean now spans the establishment ramp -- and
   # moved it to -4.36%. More evidence made it worse, which is the cost of
   # refusing to pick an estimation window after seeing the outcome.
-  expect_true(any(grepl("NRMP", BACKTEST_ARMS$label)))
+  expect_true(any(grepl("NRMP", urpssim:::BACKTEST_ARMS$label)))
   rec <- BACKTEST_RECORD_2020_2023
   best <- rec$arm[which.min(abs(rec$percent_error))]
   expect_false(grepl("NRMP", best))

@@ -14,17 +14,18 @@ A tibble with \code{from_state}, \code{to_state}, \code{trigger}, \code{param}, 
 \description{
 One row per career transition (or per age band of a graded transition),
 carrying its calibration tier (from \code{CALIBRATION_TIERS}), source, and a \code{role}:
-\itemize{
-\item "progression" definitional age/stage advance (tier "solved")
-\item "departure" exit-to-retired hazards reconstructed from R/16
+"progression"     definitional age/stage advance (tier "solved")
+"departure"       exit-to-retired hazards reconstructed from R/16
 (tier "derived_by_analogy": physician, not URPS-specific)
-\item "participation" the part-time / FTE attribute (FutureDocs)
-\item "scenario_lever" neutral, evidence-absent knobs (burnout, parental leave,
-Medicare/Medicaid participation); tier "uncalibrated_illustrative", value at
-the neutral identity.
+"participation"   the part-time / FTE attribute (FutureDocs)
+"scenario_lever"  neutral, evidence-absent knobs (burnout, parental leave,
+Medicare/Medicaid participation); tier
+"uncalibrated_illustrative", value at the neutral identity.
 }
-
-The "departure" retirement rows are the single source of truth for
-\code{RETIREMENT_HAZARD_PHYSICIAN} (R/16), reconstructed byte-identically
-(regression-guarded).
+\details{
+The "departure" retirement rows are the SSOT for \code{RETIREMENT_HAZARD_PHYSICIAN}
+(R/16): \code{.career_retirement_schedule()} reconstructs that constant from them
+byte-identically (regression-guarded). Written as code rather than a link
+because it is an unexported internal with no Rd topic to point at, and
+\verb{R CMD check} fails an unresolvable cross-reference as a WARNING.
 }

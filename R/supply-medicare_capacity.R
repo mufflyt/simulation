@@ -129,3 +129,118 @@ summarise_medicare_capacity <- function(workload_index, by = character()) {
     relative_capacity = sum(.data$medicare_workload_index),
     mean_workload_index = mean(.data$medicare_workload_index), .groups = "drop")
 }
+
+#' Crosswalk the URPS CPT basket to Medicare realized-care services
+#'
+#' @param basket Service-to-HCPCS basket, defaulting to `URPS_CPT_BASKET` (internal).
+#' @param include_non_specific Include generic evaluation-and-management codes.
+#'   Defaults to FALSE because Provider-and-Service PUF files do not contain a
+#'   diagnosis or a patient-level link: a 99213 line is not identifiable as a
+#'   pelvic-floor visit without a roster- or diagnosis-linked claims source.
+#' @return A unique `hcpcs` to `service` crosswalk.
+#' @export
+urps_medicare_service_crosswalk <- function(basket = URPS_CPT_BASKET,
+                                            include_non_specific = FALSE) {
+  needed <- c("service", "hcpcs")
+  if (!all(needed %in% names(basket))) {
+    stop("basket must contain service and hcpcs columns", call. = FALSE)
+  }
+  out <- dplyr::distinct(basket[, needed, drop = FALSE])
+  if (!isTRUE(include_non_specific)) out <- out[!grepl("^99", out$hcpcs), , drop = FALSE]
+  if (anyDuplicated(out$hcpcs)) {
+    stop("An HCPCS code maps to more than one URPS service", call. = FALSE)
+  }
+  dplyr::as_tibble(out)
+}
+
+#' Aggregate Medicare FFS claims as realized URPS care
+#'
+#' This is deliberately an *observed-use* estimand. It measures billed Medicare
+#' fee-for-service services after access, referral, payer mix, and capacity have
+#' already shaped care. It must not be substituted for latent all-payer demand.
+#'
+#' @param claims Claim lines, such as the CMS Provider-and-Service PUF.
+#' @param crosswalk HCPCS-to-service crosswalk; defaults to the procedure-only
+#'   URPS basket. Do not add generic E/M codes unless claims are linked to a
+#'   validated URPS roster or diagnosis definition.
+#' @param year,hcpcs,services Column names in `claims`.
+#' @param state,provider_type,place_of_service,npi Optional claims columns to
+#'   retain as dimensions when present. Set any to NULL to omit it.
+#' @return Tibble of annual service totals with explicit `estimand` and
+#'   `payer_scope` labels. The `unmapped_service_fraction` attribute records
+#'   claims excluded because their HCPCS code is outside the study basket.
+#' @export
+aggregate_medicare_realized_care <- function(
+    claims,
+    crosswalk = urps_medicare_service_crosswalk(),
+    year = "year", hcpcs = "HCPCS_Cd", services = "Tot_Srvcs",
+    state = "Rndrng_Prvdr_State_Abrvtn", provider_type = "Rndrng_Prvdr_Type",
+    place_of_service = "Place_Of_Srvc", npi = "Rndrng_NPI") {
+  required <- c(year, hcpcs, services)
+  missing <- setdiff(required, names(claims))
+  if (length(missing)) {
+    stop("aggregate_medicare_realized_care: claims missing column(s): ",
+         paste(missing, collapse = ", "), call. = FALSE)
+  }
+  if (!all(c("hcpcs", "service") %in% names(crosswalk))) {
+    stop("aggregate_medicare_realized_care: crosswalk needs hcpcs and service", call. = FALSE)
+  }
+  if (anyDuplicated(crosswalk$hcpcs)) {
+    stop("aggregate_medicare_realized_care: crosswalk HCPCS values must be unique", call. = FALSE)
+  }
+  c <- as.data.frame(claims)
+  raw_services <- suppressWarnings(as.numeric(c[[services]]))
+  if (any(!is.finite(raw_services) | raw_services < 0, na.rm = TRUE)) {
+    stop("aggregate_medicare_realized_care: services must be finite and non-negative", call. = FALSE)
+  }
+  c$.services <- raw_services
+  names(c)[names(c) == hcpcs] <- ".hcpcs"
+  c <- dplyr::left_join(c, crosswalk, by = c(".hcpcs" = "hcpcs"))
+  unmapped <- is.na(c$service)
+  total <- sum(c$.services, na.rm = TRUE)
+  excluded <- sum(c$.services[unmapped], na.rm = TRUE)
+  c <- c[!unmapped & !is.na(c$.services), , drop = FALSE]
+  if (!nrow(c)) stop("aggregate_medicare_realized_care: no claim lines match the service crosswalk", call. = FALSE)
+
+  dimensions <- c(year = year, state = state, provider_type = provider_type,
+                  place_of_service = place_of_service)
+  dimensions <- dimensions[!is.na(dimensions) & nzchar(dimensions) & dimensions %in% names(c)]
+  for (nm in names(dimensions)) c[[nm]] <- c[[dimensions[[nm]]]]
+  group_cols <- c(names(dimensions), "service")
+  out <- dplyr::summarise(dplyr::group_by(c, dplyr::across(dplyr::all_of(group_cols))),
+    billed_services = sum(.data$.services), claim_lines = dplyr::n(),
+    billing_npis = if (!is.null(npi) && npi %in% names(c)) dplyr::n_distinct(.data[[npi]]) else NA_integer_,
+    .groups = "drop")
+  out$estimand <- "realized Medicare FFS URPS services; not latent all-payer demand"
+  out$payer_scope <- "Medicare fee-for-service"
+  attr(out, "unmapped_service_fraction") <- if (total > 0) excluded / total else NA_real_
+  attr(out, "caveat") <- "Provider-and-Service PUF suppresses low-volume lines and does not identify beneficiary age; use for older-population realized-use validation, not prevalence or all-payer demand."
+  dplyr::as_tibble(out)
+}
+
+#' Compare modeled realized care with Medicare FFS service totals
+#'
+#' @param predicted Tibble with the grouping columns and `predicted_services`.
+#' @param observed Output of [aggregate_medicare_realized_care()].
+#' @param by Grouping columns; normally `"service"`, or `c("year", "service")`
+#'   for a trajectory comparison.
+#' @return Joined totals, calibration ratio, and residual. This ratio calibrates
+#'   *realized Medicare care* only; it must not be applied to latent demand.
+#' @export
+compare_medicare_realized_care <- function(predicted, observed, by = c("service")) {
+  needed_pred <- c(by, "predicted_services")
+  needed_obs <- c(by, "billed_services")
+  if (!all(needed_pred %in% names(predicted)) || !all(needed_obs %in% names(observed))) {
+    stop("compare_medicare_realized_care: predicted needs grouping columns plus predicted_services; observed needs grouping columns plus billed_services", call. = FALSE)
+  }
+  p <- dplyr::summarise(dplyr::group_by(predicted, dplyr::across(dplyr::all_of(by))),
+                        predicted_services = sum(.data$predicted_services), .groups = "drop")
+  o <- dplyr::summarise(dplyr::group_by(observed, dplyr::across(dplyr::all_of(by))),
+                        billed_services = sum(.data$billed_services), .groups = "drop")
+  out <- dplyr::full_join(p, o, by = by)
+  out$calibration_ratio <- ifelse(out$predicted_services > 0,
+                                  out$billed_services / out$predicted_services, NA_real_)
+  out$residual_services <- out$billed_services - out$predicted_services
+  out$comparison_estimand <- "Medicare FFS realized-care validation; not a latent all-payer demand scalar"
+  dplyr::as_tibble(out)
+}

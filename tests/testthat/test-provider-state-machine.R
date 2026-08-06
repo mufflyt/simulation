@@ -13,7 +13,7 @@ test_that("the registry is well-formed and uses only canonical tiers", {
   expect_true(all(c("from_state", "to_state", "trigger", "param", "value",
                     "age_lo", "age_hi", "ci_low", "ci_high", "calibration_tier",
                     "source", "role", "notes") %in% names(reg)))
-  expect_true(all(reg$calibration_tier %in% CALIBRATION_TIERS))
+  expect_true(all(reg$calibration_tier %in% urpssim:::CALIBRATION_TIERS))
   expect_true(all(reg$role %in% c("progression", "departure", "participation",
                                   "scenario_lever")))
   # Progression is definitional (solved); the core hazards are analogy-derived.
@@ -35,7 +35,7 @@ test_that("scenario levers are neutral and uncalibrated", {
 # ---- Byte-identity: the registry is the SSOT for the R/16 schedule --------
 
 test_that("the registry reconstructs RETIREMENT_HAZARD_PHYSICIAN byte-identically", {
-  expect_identical(.career_retirement_schedule(), RETIREMENT_HAZARD_PHYSICIAN)
+  expect_identical(urpssim:::.career_retirement_schedule(), urpssim:::RETIREMENT_HAZARD_PHYSICIAN)
 })
 
 test_that("state_departure_hazard is identical to departure_hazard across ages", {
@@ -51,7 +51,7 @@ test_that("career_state_of partitions age and respects the absorbing state", {
   st <- career_state_of(c(38, 47, 62, 80), entered = TRUE, retired = FALSE)
   expect_identical(as.character(st),
                    c("early_career", "mid_career", "late_career", "late_career"))
-  expect_identical(levels(st), CAREER_STATES)
+  expect_identical(levels(st), urpssim:::CAREER_STATES)
   # Retired overrides the age band; pipeline for not-yet-entered.
   expect_identical(as.character(career_state_of(55, entered = TRUE, retired = TRUE)),
                    "retired")
@@ -92,7 +92,7 @@ test_that("state counts sum to headcount and expose the extra columns", {
                     "n_retired") %in% names(p)))
   expect_equal(p$n_early_career + p$n_mid_career + p$n_late_career, p$headcount)
   expect_true("career_state" %in% names(res$agents))
-  expect_true(all(as.character(res$agents$career_state) %in% CAREER_STATES))
+  expect_true(all(as.character(res$agents$career_state) %in% urpssim:::CAREER_STATES))
 })
 
 # ---- Publication gate ------------------------------------------------------

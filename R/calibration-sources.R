@@ -168,6 +168,10 @@ NRMP_URPS_ENTRANT_SERIES <- tibble::tribble(
               2018L,                60L,               59L,             2018L,
               2019L,                64L,               58L,             2019L,
               2020L,                65L,               56L,             2020L,
+              2021L,                63L,               62L,             2021L,
+              2022L,                65L,               61L,             2022L,
+              2023L,                65L,               61L,             2023L,
+              2024L,                67L,               65L,             2024L,
               2025L,                70L,               70L,             2025L
 )
 
@@ -178,9 +182,16 @@ NRMP_URPS_ENTRANT_SERIES <- tibble::tribble(
 #                                certification began in 2013 and programs were
 #                                still being accredited. Growth of ~13%/yr.
 #   2015-2020  57, 53, 59, 59, 58, 56   Flat. Mean 57.0, sd 2.4.
-#   2021-2024  NOT FETCHED -- see the acquisition script.
-#   2025       70               A step above the plateau that the gap years
-#                               cannot currently explain.
+#   2021-2025  62, 61, 61, 65, 70       Fetched 2026-08-05. Rising: mean 63.8.
+#
+# The 2021-2024 rows were absent until 2026-08-05, and their absence was doing
+# real damage. The series jumped 2020 -> 2025, so the 2025 value of 70 read as an
+# unexplained step above a flat plateau, and anything projecting forward from the
+# match had a four-year hole exactly across the back-test validation window. The
+# filled series is not a plateau that suddenly steps; it resumes growing after
+# 2020, 56 -> 62 -> 61 -> 61 -> 65 -> 70. Fill rate is also at or near its
+# ceiling throughout (93.8-100%), so further growth has to come from POSITIONS
+# OFFERED, which rose 65 -> 70 over the same span.
 #
 # A first-to-last CAGR across 2010-2025 returns ~4.9%/yr, which is an artifact
 # of averaging a one-off establishment ramp with a plateau. Rates for projection

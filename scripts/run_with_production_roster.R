@@ -41,15 +41,21 @@ if (!file.exists(ROSTER)) {
 
 message("Reproducibility mode: ", resolve_reproducibility_mode())
 roster <- urps_provider_roster(load_urps_roster(ROSTER))
-message(sprintf("Roster: %d providers, %d states, %d confirmed active in 2024",
+active_year <- suppressWarnings(max(roster$last_confirmed_active_year, na.rm = TRUE))
+active_label <- if (is.finite(active_year)) {
+  sprintf("confirmed active through %d", active_year)
+} else {
+  "with activity unconfirmed"
+}
+message(sprintf("Roster: %d providers, %d states, %d %s",
                 nrow(roster), length(unique(roster$state)),
-                sum(!is.na(roster$last_confirmed_active_year))))
+                sum(!is.na(roster$last_confirmed_active_year)), active_label))
 
 # Workload concentration is reported BEFORE the projection, because it bears on
 # how the supply number should be read: board certification is not the same as
 # delivering urogynaecologic care.
 conc <- roster_workload_concentration(load_urps_roster(ROSTER))
-cat("\n===== ROSTER WORKLOAD CONCENTRATION (Medicare CY2024) =====\n")
+cat("\n===== ROSTER WORKLOAD CONCENTRATION (available Medicare activity) =====\n")
 cat(sprintf("zero URPS Medicare volume : %d of %d (%.1f%%)\n",
             conc$n_zero, conc$n_providers, 100 * conc$share_zero))
 cat(sprintf("median annual services    : %.0f\n", conc$median_volume))
@@ -64,6 +70,8 @@ gap <- baseline_gap(
   base_supply_fte = supply$national,
   adequacy = capacity_survey_adequacy(example_capacity_survey())$adequacy,
   method = "capacity_survey",
+  calibration_status = "derived_by_analogy",
+  source = "Zarek 2025 PTJ (physical therapists, n = 1,423)",
   evidence = c("STAND-IN: Zarek 2025 physical-therapy capacity distribution",
                "Replace with a fielded URPS practice-capacity survey",
                "See capacity_status() and urps_capacity_survey_requirements()")

@@ -129,8 +129,8 @@ test_that("participant-visits with no observed state are dropped", {
 # a questionnaire change to age. These lock the exclusion in.
 
 test_that("the default visit set excludes the LEKINVO visits", {
-  expect_equal(SWAN_UI_QUARANTINED_VISITS, 7:9)
-  expect_equal(SWAN_UI_DEFAULT_VISITS, c(0:6, 10))
+  expect_equal(urpssim:::SWAN_UI_QUARANTINED_VISITS, 7:9)
+  expect_equal(urpssim:::SWAN_UI_DEFAULT_VISITS, c(0:6, 10))
   p <- build_swan_dmdm_panel(mk_swan_wide(), verbose = FALSE)
   expect_false(any(p$year %in% 7:9))
   expect_setequal(unique(p$year), c(0:6, 10))

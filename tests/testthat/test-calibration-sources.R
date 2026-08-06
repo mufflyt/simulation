@@ -16,7 +16,7 @@ test_that("empirical hazards resolve with matching checksums", {
 test_that("the sparse 70+ hazard cell is floored, never zero", {
   skip_if_not(calib_available(), "calibration files not present")
   h <- urps_empirical_hazard_by_ageband("urps")
-  expect_setequal(names(h), MICROSIM_AGE_BAND_LABELS)
+  expect_setequal(names(h), urpssim:::MICROSIM_AGE_BAND_LABELS)
   expect_gt(h[["70+"]], 0)                 # raw file has 0 events / 16 PY here
   expect_gte(h[["70+"]], h[["65-69"]])     # monotone non-decreasing in the tail
   expect_gte(h[["65-69"]], h[["60-64"]])
@@ -36,7 +36,7 @@ test_that("the empirical single-year schedule blends observed 50-69 with the HWS
   expect_equal(unname(s[as.character(67)]),
                unname(urps_empirical_hazard_by_ageband("urps")[["65-69"]]))
   expect_equal(unname(s[as.character(72)]),
-               unname(RETIREMENT_HAZARD_PHYSICIAN[["72"]]))
+               unname(urpssim:::RETIREMENT_HAZARD_PHYSICIAN[["72"]]))
   # Hazard rises monotonically across the retirement region.
   expect_true(all(diff(s[as.character(60:85)]) >= 0))
 })

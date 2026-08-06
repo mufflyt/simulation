@@ -11,7 +11,7 @@ career_departure_by_state(age, sex = "female", ...)
 
 \item{sex}{Character sex(es), recycled.}
 
-\item{...}{Passed to \code{\link[=departure_hazard]{departure_hazard}()}.}
+\item{...}{Passed to \code{\link[=departure_hazard]{departure_hazard()}}.}
 }
 \value{
 A tibble of \code{career_state}, \code{n}, \code{mean_hazard}.

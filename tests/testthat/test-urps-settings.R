@@ -33,7 +33,7 @@ test_that("default setting mix shares sum to 1 per service", {
 })
 
 test_that("default setting mix uses only valid setting names", {
-  expect_true(all(URPS_DEFAULT_SETTING_MIX$setting %in% URPS_SETTING_NAMES))
+  expect_true(all(URPS_DEFAULT_SETTING_MIX$setting %in% urpssim:::URPS_SETTING_NAMES))
 })
 
 test_that("all services in example_service_volumes are covered by the mix", {

@@ -72,3 +72,99 @@ test_that("the international-migration assumption defaults to an explicit zero a
   expect_error(international_migration_assumption(c(1, 2)))
   expect_error(international_migration_assumption(Inf))
 })
+
+# ---- Entrant pipeline: lag, calibrated conversion, and disruption -----------
+#
+# Four defects found by scoring the pipeline against the observed certification
+# series rather than only checking its internal arithmetic.
+
+test_that("the NRMP series is contiguous, so the pipeline can span the validation window", {
+  s <- nrmp_entrant_series()
+  # 2021-2024 were missing until 2026-08-05; the series jumped 2020 -> 2025 and
+  # could produce nothing for the back-test validation window.
+  expect_equal(setdiff(2010:2025, s$appointment_year), integer(0))
+  expect_true(all(diff(sort(s$appointment_year)) == 1))
+  expect_equal(s$positions_filled[s$appointment_year == 2021], 62L)
+  expect_equal(s$positions_filled[s$appointment_year == 2024], 65L)
+  # Filled can never exceed offered, in any year.
+  expect_true(all(s$positions_filled <= s$positions_offered))
+})
+
+test_that("the certification lag defaults to the documented fellowship length", {
+  # A 1-year default contradicted the three-year fellowship this package
+  # documents, and scored worse against every observed certification year.
+  expect_equal(eval(formals(entrant_pipeline_transition)$cert_lag),
+               URPS_FELLOWSHIP_YEARS)
+  expect_equal(URPS_FELLOWSHIP_YEARS, 3L)
+})
+
+test_that("the match-to-cert conversion is estimated, and excludes uninformative years", {
+  skip_if_not_installed("mufflyaccess")
+  r <- nrmp_match_to_cert_ratio(2020L)
+  expect_equal(r$cert_lag, 3L)
+  # Backlog years certified an already-practising pool that never passed through
+  # the match, and 2020's examination was cancelled. Including either makes the
+  # ratio meaningless -- with them the estimate is above 4.0.
+  expect_true(all(c(2013L, 2014L, 2015L, 2020L) %in% r$excluded))
+  expect_gt(r$ratio, 0.5)
+  expect_lt(r$ratio, 1.0)
+  expect_gt(nrmp_match_to_cert_ratio(2020L, exclude_disrupted = FALSE)$ratio, 2)
+
+  # The default must be the estimated conversion, not the old 0.95 assumption.
+  expect_equal(eval(formals(entrant_pipeline_transition)$p_complete_cert),
+               round(r$ratio, 2), tolerance = 0.02)
+})
+
+test_that("a per-year conversion represents a cancelled examination", {
+  m <- data.frame(year = 2013:2025, matched = rep(50, 13))
+  sched <- data.frame(year = 2013:2025, p_complete_cert = 0.8)
+  sched$p_complete_cert[sched$year == 2020] <- 0.1
+
+  flat <- entrant_pipeline_transition(m, p_complete_cert = 0.8)
+  vary <- entrant_pipeline_transition(m, p_complete_cert = sched)
+
+  # A constant conversion cannot express the event at all.
+  expect_equal(length(unique(flat$p_complete_cert)), 1L)
+  expect_lt(vary$certified[vary$year == 2020], flat$certified[flat$year == 2020])
+})
+
+test_that("a suppressed year defers its fellows rather than destroying them", {
+  m <- data.frame(year = 2013:2025, matched = rep(50, 13))
+  sched <- data.frame(year = 2013:2025, p_complete_cert = 0.8)
+  sched$p_complete_cert[sched$year == 2020] <- 0.1
+
+  kept <- entrant_pipeline_transition(m, p_complete_cert = sched, defer_shortfall = TRUE)
+  lost <- entrant_pipeline_transition(m, p_complete_cert = sched, defer_shortfall = FALSE)
+
+  # The deficit reappears in the following year, and only there.
+  expect_gt(kept$deferred_in[kept$year == 2021], 0)
+  expect_equal(kept$deferred_in[kept$year == 2022], 0)
+  expect_gt(kept$certified[kept$year == 2021], lost$certified[lost$year == 2021])
+
+  # Deferral conserves fellows across the disruption; discarding them does not.
+  win <- 2019:2022
+  expect_equal(sum(kept$certified[kept$year %in% win]),
+               sum(lost$certified[lost$year %in% win]) +
+                 50 * (0.8 - 0.1), tolerance = 1e-6)
+})
+
+test_that("a scalar conversion is unchanged by the per-year machinery", {
+  m <- data.frame(year = 2013:2025, matched = seq(40, 64, length.out = 13))
+  a <- entrant_pipeline_transition(m, p_complete_cert = 0.75)
+  b <- entrant_pipeline_transition(m, p_complete_cert = rep(0.75, 13))
+  expect_identical(a$certified, b$certified)
+  expect_true(all(a$deferred_in == 0))   # nothing to defer when nothing varies
+})
+
+test_that("malformed conversion schedules are rejected", {
+  m <- data.frame(year = 2013:2025, matched = rep(50, 13))
+  expect_error(entrant_pipeline_transition(m, p_complete_cert = c(0.5, 0.6)),
+               "supply a")
+  expect_error(entrant_pipeline_transition(m, p_complete_cert = 1.5), "\\[0, 1\\]")
+  expect_error(entrant_pipeline_transition(m, p_complete_cert = data.frame(year = 2020)),
+               "needs")
+  # A partial schedule falls back to its own median rather than blanking years.
+  part <- entrant_pipeline_transition(
+    m, p_complete_cert = data.frame(year = 2020, p_complete_cert = 0.1))
+  expect_true(all(is.finite(part$p_complete_cert)))
+})

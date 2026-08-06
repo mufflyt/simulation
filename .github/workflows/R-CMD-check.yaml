@@ -75,7 +75,18 @@ jobs:
           # so it is actually installed, which is the point of the PAT: the
           # roster, SSOT, scenario-registry and projection-contract paths are all
           # gated behind has_mufflyaccess() and have never run in CI.
-          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown, mufflyt/mufflyaccess
+          #
+          # PINNED BY COMMIT, and it has to be spelled out here. Naming the repo
+          # bare resolves HEAD: an extra-packages entry is its own spec and does
+          # not inherit the DESCRIPTION Remotes pin, so CI would silently install
+          # a different build from every developer. That is the exact failure this
+          # repository already hit locally -- two builds, both calling themselves
+          # 0.10.0, disagreeing about whether n_retired is NA or zero. A version
+          # constraint cannot express the difference; only the commit can.
+          #
+          # test-contract-pin.R asserts this SHA equals MUFFLYACCESS_PINNED_SHA,
+          # so the two copies cannot drift apart unnoticed.
+          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown, mufflyt/mufflyaccess@b1f33acf918d71031ed7cbed79cb76d525503d4c
           # mufflyaccess (Suggests) is a private repo the CI token cannot
           # reach. Hard dependencies only; tests needing it skip themselves.
           dependencies: '"hard"'

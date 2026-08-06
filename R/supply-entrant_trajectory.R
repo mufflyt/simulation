@@ -10,18 +10,25 @@
 # always been 10% higher" rather than "what if it grows". Those are different
 # questions and only the second one is about policy.
 #
-# WHAT THE NRMP SERIES ACTUALLY SHOWS (appointment years 2017-2025):
+# WHAT THE NRMP SERIES ACTUALLY SHOWS (plateau era, appointment years 2015-2025):
 #
-#   positions offered   64, 60, 64, 65, ... 70      CAGR +1.13%/yr
-#   positions filled    59, 59, 58, 56, ... 70      CAGR +2.16%/yr
-#   fill rate           92%, 98%, 91%, 86%, ... 100%
+#   positions offered   58, 54, 64, 60, 64, 65, 63, 65, 65, 67, 70   CAGR +1.90%/yr
+#   positions filled    57, 53, 59, 59, 58, 56, 62, 61, 61, 65, 70   CAGR +2.08%/yr
+#   fill rate           98%, 98%, 92%, 98%, 91%, 86%, 98%, 94%, 94%, 97%, 100%
 #
-# The filled series grew nearly twice as fast as the offered series, and the
-# difference is entirely fill-rate catch-up: 86-92% to 100%. THAT SOURCE OF
+# The filled series still grows faster than the offered series, and the
+# difference is fill-rate catch-up to a ceiling: it ends at 100%. THAT SOURCE OF
 # GROWTH IS NOW EXHAUSTED -- a fill rate cannot exceed 1 -- so extrapolating the
 # filled CAGR forward double-counts a one-off. The sustainable ceiling on
-# entrant growth is the rate at which PROGRAMS AND POSITIONS expand, +1.13%/yr,
+# entrant growth is the rate at which PROGRAMS AND POSITIONS expand, +1.90%/yr,
 # and even that assumes the recent expansion continues.
+#
+# THESE RATES MOVED on 2026-08-05, when appointment years 2021-2024 were finally
+# fetched (R/37). The series previously jumped 2020 -> 2025, and the earlier
+# reading of it -- offered +1.13%/yr, filled +2.16%/yr, an unexplained step to 70
+# -- was an artifact of that four-year hole. The gap years show a steady climb,
+# 56 -> 62 -> 61 -> 61 -> 65 -> 70, so the offered ceiling is +1.90%/yr rather
+# than +1.13%/yr: nearly 70% higher, and it is a projection input.
 #
 # This module exists so that reasoning is in code rather than in a footnote.
 

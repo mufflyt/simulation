@@ -65,24 +65,69 @@ URLS <- c(
   "2018" = "https://www.nrmp.org/wp-content/uploads/2021/07/Results-and-Data-SMS-2018.pdf",
   "2019" = "https://www.nrmp.org/wp-content/uploads/2021/07/Results-and-Data-SMS-2019.pdf",
   "2020" = "https://www.nrmp.org/wp-content/uploads/2021/07/Results-and-Data-SMS-2020.pdf",
+  # 2021-2024 were absent until 2026-08-05. They were not missing from NRMP --
+  # each URL simply follows a different scheme again, resolved from that year's
+  # landing page rather than guessed.
+  "2021" = "https://www.nrmp.org/wp-content/uploads/2022/04/SMS_Result_and_Data_2021.pdf",
+  "2022" = "https://www.nrmp.org/wp-content/uploads/2022/03/2022-SMS-Results-Data-FINAL.pdf",
+  "2023" = "https://www.nrmp.org/wp-content/uploads/2023/04/2023-SMS-Results-and-Data-Book.pdf",
+  "2024" = "https://www.nrmp.org/wp-content/uploads/2024/02/2024-SMS-Results-Data-1.pdf",
   "2025" = "https://www.nrmp.org/wp-content/uploads/2025/02/SMS_Results_and_Data_2025.pdf"
 )
 
-# Human-verified from the source PDFs on 2026-08-04 (2025 additionally matches
-# the independently verified value in mufflyt/cliff). GATE 2 checks against this.
+# Verified from the source PDFs: 2010-2020 and 2025 by human read on 2026-08-04
+# (2025 additionally matches the independently verified value in mufflyt/cliff).
+# GATE 2 checks against this.
+#
+# 2021-2024 added 2026-08-05. These were NOT read by a human, and saying so
+# matters, because GATE 2 exists to be a second source and would be circular if
+# it were filled from the same regex it audits. They are instead corroborated by
+# a source INDEPENDENT of Table 1: every SMS report also prints a five-year
+# history of positions-offered and percent-filled, so each year appears again in
+# up to four later reports. Reconstructing filled = offered x %filled from those
+# history tables reproduces all four values, and also reproduces the
+# human-verified 2019 (64/58) and 2020 (65/56), which is what makes the
+# reconstruction trustworthy rather than merely self-consistent:
+#
+#   year  Table 1        history tables agreeing
+#   2021  63 / 62 (98.4) 2022, 2023, 2025
+#   2022  65 / 61 (93.8) 2023, 2025
+#   2023  65 / 61 (93.8) 2025
+#   2024  67 / 65 (97.0) 2025
+#
+# Replace with a human read when one is done; the values should not move.
 EXPECTED <- data.frame(
   appointment_year  = c(2010L, 2011L, 2012L, 2013L, 2014L, 2015L, 2016L,
-                        2017L, 2018L, 2019L, 2020L, 2025L),
-  positions_offered = c(34L, 40L, 39L, 51L, 55L, 58L, 54L, 64L, 60L, 64L, 65L, 70L),
-  positions_filled  = c(30L, 40L, 37L, 48L, 50L, 57L, 53L, 59L, 59L, 58L, 56L, 70L),
+                        2017L, 2018L, 2019L, 2020L,
+                        2021L, 2022L, 2023L, 2024L, 2025L),
+  positions_offered = c(34L, 40L, 39L, 51L, 55L, 58L, 54L, 64L, 60L, 64L, 65L,
+                        63L, 65L, 65L, 67L, 70L),
+  positions_filled  = c(30L, 40L, 37L, 48L, 50L, 57L, 53L, 59L, 59L, 58L, 56L,
+                        62L, 61L, 61L, 65L, 70L),
   stringsAsFactors = FALSE
 )
 
 PCT_TOLERANCE <- 0.15   # printed to one decimal; allow rounding
 
-if (nchar(Sys.which("pdftotext")) == 0) {
-  stop("pdftotext (poppler) not found on PATH; install poppler to run this fetcher.",
-       call. = FALSE)
+# PDF -> text, via poppler's pdftotext if present and the pdftools R package
+# otherwise. The binary is preferred because `-layout` preserves the column
+# spacing Table 1 depends on; pdftools::pdf_text() preserves it too. Requiring
+# the binary outright is what kept 2021-2024 unfetched on a machine that had
+# neither -- the fetcher could not run at all, so the gap looked like missing
+# data rather than a missing tool.
+if (nchar(Sys.which("pdftotext")) == 0 &&
+    !requireNamespace("pdftools", quietly = TRUE)) {
+  stop("Neither pdftotext (poppler) nor the pdftools package is available; ",
+       "install one to run this fetcher.", call. = FALSE)
+}
+
+pdf_to_text_file <- function(pdf, txt) {
+  if (nchar(Sys.which("pdftotext")) > 0) {
+    system2("pdftotext", c("-layout", shQuote(pdf), shQuote(txt)),
+            stdout = NULL, stderr = NULL)
+  } else {
+    writeLines(unlist(strsplit(pdftools::pdf_text(pdf), "\n")), txt)
+  }
 }
 
 tmp <- Sys.getenv("NRMP_CACHE_DIR", unset = tempfile("nrmp"))
@@ -100,8 +145,7 @@ extract_row <- function(year) {
       return(list(year = year, status = "UNAVAILABLE",
                   detail = "download failed or implausibly small file"))
     }
-    system2("pdftotext", c("-layout", shQuote(pdf), shQuote(txt)),
-            stdout = NULL, stderr = NULL)
+    pdf_to_text_file(pdf, txt)
   }
   lines <- readLines(txt, warn = FALSE)
 

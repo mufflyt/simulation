@@ -77,7 +77,14 @@ test_that("R/calibration-hrsa_fte really is dormant, so the warning stays true",
   # Exclude the definition, and exclude R/data-practice_survey -- it names the function inside
   # fte_curve_status()'s message string precisely to warn people off it, which
   # is a mention in a string literal rather than a call.
-  r_files <- r_files[!grepl("40-hrsa_fte_calibration|56-practice_survey", r_files)]
+  # Locate the files to exclude by WHAT THEY DEFINE, never by filename. The
+  # numbered module scheme was renamed wholesale to semantic prefixes, and a
+  # filename-matched exclusion silently stopped matching -- this test failed for
+  # a rename, not for a regression.
+  .defines <- function(fs, pattern) vapply(fs, function(f)
+    any(grepl(pattern, readLines(f, warn = FALSE))), logical(1))
+  r_files <- r_files[!(.defines(r_files, "^fte_curve_status <- function") |
+                         .defines(r_files, "^apply_hrsa_surgical_fte <- function"))]
   called_in <- function(f) {
     code <- sub("#.*$", "", readLines(f, warn = FALSE))
     any(grepl("apply_hrsa_surgical_fte\\s*\\(", code))
@@ -126,7 +133,11 @@ test_that("the ordering trap is recorded, because the wrong step looks easiest",
   # Wiring R/geography-spatial_access_e2sfca is a one-line change and is the obvious first move. Done before
   # coordinates exist it falls back to state geometry and emits a plausible
   # access ratio that means nothing -- worse than dormancy, which emits none.
-  expect_match(g$ordering_trap, "Do NOT wire R/geography-spatial_access_e2sfca first")
+  # Match the CLAIM, never the module path: a rename rewrites source and test
+  # independently and they drift apart. The path is checked for existence by
+  # "every file path the register names actually exists" instead.
+  expect_match(g$ordering_trap, "Do NOT wire")
+  expect_match(g$ordering_trap, "first")
   expect_match(g$ordering_trap, "state-level geometry")
   expect_true(any(grepl("isochrones", g$resolved_by)))
   expect_true(any(grepl("validation_report", g$resolved_by)))
@@ -165,7 +176,11 @@ test_that("R/geography-spatial_access_e2sfca really is dormant, so the trap warn
   files <- c(list.files(file.path(root[1], "R"), pattern = "[.]R$", full.names = TRUE),
              list.files(file.path(root[1], "scripts"), pattern = "[.]R$",
                         full.names = TRUE, recursive = TRUE))
-  files <- files[!grepl("14-spatial_access_e2sfca|56-practice_survey", files)]
+  # Same rule: exclude by definition, not by filename.
+  .defines <- function(fs, pattern) vapply(fs, function(f)
+    any(grepl(pattern, readLines(f, warn = FALSE))), logical(1))
+  files <- files[!(.defines(files, "^geographic_access_status <- function") |
+                     .defines(files, "^compute_access <- function"))]
   called_in <- function(f) {
     code <- sub("#.*$", "", readLines(f, warn = FALSE))
     any(grepl("(compute_access|match_points_to_isochrones)\\s*\\(", code))
@@ -174,4 +189,48 @@ test_that("R/geography-spatial_access_e2sfca really is dormant, so the trap warn
   expect_false(any(hits),
                info = paste("access layer now called from:",
                             paste(basename(files[hits]), collapse = ", ")))
+})
+
+test_that("every file path the register names actually exists", {
+  # THE FRAGILITY THIS CATCHES. fte_curve_status()$do_not_fix names a module by
+  # path to point people away from it. A wholesale rename of R/ from numbered to
+  # semantic prefixes rewrote that string correctly by luck; nothing verified it.
+  # A status message that sends a reader to a file which no longer exists is
+  # worse than no message, because it looks authoritative.
+  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
+                 c(".", "..", file.path("..", "..")))
+  skip_if(length(root) == 0)
+
+  texts <- c(unlist(fte_curve_status()), unlist(capacity_status()),
+             unlist(geographic_access_status()[setdiff(names(geographic_access_status()),
+                                                       "components")]),
+             unlist(geographic_access_status()$components))
+  texts <- texts[!is.na(texts)]
+  paths <- unique(unlist(regmatches(
+    texts, gregexpr("(R|tests|scripts|data-raw|artifacts|docs)/[A-Za-z0-9_./-]+", texts))))
+  paths <- sub("[.,;:]+$", "", paths)
+  skip_if(length(paths) == 0)
+
+  missing <- paths[!vapply(paths, function(p) {
+    file.exists(file.path(root[1], p)) || length(Sys.glob(file.path(root[1], p))) > 0
+  }, logical(1))]
+  expect_equal(missing, character(0),
+               info = paste("status text names non-existent path(s):",
+                            paste(missing, collapse = ", ")))
+})
+
+test_that("the register's function references resolve to real objects", {
+  # Same failure mode one level down: naming a function that has been renamed
+  # or removed. Checked against the namespace rather than the filesystem.
+  pkg <- asNamespace("urpssim")
+  texts <- c(unlist(fte_curve_status()), unlist(capacity_status()))
+  texts <- texts[!is.na(texts)]
+  fns <- unique(unlist(regmatches(texts, gregexpr("[a-zA-Z_.][A-Za-z0-9_.]*\\(\\)", texts))))
+  fns <- sub("\\(\\)$", "", fns)
+  # Only names this package could plausibly own; base/utils calls are fine.
+  fns <- fns[!fns %in% c("sprintf", "paste", "c", "list", "function")]
+  unknown <- fns[!vapply(fns, exists, logical(1), envir = pkg, inherits = TRUE)]
+  expect_equal(unknown, character(0),
+               info = paste("status text names unknown function(s):",
+                            paste(unknown, collapse = ", ")))
 })

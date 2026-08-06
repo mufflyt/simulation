@@ -1,0 +1,14 @@
+Sanitized URPS roster generated for urpssim production-roster input.
+Generated: 2026-08-05 20:36:31 MDT
+ABOG source: /Volumes/MufflySamsung 1/isochrones_artifact_archive/20260221_104347_fd524a46/step_2.5_final_cohort.rds
+ABU source: /Volumes/MufflySamsung 1/isochrones_straight_from_old_mac/data/0-Download/input/abu_ORG_Leads.xlsx
+ABU NPI join source: /Volumes/MufflySamsung 1/isochrones_straight_from_old_mac/data/02.33-nber_nppes_data/output/merged_obgyn_urology_npi_matched_8_18_2025.csv
+No physician names are included in the output CSV.
+last_confirmed_active_year is 2023 when the source reports Medicare activity through 2023.
+has_medicare_2024 is FALSE because no CY2024 activity file was found in the searched local, Dropbox, S3, or external-drive locations.
+urogyn_services_2024 is populated for backward compatibility with existing code, but values are from available through-2023 service columns; use urogyn_services_through_2023 for correctly labelled interpretation.
+Rows: 1100
+Unique NPIs: 1092
+ABOG rows: 830
+ABU rows with NPI: 270 of 294 ABU urogynecology records
+States: 50

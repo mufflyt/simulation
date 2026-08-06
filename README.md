@@ -75,6 +75,42 @@ pak::pak("mufflyt/simulation")
 library(urpssim)
 ```
 
+## Direct supply microsimulation
+
+This is the minimal publication-safe supply run. It gives the 95% bands a
+quantified entrant-rate component and calibrates the reference hours schedule to
+the starting cohort. An empty `supply_parameter_spec()` does neither, and is
+therefore refused in strict reproducibility mode.
+
+```r
+agents <- initialize_provider_agents(1306, "FPMRS", 2025)
+
+entrant_history <- urps_certification_cohorts()
+entrant_history <- entrant_history$n_certified[
+  entrant_history$cert_year >= 2018
+]
+
+sim <- run_supply_microsimulation(
+  initial_workforce   = agents,
+  years               = 2025:2050,
+  entrants_per_year   = 55,
+  n_iterations        = 500,
+  retirement_schedule = urps_empirical_retirement_schedule(),
+  param_spec          = supply_parameter_spec(
+    entrant_series = entrant_history,
+    entrant_mean = 55
+  ),
+  fte_method          = "hours",
+  hours_intercept     = calibrate_hours_intercept(agents$age)
+)
+
+sim$summary      # per-year median + 95% band
+sim$iterations   # every replicate panel
+```
+
+The synthetic `agents` cohort is suitable for an example only. A
+publication-facing run should use a validated provider roster with age and sex.
+
 ```bash
 Rscript scripts/run_workforce_microsimulation_example.R   # no external data needed (~2 min)
 Rscript scripts/run_backtest_2020_to_2023.R               # historical validation
