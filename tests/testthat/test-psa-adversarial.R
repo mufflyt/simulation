@@ -1,6 +1,6 @@
-# Semantic + adversarial guards for the PSA engine (R/psa.R).
+# Semantic + adversarial guards for the PSA engine (R/calibration-psa.R).
 #
-# The happy-path recovery tests live in test-psa.R. This file pins two further
+# The happy-path recovery tests live in test-calibration-psa.R. This file pins two further
 # classes of property:
 #   * SEMANTIC   -- invariants a rank-based global sensitivity method must hold
 #                   (monotone-transform invariance, null inputs read as ~0, a

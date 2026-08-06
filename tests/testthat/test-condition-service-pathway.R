@@ -1,4 +1,4 @@
-# Condition-specific service pathway (R/51-condition_service_pathway.R).
+# Condition-specific service pathway (R/demand-condition_service_pathway.R).
 #
 # The point of the cascade is that downstream stages are CONDITIONAL on upstream
 # ones. The flat map it replaces could not express that: a UI patient drew PTNS

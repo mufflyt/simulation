@@ -1,4 +1,4 @@
-# The SWAN -> DMDM panel bridge (R/47-swan_dmdm_panel.R).
+# The SWAN -> DMDM panel bridge (R/data-swan_dmdm_panel.R).
 #
 # Every fixture is built in memory, so this file needs no SIMULATION_DATA_ROOT
 # and no 2.6 GB of SWAN on disk. The traps encoded here are the ones the real

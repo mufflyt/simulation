@@ -8,9 +8,9 @@ addresses both, and the fix for one does nothing for the other.
 | Point estimate −8.5% | A cancelled board examination averaged into the steady-state entrant rate | Screen disrupted years out of the fit; defer their deficit |
 | 95% interval 6.5× too narrow | Every coefficient held fixed; intervals described Monte Carlo noise | Draw trend coefficients, overdispersion, and regime breaks per iteration |
 
-Code: `R/49-entrant_regime.R`. Tests: `tests/testthat/test-entrant-regime.R`.
+Code: `R/supply-entrant_regime.R`. Tests: `tests/testthat/test-entrant-regime.R`.
 
-**Read `R/35-backtest_run.R` arm 5 first.** It attacks the same defect using the
+**Read `R/validation-backtest_run.R` arm 5 first.** It attacks the same defect using the
 NRMP fellowship match — a leading indicator of entry rather than a repaired
 lagging one — and §5 scores this module against it rather than against the
 superseded shipped assumption.
@@ -129,7 +129,7 @@ assumption explicitly; it defaults to `NA`.
 ## 5. Scored at the 2020 cutoff, against arm 5
 
 The comparator is **arm 5**, the NRMP fellowship-match arm in
-`R/35-backtest_run.R` — not the original shipped assumption, which arm 5 already
+`R/validation-backtest_run.R` — not the original shipped assumption, which arm 5 already
 supersedes. 600 iterations, seed 20260802, target 1,306.
 
 Definition-matched (no attrition on either side):

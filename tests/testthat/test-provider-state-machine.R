@@ -1,4 +1,4 @@
-# Guards for the provider career state machine (R/16b) and its engine hook.
+# Guards for the provider career state machine (R/supply-provider_state_machine) and its engine hook.
 #
 # The state machine is ADDITIVE and OUTPUT-PRESERVING: it reconstructs the R/16
 # physician retirement schedule byte-identically, and turning on state tracking

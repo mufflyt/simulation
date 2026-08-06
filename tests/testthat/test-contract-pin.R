@@ -1,4 +1,4 @@
-# The mufflyaccess contract pin (R/60).
+# The mufflyaccess contract pin (R/core-contract_pin).
 #
 # THE FAILURE THIS EXISTS FOR, observed rather than imagined. Two materially
 # different mufflyaccess builds both reported version 0.10.0 during one working

@@ -158,7 +158,7 @@ entrants, the model has **no stochasticity at all** (PI width 0–2 providers).
 
 ### Addendum: parameter uncertainty was added, and it is not sufficient
 
-`R/36-parameter_uncertainty.R` now redraws the entrant rate each iteration from
+`R/calibration-parameter_uncertainty.R` now redraws the entrant rate each iteration from
 the observed series' own sampling distribution (pre-cutoff only: 40/48/10, SE
 11.6 on n=3), reusing PR #8's `.param_draw()` where a fitted model exists.
 
@@ -188,7 +188,7 @@ with no sample sizes or standard errors. `supply_parameter_spec()` exposes a
 
 ### Addendum 2: both failures are addressed by an entrant regime model
 
-`R/49-entrant_regime.R` takes up the two failures above, and
+`R/supply-entrant_regime.R` takes up the two failures above, and
 **`docs/ENTRANT_REGIME_MODEL.md` is the write-up**. In brief:
 
 - The point estimate missed because a **cancelled board examination** was

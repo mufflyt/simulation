@@ -1,4 +1,4 @@
-# Back-test status stamping (R/38-backtest_status.R).
+# Back-test status stamping (R/validation-backtest_status.R).
 #
 # The engine's only external validation FAILED coverage. The point of this
 # module is that the failure travels with the numbers, so these tests check the

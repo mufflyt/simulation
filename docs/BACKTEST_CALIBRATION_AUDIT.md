@@ -17,15 +17,15 @@ iterations present.
 parameter uncertainty, because `run_backtest()` never passed the `param_spec`
 that `run_backtest_arm()` accepts.
 
-**Diagnostic.** `grep -n "param_spec" R/35-backtest_run.R` — argument declared
+**Diagnostic.** `grep -n "param_spec" R/validation-backtest_run.R` — argument declared
 and documented at line 31-33, passed by nothing.
 
 **Finding.** Confirmed. PI95 widths in the pre-fix artifact: 35, 0, 34, 2, 40, 0,
 40, 3 providers on a count near 1,300. Two arms had **literally zero width** —
 no attrition and an integral entrant rate leaves nothing to vary.
 
-**Files changed.** `R/35-backtest_run.R` (per-arm `arm_spec()`),
-`R/36-parameter_uncertainty.R` (draw centred on `entrant_mean`).
+**Files changed.** `R/validation-backtest_run.R` (per-arm `arm_spec()`),
+`R/calibration-parameter_uncertainty.R` (draw centred on `entrant_mean`).
 
 **Result.** Widths 129–148. Coverage 0/8 → 2/8.
 
@@ -84,7 +84,7 @@ centre would have to move ~108.
 producing `Error in rep(NA_real_, capacity - n0) : invalid 'times' argument`
 from deep inside the engine. `run_supply_microsimulation()` already guarded
 this; `run_backtest_arm()` did not. Guard made consistent in
-`R/35-backtest_run.R`.
+`R/validation-backtest_run.R`.
 
 ---
 
@@ -167,10 +167,10 @@ Corrected cell: **55 records, 4,814,760 weighted visits** — above the NCHS
 30-record reliability floor.
 
 **MEPS checked the same way and is CORRECT** (`SEX = 2` is female there:
-N40 279/0, C61 147/0), so `R/48` needed no change. Verified, not assumed.
+N40 279/0, C61 147/0), so `R/data-meps_care_seeking` needed no change. Verified, not assumed.
 
-**Files changed.** `R/45-namcs_urps_visit_equations.R`,
-`data-raw/namcs/01-namcs_acquire.R`, new `R/52-namcs_demand_calibration.R`,
+**Files changed.** `R/demand-namcs_visit_equations.R`,
+`data-raw/namcs/01-namcs_acquire.R`, new `R/calibration-namcs_demand.R`,
 new `tests/testthat/test-namcs-demand-calibration.R`.
 
 **Result.** Scalar = 4,814,760 / 10,316,893 = **0.467**, unflagged and inside

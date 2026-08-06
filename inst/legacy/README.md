@@ -15,8 +15,8 @@ the repository: `tests/testthat/test-repo-hygiene.R`. No module, script, or
 vignette calls any of it.
 
 **No shared surface.** These scripts define 131 function names. The package
-defines 468. The intersection is **empty**. `R/42-swan_incontinence_panel.R` and
-`R/47-swan_dmdm_panel.R` are reimplementations of the SWAN work, not extractions
+defines 468. The intersection is **empty**. `R/data-swan_incontinence_panel.R` and
+`R/data-swan_dmdm_panel.R` are reimplementations of the SWAN work, not extractions
 of it, so there is no path by which a change here reaches a model output.
 
 The rule that follows: **do not add a call to `load_legacy()` from package

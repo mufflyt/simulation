@@ -25,7 +25,7 @@ the full 40+ structure the life-course / DMDM demand is defined over. Join to th
 centroids on `GEOID` (or a TIGER/Line tract layer) for coordinates, then build
 tract need with `tract_need_from_population()` (`need = sum_band(female_pop[band]
 * pfd_prevalence_by_band()[band])`) and feed `geographic_demand_summary()` — or
-run both in one call with `isochrone_demand_from_tracts()` (`R/32`). Not vendored
+run both in one call with `isochrone_demand_from_tracts()` (`R/geography-demand`). Not vendored
 (size) — download locally; the script writes a manifest with the md5.
 
 ## Provider isochrone polygons (NOT vendored)

@@ -1,7 +1,7 @@
 # SWAN (Study of Women's Health Across the Nation) — ICPSR series 253
 
 Longitudinal source for **fitting the DMDM UI onset/remission hazards**
-(`R/31-dmdm_fit_transitions.R`). A multi-ethnic cohort of mid-life women followed
+(`R/demand-dmdm_fit_transitions.R`). A multi-ethnic cohort of mid-life women followed
 across annual visits with repeated urinary-incontinence measures and the engine's
 covariates (age, BMI, menopause status, comorbidity; parity from baseline).
 
@@ -26,12 +26,12 @@ source("scripts/data_acquisition/09_download_swan_icpsr.R")
 
 SWAN measures UI well but carries **no POP-Q staging**, so it fits UI, not graded
 prolapse. For POP keep the cited literature transitions
-(`dmdm_transitions_with_pop_literature()`, `R/33`) or fit from a POP-Q cohort
+(`dmdm_transitions_with_pop_literature()`, `R/supply-roster`) or fit from a POP-Q cohort
 (MOAD / WHI). See `docs/DEMAND_METHODS.md` §4.
 
 ## Reshape → fit
 
-The reshape and fit are wired end to end — `build_swan_dmdm_panel()` (`R/47`)
+The reshape and fit are wired end to end — `build_swan_dmdm_panel()` (`R/data-swan_dmdm_panel`)
 turns the wide SWAN frame into the person-year panel
 `dmdm_transition_data()` needs, and one runner does the rest:
 

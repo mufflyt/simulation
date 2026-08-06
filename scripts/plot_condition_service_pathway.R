@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# Plot the condition-specific service pathway (R/49) against the flat service map
+# Plot the condition-specific service pathway (R/supply-entrant_regime) against the flat service map
 # it replaces.
 #
 # Two panels, because there are two distinct claims:

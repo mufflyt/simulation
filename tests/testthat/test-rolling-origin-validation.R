@@ -1,4 +1,4 @@
-# Rolling-origin vs leave-one-out validation (R/34).
+# Rolling-origin vs leave-one-out validation (R/validation-backtest).
 #
 # The single most important property here is that rolling origin cannot see the
 # future. If that breaks, the validation silently becomes the leaky comparator

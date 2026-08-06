@@ -1,4 +1,4 @@
-# URPS roster: production cohort and workload evidence (R/55).
+# URPS roster: production cohort and workload evidence (R/supply-roster_capacity).
 
 rc_have <- function() {
   any(file.exists(c("data-raw/urps_roster/urps_roster_2026-07-22.csv",

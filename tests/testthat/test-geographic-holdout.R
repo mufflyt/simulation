@@ -1,4 +1,4 @@
-# Geographic held-out (spatial) cross-validation (R/geographic_holdout_validation.R).
+# Geographic held-out (spatial) cross-validation (R/validation-geographic_holdout.R).
 #
 # External-validity harness: predicting held-out geographies is out-of-sample
 # along a dimension that played no part in the temporal model selection. These

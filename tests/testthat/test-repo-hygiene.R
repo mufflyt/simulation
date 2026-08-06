@@ -73,10 +73,10 @@ test_that("the legacy load order delivers the declared canonical implementations
 test_that("no source file hardcodes a personal filesystem path", {
   files <- c(.r_files("R"), .r_files(file.path("inst", "legacy")),
              .r_files("scripts"))
-  # R/00-paths.R is the resolver itself: the home-directory candidates it probes
+  # R/core-paths.R is the resolver itself: the home-directory candidates it probes
   # are fallbacks, not hardcoded inputs. This test file contains the pattern it
   # searches for. Both are exempt by construction.
-  files <- files[!basename(files) %in% c("00-paths.R", "test-repo-hygiene.R")]
+  files <- files[!basename(files) %in% c("core-paths.R", "test-repo-hygiene.R")]
   bad <- character(0)
   for (f in files) {
     x <- readLines(f, warn = FALSE)
@@ -183,27 +183,39 @@ test_that("declared Imports cover the namespaces the package calls", {
                info = paste("Add to DESCRIPTION Imports:", paste(missing, collapse = ", ")))
 })
 
-test_that("no two modules claim the same number prefix", {
-  # THIS DEFECT HAS RECURRED ONCE ALREADY. 46f5b56 resolved four collisions
-  # (25/26/27/28) and named the mechanism exactly: "Every one was added the same
-  # day by a different feature branch taking 'the next number'." Within days
-  # three more appeared -- 27, 33 and 38 -- one of them on a file that commit had
-  # just moved. A convention that has failed twice is not a convention, it is a
-  # test that was never written.
-  #
-  # Collation is alphabetical with no Collate field, so a collision breaks
-  # nothing functionally. What it breaks is the prefix's only job: naming one
-  # module. Sub-modules are distinguished by their whole token, so 13 and 13b are
-  # different prefixes and both may exist.
+# The allowed conceptual families. A module's prefix (the token before the first
+# "-") must be one of these. This REPLACES the former numeric-prefix convention.
+#
+# HISTORY. The numbering (00-, 10-, ...) recurred as a collision source: 46f5b56
+# resolved four collisions (25/26/27/28) -- "every one was added the same day by
+# a different feature branch taking 'the next number'" -- and within days three
+# more appeared (27, 33, 38), with 60 and 63 following later. A monotonically-
+# increasing integer is a shared mutable counter across branches; it will always
+# collide. Families remove the counter: many files share a prefix ON PURPOSE, so
+# there is nothing to contend for. Collation is alphabetical with no Collate
+# field, so load order is unaffected either way.
+ALLOWED_MODULE_FAMILIES <- c(
+  "supply", "demand", "geography", "calibration",
+  "validation", "reporting", "core", "data"
+)
+
+test_that("every R module's prefix is an allowed conceptual family", {
   files <- basename(.r_files("R"))
-  numbered <- grep("^[0-9]", files, value = TRUE)
-  prefixes <- sub("-.*", "", numbered)
-  dup <- unique(prefixes[duplicated(prefixes)])
-  offenders <- sort(numbered[prefixes %in% dup])
+  # The package-doc file follows roxygen's <pkg>-package.R convention and is exempt.
+  files <- setdiff(files, "urpssim-package.R")
+  prefixes <- sub("-.*", "", files)
+  # A file with no "-" separator has prefix == whole name: that is an offender too
+  # (it belongs to no family), caught by the same membership check.
+  has_sep <- grepl("-", files)
+  offenders <- sort(files[!has_sep | !(prefixes %in% ALLOWED_MODULE_FAMILIES)])
   expect_equal(
     offenders, character(0),
-    info = paste("Prefix collision -- renumber one of each pair to a free number:",
-                 paste(offenders, collapse = ", "))
+    info = paste0(
+      "Every R/ module must be named <family>-<name>.R with family in {",
+      paste(ALLOWED_MODULE_FAMILIES, collapse = ", "), "}. ",
+      "Offending files: ", paste(offenders, collapse = ", "),
+      ". Pick the family that best fits, or propose a new one here."
+    )
   )
 })
 

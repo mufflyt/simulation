@@ -13,9 +13,9 @@ licensed) but never ships in the built package.
 | `04_download_nhamcs_namcs.R` | NAMCS/NHAMCS | office-visit anchors | free |
 | `05_download_meps_2022.R`, `06_..2023.R` | MEPS | care-seeking, utilization | free |
 | `07_download_nhanes_urinary.R` | NHANES | UI prevalence | free |
-| **`08_download_acs_tracts.R`** | ACS 5-yr (**tract** B01001 by age band) | **isochrone demand** (`R/32`) | free API key |
-| **`09_download_swan_icpsr.R`** | **SWAN** (ICPSR 253) | **DMDM UI hazards** (`R/31`) | ICPSR account (public) / DUA (restricted) |
-| **`10_ingest_hcup_nass.R`** | **HCUP NASS** (licensed) | **base-year procedure anchors** (`R/28`) | HCUP Central Distributor |
+| **`08_download_acs_tracts.R`** | ACS 5-yr (**tract** B01001 by age band) | **isochrone demand** (`R/geography-demand`) | free API key |
+| **`09_download_swan_icpsr.R`** | **SWAN** (ICPSR 253) | **DMDM UI hazards** (`R/demand-dmdm_fit_transitions`) | ICPSR account (public) / DUA (restricted) |
+| **`10_ingest_hcup_nass.R`** | **HCUP NASS** (licensed) | **base-year procedure anchors** (`R/calibration-demand_lifecourse`) | HCUP Central Distributor |
 
 ## Already in the repo (do not re-download)
 

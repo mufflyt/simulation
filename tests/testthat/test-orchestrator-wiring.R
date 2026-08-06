@@ -1,10 +1,10 @@
 # Guards that exist but are never called are the defect this file exists to
 # prevent. Both of these were fully implemented and unreachable from a run:
 #
-#   * assert_demand_calibrated() -- defined in R/21, called by nothing, so the
+#   * assert_demand_calibrated() -- defined in R/calibration-validation, called by nothing, so the
 #     orchestrator accepted `calibration`, stored it in the metadata, and never
 #     checked it. Demand totals anchored to no observed quantity passed silently.
-#   * the geography layer in R/20 (opportunity_placement_shares(), entrant
+#   * the geography layer in R/geography-provider_geography (opportunity_placement_shares(), entrant
 #     placement, mid-career migration) -- reachable only by calling
 #     simulate_provider_career_once() directly, because the orchestrator never
 #     passed `placement_shares`. Every run was national-headcount-only.

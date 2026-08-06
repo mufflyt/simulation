@@ -1,4 +1,4 @@
-# Contract tests for R/39-severity_sandvik.R
+# Contract tests for R/demand-severity_sandvik.R
 #
 # Written before the module (TDD). Sandvik's index is a published
 # instrument with a fixed arithmetic; these tests lock that arithmetic

@@ -32,7 +32,7 @@ pop_by_age_year <- tidyr::expand_grid(year = 2025:2050, age = 40:85) |>
 ## 2. Life-course demand → service volumes → FTE
 
 The pathway runs childbirth exposure → pelvic-floor conditions → care-seeking →
-service volumes, then hands the volumes to the work-RVU FTE conversion (`R/17`).
+service volumes, then hands the volumes to the work-RVU FTE conversion (`R/supply-workload_to_fte`).
 `wrvu_per_fte` is illustrative here; in practice derive it with
 `calibrate_wrvu_per_fte()`.
 

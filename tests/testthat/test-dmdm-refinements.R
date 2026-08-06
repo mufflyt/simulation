@@ -1,5 +1,5 @@
-# DMDM refinements: Census reweighting (R/30), SWAN-style fitting (R/31),
-# and the DMDM -> demand-contract bridge (R/export_demand_contract.R).
+# DMDM refinements: Census reweighting (R/demand-dynamic_open), SWAN-style fitting (R/demand-dmdm_fit_transitions),
+# and the DMDM -> demand-contract bridge (R/reporting-export_demand_contract.R).
 
 mk_agents <- function(ages, vag, w) {
   data.frame(age = ages, cumulative_vaginal_deliveries = vag,

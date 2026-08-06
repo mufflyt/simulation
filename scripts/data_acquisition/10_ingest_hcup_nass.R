@@ -5,7 +5,7 @@
 #
 # PURPOSE:
 #   Build the base-year PROCEDURE-VOLUME calibration anchors the demand model
-#   compares its predictions against (R/28-demand_lifecourse_calibration.R;
+#   compares its predictions against (R/calibration-demand_lifecourse.R;
 #   config/calibration_targets.yml): national weighted counts of SUI sling and
 #   POP repair, in the `category`/`observed` shape calibrate_lifecourse_demand()
 #   expects. NASS is the right frame because most URPS procedures are OUTPATIENT
@@ -143,7 +143,7 @@ writeLines(c(
   sprintf("prolapse_procedure_volume = %s (CPT %s)",
           format(round(gv(prolapse_by_year)), big.mark = ","), paste(PROLAPSE_CPT, collapse = "+")),
   "",
-  "Feeds R/28 calibrate_lifecourse_demand() as the `observed` anchors.",
+  "Feeds R/calibration-demand_lifecourse calibrate_lifecourse_demand() as the `observed` anchors.",
   "Also update config/calibration_targets.yml sha256 for the split files.",
   "NASS is licensed (HCUP Central Distributor). Free totals: HCUP Fast Stats.",
   "CPT sets are editable at the top of this script — verify against your year."
