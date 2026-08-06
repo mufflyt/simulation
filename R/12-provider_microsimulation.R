@@ -271,6 +271,13 @@ initialize_provider_agents <- function(n,
 #'   the P(active) formulation.
 #' @param p_active_scenario_id Scenario id whose `retirement_shift_years` shifts
 #'   the P(active) age axis.
+#' @param track_career_states Add explicit career-state output (R/16b). When
+#'   TRUE the per-year panel gains `n_early_career`/`n_mid_career`/`n_late_career`
+#'   (active counts, summing to `headcount`) and `n_retired`, and the returned
+#'   agent table gains a `career_state` column. ADDITIVE and output-preserving:
+#'   the existing panel columns and the RNG stream are untouched, so a seeded run
+#'   is byte-identical with tracking on or off (guarded by
+#'   test-provider-state-machine.R).
 #' @return List with `panel` (per-year summary tibble) and `agents` (final agent
 #'   table incl. drawn retirement years) so the temporal cohort is reconstructible.
 #' @export
@@ -291,7 +298,8 @@ simulate_provider_career_once <- function(agents,
                                           entrant_female_share = 0.82,
                                           placement_shares = NULL,
                                           p_active_coef = NULL,
-                                          p_active_scenario_id = NULL) {
+                                          p_active_scenario_id = NULL,
+                                          track_career_states = FALSE) {
   years <- sort(unique(as.integer(years)))
   base_year <- min(years)
 
@@ -395,6 +403,11 @@ simulate_provider_career_once <- function(agents,
   p_head <- integer(n_years)
   p_fte <- numeric(n_years)
   p_age <- numeric(n_years)
+  # Career-state counts (only populated when tracking; deterministic, no RNG).
+  p_early <- integer(n_years)
+  p_mid <- integer(n_years)
+  p_late <- integer(n_years)
+  p_retired <- integer(n_years)
   next_entrant_seq <- 1L
 
   for (i in seq_along(years)) {
@@ -425,6 +438,18 @@ simulate_provider_career_once <- function(agents,
     p_head[i] <- length(active)
     p_fte[i] <- if (length(active)) sum(fte_of(v_age[active], v_sex[active])) else 0
     p_age[i] <- if (length(active)) mean(v_age[active]) else NA_real_
+
+    # --- Explicit career-state counts (deterministic; consumes no RNG) ---
+    # Uses the SAME ages already used for FTE and mean_age, so the state bands
+    # align with the reported cohort. n_early + n_mid + n_late == headcount.
+    if (track_career_states) {
+      a <- v_age[active]
+      p_early[i] <- sum(a < CAREER_STATE_MID_ONSET_AGE)
+      p_late[i]  <- sum(a >= CAREER_STATE_LATE_ONSET_AGE)
+      p_mid[i]   <- length(active) - p_early[i] - p_late[i]
+      entered_live <- live[v_entry[live] <= year]
+      p_retired[i] <- sum(!is.na(v_retire[entered_live]) & v_retire[entered_live] <= year)
+    }
 
     # --- Optional mid-career geographic migration ---
     if (!is.null(placement_shares) && !is.null(v_state) && length(active)) {
@@ -499,16 +524,35 @@ simulate_provider_career_once <- function(agents,
   )
   if (!is.null(v_state)) final_agents$state <- v_state[keep]
 
-  list(
-    panel = tibble::tibble(
-      year = p_year,
-      subspecialty = subspecialty,
-      headcount = p_head,
-      effective_fte = p_fte,
-      mean_age = p_age
-    ),
-    agents = final_agents
+  # Explicit career-state label as of the last simulated year. Agents are aged
+  # once AFTER the final record, so age at max(years) is v_age - 1. Additive: the
+  # existing columns above are untouched.
+  if (track_career_states) {
+    last_year <- max(years)
+    fa_entered <- v_entry[keep] <= last_year
+    fa_retired <- !is.na(v_retire[keep]) & v_retire[keep] <= last_year
+    final_agents$career_state <- career_state_of(v_age[keep] - 1,
+                                                 entered = fa_entered,
+                                                 retired = fa_retired)
+  }
+
+  panel <- tibble::tibble(
+    year = p_year,
+    subspecialty = subspecialty,
+    headcount = p_head,
+    effective_fte = p_fte,
+    mean_age = p_age
   )
+  # Additive state-stratified columns, appended after the published columns so
+  # the existing panel is byte-identical whether or not tracking is on.
+  if (track_career_states) {
+    panel$n_early_career <- p_early
+    panel$n_mid_career <- p_mid
+    panel$n_late_career <- p_late
+    panel$n_retired <- p_retired
+  }
+
+  list(panel = panel, agents = final_agents)
 }
 
 # Scalar-argument check shared by the supply entry points. Bounds are inclusive
