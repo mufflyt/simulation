@@ -123,3 +123,80 @@ clear_access <- function(catchments,
   out$calibration_status <- status
   tibble::as_tibble(out)
 }
+
+# Phase 4: dynamic multi-year clearing ---------------------------------------
+#
+# "Supply and demand interact every simulated year." Runs the Phase-1 static
+# clearing across a trajectory of years -- a supply-capacity path and a demand
+# path per catchment -- and (optionally) carries each year's UNMET demand
+# forward into the next year's queue. Backlog carry-forward is the Phase-3 lever,
+# OFF by default so the baseline stays the stateless per-year clearing; spatial
+# overflow (Phase 2) composes underneath, one year at a time, when added.
+
+#' Clear access across a multi-year trajectory (optionally carrying backlog)
+#'
+#' Applies [clear_access()] to each year of a catchment x year panel in
+#' ascending year order. With `carry_backlog = TRUE`, a fraction of each
+#' catchment's unmet demand is added to that catchment's demand in the following
+#' year (matched by `catchment`), so a persistent shortfall compounds instead of
+#' vanishing at the year boundary.
+#'
+#' @param panel A data frame with `year` plus the per-catchment [clear_access()]
+#'   inputs (`demand_workload`, `accessible_capacity`, and the optional
+#'   population/fte/insurance/travel columns). A `catchment` id is required when
+#'   `carry_backlog = TRUE`.
+#' @param carry_backlog If `TRUE`, carry unmet demand forward (Phase-3 behaviour).
+#'   Default `FALSE` (each year cleared independently).
+#' @param backlog_fraction Fraction of a year's unmet demand carried into the
+#'   next year. In [0, 1]. Default 1 (all unmet persists).
+#' @param appointment_window,wait_scale,wait_ceiling,status Passed through to
+#'   [clear_access()].
+#' @return A tibble: every [clear_access()] output column across all years, plus
+#'   `backlog_in` (demand carried in from the prior year) and
+#'   `demand_workload_base` (this year's demand before any backlog).
+#' @export
+clear_access_trajectory <- function(panel,
+                                    carry_backlog = FALSE,
+                                    backlog_fraction = 1,
+                                    appointment_window = 30,
+                                    wait_scale = 30,
+                                    wait_ceiling = Inf,
+                                    status = "assumed_illustrative") {
+  if (!is.data.frame(panel) || !"year" %in% names(panel) ||
+      !all(c("demand_workload", "accessible_capacity") %in% names(panel))) {
+    stop("clear_access_trajectory(): `panel` needs `year`, `demand_workload`, ",
+         "and `accessible_capacity`.", call. = FALSE)
+  }
+  stopifnot(
+    length(carry_backlog) == 1L, is.logical(carry_backlog), !is.na(carry_backlog),
+    length(backlog_fraction) == 1L, is.finite(backlog_fraction),
+    backlog_fraction >= 0, backlog_fraction <= 1
+  )
+  if (carry_backlog && !"catchment" %in% names(panel)) {
+    stop("clear_access_trajectory(): carry_backlog = TRUE needs a `catchment` id ",
+         "to match unmet demand across years.", call. = FALSE)
+  }
+  years <- sort(unique(panel$year))
+  prev_unmet <- NULL                       # named by catchment, from the prior year
+  out <- vector("list", length(years))
+  for (i in seq_along(years)) {
+    slice <- panel[panel$year == years[i], , drop = FALSE]
+    backlog_in <- rep(0, nrow(slice))
+    if (carry_backlog && !is.null(prev_unmet)) {
+      m <- match(slice$catchment, names(prev_unmet))
+      backlog_in <- ifelse(is.na(m), 0, prev_unmet[m] * backlog_fraction)
+    }
+    augmented <- slice
+    augmented$demand_workload <- slice$demand_workload + backlog_in
+    cl <- clear_access(augmented, appointment_window = appointment_window,
+                       wait_scale = wait_scale, wait_ceiling = wait_ceiling,
+                       status = status)
+    cl$backlog_in <- backlog_in
+    cl$demand_workload_base <- slice$demand_workload
+    out[[i]] <- cl
+    if (carry_backlog) {
+      prev_unmet <- stats::setNames(cl$unmet_demand, slice$catchment)
+    }
+  }
+  dplyr::bind_rows(out)
+}
