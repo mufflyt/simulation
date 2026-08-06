@@ -131,9 +131,22 @@ than a static risk equation.
   construction — each fold's fit never sees the held-out rows. Feed it observed
   provider counts by geography (ABOG/NPPES state distribution) plus a
   demand/population predictor. It does not repair the temporal contamination; it
-  supplies an independent, uncontaminated external signal alongside it. Prospective
-  and preregistered rolling-origin evaluations remain the stronger next steps once
-  an untouched data vintage is available.
+  supplies an independent, uncontaminated external signal alongside it.
+- **Preregistered rolling-origin** (`R/preregistration.R`). The procedural cure
+  for the temporal contamination going forward: `preregister_spec()` freezes the
+  model specification into an immutable, hashed record (`spec_hash` + freeze date,
+  as diffable text under `inst/extdata/preregistration/`), and
+  `rolling_origin_evaluation()` refits only parameters on data up to each origin,
+  scores one-/h-step-ahead against the strictly-future target, and — when handed
+  the preregistration — refuses to run unless the live spec still matches the
+  frozen hash (`assert_spec_matches_prereg()`). Any post-hoc change to the model
+  form flips the hash and the guard fails, so "designed after the miss" cannot
+  recur silently. Leakage-free by construction (an origin's fit sees only rows at
+  or before it). This does not retroactively clean the 2021–2023 comparison; it
+  makes every *future* origin a clean test. A genuinely prospective validation
+  against an untouched vintage remains the strongest step, and the preregistration
+  is exactly what makes that vintage's evaluation clean when it lands. Runner:
+  `scripts/run_preregistered_rolling_origin.R`.
 
 ## 6. Denominator hierarchy and concordance
 
