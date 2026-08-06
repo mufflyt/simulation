@@ -3,7 +3,7 @@
 # Preregistered rolling-origin evaluation runner
 # =============================================================================
 # Demonstrates the governance loop that removes the "designed after the miss"
-# contamination for future evaluations (R/preregistration.R):
+# contamination for future evaluations (R/validation-preregistration.R):
 #   1. FREEZE the model specification and record it (hash + freeze date);
 #   2. run a leakage-free rolling-origin evaluation GATED on that record, so a
 #      spec silently re-tuned after seeing the targets is refused.

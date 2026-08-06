@@ -1,4 +1,4 @@
-# Two-part MEPS care-seeking model (R/48).
+# Two-part MEPS care-seeking model (R/data-meps_care_seeking).
 #
 # MEPS microdata does not ship with the package, so these run on a synthetic
 # frame built to the same shape. That is enough to lock the contracts that

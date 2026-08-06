@@ -1,4 +1,4 @@
-# Reporting a baseline gap (R/61).
+# Reporting a baseline gap (R/supply-capacity_hierarchy).
 #
 # The method/tier split means identical arithmetic can carry entirely different
 # evidentiary weight. These tests pin the consequence: what a headline number

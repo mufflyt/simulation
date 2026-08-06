@@ -2,9 +2,9 @@
 # Example: the reproductive life-course demand pathway, end to end.
 #
 # Runs WITHOUT external data. Shows the childbirth-driven demand generator
-# (R/25) handing service volumes to the work-RVU FTE conversion (R/17), writing
+# (R/demand-lifecourse) handing service volumes to the work-RVU FTE conversion (R/supply-workload_to_fte), writing
 # the versioned demand contract (tiers 5-6), and taking part in the demand
-# concordance framework (R/13) as an independent fourth estimand.
+# concordance framework (R/demand-urps) as an independent fourth estimand.
 #
 # The coefficient tables are PLACEHOLDERS (calibration_status =
 # "placeholder_uncalibrated"); this is a wiring demonstration, never a result.

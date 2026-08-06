@@ -7,8 +7,8 @@
 #   non-finite parameters) must error cleanly or degrade sanely, never silently
 #   return a wrong number.
 #
-# Covers R/32 (geographic + tract-need bridge), R/58 (literature POP), R/31 (fit
-# cores), R/29 (engine), and the DMDM contract exporter. Internal helpers are
+# Covers R/geography-demand (geographic + tract-need bridge), R/demand-pop_transitions (literature POP), R/demand-dmdm_fit_transitions (fit
+# cores), R/demand-dynamic_multistate (engine), and the DMDM contract exporter. Internal helpers are
 # reached with urpssim:::.
 
 PREV <- c("20-39" = .05, "40-59" = .20, "60-64" = .35, "65-79" = .45, "80+" = .50)

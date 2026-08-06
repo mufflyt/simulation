@@ -1,4 +1,4 @@
-# HDMM life-course demand contract exporter, tiers 5-6 (R/export_demand_contract.R).
+# HDMM life-course demand contract exporter, tiers 5-6 (R/reporting-export_demand_contract.R).
 
 # The exporter now refuses to write a contract on placeholder inputs, so these
 # schema and index tests declare themselves exploratory. The missing-column test

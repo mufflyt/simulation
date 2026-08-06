@@ -1,4 +1,4 @@
-# Literature-derived POP transitions (R/33) and staged progression fit (R/31).
+# Literature-derived POP transitions (R/supply-roster) and staged progression fit (R/demand-dmdm_fit_transitions).
 #
 # (a) pop_transition_parameters() + dmdm_transitions_with_pop_literature() compile
 #     the cited MOAD/WHI/SWEPOP table into an engine-usable transition object with

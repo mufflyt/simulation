@@ -20,7 +20,7 @@
 #        data-raw/meps/meps_2023_manifest.txt
 #
 #   The income multipliers table is the direct replacement for
-#   CARE_SEEKING_BY_INCOME in R/44-urps_population.R (currently sourced from
+#   CARE_SEEKING_BY_INCOME in R/data-urps_population.R (currently sourced from
 #   MEPS 2020, citation: "MEPS 2020 specialty visit rate by income quartile").
 #
 # DATA ACCESS:
@@ -272,7 +272,7 @@ ins_visits$relative_rate <- ins_visits$count / private_n
 message("\nInsurance care-seeking multipliers (Private = 1.0):")
 print(ins_visits[, c("insurance_cat", "count", "pct", "relative_rate")])
 
-# Structured multiplier table (matches CARE_SEEKING_BY_INSURANCE in R/44)
+# Structured multiplier table (matches CARE_SEEKING_BY_INSURANCE in R/data-urps_population)
 # Defaults (Richter 2007 / MEPS 2020) used when a category has zero visits.
 defaults <- c(Private = 1.00, Public = 0.75, Uninsured = 0.58, Unknown = 0.80)
 insurance_multipliers <- defaults
@@ -286,7 +286,7 @@ message("\nInsurance multipliers for CARE_SEEKING_BY_INSURANCE:")
 print(round(insurance_multipliers, 3))
 
 # =============================================================================
-# 7. Income-tier care-seeking multipliers (key output for R/44 recalibration)
+# 7. Income-tier care-seeking multipliers (key output for R/data-urps_population recalibration)
 # =============================================================================
 
 # POVCAT: 1=Poor (<100% FPL), 2=Near-poor (100-124%), 3=Low (125-199%),
@@ -328,13 +328,13 @@ if (nrow(inc_sub) > 0) {
   message("\nIncome-tier care-seeking multipliers (GT100k = 1.0):")
   print(inc_visits[, c("income_tier", "count", "pct", "relative_rate")])
 
-  # Named vector matching CARE_SEEKING_BY_INCOME in R/44
+  # Named vector matching CARE_SEEKING_BY_INCOME in R/data-urps_population
   income_multipliers <- setNames(
     pmin(1.0, inc_visits$relative_rate),
     inc_visits$income_tier
   )
   income_multipliers["GT100k"] <- 1.00
-  message("\nIncome multipliers for CARE_SEEKING_BY_INCOME (update R/44):")
+  message("\nIncome multipliers for CARE_SEEKING_BY_INCOME (update R/data-urps_population):")
   print(round(income_multipliers[c("LT25k", "25k_50k", "50k_100k", "GT100k")], 3))
 } else {
   message("  WARNING: POVCAT not available; income multipliers not computed")
@@ -390,7 +390,7 @@ message(sprintf(
   format(round(se_visits), big.mark = ",")
 ))
 
-visits_per_fte <- 2500L   # matches URPS_VISITS_PER_FTE_YEAR in R/44
+visits_per_fte <- 2500L   # matches URPS_VISITS_PER_FTE_YEAR in R/data-urps_population
 fte_estimate <- n_visits / visits_per_fte
 message(sprintf("Implied FTE demand: %.0f FTE (at %d visits/FTE/year)",
                 fte_estimate, visits_per_fte))
@@ -430,11 +430,11 @@ message("  ", rds_insur)
 message("  ", rds_spec)
 
 # =============================================================================
-# 11. Print recalibration patch for R/44-urps_population.R
+# 11. Print recalibration patch for R/data-urps_population.R
 # =============================================================================
 
 message("\n", strrep("=", 70))
-message("RECALIBRATION PATCH — paste into R/44-urps_population.R")
+message("RECALIBRATION PATCH — paste into R/data-urps_population.R")
 message(strrep("=", 70))
 message("# Income care-seeking multipliers (MEPS 2022, updated from MEPS 2020)")
 message("# Source: scripts/data_acquisition/05_download_meps_2023.R")
@@ -486,7 +486,7 @@ writeLines(c(
   "  remotes::install_github('e-mitchell/meps_r_pkg/MEPS')",
   "  read_MEPS(year = 2022, type = 'FYC')",
   "",
-  "Recalibration target in R/44-urps_population.R:",
+  "Recalibration target in R/data-urps_population.R:",
   "  CARE_SEEKING_BY_INCOME    — income-tier multipliers (was MEPS 2020)",
   "  CARE_SEEKING_BY_INSURANCE — insurance-type multipliers (was Richter 2007/MEPS 2020)",
   "",
@@ -495,5 +495,5 @@ writeLines(c(
 
 message("\nManifest: ", manifest_path)
 message("Done. MEPS 2023 download and recalibration complete.")
-message("Next step: apply the patch printed above to R/44-urps_population.R,")
+message("Next step: apply the patch printed above to R/data-urps_population.R,")
 message("  or call apply_meps_2023_recalibration() once that function is added.")

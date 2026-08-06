@@ -135,7 +135,7 @@ granularity (insurance × income × age × race).
 | `DIABETE4` | Ever told diabetes |
 
 These 7+ chronic conditions are already present in the downloaded RDS and are
-wired into `R/44-urps_population.R` for comorbidity-stratified demand cells.
+wired into `R/data-urps_population.R` for comorbidity-stratified demand cells.
 
 ---
 
@@ -349,7 +349,7 @@ des <- svydesign(ids = ~CPSUM, strata = ~CSTRATM,
 **What it provides:**  
 HCPCS-level service counts by facility vs. non-facility setting for every
 provider. Used to calibrate the URPS CPT basket setting mix (office vs.
-hospital outpatient vs. ASC vs. operative) in `R/urps_settings.R`.
+hospital outpatient vs. ASC vs. operative) in `R/supply-urps_settings.R`.
 
 **Why it cannot be automated:**  
 CMS data portal requires a JavaScript redirect + session cookie for bulk
@@ -374,7 +374,7 @@ downloads. `curl` and `wget` fail without a valid browser session.
 pkgload::load_all()
 shares <- load_psps_pos_shares("data-raw/cms_psps/MUP_PHY_R24P04_0001_D22_Prov_Svc.csv")
 print(shares)
-# Copy output to URPS_DEFAULT_SETTING_MIX in R/urps_settings.R
+# Copy output to URPS_DEFAULT_SETTING_MIX in R/supply-urps_settings.R
 ```
 
 For the smaller geography-level aggregate (~20 MB), see `data-raw/cms_psps/DOWNLOAD.md`.

@@ -1,4 +1,4 @@
-# Adversarial tests for run_supply_microsimulation() (R/12).
+# Adversarial tests for run_supply_microsimulation() (R/supply-provider_microsimulation).
 #
 # Written on the assumption that each input below IS mishandled, and aimed at
 # the class of defect this engine is most exposed to: an argument that is

@@ -1,4 +1,4 @@
-# Tests for R/urps_flows.R — Labor force participation model
+# Tests for R/supply-urps_flows.R — Labor force participation model
 #
 # Guards:
 #  1. Calibration anchors: P(active) at key ages matches HWSM Exhibit 17 within tolerance.

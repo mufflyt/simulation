@@ -1,5 +1,5 @@
 # The gates that keep uncalibrated or non-production inputs out of published
-# numbers (R/29 assert_calibrated_transitions, R/15 cohort provenance).
+# numbers (R/demand-dynamic_multistate assert_calibrated_transitions, R/core-run_workforce_microsimulation cohort provenance).
 #
 # Each of these previously produced a warning that a caller could ignore, or in
 # the analogy case suppressed a strict-mode stop outright. The point of the tests
@@ -108,7 +108,7 @@ test_that("simulate_dmdm_open fails closed in strict mode", {
   })
 })
 
-# ---- cohort provenance gate (R/15) ----------------------------------------
+# ---- cohort provenance gate (R/core-run_workforce_microsimulation) ----------------------------------------
 
 test_that("a non-production cohort is refused in strict mode", {
   # cohort_provenance() marks only agents_from_roster() output as production;
@@ -127,7 +127,7 @@ test_that("a roster cohort is the only production source", {
   expect_true(cohort_provenance(ros)$is_production)
 })
 
-# ---- contract exporters (R/export_demand_contract.R) -----------------------
+# ---- contract exporters (R/reporting-export_demand_contract.R) -----------------------
 #
 # The engines refuse uncalibrated transitions, but the exporters take a bare
 # data frame. Without their own gate, a hand-assembled trajectory still reached

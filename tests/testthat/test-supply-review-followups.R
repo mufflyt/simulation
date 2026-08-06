@@ -1,4 +1,4 @@
-# Guards for R/61-supply_review_followups.R: entrant staged pipeline,
+# Guards for R/supply-review_followups.R: entrant staged pipeline,
 # uncertainty-driver registry, international-migration assumption.
 
 matches_df <- function() tibble::tibble(year = 2020:2025,

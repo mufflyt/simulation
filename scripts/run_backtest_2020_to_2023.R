@@ -67,7 +67,7 @@ if (isTRUE(.drift$current) && isTRUE(.drift$checksum_matches)) {
   }
   cat("\n   TO FIX, in the SAME commit as this artifact:\n")
   cat("     Rscript scripts/diagnostics/emit_backtest_record.R\n")
-  cat("     ...paste into R/38-backtest_status.R, then update\n")
+  cat("     ...paste into R/validation-backtest_status.R, then update\n")
   cat(sprintf("     BACKTEST_RECORD_SHA256 <- \"%s\"\n", .drift$observed_sha256))
 }
 utils::write.csv(bt$trajectory, "artifacts/backtest_2020_to_2023_trajectory.csv",

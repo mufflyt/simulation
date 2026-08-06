@@ -1,4 +1,4 @@
-# Reproductive life-course demand generator (R/25-demand_lifecourse.R).
+# Reproductive life-course demand generator (R/demand-lifecourse.R).
 
 pop_by_age <- tibble::tibble(age = 40:85,
                              population = round(2e6 * exp(-0.02 * (40:85 - 40))))
@@ -7,7 +7,7 @@ pop_by_age_year <- dplyr::bind_rows(lapply(c(2025L, 2030L), function(y)
 
 # Assert against the canonical workload basket rather than a hand-copied list.
 # The literal here named nine services and went stale the moment the staged
-# condition pathway (R/51) started emitting postoperative_care -- which IS in the
+# condition pathway (R/demand-condition_service_pathway) started emitting postoperative_care -- which IS in the
 # basket, carries work RVU 0 (090-day global period), and is exactly what
 # convert_workload_to_fte() consumes. A copy of a canonical list fails as soon as
 # the list grows, and it fails by accusing the model rather than itself.

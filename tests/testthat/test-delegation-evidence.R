@@ -1,4 +1,4 @@
-# Delegation evidence and sensitivity (R/53).
+# Delegation evidence and sensitivity (R/supply-delegation_evidence).
 #
 # The matrix stays an assumption. These tests pin the two things that keep it
 # an HONEST assumption: that the corroboration reports its own limits, and that

@@ -9,24 +9,24 @@ Prepared 2026-08-02.
 - Zarek et al. (2025) — a contemporary application of Dall's health-workforce demand
   model (population → predicted service use → staffing conversion → provider FTE); the
   architecture adopted in *Reframing* below.
-- `R/export_demand_contract.R` — the versioned demand contract. `export_dpmm_demand_contract()`
+- `R/reporting-export_demand_contract.R` — the versioned demand contract. `export_dpmm_demand_contract()`
   serves tiers 3–4 (prevalence / symptomatic); `export_hdmm_demand_contract()` serves
   **tiers 5–6 (care-seeking / procedural)** from the life-course model.
-- `R/25-demand_lifecourse.R` — the reproductive life-course demand generator (this plan's
-  Part B, implemented). `R/26-utilization_models.R` — the corrected surgery-rate and
+- `R/demand-lifecourse.R` — the reproductive life-course demand generator (this plan's
+  Part B, implemented). `R/demand-utilization_models.R` — the corrected surgery-rate and
   survey-weighted visit models (Part A, implemented).
-- `R/27-demand_lifecourse_uncertainty.R` — parameter-uncertainty intervals on the demand
-  trajectory (Part B / IP §5, implemented). `R/28-demand_lifecourse_calibration.R` —
+- `R/demand-lifecourse_uncertainty.R` — parameter-uncertainty intervals on the demand
+  trajectory (Part B / IP §5, implemented). `R/calibration-demand_lifecourse.R` —
   calibration to national anchors + a 2010s→2020s back-test (Part C / IP §4, implemented),
   reusing `fit_calibration_scalars()` and `config/calibration_targets.yml`.
-- `R/29-demand_dynamic_multistate.R` — the Dynamic Multistate Disease Model (DMDM, IP §9,
+- `R/demand-dynamic_multistate.R` — the Dynamic Multistate Disease Model (DMDM, IP §9,
   first version): a longitudinal microsimulation that follows each woman year by year
   through onset / remission / death, so prevalence emerges from within-person dynamics
   driven by cumulative vaginal-delivery exposure rather than a static risk equation. Base-R
-  engine (`simulate_dmdm`), reuses R/25 for the base-year cohort. Closed-cohort v1;
+  engine (`simulate_dmdm`), reuses R/demand-lifecourse for the base-year cohort. Closed-cohort v1;
   open-population (entrant replenishment) and a bridge into the demand contract are the
   next steps.
-- `R/30-demand_dynamic_open.R` — the OPEN-population extension of the DMDM: new women
+- `R/demand-dynamic_open.R` — the OPEN-population extension of the DMDM: new women
   enter each year at `entry_age` and existing women age/develop/resolve disease/die, so
   population prevalence reflects the whole female population (it does not collapse like a
   closed cohort and reaches a quasi-steady state). Deterministic cohort-component engine
@@ -34,11 +34,11 @@ Prepared 2026-08-02.
   Now also: **annual reweighting to Census projections** (`pop_by_age_year` /
   `reweight_to_projection` — counts match official demography while the model supplies the
   rates).
-- `R/31-dmdm_fit_transitions.R` — **fitting onset/remission hazards to longitudinal data
+- `R/demand-dmdm_fit_transitions.R` — **fitting onset/remission hazards to longitudinal data
   (SWAN)**: `dmdm_transition_data()` reshapes a state panel into at-risk transition rows
   and `fit_dmdm_transitions()` fits per-condition onset logistics + remission rates,
   returning a `transitions` object usable directly by the DMDM engines (`status="fitted"`).
-- `export_dmdm_demand_contract()` (in `R/export_demand_contract.R`) — the **DMDM →
+- `export_dmdm_demand_contract()` (in `R/reporting-export_demand_contract.R`) — the **DMDM →
   demand-contract bridge**: dynamic prevalence into `tier3_prevalent_pfd` (any-PFD) plus
   per-condition tiers, so it flows to cliff through the same generic seam.
 
@@ -59,15 +59,15 @@ to a life-course demand pipeline in the Zarek/Dall shape:
       → pelvic-floor conditions (UI / POP / AI), BMI et al. as MODIFIERS
       → recognition → care-seeking → referral → treatment
       → annual SERVICE VOLUMES
-      → (R/17-workload_to_fte.R) provider FTE demand
+      → (R/supply-workload_to_fte.R) provider FTE demand
 
 Zarek's transferable lesson is the last steps: demand is **not** read off disease
 prevalence — you predict service use and apply staffing/work-RVU conversion. This model
-implements the demand-generation half (`R/25`) and hands service volumes to the existing
-`convert_workload_to_fte()` (`R/17`); it does **not** re-implement the FTE conversion or the
+implements the demand-generation half (`R/demand-lifecourse`) and hands service volumes to the existing
+`convert_workload_to_fte()` (`R/supply-workload_to_fte`); it does **not** re-implement the FTE conversion or the
 provider-substitution delegation matrix that already live there.
 
-**Causal hierarchy (implemented in `R/25-demand_lifecourse.R`):**
+**Causal hierarchy (implemented in `R/demand-lifecourse.R`):**
 1. *Primary exposure* — childbirth history: live births, vaginal vs cesarean, age at and
    time since last vaginal delivery. Key state variable: `cumulative_vaginal_deliveries`
    (parity and cesarean births retained separately).
@@ -77,13 +77,13 @@ provider-substitution delegation matrix that already live there.
 4. *Care pathway → service use* — prevalence × recognition × P(seek | access) × P(referral)
    × P(treated) → expected treated → service volumes by service line.
 
-**Scenarios** (`R/25`): *baseline*; *delivery_mode* (shifts the primary exposure via
+**Scenarios** (`R/demand-lifecourse`): *baseline*; *delivery_mode* (shifts the primary exposure via
 `cesarean_rate`); *reduced_barriers* (raises care-seeking for high-barrier women); and
 *prevention* (cuts one transition — OASI/rehab or **BMI reduction**, the only place BMI
 interventions belong). Treatment-substitution across provider types is intentionally NOT
-here — it is the `R/17` delegation matrix.
+here — it is the `R/supply-workload_to_fte` delegation matrix.
 
-Coefficient tables in `R/25`/`R/26` are explicit and marked `placeholder_uncalibrated`; the
+Coefficient tables in `R/demand-lifecourse`/`R/demand-utilization_models` are explicit and marked `placeholder_uncalibrated`; the
 childbirth and pelvic-floor transition equations must come from obstetric and
 urogynecologic epidemiology.
 
@@ -117,12 +117,12 @@ models.
 > **Implemented (2026-08-02): `VaginalParity` now has a principled cohort source.**
 > The rate/visit models below reference `VaginalParity` as a covariate, but the
 > repo had no source for a vaginal-parity distribution by birth cohort.
-> `R/13b-obstetric_exposure.R` now supplies it: `cohort_vaginal_exposure()`
+> `R/demand-obstetric_exposure.R` now supplies it: `cohort_vaginal_exposure()`
 > derives mean vaginal/cesarean deliveries per woman by birth cohort from cited
 > CDC/NCHS cesarean-by-year and Census/NCHS completed-parity-by-cohort series
 > (`inst/extdata/obstetric/`), and `compute_demand_denominators_lifecourse()`
 > adds an obstetric-exposure-weighted estimand **D4** alongside D1–D3 — directly
-> answering R/13's note that age-only denominators understate parous-women
+> answering R/demand-urps's note that age-only denominators understate parous-women
 > demand. Cited dose-response coefficients (Gyhagen 2013, Rortveit 2003 NEJM,
 > Hendrix WHI, Mant, LaCross 2015) are in
 > `inst/extdata/obstetric/parity_disease_dose_response.csv`. Ported from
@@ -277,7 +277,7 @@ and interval coverage (IP §4, the highest value/feasibility item).
 - Config-driven paths (no `read_csv("hypothetical.csv")`); register inputs the way
   cliff does via `config/cliff_paths.yml` + `wc_path()`.
 - Versioned outputs + a provenance manifest with a `calibration_status` guard — reuse
-  `R/export_demand_contract.R` (IP §16).
+  `R/reporting-export_demand_contract.R` (IP §16).
 - Unit tests for each module and data-quality checks on each input.
 
 ---
@@ -290,7 +290,7 @@ cliff's D1/D2/D3 denominator sensitivity. Unreconciled, they will disagree — t
 divergence seen on the supply side (1,169 / 1,295 / 1,332 / 1,339).
 
 The highest-leverage improvement is to **fold the HDMM into the versioned demand
-contract** (`R/export_demand_contract.R`), not run it standalone:
+contract** (`R/reporting-export_demand_contract.R`), not run it standalone:
 
 - **Consume** the DPMM's `dpmm_demand_contract_v*.csv` (tiers 3–4: prevalence,
   severity) as the disease layer of §5, instead of re-deriving prevalence.
@@ -360,12 +360,12 @@ divergent estimate.
 
 ## Harvest additions (2026-08-02)
 
-- `R/32-geographic_demand.R` — **isochrone (geographic) demand**: distributes
+- `R/geography-demand.R` — **isochrone (geographic) demand**: distributes
   pelvic-floor need across 30/60/120/180-minute travel bands, need-weighted access,
-  and accessible-capacity-vs-need — the demand complement to R/14's E2SFCA supply
+  and accessible-capacity-vs-need — the demand complement to R/geography-spatial_access_e2sfca's E2SFCA supply
   access (the "demand-supply-isochrones" question).
-- Estimand IDs disambiguated: `R/13b` = **D4** (obstetric-exposure-weighted
-  denominator); `R/25` `lifecourse_demand_estimand()` = **D5** (life-course service
+- Estimand IDs disambiguated: `R/demand-obstetric_exposure` = **D4** (obstetric-exposure-weighted
+  denominator); `R/demand-lifecourse` `lifecourse_demand_estimand()` = **D5** (life-course service
   demand, care-pathway) — distinct constructs, both distinct from D1-D3.
 - `docs/DEMAND_METHODS.md` — manuscript-oriented methods writeup of the demand stack.
 - `vignettes/demand-model.Rmd` — end-to-end vignette (source; renders once the

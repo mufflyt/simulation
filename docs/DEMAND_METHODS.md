@@ -32,7 +32,7 @@ The organizing variable is **cumulative vaginal-delivery exposure**, not BMI.
 Vaginal delivery is the dominant modifiable generator of pelvic-floor disease
 burden; BMI, age, hysterectomy, menopause and comorbidity are risk *modifiers*.
 
-- `R/13b-obstetric_exposure.R` derives mean vaginal/cesarean deliveries per woman
+- `R/demand-obstetric_exposure.R` derives mean vaginal/cesarean deliveries per woman
   by birth cohort from CDC/NCHS cesarean-by-year and Census/NCHS
   completed-parity-by-cohort series, and forms an obstetric-exposure-weighted
   prevalent-case denominator (estimand **D4**).
@@ -42,7 +42,7 @@ burden; BMI, age, hysterectomy, menopause and comorbidity are risk *modifiers*.
   LaCross 2015; the coefficient table lives in
   `inst/extdata/obstetric/parity_disease_dose_response.csv`.
 
-## 3. Life-course demand pathway (`R/25`)
+## 3. Life-course demand pathway (`R/demand-lifecourse`)
 
 For each woman-year the pathway is:
 
@@ -52,34 +52,34 @@ For each woman-year the pathway is:
       → expected service units by service line (new/return visits, urodynamics,
         cystoscopy, PTNS, Botox, sling, prolapse repair, pessary care)
 
-Service volumes are handed to the work-RVU conversion in `R/17-workload_to_fte.R`
+Service volumes are handed to the work-RVU conversion in `R/supply-workload_to_fte.R`
 (`convert_workload_to_fte()`), which apportions across provider types via the
 Forte 2021 delegation matrix and divides by a base-year-calibrated work-RVU-per-FTE
-(Dall 2013 calibration approach; CMS RVU25A work RVUs in `R/23`; AAN 2010
+(Dall 2013 calibration approach; CMS RVU25A work RVUs in `R/data-cms_rvu`; AAN 2010
 indirect-time share; MGMA-range productivity guardrail). Scenarios: baseline,
 changing mode of delivery, reduced barriers to care, and prevention (the only
 place BMI-reduction interventions enter).
 
-## 4. Dynamic multistate disease model (DMDM, `R/29`–`R/31`)
+## 4. Dynamic multistate disease model (DMDM, `R/demand-dynamic_multistate`–`R/demand-dmdm_fit_transitions`)
 
 A longitudinal microsimulation follows each woman year by year through onset,
 remission and death, so prevalence emerges from within-person dynamics rather
 than a static risk equation.
 
-- **Closed cohort** (`R/29`) and **open population** (`R/30`, with entrant
+- **Closed cohort** (`R/demand-dynamic_multistate`) and **open population** (`R/demand-dynamic_open`, with entrant
   replenishment) engines; the open engine reaches a quasi-steady population
   prevalence and can be **reweighted to Census projections** so counts match
   official demography while the model supplies the rates.
-- **Fitting** (`R/31`): `dmdm_transition_data()` reshapes a longitudinal panel
+- **Fitting** (`R/demand-dmdm_fit_transitions`): `dmdm_transition_data()` reshapes a longitudinal panel
   (SWAN is the intended source) into at-risk transition rows; `fit_dmdm_transitions()`
   fits per-condition onset logistics and remission rates. `build_swan_dmdm_panel()`
-  (`R/47`) builds that panel from the wide SWAN frame, and
+  (`R/data-swan_dmdm_panel`) builds that panel from the wide SWAN frame, and
   `scripts/run_swan_dmdm_fit.R` runs the whole path — fit the UI hazards, assemble
   a full transition object (UI `fitted`, POP `derived_by_analogy`, AI
   `placeholder`; object status = the weakest), and emit the caveats that must
   travel with it (SWAN carries no delivery mode, so parity proxies vaginal parity;
   it has no POP-Q staging and does not follow AI).
-- **Prolapse is different** (`R/33`): pelvic organ prolapse is *graded* (POP-Q
+- **Prolapse is different** (`R/supply-roster`): pelvic organ prolapse is *graded* (POP-Q
   stage 0–4) and it *regresses* — mild prolapse resolves spontaneously at a high
   annual rate, unlike incontinence, which is persistent once established. Two
   additions handle this. (1) A cited, literature-derived POP transition set
@@ -99,16 +99,16 @@ than a static risk equation.
 
 ## 5. Uncertainty, calibration and validation
 
-- **Parameter uncertainty** (`R/27`): risk coefficients and care-pathway
+- **Parameter uncertainty** (`R/demand-lifecourse_uncertainty`): risk coefficients and care-pathway
   probabilities are drawn each Monte Carlo iteration; reported intervals combine
   parameter and cohort-sampling uncertainty (Dall HWMM; a zero-width interval
   across varying draws is refused as a defect).
-- **Calibration** (`R/28`): base-year service volumes are anchored to independent
+- **Calibration** (`R/calibration-demand_lifecourse`): base-year service volumes are anchored to independent
   national totals — HCUP SASD + Medicare Part B carrier (CPT 57288 slings; NIS is
   inpatient/ICD-10-PCS and undercounts outpatient slings), NAMCS/MEPS office
   visits — via multiplicative scalars (HDMM Exhibit 11: scalar = observed /
   predicted). A model with no anchor is treated as uncalibrated.
-- **Back-test** (`R/28`): fit through a cutoff year, project to a held-out year,
+- **Back-test** (`R/calibration-demand_lifecourse`): fit through a cutoff year, project to a held-out year,
   and score MAPE against observed totals — the credibility check the Dall-family
   models stop short of.
 - **Runner** (`scripts/run_demand_calibration_backtest.R`): one command runs both
@@ -123,7 +123,7 @@ than a static risk equation.
   where a model component was specified after inspecting the miss it is scored
   against (e.g. the entrant-regime model and the 2021–2023 miss), which is model
   selection on the test set. `geographic_holdout_cv()`
-  (`R/geographic_holdout_validation.R`) adds a genuinely out-of-sample check
+  (`R/validation-geographic_holdout.R`) adds a genuinely out-of-sample check
   along a dimension that played *no* part in that selection: refit on a training
   set of geographies, predict the held-out ones' observed stock, and score OOS
   (MAPE, out-of-sample R², calibration slope, Spearman) via
@@ -132,7 +132,7 @@ than a static risk equation.
   provider counts by geography (ABOG/NPPES state distribution) plus a
   demand/population predictor. It does not repair the temporal contamination; it
   supplies an independent, uncontaminated external signal alongside it.
-- **Preregistered rolling-origin** (`R/preregistration.R`). The procedural cure
+- **Preregistered rolling-origin** (`R/validation-preregistration.R`). The procedural cure
   for the temporal contamination going forward: `preregister_spec()` freezes the
   model specification into an immutable, hashed record (`spec_hash` + freeze date,
   as diffable text under `inst/extdata/preregistration/`), and
@@ -147,7 +147,7 @@ than a static risk equation.
   against an untouched vintage remains the strongest step, and the preregistration
   is exactly what makes that vintage's evaluation clean when it lands. Runner:
   `scripts/run_preregistered_rolling_origin.R`.
-- **Model-comparison scorecard** (`R/forecast_scorecard.R`). Coverage alone is a
+- **Model-comparison scorecard** (`R/validation-forecast_scorecard.R`). Coverage alone is a
   broken success measure: a deliberately wide interval "passes" 95% coverage while
   saying almost nothing, so a 292-provider band can beat a sharp, informative model
   merely because the truth fell somewhere inside it. `forecast_scorecard()` reports
@@ -172,19 +172,19 @@ Fraher & Knapton 2017) rather than blended:
 
 | Estimand | Definition | Source |
 |---|---|---|
-| D1 | Prevalent PFD cases (age-specific) | Nygaard 2008 / Wu 2009 (`R/13`) |
-| D2 | New specialty consultations | Kirby 2013 (`R/13`) |
-| D3 | SUI + POP surgical volume | Wu 2011 (`R/13`) |
-| D4 | Obstetric-exposure-weighted prevalent PFD | `R/13b` (cohort vaginal parity) |
-| D5 | Life-course *service* demand (care-pathway) | `R/25` (`lifecourse_demand_estimand()`) |
+| D1 | Prevalent PFD cases (age-specific) | Nygaard 2008 / Wu 2009 (`R/demand-urps`) |
+| D2 | New specialty consultations | Kirby 2013 (`R/demand-urps`) |
+| D3 | SUI + POP surgical volume | Wu 2011 (`R/demand-urps`) |
+| D4 | Obstetric-exposure-weighted prevalent PFD | `R/demand-obstetric_exposure` (cohort vaginal parity) |
+| D5 | Life-course *service* demand (care-pathway) | `R/demand-lifecourse` (`lifecourse_demand_estimand()`) |
 
 D1–D4 are denominators; D5 is a service-demand series downstream of the care
 pathway. Because their generators differ they are not proportional rescalings, so
 their concordance is informative rather than tautological.
 
-## 7. Geography (isochrone demand, `R/32`)
+## 7. Geography (isochrone demand, `R/geography-demand`)
 
-The demand complement to the E2SFCA supply access in `R/14`: pelvic-floor need is
+The demand complement to the E2SFCA supply access in `R/geography-spatial_access_e2sfca`: pelvic-floor need is
 distributed across 30/60/120/180-minute travel-time (isochrone) bands, giving the
 need within each band, the need effectively unreachable (beyond the largest band),
 a **need-weighted** access ratio, and accessible-capacity-vs-need by geography.
@@ -202,7 +202,7 @@ nearest-provider drive time, the result feeds `geographic_demand_summary()`;
 ## 8. Downstream contract
 
 All demand outputs are emitted into a single versioned demand contract
-(`R/export_demand_contract.R`) — tiers 3–4 (prevalence/symptomatic, DPMM), tiers
+(`R/reporting-export_demand_contract.R`) — tiers 3–4 (prevalence/symptomatic, DPMM), tiers
 5–6 (care-seeking/procedural, life-course), and dynamic prevalence (DMDM) — with a
 provenance manifest and a `calibration_status` guard, so downstream repositories
 (cliff, twostep, isochrones) consume the same artifacts rather than rebuilding the

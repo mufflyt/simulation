@@ -1,5 +1,5 @@
-# Integration of the life-course demand pathway with the FTE conversion (R/17)
-# and the demand concordance framework (R/13).
+# Integration of the life-course demand pathway with the FTE conversion (R/supply-workload_to_fte)
+# and the demand concordance framework (R/demand-urps).
 
 pop_by_age_year <- tidyr::expand_grid(year = c(2025L, 2030L, 2035L), age = 40:85) %>%
   dplyr::mutate(population = round(2e6 * exp(-0.02 * (age - 40))))

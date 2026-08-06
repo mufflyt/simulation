@@ -5,7 +5,7 @@
 # Runs the demand stack's runners in one shot and prints a single status table so
 # "which parts are real?" is one command instead of a hunt through artifacts:
 #
-#   * Isochrone demand   (R/32)  real tract file if present, else example
+#   * Isochrone demand   (R/geography-demand)  real tract file if present, else example
 #   * Calibration + back-test    scripts/run_demand_calibration_backtest.R
 #   * SWAN -> DMDM UI fit         scripts/run_swan_dmdm_fit.R (skipped w/o SWAN)
 #
@@ -40,7 +40,7 @@ run_step <- function(label, expr) {
 }
 
 # ---- 1. Isochrone (geographic) demand ---------------------------------------
-run_step("Isochrone demand (R/32)", {
+run_step("Isochrone demand (R/geography-demand)", {
   tract_csv <- "data-raw/spatial/acs5_2023_tract_female_by_ageband.csv"
   if (file.exists(tract_csv)) {
     tr <- utils::read.csv(tract_csv)

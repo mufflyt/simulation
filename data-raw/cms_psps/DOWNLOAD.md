@@ -5,13 +5,13 @@
 The Physician/Supplier Procedure Summary (PSPS) / Medicare Physician & Other
 Practitioners Public Use File (MUP_PHY) contains utilisation counts broken out
 by **place of service (POS)** for every HCPCS code. For the URPS CPT basket
-(defined in `R/23-cms_rvu.R::URPS_CPT_BASKET`) this tells us what fraction of
+(defined in `R/data-cms_rvu.R::URPS_CPT_BASKET`) this tells us what fraction of
 each service is delivered in an office (POS 11), hospital outpatient department
 (POS 22), ambulatory surgery centre (POS 24), or inpatient hospital (POS 21).
 
 These fractions replace the physiatry-borrowed 82/15/3 time-share defaults
 in `allocate_fte_by_setting()` and seed the `URPS_DEFAULT_SETTING_MIX`
-constants in `R/urps_settings.R`.
+constants in `R/supply-urps_settings.R`.
 
 ---
 
@@ -67,7 +67,7 @@ binary `F` / `O` split. For URPS purposes:
   `"operative"` depending on the CPT code (surgical codes → `"operative"`;
   E/M and diagnostics at facility → `"hospital_outpatient"`)
 
-The `load_psps_pos_shares()` function in `R/urps_settings.R` handles this
+The `load_psps_pos_shares()` function in `R/supply-urps_settings.R` handles this
 mapping automatically.
 
 ---
@@ -79,7 +79,7 @@ Run from the R console:
 pkgload::load_all()
 source("scripts/calibrate_setting_mix_from_psps.R")
 print(shares)
-# Then copy the output to replace URPS_DEFAULT_SETTING_MIX in R/urps_settings.R
+# Then copy the output to replace URPS_DEFAULT_SETTING_MIX in R/supply-urps_settings.R
 ```
 
 Add the file to `config/canonical_sources.yml`:

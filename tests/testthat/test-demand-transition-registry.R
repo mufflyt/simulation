@@ -1,4 +1,4 @@
-# Guards for the demand-transition registry (R/25b) and its publication gate.
+# Guards for the demand-transition registry (R/demand-transition_registry) and its publication gate.
 #
 # The registry is ADDITIVE and output-preserving: lifecourse_risk_params(),
 # lifecourse_risk_params_cited() and lifecourse_pathway_params() must return

@@ -1,4 +1,4 @@
-# Guards for R/60-supply_capacity_hierarchy.R -- the tiered supply-capacity
+# Guards for R/supply-capacity_hierarchy.R -- the tiered supply-capacity
 # reporting layer (headcount -> clinical FTE -> wRVU capacity -> accessible).
 
 # ---- Structure --------------------------------------------------------------

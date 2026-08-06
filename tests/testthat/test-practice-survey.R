@@ -1,4 +1,4 @@
-# The URPS practice survey: one instrument, two open items (R/56).
+# The URPS practice survey: one instrument, two open items (R/data-practice_survey).
 #
 # These requirements are the model's statement of what it cannot currently
 # know. If they drift out of sync with the status functions, the package starts
@@ -23,7 +23,7 @@ test_that("the instrument is one document, and the views are filters over it", {
 })
 
 test_that("the capacity view is a view, not a second list", {
-  # It used to be an independent tribble in R/55. A duplicate list is a drift
+  # It used to be an independent tribble in R/supply-roster_capacity. A duplicate list is a drift
   # channel: the two can disagree and nothing notices.
   expect_equal(urps_capacity_survey_requirements(),
                urps_practice_survey_requirements("capacity_anchor"))
@@ -57,24 +57,24 @@ test_that("both statuses report unresolved and name the same instrument", {
 
 test_that("the FTE status points away from the dormant module", {
   fs <- fte_curve_status()
-  # R/40 carries TODO-FTE-001 and the derived_by_analogy tier, so it looks like
+  # R/calibration-hrsa_fte carries TODO-FTE-001 and the derived_by_analogy tier, so it looks like
   # the thing to replace. apply_hrsa_surgical_fte() is called by nothing but its
   # own tests, so fixing it would change no output. The live target is
   # hwsm_reference_hours().
   expect_match(fs$current_source, "hwsm_reference_hours")
-  expect_match(fs$do_not_fix, "R/40")
+  expect_match(fs$do_not_fix, "R/calibration-hrsa_fte")
   expect_match(fs$do_not_fix, "dormant")
   expect_match(fs$leverage, "does NOT cancel")
 })
 
-test_that("R/40 really is dormant, so the warning stays true", {
+test_that("R/calibration-hrsa_fte really is dormant, so the warning stays true", {
   # If a future change wires apply_hrsa_surgical_fte() into the pipeline, this
   # fails and fte_curve_status()$do_not_fix must be rewritten.
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
   skip_if(length(root) == 0)
   r_files <- list.files(file.path(root[1], "R"), pattern = "[.]R$", full.names = TRUE)
-  # Exclude the definition, and exclude R/56 -- it names the function inside
+  # Exclude the definition, and exclude R/data-practice_survey -- it names the function inside
   # fte_curve_status()'s message string precisely to warn people off it, which
   # is a mention in a string literal rather than a call.
   r_files <- r_files[!grepl("40-hrsa_fte_calibration|56-practice_survey", r_files)]
@@ -123,10 +123,10 @@ test_that("geographic access is registered as absent, not as miscalibrated", {
 
 test_that("the ordering trap is recorded, because the wrong step looks easiest", {
   g <- geographic_access_status()
-  # Wiring R/14 is a one-line change and is the obvious first move. Done before
+  # Wiring R/geography-spatial_access_e2sfca is a one-line change and is the obvious first move. Done before
   # coordinates exist it falls back to state geometry and emits a plausible
   # access ratio that means nothing -- worse than dormancy, which emits none.
-  expect_match(g$ordering_trap, "Do NOT wire R/14 first")
+  expect_match(g$ordering_trap, "Do NOT wire R/geography-spatial_access_e2sfca first")
   expect_match(g$ordering_trap, "state-level geometry")
   expect_true(any(grepl("isochrones", g$resolved_by)))
   expect_true(any(grepl("validation_report", g$resolved_by)))
@@ -155,7 +155,7 @@ test_that("the register distinguishes 'cancels out' from 'not in the estimand'",
   expect_true(is.na(u$cancels_out[u$item == "geographic_access"]))
 })
 
-test_that("R/14 really is dormant, so the trap warning stays true", {
+test_that("R/geography-spatial_access_e2sfca really is dormant, so the trap warning stays true", {
   # If a future change calls the access layer from R/ or scripts/, this fails
   # and geographic_access_status() must be re-checked -- especially whether
   # provider coordinates arrived first.

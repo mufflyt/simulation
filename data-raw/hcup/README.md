@@ -5,7 +5,7 @@ base-year calibration because most URPS procedures are **outpatient** (NIS is
 inpatient/ICD-10-PCS and undercounts slings — see
 `config/calibration_targets.yml`). This produces the `sling_procedure_volume` and
 `prolapse_procedure_volume` anchors the demand model calibrates against
-(`R/28-demand_lifecourse_calibration.R`).
+(`R/calibration-demand_lifecourse.R`).
 
 ## Acquire (licensed — no free API)
 

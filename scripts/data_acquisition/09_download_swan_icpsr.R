@@ -5,7 +5,7 @@
 #
 # PURPOSE:
 #   SWAN is the intended longitudinal source for fitting the DMDM onset/remission
-#   hazards (R/31-dmdm_fit_transitions.R). It follows a multi-ethnic cohort of
+#   hazards (R/demand-dmdm_fit_transitions.R). It follows a multi-ethnic cohort of
 #   mid-life women across annual visits with repeated urinary-incontinence
 #   measures and the covariates the engine uses (age, BMI, menopause status,
 #   comorbidity; parity is on the baseline/screener). This script pulls the
@@ -15,7 +15,7 @@
 # IMPORTANT — POP CAVEAT:
 #   SWAN measures urinary incontinence well but does NOT carry POP-Q staging, so
 #   it fits UI (and AI where asked) but not graded prolapse. For POP, keep the
-#   cited literature transitions (R/33, dmdm_transitions_with_pop_literature())
+#   cited literature transitions (R/supply-roster, dmdm_transitions_with_pop_literature())
 #   or fit from a POP-Q cohort (MOAD / WHI). See docs/DEMAND_METHODS.md sec 4.
 #
 # DATA ACCESS:

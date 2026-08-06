@@ -110,7 +110,7 @@ data it came from.** Rebasing supply and demand to 1.0 in the base year
 guarantees adequacy of 1.0 whether or not the workforce is short. The HWMM
 documentation names this as a conceptual limitation: base-year equilibrium
 *"essentially presents future adequacy relative to current levels."*
-`R/18-baseline_gap.R` implements four routes — a provider capacity survey,
+`R/reporting-baseline_gap.R` implements four routes — a provider capacity survey,
 HPSA-removal counts, an external anchor, or a labelled assumption with an
 evidence ledger. Without one, `REPRODUCIBILITY_MODE=strict` refuses to run.
 
@@ -125,7 +125,7 @@ and `base_year_gap_measured` as two separate checks.
 
 **2. Every supply/demand comparison has FTE on both sides.** Provider FTE divided
 by a count of prevalent cases, consultations, or procedures is dimensionally
-meaningless. `R/17-workload_to_fte.R` converts service volumes to required FTE
+meaningless. `R/supply-workload_to_fte.R` converts service volumes to required FTE
 through work RVUs calibrated to a base-year anchor. `compute_demand_coverage()`
 now errors with an explanation.
 
@@ -237,7 +237,7 @@ model has never used one pooled "PFD demand" rate. What was missing was pathway
 UI patient contributed PTNS and a sling in the same year as independent draws,
 and nothing generated post-operative follow-up or recurrence at all.
 
-`R/51-condition_service_pathway.R` replaces that with an explicit cascade —
+`R/demand-condition_service_pathway.R` replaces that with an explicit cascade —
 conservative → testing → procedure → follow-up → recurrence — where each stage
 carries one `p_advance` and the entrants to stage *k+1* are the entrants to stage
 *k* times that probability.
@@ -281,7 +281,7 @@ Rscript scripts/plot_condition_service_pathway.R
 
 Prevalence does not create demand — care seeking does. That step used to be two
 hard-coded constants (`CARE_SEEKING_BY_INSURANCE`, `CARE_SEEKING_BY_INCOME`).
-`R/48-meps_care_seeking.R` estimates it instead, from MEPS 2023, as the two-part
+`R/data-meps_care_seeking.R` estimates it instead, from MEPS 2023, as the two-part
 structure the quantity actually has: **P(any pelvic-floor ambulatory visit)**,
 and **visits given that care was sought**. Both are survey-weighted
 (`VARPSU`/`VARSTR`/`PERWT23F`); expected visits per woman is their product.
@@ -357,7 +357,7 @@ it does not validate clinical-hours FTE, required FTE, or the projected gap.
 
 ### Rolling-origin interval coverage
 
-`R/41-interval_coverage.R` implements a rigorous leave-future-out coverage
+`R/validation-interval_coverage.R` implements a rigorous leave-future-out coverage
 assessment. Rather than a single train/test split, `rolling_origin_coverage()`
 replicates the forecast problem across all available origin windows and measures
 empirical interval coverage:
@@ -441,7 +441,7 @@ and enforced by `assert_publishable_workload()`:
 | PFD prevalence < 65 | local | not in the contract; Nygaard-derived literals |
 
 The base-year gap carries its tier on the gap object itself
-(`BASELINE_GAP_TIERS`, `R/18-baseline_gap.R`), which adds
+(`BASELINE_GAP_TIERS`, `R/reporting-baseline_gap.R`), which adds
 `assumed_with_evidence` for the Dall 2013 route — an assumption defended by
 indirect indicators — and drops `solved`, since no internal constraint can
 determine a base-year shortfall. `assert_baseline_gap_estimated()` accepts
@@ -454,49 +454,49 @@ refuses `uncalibrated_illustrative` outright.
 
 | Module | Contents |
 |---|---|
-| `00-paths.R` | external-data path resolution (no hardcoded paths anywhere) |
-| `10-repro_provenance.R` | reproducibility modes, seeding, fail-closed artifact provenance |
-| `11-canonical_and_joins.R` | canonical source resolver, join-safety wrappers |
-| `12-provider_microsimulation.R` | stochastic supply engine + `participation_logistic` FTE method |
-| `13-demand_urps.R` | D1/D2/D3 demand estimands; `compute_brfss_demand_estimand()` (D4) |
-| `13b-obstetric_exposure.R` | birth-cohort vaginal parity, obstetric-exposure estimand |
-| `14-spatial_access_e2sfca.R` | E2SFCA / M2SFCA geographic access |
-| `15-run_workforce_microsimulation.R` | main orchestrator; `brfss_cells` wires in D4 |
-| `16-provider_lifecycle.R` | roster contract, hours by age × sex, retirement, career change |
-| `17-workload_to_fte.R` | service basket, delegation matrix, workload → FTE |
-| `18-baseline_gap.R` | base-year supply adequacy |
-| `19-scenario_registry.R` | versioned supply and demand scenarios |
-| `20-provider_geography.R` | empirical-Bayes migration matrix, origin-dependent placement |
-| `21-calibration_validation.R` | calibration scalars, two-method agreement, validation report |
-| `22-legacy_loader.R` | ordered, collision-reporting loader for `inst/legacy/` |
-| `23-cms_rvu.R` | CMS work RVUs, CPT basket, re-derivation helpers |
-| `24-ssot.R` | every `mufflyaccess` contract hookup, in one place |
-| `25-demand_lifecourse.R` | reproductive life-course demand pathway |
-| `26-utilization_models.R` | survey-weighted utilization and offset-Poisson rate models |
-| `27-demand_lifecourse_uncertainty.R` | life-course demand prediction intervals |
-| `28-demand_lifecourse_calibration.R` | life-course anchoring to national totals |
-| `29-demand_dynamic_multistate.R` | multistate PFD transition model |
-| `30-demand_dynamic_open.R` | open-cohort dynamic demand |
-| `31-dmdm_fit_transitions.R` | multistate transition fitters |
-| `32-geographic_demand.R` | geographic demand apportionment |
-| `33-roster.R` | base-year cohort from the observed certification series |
-| `34-backtest.R`, `35-backtest_run.R` | leakage-free historical back-test |
-| `36-parameter_uncertainty.R` | per-iteration parameter draws for the supply engine |
-| `37-calibration_sources.R` | empirical `cliff` hazards, NRMP entrants, age-productivity curve |
-| `38-backtest_status.R` | back-test status reporting |
-| `39-cliff_retirement_hazard.R` | `build_urps_exit_hazard()` — Gompertz fit from cliff or Fraher fallback |
-| `40-hrsa_fte_calibration.R` | `apply_hrsa_surgical_fte()` — HRSA hours by age/sex → relative FTE |
-| `41-interval_coverage.R` | rolling-origin coverage, interval inflation solver, publication gate |
-| `42-swan_incontinence_panel.R` | SWAN visit harmonisation, evidence-gated crosswalk (DAYSLEA/LEKDAYS) |
-| `43-severity_sandvik.R` | Sandvik Incontinence Severity Index (frequency × amount) |
-| `44-urps_population.R` | HWMM-style population file: BRFSS cells, DEMAND_AGE_BAND crosswalk, D4 prevalence weights |
-| `57-workforce_concentration.R` | Herfindahl index and geographic concentration |
-| `58-pop_transitions.R` | population transition helpers |
-| `59-fraher_agent_supply.R` | Fraher (2024) individual-level agent engine; `initialize_urps_agents()`, `advance_urps_agents()` |
-| `urps_flows.R` | URPS patient flow functions for demand modeling |
-| `urps_prevention.R` | DPMM-lite: conservative management diversion multipliers (PT / pessary) |
-| `partial_pooling_hazard.R` | empirical-Bayes partial pooling for sparse hazard cells |
-| `psa.R`, `psa_workforce.R` | joint Monte-Carlo + PRCC/SRRC global sensitivity analysis |
+| `core-paths.R` | external-data path resolution (no hardcoded paths anywhere) |
+| `core-repro_provenance.R` | reproducibility modes, seeding, fail-closed artifact provenance |
+| `core-canonical_and_joins.R` | canonical source resolver, join-safety wrappers |
+| `supply-provider_microsimulation.R` | stochastic supply engine + `participation_logistic` FTE method |
+| `demand-urps.R` | D1/D2/D3 demand estimands; `compute_brfss_demand_estimand()` (D4) |
+| `demand-obstetric_exposure.R` | birth-cohort vaginal parity, obstetric-exposure estimand |
+| `geography-spatial_access_e2sfca.R` | E2SFCA / M2SFCA geographic access |
+| `core-run_workforce_microsimulation.R` | main orchestrator; `brfss_cells` wires in D4 |
+| `supply-provider_lifecycle.R` | roster contract, hours by age × sex, retirement, career change |
+| `supply-workload_to_fte.R` | service basket, delegation matrix, workload → FTE |
+| `reporting-baseline_gap.R` | base-year supply adequacy |
+| `reporting-scenario_registry.R` | versioned supply and demand scenarios |
+| `geography-provider_geography.R` | empirical-Bayes migration matrix, origin-dependent placement |
+| `calibration-validation.R` | calibration scalars, two-method agreement, validation report |
+| `core-legacy_loader.R` | ordered, collision-reporting loader for `inst/legacy/` |
+| `data-cms_rvu.R` | CMS work RVUs, CPT basket, re-derivation helpers |
+| `core-ssot.R` | every `mufflyaccess` contract hookup, in one place |
+| `demand-lifecourse.R` | reproductive life-course demand pathway |
+| `demand-utilization_models.R` | survey-weighted utilization and offset-Poisson rate models |
+| `demand-lifecourse_uncertainty.R` | life-course demand prediction intervals |
+| `calibration-demand_lifecourse.R` | life-course anchoring to national totals |
+| `demand-dynamic_multistate.R` | multistate PFD transition model |
+| `demand-dynamic_open.R` | open-cohort dynamic demand |
+| `demand-dmdm_fit_transitions.R` | multistate transition fitters |
+| `geography-demand.R` | geographic demand apportionment |
+| `supply-roster.R` | base-year cohort from the observed certification series |
+| `validation-backtest.R`, `validation-backtest_run.R` | leakage-free historical back-test |
+| `calibration-parameter_uncertainty.R` | per-iteration parameter draws for the supply engine |
+| `calibration-sources.R` | empirical `cliff` hazards, NRMP entrants, age-productivity curve |
+| `validation-backtest_status.R` | back-test status reporting |
+| `supply-retirement_hazard.R` | `build_urps_exit_hazard()` — Gompertz fit from cliff or Fraher fallback |
+| `calibration-hrsa_fte.R` | `apply_hrsa_surgical_fte()` — HRSA hours by age/sex → relative FTE |
+| `validation-interval_coverage.R` | rolling-origin coverage, interval inflation solver, publication gate |
+| `data-swan_incontinence_panel.R` | SWAN visit harmonisation, evidence-gated crosswalk (DAYSLEA/LEKDAYS) |
+| `demand-severity_sandvik.R` | Sandvik Incontinence Severity Index (frequency × amount) |
+| `data-urps_population.R` | HWMM-style population file: BRFSS cells, DEMAND_AGE_BAND crosswalk, D4 prevalence weights |
+| `reporting-workforce_concentration.R` | Herfindahl index and geographic concentration |
+| `demand-pop_transitions.R` | population transition helpers |
+| `supply-fraher_agent_supply.R` | Fraher (2024) individual-level agent engine; `initialize_urps_agents()`, `advance_urps_agents()` |
+| `supply-urps_flows.R` | URPS patient flow functions for demand modeling |
+| `demand-prevention.R` | DPMM-lite: conservative management diversion multipliers (PT / pessary) |
+| `supply-partial_pooling_hazard.R` | empirical-Bayes partial pooling for sparse hazard cells |
+| `calibration-psa.R`, `calibration-psa_workforce.R` | joint Monte-Carlo + PRCC/SRRC global sensitivity analysis |
 
 > The numeric prefix identifies a module uniquely within a branch. Keep it that
 > way when adding one — parallel branches each taking "the next number" is how
@@ -540,8 +540,8 @@ age × sex × census-division distributions.
 
 ## Retirement modeling
 
-Retirement is drawn from a **Weibull survival curve** (`R/59-fraher_agent_supply.R`,
-`R/39-cliff_retirement_hazard.R`), not a binary age-shift:
+Retirement is drawn from a **Weibull survival curve** (`R/supply-fraher_agent_supply.R`,
+`R/supply-retirement_hazard.R`), not a binary age-shift:
 
 ```
 P(still active at age a) = exp(−(a / scale)^shape)
@@ -584,7 +584,7 @@ P(active)
 
 ## BRFSS population cells (D4)
 
-`R/44-urps_population.R` implements the HWMM population-file architecture:
+`R/data-urps_population.R` implements the HWMM population-file architecture:
 
 ```
 BRFSS 2023 (229,541 women 18+, survey-weighted)
@@ -626,7 +626,7 @@ observed national data are wired.
 
 ## Prevention model (DPMM-lite)
 
-`R/urps_prevention.R` applies conservative-management diversion multipliers to
+`R/demand-prevention.R` applies conservative-management diversion multipliers to
 service volumes before `convert_workload_to_fte()`, following the IHS Markit
 DPMM architecture:
 
@@ -710,15 +710,15 @@ original source and the repository entry point that obtains or documents it.
 
 | Source | Use | Original data | Reproducible entry point |
 |---|---|---|---|
-| CMS Physician Fee Schedule RVU file | work RVUs for the service basket | [CMS RVU25A release](https://www.cms.gov/files/zip/rvu25a.zip) | [`R/23-cms_rvu.R`](R/23-cms_rvu.R) and [`config/service_workload.yml`](config/service_workload.yml) |
+| CMS Physician Fee Schedule RVU file | work RVUs for the service basket | [CMS RVU25A release](https://www.cms.gov/files/zip/rvu25a.zip) | [`R/data-cms_rvu.R`](R/data-cms_rvu.R) and [`config/service_workload.yml`](config/service_workload.yml) |
 | CMS Medicare Physician & Other Practitioners PUF | CPT 57288 sling-activity figure | [CMS data portal](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners) | [`scripts/plot_medicare_sling_workload.R`](scripts/plot_medicare_sling_workload.R); processed cache is configured with `MEDICARE_SLING_CACHE` |
 | US Census 2023 National Population Projections | demand denominator by age band (D1–D3) | [Census 2023 population projections](https://www.census.gov/data/datasets/2023/demo/popproj/2023-summary-tables.html) | [`data-raw/census/README.md`](data-raw/census/README.md) |
 | CDC BRFSS 2023 | D4 survey-weighted UI prevalence and population cells | [BRFSS 2023 annual data](https://www.cdc.gov/brfss/annual_data/annual_2023.html) | [`scripts/data_acquisition/01_download_brfss.R`](scripts/data_acquisition/01_download_brfss.R) |
 | Census ACS 2023 5-year and PUMS | demographic and insurance/income population cells | [Census API](https://api.census.gov/data/key_signup.html) | [`scripts/data_acquisition/02_download_acs.R`](scripts/data_acquisition/02_download_acs.R) and [`scripts/data_acquisition/08_download_acs_tracts.R`](scripts/data_acquisition/08_download_acs_tracts.R) |
-| `mufflyaccess` URPS contract | base-year supply, scenarios, PFD prevalence, provenance | [`mufflyt/mufflyaccess`](https://github.com/mufflyt/mufflyaccess) | [`R/24-ssot.R`](R/24-ssot.R) |
+| `mufflyaccess` URPS contract | base-year supply, scenarios, PFD prevalence, provenance | [`mufflyt/mufflyaccess`](https://github.com/mufflyt/mufflyaccess) | [`R/core-ssot.R`](R/core-ssot.R) |
 | CDC/NCHS natality and Census fertility series | birth-cohort vaginal parity | [NCHS natality data](https://www.cdc.gov/nchs/nvss/births.htm) | [`inst/extdata/obstetric/`](inst/extdata/obstetric/) |
 | NAMCS and NHAMCS | ambulatory-care utilization anchors | [NCHS ambulatory health-care data](https://www.cdc.gov/nchs/ahcd/index.htm) | [`scripts/data_acquisition/04_download_nhamcs_namcs.R`](scripts/data_acquisition/04_download_nhamcs_namcs.R) |
-| SWAN (Study of Women's Health Across the Nation) | incontinence panel | [ICPSR SWAN series](https://www.icpsr.umich.edu/web/ICPSR/series/253) | [`scripts/data_acquisition/09_download_swan_icpsr.R`](scripts/data_acquisition/09_download_swan_icpsr.R) and [`R/42-swan_incontinence_panel.R`](R/42-swan_incontinence_panel.R) |
+| SWAN (Study of Women's Health Across the Nation) | incontinence panel | [ICPSR SWAN series](https://www.icpsr.umich.edu/web/ICPSR/series/253) | [`scripts/data_acquisition/09_download_swan_icpsr.R`](scripts/data_acquisition/09_download_swan_icpsr.R) and [`R/data-swan_incontinence_panel.R`](R/data-swan_incontinence_panel.R) |
 | MEPS | care-seeking and access calibration | [AHRQ MEPS data](https://meps.ahrq.gov/mepsweb/data_stats/download_data_files.jsp) | [`scripts/data_acquisition/05_download_meps_2022.R`](scripts/data_acquisition/05_download_meps_2022.R) and [`scripts/data_acquisition/06_download_meps_2023.R`](scripts/data_acquisition/06_download_meps_2023.R) |
 | MCBS | Medicare-aged demand calibration | [CMS MCBS public-use files](https://www.cms.gov/data-research/research/medicare-current-beneficiary-survey) | [`scripts/data_acquisition/03_download_mcbs.R`](scripts/data_acquisition/03_download_mcbs.R) |
 | NHANES | urinary-symptom prevalence | [CDC NHANES](https://www.cdc.gov/nchs/nhanes/) | [`scripts/data_acquisition/07_download_nhanes_urinary.R`](scripts/data_acquisition/07_download_nhanes_urinary.R) |

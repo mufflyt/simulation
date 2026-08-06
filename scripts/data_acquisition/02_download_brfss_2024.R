@@ -69,7 +69,7 @@
 #     cells <- build_urps_population_cells(
 #       brfss_women = load_brfss_women("data-raw/brfss/brfss_2024_women18plus.rds")
 #     )
-#   Or update the default path in load_brfss_women() (R/44-urps_population.R).
+#   Or update the default path in load_brfss_women() (R/data-urps_population.R).
 #
 # SURVEY DESIGN (use with survey::svydesign):
 #   ids     = ~X_PSU
@@ -207,5 +207,5 @@ message("Manifest written: ", manifest)
 message("\nDone. BRFSS 2024 download complete.")
 if (length(missing) > 0) {
   message("\nACTION REQUIRED: ", length(missing), " required variable(s) missing.")
-  message("Check the 2024 BRFSS codebook and update R/44-urps_population.R if variable names changed.")
+  message("Check the 2024 BRFSS codebook and update R/data-urps_population.R if variable names changed.")
 }

@@ -1,4 +1,4 @@
-# Entrant trajectories (R/54).
+# Entrant trajectories (R/supply-entrant_trajectory).
 #
 # Supply growth is the whole of the surplus story, and it rested on one number
 # held flat for 25 years. These tests pin the two things that make a trajectory

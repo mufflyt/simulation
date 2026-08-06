@@ -117,7 +117,7 @@ test_that("E2SFCA zero-demand provider yields ratio NA, not 0 capacity", {
 })
 
 test_that("the deterministic backbone tracks the stochastic engine", {
-  # R/12 keeps project_supply_deterministic() alongside the microsimulation so the
+  # R/supply-provider_microsimulation keeps project_supply_deterministic() alongside the microsimulation so the
   # stochastic engine can be validated against its analytic expectation. That
   # agreement was previously asserted only in a comment, and the two once diverged
   # by 37% at 2050 because conversion_floor was missing from one of them. Lock it.

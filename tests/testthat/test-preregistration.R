@@ -1,4 +1,4 @@
-# Preregistered rolling-origin evaluation (R/preregistration.R).
+# Preregistered rolling-origin evaluation (R/validation-preregistration.R).
 #
 # The governance layer that removes the "designed after the miss" contamination
 # for FUTURE origins: freeze + hash the spec, then refuse to evaluate unless the

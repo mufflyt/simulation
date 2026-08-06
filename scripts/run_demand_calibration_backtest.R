@@ -5,7 +5,7 @@
 # Anchors the life-course demand model's base-year service volumes to independent
 # national totals and back-tests it against a held-out year -- the two credibility
 # steps that turn the model off "placeholder_uncalibrated". Wires the package's
-# own machinery (R/28): calibrate_lifecourse_demand() (scalar = observed /
+# own machinery (R/calibration-demand_lifecourse): calibrate_lifecourse_demand() (scalar = observed /
 # predicted, HDMM Exhibit 11) and backtest_lifecourse() (MAPE at a held-out year).
 #
 #   Rscript scripts/run_demand_calibration_backtest.R
