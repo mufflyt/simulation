@@ -23,7 +23,7 @@ drop -- see the note in the body.}
 combined \code{surgical_cases}.}
 
 \item{components}{Component rate table used when \code{by_condition = TRUE};
-defaults to \link{WU2011_SURGERY_RATE_COMPONENTS}.}
+defaults to \code{WU2011_SURGERY_RATE_COMPONENTS}.}
 }
 \value{
 Tibble of \code{year} plus either \code{surgical_cases}, or \code{sui_cases} and
@@ -35,7 +35,7 @@ an age-resolved D3 that does not assume a single crude rate. This is now the
 single implementation: cliff carried a second copy that was never wired
 ("wire this once that population table exists"), and its rate table -- not
 this one -- turned out to be the faithful transcription of the source. See
-\link{WU2011_SURGERY_RATE_COMPONENTS} and \code{scripts/validate_wu2011_rates.R}.
+\code{WU2011_SURGERY_RATE_COMPONENTS} and \code{scripts/validate_wu2011_rates.R}.
 }
 \details{
 Set \code{by_condition = TRUE} to get SUI and POP as separate columns rather than a

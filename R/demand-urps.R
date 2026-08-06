@@ -410,7 +410,7 @@ compute_demand_denominators_crude <- function(population_65plus,
 #' single implementation: cliff carried a second copy that was never wired
 #' ("wire this once that population table exists"), and its rate table -- not
 #' this one -- turned out to be the faithful transcription of the source. See
-#' [WU2011_SURGERY_RATE_COMPONENTS] and `scripts/validate_wu2011_rates.R`.
+#' `WU2011_SURGERY_RATE_COMPONENTS` and `scripts/validate_wu2011_rates.R`.
 #'
 #' Set `by_condition = TRUE` to get SUI and POP as separate columns rather than a
 #' single total. They are different clinical pathways with different age curves
@@ -425,7 +425,7 @@ compute_demand_denominators_crude <- function(population_65plus,
 #' @param by_condition Return `sui_cases` and `pop_cases` separately instead of a
 #'   combined `surgical_cases`.
 #' @param components Component rate table used when `by_condition = TRUE`;
-#'   defaults to [WU2011_SURGERY_RATE_COMPONENTS].
+#'   defaults to `WU2011_SURGERY_RATE_COMPONENTS`.
 #' @return Tibble of `year` plus either `surgical_cases`, or `sui_cases` and
 #'   `pop_cases` when `by_condition = TRUE`.
 #' @export
