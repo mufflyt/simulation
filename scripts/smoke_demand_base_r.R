@@ -94,6 +94,22 @@ gh2 <- gh; gh2$obs[1] <- 100000L
 p1 <- geographic_holdout_cv(gh2, "obs", "x", geo = "geo", scheme = "loo")$predictions
 ok(p1$predicted[p1$geo == "g1"] < 1000, "leakage-free: outlier geo cannot predict its own value")
 
+cat("== preregistered rolling-origin (R/preregistration.R) ==\n")
+src("R/preregistration.R")   # digest-free cores: canonicalize + rolling_origin_evaluation
+sa <- list(form = "log(count) ~ year", horizon = 1L, origins = 2015:2020)
+sb <- list(origins = 2015:2020, horizon = 1L, form = "log(count) ~ year")   # reordered
+ok(identical(.canonicalize_spec(sa), .canonicalize_spec(sb)), "spec canonicalization is order-independent")
+ok(!identical(.canonicalize_spec(sa), .canonicalize_spec(list(form = "log(count) ~ year", horizon = 2L))),
+   "spec canonicalization is value-sensitive")
+ser <- data.frame(year = 2008:2020, count = round(1000 * exp(0.02 * (0:12))))
+fpp <- function(train, tt) exp(unname(predict(lm(log(count) ~ year, train), data.frame(year = tt))))
+ro <- rolling_origin_evaluation(ser, "year", "count", origins = 2014:2019, horizon = 1L, fit_predict = fpp)
+ok(isTRUE(ro$summary$all_targets_future) && ro$summary$n == 6L, "rolling-origin scores one-step-ahead OOS")
+spk <- ser; spk$count[spk$year == 2020] <- 1e7
+a <- rolling_origin_evaluation(ser, "year", "count", origins = 2015, horizon = 1L, fit_predict = fpp)
+b <- rolling_origin_evaluation(spk, "year", "count", origins = 2015, horizon = 1L, fit_predict = fpp)
+ok(identical(a$by_origin$predicted, b$by_origin$predicted), "leakage-free: a 2020 outlier cannot move the 2015-origin prediction")
+
 cat("== literature POP transitions (R/33) ==\n")
 ptr <- dmdm_transitions_with_pop_literature()
 ok(ptr$calibration_status == "derived_by_analogy", "POP overlay marked derived_by_analogy")
