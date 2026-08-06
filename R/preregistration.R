@@ -66,14 +66,14 @@
 #' diffs cleanly in git. Re-running with the SAME spec is idempotent; attempting
 #' to register a DIFFERENT spec at an existing path errors unless `force = TRUE`,
 #' because a change after the freeze is exactly the contamination this guards
-#' against — register a new protocol version instead.
+#' against -- register a new protocol version instead.
 #'
 #' @param spec A named list fully describing the frozen model: form, fixed
 #'   hyperparameters, predictor set, and the evaluation protocol (origins,
 #'   horizon, metric). Field order does not matter; values do.
 #' @param path File to write the record to (e.g. under
 #'   `inst/extdata/preregistration/`).
-#' @param frozen_at Freeze date/time as a string (required — state when the spec
+#' @param frozen_at Freeze date/time as a string (required -- state when the spec
 #'   was frozen relative to the data vintage). It is metadata and does NOT enter
 #'   the spec hash.
 #' @param notes Optional free-text rationale.
@@ -84,7 +84,7 @@
 preregister_spec <- function(spec, path, frozen_at, notes = "", force = FALSE) {
   stopifnot(is.list(spec), is.character(path), length(path) == 1L)
   if (missing(frozen_at) || !nzchar(as.character(frozen_at)))
-    stop("preregister_spec(): `frozen_at` is required — state when the spec was ",
+    stop("preregister_spec(): `frozen_at` is required -- state when the spec was ",
          "frozen relative to the data vintage.", call. = FALSE)
   hash <- .prereg_spec_hash(spec)
   if (file.exists(path) && !isTRUE(force)) {
@@ -109,7 +109,7 @@ preregister_spec <- function(spec, path, frozen_at, notes = "", force = FALSE) {
 #' Assert a live spec matches its preregistration (anti-contamination guard)
 #'
 #' Recomputes the hash of `spec` and compares it to the preregistered hash. Errors
-#' if they differ — the point being that a model form re-tuned after seeing the
+#' if they differ -- the point being that a model form re-tuned after seeing the
 #' held-out targets no longer matches what was frozen, and that is model selection
 #' on the test set.
 #'
@@ -136,7 +136,7 @@ assert_spec_matches_prereg <- function(spec, prereg) {
 #' the observed target. Leakage-free by construction: an origin's fit sees only
 #' rows at or before it, and the target is strictly in its future. When a
 #' preregistration is supplied, the run is refused unless the live `spec` matches
-#' it — so a clean rolling-origin number cannot be produced from a spec that was
+#' it -- so a clean rolling-origin number cannot be produced from a spec that was
 #' altered after the targets were seen.
 #'
 #' @param data Data frame with a time column and a target column (e.g. an annual

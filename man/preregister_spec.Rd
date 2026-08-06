@@ -14,7 +14,7 @@ horizon, metric). Field order does not matter; values do.}
 \item{path}{File to write the record to (e.g. under
 \code{inst/extdata/preregistration/}).}
 
-\item{frozen_at}{Freeze date/time as a string (required — state when the spec
+\item{frozen_at}{Freeze date/time as a string (required -- state when the spec
 was frozen relative to the data vintage). It is metadata and does NOT enter
 the spec hash.}
 
@@ -31,7 +31,7 @@ freeze date, and the canonical serialization, as plain key:value text that
 diffs cleanly in git. Re-running with the SAME spec is idempotent; attempting
 to register a DIFFERENT spec at an existing path errors unless \code{force = TRUE},
 because a change after the freeze is exactly the contamination this guards
-against — register a new protocol version instead.
+against -- register a new protocol version instead.
 }
 \seealso{
 \code{\link[=assert_spec_matches_prereg]{assert_spec_matches_prereg()}}, \code{\link[=rolling_origin_evaluation]{rolling_origin_evaluation()}}

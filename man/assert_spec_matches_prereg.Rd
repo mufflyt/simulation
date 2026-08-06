@@ -17,7 +17,7 @@ path to one.}
 }
 \description{
 Recomputes the hash of \code{spec} and compares it to the preregistered hash. Errors
-if they differ — the point being that a model form re-tuned after seeing the
+if they differ -- the point being that a model form re-tuned after seeing the
 held-out targets no longer matches what was frozen, and that is model selection
 on the test set.
 }

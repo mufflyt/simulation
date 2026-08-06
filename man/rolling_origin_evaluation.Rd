@@ -45,7 +45,7 @@ origin and predicts \code{horizon} steps ahead, then scores the prediction again
 the observed target. Leakage-free by construction: an origin's fit sees only
 rows at or before it, and the target is strictly in its future. When a
 preregistration is supplied, the run is refused unless the live \code{spec} matches
-it — so a clean rolling-origin number cannot be produced from a spec that was
+it -- so a clean rolling-origin number cannot be produced from a spec that was
 altered after the targets were seen.
 }
 \seealso{
