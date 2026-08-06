@@ -203,7 +203,10 @@ career_transition_registry <- function() {
     notes = notes)
   levers <- rbind(
     lever("burnout_hazard_multiplier",
-          "neutral (1.0); multiplies the departure hazard when activated"),
+          paste("neutral (1.0); scales the age-flat early-exit hazard when",
+                "activated. Wired via the `burnout_reduction` supply scenario",
+                "(career_change_multiplier -> run_supply_microsimulation's",
+                "career_change_hazard)")),
     lever("parental_leave_fte_multiplier",
           "neutral (1.0); temporary FTE reduction when activated"),
     lever("medicare_participation_multiplier",

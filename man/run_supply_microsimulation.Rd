@@ -12,6 +12,7 @@ run_supply_microsimulation(
   n_iterations = 500,
   conversion_floor = 1,
   retirement_schedule = RETIREMENT_HAZARD_BY_AGE,
+  career_change_hazard = CAREER_CHANGE_HAZARD_UNDER_50,
   hazard_table = NULL,
   fte_method = "hours",
   hours_model = NULL,
@@ -47,6 +48,12 @@ warns. A spec that carries no \code{entrant_mean} leaves this argument in force.
 
 \item{retirement_schedule}{Single-year retirement hazard schedule; scenarios
 supply a SHIFTED schedule (retire +/- n years) rather than a multiplier.}
+
+\item{career_change_hazard}{Annual age-flat departure hazard below the
+retirement age (the early-exit / burnout process, distinct from the
+age-graded retirement schedule). The \code{burnout_reduction} supply scenario
+lowers it; the default leaves it at \code{CAREER_CHANGE_HAZARD_UNDER_50} so a
+run is output-preserving.}
 
 \item{hazard_table}{Optional legacy age-band hazard table. Supplying it
 switches back to the coarse seven-band gradient.}

@@ -457,6 +457,12 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       n_iterations = n_iterations,
       conversion_floor = params$conversion %||% 1.0,
       retirement_schedule = scenario_retirement_schedule(params, base_retirement_schedule),
+      # Burnout acts on the age-flat early-exit (career-change) hazard, NOT the
+      # age-graded retirement curve, so a scenario scales it here rather than
+      # multiplying the retirement schedule (which the registry forbids). The
+      # neutral default (multiplier 1) leaves the base hazard untouched.
+      career_change_hazard = CAREER_CHANGE_HAZARD_UNDER_50 *
+        (params$career_change_multiplier %||% 1),
       hours_multiplier = params$hours_multiplier %||% 1.0,
       hours_intercept = hours_intercept,
       # Re-centred on THIS scenario's entrant level. `entrant_mean` takes

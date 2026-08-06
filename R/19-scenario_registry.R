@@ -120,6 +120,25 @@ local_supply_scenario_registry <- function(baseline_entrants = 55) {
       hours_multiplier = 1.00,
       conversion = 0.70,
       source = "cliff WORKFORCE_CONVERSION_FLOOR"
+    ),
+    # Burnout reduction acts on the AGE-FLAT early-exit (career-change) hazard,
+    # not the age-graded retirement curve -- so it uses `career_change_multiplier`
+    # (< 1 = fewer early exits) rather than a forbidden retirement-curve
+    # multiplier. There is no in-domain URPS burnout->attrition estimate, so the
+    # 0.75 level is ILLUSTRATIVE: this is a scenario lever (a what-if range), not
+    # a calibrated effect. It is the functional counterpart of the neutral
+    # `burnout_hazard_multiplier` row in career_transition_registry() (R/16b).
+    burnout_reduction = list(
+      label = "Burnout reduction (fewer early-career exits)",
+      entrants = baseline_entrants,
+      retirement_shift_years = 0,
+      hours_multiplier = 1.00,
+      conversion = 1.00,
+      career_change_multiplier = 0.75,
+      source = paste("Illustrative scenario lever: 25% fewer age-flat early-career",
+                     "exits. No in-domain URPS burnout->attrition estimate exists;",
+                     "range, not a calibrated point (HWSM burnout narrative;",
+                     "Zarek 2025 occupational-separation mechanism)")
     )
   )
 }
