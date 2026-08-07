@@ -668,6 +668,12 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       specialty      = subspecialty,
       geography_type = supply_geography,
       geography_id   = if (supply_geography == "conus") "CONUS" else "US",
+      # The cohort's provenance travels INSIDE the exported table, not only in
+      # scenario_meta. Every column here is a supply number or derived from one,
+      # so a projection that has been saved or handed on must still be able to
+      # say whether its supply was measured or reconstructed.
+      cohort_basis   = cohort$source,
+      observed_share = cohort$observed_share,
       mode           = mode
     ),
     error = function(e) {
