@@ -10,7 +10,7 @@
 test_that("DESCRIPTION pins the contract to a commit, not a bare repo", {
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
-  skip_if(length(root) == 0)
+  skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   d <- readLines(file.path(root[1], "DESCRIPTION"), warn = FALSE)
   # The Remotes ENTRY, not every line naming the package -- Imports lists it too,
   # and matching that would pass on a bare dependency declaration.
@@ -35,7 +35,7 @@ test_that("CI installs the pinned commit, not the repo's HEAD", {
   # 0.10.0. Pinning DESCRIPTION alone therefore does not pin CI.
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
-  skip_if(length(root) == 0)
+  skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   wf <- file.path(root[1], ".github", "workflows", "R-CMD-check.yaml")
   skip_if_not(file.exists(wf), "R-CMD-check workflow not present")
 
@@ -50,7 +50,7 @@ test_that("CI installs the pinned commit, not the repo's HEAD", {
 test_that("the required-export list matches what the package actually calls", {
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
-  skip_if(length(root) == 0)
+  skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   files <- c(list.files(file.path(root[1], "R"), pattern = "[.]R$", full.names = TRUE),
              list.files(file.path(root[1], "scripts"), pattern = "[.]R$",
                         full.names = TRUE, recursive = TRUE))

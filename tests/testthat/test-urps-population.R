@@ -36,7 +36,8 @@ library(urpssim)
   bmi_class <- urpssim:::.BMI5CAT_LABELS[as.character(df$X_BMI5CAT)]
   smoker    <- urpssim:::.SMOKER3_LABELS[as.character(df$X_SMOKER3)]
   n_ch <- df$CHILDREN
-  n_ch[n_ch %in% c(88L, 99L)] <- NA_integer_
+  n_ch[n_ch == 88L] <- 0L
+  n_ch[n_ch == 99L] <- NA_integer_
 
   tibble::tibble(
     seqno       = df$SEQNO,

@@ -133,7 +133,7 @@ test_that("the status records that one target year cannot estimate coverage", {
 
 test_that("the frozen record matches the live artifact ARM BY ARM", {
   path <- backtest_artifact_path()
-  skip_if(is.null(path))
+  skip_if(is.null(path), "frozen back-test record not reachable (artifacts/ is not shipped)")
   live <- utils::read.csv(path, stringsAsFactors = FALSE)
   rec <- BACKTEST_RECORD_2020_2023
 
@@ -156,7 +156,7 @@ test_that("the frozen record matches the live artifact ARM BY ARM", {
 
 test_that("the recorded checksum identifies the artifact it was taken from", {
   path <- backtest_artifact_path()
-  skip_if(is.null(path))
+  skip_if(is.null(path), "frozen back-test record not reachable (artifacts/ is not shipped)")
   skip_if_not_installed("openssl")
   v <- verify_backtest_record(path)
   expect_true(v$checked)
@@ -167,7 +167,7 @@ test_that("the recorded checksum identifies the artifact it was taken from", {
 
 test_that("verification detects every kind of drift it exists to catch", {
   path <- backtest_artifact_path()
-  skip_if(is.null(path))
+  skip_if(is.null(path), "frozen back-test record not reachable (artifacts/ is not shipped)")
   base <- utils::read.csv(path, stringsAsFactors = FALSE)
   write_tmp <- function(d) { f <- tempfile(fileext = ".csv")
                              utils::write.csv(d, f, row.names = FALSE); f }
@@ -198,7 +198,7 @@ test_that("verification detects every kind of drift it exists to catch", {
 
 test_that("a drift below tolerance is not reported as drift", {
   path <- backtest_artifact_path()
-  skip_if(is.null(path))
+  skip_if(is.null(path), "frozen back-test record not reachable (artifacts/ is not shipped)")
   d <- utils::read.csv(path, stringsAsFactors = FALSE)
   d$percent_error[2] <- d$percent_error[2] + 1e-9
   f <- tempfile(fileext = ".csv"); utils::write.csv(d, f, row.names = FALSE)
@@ -209,7 +209,7 @@ test_that("a drift below tolerance is not reported as drift", {
 
 test_that("the gate fails closed in strict mode and warns in relaxed", {
   path <- backtest_artifact_path()
-  skip_if(is.null(path))
+  skip_if(is.null(path), "frozen back-test record not reachable (artifacts/ is not shipped)")
   d <- utils::read.csv(path, stringsAsFactors = FALSE)
   d$percent_error[1] <- d$percent_error[1] - 5
   f <- tempfile(fileext = ".csv"); utils::write.csv(d, f, row.names = FALSE)
@@ -241,7 +241,7 @@ test_that("a missing artifact is unverifiable, not a failure", {
 
 test_that("the checksum is a bare character, not a classed object", {
   path <- backtest_artifact_path()
-  skip_if(is.null(path))
+  skip_if(is.null(path), "frozen back-test record not reachable (artifacts/ is not shipped)")
   # WHY THIS IS PINNED. The first implementation used openssl::sha256(), which
   # returns a CLASSED object whose class survives as.character(). The result
   # printed as plain hex and compared TRUE under `==` but FALSE under

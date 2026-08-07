@@ -59,7 +59,7 @@ test_that("state vulnerability ranks by loss, weighted by log active count", {
   )
   top <- calculate_state_vulnerability(impacts, top_n = 2)
   expect_equal(nrow(top), 2L)
-  expect_equal(top$state[1], "WY")                        # highest pct_loss first
+  expect_equal(top$state[1], "TX")                        # highest log10(active)-weighted vulnerability_score
   expect_true("vulnerability_score" %in% names(top))
 })
 

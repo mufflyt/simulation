@@ -37,7 +37,9 @@ interval, not a point forecast — and, as our own validation shows
 ([`docs/RESULTS_INTERVAL_CALIBRATION.md`](docs/RESULTS_INTERVAL_CALIBRATION.md)),
 that interval has to be judged by a proper scoring rule (width *and* miss), not by
 coverage alone. Microsimulation is strongest when it communicates uncertainty, not
-a single number.
+a single number — so the workforce gap is reported as a median, a prediction
+interval, and decision-relevant probabilities (`workforce_gap_probabilities()`:
+P(any shortage), P(shortage exceeds X%)), never as a single headline count.
 
 **What has been validated?** Two different things, and it matters not to conflate
 them. The *software* is fully validated: R CMD check passes clean and the test

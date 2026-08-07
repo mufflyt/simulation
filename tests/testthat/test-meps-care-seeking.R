@@ -62,7 +62,7 @@ test_that("comorbidity excludes the pelvic-floor conditions themselves", {
   other_ids <- unique(f$cond$DUPERSID[!substr(f$cond$ICD10CDX, 1, 3) %in%
                                         MEPS_PELVIC_FLOOR_ICD10])
   clean <- setdiff(f$seekers, other_ids)
-  skip_if(length(clean) == 0)
+  skip_if(length(clean) == 0, "MEPS cleaned file not present")
   expect_true(all(p$n_comorbid[p$DUPERSID %in% clean] == 0))
 })
 

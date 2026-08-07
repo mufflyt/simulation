@@ -6,7 +6,7 @@
 \usage{
 entrant_pipeline_transition(
   matches,
-  p_complete_cert = 0.75,
+  p_complete_cert = 0.86,
   p_active_practice = 0.9,
   cert_lag = URPS_FELLOWSHIP_YEARS,
   active_lag = 0L,
@@ -22,9 +22,11 @@ entrant_pipeline_transition(
 achieve board certification. Either one value in 0 to 1, one value per row of
 \code{matches}, or a data frame of \code{year} and \code{p_complete_cert} keyed on the
 CERTIFICATION year (years it omits fall back to its median). Defaults to
-0.75, the pre-cutoff observed conversion from \code{\link[=nrmp_match_to_cert_ratio]{nrmp_match_to_cert_ratio()}};
-the former default of 0.95 was an assumption that over-predicted every
-observed year by 8 to 18 certifications.}
+0.86, the pooled entry-to-certification conversion from
+\code{\link[=entrant_to_cert_ratio]{entrant_to_cert_ratio()}} against the ACGME fellow counts. Two earlier
+defaults were worse: 0.95 was an assumption that over-predicted every
+observed year by 8 to 18 certifications, and 0.75 was estimated on a window
+containing the COVID trough but not its release, which biases it low.}
 
 \item{p_active_practice}{Fraction of newly certified who enter active US
 clinical practice. In 0 to 1. Default 0.90 (labeled assumption).}
