@@ -95,8 +95,12 @@ test_that("supply scenarios come from the mufflyaccess SSOT registry", {
   skip_if_not_installed("mufflyaccess")
   reg <- supply_scenario_registry(55)
   expect_silent(validate_scenario_registry(reg, "supply"))
-  # The ids are the contract's, not locally invented ones.
-  expect_setequal(names(reg), mufflyaccess::urps_scenario_ids())
+  # The ids are the contract's SSOT plus the local policy-lever extensions
+  # (telemedicine, AI-documentation, burnout-reduction) that supply_scenario_registry()
+  # appends first-class because the mufflyaccess contract does not carry them.
+  expect_setequal(
+    names(reg),
+    union(mufflyaccess::urps_scenario_ids(), urpssim:::SUPPLY_SCENARIO_LOCAL_EXTENSIONS))
   expect_true("baseline" %in% names(reg))
   expect_equal(reg$retire_2yr_later$retirement_shift_years, 2)
   expect_equal(reg$retire_2yr_earlier$retirement_shift_years, -2)
