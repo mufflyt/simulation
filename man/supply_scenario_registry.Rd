@@ -15,9 +15,9 @@ supply_scenario_registry(baseline_entrants = 55, prefer_ssot = TRUE)
 Named list of supply scenario definitions.
 }
 \description{
-Returns the mufflyaccess registry when available, plus local policy-lever
-extensions that the SSOT does not yet carry. For any id present in
-mufflyaccess, the SSOT definition wins. When the contract is absent this falls
-back to \code{\link[=local_supply_scenario_registry]{local_supply_scenario_registry()}}. Pass \code{prefer_ssot = FALSE} to
-force the local fallback even when mufflyaccess is present.
+Returns the mufflyaccess registry when available; its ids ARE the registry and
+are never locally extended. When the contract is absent this falls back to
+\code{\link[=local_supply_scenario_registry]{local_supply_scenario_registry()}}, which is also where the policy-lever
+extensions live. Pass \code{prefer_ssot = FALSE} to force the local fallback (and
+reach those extensions) even when mufflyaccess is present.
 }
