@@ -160,16 +160,29 @@ local_supply_scenario_registry <- function(baseline_entrants = 55) {
         "documentation frees ~8% of clinical time from clerical burden, modeled",
         "as an effective clinical-hours gain.")
     ),
+    # Burnout reduction acts on the AGE-FLAT early-exit (career-change) hazard,
+    # not the age-graded retirement curve -- so it uses `career_change_multiplier`
+    # (< 1 = fewer early exits) rather than a `retirement_shift_years` / hours
+    # retention lever. Burnout attrition concentrates in EARLY-career (<50)
+    # providers, which a retirement-curve shift (only touches 50+) cannot
+    # represent; the career-change hazard is the correct locus. There is no
+    # in-domain URPS burnout->attrition estimate, so the 0.75 level is
+    # ILLUSTRATIVE: a scenario range, not a calibrated effect. Functional
+    # counterpart of the neutral `burnout_hazard_multiplier` row in
+    # career_transition_registry() (R/supply-provider_state_machine.R).
     burnout_reduction = list(
-      label = "Burnout reduction (retention)",
+      label = "Burnout reduction (fewer early-career exits)",
       entrants = baseline_entrants,
-      retirement_shift_years = 2,
-      hours_multiplier = 1.03,
+      retirement_shift_years = 0,
+      hours_multiplier = 1.00,
       conversion = 1.00,
-      source = paste(
-        "ASSUMED/ILLUSTRATIVE (magnitude not yet calibrated): wellness /",
-        "burnout-reduction keeps providers in practice ~2 yr longer (retention --",
-        "the opposite sign to retire_2yr_earlier) and restores ~3% clinical hours.")
+      career_change_multiplier = 0.75,
+      source = paste("ASSUMED/ILLUSTRATIVE (magnitude not yet calibrated): 25% fewer",
+                     "age-flat early-career exits (burnout attrition, which concentrates",
+                     "in <50 providers a retirement-curve shift cannot capture). No",
+                     "in-domain URPS burnout->attrition estimate exists; a range, not a",
+                     "calibrated point (HWSM burnout narrative; Zarek 2025",
+                     "occupational-separation mechanism).")
     )
   )
 }
