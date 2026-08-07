@@ -16,6 +16,14 @@ licensed) but never ships in the built package.
 | **`08_download_acs_tracts.R`** | ACS 5-yr (**tract** B01001 by age band) | **isochrone demand** (`R/geography-demand`) | free API key |
 | **`09_download_swan_icpsr.R`** | **SWAN** (ICPSR 253) | **DMDM UI hazards** (`R/demand-dmdm_fit_transitions`) | ICPSR account (public) / DUA (restricted) |
 | **`10_ingest_hcup_nass.R`** | **HCUP NASS** (licensed) | **base-year procedure anchors** (`R/calibration-demand_lifecourse`) | HCUP Central Distributor |
+| **`12_build_provider_isochrone_membership.R`** | **provider isochrones** (`mufflyt/isochrones`, S3) overlaid on tract centroids | **E2SFCA `membership`** (`R/geography-spatial_access_e2sfca`) | the `isochrones_{N}min_consolidated.rds` (EC2/S3) |
+
+`12` is a **derivation, not a download**: it turns the (large, S3-hosted) drive-time
+isochrone polygons into the compact `(demand_id, provider_id, band)` catchment
+table the access layer consumes, and commits only that. Run it where the `.rds`
+live (`--iso-dir`); it fails rather than approximate if a band is missing.
+`Rscript scripts/data_acquisition/12_build_provider_isochrone_membership.R --self-test`
+validates the overlay with no external data.
 
 ## Already in the repo (do not re-download)
 
