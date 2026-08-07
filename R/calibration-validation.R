@@ -319,9 +319,14 @@ validation_report <- function(supply, required = NULL, gap = NULL,
   }
 
   if (!is.null(required)) {
-    ok <- all(required$required_fte > 0, na.rm = TRUE)
+    # Guard the column: `all(NULL > 0, na.rm = TRUE)` is TRUE, so a `required`
+    # table whose FTE column is absent (renamed) or empty would record this
+    # check as PASSED having validated nothing. Absent/empty must FAIL.
+    has_req <- "required_fte" %in% names(required) && nrow(required) > 0L
+    ok <- has_req && all(required$required_fte > 0, na.rm = TRUE)
     add("required_fte_positive", "internal", ok,
-        if (ok) "ok" else "non-positive required FTE")
+        if (!has_req) "required_fte column absent or table empty"
+        else if (ok) "ok" else "non-positive required FTE")
   }
 
   # Two separate questions, and reporting only the first is how a borrowed

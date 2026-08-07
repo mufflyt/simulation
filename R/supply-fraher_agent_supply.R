@@ -113,10 +113,16 @@ initialize_urps_agents <- function(roster_source  = "mufflyaccess",
     )
 
   n_agents       <- nrow(agents)
-  contract_total <- tryCatch(
-    nrow(mufflyaccess::urps_count()),
-    error = function(e) 1306L
-  )
+  # urps_count() returns a scalar count; nrow(scalar) is NULL, which makes
+  # pct_diff numeric(0) and the `if (pct_diff > 10)` below throw "argument is of
+  # length zero" -- i.e. it crashed precisely when mufflyaccess IS installed.
+  # Coerce robustly and fall back on any degenerate value.
+  contract_total <- tryCatch({
+    v <- mufflyaccess::urps_count()
+    if (is.data.frame(v)) nrow(v) else suppressWarnings(as.numeric(v)[1])
+  }, error = function(e) 1306L)
+  if (length(contract_total) != 1L || !is.finite(contract_total) || contract_total <= 0)
+    contract_total <- 1306L
   pct_diff <- abs(n_agents - contract_total) / contract_total * 100
 
   if (verbose) {
