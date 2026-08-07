@@ -177,11 +177,12 @@ local_supply_scenario_registry <- function(baseline_entrants = 55) {
       hours_multiplier = 1.00,
       conversion = 1.00,
       career_change_multiplier = 0.75,
-      source = paste("Illustrative scenario lever: 25% fewer age-flat early-career",
-                     "exits (burnout attrition, which concentrates in <50 providers a",
-                     "retirement-curve shift cannot capture). No in-domain URPS",
-                     "burnout->attrition estimate exists; range, not a calibrated point",
-                     "(HWSM burnout narrative; Zarek 2025 occupational-separation).")
+      source = paste("ASSUMED/ILLUSTRATIVE (magnitude not yet calibrated): 25% fewer",
+                     "age-flat early-career exits (burnout attrition, which concentrates",
+                     "in <50 providers a retirement-curve shift cannot capture). No",
+                     "in-domain URPS burnout->attrition estimate exists; a range, not a",
+                     "calibrated point (HWSM burnout narrative; Zarek 2025",
+                     "occupational-separation mechanism).")
     )
   )
 }
