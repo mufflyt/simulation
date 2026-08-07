@@ -11,17 +11,28 @@ locally and how to keep `main` green structurally.
 A `Makefile` mirrors CI so failures surface before you push:
 
 ```sh
-make deps        # once: install package deps + rcmdcheck + roxygen2
-make document    # regenerate man/*.Rd + NAMESPACE from roxygen comments
-make test        # run the testthat suite
-make check       # R CMD check --as-cran, error on WARNING  <-- the CI gate
-make check-fast  # doc/namespace/Rd checks only (skips tests + vignettes)
+make deps          # once: install package deps + rcmdcheck + roxygen2
+make document      # regenerate man/*.Rd + NAMESPACE from roxygen comments
+make test          # run the testthat suite
+make check         # R CMD check --as-cran, error on WARNING  <-- the CI gate
+make check-fast    # doc/namespace/Rd checks only (skips tests + vignettes)
+make validate-docs # doc-drift tripwire, NO package deps needed (base R only)
 ```
 
 `make check` runs the **exact** command CI runs, so a green `make check` means
 a green PR. On Claude-on-web the SessionStart hook
 (`.claude/hooks/session-start.sh`) installs the dependencies automatically;
 elsewhere run `make deps` once.
+
+**When you can't install the dependencies** (`duckdb` and the rest of `Imports`
+are required to build the package, so `make document` and `make check` both need
+`make deps` first), run `make validate-docs` — or `Rscript
+scripts/dev/validate_docs.R` directly. It only *parses* the committed `R/` and
+`man/`, so it runs on a bare `Rscript` with nothing installed, and it catches
+the doc-drift subset that keeps reaching `main`: a stale NAMESPACE (an `@export`
+with no `export()`), an `export()` with no man page, a codoc `\usage`/formals
+mismatch, and structurally invalid Rd. It is a pre-push tripwire, not a
+substitute for `make check`.
 
 ### Optional pre-push gate
 
