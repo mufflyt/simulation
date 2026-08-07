@@ -26,7 +26,9 @@
 #'   `wait_censored`, `p_appointment`, and, for panel size,
 #'   `accessible_population`/`accessible_fte`).
 #' @return A tidy tibble: `estimand` (A1-A5, with `A1b`/`A5b` auxiliary shares),
-#'   `label`, `value`, `unit`, `calibration_status`.
+#'   `label`, `value`, `unit`, `calibration_status`. When `cleared` carries
+#'   spatial-overflow columns (from [overflow_access()]), two more rows are
+#'   appended: `A6` (`spilled_share`) and `A7` (`overflow_travel_time`).
 #' @export
 access_outcomes_national <- function(cleared) {
   need <- c("demand_workload", "accessible_capacity", "served", "unmet_demand",
@@ -59,7 +61,7 @@ access_outcomes_national <- function(cleared) {
   status <- unique(stats::na.omit(cleared$calibration_status))
   status <- if (length(status) == 1L) status else paste(status, collapse = "+")
 
-  tibble::tibble(
+  out <- tibble::tibble(
     estimand = c("A1", "A1b", "A2", "A3", "A4", "A5", "A5b"),
     label = c("wait_time", "wait_censored_share", "p_appointment",
               "panel_size", "utilization", "unmet_demand", "unmet_fraction"),
@@ -69,6 +71,27 @@ access_outcomes_national <- function(cleared) {
              "fraction", "workload", "fraction"),
     calibration_status = status
   )
+
+  # A6/A7: spatial-overflow outcomes, present only when `cleared` came from
+  # overflow_access() (Phase 2). Demand that was met only by sending the patient
+  # to another catchment, and the mean extra travel that cost -- computed from
+  # columns so they survive a trajectory roll-up (attr() would not).
+  if (all(c("spilled_out", "overflow_travel_time") %in% names(cleared))) {
+    base_demand <- if ("demand_workload_pre_overflow" %in% names(cleared)) {
+      sum(cleared$demand_workload_pre_overflow, na.rm = TRUE)
+    } else tot_demand
+    tot_spilled <- sum(cleared$spilled_out, na.rm = TRUE)
+    spilled_share <- if (base_demand > 0) tot_spilled / base_demand else NA_real_
+    ovt_nat <- .access_dwmean(cleared$overflow_travel_time, cleared$spilled_out)
+    out <- rbind(out, tibble::tibble(
+      estimand = c("A6", "A7"),
+      label = c("spilled_share", "overflow_travel_time"),
+      value = c(spilled_share, ovt_nat),
+      unit = c("fraction", "time"),
+      calibration_status = status
+    ))
+  }
+  out
 }
 
 # TRUE for TRUE, FALSE for FALSE or NA -- so an NA censored flag never counts as
