@@ -92,6 +92,14 @@ Each year: draw Bernoulli retirement per active agent using the age-band
 hazard, age everyone by one year, then inject \code{entrants_per_year} new agents
 at the entry age. Records active headcount, effective FTE, and mean age.
 }
+\examples{
+# One Monte Carlo draw. run_supply_microsimulation() repeats this and
+# summarises across iterations.
+agents <- initialize_provider_agents(40, "FPMRS", 2025)
+sim <- simulate_provider_career_once(agents, 2025:2028,
+                                     entrants_per_year = 10, fte_method = "hours")
+head(sim$panel)
+}
 \seealso{
 Other provider microsimulation: 
 \code{\link{build_hazard_table}()},

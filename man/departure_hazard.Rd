@@ -36,6 +36,10 @@ Combines the two distinct processes: an age-graded retirement hazard from
 \code{RETIREMENT_MIN_AGE}, and an age-flat career-change hazard below it. Everyone
 at or above \code{MICROSIM_TERMINAL_AGE} departs with probability 1.
 }
+\examples{
+# Combined retirement and career-change hazard.
+departure_hazard(age = c(55, 65, 75), sex = "female")
+}
 \seealso{
 Other provider lifecycle: 
 \code{\link{RETIREMENT_HAZARD_BY_AGE}},

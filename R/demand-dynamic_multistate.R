@@ -34,6 +34,8 @@
 #'   age).
 #' @family dynamic multistate
 #' @concept demand
+#' @examples
+#' str(dmdm_default_transitions(), max.level = 1)
 #' @export
 dmdm_default_transitions <- function() {
   mk <- function(a0, avag, aage, absl, abmi, ahyst, ameno, acom)

@@ -27,6 +27,11 @@ Age bands grow at different rates so the three demand estimands diverge, which
 is the whole point of giving each its own age profile. Replace with ACS/Census
 projections resolved through \code{\link[=resolve_canonical]{resolve_canonical()}} for production runs.
 }
+\examples{
+# A synthetic population for examples and tests. Real runs pass Census
+# series through `pop_by_band`.
+head(example_female_population_by_band(2025:2027))
+}
 \seealso{
 Other run workforce microsimulation: 
 \code{\link{example_capacity_survey}()},

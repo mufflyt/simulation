@@ -436,6 +436,15 @@ implied_urps_share <- function(volumes, required_fte,
 #'   When `by_setting = TRUE`, also includes a `setting` column.
 #' @family workload to fte
 #' @concept supply
+#' @examples
+#' # Service volumes become REQUIRED FTE through a work-RVU basket, so supply
+#' # and demand end up in the same units. Service names must exist in
+#' # urps_service_workload(); an unmatched name is refused, not dropped.
+#' volumes <- tibble::tibble(
+#'   service = c("new_consultation", "return_visit", "cystoscopy", "prolapse_procedure"),
+#'   volume  = c(120000, 240000, 45000, 32000)
+#' )
+#' convert_workload_to_fte(volumes, wrvu_per_fte = 7500)
 #' @export
 convert_workload_to_fte <- function(volumes,
                                     wrvu_per_fte = NULL,

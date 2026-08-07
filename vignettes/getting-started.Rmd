@@ -1,0 +1,171 @@
+---
+title: "Getting started with urpssim"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with urpssim}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(urpssim)
+```
+
+## What this package answers
+
+Will the US supply of urogynecology and reconstructive pelvic surgery (URPS)
+providers keep pace with demand, and where will access fall short?
+
+It answers that by projecting supply and demand **in the same units** —
+full-time-equivalent providers — and reporting the gap with an uncertainty
+interval. Supply comes from an individual-level microsimulation of a provider
+cohort; demand comes from age-banded population series converted to required FTE
+through a work-RVU workload basket.
+
+The rest of this vignette runs the model once and then explains the three things
+newcomers reliably trip over.
+
+## A first run
+
+`run_workforce_microsimulation()` is the entry point. It takes many arguments;
+almost all have defaults. The two you cannot skip are a **base-year gap** and,
+if any input is analogy-derived, an explicit acknowledgement that you know it is.
+
+```{r first-run}
+gap <- baseline_gap(
+  base_supply_fte    = 120,
+  adequacy           = 0.95,
+  method             = "assumed",
+  calibration_status = "uncalibrated_illustrative",
+  evidence           = "illustrative example, not a published estimate"
+)
+
+result <- run_workforce_microsimulation(
+  baseline_supply           = 120,
+  use_certification_cohorts = FALSE,
+  years                     = 2025:2030,
+  n_iterations              = 5,
+  supply_scenarios          = supply_scenario_registry(20)["baseline"],
+  pop_by_band               = example_female_population_by_band(2025:2030),
+  baseline_gap_estimate     = gap,
+  allow_analogy             = TRUE,
+  verbose                   = FALSE
+)
+
+names(result)
+```
+
+`n_iterations = 5` keeps this vignette fast. Real runs use 200.
+
+### Reading the result
+
+`supply` is the projected provider FTE by year and scenario:
+
+```{r supply}
+head(result$supply[, c("year", "scenario_label", "effective_fte_median")])
+```
+
+`fte_gap` is the headline: required FTE against projected supply, in the same
+units, so subtracting them is meaningful.
+
+```{r gap}
+head(result$fte_gap)
+```
+
+### What the run says about itself
+
+Every run carries metadata describing how much you should trust it. This is not
+decoration — it is the part most likely to change your interpretation.
+
+```{r meta}
+meta <- result$scenario_meta
+meta$demand_calibrated
+meta$example_only
+```
+
+`demand_calibrated` is `FALSE` here because no independent anchor was supplied.
+The projection still ran; it simply is not anchored to an observed national
+quantity, and the object says so rather than letting you assume otherwise.
+
+## Three things that will surprise you
+
+### 1. An interval is not automatically a forecast interval
+
+If you do not pass a `supply_parameter_spec()`, every Monte Carlo iteration uses
+the *same* entrant rate. The resulting band describes individual stochasticity
+only — the luck of who retires when — and not uncertainty about the future.
+
+In the 2020→2023 back-test, intervals of that kind were 0–40 providers wide on a
+count near 1,300 (two arms had **zero** width) and covered the observed value in
+0 of 8 arms. Drawing the entrant rate per iteration widens them to 129–148.
+
+```{r spec}
+spec <- supply_parameter_spec(
+  entrant_series = c(50, 57, 53, 59, 59),
+  entrant_mean   = 55
+)
+spec$quantified
+```
+
+Pass that as `parameter_spec` and the interval starts carrying forecast
+uncertainty. Without it, report the band as a Monte Carlo range —
+`interval_label()` will not let you call it a prediction interval.
+
+### 2. Every input declares a calibration tier
+
+`baseline_gap()` requires `calibration_status`; it will not infer one. The same
+arithmetic is *calibrated* when it comes from a survey fielded on
+urogynecologists and *derived by analogy* when it comes from another specialty's
+published distribution, and the function refuses to guess which it was handed.
+
+```{r tiers, error = TRUE}
+# Omitting the tier for a non-'assumed' method is an error, not a default.
+baseline_gap(1306, 0.95, method = "capacity_survey", evidence = "x")
+```
+
+This matters because the base-year shortfall passes through to the headline gap
+**with a coefficient of one**. A borrowed number must not be reportable as a
+measurement.
+
+### 3. Some things are deliberately not resolved
+
+The package reports its own open items rather than burying them.
+
+```{r status}
+capacity_status()$resolved
+```
+
+The base-year capacity anchor is a published physical-therapy distribution
+standing in for a URPS practice-capacity survey that has not been fielded. It is
+the single highest-value missing input.
+
+A useful structural fact: because
+`required_fte(t) = anchor × wRVU(t) / wRVU(base)`, the delegation matrix, the
+demand calibration and the workload *levels* all cancel. A 2.1× change in
+calibration moved 2050 required FTE by 0.25%. Only the anchor and the *shape* of
+demand growth move the answer — which is why the anchor is the thing to fix.
+
+## Finding your way around
+
+There are over 400 exported objects. Two roxygen tags make them navigable:
+
+* **`@concept`** names the layer, so `help.search("geography", package = "urpssim")`
+  narrows to it. The eight layers match the `R/` filename prefixes: `supply`,
+  `demand`, `geography`, `calibration`, `validation`, `reporting`, `core`, `data`.
+* **`@family`** names the module, so every help page lists its siblings under
+  "See also". Start anywhere and walk sideways.
+
+For the code itself, `docs/ARCHITECTURE.md` maps the package and
+`docs/GUARDS.md` explains each guard and the defect that motivated it. Both live
+in the repository rather than the installed package.
+
+## Where to go next
+
+* `vignette("demand-model")` — how population becomes required FTE
+* `?run_workforce_microsimulation` — every argument
+* `?baseline_gap` — stating the base-year shortfall honestly
+* `backtest_status()` — how the engine scored against a held-out period

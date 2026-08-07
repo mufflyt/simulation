@@ -34,6 +34,15 @@ asserts keys are present, checks the right table has unique keys unless
 \code{allow_fanout = TRUE}, performs the join, and fails if the result row count
 differs from the left input (which can only happen via fan-out).
 }
+\examples{
+# A plain left_join silently drops rows that do not match. This one states a
+# required match rate and refuses to return a quietly-truncated table.
+safe_left_join(
+  tibble::tibble(geo = c("CO", "NY"), fte = c(60, 140)),
+  tibble::tibble(geo = c("CO", "NY"), population = c(2.9e6, 1.0e7)),
+  by = "geo"
+)
+}
 \seealso{
 Other canonical and joins: 
 \code{\link{resolve_canonical}()}

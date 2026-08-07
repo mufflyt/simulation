@@ -191,6 +191,9 @@ PROFESSIONAL_MORTALITY_MULTIPLIER <- c(male = 0.75, female = 0.85)
 #' @return Numeric hazard(s) in the unit interval.
 #' @family provider lifecycle
 #' @concept supply
+#' @examples
+#' # Combined retirement and career-change hazard.
+#' departure_hazard(age = c(55, 65, 75), sex = "female")
 #' @export
 departure_hazard <- function(age,
                              sex = "female",

@@ -30,6 +30,11 @@ respond differently to a shifting age structure. This is the sanctioned entry
 point; \code{\link[=compute_demand_denominators_crude]{compute_demand_denominators_crude()}} reproduces the old single-rate
 behaviour and is retained only for backward comparison.
 }
+\examples{
+# Three estimands with genuinely different age profiles -- not one series
+# rescaled three ways, which is what detect_proportional_estimands() catches.
+head(compute_demand_denominators(example_female_population_by_band(2025:2027)))
+}
 \seealso{
 Other urps: 
 \code{\link{anchor_index}()},

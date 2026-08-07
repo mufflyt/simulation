@@ -76,6 +76,10 @@ load_workforce_microsimulation <- function(r_dir = "R") {
 #' @return Tibble `year`, `age_band`, `female_pop`.
 #' @family run workforce microsimulation
 #' @concept core
+#' @examples
+#' # A synthetic population for examples and tests. Real runs pass Census
+#' # series through `pop_by_band`.
+#' head(example_female_population_by_band(2025:2027))
 #' @export
 example_female_population_by_band <- function(
     years = 2025:2050,

@@ -119,6 +119,21 @@ the distribution of headcount / effective-FTE per year (median + CI band),
 giving DISTRIBUTIONAL supply projections rather than a single deterministic
 line. Seeded via \code{\link[=seed_microsimulation]{seed_microsimulation()}} for reproducibility.
 }
+\examples{
+# param_spec is what makes the interval carry forecast uncertainty. Without
+# it every iteration shares one entrant rate and the band describes
+# individual stochasticity only -- see supply_parameter_spec().
+out <- run_supply_microsimulation(
+  initial_workforce = 100,
+  years             = 2025:2027,
+  entrants_per_year = 10,
+  n_iterations      = 3,
+  param_spec        = supply_parameter_spec(
+    entrant_series = c(8, 10, 12, 9, 11), entrant_mean = 10),
+  verbose           = FALSE
+)
+out$summary
+}
 \seealso{
 Other provider microsimulation: 
 \code{\link{build_hazard_table}()},

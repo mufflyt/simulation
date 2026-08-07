@@ -30,6 +30,8 @@
 #' @return A `psa_input` spec.
 #' @family psa
 #' @concept calibration
+#' @examples
+#' psa_uniform("indirect_share", min = 0.20, max = 0.35)
 #' @export
 psa_uniform <- function(name, min, max) {
   structure(list(name = name, type = "uniform", min = min, max = max),

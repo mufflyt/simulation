@@ -355,6 +355,10 @@ rebase_to_year <- function(year, value, base_year = DEMAND_INDEX_BASE_YEAR) {
 #' @return Long tibble: `year`, `estimand` (D1/D2/D3), `label`, `demand_cases`.
 #' @family urps
 #' @concept demand
+#' @examples
+#' # Three estimands with genuinely different age profiles -- not one series
+#' # rescaled three ways, which is what detect_proportional_estimands() catches.
+#' head(compute_demand_denominators(example_female_population_by_band(2025:2027)))
 #' @export
 compute_demand_denominators <- function(pop_by_band,
                                         pfd_prevalence = pfd_prevalence_by_band(),
