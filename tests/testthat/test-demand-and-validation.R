@@ -336,12 +336,36 @@ test_that("the validation report fails closed on internal checks", {
 test_that("the report records the validation types that cannot be automated", {
   rep <- validation_report(tibble::tibble(year = 2025, effective_fte_median = 1))
   expect_setequal(unique(rep$type), c("internal", "conceptual", "external", "data"))
-  # The placeholders for manual review stay NA. base_year_gap_measured is the one
-  # external check that IS decidable from the run: whether the base-year gap was
-  # measured on urogynaecologists is a property of the gap object, not a judgement.
+  # The placeholders for manual review stay NA. Two external checks ARE decidable
+  # from the run and so carry a real TRUE/FALSE, not NA: base_year_gap_measured
+  # (a property of the gap object) and geographic_access_validated (a property of
+  # geographic_access_status()).
+  decidable <- c("base_year_gap_measured", "geographic_access_validated")
   manual <- rep$type %in% c("conceptual", "external", "data") &
-    rep$check != "base_year_gap_measured"
+    !rep$check %in% decidable
   expect_true(all(is.na(rep$passed[manual])))
+})
+
+test_that("the report carries a geographic-access gate that fails closed until isochrones land", {
+  # A report whose INTERNAL checks all pass, so the only thing under test is that
+  # the geographic gate is present, decidable, and non-fatal.
+  supply <- tibble::tibble(year = 2025, scenario = "status_quo", effective_fte_median = 1300)
+  gap <- baseline_gap(1306, 0.948, method = "capacity_survey",
+                      calibration_status = "calibrated",
+                      source = "fielded URPS practice-capacity survey")
+  rep <- validation_report(supply, gap = gap)
+
+  row <- rep[rep$check == "geographic_access_validated", ]
+  expect_equal(nrow(row), 1L)
+  expect_equal(row$type, "external")
+  # It reads geographic_access_status(): unresolved while drive-time isochrones
+  # are absent, so the check is FALSE (never NA) and the run records the gap
+  # rather than presenting a headline as if geography had been validated.
+  expect_false(is.na(row$passed))
+  expect_equal(row$passed, isTRUE(geographic_access_status()$resolved))
+  expect_false(row$passed)
+  # An unresolved external check does NOT fail the build (only internal checks do).
+  expect_silent(assert_validation_passed(rep, mode = "strict"))
 })
 
 test_that("the validation report distinguishes an estimated gap from a measured one", {

@@ -380,6 +380,22 @@ validation_report <- function(supply, required = NULL, gap = NULL,
     }
   }
 
+  # Geographic access is reported as an EXTERNAL check, not an internal one, so
+  # it records the unresolved state without failing the build: the layer cannot
+  # be validated until drive-time isochrones are imported (see
+  # geographic_access_status()$resolved_by), and until then every run would stop.
+  # This closes the gap the status object names -- "validation_report() runs six
+  # internal checks, none geographic" -- so a headline gap can no longer be
+  # reported as if geography had been checked when it has not. It does NOT run
+  # the access layer: doing so before isochrones exist falls back to state-level
+  # geometry and yields a plausible-but-meaningless access ratio (the ordering
+  # trap the status object warns against).
+  gas <- geographic_access_status()
+  add("geographic_access_validated", "external", isTRUE(gas$resolved),
+      if (isTRUE(gas$resolved))
+        "geographic access layer wired and validated against provider coordinates + isochrones"
+      else gas$why_unresolved)
+
   add("conceptual_validation", "conceptual", NA,
       "Peer review / advisory-panel critique of the framework: manual")
   add("external_validation", "external", NA,

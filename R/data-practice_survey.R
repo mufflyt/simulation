@@ -178,7 +178,7 @@ geographic_access_status <- function() {
     "supply_machinery",      "DORMANT",  "R/geography-spatial_access_e2sfca.R: compute_access(), match_points_to_isochrones(), compare_access_methods(), access_moe_ci(). Present in the orchestrator's module load list and called by NOTHING outside tests.",
     "provider_coordinates",  "PRESENT",  "Assembled from five geocoding runs in mufflyt/isochrones: the primary ABOG run, the separate data/abu_urology/ run it omits, and three earlier production runs. 1,324 of the 1,339 model baseline carry a point (98.9%): ABOG 98.8%, ABU 99.0%. Above the 95% floor with no pathway hole, so provider_coordinate_coverage() no longer blocks.",
     "drive_time_isochrones", "MISSING",  "Absent from this repository entirely. They exist in mufflyt/isochrones and were expensive to generate; import rather than recompute.",
-    "validation_gate",       "MISSING",  "validation_report() runs six internal checks, none geographic. two_method_agreement() exists to compare geographic adequacy rankings and is called with geographic data by nothing."
+    "validation_gate",       "WIRED",    "validation_report() reports geographic_access_validated (an external check reading this status object): FALSE until isochrones land, so a run records the geographic gap instead of asserting geography was checked. It deliberately does NOT run the access layer -- that awaits isochrones (the ordering trap below). two_method_agreement() still compares geographic adequacy rankings and is called with geographic data by nothing."
   )
 
   list(
@@ -198,8 +198,10 @@ geographic_access_status <- function() {
       "the wrong geometry produces a publishable one."),
     # Deliberately NOT resolved by the practice survey: this is an integration
     # task, and listing it there would imply a questionnaire could fix it.
+    # The third historical item -- "a geographic check added to
+    # validation_report()" -- is DONE (validation_gate is now WIRED); what
+    # remains is the isochrone import and the orchestrator wiring, in that order.
     resolved_by = c("drive-time isochrones imported from mufflyt/isochrones",
-                    "R/geography-spatial_access_e2sfca.R called from the orchestrator, not merely loaded",
-                    "a geographic check added to validation_report()")
+                    "R/geography-spatial_access_e2sfca.R called from the orchestrator, not merely loaded")
   )
 }
