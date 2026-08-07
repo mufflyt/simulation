@@ -126,11 +126,12 @@ test_that("geographic access is registered as absent, not as miscalibrated", {
   expect_equal(unname(st["demand_machinery"]), "WIRED")
   # What is actually missing.
   # PRESENT: five merged geocoding runs put both pathways near 99% and clear the
-  # 95% floor. Isochrones and the validation gate are what remain.
+  # 95% floor. The validation gate is now WIRED (validation_report reports the
+  # geographic status); drive-time isochrones are the remaining hard blocker.
   expect_equal(unname(st["provider_coordinates"]), "PRESENT")
   expect_equal(unname(st["drive_time_isochrones"]), "MISSING")
   expect_equal(unname(st["supply_machinery"]), "DORMANT")
-  expect_equal(unname(st["validation_gate"]), "MISSING")
+  expect_equal(unname(st["validation_gate"]), "WIRED")
 })
 
 test_that("the ordering trap is recorded, because the wrong step looks easiest", {
@@ -145,7 +146,11 @@ test_that("the ordering trap is recorded, because the wrong step looks easiest",
   expect_match(g$ordering_trap, "first")
   expect_match(g$ordering_trap, "state-level geometry")
   expect_true(any(grepl("isochrones", g$resolved_by)))
-  expect_true(any(grepl("validation_report", g$resolved_by)))
+  # The validation_report check is DONE (validation_gate is WIRED), so it is no
+  # longer listed as remaining work -- only the isochrone import and the
+  # orchestrator wiring are.
+  expect_false(any(grepl("validation_report", g$resolved_by)))
+  expect_true(any(grepl("orchestrator", g$resolved_by)))
 })
 
 test_that("geographic access is NOT listed as survey-resolvable", {
