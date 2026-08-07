@@ -245,6 +245,10 @@ load_cms_pprrvu <- function(path, skip = 9L) {
   }
   d <- utils::read.csv(path, skip = skip, header = FALSE,
                        stringsAsFactors = FALSE, colClasses = "character")
+  if (ncol(d) < 15L) {
+    stop("load_cms_pprrvu(): CMS PPRRVU file has ", ncol(d),
+         " columns; expected >= 15. Wrong file or delimiter?", call. = FALSE)
+  }
   names(d)[1:15] <- c("hcpcs", "mod", "description", "status", "medicare_payment",
                       "work_rvu", "nonfac_pe", "nonfac_na", "fac_pe", "fac_na",
                       "mp_rvu", "nonfac_total", "fac_total", "pctc", "glob")

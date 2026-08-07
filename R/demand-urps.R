@@ -692,6 +692,14 @@ compute_brfss_demand_estimand <- function(pop_by_band,
   prev <- brfss_pfd_prevalence_for_demand_bands(brfss_cells, condition = condition)
   rate <- prev * care_seeking_rate * referral_rate
 
+  unknown <- setdiff(unique(as.character(pop_by_band$age_band)), names(rate))
+  if (length(unknown)) {
+    stop("compute_brfss_demand_estimand(): age_band value(s) not in the rate table: ",
+         paste(sQuote(unknown), collapse = ", "),
+         ". Dropping them would silently understate demand, so this stops instead.",
+         call. = FALSE)
+  }
+
   pop_by_band %>%
     dplyr::mutate(rate = unname(rate[as.character(.data$age_band)])) %>%
     dplyr::group_by(.data$year) %>%

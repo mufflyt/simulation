@@ -658,9 +658,10 @@ project_urps_demand <- function(cells,
 summarise_stratum_coverage <- function(cells) {
   strata_cols <- c("age_group", "race_eth", "insurance", "income_tier")
   complete <- rowSums(is.na(cells[, strata_cols])) == 0
+  total_wt <- sum(cells$pop_weight, na.rm = TRUE)
   c(
-    complete_cell_share = sum(cells$pop_weight[complete], na.rm = TRUE) /
-      sum(cells$pop_weight, na.rm = TRUE),
+    complete_cell_share = if (total_wt > 0)
+      sum(cells$pop_weight[complete], na.rm = TRUE) / total_wt else NA_real_,
     n_complete_cells = sum(complete),
     n_total_cells    = nrow(cells)
   )
@@ -690,7 +691,9 @@ brfss_barrier_prevalence <- function(cells,
     flag <- (!is.na(cells$insurance) & cells$insurance == "Uninsured") |
             (!is.na(cells$income_tier) & cells$income_tier == "LT25k")
   }
-  c(barrier_prevalence = sum(wt[flag]) / sum(wt))
+  den <- sum(wt)
+  if (den <= 0) return(c(barrier_prevalence = NA_real_))
+  c(barrier_prevalence = sum(wt[flag]) / den)
 }
 
 # ---- Crosswalk to DEMAND_AGE_BANDS ------------------------------------------

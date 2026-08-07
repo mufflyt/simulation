@@ -191,6 +191,7 @@ agent_urbanicity_summary <- function(agents,
   }
   u <- classify_state_urbanicity(agents$state, urbanicity_lookup)
   n <- nrow(agents)
+  if (n == 0L) return(c(metro = NA_real_, nonmetro = NA_real_, unknown = NA_real_))
   c(
     metro    = sum(u == "metro",    na.rm = TRUE) / n,
     nonmetro = sum(u == "nonmetro", na.rm = TRUE) / n,

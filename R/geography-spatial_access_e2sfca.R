@@ -245,10 +245,17 @@ assign_access_category <- function(access_scaled) {
   cat <- rep(1L, length(access_scaled))
   positive <- access_scaled > 0 & !is.na(access_scaled)
   if (any(positive)) {
-    brks <- stats::quantile(access_scaled[positive], probs = c(0, .25, .5, .75, 1), na.rm = TRUE)
-    q <- cut(access_scaled[positive], breaks = brks, labels = FALSE,
-             include.lowest = TRUE)
-    cat[positive] <- as.integer(q) + 1L
+    brks <- unique(stats::quantile(access_scaled[positive],
+                                   probs = c(0, .25, .5, .75, 1), na.rm = TRUE))
+    if (length(brks) < 2L) {
+      # Degenerate surface (all positive access values equal): quantile breaks
+      # collapse and cut() would error; assign the middle band instead.
+      cat[positive] <- 3L
+    } else {
+      q <- cut(access_scaled[positive], breaks = brks, labels = FALSE,
+               include.lowest = TRUE)
+      cat[positive] <- as.integer(q) + 1L
+    }
   }
   cat
 }
@@ -308,6 +315,12 @@ match_points_to_isochrones <- function(points, iso_centers, threshold_km = ISOCH
   if (nrow(points) == 0) {
     return(dplyr::mutate(points, match_km = numeric(0), matched = logical(0),
                          matched_coord_id = character(0)))
+  }
+  if (nrow(iso_centers) == 0) {
+    # No isochrone origins to match against: every point is unmatched rather
+    # than a which.min(numeric(0)) that drops the idx column and corrupts the bind.
+    return(dplyr::mutate(points, match_km = NA_real_, matched = FALSE,
+                         matched_coord_id = NA_character_))
   }
 
   in_conus <- conus_ok(points$lat, points$lon)
