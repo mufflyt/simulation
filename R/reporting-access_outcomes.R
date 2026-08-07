@@ -154,3 +154,53 @@ access_outcomes_trajectory <- function(cleared) {
   res <- dplyr::bind_rows(parts)
   res[, c("year", setdiff(names(res), "year")), drop = FALSE]
 }
+
+#' National access outcomes stratified by severity class
+#'
+#' Applies [access_outcomes_national()] within each severity class of a
+#' severity-stratified clearing table (from [clear_access_by_severity()]) and
+#' stacks the results, so the A-series can be read per severity (e.g. an urgent
+#' wait that must clear a 7-day window vs a routine 30-day one).
+#'
+#' @param cleared A tibble from [clear_access_by_severity()].
+#' @param severity_col Name of the severity column. Default `"severity"`.
+#' @return The [access_outcomes_national()] tibble per severity class, stacked,
+#'   with a leading severity column.
+#' @export
+access_outcomes_by_severity <- function(cleared, severity_col = "severity") {
+  if (!is.data.frame(cleared) || !severity_col %in% names(cleared)) {
+    stop("access_outcomes_by_severity(): `cleared` needs a `", severity_col,
+         "` column (from clear_access_by_severity()).", call. = FALSE)
+  }
+  levels <- unique(cleared[[severity_col]])
+  parts <- lapply(levels, function(s) {
+    nat <- access_outcomes_national(cleared[cleared[[severity_col]] == s, , drop = FALSE])
+    nat[[severity_col]] <- s
+    nat
+  })
+  res <- dplyr::bind_rows(parts)
+  res[, c(severity_col, setdiff(names(res), severity_col)), drop = FALSE]
+}
+
+#' Roll up and publish access outcomes, guarding calibration
+#'
+#' The single publish-path seam for the access layer: it produces the national
+#' A-series roll-up and then refuses to hand it back unless every outcome carries
+#' a calibration label and, by default, is actually calibrated (not still
+#' `assumed`/`illustrative`). Wiring [assert_access_outcomes_labeled()] in HERE
+#' means an un-calibrated access number cannot leave the layer as a published
+#' figure by accident -- the same governance the demand/supply layers use.
+#'
+#' @param cleared A per-catchment clearing table from [clear_access()] (or a
+#'   spatial-overflow clearing).
+#' @param require_calibrated If `TRUE` (default, the publishing posture), error
+#'   when any outcome is still `assumed`/`illustrative`. Set `FALSE` to roll up
+#'   an explicitly-labeled draft without the calibration gate.
+#' @return The [access_outcomes_national()] tibble, invisibly returned only after
+#'   it passes the guard.
+#' @export
+publish_access_outcomes <- function(cleared, require_calibrated = TRUE) {
+  national <- access_outcomes_national(cleared)
+  assert_access_outcomes_labeled(national, require_calibrated = require_calibrated)
+  national
+}
