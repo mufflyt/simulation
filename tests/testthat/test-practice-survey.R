@@ -125,10 +125,9 @@ test_that("geographic access is registered as absent, not as miscalibrated", {
   expect_equal(unname(st["tract_centroids"]), "PRESENT")
   expect_equal(unname(st["demand_machinery"]), "WIRED")
   # What is actually missing.
-  # PARTIAL, not MISSING: coordinates were imported from mufflyt/isochrones and
-  # cover 964 of 1,339 -- but 0% of the ABU pathway, so they are not yet usable.
-  # provider_coordinate_coverage() carries that blocker.
-  expect_equal(unname(st["provider_coordinates"]), "PARTIAL")
+  # PRESENT: five merged geocoding runs put both pathways near 99% and clear the
+  # 95% floor. Isochrones and the validation gate are what remain.
+  expect_equal(unname(st["provider_coordinates"]), "PRESENT")
   expect_equal(unname(st["drive_time_isochrones"]), "MISSING")
   expect_equal(unname(st["supply_machinery"]), "DORMANT")
   expect_equal(unname(st["validation_gate"]), "MISSING")

@@ -47,10 +47,10 @@ test_that("coverage is reported BY PATHWAY, because the overall share hides the 
   # the blocker must say SO rather than going quiet -- "not usable, reason NA"
   # tells a caller they are blocked and not why.
   expect_equal(length(cv$pathways_absent), 0)
-  expect_false(cv$usable_for_access)
-  expect_true(nzchar(cv$blocker))
-  expect_match(cv$blocker, "floor")
-  expect_true(all(cv$by_pathway$with_coord > 0))
+  expect_true(cv$usable_for_access)
+  expect_true(is.na(cv$blocker))
+  expect_gte(cv$overall_share, 0.95)
+  expect_true(all(cv$by_pathway$share > 0.95))
 })
 
 test_that("a pathway at zero blocks the layer even at high overall coverage", {
@@ -73,11 +73,28 @@ test_that("a pathway at zero blocks the layer even at high overall coverage", {
 test_that("the register reports coordinates as PARTIAL and still refuses to wire", {
   g <- geographic_access_status()
   st <- stats::setNames(g$components$state, g$components$component)
-  expect_equal(unname(st["provider_coordinates"]), "PARTIAL")
+  # PRESENT: 98.9% across five merged geocoding runs, both pathways ~99%.
+  expect_equal(unname(st["provider_coordinates"]), "PRESENT")
   # Progress on one input must not flip the overall verdict: isochrones and the
   # validation gate are still missing, and the ordering trap still applies.
   expect_false(g$resolved)
   expect_equal(unname(st["drive_time_isochrones"]), "MISSING")
   expect_equal(unname(st["supply_machinery"]), "DORMANT")
   expect_match(g$ordering_trap, "Do NOT wire")
+})
+
+
+test_that("every coordinate row can be traced to the run it came from", {
+  p <- pc_path(); skip_if(is.null(p))
+  d <- load_urps_provider_coordinates(p)
+  # Merging five geocoding runs with rbind coerced retrieved_on to Date and
+  # NA'd a quarter of the rows, while source_run and the points survived --
+  # nothing downstream would have noticed. The loader now refuses such a file.
+  expect_true(all(nzchar(d$source_run)))
+  expect_true(all(nzchar(as.character(d$retrieved_on))))
+  expect_gt(length(unique(d$source_run)), 1)
+
+  broken <- d; broken$retrieved_on[1] <- NA
+  f <- tempfile(fileext = ".csv"); utils::write.csv(broken, f, row.names = FALSE)
+  expect_error(load_urps_provider_coordinates(f), "cannot be audited")
 })

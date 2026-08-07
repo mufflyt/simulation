@@ -54,6 +54,22 @@ load_urps_provider_coordinates <- function(
          call. = FALSE)
   }
   d <- utils::read.csv(path, colClasses = c(npi = "character"), stringsAsFactors = FALSE)
+  # Provenance must survive the load, not just the coordinates. Merging several
+  # geocoding runs with rbind coerced `retrieved_on` to Date and silently NA'd
+  # 364 of 1,540 rows; source_run and the points were untouched, so nothing
+  # downstream would have noticed a quarter of the file losing its date.
+  for (col in c("source_run", "retrieved_on")) {
+    if (!col %in% names(d)) stop("provider coordinates are missing the `", col,
+                                 "` provenance column.", call. = FALSE)
+    n_bad <- sum(is.na(d[[col]]) | !nzchar(as.character(d[[col]])))
+    if (n_bad > 0) {
+      stop(sprintf(paste("%d of %d coordinate rows have no `%s`. A point whose",
+                         "origin is unrecorded cannot be audited; repair the",
+                         "extract rather than loading it."),
+                   n_bad, nrow(d), col), call. = FALSE)
+    }
+  }
+
   bad <- !is.finite(d$lat) | !is.finite(d$lon) |
     d$lat < 17 | d$lat > 72 | d$lon < -180 | d$lon > -65
   if (any(bad)) {
