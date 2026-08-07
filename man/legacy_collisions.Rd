@@ -15,3 +15,11 @@ Tibble of \code{fn} and the files defining it.
 \description{
 Names defined by more than one legacy script
 }
+\seealso{
+Other legacy loader: 
+\code{\link{LEGACY_CANONICAL}},
+\code{\link{check_legacy_canonical}()},
+\code{\link{load_legacy}()}
+}
+\concept{core}
+\concept{legacy loader}

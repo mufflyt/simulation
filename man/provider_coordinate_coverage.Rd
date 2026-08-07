@@ -19,3 +19,9 @@ The number that decides whether the access layer may be wired. A share is not
 enough on its own: coverage that is 93\% in one pathway and 0\% in another is
 not 72\% coverage, it is a missing pathway.
 }
+\seealso{
+Other provider coordinates: 
+\code{\link{load_urps_provider_coordinates}()}
+}
+\concept{geography}
+\concept{provider coordinates}

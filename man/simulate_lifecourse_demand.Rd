@@ -98,3 +98,12 @@ or a condition-specific risk reduction — the ONLY place BMI interventions
 live). Provider-mix / treatment-substitution scenarios belong to
 R/supply-workload_to_fte.R, not here.
 }
+\seealso{
+Other lifecourse: 
+\code{\link{lifecourse_demand_estimand}()},
+\code{\link{lifecourse_demand_trajectory}()},
+\code{\link{lifecourse_required_fte}()},
+\code{\link{lifecourse_risk_params_cited}()}
+}
+\concept{demand}
+\concept{lifecourse}

@@ -21,3 +21,10 @@ if they differ -- the point being that a model form re-tuned after seeing the
 held-out targets no longer matches what was frozen, and that is model selection
 on the test set.
 }
+\seealso{
+Other preregistration: 
+\code{\link{preregister_spec}()},
+\code{\link{rolling_origin_evaluation}()}
+}
+\concept{preregistration}
+\concept{validation}

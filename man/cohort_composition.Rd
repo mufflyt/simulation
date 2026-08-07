@@ -15,3 +15,13 @@ Tibble summarising each cohort source.
 \description{
 Composition of a base-year cohort: what is observed, what is assumed
 }
+\seealso{
+Other roster: 
+\code{\link{agents_from_certification_cohorts}()},
+\code{\link{cohort_provenance}()},
+\code{\link{implied_gross_entrants}()},
+\code{\link{observed_entrant_rate}()},
+\code{\link{urps_certification_cohorts}()}
+}
+\concept{roster}
+\concept{supply}

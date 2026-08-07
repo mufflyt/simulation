@@ -42,3 +42,12 @@ The flow is used as-is. It is a GROSS entrant count -- the source series never
 removes departures -- so modelled departures are recorded but not added; see
 \code{\link[=observed_entrant_rate]{observed_entrant_rate()}}.
 }
+\seealso{
+Other parameter uncertainty: 
+\code{\link{assert_parameter_uncertainty}()},
+\code{\link{draw_supply_parameters}()},
+\code{\link{series_mean_se}()},
+\code{\link{supply_parameter_spec}()}
+}
+\concept{calibration}
+\concept{parameter uncertainty}

@@ -25,3 +25,10 @@ column per multivariate-normal coefficient draw, so callers can take row-wise
 quantiles for prediction intervals (combine with a \code{rpois}/\code{rnbinom} draw per
 cell to add individual-level uncertainty on top of parameter uncertainty).
 }
+\seealso{
+Other utilization models: 
+\code{\link{fit_sling_rate_model}()},
+\code{\link{fit_visit_model}()}
+}
+\concept{demand}
+\concept{utilization models}

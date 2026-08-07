@@ -34,3 +34,11 @@ benchmark that stands in for a measured value (a \code{pass} against it is then
 visibly assumed in \code{\link[=validate_access_outcomes]{validate_access_outcomes()}}, never mistaken for a
 measured-anchor pass); \code{status = "calibrated"} for a cited observation.
 }
+\seealso{
+Other access: 
+\code{\link{access_validation_targets}()},
+\code{\link{fit_wait_scale}()},
+\code{\link{validate_access_outcomes}()}
+}
+\concept{access}
+\concept{validation}

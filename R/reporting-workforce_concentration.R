@@ -17,6 +17,8 @@
 #' Include zero-valued units to measure concentration across the full geography.
 #' @param x Numeric vector of non-negative counts or weights.
 #' @return Gini in [0, 1), or `NA_real_` if the total is 0.
+#' @family workforce concentration
+#' @concept reporting
 #' @export
 workforce_gini <- function(x) {
   x <- x[is.finite(x)]
@@ -31,6 +33,8 @@ workforce_gini <- function(x) {
 #' @param counts Numeric counts per unit (zero/negative dropped).
 #' @param normalized If TRUE, size-corrected HHI* = (H - 1/n)/(1 - 1/n).
 #' @return HHI in `[0, 1]`; `NA_real_` if the total is 0.
+#' @family workforce concentration
+#' @concept reporting
 #' @export
 workforce_hhi <- function(counts, normalized = FALSE) {
   counts <- counts[is.finite(counts) & counts > 0]
@@ -48,6 +52,8 @@ workforce_hhi <- function(counts, normalized = FALSE) {
 #' @return Tibble `cum_unit_share`, `cum_value_share`, prepended with (0, 0).
 #' @examples
 #' workforce_lorenz(c(120, 80, 40, 10, 0, 0))
+#' @family workforce concentration
+#' @concept reporting
 #' @export
 workforce_lorenz <- function(x) {
   x <- sort(x[is.finite(x)])
@@ -64,6 +70,8 @@ workforce_lorenz <- function(x) {
 #' @param counts Numeric counts per unit.
 #' @param k Number of top units. Default 5.
 #' @return Fraction in `[0, 1]`, or `NA_real_` if the total is 0.
+#' @family workforce concentration
+#' @concept reporting
 #' @export
 workforce_top_k_share <- function(counts, k = 5L) {
   counts <- counts[is.finite(counts)]
@@ -86,6 +94,8 @@ workforce_top_k_share <- function(counts, k = 5L) {
 #' # and two deliver none at all. Board certification is not the same as
 #' # delivering care, which is why this is reported beside any headcount.
 #' provider_concentration(c(120, 80, 40, 10, 0, 0))
+#' @family workforce concentration
+#' @concept reporting
 #' @export
 provider_concentration <- function(counts, n_units_total = length(counts),
                                    label = NA_character_) {

@@ -29,3 +29,13 @@ Convert roster-linked Medicare activity into a relative URPS capacity index
 The included clinicians have a weighted mean index of one. The index
 is relative Medicare-workload-indexed capacity, not clinical-hours FTE.
 }
+\seealso{
+Other medicare capacity: 
+\code{\link{aggregate_medicare_realized_care}()},
+\code{\link{compare_medicare_realized_care}()},
+\code{\link{medicare_work_rvu_by_provider}()},
+\code{\link{summarise_medicare_capacity}()},
+\code{\link{urps_medicare_service_crosswalk}()}
+}
+\concept{medicare capacity}
+\concept{supply}

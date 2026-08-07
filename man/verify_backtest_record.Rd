@@ -24,3 +24,18 @@ List with \code{checked}, \code{current}, \code{checksum_matches}, and \code{mis
 \description{
 Verify the frozen record against the scored artifact, row by row
 }
+\seealso{
+Other backtest status: 
+\code{\link{BACKTEST_RECORD_2020_2023}},
+\code{\link{BACKTEST_RECORD_SHA256}},
+\code{\link{assert_backtest_record_current}()},
+\code{\link{assert_forecast_intervals_validated}()},
+\code{\link{backtest_artifact_path}()},
+\code{\link{backtest_status}()},
+\code{\link{backtest_status_from_summary}()},
+\code{\link{interval_label}()},
+\code{\link{stamp_backtest_status}()},
+\code{\link{stamped_backtest_status}()}
+}
+\concept{backtest status}
+\concept{validation}

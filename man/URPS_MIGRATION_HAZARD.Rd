@@ -15,4 +15,17 @@ Calibrated from AMA Physician Practice Benchmark Survey (2021) adjusted for
 the URPS subspecialty context. These are CONUS-only: providers outside CONUS
 are handled by the \code{out_of_country} sink in \code{\link[=apply_provider_migration_matrix]{apply_provider_migration_matrix()}}.
 }
+\seealso{
+Other urps migration: 
+\code{\link{CONUS_STATE_URBANICITY}},
+\code{\link{URPS_RURAL_URBAN_DRIFT}},
+\code{\link{agent_urbanicity_summary}()},
+\code{\link{apply_urps_migration}()},
+\code{\link{classify_state_urbanicity}()},
+\code{\link{migration_drift_scenario}()},
+\code{\link{rural_urban_concentration}()},
+\code{\link{urps_migration_matrix}()}
+}
+\concept{geography}
+\concept{urps migration}
 \keyword{datasets}

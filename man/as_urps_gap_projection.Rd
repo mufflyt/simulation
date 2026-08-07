@@ -59,3 +59,10 @@ The headcount conversion for demand uses the ratio
 the two axes internally consistent without requiring a separate staffing
 ratio assumption.
 }
+\seealso{
+Other urps projection: 
+\code{\link{gap_projections_all_scenarios}()},
+\code{\link{validate_urps_gap_projection}()}
+}
+\concept{reporting}
+\concept{urps projection}

@@ -57,6 +57,8 @@ simulation_data_root <- function(must_work = FALSE) {
 #' @param ... Path components appended to the root.
 #' @param must_work Error if the resolved path does not exist.
 #' @return Resolved path.
+#' @family paths
+#' @concept core
 #' @export
 external_path <- function(..., must_work = FALSE) {
   p <- file.path(simulation_data_root(), ...)
@@ -75,6 +77,8 @@ external_path <- function(..., must_work = FALSE) {
 #' @param ... Path components beneath the SWAN directory.
 #' @param must_work Error if the resolved path does not exist.
 #' @return Resolved path.
+#' @family paths
+#' @concept core
 #' @export
 swan_path <- function(..., must_work = FALSE) {
   sub <- .paths_config()$swan_subdir %||% file.path("workforce", "Dall_model", "data", "SWAN")
@@ -86,6 +90,8 @@ swan_path <- function(..., must_work = FALSE) {
 #' @param ... Path components beneath the raw-data directory.
 #' @param must_work Error if the resolved path does not exist.
 #' @return Resolved path.
+#' @family paths
+#' @concept core
 #' @export
 data_raw_path <- function(..., must_work = FALSE) {
   sub <- .paths_config()$data_raw_subdir %||% file.path("tyler", "data-raw")
@@ -98,6 +104,8 @@ data_raw_path <- function(..., must_work = FALSE) {
 #' halfway through a long job.
 #'
 #' @return Tibble of logical name, resolved path, and existence.
+#' @family paths
+#' @concept core
 #' @export
 check_external_data <- function() {
   items <- list(

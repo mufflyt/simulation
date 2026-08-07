@@ -57,3 +57,5 @@ leave-one-region-out (\code{"region"}, the classic geographic hold-out), and ran
 \code{"kfold"}. Leakage-free by construction: each fold's fit sees only its training
 rows.
 }
+\concept{geographic holdout}
+\concept{validation}

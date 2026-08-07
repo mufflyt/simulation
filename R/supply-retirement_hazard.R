@@ -139,6 +139,8 @@ urps_survival_curve <- function(ages = 30:85, sex = "Female",
 #' @importFrom assertthat assert_that
 #' @importFrom dplyr mutate filter case_when select bind_rows if_else
 #' @importFrom purrr map_dfr
+#' @family retirement hazard
+#' @concept supply
 #' @export
 build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
                                    min_confidence   = 0.60,

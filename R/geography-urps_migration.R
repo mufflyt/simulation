@@ -69,6 +69,8 @@
 #' the URPS subspecialty context. These are CONUS-only: providers outside CONUS
 #' are handled by the `out_of_country` sink in [apply_provider_migration_matrix()].
 #'
+#' @family urps migration
+#' @concept geography
 #' @export
 URPS_MIGRATION_HAZARD <- c(
   early_career = 0.052,  # ≤5 yrs post-entry; academic-centre instability
@@ -88,6 +90,8 @@ URPS_MIGRATION_HAZARD <- c(
 #' is lower because fellowship training overwhelmingly occurs at academic
 #' medical centres that form the dominant peer network for job referrals.
 #'
+#' @family urps migration
+#' @concept geography
 #' @export
 URPS_RURAL_URBAN_DRIFT <- list(
   rural_to_urban = 0.67,
@@ -113,6 +117,8 @@ URPS_RURAL_URBAN_DRIFT <- list(
 #'
 #' @format Named character vector. Names are two-letter state abbreviations.
 #'   Values are `"metro"` or `"nonmetro"`.
+#' @family urps migration
+#' @concept geography
 #' @export
 CONUS_STATE_URBANICITY <- c(
   # Predominantly metro (>80% of population in metro counties, USDA ERS 2023)
@@ -147,6 +153,8 @@ stopifnot(
 #' @param urbanicity_lookup Named character vector mapping state abbreviation
 #'   to `"metro"` or `"nonmetro"`. Defaults to [CONUS_STATE_URBANICITY].
 #' @return Character vector of `"metro"`, `"nonmetro"`, or `NA`.
+#' @family urps migration
+#' @concept geography
 #' @export
 #'
 #' @examples
@@ -173,6 +181,8 @@ classify_state_urbanicity <- function(state,
 #' @param urbanicity_lookup See [classify_state_urbanicity()].
 #' @return Named numeric vector: `metro`, `nonmetro`, `unknown` (fractions
 #'   summing to 1, agents with NA state contribute to `unknown`).
+#' @family urps migration
+#' @concept geography
 #' @export
 agent_urbanicity_summary <- function(agents,
                                      urbanicity_lookup = CONUS_STATE_URBANICITY) {
@@ -227,6 +237,8 @@ agent_urbanicity_summary <- function(agents,
 #'   `probability`. Passes [validate_migration_matrix()].
 #' @seealso [apply_provider_migration_matrix()], [apply_urps_migration()],
 #'   [CONUS_STATE_URBANICITY], [URPS_RURAL_URBAN_DRIFT]
+#' @family urps migration
+#' @concept geography
 #' @export
 #'
 #' @examples
@@ -355,6 +367,8 @@ urps_migration_matrix <- function(states,
 #' @param ... Additional arguments passed to [urps_migration_matrix()] when
 #'   `migration_matrix = NULL`.
 #' @return The agent tibble with updated `state`, `n_moves`, and `left_country`.
+#' @family urps migration
+#' @concept geography
 #' @export
 #'
 #' @examples
@@ -402,6 +416,8 @@ apply_urps_migration <- function(agents,
 #' @return Tibble: `year`, `metro_fte`, `nonmetro_fte`, `metro_share`,
 #'   `nonmetro_share`, `metro_per_million`, `nonmetro_per_million` (the last
 #'   two require a `female_pop_by_urbanicity` column or are `NA`).
+#' @family urps migration
+#' @concept geography
 #' @export
 rural_urban_concentration <- function(supply_by_year,
                                        fte_col    = "effective_fte",
@@ -463,6 +479,8 @@ rural_urban_concentration <- function(supply_by_year,
 #' @param rural_to_urban Replacement fraction (default: keep current).
 #' @param urban_to_rural Replacement fraction (default: keep current).
 #' @return Named list with `rural_to_urban` and `urban_to_rural`.
+#' @family urps migration
+#' @concept geography
 #' @export
 #'
 #' @examples

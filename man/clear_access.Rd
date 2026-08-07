@@ -52,3 +52,12 @@ approximation \code{P(wait <= W) = 1 - exp(-W / wait)}, multiplied by the share 
 capacity that will accept the patient (\code{insurance_fraction}). Panel size is
 \code{accessible_population / accessible_fte}.
 }
+\seealso{
+Other access clearing: 
+\code{\link{catchment_neighbors_from_coords}()},
+\code{\link{clear_access_trajectory}()},
+\code{\link{overflow_access}()},
+\code{\link{overflow_conservation}()}
+}
+\concept{access clearing}
+\concept{geography}

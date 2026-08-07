@@ -27,3 +27,11 @@ Age bands grow at different rates so the three demand estimands diverge, which
 is the whole point of giving each its own age profile. Replace with ACS/Census
 projections resolved through \code{\link[=resolve_canonical]{resolve_canonical()}} for production runs.
 }
+\seealso{
+Other run workforce microsimulation: 
+\code{\link{example_capacity_survey}()},
+\code{\link{example_service_volumes}()},
+\code{\link{run_workforce_microsimulation}()}
+}
+\concept{core}
+\concept{run workforce microsimulation}

@@ -21,4 +21,12 @@ appear only in roxygen prose, never in a call. A frozen list padded with
 documentation mentions would demand capabilities the package does not use,
 and reject a build that could run it perfectly well.
 }
+\seealso{
+Other contract pin: 
+\code{\link{MUFFLYACCESS_PINNED_SHA}},
+\code{\link{assert_mufflyaccess_contract}()},
+\code{\link{mufflyaccess_build}()}
+}
+\concept{contract pin}
+\concept{core}
 \keyword{datasets}

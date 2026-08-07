@@ -19,3 +19,11 @@ In \code{strict} mode we always seed (default 20260801, the study reference date
 so Monte-Carlo trajectories are bit-identical across machines. In \code{relaxed}
 mode we honour an explicit seed if given but otherwise leave the RNG alone.
 }
+\seealso{
+Other repro provenance: 
+\code{\link{read_artifact_with_provenance}()},
+\code{\link{resolve_reproducibility_mode}()},
+\code{\link{write_artifact_with_provenance}()}
+}
+\concept{core}
+\concept{repro provenance}

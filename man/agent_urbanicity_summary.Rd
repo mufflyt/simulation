@@ -19,3 +19,16 @@ summing to 1, agents with NA state contribute to \code{unknown}).
 Summary statistic for monitoring geographic concentration over the
 projection horizon.
 }
+\seealso{
+Other urps migration: 
+\code{\link{CONUS_STATE_URBANICITY}},
+\code{\link{URPS_MIGRATION_HAZARD}},
+\code{\link{URPS_RURAL_URBAN_DRIFT}},
+\code{\link{apply_urps_migration}()},
+\code{\link{classify_state_urbanicity}()},
+\code{\link{migration_drift_scenario}()},
+\code{\link{rural_urban_concentration}()},
+\code{\link{urps_migration_matrix}()}
+}
+\concept{geography}
+\concept{urps migration}

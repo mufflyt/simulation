@@ -30,3 +30,12 @@ Runs \code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}} for
 volumes plus a national demand summary (care-seeking and total service units),
 the latter feeding the contract tiers 5-6 in \code{\link[=export_hdmm_demand_contract]{export_hdmm_demand_contract()}}.
 }
+\seealso{
+Other lifecourse: 
+\code{\link{lifecourse_demand_estimand}()},
+\code{\link{lifecourse_required_fte}()},
+\code{\link{lifecourse_risk_params_cited}()},
+\code{\link{simulate_lifecourse_demand}()}
+}
+\concept{demand}
+\concept{lifecourse}

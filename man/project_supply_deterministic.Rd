@@ -51,3 +51,17 @@ rather than Bernoulli draws — used to validate the stochastic microsimulation
 against its analytic expectation (they should agree to within a few percent;
 cliff code/05 reports 4.51\% mean agreement).
 }
+\seealso{
+Other provider microsimulation: 
+\code{\link{build_hazard_table}()},
+\code{\link{classify_workforce_outlook}()},
+\code{\link{initialize_provider_agents}()},
+\code{\link{microsim_age_band_of}()},
+\code{\link{provider_active_in_year}()},
+\code{\link{provider_clinical_fte}()},
+\code{\link{retirement_hazard}()},
+\code{\link{run_supply_microsimulation}()},
+\code{\link{simulate_provider_career_once}()}
+}
+\concept{provider microsimulation}
+\concept{supply}

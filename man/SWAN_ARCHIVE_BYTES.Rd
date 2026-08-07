@@ -13,4 +13,13 @@ SWAN_ARCHIVE_BYTES
 \description{
 Expected sizes in bytes, as a cheap pre-check before hashing
 }
+\seealso{
+Other swan archive: 
+\code{\link{SWAN_ARCHIVE_SHA256}},
+\code{\link{load_swan_archive}()},
+\code{\link{swan_archive_provenance}()},
+\code{\link{swan_dmdm_panel_from_archive}()}
+}
+\concept{data}
+\concept{swan archive}
 \keyword{datasets}

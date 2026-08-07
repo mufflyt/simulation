@@ -28,3 +28,13 @@ the need (and share) farther than the largest band.
 \description{
 Distribute pelvic-floor NEED across travel-time (isochrone) bands
 }
+\seealso{
+Other demand: 
+\code{\link{accessible_need_vs_capacity}()},
+\code{\link{geographic_demand_summary}()},
+\code{\link{isochrone_demand_from_tracts}()},
+\code{\link{need_weighted_access}()},
+\code{\link{tract_need_from_population}()}
+}
+\concept{demand}
+\concept{geography}

@@ -36,6 +36,8 @@
 #' @param weights_col Optional survey/frequency weights column.
 #' @param overdispersion If TRUE (default) use quasipoisson; FALSE uses poisson.
 #' @return A `glm` object; `attr(., "hdmm_offset_col")` records the offset name.
+#' @family utilization models
+#' @concept demand
 #' @export
 fit_sling_rate_model <- function(cells,
                                  formula = n_slings ~ AgeGrp + Obesity + VaginalParity + Race,
@@ -78,6 +80,8 @@ fit_sling_rate_model <- function(cells,
 #' @param strata_col,psu_col Survey strata / PSU columns (e.g. `VARSTR`,`VARPSU`).
 #' @param prefer Method preference; see Details.
 #' @return The fitted model; `attr(., "hdmm_method")` records the path used.
+#' @family utilization models
+#' @concept demand
 #' @export
 fit_visit_model <- function(data,
                             formula = UI_visits ~ Age + I(Age^2) + Obesity +
@@ -176,6 +180,8 @@ fit_visit_model <- function(data,
 #' @param offset Optional numeric offset on the LINK scale (length 1 or
 #'   `nrow(newdata)`); default 0 gives the per-person rate for an offset model.
 #' @return Numeric matrix, `nrow(newdata) x n_draws`, on the response scale.
+#' @family utilization models
+#' @concept demand
 #' @export
 predict_count_with_uncertainty <- function(model, newdata, n_draws = 1000L, offset = 0) {
   b_all <- stats::coef(model); keep <- !is.na(b_all)

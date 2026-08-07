@@ -26,3 +26,9 @@ path string or a mapping with \code{path} and optional \code{sha256}. Unknown na
 missing files always \code{stop()}. A recorded SHA-256 that does not match the
 file's actual digest \code{stop()}s in strict mode and warns in relaxed mode.
 }
+\seealso{
+Other canonical and joins: 
+\code{\link{safe_left_join}()}
+}
+\concept{canonical and joins}
+\concept{core}

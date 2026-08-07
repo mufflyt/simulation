@@ -38,3 +38,12 @@ exposure-weighted prevalent-case \emph{denominator}. D1–D3 are the published
 denominators (R/demand-urps); D4 is the obstetric-weighted denominator; D5 is the
 dynamic service-demand series.
 }
+\seealso{
+Other lifecourse: 
+\code{\link{lifecourse_demand_trajectory}()},
+\code{\link{lifecourse_required_fte}()},
+\code{\link{lifecourse_risk_params_cited}()},
+\code{\link{simulate_lifecourse_demand}()}
+}
+\concept{demand}
+\concept{lifecourse}

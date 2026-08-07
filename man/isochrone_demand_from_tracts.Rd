@@ -27,3 +27,13 @@ then summarise it with \code{\link[=geographic_demand_summary]{geographic_demand
 carry a nearest-provider travel-time column (from the isochrone pipeline);
 access-ratio / capacity columns are used when present.
 }
+\seealso{
+Other demand: 
+\code{\link{accessible_need_vs_capacity}()},
+\code{\link{demand_by_travel_band}()},
+\code{\link{geographic_demand_summary}()},
+\code{\link{need_weighted_access}()},
+\code{\link{tract_need_from_population}()}
+}
+\concept{demand}
+\concept{geography}

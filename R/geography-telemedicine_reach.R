@@ -36,6 +36,8 @@
 #' @return The catchment table (tibble) with `accessible_capacity` raised on
 #'   nonmetro rows and a logical `telemedicine_reach_applied` column. With
 #'   `nonmetro_uplift = 0` or no `metro_col`, capacity is returned unchanged.
+#' @family telemedicine reach
+#' @concept geography
 #' @export
 telemedicine_reach <- function(catchments,
                                nonmetro_uplift = 0.15,

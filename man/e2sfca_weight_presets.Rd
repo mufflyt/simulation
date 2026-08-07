@@ -12,3 +12,27 @@ Character vector of preset names.
 \description{
 List the available E2SFCA weight presets
 }
+\seealso{
+Other spatial access e2sfca: 
+\code{\link{access_moe_ci}()},
+\code{\link{access_weight_sensitivity}()},
+\code{\link{annual_trend}()},
+\code{\link{assign_access_category}()},
+\code{\link{compare_access_methods}()},
+\code{\link{compute_access}()},
+\code{\link{compute_access_preset}()},
+\code{\link{compute_e2sfca_access}()},
+\code{\link{conus_ok}()},
+\code{\link{e2sfca_bands}()},
+\code{\link{e2sfca_incremental_weights}()},
+\code{\link{gaussian_band_weights}()},
+\code{\link{haversine_km}()},
+\code{\link{match_points_to_isochrones}()},
+\code{\link{spatial_access_ratio}()},
+\code{\link{summarize_access}()},
+\code{\link{weighted_mean_all}()},
+\code{\link{wilson_ci}()},
+\code{\link{zero_access_share}()}
+}
+\concept{geography}
+\concept{spatial access e2sfca}

@@ -19,3 +19,10 @@ Accepts the \code{hazard_by_band_pooled_vs_unpooled.csv} layout (columns
 \code{band}, \verb{<sub>_events}, \verb{<sub>_py} for each subspecialty) and returns the long
 person-year / event table the fit consumes.
 }
+\seealso{
+Other partial pooling hazard: 
+\code{\link{fit_partial_pooled_hazards}()},
+\code{\link{hazard_shrinkage_summary}()}
+}
+\concept{partial pooling hazard}
+\concept{supply}

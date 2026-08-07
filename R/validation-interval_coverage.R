@@ -35,6 +35,8 @@
 #' @importFrom dplyr filter arrange
 #' @importFrom stats glm poisson predict residuals qnbinom qpois quantile
 #' @importFrom rlang .data
+#' @family interval coverage
+#' @concept validation
 #' @export
 #'
 #' @examples
@@ -116,6 +118,8 @@ fit_certification_baseline <- function(certification_series,
 #' @importFrom assertthat assert_that is.flag
 #' @importFrom tibble tibble
 #' @importFrom stats predict qnbinom qpois
+#' @family interval coverage
+#' @concept validation
 #' @export
 forecast_certification <- function(baseline_fit,
                                    forecast_years,
@@ -190,6 +194,8 @@ forecast_certification <- function(baseline_fit,
 #' @importFrom dplyr bind_rows
 #' @importFrom tibble tibble
 #' @importFrom rlang .data
+#' @family interval coverage
+#' @concept validation
 #' @export
 rolling_origin_coverage <- function(certification_series,
                                     minimum_train_years = 6L,
@@ -301,6 +307,8 @@ rolling_origin_coverage <- function(certification_series,
 #'   `tier`, and `search_grid`.
 #'
 #' @importFrom assertthat assert_that is.count is.flag
+#' @family interval coverage
+#' @concept validation
 #' @export
 solve_interval_inflation <- function(certification_series,
                                      minimum_train_years = 6L,
@@ -366,6 +374,8 @@ solve_interval_inflation <- function(certification_series,
 #' @return Invisibly `TRUE` on pass; otherwise an error.
 #'
 #' @importFrom assertthat assert_that is.count is.flag
+#' @family interval coverage
+#' @concept validation
 #' @export
 assert_interval_coverage_publishable <- function(coverage_report,
                                                  maximum_coverage_ratio = 1.25,

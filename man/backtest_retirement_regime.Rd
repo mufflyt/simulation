@@ -26,3 +26,22 @@ The contract's own accessor is authoritative when present; otherwise the
 regime is inferred from the data. Callers branch on the RETURNED VALUE rather
 than on message text, so neither generation needs a different test.
 }
+\seealso{
+Other backtest: 
+\code{\link{.series_through}()},
+\code{\link{BACKTEST_TARGET_YEAR}},
+\code{\link{assert_no_leakage}()},
+\code{\link{backtest_attrition_requirement}()},
+\code{\link{backtest_cohort_at}()},
+\code{\link{backtest_cohorts_through}()},
+\code{\link{backtest_entrant_estimate}()},
+\code{\link{backtest_loo_validation}()},
+\code{\link{backtest_multi_window}()},
+\code{\link{backtest_oos_interval}()},
+\code{\link{backtest_rolling_origin}()},
+\code{\link{backtest_target_candidates}()},
+\code{\link{reset_leakage_audit}()},
+\code{\link{validate_backtest_target}()}
+}
+\concept{backtest}
+\concept{validation}

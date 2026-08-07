@@ -21,3 +21,11 @@ affect the answer" and are not the same. Delegation IS in the estimand and
 cancels arithmetically. Geographic access is not in it at all, because the
 layer is dormant -- so it cannot be wrong, only absent.
 }
+\seealso{
+Other practice survey: 
+\code{\link{fte_curve_status}()},
+\code{\link{geographic_access_status}()},
+\code{\link{urps_practice_survey_requirements}()}
+}
+\concept{data}
+\concept{practice survey}

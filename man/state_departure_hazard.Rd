@@ -21,3 +21,12 @@ Reconstructs \code{\link[=departure_hazard]{departure_hazard()}} (R/16) exactly,
 machine. It exists so the transition matrix and the engine read the SAME
 hazard; it is guarded to remain identical to \code{departure_hazard()}.
 }
+\seealso{
+Other provider state machine: 
+\code{\link{assert_publishable_supply_transitions}()},
+\code{\link{career_departure_by_state}()},
+\code{\link{career_state_of}()},
+\code{\link{career_transition_registry}()}
+}
+\concept{provider state machine}
+\concept{supply}

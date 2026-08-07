@@ -33,3 +33,12 @@ A person-level data frame of adult women: \code{sought} (0/1), \code{pf_visits},
 \description{
 Build the person-level care-seeking analytic frame from MEPS files
 }
+\seealso{
+Other meps care seeking: 
+\code{\link{MEPS_PELVIC_FLOOR_ICD10}},
+\code{\link{care_seeking_multipliers}()},
+\code{\link{fit_care_seeking_model}()},
+\code{\link{predict_care_seeking}()}
+}
+\concept{data}
+\concept{meps care seeking}

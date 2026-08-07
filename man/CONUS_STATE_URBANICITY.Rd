@@ -26,4 +26,17 @@ where the majority of residents live in nonmetro counties are classified as
 To override for a specific analysis, pass a custom named character vector
 to \code{urbanicity_lookup} in \code{\link[=classify_state_urbanicity]{classify_state_urbanicity()}}.
 }
+\seealso{
+Other urps migration: 
+\code{\link{URPS_MIGRATION_HAZARD}},
+\code{\link{URPS_RURAL_URBAN_DRIFT}},
+\code{\link{agent_urbanicity_summary}()},
+\code{\link{apply_urps_migration}()},
+\code{\link{classify_state_urbanicity}()},
+\code{\link{migration_drift_scenario}()},
+\code{\link{rural_urban_concentration}()},
+\code{\link{urps_migration_matrix}()}
+}
+\concept{geography}
+\concept{urps migration}
 \keyword{datasets}

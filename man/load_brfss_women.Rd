@@ -22,3 +22,18 @@ Reads the pre-processed RDS created by \verb{scripts/data_acquisition/01_downloa
 and returns a minimal tidy tibble with strata columns, BRFSS survey weight,
 and risk-factor flags needed by the demand cell builder.
 }
+\seealso{
+Other urps population: 
+\code{\link{CARE_SEEKING_BY_INCOME}},
+\code{\link{CARE_SEEKING_BY_INSURANCE}},
+\code{\link{URPS_POP_AGE_BANDS}},
+\code{\link{blend_mcbs_prevalence}()},
+\code{\link{blend_nhanes_ui_prevalence}()},
+\code{\link{brfss_pfd_prevalence_for_demand_bands}()},
+\code{\link{build_calibrated_population_cells}()},
+\code{\link{build_urps_population_cells}()},
+\code{\link{project_urps_demand}()},
+\code{\link{summarise_stratum_coverage}()}
+}
+\concept{data}
+\concept{urps population}

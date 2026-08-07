@@ -43,6 +43,8 @@ URPS_SEVERITY_WINDOWS <- c(urgent = 7, routine = 30)
 #' @param wait_scale,wait_ceiling,status Passed through to [clear_access()].
 #' @return A long tibble: every [clear_access()] output column, plus the severity
 #'   column and `appointment_window`, one row per catchment x severity.
+#' @family access severity
+#' @concept geography
 #' @export
 clear_access_by_severity <- function(catchments,
                                      severity_windows = URPS_SEVERITY_WINDOWS,

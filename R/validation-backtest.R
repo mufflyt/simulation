@@ -52,6 +52,8 @@ BACKTEST_CUTOFF_YEAR <- 2020L
 #' Target year the back-test scores against
 #'
 #' Default `target_year` for [validate_backtest_target()] and [run_backtest()].
+#' @family backtest
+#' @concept validation
 #' @export
 BACKTEST_TARGET_YEAR <- 2023L
 
@@ -61,6 +63,8 @@ BACKTEST_TARGET_YEAR <- 2023L
 
 #' Reset the leakage audit log
 #' @return (Invisibly) NULL.
+#' @family backtest
+#' @concept validation
 #' @export
 reset_leakage_audit <- function() {
   .backtest_audit$max_year <- -Inf
@@ -78,6 +82,8 @@ reset_leakage_audit <- function() {
 #' @param geography,board_pathway Contract dimensions.
 #' @param what Label recorded in the audit log.
 #' @return Tibble of `year`, `n_active`, filtered to `<= through_year`.
+#' @family backtest
+#' @concept validation
 #' @export
 .series_through <- function(through_year, geography = "national",
                             board_pathway = "ABOG_PLUS_ABU", what = "series") {
@@ -100,6 +106,8 @@ reset_leakage_audit <- function() {
 #'
 #' @param through_year The cutoff the run declared.
 #' @return (Invisibly) the audit log.
+#' @family backtest
+#' @concept validation
 #' @export
 assert_no_leakage <- function(through_year = BACKTEST_CUTOFF_YEAR) {
   m <- .backtest_audit$max_year
@@ -121,6 +129,8 @@ assert_no_leakage <- function(through_year = BACKTEST_CUTOFF_YEAR) {
 
 #' Every 2023 count in the project, with the dimensions that distinguish them
 #' @return Tibble of candidate targets.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_target_candidates <- function() {
   tibble::tribble(
@@ -150,6 +160,8 @@ backtest_target_candidates <- function() {
 #' @param series Contract series; read from the contract when NULL.
 #' @return One of "not_ascertained", "zero", "ascertained", with a `source`
 #'   attribute recording whether it came from the accessor or from inference.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_retirement_regime <- function(series = NULL) {
   declared <- tryCatch({
@@ -191,6 +203,8 @@ backtest_retirement_regime <- function(series = NULL) {
 #'   into an error: asking for the ABOG-only pathway returns 1,027, which is a
 #'   perfectly valid count and the wrong one for an ABOG+ABU cohort.
 #' @return List with the validated `value` and the reconciliation record.
+#' @family backtest
+#' @concept validation
 #' @export
 validate_backtest_target <- function(target_year = BACKTEST_TARGET_YEAR,
                                      geography = "national",
@@ -356,6 +370,8 @@ validate_backtest_target <- function(target_year = BACKTEST_TARGET_YEAR,
 #' actually test.
 #'
 #' @return An object of class `urps_attrition_requirement`.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_attrition_requirement <- function() {
   .require_mufflyaccess("The attrition ascertainment status")
@@ -421,6 +437,8 @@ print.urps_attrition_requirement <- function(x, ...) {
 #' @param through_year Cutoff year.
 #' @param geography,board_pathway Contract dimensions.
 #' @return Tibble of `cert_year`, `n_certified`, `basis`.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_cohorts_through <- function(through_year = BACKTEST_CUTOFF_YEAR,
                                      geography = "national",
@@ -455,6 +473,8 @@ backtest_cohorts_through <- function(through_year = BACKTEST_CUTOFF_YEAR,
 #' @param steady_from First year of the steady-state window.
 #' @param agents Cohort supplying the age structure for the departure estimate.
 #' @return List with `gross_entrants`, `departures`, `window`, `sd_entrants`.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_entrant_estimate <- function(through_year = BACKTEST_CUTOFF_YEAR,
                                       steady_from = 2018L,
@@ -493,6 +513,8 @@ backtest_entrant_estimate <- function(through_year = BACKTEST_CUTOFF_YEAR,
 #' @param female_share Share drawn female.
 #' @param subspecialty Subspecialty label.
 #' @return Agent tibble.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_cohort_at <- function(through_year = BACKTEST_CUTOFF_YEAR,
                                geography = "national",
@@ -548,6 +570,8 @@ backtest_cohort_at <- function(through_year = BACKTEST_CUTOFF_YEAR,
 #'   "nrmp" (mean of NRMP filled positions published by the cutoff).
 #' @param lookback Trailing years used by the certification predictor.
 #' @return Tibble with one row per window.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_multi_window <- function(cutoffs = 2017:2020, horizon = 3L,
                                   predictor = c("certification", "nrmp"),
@@ -600,6 +624,8 @@ backtest_multi_window <- function(cutoffs = 2017:2020, horizon = 3L,
 #' @param conf Interval level.
 #' @return List with the raw and bias-corrected prediction, interval, and the
 #'   training errors it rests on.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_oos_interval <- function(target_cutoff = 2020L, cutoffs = 2017:2020,
                                   predictor = "nrmp", conf = 0.95) {
@@ -656,6 +682,8 @@ backtest_oos_interval <- function(target_cutoff = 2020L, cutoffs = 2017:2020,
 #'   rather than scored on a spread that is not estimable.
 #' @param conf Interval level.
 #' @return Tibble, one row per eligible origin.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_rolling_origin <- function(cutoffs = 2013:2020, horizon = 3L,
                                     predictor = "nrmp", min_train = 2L,
@@ -707,6 +735,8 @@ backtest_rolling_origin <- function(cutoffs = 2013:2020, horizon = 3L,
 #'
 #' @inheritParams backtest_rolling_origin
 #' @return Tibble, one row per window.
+#' @family backtest
+#' @concept validation
 #' @export
 backtest_loo_validation <- function(cutoffs = 2013:2020, horizon = 3L,
                                     predictor = "nrmp", min_train = 2L,

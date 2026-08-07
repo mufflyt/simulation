@@ -16,3 +16,27 @@ The access tibble with a \code{relative_access} column added.
 Port of the Wan 2012 SPAR. Makes surfaces from different scenarios /
 subspecialties directly comparable on a fixed national-mean = 1.0 scale.
 }
+\seealso{
+Other spatial access e2sfca: 
+\code{\link{access_moe_ci}()},
+\code{\link{access_weight_sensitivity}()},
+\code{\link{annual_trend}()},
+\code{\link{assign_access_category}()},
+\code{\link{compare_access_methods}()},
+\code{\link{compute_access}()},
+\code{\link{compute_access_preset}()},
+\code{\link{compute_e2sfca_access}()},
+\code{\link{conus_ok}()},
+\code{\link{e2sfca_bands}()},
+\code{\link{e2sfca_incremental_weights}()},
+\code{\link{e2sfca_weight_presets}()},
+\code{\link{gaussian_band_weights}()},
+\code{\link{haversine_km}()},
+\code{\link{match_points_to_isochrones}()},
+\code{\link{summarize_access}()},
+\code{\link{weighted_mean_all}()},
+\code{\link{wilson_ci}()},
+\code{\link{zero_access_share}()}
+}
+\concept{geography}
+\concept{spatial access e2sfca}

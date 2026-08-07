@@ -16,3 +16,12 @@ Gini in [0, 1), or \code{NA_real_} if the total is 0.
 A vector with all mass in one unit tends to (n-1)/n; an even split gives 0.
 Include zero-valued units to measure concentration across the full geography.
 }
+\seealso{
+Other workforce concentration: 
+\code{\link{provider_concentration}()},
+\code{\link{workforce_hhi}()},
+\code{\link{workforce_lorenz}()},
+\code{\link{workforce_top_k_share}()}
+}
+\concept{reporting}
+\concept{workforce concentration}

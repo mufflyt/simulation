@@ -41,6 +41,8 @@ psa_workforce_gap_inputs <- function() {
 #' @param seed RNG seed.
 #' @param verbose Logical.
 #' @return A [run_psa()] result with outputs `gap_pct` and `gap_fte`.
+#' @family psa workforce
+#' @concept calibration
 #' @export
 psa_workforce_gap <- function(n = 200,
                               years = 2025:2050,

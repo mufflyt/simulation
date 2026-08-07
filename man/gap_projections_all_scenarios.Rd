@@ -48,3 +48,10 @@ scenario column of the full supply panel, joining each scenario to the
 same \code{required_fte} series (demand is scenario-independent in the status-
 quo case; pass scenario-specific demand in \code{fte_gap_by_scenario} if needed).
 }
+\seealso{
+Other urps projection: 
+\code{\link{as_urps_gap_projection}()},
+\code{\link{validate_urps_gap_projection}()}
+}
+\concept{reporting}
+\concept{urps projection}

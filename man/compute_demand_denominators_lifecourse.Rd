@@ -31,3 +31,12 @@ exposure relative to the Nygaard-era reference. D4 answers R/demand-urps's docum
 limitation that age-only denominators understate parous-women demand and that
 future high-age-band cohorts carry less vaginal-delivery exposure.
 }
+\seealso{
+Other obstetric exposure: 
+\code{\link{cesarean_rate_for_year}()},
+\code{\link{cohort_vaginal_exposure}()},
+\code{\link{completed_parity_for_cohort}()},
+\code{\link{obstetric_exposure_multiplier}()}
+}
+\concept{demand}
+\concept{obstetric exposure}

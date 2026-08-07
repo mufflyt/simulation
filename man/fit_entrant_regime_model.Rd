@@ -64,3 +64,12 @@ s <- data.frame(year = 2013:2020,
                 count = c(655, 175, 102, 36, 33, 40, 48, 10))
 fit_entrant_regime_model(s, 2020L, verbose = FALSE)$deferred_backlog > 0
 }
+\seealso{
+Other entrant regime: 
+\code{\link{classify_certification_regimes}()},
+\code{\link{draw_entrant_paths}()},
+\code{\link{entrant_regime_rolling_validation}()},
+\code{\link{project_entrant_path}()}
+}
+\concept{entrant regime}
+\concept{supply}

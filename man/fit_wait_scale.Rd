@@ -28,3 +28,11 @@ The result makes \code{access_outcomes_national()}'s \code{A1} (\code{wait_time}
 \code{observed_wait} by construction. Supply \code{observed_wait} from a specialty wait
 survey (see \code{\link[=access_validation_targets]{access_validation_targets()}}); this does not invent it.
 }
+\seealso{
+Other access: 
+\code{\link{access_validation_targets}()},
+\code{\link{set_access_target}()},
+\code{\link{validate_access_outcomes}()}
+}
+\concept{access}
+\concept{validation}

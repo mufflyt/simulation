@@ -82,6 +82,8 @@ OPTIONAL_COLS <- c(
 #' @param x Data frame produced by [as_urps_gap_projection()].
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
 #' @return (Invisibly) `x` when valid.
+#' @family urps projection
+#' @concept reporting
 #' @export
 validate_urps_gap_projection <- function(x,
                                          mode = resolve_reproducibility_mode()) {
@@ -180,6 +182,8 @@ validate_urps_gap_projection <- function(x,
 #' @param mode Reproducibility mode; passed to [validate_urps_gap_projection()].
 #' @return Data frame conforming to the gap projection contract (REQUIRED_COLS +
 #'   optional `lower_95`, `upper_95`, `gap_pct`, `scenario_label`).
+#' @family urps projection
+#' @concept reporting
 #' @export
 as_urps_gap_projection <- function(supply,
                                    fte_gap,
@@ -286,6 +290,8 @@ as_urps_gap_projection <- function(supply,
 #'   `required_fte`.
 #' @inheritParams as_urps_gap_projection
 #' @return Long data frame of gap projections for all scenarios.
+#' @family urps projection
+#' @concept reporting
 #' @export
 gap_projections_all_scenarios <- function(supply_by_scenario,
                                           required_fte,

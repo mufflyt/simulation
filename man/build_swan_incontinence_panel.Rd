@@ -177,3 +177,5 @@ attr(renamed_panel, "swan_panel_provenance")$visits_used
 #> [1] 7
 
 }
+\concept{data}
+\concept{swan incontinence panel}

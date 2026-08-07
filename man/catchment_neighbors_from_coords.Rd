@@ -17,10 +17,18 @@ catchment_neighbors_from_coords(coords, k = 3, penalty_per_km = 1)
 A tibble of \code{from}, \code{to}, \code{travel_penalty} edges.
 }
 \description{
-Convenience constructor for the \code{neighbors} argument of
-\code{\link[=overflow_access]{overflow_access()}}: links each catchment to its \code{k} nearest others by
-great-circle distance (\code{\link[=haversine_km]{haversine_km()}}), turning distance into a
-\code{travel_penalty} at a flat \code{penalty_per_km}. A stand-in for a real
-drive-time matrix when one is not to hand; supply a measured matrix directly
-for production use.
+Convenience constructor for the \code{neighbors} argument of \code{\link[=overflow_access]{overflow_access()}}:
+links each catchment to its \code{k} nearest others by great-circle distance
+(\code{\link[=haversine_km]{haversine_km()}}), turning distance into a \code{travel_penalty} at a flat
+\code{penalty_per_km}. A stand-in for a real drive-time matrix when one is not to
+hand; supply a measured matrix directly for production use.
 }
+\seealso{
+Other access clearing: 
+\code{\link{clear_access}()},
+\code{\link{clear_access_trajectory}()},
+\code{\link{overflow_access}()},
+\code{\link{overflow_conservation}()}
+}
+\concept{access clearing}
+\concept{geography}

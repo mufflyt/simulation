@@ -26,3 +26,12 @@ a calibration label and, by default, is actually calibrated (not still
 means an un-calibrated access number cannot leave the layer as a published
 figure by accident -- the same governance the demand/supply layers use.
 }
+\seealso{
+Other access outcomes: 
+\code{\link{access_outcomes_by_severity}()},
+\code{\link{access_outcomes_national}()},
+\code{\link{access_outcomes_trajectory}()},
+\code{\link{assert_access_outcomes_labeled}()}
+}
+\concept{access outcomes}
+\concept{reporting}

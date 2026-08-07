@@ -46,6 +46,8 @@ COORD_COVERAGE_MIN <- 0.95
 #'
 #' @param path CSV path.
 #' @return Tibble with `npi`, `lat`, `lon`, and provenance columns.
+#' @family provider coordinates
+#' @concept geography
 #' @export
 load_urps_provider_coordinates <- function(
     path = "data-raw/urps_roster/urps_provider_coordinates_2026-08-02.csv") {
@@ -91,6 +93,8 @@ load_urps_provider_coordinates <- function(
 #' @param roster Roster tibble; loaded when NULL.
 #' @param coords Coordinate tibble; loaded when NULL.
 #' @return List with overall and per-pathway coverage, and `usable_for_access`.
+#' @family provider coordinates
+#' @concept geography
 #' @export
 provider_coordinate_coverage <- function(roster = NULL, coords = NULL) {
   if (is.null(roster)) roster <- load_urps_roster()

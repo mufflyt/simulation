@@ -21,3 +21,13 @@ Joined totals, calibration ratio, and residual. This ratio calibrates
 \description{
 Compare modeled realized care with Medicare FFS service totals
 }
+\seealso{
+Other medicare capacity: 
+\code{\link{aggregate_medicare_realized_care}()},
+\code{\link{medicare_work_rvu_by_provider}()},
+\code{\link{medicare_workload_index}()},
+\code{\link{summarise_medicare_capacity}()},
+\code{\link{urps_medicare_service_crosswalk}()}
+}
+\concept{medicare capacity}
+\concept{supply}

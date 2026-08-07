@@ -57,6 +57,8 @@ LEGACY_LOAD_ORDER <- c(
 #'
 #' Every entry is the file whose implementation should survive. The loader
 #' asserts that the load order actually delivers it.
+#' @family legacy loader
+#' @concept core
 #' @export
 LEGACY_CANONICAL <- c(
   calculate_age_gradient                 = "dppm_validate_SWAN.R",
@@ -122,6 +124,8 @@ legacy_definitions <- function(dir = legacy_dir()) {
 #'
 #' @param dir Directory holding the scripts.
 #' @return Tibble of `fn` and the files defining it.
+#' @family legacy loader
+#' @concept core
 #' @export
 legacy_collisions <- function(dir = legacy_dir()) {
   defs <- legacy_definitions(dir)
@@ -181,6 +185,8 @@ legacy_collisions <- function(dir = legacy_dir()) {
 #'   the scripts as scripts, which requires the external data to be present.
 #' @param quiet Suppress the collision report.
 #' @return (Invisibly) a tibble of shadowed names and the file that won.
+#' @family legacy loader
+#' @concept core
 #' @export
 load_legacy <- function(dir = legacy_dir(), envir = parent.frame(),
                         files = LEGACY_LOAD_ORDER, functions_only = TRUE,
@@ -248,6 +254,8 @@ load_legacy <- function(dir = legacy_dir(), envir = parent.frame(),
 #' @param order Load order to check.
 #' @param canonical Declared ownership map.
 #' @return Tibble of mismatches (empty when the order is correct).
+#' @family legacy loader
+#' @concept core
 #' @export
 check_legacy_canonical <- function(dir = legacy_dir(),
                                    order = LEGACY_LOAD_ORDER,

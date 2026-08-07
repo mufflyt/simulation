@@ -20,3 +20,17 @@ Define a normal PSA input
 \examples{
 psa_normal("retirement_age", mean = 65, sd = 2)
 }
+\seealso{
+Other psa: 
+\code{\link{plot_psa_tornado}()},
+\code{\link{psa_discrete}()},
+\code{\link{psa_prcc}()},
+\code{\link{psa_sample}()},
+\code{\link{psa_srrc}()},
+\code{\link{psa_tornado}()},
+\code{\link{psa_triangular}()},
+\code{\link{psa_uniform}()},
+\code{\link{run_psa}()}
+}
+\concept{calibration}
+\concept{psa}

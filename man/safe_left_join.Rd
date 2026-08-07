@@ -34,3 +34,9 @@ asserts keys are present, checks the right table has unique keys unless
 \code{allow_fanout = TRUE}, performs the join, and fails if the result row count
 differs from the left input (which can only happen via fan-out).
 }
+\seealso{
+Other canonical and joins: 
+\code{\link{resolve_canonical}()}
+}
+\concept{canonical and joins}
+\concept{core}

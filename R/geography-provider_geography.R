@@ -39,6 +39,8 @@ GEO_ALLOCATION_RULES <- c("historical", "opportunity", "hybrid")
 #' @param roster Provider roster with a geography column.
 #' @param geo_col Name of the geography column.
 #' @return Tibble with `geo` and `share`.
+#' @family provider geography
+#' @concept geography
 #' @export
 historical_placement_shares <- function(roster, geo_col = "state") {
   assertthat::assert_that(is.data.frame(roster), geo_col %in% names(roster))
@@ -58,6 +60,8 @@ historical_placement_shares <- function(roster, geo_col = "state") {
 #'   horizon (step 2).
 #' @return Tibble with `geo`, `requirements_fte` (step 3) and `share` (step 4),
 #'   ready to distribute entrants (step 5).
+#' @family provider geography
+#' @concept geography
 #' @export
 opportunity_placement_shares <- function(demand_growth, retirements) {
   assertthat::assert_that(all(c("geo", "demand_growth_fte") %in% names(demand_growth)))
@@ -84,6 +88,8 @@ opportunity_placement_shares <- function(demand_growth, retirements) {
 #' @param weight Weight on the opportunity-responsive shares (0 = purely
 #'   historical, 1 = purely opportunity-responsive).
 #' @return Tibble with `geo` and blended `share`.
+#' @family provider geography
+#' @concept geography
 #' @export
 blend_placement_shares <- function(historical, opportunity, weight = 0.5) {
   assertthat::assert_that(weight >= 0, weight <= 1)
@@ -108,6 +114,8 @@ blend_placement_shares <- function(historical, opportunity, weight = 0.5) {
 #' @param shares Tibble with `geo` and `share`.
 #' @param stochastic Draw multinomially (TRUE) or allocate proportionally (FALSE).
 #' @return Character vector of geographies, length `n_entrants`.
+#' @family provider geography
+#' @concept geography
 #' @export
 assign_entrant_geography <- function(n_entrants, shares, stochastic = TRUE) {
   assertthat::assert_that(all(c("geo", "share") %in% names(shares)))
@@ -146,6 +154,8 @@ PROVIDER_MIGRATION_HAZARD <- c(
 #' @param age Provider age (late career slows moves further).
 #' @param hazards Named hazard vector.
 #' @return Numeric annual migration probability.
+#' @family provider geography
+#' @concept geography
 #' @export
 migration_hazard <- function(years_since_entry, age = NA_real_,
                              hazards = PROVIDER_MIGRATION_HAZARD) {
@@ -163,6 +173,8 @@ migration_hazard <- function(years_since_entry, age = NA_real_,
 #' @param shares Destination share distribution (`geo`, `share`).
 #' @param hazards Migration hazards.
 #' @return The agent tibble with updated `state` and an incremented `n_moves`.
+#' @family provider geography
+#' @concept geography
 #' @export
 apply_provider_migration <- function(agents, year, shares,
                                      hazards = PROVIDER_MIGRATION_HAZARD) {
@@ -197,6 +209,8 @@ apply_provider_migration <- function(agents, year, shares,
 #'   population = tibble::tibble(geo = c("CO", "NY", "TX"),
 #'                               population = c(2.9e6, 1.0e7, 1.5e7))
 #' )
+#' @family provider geography
+#' @concept geography
 #' @export
 supply_per_capita <- function(supply, population, per = 1e6) {
   out <- safe_left_join(supply, population, by = "geo", min_match_rate = 1.0)
@@ -218,6 +232,8 @@ supply_per_capita <- function(supply, population, per = 1e6) {
 #' @param benchmark Target FTE per `per` population.
 #' @param per Population denominator matching `per_capita`.
 #' @return List with `national_additional`, `geographic_additional`, and detail.
+#' @family provider geography
+#' @concept geography
 #' @export
 benchmark_density_shortfall <- function(per_capita, benchmark, per = 1e6) {
   detail <- dplyr::mutate(
@@ -284,6 +300,8 @@ benchmark_density_shortfall <- function(per_capita, benchmark, per = 1e6) {
 #' @param matrix Tibble with `origin`, `destination`, `probability`.
 #' @param tol Absolute tolerance on each origin's row sum.
 #' @return `matrix`, invisibly, or an error naming the offending origins.
+#' @family provider geography
+#' @concept geography
 #' @export
 validate_migration_matrix <- function(matrix, tol = 1e-8) {
   assertthat::assert_that(is.data.frame(matrix))
@@ -344,6 +362,8 @@ validate_migration_matrix <- function(matrix, tol = 1e-8) {
 #'   distribution to shrink toward. Defaults to the marginal of `moves`.
 #' @param shrinkage Prior weight in pseudo-moves. `0` disables shrinkage.
 #' @return Tibble with `origin`, `destination`, `probability`, `n_observed`.
+#' @family provider geography
+#' @concept geography
 #' @export
 migration_matrix_from_moves <- function(moves, prior_shares = NULL,
                                         shrinkage = 10) {
@@ -421,6 +441,8 @@ migration_matrix_from_moves <- function(moves, prior_shares = NULL,
 #' @param out_of_country Destination label treated as an absorbing sink, or
 #'   `NULL` for none.
 #' @return The agent tibble with updated `state`, `n_moves`, `left_country`.
+#' @family provider geography
+#' @concept geography
 #' @export
 apply_provider_migration_matrix <- function(agents, year, matrix,
                                             hazards = PROVIDER_MIGRATION_HAZARD,
@@ -479,6 +501,8 @@ apply_provider_migration_matrix <- function(agents, year, matrix,
 #' @param year Calendar year recorded as the returners' entry year.
 #' @param age Age assigned to returners.
 #' @return The agent tibble with returners appended.
+#' @family provider geography
+#' @concept geography
 #' @export
 add_returning_providers <- function(agents, returners, year, age = 45) {
   assertthat::assert_that(is.data.frame(returners))

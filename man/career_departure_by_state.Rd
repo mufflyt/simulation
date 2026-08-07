@@ -21,3 +21,12 @@ Reporting helper: groups the (age-continuous) departure hazard by the clinical
 career state, so a table can show "mean annual exit hazard by career stage"
 without implying a single per-state constant drives the engine.
 }
+\seealso{
+Other provider state machine: 
+\code{\link{assert_publishable_supply_transitions}()},
+\code{\link{career_state_of}()},
+\code{\link{career_transition_registry}()},
+\code{\link{state_departure_hazard}()}
+}
+\concept{provider state machine}
+\concept{supply}

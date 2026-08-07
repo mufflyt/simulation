@@ -22,3 +22,14 @@ Port of cliff::calculate_proportion_ci. The Wilson interval is well-behaved
 for small samples and near 0/1, so it is the right choice for
 rural/subgroup access-desert or at-risk proportions.
 }
+\seealso{
+Other workforce statistics: 
+\code{\link{calculate_replacement_gap}()},
+\code{\link{calculate_rural_metro_comparison}()},
+\code{\link{calculate_state_vulnerability}()},
+\code{\link{calculate_two_prop_test}()},
+\code{\link{load_sensitivity_table}()},
+\code{\link{sensitivity_registry}()}
+}
+\concept{reporting}
+\concept{workforce statistics}

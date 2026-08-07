@@ -24,3 +24,10 @@ The proper multi-level generalization of the interval score (Bracher et al.
 scores of the central intervals implied by symmetric quantile pairs. Rewards
 both calibration and sharpness, so a wide, uninformative forecast cannot win.
 }
+\seealso{
+Other forecast scorecard: 
+\code{\link{compare_forecasts}()},
+\code{\link{forecast_scorecard}()}
+}
+\concept{forecast scorecard}
+\concept{validation}

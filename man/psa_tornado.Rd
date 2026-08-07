@@ -19,3 +19,17 @@ Tibble \code{input}, \code{index}, \code{direction} ordered by descending magnit
 \description{
 Tidy tornado table (ranked sensitivity indices)
 }
+\seealso{
+Other psa: 
+\code{\link{plot_psa_tornado}()},
+\code{\link{psa_discrete}()},
+\code{\link{psa_normal}()},
+\code{\link{psa_prcc}()},
+\code{\link{psa_sample}()},
+\code{\link{psa_srrc}()},
+\code{\link{psa_triangular}()},
+\code{\link{psa_uniform}()},
+\code{\link{run_psa}()}
+}
+\concept{calibration}
+\concept{psa}

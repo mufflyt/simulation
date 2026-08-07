@@ -22,3 +22,12 @@ never be published without a \code{calibration_status}. With
 \code{require_calibrated = TRUE} it further refuses an outcome still stamped with an
 \code{assumed}/\code{illustrative} status.
 }
+\seealso{
+Other access outcomes: 
+\code{\link{access_outcomes_by_severity}()},
+\code{\link{access_outcomes_national}()},
+\code{\link{access_outcomes_trajectory}()},
+\code{\link{publish_access_outcomes}()}
+}
+\concept{access outcomes}
+\concept{reporting}

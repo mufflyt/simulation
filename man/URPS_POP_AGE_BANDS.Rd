@@ -15,4 +15,19 @@ Five HWMM/HDMM adult bands (Exhibit 5). The upper two align exactly with the
 \code{mufflyaccess::pfd_prevalence()} contract bands (65-74, 75+) so prevalence can
 be joined without a wrong-grain error.
 }
+\seealso{
+Other urps population: 
+\code{\link{CARE_SEEKING_BY_INCOME}},
+\code{\link{CARE_SEEKING_BY_INSURANCE}},
+\code{\link{blend_mcbs_prevalence}()},
+\code{\link{blend_nhanes_ui_prevalence}()},
+\code{\link{brfss_pfd_prevalence_for_demand_bands}()},
+\code{\link{build_calibrated_population_cells}()},
+\code{\link{build_urps_population_cells}()},
+\code{\link{load_brfss_women}()},
+\code{\link{project_urps_demand}()},
+\code{\link{summarise_stratum_coverage}()}
+}
+\concept{data}
+\concept{urps population}
 \keyword{datasets}

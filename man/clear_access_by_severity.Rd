@@ -44,3 +44,5 @@ that class's appointment window. Higher-severity demand therefore cannot be
 displaced by lower-severity volume, and each class's \code{p_appointment} is judged
 against its own clinically relevant deadline.
 }
+\concept{access severity}
+\concept{geography}

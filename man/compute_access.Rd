@@ -28,3 +28,27 @@ penalty as a first-class toggle rather than a numeric power. M2SFCA
 (Delamater 2013) squares the CUMULATIVE band weights before differencing
 (\code{step2_power = 2}), penalising supply that is present but poorly located.
 }
+\seealso{
+Other spatial access e2sfca: 
+\code{\link{access_moe_ci}()},
+\code{\link{access_weight_sensitivity}()},
+\code{\link{annual_trend}()},
+\code{\link{assign_access_category}()},
+\code{\link{compare_access_methods}()},
+\code{\link{compute_access_preset}()},
+\code{\link{compute_e2sfca_access}()},
+\code{\link{conus_ok}()},
+\code{\link{e2sfca_bands}()},
+\code{\link{e2sfca_incremental_weights}()},
+\code{\link{e2sfca_weight_presets}()},
+\code{\link{gaussian_band_weights}()},
+\code{\link{haversine_km}()},
+\code{\link{match_points_to_isochrones}()},
+\code{\link{spatial_access_ratio}()},
+\code{\link{summarize_access}()},
+\code{\link{weighted_mean_all}()},
+\code{\link{wilson_ci}()},
+\code{\link{zero_access_share}()}
+}
+\concept{geography}
+\concept{spatial access e2sfca}

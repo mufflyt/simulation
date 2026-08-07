@@ -18,3 +18,13 @@ Numeric vector.
 Delegates to \code{mufflyaccess::safe_divide()} when available so this package
 uses the house convention for divide-by-zero rather than producing \code{Inf}.
 }
+\seealso{
+Other ssot: 
+\code{\link{as_urps_projection}()},
+\code{\link{assert_scenarios_registered}()},
+\code{\link{ssot_coverage_report}()},
+\code{\link{ssot_rurality}()},
+\code{\link{ssot_safe_percent}()}
+}
+\concept{core}
+\concept{ssot}

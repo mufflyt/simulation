@@ -13,8 +13,7 @@ validate_access_outcomes(national, targets = access_validation_targets())
 }
 \value{
 A tibble: \code{target}, \code{predicted}, \code{observed}, \code{rel_diff}, \code{rel_tol},
-\code{status} (\code{pass} / \code{fail} / \code{no_target}), and \code{target_status} (the target's own
-calibration state, e.g. \code{target_unpopulated} / \code{assumed} / \code{calibrated}).
+\code{status} (\code{pass} / \code{fail} / \code{no_target}).
 }
 \description{
 Joins the \code{A}-series roll-up to \code{\link[=access_validation_targets]{access_validation_targets()}} by outcome name
@@ -23,3 +22,11 @@ relative difference and whether it falls within \code{rel_tol}. Targets with no
 observed value are returned with \code{status = "no_target"} and never counted as a
 pass -- silence is not validation.
 }
+\seealso{
+Other access: 
+\code{\link{access_validation_targets}()},
+\code{\link{fit_wait_scale}()},
+\code{\link{set_access_target}()}
+}
+\concept{access}
+\concept{validation}

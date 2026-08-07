@@ -17,3 +17,12 @@ Fraction in \verb{[0, 1]}, or \code{NA_real_} if the total is 0.
 \description{
 Share of the total held by the k largest units
 }
+\seealso{
+Other workforce concentration: 
+\code{\link{provider_concentration}()},
+\code{\link{workforce_gini}()},
+\code{\link{workforce_hhi}()},
+\code{\link{workforce_lorenz}()}
+}
+\concept{reporting}
+\concept{workforce concentration}

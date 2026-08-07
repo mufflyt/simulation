@@ -37,6 +37,8 @@ TRACT_AGE_BAND_COLUMNS <- c(
 #' @return Data frame `threshold_min`, `need_within` (need reachable within that
 #'   many minutes) and `share_within` (of total need). `attr(., "beyond")` gives
 #'   the need (and share) farther than the largest band.
+#' @family demand
+#' @concept geography
 #' @export
 demand_by_travel_band <- function(geo_need, bands = c(30, 60, 120, 180),
                                   need_col = "need", time_col = "nearest_provider_min") {
@@ -64,6 +66,8 @@ demand_by_travel_band <- function(geo_need, bands = c(30, 60, 120, 180),
 #' @param access_col,need_col Column names.
 #' @return Need-weighted mean access ratio (numeric scalar), or `NA` if no
 #'   finite, positively-weighted rows.
+#' @family demand
+#' @concept geography
 #' @export
 need_weighted_access <- function(geo, access_col = "access_ratio", need_col = "need") {
   stopifnot(is.data.frame(geo), all(c(access_col, need_col) %in% names(geo)))
@@ -82,6 +86,8 @@ need_weighted_access <- function(geo, access_col = "access_ratio", need_col = "n
 #'   (capacity/need), `underserved_need_share` (share of national need in
 #'   geographies with capacity < need), and `by_geo` (input plus per-geography
 #'   `adequacy`).
+#' @family demand
+#' @concept geography
 #' @export
 accessible_need_vs_capacity <- function(geo, need_col = "need", capacity_col = "capacity") {
   stopifnot(is.data.frame(geo), all(c(need_col, capacity_col) %in% names(geo)))
@@ -123,6 +129,8 @@ accessible_need_vs_capacity <- function(geo, need_col = "need", capacity_col = "
 #'   written by `08_download_acs_tracts.R`).
 #' @param need_col Name of the output need column. Default `"need"`.
 #' @return `tracts` with a numeric `need` column added.
+#' @family demand
+#' @concept geography
 #' @export
 tract_need_from_population <- function(tracts,
                                        prevalence = pfd_prevalence_by_band(),
@@ -163,6 +171,8 @@ tract_need_from_population <- function(tracts,
 #' @param prevalence,band_cols Passed to [tract_need_from_population()].
 #' @param ... Passed to [geographic_demand_summary()] (e.g. `bands`, `time_col`).
 #' @return The [geographic_demand_summary()] list for the tract need surface.
+#' @family demand
+#' @concept geography
 #' @export
 isochrone_demand_from_tracts <- function(tracts,
                                          prevalence = pfd_prevalence_by_band(),
@@ -184,6 +194,8 @@ isochrone_demand_from_tracts <- function(tracts,
 #' @return A list with `total_need`, `by_band`, `beyond_share` (need farther than
 #'   the largest band), and — when the columns exist — `need_weighted_access` and
 #'   `adequacy`.
+#' @family demand
+#' @concept geography
 #' @export
 geographic_demand_summary <- function(geo_need, bands = c(30, 60, 120, 180),
                                       need_col = "need", time_col = "nearest_provider_min",

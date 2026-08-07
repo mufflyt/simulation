@@ -19,3 +19,11 @@ Lets the conversion be estimated against either entry source without the
 caller rewriting the alignment. \code{"acgme"} counts fellows on duty and sees
 off-match entry; \code{"nrmp"} counts matched positions and does not.
 }
+\seealso{
+Other acgme fellows: 
+\code{\link{acgme_entering_cohort}()},
+\code{\link{acgme_urps_fellows}()},
+\code{\link{entrant_to_cert_ratio}()}
+}
+\concept{acgme fellows}
+\concept{supply}

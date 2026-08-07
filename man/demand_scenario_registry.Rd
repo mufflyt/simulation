@@ -13,3 +13,11 @@ Named list of demand scenario definitions.
 \code{access_components} names which barriers the scenario relaxes, so the
 double-count guard can compare them against the base-year gap.
 }
+\seealso{
+Other scenario registry: 
+\code{\link{local_supply_scenario_registry}()},
+\code{\link{supply_scenario_registry}()},
+\code{\link{validate_scenario_registry}()}
+}
+\concept{reporting}
+\concept{scenario registry}

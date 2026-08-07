@@ -129,6 +129,8 @@ URPS_ICD10_PREFIXES <- c(
 #'
 #' @param path Path to the cleaned RDS file.
 #' @return Tibble with all retained NAMCS columns (8,250 rows).
+#' @family namcs visit equations
+#' @concept demand
 #' @export
 load_namcs_2019 <- function(path = "data-raw/namcs/namcs2019_clean.rds") {
   if (!file.exists(path)) {
@@ -150,6 +152,8 @@ load_namcs_2019 <- function(path = "data-raw/namcs/namcs2019_clean.rds") {
 #' @param namcs Tibble from [load_namcs_2019()].
 #' @param prefixes Character vector of ICD-10-CM prefixes.
 #' @return `namcs` with logical column `is_urps`.
+#' @family namcs visit equations
+#' @concept demand
 #' @export
 flag_urps_visits <- function(namcs,
                              prefixes = URPS_ICD10_PREFIXES) {
@@ -177,6 +181,8 @@ flag_urps_visits <- function(namcs,
 #' @return Tibble with columns: `age_band`, `sex`, `race_eth`,
 #'   `insurance_2tier`, `n_visits_unweighted`, `visits_weighted`
 #'   (national annual total), `visits_per_1000_weighted`.
+#' @family namcs visit equations
+#' @concept demand
 #' @export
 namcs_urps_stratum_visits <- function(namcs) {
   assertthat::assert_that(all(c("is_urps", "AGE", "SEX", "RACERETH",
@@ -222,6 +228,8 @@ namcs_urps_stratum_visits <- function(namcs) {
 #'   Must contain `_AGEG5YR`, `_IMPRACE`, `_HLTHPL1`, `_LLCPWT`.
 #' @return Tibble with `age_band`, `sex`, `race_eth`, `insurance_2tier`,
 #'   `pop_weighted` (BRFSS-estimated population).
+#' @family namcs visit equations
+#' @concept demand
 #' @export
 brfss_population_by_stratum <- function(brfss) {
   needed <- c("_AGEG5YR", "_IMPRACE", "_HLTHPL1", "_LLCPWT")
@@ -262,6 +270,8 @@ brfss_population_by_stratum <- function(brfss) {
 #' @param stratum_pop   Output of [brfss_population_by_stratum()].
 #' @return Tibble with stratum covariates plus:
 #'   `visits_per_1000` -- NAMCS-estimated annual URPS visits per 1,000 persons.
+#' @family namcs visit equations
+#' @concept demand
 #' @export
 compute_urps_visit_rates <- function(stratum_visits, stratum_pop) {
   join_cols <- c("age_band", "sex", "race_eth", "insurance_2tier")
@@ -285,6 +295,8 @@ compute_urps_visit_rates <- function(stratum_visits, stratum_pop) {
 #'
 #' @param rate_table Output of [compute_urps_visit_rates()].
 #' @return A `lm` object; coefficients are log visit-rate adjustments.
+#' @family namcs visit equations
+#' @concept demand
 #' @export
 fit_urps_visit_rate_model <- function(rate_table) {
   assertthat::assert_that(all(c("visits_per_1000", "age_band", "race_eth",
@@ -373,6 +385,8 @@ predict_urps_annual_visits <- function(model, newdata, ci = FALSE) {
 #'   the share of URPS visits in NAMCS with SPECCAT 2/3.
 #' @return Tibble with `year`, `estimand = "D5"`, `demand_visits`,
 #'   `demand_clinical_fte`.
+#' @family namcs visit equations
+#' @concept demand
 #' @export
 compute_namcs_demand_estimand <- function(pop_projection,
                                           model,

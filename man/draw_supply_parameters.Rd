@@ -28,3 +28,12 @@ model (\code{clinical_hours ~ ns(age, df) + sex}), drawn from its own \code{coef
 fit exactly. Substitute it into the model with \code{.hours_model_with_coef()}
 rather than applying it to anything by hand.
 }
+\seealso{
+Other parameter uncertainty: 
+\code{\link{assert_parameter_uncertainty}()},
+\code{\link{entrant_spec_from_series}()},
+\code{\link{series_mean_se}()},
+\code{\link{supply_parameter_spec}()}
+}
+\concept{calibration}
+\concept{parameter uncertainty}

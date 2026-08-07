@@ -39,3 +39,10 @@ RMSE), signed bias, and -- when interval columns are present -- empirical
 coverage, mean interval width, the mean interval score (width-penalized), and
 the calibration slope.
 }
+\seealso{
+Other forecast scorecard: 
+\code{\link{compare_forecasts}()},
+\code{\link{weighted_interval_score}()}
+}
+\concept{forecast scorecard}
+\concept{validation}

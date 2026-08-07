@@ -22,3 +22,10 @@ behind it differ is a defect, not a narrow result. This caught a real one: the
 summarise below originally computed the point estimate first, under the same
 name as its source column, so the bounds were taken over a single value.
 }
+\seealso{
+Other lifecourse uncertainty: 
+\code{\link{lifecourse_demand_trajectory_ci}()},
+\code{\link{lifecourse_param_uncertainty}()}
+}
+\concept{demand}
+\concept{lifecourse uncertainty}

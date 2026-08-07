@@ -17,6 +17,8 @@
 #'
 #' @return A tibble: `target` (matches an `access_outcomes_national()` `label`),
 #'   `observed`, `unit`, `rel_tol`, `status`, `note`.
+#' @family access
+#' @concept validation
 #' @export
 access_validation_targets <- function() {
   tibble::tribble(
@@ -38,6 +40,8 @@ access_validation_targets <- function() {
 #' @param targets A targets tibble; defaults to [access_validation_targets()].
 #' @return A tibble: `target`, `predicted`, `observed`, `rel_diff`, `rel_tol`,
 #'   `status` (`pass` / `fail` / `no_target`).
+#' @family access
+#' @concept validation
 #' @export
 validate_access_outcomes <- function(national, targets = access_validation_targets()) {
   if (!is.data.frame(national) || !all(c("label", "value") %in% names(national))) {
@@ -91,6 +95,8 @@ validate_access_outcomes <- function(national, targets = access_validation_targe
 #'   at `wait_scale = 1`), `observed_wait`, `n_catchments_used`, and
 #'   `censored_demand_share` (demand share in saturated queues the fit cannot
 #'   see). Feed `wait_scale` back into [clear_access()].
+#' @family access
+#' @concept validation
 #' @export
 fit_wait_scale <- function(catchments, observed_wait) {
   stopifnot(length(observed_wait) == 1L, is.finite(observed_wait), observed_wait > 0)
@@ -128,6 +134,8 @@ fit_wait_scale <- function(catchments, observed_wait) {
 #' @param status Calibration status to stamp. Default `"assumed"`.
 #' @param rel_tol Optional replacement relative tolerance for this target.
 #' @return The targets tibble with that row populated.
+#' @family access
+#' @concept validation
 #' @export
 set_access_target <- function(targets = access_validation_targets(), target, observed,
                               status = "assumed", rel_tol = NULL) {

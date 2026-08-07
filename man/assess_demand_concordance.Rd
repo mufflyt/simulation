@@ -23,3 +23,21 @@ survives the choice of demand denominator. The verdict now carries an
 the rho is 1.000 by construction and means nothing, so the flag is FALSE and
 the result must not be reported as robustness evidence.
 }
+\seealso{
+Other urps: 
+\code{\link{anchor_index}()},
+\code{\link{apply_age_specific_surgery_demand}()},
+\code{\link{compute_brfss_demand_estimand}()},
+\code{\link{compute_demand_coverage}()},
+\code{\link{compute_demand_denominators}()},
+\code{\link{compute_demand_denominators_crude}()},
+\code{\link{compute_growth_adequacy}()},
+\code{\link{npp_female_by_band}()},
+\code{\link{npp_women_65plus}()},
+\code{\link{pfd_prevalence_by_band}()},
+\code{\link{pfd_prevalence_ownership}()},
+\code{\link{rebase_to_year}()},
+\code{\link{resolve_demand_population}()}
+}
+\concept{demand}
+\concept{urps}

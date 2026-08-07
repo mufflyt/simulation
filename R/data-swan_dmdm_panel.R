@@ -160,6 +160,8 @@ SWAN_COMORBIDITY_ITEMS <- c("HIGH_BP", "DIABETE", "HEART",
 #'   `has_ui` (plus `has_pop` when requested). Carries a `swan_dmdm_provenance`
 #'   attribute recording which covariates are measured, proxied or unmeasured.
 #' @seealso [swan_panel_fit_caveats()], [dmdm_transition_data()]
+#' @family swan dmdm panel
+#' @concept data
 #' @export
 build_swan_dmdm_panel <- function(swan_wide,
                                   visits = SWAN_UI_DEFAULT_VISITS,
@@ -322,6 +324,8 @@ isTRUE_vec <- function(x) {
 #'
 #' @param panel A panel from [build_swan_dmdm_panel()].
 #' @return A character vector of caveats, one per line.
+#' @family swan dmdm panel
+#' @concept data
 #' @export
 swan_panel_fit_caveats <- function(panel) {
   prov <- attr(panel, "swan_dmdm_provenance")

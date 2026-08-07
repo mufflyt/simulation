@@ -19,3 +19,14 @@ Reads a cliff-derived sensitivity table through the canonical-source resolver
 (path + SHA-256 verified), so a workforce sensitivity analysis never reads
 from an ad-hoc path.
 }
+\seealso{
+Other workforce statistics: 
+\code{\link{calculate_proportion_ci}()},
+\code{\link{calculate_replacement_gap}()},
+\code{\link{calculate_rural_metro_comparison}()},
+\code{\link{calculate_state_vulnerability}()},
+\code{\link{calculate_two_prop_test}()},
+\code{\link{sensitivity_registry}()}
+}
+\concept{reporting}
+\concept{workforce statistics}

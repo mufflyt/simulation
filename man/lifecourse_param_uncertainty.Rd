@@ -13,3 +13,10 @@ A list with \code{coef_sd} (SD on each risk log-odds coefficient) and
 \description{
 Default parameter-uncertainty specification (placeholder)
 }
+\seealso{
+Other lifecourse uncertainty: 
+\code{\link{assert_interval_nondegenerate}()},
+\code{\link{lifecourse_demand_trajectory_ci}()}
+}
+\concept{demand}
+\concept{lifecourse uncertainty}

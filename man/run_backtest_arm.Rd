@@ -41,3 +41,10 @@ List with per-iteration trajectories and the arm's settings.
 \description{
 Run one back-test arm
 }
+\seealso{
+Other backtest run: 
+\code{\link{run_backtest}()},
+\code{\link{score_backtest_arm}()}
+}
+\concept{backtest run}
+\concept{validation}

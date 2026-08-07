@@ -14,4 +14,18 @@ URPS_DEFAULT_SETTING_MIX
 A tibble with columns \code{service}, \code{setting}, \code{share}. Each service's shares
 sum to 1. Illustrative until replaced by PSPS place-of-service data.
 }
+\seealso{
+Other urps settings: 
+\code{\link{URPS_SETTING_SCENARIOS}},
+\code{\link{apply_setting_productivity}()},
+\code{\link{apply_setting_scenario}()},
+\code{\link{apply_setting_shift}()},
+\code{\link{load_psps_pos_shares}()},
+\code{\link{setting_scenario_summary}()},
+\code{\link{split_volumes_by_setting}()},
+\code{\link{validate_setting_mix}()},
+\code{\link{volumes_with_setting}()}
+}
+\concept{supply}
+\concept{urps settings}
 \keyword{datasets}

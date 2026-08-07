@@ -45,3 +45,10 @@ coefficients and care-pathway probabilities drawn from \code{param_uncertainty},
 and returns the national demand summary with median and lower/upper prediction
 bounds. The bounds combine parameter uncertainty with cohort sampling noise.
 }
+\seealso{
+Other lifecourse uncertainty: 
+\code{\link{assert_interval_nondegenerate}()},
+\code{\link{lifecourse_param_uncertainty}()}
+}
+\concept{demand}
+\concept{lifecourse uncertainty}

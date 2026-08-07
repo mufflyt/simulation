@@ -13,3 +13,11 @@ leverage, and the variables that would resolve it.
 \description{
 Status of the hours-to-FTE curve
 }
+\seealso{
+Other practice survey: 
+\code{\link{geographic_access_status}()},
+\code{\link{unresolved_calibration_items}()},
+\code{\link{urps_practice_survey_requirements}()}
+}
+\concept{data}
+\concept{practice survey}

@@ -57,6 +57,8 @@ PATHWAY_STAGES <- c("conservative", "testing", "procedure", "followup", "recurre
 #' @return A tibble with `condition`, `stage`, `service`, `per_entering`,
 #'   `p_advance`, `ci_low`, `ci_high`, `confidence`, `source`, `notes`.
 #' @seealso [pathway_service_volumes()], [validate_condition_pathway()]
+#' @family condition service pathway
+#' @concept demand
 #' @export
 condition_service_pathway <- function(path = NULL) {
   if (is.null(path)) {
@@ -90,6 +92,8 @@ condition_service_pathway <- function(path = NULL) {
 #' @param known_services Service names the workload basket recognises; `NULL`
 #'   skips that check (used when the basket is not loaded).
 #' @return (Invisibly) TRUE; errors on any inconsistency.
+#' @family condition service pathway
+#' @concept demand
 #' @export
 validate_condition_pathway <- function(pathway = condition_service_pathway(),
                                        known_services = NULL) {
@@ -160,6 +164,8 @@ validate_condition_pathway <- function(pathway = condition_service_pathway(),
 #' @param treated Named numeric vector of treated patients per condition.
 #' @param pathway A table from [condition_service_pathway()].
 #' @return A tibble of `condition`, `stage`, `entering`.
+#' @family condition service pathway
+#' @concept demand
 #' @export
 pathway_stage_entrants <- function(treated, pathway = condition_service_pathway()) {
   validate_condition_pathway(pathway)
@@ -198,6 +204,8 @@ pathway_stage_entrants <- function(treated, pathway = condition_service_pathway(
 #'   collapsing to service totals. Useful for auditing where workload arises.
 #' @return A tibble of `year`, `service`, `volume` (plus `condition` and `stage`
 #'   when `by_stage = TRUE`).
+#' @family condition service pathway
+#' @concept demand
 #' @export
 pathway_service_volumes <- function(treated, year,
                                     pathway = condition_service_pathway(),
@@ -227,6 +235,8 @@ pathway_service_volumes <- function(treated, year,
 #'
 #' @param pathway A table from [condition_service_pathway()].
 #' @return A length-one character calibration tier.
+#' @family condition service pathway
+#' @concept demand
 #' @export
 condition_pathway_status <- function(pathway = condition_service_pathway()) {
   conf <- unique(pathway$confidence)

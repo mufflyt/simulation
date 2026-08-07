@@ -21,3 +21,11 @@ Tibble of \code{academic_year}, \code{entry_year}, \code{parent}, \code{active_t
 \description{
 ACGME URPS fellow counts by academic year and parent specialty
 }
+\seealso{
+Other acgme fellows: 
+\code{\link{acgme_entering_cohort}()},
+\code{\link{entrant_source_series}()},
+\code{\link{entrant_to_cert_ratio}()}
+}
+\concept{acgme fellows}
+\concept{supply}

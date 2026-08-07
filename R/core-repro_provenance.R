@@ -42,6 +42,8 @@
 #'
 #' @param default Character fallback when the environment variable is unset.
 #' @return Character scalar, one of "strict" or "relaxed".
+#' @family repro provenance
+#' @concept core
 #' @export
 resolve_reproducibility_mode <- function(default = "relaxed") {
   mode <- Sys.getenv("REPRODUCIBILITY_MODE", unset = default)
@@ -65,6 +67,8 @@ resolve_reproducibility_mode <- function(default = "relaxed") {
 #' @param seed Integer seed. If NULL, uses `MICROSIM_SEED` env var or 20260801.
 #' @param mode Reproducibility mode (see [resolve_reproducibility_mode()]).
 #' @return (Invisibly) the integer seed actually applied, or NA if none.
+#' @family repro provenance
+#' @concept core
 #' @export
 seed_microsimulation <- function(seed = NULL, mode = resolve_reproducibility_mode()) {
   if (is.null(seed)) {
@@ -166,6 +170,8 @@ fingerprint_files <- function(paths) {
 #' @param source Free-text description of the data source.
 #' @param extra Named list of additional provenance fields (e.g. tool versions).
 #' @return (Invisibly) the provenance list that was written.
+#' @family repro provenance
+#' @concept core
 #' @export
 write_artifact_with_provenance <- function(object,
                                            artifact_path,
@@ -243,6 +249,8 @@ write_artifact_with_provenance <- function(object,
 #'   recorded `input_fingerprint` matches `fingerprint_object(expected_inputs)`.
 #' @param mode Reproducibility mode; governs reject behaviour (stop vs NULL).
 #' @return The deserialised object, or NULL when rejected in relaxed mode.
+#' @family repro provenance
+#' @concept core
 #' @export
 read_artifact_with_provenance <- function(artifact_path,
                                           expected_inputs = NULL,

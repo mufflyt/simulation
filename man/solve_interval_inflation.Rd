@@ -35,3 +35,12 @@ Searches a grid for the smallest inflation factor whose rolling-origin
 empirical coverage reaches \code{nominal_coverage}. When no factor in the grid
 reaches it, returns the best attainable and flags \code{reached_nominal = FALSE}.
 }
+\seealso{
+Other interval coverage: 
+\code{\link{assert_interval_coverage_publishable}()},
+\code{\link{fit_certification_baseline}()},
+\code{\link{forecast_certification}()},
+\code{\link{rolling_origin_coverage}()}
+}
+\concept{interval coverage}
+\concept{validation}

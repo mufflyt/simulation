@@ -32,3 +32,9 @@ Updated agents data frame.
 \description{
 Advance URPS Agent Population One Year
 }
+\seealso{
+Other fraher agent supply: 
+\code{\link{initialize_urps_agents}()}
+}
+\concept{fraher agent supply}
+\concept{supply}

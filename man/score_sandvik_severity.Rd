@@ -150,3 +150,5 @@ severity_provenance$amount_crosswalk_tier
 #> [1] "derived_by_analogy"
 
 }
+\concept{demand}
+\concept{severity sandvik}

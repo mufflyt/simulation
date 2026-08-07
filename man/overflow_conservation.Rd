@@ -19,6 +19,15 @@ and \code{system_resid} (scalars), and \code{conserved} (all within \code{tol}).
 Verifies the Phase-2 accounting from the returned columns alone: the
 per-catchment identity \code{demand = served_local + spilled_out + unmet}, the
 transfer balance \code{sum(spilled_out) = sum(spilled_in)}, and the system
-identity \code{sum(served) + sum(unmet) = sum(demand)}. Returns the residuals so
-a caller (or a test) can assert they are ~0 rather than trusting a boolean.
+identity \code{sum(served) + sum(unmet) = sum(demand)}. Returns the residuals so a
+caller (or a test) can assert they are ~0 rather than trusting a boolean.
 }
+\seealso{
+Other access clearing: 
+\code{\link{catchment_neighbors_from_coords}()},
+\code{\link{clear_access}()},
+\code{\link{clear_access_trajectory}()},
+\code{\link{overflow_access}()}
+}
+\concept{access clearing}
+\concept{geography}

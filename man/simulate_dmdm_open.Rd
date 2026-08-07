@@ -60,3 +60,10 @@ Deterministic cohort-component engine. Each agent-track carries a survival
 prevalence is recorded, then the marginal probabilities take a Markov step,
 weights decay by mortality, and everyone ages.
 }
+\seealso{
+Other dynamic open: 
+\code{\link{dmdm_open_prevalence_trajectory}()},
+\code{\link{dmdm_population_audit}()}
+}
+\concept{demand}
+\concept{dynamic open}

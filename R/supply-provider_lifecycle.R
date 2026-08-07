@@ -72,6 +72,8 @@ URPS_FTE_CLINICAL_HOURS_PER_WEEK <- 37.2
 #'
 #' @param hours Weekly clinical hours defining 1.0 FTE.
 #' @return List with the hours threshold and a human-readable label.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 fte_definition <- function(hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK) {
   list(hours_per_week = hours,
@@ -93,6 +95,8 @@ fte_definition <- function(hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK) {
 #' # package's clinical-hours definition. Comparing supply figures that use
 #' # different denominators is the error this exists to prevent.
 #' restate_fte(fte = 1, from_hours = 50)
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 restate_fte <- function(fte, from_hours, to_hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK) {
   assertthat::assert_that(is.numeric(from_hours), from_hours > 0,
@@ -145,6 +149,8 @@ RETIREMENT_HAZARD_ALLIED <- c(
 #' The default `retirement_schedule` for [simulate_provider_career_once()],
 #' [run_supply_microsimulation()] and five other exported functions. A user who
 #' cannot name it cannot state what baseline their scenario deviates from.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 RETIREMENT_HAZARD_BY_AGE <- RETIREMENT_HAZARD_PHYSICIAN
 
@@ -183,6 +189,8 @@ PROFESSIONAL_MORTALITY_MULTIPLIER <- c(male = 0.75, female = 0.85)
 #' @param terminal_age Age at which departure is certain.
 #' @param sex_multiplier Named multiplier on the retirement hazard by sex.
 #' @return Numeric hazard(s) in the unit interval.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 departure_hazard <- function(age,
                              sex = "female",
@@ -231,6 +239,8 @@ departure_hazard <- function(age,
 #'   negative = retire earlier.
 #' @param schedule Retirement hazard schedule to shift.
 #' @return A shifted named hazard vector.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 shift_retirement_schedule <- function(delta_years, schedule = RETIREMENT_HAZARD_BY_AGE) {
   assertthat::assert_that(is.numeric(delta_years), length(delta_years) == 1L)
@@ -269,6 +279,8 @@ shift_retirement_schedule <- function(delta_years, schedule = RETIREMENT_HAZARD_
 #' @return Named numeric vector of survival probabilities.
 #' @examples
 #' retirement_survival(from_age = 55, to_ages = c(65, 70))
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 retirement_survival <- function(from_age = 50, to_ages = c(60, 65, 70, 75, 80),
                                 sex = "male", ...) {
@@ -291,6 +303,8 @@ retirement_survival <- function(from_age = 50, to_ages = c(60, 65, 70, 75, 80),
 #' @param ages Numeric ages of the active cohort.
 #' @param ... Passed to [departure_hazard()].
 #' @return Numeric crude annual departure probability.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 implied_annual_departure_rate <- function(ages, ...) {
   if (length(ages) == 0) return(NA_real_)
@@ -309,6 +323,8 @@ implied_annual_departure_rate <- function(ages, ...) {
 #' @param schedule Retirement hazard schedule to rescale.
 #' @param career_change_hazard Career-change hazard (held fixed).
 #' @return A rescaled retirement schedule.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 calibrate_retirement_schedule <- function(ages, target_rate,
                                           schedule = RETIREMENT_HAZARD_BY_AGE,
@@ -389,6 +405,8 @@ REFERENCE_HOURS_CALIBRATION_STATUS <- "uncalibrated_illustrative"
 #' @param sex Character sex ("male"/"female").
 #' @param intercept Reference-group weekly hours.
 #' @return Numeric weekly patient-care hours.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 hwsm_reference_hours <- function(age, sex = "female", intercept = HWSM_HOURS_INTERCEPT) {
   pmax(intercept + .hwsm_hours_offset(age, sex), 0)
@@ -434,6 +452,8 @@ reference_hours_status <- function() REFERENCE_HOURS_CALIBRATION_STATUS
 #' @param df Spline degrees of freedom for age.
 #' @param extra_terms Character vector of additional right-hand-side terms.
 #' @return An `lm` object with class `urps_hours_model` prepended.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 fit_clinical_hours_model <- function(survey, df = 4L, extra_terms = character(0)) {
   assertthat::assert_that(is.data.frame(survey))
@@ -463,6 +483,8 @@ fit_clinical_hours_model <- function(survey, df = 4L, extra_terms = character(0)
 #' @param model Optional model from [fit_clinical_hours_model()].
 #' @param intercept Reference-group hours for the fallback specification.
 #' @return Numeric weekly clinical hours.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 predict_clinical_hours <- function(age, sex = "female", model = NULL,
                                    intercept = HWSM_HOURS_INTERCEPT) {
@@ -575,6 +597,8 @@ FUTUREDOCS_PARTICIPATION_SOURCE <- paste(
 #' @param sex Character sex.
 #' @param table Participation probability table.
 #' @return Numeric expected FTE (1.0 * p_full + 0.5 * p_part).
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 participation_fte <- function(age, sex = "female", table = FUTUREDOCS_PARTICIPATION) {
   age <- as.numeric(age)
@@ -601,6 +625,8 @@ participation_fte <- function(age, sex = "female", table = FUTUREDOCS_PARTICIPAT
 #' @return Numeric probability.
 #' @examples
 #' participation_p_no_patient_care(age = 62)
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 participation_p_no_patient_care <- function(age, sex = "female",
                                             table = FUTUREDOCS_PARTICIPATION) {
@@ -617,6 +643,8 @@ participation_p_no_patient_care <- function(age, sex = "female",
 #' Validate that categorical participation probabilities sum to 1
 #' @param table Participation probability table.
 #' @return (Invisibly) the table.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 validate_participation_table <- function(table = FUTUREDOCS_PARTICIPATION) {
   s <- table$p_full + table$p_part + table$p_none
@@ -648,6 +676,8 @@ validate_participation_table <- function(table = FUTUREDOCS_PARTICIPATION) {
 #' @param sex Sexes of the base-year cohort.
 #' @param fte_hours Weekly clinical hours defining 1.0 FTE.
 #' @return Numeric intercept for [hwsm_reference_hours()].
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 calibrate_hours_intercept <- function(age, sex = "female",
                                       fte_hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK) {
@@ -698,6 +728,8 @@ PROVIDER_ROSTER_OPTIONAL <- c(
 #' @param roster Data frame of provider records.
 #' @param require_coords Require `lat`/`lon` (needed for the access layer).
 #' @return (Invisibly) the roster, on success.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 validate_provider_roster <- function(roster, require_coords = FALSE) {
   assertthat::assert_that(is.data.frame(roster))
@@ -734,6 +766,8 @@ validate_provider_roster <- function(roster, require_coords = FALSE) {
 #' @param keep Strategy for choosing the surviving row per person: "first" or a
 #'   column name to order by descending (e.g. "last_confirmed_active_year").
 #' @return List with `roster` (de-duplicated) and `audit` (counts + inflation).
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 deduplicate_provider_roster <- function(roster, person_key = "provider_id",
                                         keep = "last_confirmed_active_year") {
@@ -769,6 +803,8 @@ deduplicate_provider_roster <- function(roster, person_key = "provider_id",
 #' @param drop_terminal Drop providers at or beyond `MICROSIM_TERMINAL_AGE`
 #'   (Zarek excludes licensees aged 75+ from the starting supply).
 #' @return Agent tibble compatible with [simulate_provider_career_once()].
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 agents_from_roster <- function(roster, baseline_year,
                                hours_model = NULL,
@@ -817,6 +853,8 @@ agents_from_roster <- function(roster, baseline_year,
 #' @param include_urology Include the ABU pathway alongside ABOG.
 #' @param measure Measure name passed through to `mufflyaccess::urps_count()`.
 #' @return List with `national`, `conus`, and contract provenance.
+#' @family provider lifecycle
+#' @concept supply
 #' @export
 urps_baseline_supply <- function(year = 2023L, include_urology = TRUE,
                                  measure = "board_certified_active") {

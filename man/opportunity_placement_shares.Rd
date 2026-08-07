@@ -20,3 +20,19 @@ ready to distribute entrants (step 5).
 \description{
 Opportunity-responsive placement shares (HWSM five-step algorithm)
 }
+\seealso{
+Other provider geography: 
+\code{\link{add_returning_providers}()},
+\code{\link{apply_provider_migration}()},
+\code{\link{apply_provider_migration_matrix}()},
+\code{\link{assign_entrant_geography}()},
+\code{\link{benchmark_density_shortfall}()},
+\code{\link{blend_placement_shares}()},
+\code{\link{historical_placement_shares}()},
+\code{\link{migration_hazard}()},
+\code{\link{migration_matrix_from_moves}()},
+\code{\link{supply_per_capita}()},
+\code{\link{validate_migration_matrix}()}
+}
+\concept{geography}
+\concept{provider geography}

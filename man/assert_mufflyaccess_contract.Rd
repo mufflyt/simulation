@@ -17,3 +17,11 @@ Checks CAPABILITY first and identity second. A build missing a required
 export fails regardless of what version it claims; a build whose commit
 differs from the pin warns, because it may be newer rather than broken.
 }
+\seealso{
+Other contract pin: 
+\code{\link{MUFFLYACCESS_PINNED_SHA}},
+\code{\link{MUFFLYACCESS_REQUIRED_EXPORTS}},
+\code{\link{mufflyaccess_build}()}
+}
+\concept{contract pin}
+\concept{core}

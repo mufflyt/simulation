@@ -51,4 +51,10 @@ demand-contract schema (the same columns as \code{\link[=export_dpmm_demand_cont
 emitting \code{tier5_care_seeking} and \code{tier6_procedural} indexed to the base year,
 plus a JSON provenance manifest.
 }
+\seealso{
+Other export demand contract: 
+\code{\link{export_dmdm_demand_contract}()}
+}
+\concept{export demand contract}
+\concept{reporting}
 \keyword{internal}

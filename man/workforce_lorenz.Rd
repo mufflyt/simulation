@@ -18,3 +18,12 @@ Lorenz-curve coordinates for a count vector
 \examples{
 workforce_lorenz(c(120, 80, 40, 10, 0, 0))
 }
+\seealso{
+Other workforce concentration: 
+\code{\link{provider_concentration}()},
+\code{\link{workforce_gini}()},
+\code{\link{workforce_hhi}()},
+\code{\link{workforce_top_k_share}()}
+}
+\concept{reporting}
+\concept{workforce concentration}

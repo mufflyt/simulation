@@ -58,6 +58,8 @@
 #'
 #' @param x Observed annual values.
 #' @return Numeric standard error of the mean.
+#' @family parameter uncertainty
+#' @concept calibration
 #' @export
 series_mean_se <- function(x) {
   x <- x[is.finite(x)]
@@ -96,6 +98,8 @@ series_mean_se <- function(x) {
 #' spec <- supply_parameter_spec(entrant_series = c(50, 57, 53, 59, 59),
 #'                               entrant_mean = 55)
 #' spec$quantified
+#' @family parameter uncertainty
+#' @concept calibration
 #' @export
 supply_parameter_spec <- function(entrant_series = NULL,
                                   entrant_mean = NULL,
@@ -187,6 +191,8 @@ print.urps_param_spec <- function(x, ...) {
 #'   element i being the cohort entering between `years[i]` and `years[i + 1]` --
 #'   which is one of the lengths [simulate_provider_career_once()] accepts.
 #' @return List with `entrants`, `retirement_schedule`, `hours_coef`.
+#' @family parameter uncertainty
+#' @concept calibration
 #' @export
 draw_supply_parameters <- function(spec, schedule = RETIREMENT_HAZARD_BY_AGE,
                                    years = NULL) {
@@ -270,6 +276,8 @@ draw_supply_parameters <- function(spec, schedule = RETIREMENT_HAZARD_BY_AGE,
 #' @param spec A [supply_parameter_spec()], or NULL.
 #' @param mode Reproducibility mode; strict errors.
 #' @return (Invisibly) TRUE when at least one parameter varies.
+#' @family parameter uncertainty
+#' @concept calibration
 #' @export
 assert_parameter_uncertainty <- function(spec, mode = resolve_reproducibility_mode()) {
   any_drawn <- inherits(spec, "urps_param_spec") && any(spec$quantified)
@@ -319,6 +327,8 @@ assert_parameter_uncertainty <- function(spec, mode = resolve_reproducibility_mo
 #' @param hazard_cv Coefficient of variation on the retirement hazard.
 #' @param hours_model Optional fitted hours model.
 #' @return A [supply_parameter_spec()].
+#' @family parameter uncertainty
+#' @concept calibration
 #' @export
 entrant_spec_from_series <- function(agents, from_year = 2018L,
                                      through_year = NULL,

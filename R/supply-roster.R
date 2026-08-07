@@ -50,6 +50,8 @@ URPS_FIRST_CERTIFICATION_YEAR <- 2013L
 #' @param geography "national" or "conus".
 #' @param board_pathway One of ABOG, ABU_NET_NEW, ABOG_PLUS_ABU.
 #' @return Tibble of `cert_year`, `n_certified`, `basis`.
+#' @family roster
+#' @concept supply
 #' @export
 urps_certification_cohorts <- function(geography = "national",
                                        board_pathway = "ABOG_PLUS_ABU") {
@@ -94,6 +96,8 @@ urps_certification_cohorts <- function(geography = "national",
 #' @param geography,board_pathway Contract dimensions.
 #' @return List with `mean_gross_entrants`, `window`, and the cohort table.
 #'   `mean_net_growth` is retained as a deprecated alias of the same value.
+#' @family roster
+#' @concept supply
 #' @export
 observed_entrant_rate <- function(from_year = 2018L,
                                   geography = "national",
@@ -146,6 +150,8 @@ observed_entrant_rate <- function(from_year = 2018L,
 #'   `NULL` (default) reads the flag from [observed_entrant_rate()].
 #' @param ... Passed to [observed_entrant_rate()].
 #' @return List with `gross_entrants`, `observed_flow`, `departures`, `assumed`.
+#' @family roster
+#' @concept supply
 #' @export
 implied_gross_entrants <- function(agents, from_year = 2018L, assumed = NA_real_,
                                    series_applies_attrition = NULL, ...) {
@@ -215,6 +221,8 @@ BACKLOG_COHORT_AGE_SD_AT_CERT <- 8
 #' @param female_share Share of the cohort drawn female.
 #' @param subspecialty Subspecialty label.
 #' @return Agent tibble compatible with [simulate_provider_career_once()].
+#' @family roster
+#' @concept supply
 #' @export
 agents_from_certification_cohorts <- function(baseline_year = 2023L,
                                               geography = "national",
@@ -262,6 +270,8 @@ agents_from_certification_cohorts <- function(baseline_year = 2023L,
 #'
 #' @param agents Agent tibble.
 #' @return Tibble summarising each cohort source.
+#' @family roster
+#' @concept supply
 #' @export
 cohort_composition <- function(agents) {
   if (!"cohort_source" %in% names(agents)) {
@@ -288,6 +298,8 @@ cohort_composition <- function(agents) {
 #'
 #' @param agents Agent tibble.
 #' @return List with `source`, `is_production`, and a note.
+#' @family roster
+#' @concept supply
 #' @export
 cohort_provenance <- function(agents) {
   # Check the roster marker FIRST: agents_from_roster() stamps origin_cohort but

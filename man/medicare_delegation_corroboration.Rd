@@ -25,3 +25,9 @@ Reads the realized-care artifacts and computes, for each URPS service, the
 share of billed services rendered by an APP. Compares with the shipped
 delegation matrix.
 }
+\seealso{
+Other delegation evidence: 
+\code{\link{delegation_capacity_sensitivity}()}
+}
+\concept{delegation evidence}
+\concept{supply}

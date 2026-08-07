@@ -30,3 +30,12 @@ Drop-in replacement for the flat \verb{condition x service x per_treated} join:
 takes the same treated-patient counts and returns the same
 \code{year}/\code{service}/\code{volume} shape \code{\link[=convert_workload_to_fte]{convert_workload_to_fte()}} expects.
 }
+\seealso{
+Other condition service pathway: 
+\code{\link{condition_pathway_status}()},
+\code{\link{condition_service_pathway}()},
+\code{\link{pathway_stage_entrants}()},
+\code{\link{validate_condition_pathway}()}
+}
+\concept{condition service pathway}
+\concept{demand}

@@ -36,3 +36,5 @@ replacing the previous coarse step function.  When a cliff DuckDB is
 available, a Gompertz model is fitted to observed departure events and
 returned at the \code{calibrated} tier.
 }
+\concept{retirement hazard}
+\concept{supply}

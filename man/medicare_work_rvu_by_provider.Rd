@@ -47,3 +47,13 @@ Use only after a roster establishes active URPS status. A zero-claim
 clinician is never considered non-URPS or inactive: payer mix, Medicare
 Advantage, and non-billing roles can all yield low FFS activity.
 }
+\seealso{
+Other medicare capacity: 
+\code{\link{aggregate_medicare_realized_care}()},
+\code{\link{compare_medicare_realized_care}()},
+\code{\link{medicare_workload_index}()},
+\code{\link{summarise_medicare_capacity}()},
+\code{\link{urps_medicare_service_crosswalk}()}
+}
+\concept{medicare capacity}
+\concept{supply}

@@ -18,3 +18,11 @@ The single instrument. \code{resolves} records which open calibration item each
 variable serves, so the questionnaire can be read as one document while each
 status function reports only what bears on it.
 }
+\seealso{
+Other practice survey: 
+\code{\link{fte_curve_status}()},
+\code{\link{geographic_access_status}()},
+\code{\link{unresolved_calibration_items}()}
+}
+\concept{data}
+\concept{practice survey}

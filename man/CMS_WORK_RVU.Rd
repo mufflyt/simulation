@@ -18,4 +18,10 @@ Work RVUs only (not practice-expense or malpractice RVUs), unmodified codes.
 \code{glob} is the global-period indicator: \code{090} means routine postoperative care
 is bundled into the procedure's work RVU and must NOT be counted again.
 }
+\seealso{
+Other cms rvu: 
+\code{\link{validate_cpt_basket}()}
+}
+\concept{cms rvu}
+\concept{data}
 \keyword{datasets}

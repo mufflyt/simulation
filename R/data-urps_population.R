@@ -38,6 +38,8 @@
 #' be joined without a wrong-grain error.
 #'
 #' @format Character vector of five band labels.
+#' @family urps population
+#' @concept data
 #' @export
 URPS_POP_AGE_BANDS <- c("18-34", "35-44", "45-64", "65-74", "75+")
 
@@ -104,6 +106,8 @@ URPS_POP_AGE_BANDS <- c("18-34", "35-44", "45-64", "65-74", "75+")
 #' Source: Richter 2007 AJOG; HCUP SASD specialty-access gap.
 #'
 #' @format Named numeric vector; 1.00 is the insured reference level.
+#' @family urps population
+#' @concept data
 #' @export
 CARE_SEEKING_BY_INSURANCE <- c(
   Insured   = 1.00,
@@ -117,6 +121,8 @@ CARE_SEEKING_BY_INSURANCE <- c(
 #' Source: MEPS 2020 specialty visit rate by income quartile.
 #'
 #' @format Named numeric vector; 1.00 is the highest-income reference level.
+#' @family urps population
+#' @concept data
 #' @export
 CARE_SEEKING_BY_INCOME <- c(
   LT25k     = 0.72,
@@ -246,6 +252,8 @@ load_meps_care_seeking_multipliers <- function(year    = 2022L,
 #' @return A tibble with columns: `seqno`, `state_fips`, `survey_wt`,
 #'   `age_group`, `race_eth`, `insurance`, `income_tier`, `metro`,
 #'   `bmi_class`, `smoker`, `n_children`, `ui_flag`, `pop_flag`, `fi_flag`.
+#' @family urps population
+#' @concept data
 #' @export
 load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
   if (is.null(brfss_rds)) {
@@ -397,6 +405,8 @@ load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
 #'   NULL, [load_brfss_women()] is called with default arguments.
 #' @param verbose Logical.
 #' @return A tibble with one row per stratum cell plus summary columns.
+#' @family urps population
+#' @concept data
 #' @export
 build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
   if (is.null(brfss_women)) brfss_women <- load_brfss_women(verbose = verbose)
@@ -501,6 +511,8 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
 #' @details The youngest NHANES stratum is 20--34 because the KIQ_U analysis
 #' starts at age 20. It is used for the BRFSS 18--34 stratum and that small
 #' coverage mismatch is recorded in the source label rather than hidden.
+#' @family urps population
+#' @concept data
 #' @export
 blend_nhanes_ui_prevalence <- function(cells, nhanes_age = NULL, verbose = TRUE) {
   if (is.null(nhanes_age)) {
@@ -564,6 +576,8 @@ blend_nhanes_ui_prevalence <- function(cells, nhanes_age = NULL, verbose = TRUE)
 #' @return A tibble with columns: `age_group`, `pop_women`, `n_pfd`,
 #'   `n_care_seeking`, `n_urgy_visits`, `demand_fte` (annualised FTE assuming
 #'   the workload constant from R/supply-workload_to_fte.R).
+#' @family urps population
+#' @concept data
 #' @export
 project_urps_demand <- function(cells,
                                 us_female_pop     = 138e6,
@@ -638,6 +652,8 @@ project_urps_demand <- function(cells,
 #' @param cells Cell table from [build_urps_population_cells()].
 #' @return Named numeric vector: `complete_cell_share` (weight fraction),
 #'   `n_complete_cells`, `n_total_cells`.
+#' @family urps population
+#' @concept data
 #' @export
 summarise_stratum_coverage <- function(cells) {
   strata_cols <- c("age_group", "race_eth", "insurance", "income_tier")
@@ -715,6 +731,8 @@ brfss_barrier_prevalence <- function(cells,
 #'   (unweighted sum of the three rates, capped at 1).
 #' @return Named numeric vector over `DEMAND_AGE_BANDS` (same structure as
 #'   `pfd_prevalence_by_band()`).
+#' @family urps population
+#' @concept data
 #' @export
 brfss_pfd_prevalence_for_demand_bands <- function(cells,
                                                    condition = c("ui", "pop", "fi",
@@ -856,6 +874,8 @@ load_mcbs_women65 <- function(mcbs_rds = NULL, verbose = TRUE) {
 #'   [load_mcbs_women65()] is called with default arguments.
 #' @param verbose Logical.
 #' @return The `cells` tibble with `ui_prevalence` recalibrated for 65+ rows.
+#' @family urps population
+#' @concept data
 #' @export
 blend_mcbs_prevalence <- function(cells, mcbs = NULL, verbose = TRUE) {
   if (is.null(mcbs)) mcbs <- load_mcbs_women65(verbose = verbose)
@@ -898,6 +918,8 @@ blend_mcbs_prevalence <- function(cells, mcbs = NULL, verbose = TRUE) {
 #'   NULL = default.
 #' @param verbose Logical.
 #' @return Calibrated population cell table.
+#' @family urps population
+#' @concept data
 #' @export
 build_calibrated_population_cells <- function(use_mcbs  = TRUE,
                                                use_nhanes = TRUE,

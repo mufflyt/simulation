@@ -30,3 +30,12 @@ in the anchor and the break-even is closed-form. This reports where the
 conclusion flips, which is the number a reader needs in order to judge how
 much the anchor's provenance matters.
 }
+\seealso{
+Other baseline gap reporting: 
+\code{\link{assert_external_anchor}()},
+\code{\link{baseline_gap_claim}()},
+\code{\link{baseline_gap_provenance}()},
+\code{\link{has_external_anchor}()}
+}
+\concept{baseline gap reporting}
+\concept{reporting}

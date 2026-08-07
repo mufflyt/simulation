@@ -90,6 +90,8 @@ ACGME_URPS_FELLOWS <- tibble::tribble(
 #' @param parent Optional filter, `"obgyn"` or `"urology"`.
 #' @return Tibble of `academic_year`, `entry_year`, `parent`, `active_total`,
 #'   `year_1`, `year_2`, `year_3`, `available_by_year`.
+#' @family acgme fellows
+#' @concept supply
 #' @export
 acgme_urps_fellows <- function(available_by = NULL, parent = NULL) {
   x <- ACGME_URPS_FELLOWS
@@ -115,6 +117,8 @@ acgme_urps_fellows <- function(available_by = NULL, parent = NULL) {
 #'
 #' @param available_by Passed to [acgme_urps_fellows()].
 #' @return Tibble of `entry_year`, `entering_cohort`, `n_pathways`.
+#' @family acgme fellows
+#' @concept supply
 #' @export
 acgme_entering_cohort <- function(available_by = NULL) {
   x <- acgme_urps_fellows(available_by)
@@ -142,6 +146,8 @@ acgme_entering_cohort <- function(available_by = NULL) {
 #' @param source `"acgme"` or `"nrmp"`.
 #' @param available_by Publication-year cutoff, applied to whichever source.
 #' @return Tibble of `entry_year`, `entrants`, `source`.
+#' @family acgme fellows
+#' @concept supply
 #' @export
 entrant_source_series <- function(source = c("acgme", "nrmp"),
                                   available_by = NULL) {
@@ -178,6 +184,8 @@ entrant_source_series <- function(source = c("acgme", "nrmp"),
 #' @param pooled Sum both sides before dividing.
 #' @return List with `ratio`, `source`, `years`, `n_years`, `excluded`,
 #'   `cert_lag`, `pooled`, and `annual`.
+#' @family acgme fellows
+#' @concept supply
 #' @export
 entrant_to_cert_ratio <- function(source = c("acgme", "nrmp"),
                                   through_year = NULL,

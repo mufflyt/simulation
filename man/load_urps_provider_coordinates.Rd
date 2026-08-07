@@ -18,3 +18,9 @@ Tibble with \code{npi}, \code{lat}, \code{lon}, and provenance columns.
 Physician names are excluded, as in \code{\link[=load_urps_roster]{load_urps_roster()}}: the access
 calculation needs a point and an identifier, never a name.
 }
+\seealso{
+Other provider coordinates: 
+\code{\link{provider_coordinate_coverage}()}
+}
+\concept{geography}
+\concept{provider coordinates}

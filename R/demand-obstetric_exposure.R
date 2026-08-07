@@ -63,6 +63,8 @@ OBSTETRIC_POP_OR_PER_VAGINAL_DELIVERY <- 1.20
 #' US total-cesarean rate, interpolated across cited anchor years
 #' @param years Integer calendar years.
 #' @return Numeric cesarean fraction per year (clamped at the anchor range ends).
+#' @family obstetric exposure
+#' @concept demand
 #' @export
 cesarean_rate_for_year <- function(years) {
   ces <- .obstetric_extdata("us_cesarean_rate_by_year.csv")
@@ -83,6 +85,8 @@ cesarean_rate_for_year <- function(years) {
 #'   the interpolation can be tested against a known series, and so a caller can
 #'   substitute a revised one without editing the package.
 #' @return Numeric mean completed parity (clamped outside the anchor range).
+#' @family obstetric exposure
+#' @concept demand
 #' @export
 completed_parity_for_cohort <- function(cohorts, par = NULL) {
   if (is.null(par)) par <- .obstetric_extdata("us_completed_parity_by_cohort.csv")
@@ -100,6 +104,8 @@ completed_parity_for_cohort <- function(cohorts, par = NULL) {
 #' @param cohorts Integer birth cohorts.
 #' @return Tibble: `birth_cohort`, `mean_total_parity`, `cohort_cesarean_fraction`,
 #'   `mean_vaginal_deliveries`, `mean_cesarean_deliveries`.
+#' @family obstetric exposure
+#' @concept demand
 #' @export
 cohort_vaginal_exposure <- function(cohorts) {
   cohorts <- as.integer(cohorts)
@@ -138,6 +144,8 @@ cohort_vaginal_exposure <- function(cohorts) {
 #' @param ref_year,ref_band Reference cohort. Default base year x "65-79".
 #' @return Long tibble: `year`, `age_band`, `mean_vaginal_deliveries`,
 #'   `exposure_multiplier`.
+#' @family obstetric exposure
+#' @concept demand
 #' @export
 obstetric_exposure_multiplier <- function(years, bands = DEMAND_AGE_BANDS,
                                           or_per_vaginal_delivery =
@@ -167,6 +175,8 @@ obstetric_exposure_multiplier <- function(years, bands = DEMAND_AGE_BANDS,
 #' @param or_per_vaginal_delivery Dose-response OR for the D4 exposure weight.
 #' @param ... Passed to [compute_demand_denominators()].
 #' @return Long tibble `year`, `estimand` (D1-D4), `label`, `demand_cases`.
+#' @family obstetric exposure
+#' @concept demand
 #' @export
 compute_demand_denominators_lifecourse <- function(pop_by_band,
                                                    pfd_prevalence = pfd_prevalence_by_band(),

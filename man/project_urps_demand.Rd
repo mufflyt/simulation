@@ -48,3 +48,18 @@ multipliers (\code{CARE_SEEKING_BY_INSURANCE}, \code{CARE_SEEKING_BY_INCOME}) ar
 per cell before aggregation, so the scenario lift is anchored to the actual
 uninsured/low-income share in the demand cells rather than a population scalar.
 }
+\seealso{
+Other urps population: 
+\code{\link{CARE_SEEKING_BY_INCOME}},
+\code{\link{CARE_SEEKING_BY_INSURANCE}},
+\code{\link{URPS_POP_AGE_BANDS}},
+\code{\link{blend_mcbs_prevalence}()},
+\code{\link{blend_nhanes_ui_prevalence}()},
+\code{\link{brfss_pfd_prevalence_for_demand_bands}()},
+\code{\link{build_calibrated_population_cells}()},
+\code{\link{build_urps_population_cells}()},
+\code{\link{load_brfss_women}()},
+\code{\link{summarise_stratum_coverage}()}
+}
+\concept{data}
+\concept{urps population}

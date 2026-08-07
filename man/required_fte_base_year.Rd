@@ -18,3 +18,18 @@ Numeric required FTE.
 required = supply / adequacy. With adequacy 0.948 (Zarek) this is the same as
 \code{supply / (1 - 0.052)}.
 }
+\seealso{
+Other baseline gap: 
+\code{\link{assert_access_not_double_counted}()},
+\code{\link{assert_baseline_gap_estimated}()},
+\code{\link{assumed_baseline_gap}()},
+\code{\link{baseline_gap}()},
+\code{\link{capacity_category_adequacy}()},
+\code{\link{capacity_survey_adequacy}()},
+\code{\link{capacity_survey_shortfall_bottom_up}()},
+\code{\link{external_anchor_gap}()},
+\code{\link{hpsa_removal_shortfall}()},
+\code{\link{published_baseline_gaps}()}
+}
+\concept{baseline gap}
+\concept{reporting}

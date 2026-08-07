@@ -23,6 +23,8 @@
 #' @details Use only after a roster establishes active URPS status. A zero-claim
 #' clinician is never considered non-URPS or inactive: payer mix, Medicare
 #' Advantage, and non-billing roles can all yield low FFS activity.
+#' @family medicare capacity
+#' @concept supply
 #' @export
 medicare_work_rvu_by_provider <- function(claims, roster, provider_id = "npi",
                                           services = "services", hcpcs = "hcpcs",
@@ -85,6 +87,8 @@ medicare_work_rvu_by_provider <- function(claims, roster, provider_id = "npi",
 #'   the reference mean and estimand.
 #' @details The included clinicians have a weighted mean index of one. The index
 #' is relative Medicare-workload-indexed capacity, not clinical-hours FTE.
+#' @family medicare capacity
+#' @concept supply
 #' @export
 medicare_workload_index <- function(provider_workload, direct_care_hours = 2063,
                                     reference_weight = NULL) {
@@ -118,6 +122,8 @@ medicare_workload_index <- function(provider_workload, direct_care_hours = 2063,
 #' @param workload_index Output of [medicare_workload_index()].
 #' @param by Grouping variables, e.g. age band, sex, and practice setting.
 #' @return Roster count, reference-eligible count, and relative capacity total.
+#' @family medicare capacity
+#' @concept supply
 #' @export
 summarise_medicare_capacity <- function(workload_index, by = character()) {
   needed <- c("medicare_workload_index", "included_in_reference", by)
@@ -138,6 +144,8 @@ summarise_medicare_capacity <- function(workload_index, by = character()) {
 #'   diagnosis or a patient-level link: a 99213 line is not identifiable as a
 #'   pelvic-floor visit without a roster- or diagnosis-linked claims source.
 #' @return A unique `hcpcs` to `service` crosswalk.
+#' @family medicare capacity
+#' @concept supply
 #' @export
 urps_medicare_service_crosswalk <- function(basket = URPS_CPT_BASKET,
                                             include_non_specific = FALSE) {
@@ -169,6 +177,8 @@ urps_medicare_service_crosswalk <- function(basket = URPS_CPT_BASKET,
 #' @return Tibble of annual service totals with explicit `estimand` and
 #'   `payer_scope` labels. The `unmapped_service_fraction` attribute records
 #'   claims excluded because their HCPCS code is outside the study basket.
+#' @family medicare capacity
+#' @concept supply
 #' @export
 aggregate_medicare_realized_care <- function(
     claims,
@@ -226,6 +236,8 @@ aggregate_medicare_realized_care <- function(
 #'   for a trajectory comparison.
 #' @return Joined totals, calibration ratio, and residual. This ratio calibrates
 #'   *realized Medicare care* only; it must not be applied to latent demand.
+#' @family medicare capacity
+#' @concept supply
 #' @export
 compare_medicare_realized_care <- function(predicted, observed, by = c("service")) {
   needed_pred <- c(by, "predicted_services")

@@ -62,6 +62,8 @@
 #'
 #' @return A tibble with `stage`, `condition`, `param`, `variant`, `value`,
 #'   `ci_low`, `ci_high`, `calibration_tier`, `source`, `notes`.
+#' @family transition registry
+#' @concept demand
 #' @export
 demand_transition_registry <- function() {
   # -- Disease-state log-odds (placeholder set). Compact wide block mirrors the
@@ -197,6 +199,8 @@ demand_transition_registry <- function() {
 #'   are derived from it via [score_sandvik_severity()] instead of the placeholder.
 #' @return A list with `status`, `levels`, and per-condition named vectors
 #'   `shares` and `seek_multiplier` (one entry per severity level).
+#' @family transition registry
+#' @concept demand
 #' @export
 lifecourse_severity_params <- function(swan_panel = NULL) {
   reg <- demand_transition_registry()
@@ -233,6 +237,8 @@ lifecourse_severity_params <- function(swan_panel = NULL) {
 #' gate treatment on medical eligibility.
 #'
 #' @return A list with `status` and a per-condition named vector `p_eligible`.
+#' @family transition registry
+#' @concept demand
 #' @export
 lifecourse_eligibility_params <- function() {
   reg <- demand_transition_registry()
@@ -303,6 +309,8 @@ lifecourse_eligibility_params <- function() {
 #' @param allow_analogy Permit `derived_by_analogy` coefficients.
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
 #' @return (Invisibly) `TRUE` when publishable, `FALSE` otherwise.
+#' @family transition registry
+#' @concept demand
 #' @export
 assert_publishable_demand_coefficients <- function(variant = c("default", "cited"),
                                            allow_analogy = FALSE,

@@ -23,3 +23,11 @@ Tibble of mismatches (empty when the order is correct).
 \description{
 Check that the load order delivers the declared canonical implementations
 }
+\seealso{
+Other legacy loader: 
+\code{\link{LEGACY_CANONICAL}},
+\code{\link{legacy_collisions}()},
+\code{\link{load_legacy}()}
+}
+\concept{core}
+\concept{legacy loader}

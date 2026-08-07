@@ -35,4 +35,10 @@ against -- register a new protocol version instead.
 }
 \seealso{
 \code{\link[=assert_spec_matches_prereg]{assert_spec_matches_prereg()}}, \code{\link[=rolling_origin_evaluation]{rolling_origin_evaluation()}}
+
+Other preregistration: 
+\code{\link{assert_spec_matches_prereg}()},
+\code{\link{rolling_origin_evaluation}()}
 }
+\concept{preregistration}
+\concept{validation}

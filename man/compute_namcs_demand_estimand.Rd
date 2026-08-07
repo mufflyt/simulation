@@ -38,3 +38,14 @@ The D5 estimand is a bottom-up visit demand approach anchored to the
 nationally representative NAMCS 2019 visit survey; it complements the
 top-down prevalence-based D1-D4 estimands in the pipeline.
 }
+\seealso{
+Other namcs visit equations: 
+\code{\link{brfss_population_by_stratum}()},
+\code{\link{compute_urps_visit_rates}()},
+\code{\link{fit_urps_visit_rate_model}()},
+\code{\link{flag_urps_visits}()},
+\code{\link{load_namcs_2019}()},
+\code{\link{namcs_urps_stratum_visits}()}
+}
+\concept{demand}
+\concept{namcs visit equations}

@@ -16,6 +16,8 @@
 #'
 #' @return A list with `coef_sd` (SD on each risk log-odds coefficient) and
 #'   `logit_sd` (SD on the logit of each care-pathway probability).
+#' @family lifecourse uncertainty
+#' @concept demand
 #' @export
 lifecourse_param_uncertainty <- function() {
   list(status = "placeholder_uncalibrated", coef_sd = 0.10, logit_sd = 0.15)
@@ -53,6 +55,8 @@ lifecourse_param_uncertainty <- function() {
 #' @param risk_params,pathway_params Point-estimate parameter tables to perturb.
 #' @return Tibble `year`, and for care-seeking and service units the median plus
 #'   `_lo`/`_hi` columns.
+#' @family lifecourse uncertainty
+#' @concept demand
 #' @export
 lifecourse_demand_trajectory_ci <- function(pop_by_age_year,
                                             years = sort(unique(pop_by_age_year$year)),
@@ -111,6 +115,8 @@ lifecourse_demand_trajectory_ci <- function(pop_by_age_year,
 #' @param draws The per-draw tibble the summary was built from.
 #' @param tol Minimum width, relative to the point estimate, to accept.
 #' @return (Invisibly) TRUE when every interval is non-degenerate.
+#' @family lifecourse uncertainty
+#' @concept demand
 #' @export
 assert_interval_nondegenerate <- function(out, draws, tol = 1e-9) {
   bases <- sub("_lo$", "", grep("_lo$", names(out), value = TRUE))

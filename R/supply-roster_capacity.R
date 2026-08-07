@@ -36,6 +36,8 @@
 #' @param path CSV path.
 #' @param in_baseline_only Keep only providers in the model baseline cohort.
 #' @return Tibble of roster records.
+#' @family roster capacity
+#' @concept supply
 #' @export
 load_urps_roster <- function(path = "data-raw/urps_roster/urps_roster_2026-07-22.csv",
                              in_baseline_only = TRUE) {
@@ -63,6 +65,8 @@ load_urps_roster <- function(path = "data-raw/urps_roster/urps_roster_2026-07-22
 #'   than silently defaulted: a missing sex yields NA clinical FTE, which
 #'   propagates into an unreadable engine error.
 #' @return Tibble in the [validate_provider_roster()] contract.
+#' @family roster capacity
+#' @concept supply
 #' @export
 urps_provider_roster <- function(roster = load_urps_roster(), unknown_sex = "female") {
   sex <- ifelse(roster$gender == "F", "female",
@@ -103,6 +107,8 @@ MEDICARE_SUPPRESSION_THRESHOLD <- 11L
 #' @param roster Tibble from [load_urps_roster()].
 #' @param volume_col Workload column.
 #' @return List of distribution statistics, carrying a `caveats` attribute.
+#' @family roster capacity
+#' @concept supply
 #' @export
 roster_workload_concentration <- function(roster = load_urps_roster(),
                                           volume_col = "urogyn_services_2024") {
@@ -160,6 +166,8 @@ print.default_roster_concentration <- function(x, ...) invisible(x)
 #' questionnaire's worth of questions is how neither gets fielded.
 #'
 #' @return Tibble of the instrument's capacity-anchor items.
+#' @family roster capacity
+#' @concept supply
 #' @export
 urps_capacity_survey_requirements <- function() {
   urps_practice_survey_requirements("capacity_anchor")
@@ -173,6 +181,8 @@ urps_capacity_survey_requirements <- function() {
 #' # the stand-in is a published physical-therapy distribution, and the field
 #' # naming that is part of the result rather than a footnote elsewhere.
 #' capacity_status()
+#' @family roster capacity
+#' @concept supply
 #' @export
 capacity_status <- function() {
   list(

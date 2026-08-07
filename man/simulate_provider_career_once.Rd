@@ -92,3 +92,17 @@ Each year: draw Bernoulli retirement per active agent using the age-band
 hazard, age everyone by one year, then inject \code{entrants_per_year} new agents
 at the entry age. Records active headcount, effective FTE, and mean age.
 }
+\seealso{
+Other provider microsimulation: 
+\code{\link{build_hazard_table}()},
+\code{\link{classify_workforce_outlook}()},
+\code{\link{initialize_provider_agents}()},
+\code{\link{microsim_age_band_of}()},
+\code{\link{project_supply_deterministic}()},
+\code{\link{provider_active_in_year}()},
+\code{\link{provider_clinical_fte}()},
+\code{\link{retirement_hazard}()},
+\code{\link{run_supply_microsimulation}()}
+}
+\concept{provider microsimulation}
+\concept{supply}

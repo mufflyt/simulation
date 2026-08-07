@@ -21,3 +21,11 @@ are never locally extended. When the contract is absent this falls back to
 extensions live. Pass \code{prefer_ssot = FALSE} to force the local fallback (and
 reach those extensions) even when mufflyaccess is present.
 }
+\seealso{
+Other scenario registry: 
+\code{\link{demand_scenario_registry}()},
+\code{\link{local_supply_scenario_registry}()},
+\code{\link{validate_scenario_registry}()}
+}
+\concept{reporting}
+\concept{scenario registry}

@@ -26,3 +26,10 @@ List: \code{hazards} (tibble with \code{unpooled}, \code{pooled}, \code{partial}
 \description{
 Fit unpooled / pooled / partial-pooled age-band departure hazards
 }
+\seealso{
+Other partial pooling hazard: 
+\code{\link{hazard_pooled_long}()},
+\code{\link{hazard_shrinkage_summary}()}
+}
+\concept{partial pooling hazard}
+\concept{supply}

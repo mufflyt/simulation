@@ -20,3 +20,12 @@ List of distribution statistics, carrying a \code{caveats} attribute.
 \description{
 Concentration of URPS workload across the certified roster
 }
+\seealso{
+Other roster capacity: 
+\code{\link{capacity_status}()},
+\code{\link{load_urps_roster}()},
+\code{\link{urps_capacity_survey_requirements}()},
+\code{\link{urps_provider_roster}()}
+}
+\concept{roster capacity}
+\concept{supply}

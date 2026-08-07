@@ -129,6 +129,8 @@ URPS_P_ACTIVE_COEF <- list(
 #'   Returns 0 for ages ≥ `MICROSIM_TERMINAL_AGE` and for ages < 18.
 #' @seealso [departure_hazard()], [shift_retirement_schedule()],
 #'   [participation_fte()], [URPS_P_ACTIVE_COEF], [fit_p_active_model()]
+#' @family urps flows
+#' @concept supply
 #' @export
 #'
 #' @examples
@@ -323,6 +325,8 @@ fit_p_active_model <- function(data, weights = NULL) {
 #' @return A tibble with columns `age`, `sex`, `years_certified`, `p_active`.
 #' @examples
 #' p_active_by_age(ages = 40:45)
+#' @family urps flows
+#' @concept supply
 #' @export
 p_active_by_age <- function(ages              = 30:85,
                              years_certified_fn = function(a) pmax(a - 33, 0),

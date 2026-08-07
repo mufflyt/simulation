@@ -47,6 +47,8 @@ CMS_RVU_URL <- "https://www.cms.gov/files/zip/rvu25a.zip"
 #'
 #' @format A tibble with `hcpcs`, `description`, `work_rvu`, `glob`.
 #' @source `r CMS_RVU_RELEASE`
+#' @family cms rvu
+#' @concept data
 #' @export
 CMS_WORK_RVU <- tibble::tribble(
   ~hcpcs,   ~description,                        ~work_rvu, ~glob,
@@ -146,6 +148,8 @@ URPS_SERVICE_SETTING <- c(
 #' @param basket Service-to-CPT basket.
 #' @param tol Tolerance on the per-service sums.
 #' @return (Invisibly) the basket.
+#' @family cms rvu
+#' @concept data
 #' @export
 validate_cpt_basket <- function(basket = URPS_CPT_BASKET, tol = 1e-8) {
   s <- stats::aggregate(basket$mix, by = list(service = basket$service), FUN = sum)

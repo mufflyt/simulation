@@ -12,3 +12,13 @@ Tibble of \code{quantity}, \code{owner}, \code{note}.
 \description{
 Which model quantities are owned by the SSOT, and which are local
 }
+\seealso{
+Other ssot: 
+\code{\link{as_urps_projection}()},
+\code{\link{assert_scenarios_registered}()},
+\code{\link{ssot_rurality}()},
+\code{\link{ssot_safe_divide}()},
+\code{\link{ssot_safe_percent}()}
+}
+\concept{core}
+\concept{ssot}

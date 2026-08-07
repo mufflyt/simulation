@@ -32,6 +32,8 @@
 #'   `avag` the primary cumulative-vaginal-delivery term), `remission` (per-
 #'   condition annual probabilities) and `mortality` (log-odds intercept/slope in
 #'   age).
+#' @family dynamic multistate
+#' @concept demand
 #' @export
 dmdm_default_transitions <- function() {
   mk <- function(a0, avag, aage, absl, abmi, ahyst, ameno, acom)
@@ -73,6 +75,8 @@ dmdm_default_transitions <- function() {
 #' @param what Label naming the caller, used in the message.
 #' @param mode Reproducibility mode; strict errors.
 #' @return (Invisibly) TRUE when the transitions are fit to report.
+#' @family dynamic multistate
+#' @concept demand
 #' @export
 assert_calibrated_transitions <- function(transitions,
                                           allow_uncalibrated = FALSE,
@@ -129,6 +133,8 @@ assert_calibrated_transitions <- function(transitions,
 #' @return A data frame, one row per year: `year`, `living`, `deaths`,
 #'   `prev_ui`/`prev_pop`/`prev_ai` (prevalence among the living at the start of
 #'   the year) and `inc_ui`/`inc_pop`/`inc_ai` (new onsets during the year).
+#' @family dynamic multistate
+#' @concept demand
 #' @export
 simulate_dmdm <- function(cohort0, start_year, end_year,
                           transitions = dmdm_default_transitions(), seed = NULL,
@@ -242,6 +248,8 @@ dmdm_initial_cohort <- function(pop_by_age, year, n = 1e5, cesarean_rate = 0.32,
 #' @param allow_uncalibrated Declare an exploratory run; passed through to
 #'   [simulate_dmdm()].
 #' @return The per-year data frame from [simulate_dmdm()].
+#' @family dynamic multistate
+#' @concept demand
 #' @export
 dmdm_prevalence_trajectory <- function(pop_by_age, start_year, end_year, n = 1e5,
                                        cesarean_rate = 0.32, seed = NULL,

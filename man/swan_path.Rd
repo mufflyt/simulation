@@ -18,3 +18,11 @@ Resolved path.
 The legacy scripts referenced the SWAN directory eleven different ways. This
 is the single entry point.
 }
+\seealso{
+Other paths: 
+\code{\link{check_external_data}()},
+\code{\link{data_raw_path}()},
+\code{\link{external_path}()}
+}
+\concept{core}
+\concept{paths}

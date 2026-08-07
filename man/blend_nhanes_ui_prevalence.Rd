@@ -29,3 +29,18 @@ The youngest NHANES stratum is 20--34 because the KIQ_U analysis
 starts at age 20. It is used for the BRFSS 18--34 stratum and that small
 coverage mismatch is recorded in the source label rather than hidden.
 }
+\seealso{
+Other urps population: 
+\code{\link{CARE_SEEKING_BY_INCOME}},
+\code{\link{CARE_SEEKING_BY_INSURANCE}},
+\code{\link{URPS_POP_AGE_BANDS}},
+\code{\link{blend_mcbs_prevalence}()},
+\code{\link{brfss_pfd_prevalence_for_demand_bands}()},
+\code{\link{build_calibrated_population_cells}()},
+\code{\link{build_urps_population_cells}()},
+\code{\link{load_brfss_women}()},
+\code{\link{project_urps_demand}()},
+\code{\link{summarise_stratum_coverage}()}
+}
+\concept{data}
+\concept{urps population}

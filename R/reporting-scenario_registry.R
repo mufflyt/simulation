@@ -53,6 +53,8 @@ ACCESS_COMPONENTS <- c("uninsured", "nonmetro", "racial_equity", "income")
 #' @param baseline_entrants Baseline annual entrants to practice.
 #' @param prefer_ssot Use `mufflyaccess::urps_scenarios()` when available.
 #' @return Named list of supply scenario definitions.
+#' @family scenario registry
+#' @concept reporting
 #' @export
 supply_scenario_registry <- function(baseline_entrants = 55, prefer_ssot = TRUE) {
   if (isTRUE(prefer_ssot) && has_mufflyaccess()) {
@@ -70,6 +72,8 @@ supply_scenario_registry <- function(baseline_entrants = 55, prefer_ssot = TRUE)
 #' Local fallback scenario definitions
 #' @param baseline_entrants Baseline annual entrants.
 #' @return Named list of scenario definitions.
+#' @family scenario registry
+#' @concept reporting
 #' @export
 local_supply_scenario_registry <- function(baseline_entrants = 55) {
   list(
@@ -195,6 +199,8 @@ local_supply_scenario_registry <- function(baseline_entrants = 55) {
 #' double-count guard can compare them against the base-year gap.
 #'
 #' @return Named list of demand scenario definitions.
+#' @family scenario registry
+#' @concept reporting
 #' @export
 demand_scenario_registry <- function() {
   list(
@@ -263,6 +269,8 @@ DEMAND_SCENARIO_REQUIRED <- c("label", "access_components", "source")
 #' @param registry Named list of scenario definitions.
 #' @param kind "supply" or "demand".
 #' @return (Invisibly) the registry.
+#' @family scenario registry
+#' @concept reporting
 #' @export
 validate_scenario_registry <- function(registry, kind = c("supply", "demand")) {
   kind <- match.arg(kind)

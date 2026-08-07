@@ -14,4 +14,12 @@ LEGACY_CANONICAL
 Every entry is the file whose implementation should survive. The loader
 asserts that the load order actually delivers it.
 }
+\seealso{
+Other legacy loader: 
+\code{\link{check_legacy_canonical}()},
+\code{\link{legacy_collisions}()},
+\code{\link{load_legacy}()}
+}
+\concept{core}
+\concept{legacy loader}
 \keyword{datasets}

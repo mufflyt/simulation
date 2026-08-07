@@ -41,3 +41,11 @@ annual ratios is dominated by whichever side of the break the window lands on.
 It is why this estimator is stable where the NRMP-based one drifted from 0.755
 to 1.197 across successive windows.
 }
+\seealso{
+Other acgme fellows: 
+\code{\link{acgme_entering_cohort}()},
+\code{\link{acgme_urps_fellows}()},
+\code{\link{entrant_source_series}()}
+}
+\concept{acgme fellows}
+\concept{supply}

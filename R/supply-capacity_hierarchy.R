@@ -42,6 +42,8 @@
 #' @param group Optional scalar label stamped on every row for easy binding.
 #' @return A 4-row tibble: `group`, `tier` (1-4), `label`, `value`, `unit`,
 #'   `provider_equivalent`, `retained_vs_headcount`.
+#' @family capacity hierarchy
+#' @concept supply
 #' @export
 supply_capacity_hierarchy <- function(headcount, clinical_fte,
                                       wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]],

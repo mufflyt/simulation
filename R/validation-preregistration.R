@@ -80,6 +80,8 @@
 #' @param force Overwrite a differing prior registration. Default `FALSE`.
 #' @return (invisibly) the record list, including `spec_hash`.
 #' @seealso [assert_spec_matches_prereg()], [rolling_origin_evaluation()]
+#' @family preregistration
+#' @concept validation
 #' @export
 preregister_spec <- function(spec, path, frozen_at, notes = "", force = FALSE) {
   stopifnot(is.list(spec), is.character(path), length(path) == 1L)
@@ -117,6 +119,8 @@ preregister_spec <- function(spec, path, frozen_at, notes = "", force = FALSE) {
 #' @param prereg A preregistration record list (from [preregister_spec()]) or a
 #'   path to one.
 #' @return (invisibly) `TRUE` on a match.
+#' @family preregistration
+#' @concept validation
 #' @export
 assert_spec_matches_prereg <- function(spec, prereg) {
   pr <- .as_prereg(prereg)
@@ -154,6 +158,8 @@ assert_spec_matches_prereg <- function(spec, prereg) {
 #'   `signed_error`, `abs_pct_error`) and `summary` (`n`, `mape`, `rmse`,
 #'   `horizon`, `all_targets_future`, `preregistered`, `spec_hash`).
 #' @seealso [preregister_spec()], [assert_spec_matches_prereg()]
+#' @family preregistration
+#' @concept validation
 #' @export
 rolling_origin_evaluation <- function(data, time_col, target_col, origins,
                                       horizon = 1L, fit_predict,

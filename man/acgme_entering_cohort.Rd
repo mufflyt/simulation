@@ -17,3 +17,11 @@ The year-1 count, which is a FLOW and the quantity a forward projection needs.
 Both parent specialties are summed, because the certification series this is
 calibrated against (ABOG plus ABU) also spans both.
 }
+\seealso{
+Other acgme fellows: 
+\code{\link{acgme_urps_fellows}()},
+\code{\link{entrant_source_series}()},
+\code{\link{entrant_to_cert_ratio}()}
+}
+\concept{acgme fellows}
+\concept{supply}

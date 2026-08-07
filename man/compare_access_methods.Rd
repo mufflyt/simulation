@@ -26,3 +26,27 @@ national mean access. Enforces the twostep numerical contract that the M2SFCA
 mean cannot exceed the E2SFCA mean (the maldistribution penalty only removes
 access), so a violation signals a weighting bug rather than a finding.
 }
+\seealso{
+Other spatial access e2sfca: 
+\code{\link{access_moe_ci}()},
+\code{\link{access_weight_sensitivity}()},
+\code{\link{annual_trend}()},
+\code{\link{assign_access_category}()},
+\code{\link{compute_access}()},
+\code{\link{compute_access_preset}()},
+\code{\link{compute_e2sfca_access}()},
+\code{\link{conus_ok}()},
+\code{\link{e2sfca_bands}()},
+\code{\link{e2sfca_incremental_weights}()},
+\code{\link{e2sfca_weight_presets}()},
+\code{\link{gaussian_band_weights}()},
+\code{\link{haversine_km}()},
+\code{\link{match_points_to_isochrones}()},
+\code{\link{spatial_access_ratio}()},
+\code{\link{summarize_access}()},
+\code{\link{weighted_mean_all}()},
+\code{\link{wilson_ci}()},
+\code{\link{zero_access_share}()}
+}
+\concept{geography}
+\concept{spatial access e2sfca}

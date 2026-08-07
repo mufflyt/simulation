@@ -49,6 +49,8 @@
 #' @return A tibble: the input columns, plus `utilization`, `served`,
 #'   `unmet_demand`, `wait_time`, `wait_censored`, `p_appointment`,
 #'   `panel_size`, `median_travel_time`, `calibration_status`.
+#' @family access clearing
+#' @concept geography
 #' @export
 clear_access <- function(catchments,
                          appointment_window = 30,
@@ -163,6 +165,8 @@ clear_access <- function(catchments,
 #'   `backlog_in` (demand carried in from the prior year) and
 #'   `demand_workload_base` (this year's demand before any backlog). With
 #'   `neighbors`, also the [overflow_access()] accounting columns.
+#' @family access clearing
+#' @concept geography
 #' @export
 clear_access_trajectory <- function(panel,
                                     carry_backlog = FALSE,
@@ -275,6 +279,8 @@ clear_access_trajectory <- function(panel,
 #'   (mean total travel borne by demand spilled out of the catchment; `NA` where
 #'   none spilled). System-level overflow totals are attached as
 #'   `attr(x, "overflow")`.
+#' @family access clearing
+#' @concept geography
 #' @export
 overflow_access <- function(catchments, neighbors,
                             max_travel_penalty = Inf,
@@ -393,6 +399,8 @@ overflow_access <- function(catchments, neighbors,
 #' @param tol Absolute tolerance for the "conserved" flags. Default 1e-8.
 #' @return A list: `per_catchment_resid` (numeric, one per row), `transfer_resid`
 #'   and `system_resid` (scalars), and `conserved` (all within `tol`).
+#' @family access clearing
+#' @concept geography
 #' @export
 overflow_conservation <- function(x, tol = 1e-8) {
   need <- c("demand_workload_pre_overflow", "served_local", "spilled_out",
@@ -429,6 +437,8 @@ overflow_conservation <- function(x, tol = 1e-8) {
 #' @param k Number of nearest neighbours to link per catchment. Default 3.
 #' @param penalty_per_km Travel penalty per kilometre. Non-negative. Default 1.
 #' @return A tibble of `from`, `to`, `travel_penalty` edges.
+#' @family access clearing
+#' @concept geography
 #' @export
 catchment_neighbors_from_coords <- function(coords, k = 3, penalty_per_km = 1) {
   if (!is.data.frame(coords) || !all(c("catchment", "lat", "lon") %in% names(coords))) {

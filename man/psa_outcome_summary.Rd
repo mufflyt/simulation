@@ -32,3 +32,9 @@ definition used.
 \description{
 Summarise one PSA output
 }
+\seealso{
+Other psa reporting: 
+\code{\link{write_psa_report}()}
+}
+\concept{calibration}
+\concept{psa reporting}

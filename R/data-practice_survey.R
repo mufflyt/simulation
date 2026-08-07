@@ -53,6 +53,8 @@
 #' @param resolves Optional filter: "capacity_anchor", "fte_curve", or NULL for
 #'   the whole instrument.
 #' @return Tibble with `variable`, `resolves`, `why_needed`.
+#' @family practice survey
+#' @concept data
 #' @export
 urps_practice_survey_requirements <- function(resolves = NULL) {
   items <- tibble::tribble(
@@ -86,6 +88,8 @@ urps_practice_survey_requirements <- function(resolves = NULL) {
 #'
 #' @return List with `resolved`, the current source, why it is unresolved, its
 #'   leverage, and the variables that would resolve it.
+#' @family practice survey
+#' @concept data
 #' @export
 fte_curve_status <- function() {
   list(
@@ -124,6 +128,8 @@ fte_curve_status <- function() {
 #'
 #' @return Tibble with `item`, `resolved`, `in_reported_estimand`,
 #'   `cancels_out`, `resolved_by`, `leverage`.
+#' @family practice survey
+#' @concept data
 #' @export
 unresolved_calibration_items <- function() {
   tibble::tribble(
@@ -160,6 +166,8 @@ unresolved_calibration_items <- function() {
 #' Coordinates and isochrones come first.
 #'
 #' @return List with `resolved`, per-component state, the trap, and what remains.
+#' @family practice survey
+#' @concept data
 #' @export
 geographic_access_status <- function() {
   components <- tibble::tribble(

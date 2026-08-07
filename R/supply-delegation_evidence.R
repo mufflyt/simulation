@@ -53,6 +53,8 @@ MEDICARE_APP_PROVIDER_TYPES <- c(
 #' @return Tibble with `service`, `billed_services`, `measured_app_share`,
 #'   `matrix_app_share`, `ratio`; carries a `caveats` attribute and a
 #'   `rank_correlation` attribute.
+#' @family delegation evidence
+#' @concept supply
 #' @export
 medicare_delegation_corroboration <- function(realized = NULL,
                                               matrix = URPS_DELEGATION_MATRIX) {
@@ -144,6 +146,8 @@ medicare_delegation_corroboration <- function(realized = NULL,
 #' @param factors Capacity factors to sweep.
 #' @return Tibble with `capacity_factor`, `urps_wrvu`, `solved_wrvu_per_fte`,
 #'   `required_fte_base`, `required_fte_target`, `productivity_plausible`.
+#' @family delegation evidence
+#' @concept supply
 #' @export
 delegation_capacity_sensitivity <- function(volumes,
                                             year = NULL,

@@ -106,6 +106,8 @@ CAPACITY_SURVEY_TEMPLATE <- tibble::tribble(
 #'   "shortage_hours", appointments that could not be accommodated for
 #'   "shortage_unmet". Ignored for "equilibrium".
 #' @return Numeric adequacy ratio (supply / demand).
+#' @family baseline gap
+#' @concept reporting
 #' @export
 capacity_category_adequacy <- function(category, seen = NA_real_, additional = NA_real_) {
   category <- match.arg(category, CAPACITY_SURVEY_TEMPLATE$category)
@@ -145,6 +147,8 @@ capacity_category_adequacy <- function(category, seen = NA_real_, additional = N
 #'   `additional` medians required by [capacity_category_adequacy()].
 #' @return List with `adequacy`, `gap_fraction`, per-category detail, and the
 #'   method label.
+#' @family baseline gap
+#' @concept reporting
 #' @export
 capacity_survey_adequacy <- function(responses) {
   assertthat::assert_that(is.data.frame(responses),
@@ -190,6 +194,8 @@ capacity_survey_adequacy <- function(responses) {
 #' @param responses Tibble with `category`, `national_fte`, and
 #'   `over_under_capacity` (positive = over capacity, negative = under).
 #' @return List with `shortfall_fte`, `shortfall_pct`, detail, and the method.
+#' @family baseline gap
+#' @concept reporting
 #' @export
 capacity_survey_shortfall_bottom_up <- function(responses) {
   assertthat::assert_that(is.data.frame(responses))
@@ -224,6 +230,8 @@ capacity_survey_shortfall_bottom_up <- function(responses) {
 #' @param providers_to_remove Additional providers required.
 #' @param base_supply_fte Base-year supplied FTE.
 #' @return List with `shortfall_fte`, `adequacy`, `gap_fraction`, method.
+#' @family baseline gap
+#' @concept reporting
 #' @export
 hpsa_removal_shortfall <- function(providers_to_remove, base_supply_fte) {
   assertthat::assert_that(is.numeric(providers_to_remove), providers_to_remove >= 0)
@@ -252,6 +260,8 @@ hpsa_removal_shortfall <- function(providers_to_remove, base_supply_fte) {
 #' @param evidence Character vector of supporting indicators.
 #' @param base_supply_fte Base-year supplied FTE.
 #' @return List with `required_fte`, `shortfall_fte`, `adequacy`, evidence, method.
+#' @family baseline gap
+#' @concept reporting
 #' @export
 assumed_baseline_gap <- function(gap_fraction, evidence = character(0),
                                  base_supply_fte) {
@@ -313,6 +323,8 @@ assumed_baseline_gap <- function(gap_fraction, evidence = character(0),
 #' @param access_components_counted Access deficits already inside this anchor,
 #'   passed through to [assert_access_not_double_counted()].
 #' @return An object of class `urps_baseline_gap`.
+#' @family baseline gap
+#' @concept reporting
 #' @export
 external_anchor_gap <- function(base_supply_fte,
                                 adequacy = NULL,
@@ -368,6 +380,8 @@ external_anchor_gap <- function(base_supply_fte,
 #' @param base_supply_fte Base-year supplied FTE.
 #' @param adequacy Base-year adequacy ratio (supply / demand).
 #' @return Numeric required FTE.
+#' @family baseline gap
+#' @concept reporting
 #' @export
 required_fte_base_year <- function(base_supply_fte, adequacy) {
   assertthat::assert_that(is.numeric(adequacy), adequacy > 0)
@@ -422,6 +436,8 @@ required_fte_base_year <- function(base_supply_fte, adequacy) {
 #'   evidence = "illustrative example, not a published estimate"
 #' )
 #' gap$calibration_status
+#' @family baseline gap
+#' @concept reporting
 #' @export
 baseline_gap <- function(base_supply_fte, adequacy,
                          method = c("capacity_survey", "hpsa_removal", "assumed", "external_anchor"),
@@ -546,6 +562,8 @@ print.urps_baseline_gap <- function(x, ...) {
 #' @param allow_analogy Permit a `derived_by_analogy` or `assumed_with_evidence`
 #'   base-year gap. `uncalibrated_illustrative` is refused regardless.
 #' @return (Invisibly) TRUE when a genuine gap estimate is present.
+#' @family baseline gap
+#' @concept reporting
 #' @export
 assert_baseline_gap_estimated <- function(gap, mode = resolve_reproducibility_mode(),
                                           allow_analogy = FALSE) {
@@ -643,6 +661,8 @@ assert_baseline_gap_estimated <- function(gap, mode = resolve_reproducibility_mo
 #'   scenario increases (e.g. "nonmetro", "uninsured", "racial_equity").
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
 #' @return (Invisibly) the overlapping components (empty when safe).
+#' @family baseline gap
+#' @concept reporting
 #' @export
 assert_access_not_double_counted <- function(gap, scenario_components,
                                              mode = resolve_reproducibility_mode()) {
@@ -669,6 +689,8 @@ assert_access_not_double_counted <- function(gap, scenario_components,
 #' @return Tibble of reference values.
 #' @examples
 #' published_baseline_gaps()
+#' @family baseline gap
+#' @concept reporting
 #' @export
 published_baseline_gaps <- function() {
   tibble::tribble(

@@ -21,3 +21,11 @@ Numeric vector, one entrant count per year in \code{years}.
 \description{
 Build an annual entrant trajectory
 }
+\seealso{
+Other entrant trajectory: 
+\code{\link{compound_growth_rate}()},
+\code{\link{entrant_trajectory_scenarios}()},
+\code{\link{nrmp_growth_rates}()}
+}
+\concept{entrant trajectory}
+\concept{supply}

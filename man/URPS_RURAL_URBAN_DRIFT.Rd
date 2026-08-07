@@ -22,4 +22,17 @@ classified as nonmetro. 12\% is the AMA benchmark for all physicians; URPS
 is lower because fellowship training overwhelmingly occurs at academic
 medical centres that form the dominant peer network for job referrals.
 }
+\seealso{
+Other urps migration: 
+\code{\link{CONUS_STATE_URBANICITY}},
+\code{\link{URPS_MIGRATION_HAZARD}},
+\code{\link{agent_urbanicity_summary}()},
+\code{\link{apply_urps_migration}()},
+\code{\link{classify_state_urbanicity}()},
+\code{\link{migration_drift_scenario}()},
+\code{\link{rural_urban_concentration}()},
+\code{\link{urps_migration_matrix}()}
+}
+\concept{geography}
+\concept{urps migration}
 \keyword{datasets}

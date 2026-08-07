@@ -13,3 +13,11 @@ Tibble of logical name, resolved path, and existence.
 Run before a legacy analysis script rather than discovering a missing file
 halfway through a long job.
 }
+\seealso{
+Other paths: 
+\code{\link{data_raw_path}()},
+\code{\link{external_path}()},
+\code{\link{swan_path}()}
+}
+\concept{core}
+\concept{paths}

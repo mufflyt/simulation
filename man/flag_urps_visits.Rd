@@ -18,3 +18,14 @@ flag_urps_visits(namcs, prefixes = URPS_ICD10_PREFIXES)
 A visit is flagged when ANY of DIAG1, DIAG2, or DIAG3 starts with a prefix
 in \link{URPS_ICD10_PREFIXES}.
 }
+\seealso{
+Other namcs visit equations: 
+\code{\link{brfss_population_by_stratum}()},
+\code{\link{compute_namcs_demand_estimand}()},
+\code{\link{compute_urps_visit_rates}()},
+\code{\link{fit_urps_visit_rate_model}()},
+\code{\link{load_namcs_2019}()},
+\code{\link{namcs_urps_stratum_visits}()}
+}
+\concept{demand}
+\concept{namcs visit equations}

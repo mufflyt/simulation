@@ -17,3 +17,16 @@ assert_demand_calibrated(calibration, mode = resolve_reproducibility_mode())
 \description{
 Refuse to publish demand output that was never calibrated to a national anchor
 }
+\seealso{
+Other validation: 
+\code{\link{apply_calibration_scalars}()},
+\code{\link{assert_estimands_independent}()},
+\code{\link{assert_validation_passed}()},
+\code{\link{detect_proportional_estimands}()},
+\code{\link{fit_calibration_scalars}()},
+\code{\link{published_calibration_scalars}()},
+\code{\link{two_method_agreement}()},
+\code{\link{validation_report}()}
+}
+\concept{calibration}
+\concept{validation}

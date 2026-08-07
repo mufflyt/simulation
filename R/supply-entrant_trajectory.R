@@ -37,6 +37,8 @@
 #' @param first,last Endpoint values.
 #' @param years Number of years between them.
 #' @return Numeric annual growth rate.
+#' @family entrant trajectory
+#' @concept supply
 #' @export
 compound_growth_rate <- function(first, last, years) {
   if (!is.finite(first) || !is.finite(last) || first <= 0 || years <= 0) return(NA_real_)
@@ -52,6 +54,8 @@ compound_growth_rate <- function(first, last, years) {
 #'   expanding, and fitting on it badly overstates the trend.
 #' @return List with `offered`, `filled`, `fill_rate_first`, `fill_rate_last`,
 #'   `sustainable` and `headroom_exhausted`.
+#' @family entrant trajectory
+#' @concept supply
 #' @export
 nrmp_growth_rates <- function(series = nrmp_entrant_series(), from = NULL) {
   s <- series[order(series$appointment_year), , drop = FALSE]
@@ -94,6 +98,8 @@ nrmp_growth_rates <- function(series = nrmp_entrant_series(), from = NULL) {
 #' @param growth Annual growth rate (0 = flat).
 #' @param cap Optional upper bound on annual entrants.
 #' @return Numeric vector, one entrant count per year in `years`.
+#' @family entrant trajectory
+#' @concept supply
 #' @export
 entrant_trajectory <- function(base, years, growth = 0, cap = NULL) {
   assertthat::assert_that(is.numeric(base), length(base) == 1L, is.finite(base), base >= 0)
@@ -118,6 +124,8 @@ entrant_trajectory <- function(base, years, growth = 0, cap = NULL) {
 #' @param years Projection years.
 #' @param rates Optional [nrmp_growth_rates()] output.
 #' @return Named list of numeric trajectories.
+#' @family entrant trajectory
+#' @concept supply
 #' @export
 entrant_trajectory_scenarios <- function(base = NULL, years = 2025:2050,
                                          rates = nrmp_growth_rates()) {

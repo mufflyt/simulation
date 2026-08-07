@@ -33,3 +33,13 @@ owns a 13-column projection contract that downstream consumers read through
 \code{read_urps_projection()}, so the supply panel is reshaped into it and
 validated before anything downstream sees it.
 }
+\seealso{
+Other ssot: 
+\code{\link{assert_scenarios_registered}()},
+\code{\link{ssot_coverage_report}()},
+\code{\link{ssot_rurality}()},
+\code{\link{ssot_safe_divide}()},
+\code{\link{ssot_safe_percent}()}
+}
+\concept{core}
+\concept{ssot}

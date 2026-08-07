@@ -21,3 +21,16 @@ Guard against reintroducing the tautological-concordance defect: if two demand
 series are constant multiples of each other they carry identical information,
 and any rank correlation between them is exactly 1 by construction.
 }
+\seealso{
+Other validation: 
+\code{\link{apply_calibration_scalars}()},
+\code{\link{assert_demand_calibrated}()},
+\code{\link{assert_estimands_independent}()},
+\code{\link{assert_validation_passed}()},
+\code{\link{fit_calibration_scalars}()},
+\code{\link{published_calibration_scalars}()},
+\code{\link{two_method_agreement}()},
+\code{\link{validation_report}()}
+}
+\concept{calibration}
+\concept{validation}

@@ -21,3 +21,17 @@ input's contribution, and \code{var_share} (coef^2, renormalised to the model R^
 estimates the fraction of output-rank variance each input explains -- the
 natural magnitude axis for a tornado.
 }
+\seealso{
+Other psa: 
+\code{\link{plot_psa_tornado}()},
+\code{\link{psa_discrete}()},
+\code{\link{psa_normal}()},
+\code{\link{psa_prcc}()},
+\code{\link{psa_sample}()},
+\code{\link{psa_tornado}()},
+\code{\link{psa_triangular}()},
+\code{\link{psa_uniform}()},
+\code{\link{run_psa}()}
+}
+\concept{calibration}
+\concept{psa}

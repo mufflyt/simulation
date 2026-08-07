@@ -18,3 +18,12 @@ Every row is expert judgement, so the table as a whole is
 rest of the model so \code{\link[=calibration_status_report]{calibration_status_report()}} and
 \code{\link[=assert_publishable_workload]{assert_publishable_workload()}} see it.
 }
+\seealso{
+Other condition service pathway: 
+\code{\link{condition_service_pathway}()},
+\code{\link{pathway_service_volumes}()},
+\code{\link{pathway_stage_entrants}()},
+\code{\link{validate_condition_pathway}()}
+}
+\concept{condition service pathway}
+\concept{demand}

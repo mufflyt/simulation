@@ -29,3 +29,9 @@ Data frame with one row per physician.
 \description{
 Initialize URPS Physician Agent Population
 }
+\seealso{
+Other fraher agent supply: 
+\code{\link{advance_urps_agents}()}
+}
+\concept{fraher agent supply}
+\concept{supply}

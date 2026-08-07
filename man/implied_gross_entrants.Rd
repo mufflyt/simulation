@@ -46,3 +46,13 @@ was reported to users on every run.
 hardcoding one, so a future stock-based series can be passed without
 reintroducing the error.
 }
+\seealso{
+Other roster: 
+\code{\link{agents_from_certification_cohorts}()},
+\code{\link{cohort_composition}()},
+\code{\link{cohort_provenance}()},
+\code{\link{observed_entrant_rate}()},
+\code{\link{urps_certification_cohorts}()}
+}
+\concept{roster}
+\concept{supply}

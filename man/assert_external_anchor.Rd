@@ -17,3 +17,12 @@ assert_external_anchor(gap, mode = resolve_reproducibility_mode())
 \description{
 Call before publishing any sentence of the form "the current shortage is X".
 }
+\seealso{
+Other baseline gap reporting: 
+\code{\link{baseline_anchor_sensitivity}()},
+\code{\link{baseline_gap_claim}()},
+\code{\link{baseline_gap_provenance}()},
+\code{\link{has_external_anchor}()}
+}
+\concept{baseline gap reporting}
+\concept{reporting}

@@ -42,6 +42,8 @@
 #' @param config_path Path to the canonical-sources YAML.
 #' @param mode Reproducibility mode ([resolve_reproducibility_mode()]).
 #' @return Absolute path to the verified canonical file.
+#' @family canonical and joins
+#' @concept core
 #' @export
 resolve_canonical <- function(name,
                               config_path = .canonical_config_path(),
@@ -128,6 +130,8 @@ if (!exists("%||%", envir = baseenv())) {
 #'   lower coverage warns (strict: errors). NULL disables the check.
 #' @param mode Reproducibility mode governing warn-vs-stop on low coverage.
 #' @return The joined data frame.
+#' @family canonical and joins
+#' @concept core
 #' @export
 safe_left_join <- function(x, y, by, allow_fanout = FALSE,
                            min_match_rate = NULL,

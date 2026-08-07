@@ -26,3 +26,5 @@ agents with clinical_fte, fte_source, fte_calibration_tier.
 \description{
 Apply HRSA Surgical FTE Calibration to URPS Agent Population
 }
+\concept{calibration}
+\concept{hrsa fte}

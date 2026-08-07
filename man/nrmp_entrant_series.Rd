@@ -20,3 +20,14 @@ most recent value. Fellowship is three years, so appointment year Y feeds
 certifications around Y+3 to Y+4: the series is a LEADING INDICATOR of the
 certification counts the contract reports.
 }
+\seealso{
+Other sources: 
+\code{\link{nrmp_entrants}()},
+\code{\link{nrmp_track_split}()},
+\code{\link{urps_age_productivity_curve}()},
+\code{\link{urps_empirical_hazard_by_ageband}()},
+\code{\link{urps_empirical_retirement_schedule}()},
+\code{\link{urps_hazard_exposure}()}
+}
+\concept{calibration}
+\concept{sources}

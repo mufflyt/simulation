@@ -19,3 +19,14 @@ Uses BRFSS 2023 survey weights (\verb{_LLCPWT}) to estimate the US civilian
 non-institutionalized adult female population by demographic stratum,
 matching the NAMCS strata produced by \code{\link[=namcs_urps_stratum_visits]{namcs_urps_stratum_visits()}}.
 }
+\seealso{
+Other namcs visit equations: 
+\code{\link{compute_namcs_demand_estimand}()},
+\code{\link{compute_urps_visit_rates}()},
+\code{\link{fit_urps_visit_rate_model}()},
+\code{\link{flag_urps_visits}()},
+\code{\link{load_namcs_2019}()},
+\code{\link{namcs_urps_stratum_visits}()}
+}
+\concept{demand}
+\concept{namcs visit equations}

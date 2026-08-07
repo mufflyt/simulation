@@ -33,3 +33,11 @@ Point-in-polygon overlay: each tract centroid is assigned to every provider
 isochrone band whose polygon contains it. Produces the \code{membership} table the
 base-R engine (\code{\link[=compute_e2sfca_access]{compute_e2sfca_access()}}) consumes. Requires \code{sf}.
 }
+\seealso{
+Other spatial access data: 
+\code{\link{load_provider_isochrones}()},
+\code{\link{load_tract_demand}()},
+\code{\link{real_access_surface}()}
+}
+\concept{geography}
+\concept{spatial access data}

@@ -29,3 +29,11 @@ then they are computed from the Sandvik instrument (\code{\link[=score_sandvik_s
 as the observed category distribution (not-computable / continent rows are
 dropped, not folded into "slight"), and the \code{status} reflects that.
 }
+\seealso{
+Other transition registry: 
+\code{\link{assert_publishable_demand_coefficients}()},
+\code{\link{demand_transition_registry}()},
+\code{\link{lifecourse_eligibility_params}()}
+}
+\concept{demand}
+\concept{transition registry}

@@ -23,3 +23,12 @@ An object of class \code{urps_care_seeking_model}.
 \description{
 Fit the two-part MEPS care-seeking model
 }
+\seealso{
+Other meps care seeking: 
+\code{\link{MEPS_PELVIC_FLOOR_ICD10}},
+\code{\link{build_meps_care_seeking_panel}()},
+\code{\link{care_seeking_multipliers}()},
+\code{\link{predict_care_seeking}()}
+}
+\concept{data}
+\concept{meps care seeking}

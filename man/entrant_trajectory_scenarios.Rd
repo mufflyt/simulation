@@ -29,3 +29,11 @@ moved. \code{filled_naive} is included precisely so its double-count is visible 
 it extrapolates a filled-position growth rate that was partly fill-rate
 catch-up, and the catch-up is spent.
 }
+\seealso{
+Other entrant trajectory: 
+\code{\link{compound_growth_rate}()},
+\code{\link{entrant_trajectory}()},
+\code{\link{nrmp_growth_rates}()}
+}
+\concept{entrant trajectory}
+\concept{supply}

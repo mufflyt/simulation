@@ -36,3 +36,16 @@ external (subject-matter expert critique, comparison with sources not used as
 inputs) and data validation. Only internal checks can be automated; the report
 records the status of the others so they cannot be quietly skipped.
 }
+\seealso{
+Other validation: 
+\code{\link{apply_calibration_scalars}()},
+\code{\link{assert_demand_calibrated}()},
+\code{\link{assert_estimands_independent}()},
+\code{\link{assert_validation_passed}()},
+\code{\link{detect_proportional_estimands}()},
+\code{\link{fit_calibration_scalars}()},
+\code{\link{published_calibration_scalars}()},
+\code{\link{two_method_agreement}()}
+}
+\concept{calibration}
+\concept{validation}

@@ -15,3 +15,11 @@ Named list of scenario definitions.
 \description{
 Local fallback scenario definitions
 }
+\seealso{
+Other scenario registry: 
+\code{\link{demand_scenario_registry}()},
+\code{\link{supply_scenario_registry}()},
+\code{\link{validate_scenario_registry}()}
+}
+\concept{reporting}
+\concept{scenario registry}

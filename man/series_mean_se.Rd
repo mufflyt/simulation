@@ -15,3 +15,12 @@ Numeric standard error of the mean.
 \description{
 Standard error of a mean estimated from an observed annual series
 }
+\seealso{
+Other parameter uncertainty: 
+\code{\link{assert_parameter_uncertainty}()},
+\code{\link{draw_supply_parameters}()},
+\code{\link{entrant_spec_from_series}()},
+\code{\link{supply_parameter_spec}()}
+}
+\concept{calibration}
+\concept{parameter uncertainty}

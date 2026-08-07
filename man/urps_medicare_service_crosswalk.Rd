@@ -23,3 +23,13 @@ A unique \code{hcpcs} to \code{service} crosswalk.
 \description{
 Crosswalk the URPS CPT basket to Medicare realized-care services
 }
+\seealso{
+Other medicare capacity: 
+\code{\link{aggregate_medicare_realized_care}()},
+\code{\link{compare_medicare_realized_care}()},
+\code{\link{medicare_work_rvu_by_provider}()},
+\code{\link{medicare_workload_index}()},
+\code{\link{summarise_medicare_capacity}()}
+}
+\concept{medicare capacity}
+\concept{supply}

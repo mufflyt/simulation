@@ -24,3 +24,14 @@ Port of cliff::calculate_rural_metro_comparison. Bundles the two group rates,
 their Wilson CIs, and the two-proportion test into one result for reporting a
 rural access-desert disparity.
 }
+\seealso{
+Other workforce statistics: 
+\code{\link{calculate_proportion_ci}()},
+\code{\link{calculate_replacement_gap}()},
+\code{\link{calculate_state_vulnerability}()},
+\code{\link{calculate_two_prop_test}()},
+\code{\link{load_sensitivity_table}()},
+\code{\link{sensitivity_registry}()}
+}
+\concept{reporting}
+\concept{workforce statistics}

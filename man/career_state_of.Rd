@@ -20,3 +20,12 @@ An ordered factor with levels \code{CAREER_STATES}.
 Deterministic mapping from age and lifecycle status to a career state. This is
 a labelling VIEW over the existing agent table: it never alters departures.
 }
+\seealso{
+Other provider state machine: 
+\code{\link{assert_publishable_supply_transitions}()},
+\code{\link{career_departure_by_state}()},
+\code{\link{career_transition_registry}()},
+\code{\link{state_departure_hazard}()}
+}
+\concept{provider state machine}
+\concept{supply}

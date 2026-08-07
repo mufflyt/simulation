@@ -48,3 +48,11 @@ key, and run provenance (run_id, run_mode, created_at, source, count).
 The sidecar is written after (and separately from) the payload so a crash
 mid-write leaves no sidecar -> the artifact is treated as absent on load.
 }
+\seealso{
+Other repro provenance: 
+\code{\link{read_artifact_with_provenance}()},
+\code{\link{resolve_reproducibility_mode}()},
+\code{\link{seed_microsimulation}()}
+}
+\concept{core}
+\concept{repro provenance}

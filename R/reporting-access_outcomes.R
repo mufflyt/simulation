@@ -29,6 +29,8 @@
 #'   `label`, `value`, `unit`, `calibration_status`. When `cleared` carries
 #'   spatial-overflow columns (from [overflow_access()]), two more rows are
 #'   appended: `A6` (`spilled_share`) and `A7` (`overflow_travel_time`).
+#' @family access outcomes
+#' @concept reporting
 #' @export
 access_outcomes_national <- function(cleared) {
   need <- c("demand_workload", "accessible_capacity", "served", "unmet_demand",
@@ -110,6 +112,8 @@ access_outcomes_national <- function(cleared) {
 #' @param require_calibrated If `TRUE`, also error when any status matches
 #'   "assumed" or "illustrative". Default `FALSE`.
 #' @return `x`, invisibly, if it passes.
+#' @family access outcomes
+#' @concept reporting
 #' @export
 assert_access_outcomes_labeled <- function(x, require_calibrated = FALSE) {
   if (!is.data.frame(x) || !"calibration_status" %in% names(x)) {
@@ -139,6 +143,8 @@ assert_access_outcomes_labeled <- function(x, require_calibrated = FALSE) {
 #'   column plus the [clear_access()] outputs).
 #' @return The [access_outcomes_national()] tibble per year, stacked, with a
 #'   leading `year` column.
+#' @family access outcomes
+#' @concept reporting
 #' @export
 access_outcomes_trajectory <- function(cleared) {
   if (!is.data.frame(cleared) || !"year" %in% names(cleared)) {
@@ -166,6 +172,8 @@ access_outcomes_trajectory <- function(cleared) {
 #' @param severity_col Name of the severity column. Default `"severity"`.
 #' @return The [access_outcomes_national()] tibble per severity class, stacked,
 #'   with a leading severity column.
+#' @family access outcomes
+#' @concept reporting
 #' @export
 access_outcomes_by_severity <- function(cleared, severity_col = "severity") {
   if (!is.data.frame(cleared) || !severity_col %in% names(cleared)) {
@@ -198,6 +206,8 @@ access_outcomes_by_severity <- function(cleared, severity_col = "severity") {
 #'   an explicitly-labeled draft without the calibration gate.
 #' @return The [access_outcomes_national()] tibble, invisibly returned only after
 #'   it passes the guard.
+#' @family access outcomes
+#' @concept reporting
 #' @export
 publish_access_outcomes <- function(cleared, require_calibrated = TRUE) {
   national <- access_outcomes_national(cleared)

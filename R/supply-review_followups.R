@@ -48,6 +48,8 @@
 #' @param cert_lag Years from appointment to certification.
 #' @param exclude_disrupted Drop disrupted certification years.
 #' @return List with `ratio`, `years`, `n_years`, `excluded`, and `annual`.
+#' @family review followups
+#' @concept supply
 #' @export
 nrmp_match_to_cert_ratio <- function(through_year = BACKTEST_CUTOFF_YEAR,
                                      cert_lag = URPS_FELLOWSHIP_YEARS,
@@ -119,6 +121,8 @@ nrmp_match_to_cert_ratio <- function(through_year = BACKTEST_CUTOFF_YEAR,
 #'   `deferred_in` (fellows carried in from a suppressed earlier year), plus the
 #'   stage fractions and `calibration_status`. Years whose source match year is
 #'   absent yield `NA` (leading edge of the lag).
+#' @family review followups
+#' @concept supply
 #' @export
 entrant_pipeline_transition <- function(matches,
                                         p_complete_cert = 0.86,
@@ -225,6 +229,8 @@ entrant_pipeline_transition <- function(matches,
 #' # Every driver carries an observability label, so a parameter that is merely
 #' # assumed cannot be read as one that was measured.
 #' supply_uncertainty_drivers()
+#' @family review followups
+#' @concept supply
 #' @export
 supply_uncertainty_drivers <- function() {
   tibble::tribble(
@@ -251,6 +257,8 @@ supply_uncertainty_drivers <- function() {
 #'   per year (can be negative for net emigration). Default 0.
 #' @param status Calibration status. Default "assumed_zero_unquantified".
 #' @return A one-row tibble describing the assumption.
+#' @family review followups
+#' @concept supply
 #' @export
 international_migration_assumption <- function(net_annual = 0,
                                                status = "assumed_zero_unquantified") {

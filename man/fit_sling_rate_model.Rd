@@ -38,3 +38,10 @@ log-rate ratios and per-person expected surgeries come from a \code{pop_at_risk}
 via \code{\link[=predict_count_with_uncertainty]{predict_count_with_uncertainty()}} never needs the offset column.
 }
 }
+\seealso{
+Other utilization models: 
+\code{\link{fit_visit_model}()},
+\code{\link{predict_count_with_uncertainty}()}
+}
+\concept{demand}
+\concept{utilization models}

@@ -17,3 +17,11 @@ Resolved path.
 \description{
 Resolve a path beneath the external data root
 }
+\seealso{
+Other paths: 
+\code{\link{check_external_data}()},
+\code{\link{data_raw_path}()},
+\code{\link{swan_path}()}
+}
+\concept{core}
+\concept{paths}

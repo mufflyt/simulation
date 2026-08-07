@@ -24,3 +24,17 @@ each service's volume is split across settings according to \code{mix}.
 vols <- tibble::tibble(year = 2025L, service = "new_consultation", volume = 3e6)
 split_volumes_by_setting(vols)
 }
+\seealso{
+Other urps settings: 
+\code{\link{URPS_DEFAULT_SETTING_MIX}},
+\code{\link{URPS_SETTING_SCENARIOS}},
+\code{\link{apply_setting_productivity}()},
+\code{\link{apply_setting_scenario}()},
+\code{\link{apply_setting_shift}()},
+\code{\link{load_psps_pos_shares}()},
+\code{\link{setting_scenario_summary}()},
+\code{\link{validate_setting_mix}()},
+\code{\link{volumes_with_setting}()}
+}
+\concept{supply}
+\concept{urps settings}
