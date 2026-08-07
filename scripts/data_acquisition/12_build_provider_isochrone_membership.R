@@ -112,8 +112,8 @@ build_isochrone_membership <- function(iso_by_band, tract_pts) {
   for (b in bands) {
     f <- file.path(iso_dir, sprintf("isochrones_%dmin_consolidated.rds", b))
     if (!file.exists(f))
-      stop(sprintf("build_membership: missing band file %s. All requested bands ",
-                   "must be present -- no substitution.", f), call. = FALSE)
+      stop(sprintf(paste0("build_membership: missing band file %s. All requested ",
+                          "bands must be present -- no substitution."), f), call. = FALSE)
     layer <- readRDS(f)
     if (!inherits(layer, "sf"))
       stop(sprintf("build_membership: %s is not an sf layer.", f), call. = FALSE)
