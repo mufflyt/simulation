@@ -27,7 +27,7 @@ rt_path <- function() {
 }
 
 test_that("the coordinate extract carries points and provenance, not names", {
-  p <- pc_path(); skip_if(is.null(p))
+  p <- pc_path(); skip_if(is.null(p), "coordinate extract not present (carries NPIs, deliberately not shipped)")
   d <- load_urps_provider_coordinates(p)
   expect_true(all(c("npi", "lat", "lon", "source_run", "retrieved_on") %in% names(d)))
   # An access calculation needs a point and an identifier. It never needs a name.
@@ -49,7 +49,7 @@ test_that("implausible coordinates are dropped rather than projected", {
 })
 
 test_that("coverage is reported BY PATHWAY, because the overall share hides the hole", {
-  p <- pc_path(); rp <- rt_path(); skip_if(is.null(p) || is.null(rp))
+  p <- pc_path(); rp <- rt_path(); skip_if(is.null(p) || is.null(rp), "roster/coordinate extract not present (carries NPIs, deliberately not shipped)")
   cv <- provider_coordinate_coverage(roster = load_urps_roster(rp),
                                      coords = load_urps_provider_coordinates(p))
 
@@ -99,7 +99,7 @@ test_that("the register reports coordinates as PARTIAL and still refuses to wire
 
 
 test_that("every coordinate row can be traced to the run it came from", {
-  p <- pc_path(); skip_if(is.null(p))
+  p <- pc_path(); skip_if(is.null(p), "coordinate extract not present (carries NPIs, deliberately not shipped)")
   d <- load_urps_provider_coordinates(p)
   # Merging five geocoding runs with rbind coerced retrieved_on to Date and
   # NA'd a quarter of the rows, while source_run and the points survived --
@@ -241,7 +241,7 @@ test_that("a candidate with no recorded address is refused, not waved through", 
 })
 
 test_that("state agreement is NOT used to validate coordinates", {
-  p <- pc_path(); rp <- rt_path(); skip_if(is.null(p) || is.null(rp))
+  p <- pc_path(); rp <- rt_path(); skip_if(is.null(p) || is.null(rp), "roster/coordinate extract not present (carries NPIs, deliberately not shipped)")
   # The documented reason, pinned as a test because the check is tempting and
   # wrong: `state` is the certifying board's mailing state. In the source that
   # carries both, 20.5% of physicians practise in a different state. Screening
@@ -265,7 +265,7 @@ test_that("state agreement is NOT used to validate coordinates", {
 })
 
 test_that("the recovered points are in the extract with their own provenance", {
-  p <- pc_path(); skip_if(is.null(p))
+  p <- pc_path(); skip_if(is.null(p), "coordinate extract not present (carries NPIs, deliberately not shipped)")
   co <- load_urps_provider_coordinates(p)
   recovered <- co[co$npi %in% c("1134153067", "1134239262", "1952857385"), ]
   expect_equal(nrow(recovered), 3L)
@@ -279,7 +279,7 @@ test_that("the recovered points are in the extract with their own provenance", {
 })
 
 test_that("coverage clears 99% in both pathways, not just overall", {
-  p <- pc_path(); rp <- rt_path(); skip_if(is.null(p) || is.null(rp))
+  p <- pc_path(); rp <- rt_path(); skip_if(is.null(p) || is.null(rp), "roster/coordinate extract not present (carries NPIs, deliberately not shipped)")
   cov <- provider_coordinate_coverage(roster = load_urps_roster(rp),
                                       coords = load_urps_provider_coordinates(p))
   # Overall alone would pass at 99% with one pathway at 90%; that is the same

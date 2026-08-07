@@ -1,0 +1,36 @@
+# Declared skip reasons and how many tests each may take down.
+#
+# Enforced by scripts/ci/check_suite.R. A skip is legitimate; an UNDECLARED skip
+# is a gate going dark, and that is what this file exists to make impossible.
+# `FAIL 0 | SKIP 66 | PASS 2337` reads exactly like a clean build.
+#
+# reason_pattern is a regular expression matched against the skip message.
+# max_tests is the count in the WORST declared environment (usually CI, which
+# has no NPI-bearing extracts and no downloaded survey files); a local run with
+# more data present simply reports fewer.
+#
+# BEFORE ADDING A ROW, ask whether the skip condition should hold at all. Six of
+# these were once "sf not installed" / "zipcodeR not installed" in CI, which was
+# not a fact about the tests but a missing line in the workflow. Those rows are
+# now budgeted at 0 on purpose: a nonzero count means the CI install regressed,
+# not that the guards are legitimately unrunnable.
+reason_pattern,max_tests,why
+"repository root not reachable",10,"R CMD check runs tests in <pkg>.Rcheck/ where the source tree is absent. scripts/ci/check_suite.R runs the same tests FROM the root, which is where these gates actually execute."
+"repository root not found",12,"Same cause, test-repo-hygiene.R's own wording. Covered by the root-based run."
+"frozen back-test record not reachable",6,"artifacts/ is .Rbuildignore'd. The record drift gate runs in the root-based job."
+"NRMP series CSV not reachable",6,"config/ and data-raw/calibration are .Rbuildignore'd."
+"roster/coordinate extract not present",3,"data-raw/urps_roster carries NPIs and is deliberately not in git; these cannot run in CI at all."
+"coordinate extract not present",3,"Same extract, single-path variant."
+"canonical source registry not reachable",2,"config/ is not shipped."
+"NAMCS 2019 cleaned file not present",4,"Downloaded survey extract, not in git."
+"BRFSS 2023 cleaned file not present",4,"Downloaded survey extract, not in git."
+"MEPS cleaned file not present",4,"Downloaded survey extract, not in git."
+"SWAN archive not present",1,"ICPSR archive requires an account; cannot be redistributed."
+"ndc_have_namcs\\(\\) is not TRUE",4,"NAMCS extract absent."
+"rc_have\\(\\) is not TRUE",4,"Roster extract absent (NPIs)."
+"On CRAN",3,"skip_on_cran() for long Monte Carlo runs. CI sets NOT_CRAN=true so these DO run there."
+"not installed",0,"sf, survey, zipcodeR, ggplot2, blme, lme4 are Suggests the CI token can reach and the workflows now install. Nonzero means the install regressed."
+"blme is installed",1,"Inverted skip: exercises the missing-dependency error path, so it can only run where blme is ABSENT."
+"mufflyaccess installed",1,"Inverted skip: exercises the no-contract fallback."
+"contract accessor overrides inference",1,"The installed contract exposes the accessor, so the inference branch is unreachable; asserted separately in test-contract-pin.R."
+"fewer than three overlapping years",1,"Guards an estimator that needs a minimum window."

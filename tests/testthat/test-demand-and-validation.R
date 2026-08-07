@@ -95,14 +95,25 @@ test_that("supply scenarios come from the mufflyaccess SSOT registry", {
   skip_if_not_installed("mufflyaccess")
   reg <- supply_scenario_registry(55)
   expect_silent(validate_scenario_registry(reg, "supply"))
-  # The SSOT is authoritative and its ids ARE the registry -- EXACTLY, with
-  # nothing appended. The local policy-lever scenarios (telemedicine,
-  # AI-documentation, burnout-reduction) are deliberately absent here: injecting
-  # ids the projection contract does not carry is the silent divergence this
-  # module exists to prevent, and downstream consumers validate against the SSOT
-  # set, so a locally-added id would fail validation somewhere further away.
-  expect_setequal(names(reg), mufflyaccess::urps_scenario_ids())
-  expect_false(any(urpssim:::SUPPLY_SCENARIO_LOCAL_EXTENSIONS %in% names(reg)))
+  # THIS ASSERTION HAS FLIPPED TWICE, in opposite directions, in two commits
+  # from different working sessions (61128a6 made the SSOT exclusive; e5fb995
+  # restored the append). So it now pins the INVARIANT both designs agree on
+  # rather than the id set, which is the part that keeps moving: the contract
+  # owns every id it defines, and local ids may only ever be ADDED.
+  ssot <- mufflyaccess::urps_scenario_ids()
+  ext <- urpssim:::SUPPLY_SCENARIO_LOCAL_EXTENSIONS
+  expect_setequal(names(reg), union(ssot, ext))
+
+  # An SSOT id must never be served from the local fallback. That is the
+  # divergence this module warns about, and appending is only safe because it
+  # excludes ids the contract already owns -- an id defined in both places would
+  # silently take the local definition and still validate downstream, because
+  # the NAME is on the SSOT list while the CONTENT is not.
+  local_only <- suppressMessages(supply_scenario_registry(55, prefer_ssot = FALSE))
+  from_ssot <- urpssim:::ssot_supply_scenarios(55)
+  for (id in intersect(names(local_only), ssot)) {
+    expect_identical(reg[[id]], from_ssot[[id]])
+  }
   expect_true("baseline" %in% names(reg))
   expect_equal(reg$retire_2yr_later$retirement_shift_years, 2)
   expect_equal(reg$retire_2yr_earlier$retirement_shift_years, -2)

@@ -41,14 +41,25 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::testthat, any::pkgload, any::dplyr, any::tibble, any::tidyr
-          # mufflyaccess (Suggests) is a private repo the CI token cannot
-          # reach. Hard dependencies only; tests needing it skip themselves.
+          # mufflyaccess is pinned to the same commit as DESCRIPTION and
+          # R/core-contract_pin -- see R-CMD-check.yaml for why a bare repo spec
+          # is not good enough. It IS installable here: this job requires
+          # MUFFLYACCESS_PAT above.
+          extra-packages: any::testthat, any::pkgload, any::dplyr, any::tibble, any::tidyr, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          # Suggests are not resolved wholesale (mufflyaccess is private and pak
+          # fails the job on it); the reachable ones are named above.
           dependencies: '"hard"'
 
-      - name: Structural guards
-        run: |
-          pkgload::load_all(".", quiet = TRUE)
-          res <- testthat::test_file("tests/testthat/test-repo-hygiene.R",
-                                     package = "urpssim", stop_on_failure = TRUE)
-        shell: Rscript {0}
+      # THIS JOB RUNS THE WHOLE SUITE, not just the structural guards, and it is
+      # not redundant with R-CMD-check. Check runs tests inside <pkg>.Rcheck/,
+      # where config/, artifacts/ and data-raw/ are absent, so every gate that
+      # looks for the repository root skips itself -- including the frozen
+      # back-test record drift gate and the mufflyaccess contract pin. Here the
+      # source tree is present, so those gates actually execute.
+      #
+      # It also enforces tests/skip-budget.csv, which is the only thing that can
+      # tell a skipped gate from a passing one.
+      - name: Full suite from the repository root, with the skip budget
+        env:
+          NOT_CRAN: "true"
+        run: Rscript scripts/ci/check_suite.R
