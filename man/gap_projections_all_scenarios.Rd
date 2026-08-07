@@ -11,6 +11,8 @@ gap_projections_all_scenarios(
   specialty = "FPMRS",
   geography_type = "national",
   geography_id = "US",
+  cohort_basis = "undeclared",
+  observed_share = NA_real_,
   mode = resolve_reproducibility_mode()
 )
 }
@@ -25,6 +27,15 @@ When NULL, \code{compute_fte_gap()} is called once per scenario against
 \code{required_fte}.}
 
 \item{specialty, geography_type, geography_id}{Contract identifiers.}
+
+\item{cohort_basis}{What the supply cohort is, from
+\code{\link[=cohort_provenance]{cohort_provenance()}}\verb{$source}. Only \code{"roster"} is a measured workforce.
+Defaults to \code{"undeclared"}, which \code{\link[=validate_urps_gap_projection]{validate_urps_gap_projection()}} refuses
+in strict mode: silence here is what let reconstructed supply export
+looking measured.}
+
+\item{observed_share}{Share of the cohort with an observed certification
+year, from \code{\link[=cohort_provenance]{cohort_provenance()}}\verb{$observed_share}. Optional.}
 
 \item{mode}{Reproducibility mode; passed to \code{\link[=validate_urps_gap_projection]{validate_urps_gap_projection()}}.}
 }
