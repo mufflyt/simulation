@@ -17,9 +17,10 @@
 #'
 #' Raises `accessible_capacity` for catchments flagged nonmetro by a labeled
 #' factor, modelling telehealth extending specialist reach into rural areas. The
-#' result is an ordinary catchment table for [clear_access()] /
-#' [overflow_access()]; under the uplift a nonmetro catchment clears more of its
-#' demand (shorter wait, less unmet). Metro catchments are untouched.
+#' result is an ordinary catchment table for [clear_access()] (and the
+#' spatial-overflow clearing when present); under the uplift a nonmetro catchment
+#' clears more of its demand (shorter wait, less unmet). Metro catchments are
+#' untouched.
 #'
 #' The uplift is ASSUMED/ILLUSTRATIVE -- a scenario lever, not a measured
 #' telehealth-reach effect. Supply a cited rural tele-reach estimate before any

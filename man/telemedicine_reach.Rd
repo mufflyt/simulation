@@ -31,9 +31,10 @@ nonmetro rows and a logical \code{telemedicine_reach_applied} column. With
 \description{
 Raises \code{accessible_capacity} for catchments flagged nonmetro by a labeled
 factor, modelling telehealth extending specialist reach into rural areas. The
-result is an ordinary catchment table for \code{\link[=clear_access]{clear_access()}} /
-\code{\link[=overflow_access]{overflow_access()}}; under the uplift a nonmetro catchment clears more of its
-demand (shorter wait, less unmet). Metro catchments are untouched.
+result is an ordinary catchment table for \code{\link[=clear_access]{clear_access()}} (and the
+spatial-overflow clearing when present); under the uplift a nonmetro catchment
+clears more of its demand (shorter wait, less unmet). Metro catchments are
+untouched.
 }
 \details{
 The uplift is ASSUMED/ILLUSTRATIVE -- a scenario lever, not a measured
