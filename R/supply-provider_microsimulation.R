@@ -602,6 +602,11 @@ simulate_provider_career_once <- function(agents,
 #' @param conversion_floor cliff graduate-to-practice conversion (0.70-1.0).
 #' @param retirement_schedule Single-year retirement hazard schedule; scenarios
 #'   supply a SHIFTED schedule (retire +/- n years) rather than a multiplier.
+#' @param career_change_hazard Annual age-flat departure hazard below the
+#'   retirement age (the early-exit / burnout process, distinct from the
+#'   age-graded retirement schedule). The `burnout_reduction` supply scenario
+#'   lowers it; the default leaves it at `CAREER_CHANGE_HAZARD_UNDER_50` so a
+#'   run is output-preserving.
 #' @param hazard_table Optional legacy age-band hazard table. Supplying it
 #'   switches back to the coarse seven-band gradient.
 #' @param fte_method FTE method (see [provider_clinical_fte()]).
@@ -650,6 +655,7 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
                                         n_iterations = 500,
                                         conversion_floor = 1.0,
                                         retirement_schedule = RETIREMENT_HAZARD_BY_AGE,
+                                        career_change_hazard = CAREER_CHANGE_HAZARD_UNDER_50,
                                         hazard_table = NULL,
                                         fte_method = "hours",
                                         hours_model = NULL,
@@ -932,6 +938,7 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
       conversion_floor = conversion_floor,
       subspecialty = subspecialty,
       retirement_schedule = it_schedule,
+      career_change_hazard = career_change_hazard,
       fte_method = fte_method,
       hours_model = it_hours_model,
       hours_multiplier = hours_multiplier,

@@ -57,7 +57,8 @@ has_mufflyaccess <- function() requireNamespace("mufflyaccess", quietly = TRUE)
 #' Adopts `mufflyaccess::urps_scenarios()` as the single source of truth and
 #' translates it into the shape this package's engine consumes. The registry
 #' carries `entrant_multiplier`, `retirement_shift_years`,
-#' `late_career_fte_factor` and `late_career_fte_onset_age`.
+#' `late_career_fte_factor`, `late_career_fte_onset_age` and (from registry
+#' v1.3.0) `career_change_multiplier` (the burnout / early-exit lever).
 #'
 #' Two mapping notes:
 #'  * the registry expresses entrants as a MULTIPLIER on the modelled rate, so a
@@ -85,6 +86,11 @@ ssot_supply_scenarios <- function(baseline_entrants = 55, ids = NULL) {
       retirement_shift_years = r$retirement_shift_years,
       late_career_fte_factor = r$late_career_fte_factor,
       late_career_fte_onset_age = r$late_career_fte_onset_age,
+      # career_change_multiplier is the burnout / early-exit lever (mufflyaccess
+      # registry >= v1.3.0). `%||% 1` keeps this backward-compatible with an
+      # older SSOT install that does not carry the column: the scenario applier
+      # reads it and scales career_change_hazard, neutral at 1.
+      career_change_multiplier = r$career_change_multiplier %||% 1,
       requires_fte_model = r$requires_fte_model,
       hours_multiplier = 1.0,
       conversion = 1.0,
