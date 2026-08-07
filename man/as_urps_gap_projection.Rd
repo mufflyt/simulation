@@ -13,6 +13,8 @@ as_urps_gap_projection(
   scenario_col = "scenario",
   headcount_col = "headcount_median",
   fte_col = "effective_fte_median",
+  cohort_basis = "undeclared",
+  observed_share = NA_real_,
   mode = resolve_reproducibility_mode()
 )
 }
@@ -30,6 +32,15 @@ a projection data frame from \code{\link[=as_urps_projection]{as_urps_projection
 \item{headcount_col}{Column in \code{supply} holding median headcount.}
 
 \item{fte_col}{Column in \code{supply} holding median clinical FTE.}
+
+\item{cohort_basis}{What the supply cohort is, from
+\code{\link[=cohort_provenance]{cohort_provenance()}}\verb{$source}. Only \code{"roster"} is a measured workforce.
+Defaults to \code{"undeclared"}, which \code{\link[=validate_urps_gap_projection]{validate_urps_gap_projection()}} refuses
+in strict mode: silence here is what let reconstructed supply export
+looking measured.}
+
+\item{observed_share}{Share of the cohort with an observed certification
+year, from \code{\link[=cohort_provenance]{cohort_provenance()}}\verb{$observed_share}. Optional.}
 
 \item{mode}{Reproducibility mode; passed to \code{\link[=validate_urps_gap_projection]{validate_urps_gap_projection()}}.}
 }
