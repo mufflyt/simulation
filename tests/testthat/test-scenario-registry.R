@@ -33,13 +33,15 @@ test_that("each scenario changes only the intended parameters", {
   expect_equal(changed(loc$ai_documentation), 1L)
   expect_gt(loc$telemedicine$hours_multiplier, 1)
   expect_equal(changed(loc$telemedicine), 1L)
-  # Burnout reduction: retention (+2 yr, opposite sign to retire_2yr_earlier)
-  # plus a modest hours restoration -> exactly two shifted parameters.
-  expect_equal(loc$burnout_reduction$retirement_shift_years, 2)
-  expect_equal(loc$burnout_reduction$retirement_shift_years,
-               -loc$retire_2yr_earlier$retirement_shift_years)
-  expect_gt(loc$burnout_reduction$hours_multiplier, 1)
-  expect_equal(changed(loc$burnout_reduction), 2L)
+  # Burnout reduction: early-career attrition -- a single career_change_multiplier
+  # lever (< 1 = fewer age-flat early-career exits), NOT a retirement-curve shift.
+  # Burnout attrition concentrates in <50 providers that retirement_shift_years
+  # cannot touch, so it acts on the career-change hazard instead.
+  expect_equal(loc$burnout_reduction$career_change_multiplier, 0.75)
+  expect_lt(loc$burnout_reduction$career_change_multiplier, 1)
+  expect_equal(loc$burnout_reduction$retirement_shift_years, 0)
+  expect_equal(loc$burnout_reduction$hours_multiplier, 1)
+  expect_equal(changed(loc$burnout_reduction), 1L)
 })
 
 test_that("the extended registry still satisfies the supply contract", {
