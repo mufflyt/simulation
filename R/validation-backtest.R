@@ -163,7 +163,10 @@ backtest_retirement_regime <- function(series = NULL) {
     return(structure(regime, source = "contract accessor", declared = declared))
   }
 
-  if (is.null(series)) series <- mufflyaccess::urps_counts_long()
+  if (is.null(series)) {
+    .require_mufflyaccess("The URPS certification series")
+    series <- mufflyaccess::urps_counts_long()
+  }
   if (!"n_retired" %in% names(series)) {
     return(structure("not_ascertained", source = "absent n_retired column"))
   }

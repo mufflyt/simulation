@@ -75,6 +75,7 @@ namcs_urps_visit_anchor <- function(namcs = NULL, min_records = NAMCS_MIN_RECORD
   # subspecialty; the anchor states the convention rather than inheriting it.
   keep <- flagged$is_urps & flagged$SEX == 1L & flagged$AGE >= 18 &
     !is.na(flagged$PATWT)
+  keep[is.na(keep)] <- FALSE   # a missing AGE/SEX/is_urps must exclude, not poison sum()
   n_rec <- sum(keep)
   total <- sum(flagged$PATWT[keep])
 

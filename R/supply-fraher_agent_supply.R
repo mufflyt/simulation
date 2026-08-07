@@ -169,6 +169,13 @@ advance_urps_agents <- function(agents,
 
   if (!is.null(year_seed)) set.seed(year_seed)
 
+  if (!is.data.frame(agents) || nrow(agents) == 0L)
+    stop("`agents` must be a non-empty data frame.", call. = FALSE)
+  .need <- c("status", "simulation_year", "age", "sex")
+  if (!all(.need %in% names(agents)))
+    stop("`agents` is missing required column(s): ",
+         paste(setdiff(.need, names(agents)), collapse = ", "), call. = FALSE)
+
   current_year   <- max(agents$simulation_year, na.rm = TRUE)
   n_active_start <- sum(agents$status == "Active", na.rm = TRUE)
 
@@ -177,7 +184,15 @@ advance_urps_agents <- function(agents,
     dplyr::left_join(
       exit_hazard %>% dplyr::select(age, sex, prob_exit),
       by = c("age", "sex")
-    ) %>%
+    )
+  n_unmatched <- sum(is.na(active$prob_exit))
+  if (n_unmatched > 0L)
+    warning(sprintf(paste0(
+      "%d active provider-row(s) had no (age, sex) match in the exit-hazard table and ",
+      "fall back to a flat 1%%/yr exit -- check that agents$sex uses the same coding as ",
+      "the hazard table's sex ('Female'/'Male') and ages lie in the hazard grid."),
+      n_unmatched), call. = FALSE)
+  active <- active %>%
     dplyr::mutate(
       prob_exit = tidyr::replace_na(prob_exit, 0.01),
       exit_draw = stats::runif(dplyr::n()),

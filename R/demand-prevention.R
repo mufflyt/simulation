@@ -340,6 +340,8 @@ prevention_volume_summary <- function(demand_long,
   ) |>
     dplyr::mutate(
       volume_delta = .data$volume_prevention - .data$volume_baseline,
-      pct_change   = 100 * .data$volume_delta / .data$volume_baseline
+      pct_change   = dplyr::if_else(.data$volume_baseline != 0,
+                                    100 * .data$volume_delta / .data$volume_baseline,
+                                    NA_real_)
     )
 }

@@ -70,6 +70,9 @@ nrmp_growth_rates <- function(series = nrmp_entrant_series(), from = NULL) {
   }
   n <- nrow(s)
   span <- s$appointment_year[n] - s$appointment_year[1]
+  if (any(!is.finite(s$positions_offered[c(1, n)]) | s$positions_offered[c(1, n)] <= 0))
+    stop("nrmp_growth_rates(): positions_offered must be positive and finite at the ",
+         "first and last observation.", call. = FALSE)
   fr_first <- s$positions_filled[1] / s$positions_offered[1]
   fr_last <- s$positions_filled[n] / s$positions_offered[n]
 

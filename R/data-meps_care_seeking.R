@@ -138,10 +138,16 @@ build_meps_care_seeking_panel <- function(fyc, cond, clnk, ob,
       levels = c("Private", "Public", "Uninsured"))
   }
   if (pov %in% names(p)) {
+    if (any(!p[[pov]] %in% 1:5, na.rm = TRUE))
+      warning("MEPS ", pov, " has value(s) outside the expected 1-5 domain; those ",
+              "rows resolve to NA income and drop from the design.", call. = FALSE)
     p$income <- factor(
       c("LT100FPL", "LT100FPL", "100_199FPL", "200_399FPL", "GE400FPL")[p[[pov]]],
       levels = c("GE400FPL", "200_399FPL", "100_199FPL", "LT100FPL"))
   }
+  if (any(!p$RACETHX %in% 1:5, na.rm = TRUE))
+    warning("MEPS RACETHX has value(s) outside the expected 1-5 domain; those rows ",
+            "resolve to NA race.", call. = FALSE)
   p$race <- factor(
     c("Hispanic", "NH_White", "NH_Black", "NH_Asian", "NH_Other")[p$RACETHX],
     levels = c("NH_White", "Hispanic", "NH_Black", "NH_Asian", "NH_Other"))
@@ -229,6 +235,9 @@ predict_care_seeking <- function(model, newdata) {
 #' @export
 care_seeking_multipliers <- function(model, variable, reference, level = 0.95) {
   stopifnot(inherits(model, "urps_care_seeking_model"))
+  if (!requireNamespace("survey", quietly = TRUE))
+    stop("care_seeking_multipliers(): package 'survey' is required for interval SEs.",
+         call. = FALSE)
   xl <- model$part1$xlevels[[variable]]
   if (is.null(xl)) {
     stop(sprintf(paste("care_seeking_multipliers: '%s' is not a factor term in",

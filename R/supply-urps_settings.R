@@ -352,7 +352,7 @@ apply_setting_shift <- function(volumes_split, service, from, to, fraction) {
     # Add to existing destination rows (match by service + year if present)
     join_cols <- intersect(c("year", "service"), names(volumes_split))
     merge_key <- lapply(join_cols, function(col) to_rows[[col]])
-    for (i in seq_len(nrow(to_rows))) {
+    for (i in rev(seq_len(nrow(to_rows)))) {   # reverse: to_rows[-i, ] renumbers rows
       idx <- which(existing_to)
       match_i <- idx[mapply(function(col) {
         volumes_split[[col]][idx] == to_rows[[col]][i]
