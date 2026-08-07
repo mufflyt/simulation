@@ -10,14 +10,15 @@
 
 RSCRIPT ?= Rscript
 
-.PHONY: help deps document test check check-fast clean
+.PHONY: help deps document test check check-fast validate-docs clean
 
 help:
-	@echo "make deps       - install package deps + dev tooling (rcmdcheck, roxygen2)"
-	@echo "make document   - regenerate man/*.Rd + NAMESPACE from roxygen comments"
-	@echo "make test       - run the testthat suite"
-	@echo "make check      - R CMD check --as-cran, error on WARNING (the CI gate)"
-	@echo "make check-fast - check without tests/vignettes (quick doc/namespace pass)"
+	@echo "make deps          - install package deps + dev tooling (rcmdcheck, roxygen2)"
+	@echo "make document      - regenerate man/*.Rd + NAMESPACE from roxygen comments"
+	@echo "make test          - run the testthat suite"
+	@echo "make check         - R CMD check --as-cran, error on WARNING (the CI gate)"
+	@echo "make check-fast    - check without tests/vignettes (quick doc/namespace pass)"
+	@echo "make validate-docs - doc-drift tripwire, NO package deps needed (base R only)"
 
 # Install everything needed to test + check. Reads the dependency tiers from
 # DESCRIPTION so it never drifts from the manifest; mufflyaccess (private) is
@@ -50,6 +51,17 @@ check: document
 # missing NAMESPACE exports, codoc, undeclared globals.
 check-fast: document
 	$(RSCRIPT) --vanilla -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--no-tests", "--no-build-vignettes", "--as-cran"), error_on = "warning")'
+
+# The no-dependency tripwire. Unlike `check` / `check-fast` (which build the
+# package and therefore need every Import, duckdb included), this only PARSES
+# the committed R/ and man/, so it runs on a bare `Rscript` with nothing
+# installed -- the machine where `make deps` cannot, and `make document` will
+# not, run. It catches the doc-drift subset that keeps reaching main: a stale
+# NAMESPACE, an export with no man page, a codoc \usage/formals mismatch, and
+# structurally invalid Rd. Not a substitute for `make check`; a pre-push gate
+# for the machine that cannot run it.
+validate-docs:
+	$(RSCRIPT) --vanilla scripts/dev/validate_docs.R
 
 clean:
 	rm -rf ..Rcheck *.Rcheck *.tar.gz
