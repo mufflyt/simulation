@@ -95,12 +95,14 @@ test_that("supply scenarios come from the mufflyaccess SSOT registry", {
   skip_if_not_installed("mufflyaccess")
   reg <- supply_scenario_registry(55)
   expect_silent(validate_scenario_registry(reg, "supply"))
-  # The ids are the contract's SSOT plus the local policy-lever extensions
-  # (telemedicine, AI-documentation, burnout-reduction) that supply_scenario_registry()
-  # appends first-class because the mufflyaccess contract does not carry them.
-  expect_setequal(
-    names(reg),
-    union(mufflyaccess::urps_scenario_ids(), urpssim:::SUPPLY_SCENARIO_LOCAL_EXTENSIONS))
+  # The SSOT is authoritative and its ids ARE the registry -- EXACTLY, with
+  # nothing appended. The local policy-lever scenarios (telemedicine,
+  # AI-documentation, burnout-reduction) are deliberately absent here: injecting
+  # ids the projection contract does not carry is the silent divergence this
+  # module exists to prevent, and downstream consumers validate against the SSOT
+  # set, so a locally-added id would fail validation somewhere further away.
+  expect_setequal(names(reg), mufflyaccess::urps_scenario_ids())
+  expect_false(any(urpssim:::SUPPLY_SCENARIO_LOCAL_EXTENSIONS %in% names(reg)))
   expect_true("baseline" %in% names(reg))
   expect_equal(reg$retire_2yr_later$retirement_shift_years, 2)
   expect_equal(reg$retire_2yr_earlier$retirement_shift_years, -2)
@@ -111,6 +113,19 @@ test_that("supply scenarios come from the mufflyaccess SSOT registry", {
   # And the late-career FTE scenario carries an onset age, not a flat multiplier.
   expect_equal(reg$lower_late_career_fte$late_career_fte_factor, 0.75)
   expect_equal(reg$lower_late_career_fte$late_career_fte_onset_age, 60)
+})
+
+test_that("the local policy levers stay reachable, and announce that they are not the SSOT", {
+  # Dropping the extensions from the SSOT assertion above would otherwise leave
+  # them untested entirely -- three scenarios defined, exported and reachable by
+  # nobody's test, which is how a capability ends up implemented and never
+  # connected. They live in the local fallback until the contract carries them.
+  expect_message(supply_scenario_registry(55, prefer_ssot = FALSE),
+                 "will not validate against")
+  reg <- suppressMessages(supply_scenario_registry(55, prefer_ssot = FALSE))
+  expect_true(all(urpssim:::SUPPLY_SCENARIO_LOCAL_EXTENSIONS %in% names(reg)))
+  # The warning is the point: a caller who reaches these ids must know the
+  # registry they got is no longer the one downstream validation checks against.
 })
 
 test_that("an unregistered scenario id is refused", {
