@@ -168,8 +168,8 @@ access_outcomes_by_severity <- function(cleared, severity_col = "severity") {
 #' means an un-calibrated access number cannot leave the layer as a published
 #' figure by accident -- the same governance the demand/supply layers use.
 #'
-#' @param cleared A per-catchment clearing table ([clear_access()] /
-#'   [overflow_access()]).
+#' @param cleared A per-catchment clearing table from [clear_access()] (or a
+#'   spatial-overflow clearing).
 #' @param require_calibrated If `TRUE` (default, the publishing posture), error
 #'   when any outcome is still `assumed`/`illustrative`. Set `FALSE` to roll up
 #'   an explicitly-labeled draft without the calibration gate.

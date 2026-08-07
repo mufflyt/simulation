@@ -7,8 +7,8 @@
 publish_access_outcomes(cleared, require_calibrated = TRUE)
 }
 \arguments{
-\item{cleared}{A per-catchment clearing table (\code{\link[=clear_access]{clear_access()}} /
-\code{\link[=overflow_access]{overflow_access()}}).}
+\item{cleared}{A per-catchment clearing table from \code{\link[=clear_access]{clear_access()}} (or a
+spatial-overflow clearing).}
 
 \item{require_calibrated}{If \code{TRUE} (default, the publishing posture), error
 when any outcome is still \code{assumed}/\code{illustrative}. Set \code{FALSE} to roll up
