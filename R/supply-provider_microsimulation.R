@@ -205,6 +205,9 @@ provider_active_in_year <- function(agents, year) {
 #' @param age_distribution Function(n) returning n starting ages, or a numeric
 #'   vector of length `n`. Defaults to a plausible subspecialist age spread.
 #' @return A tibble of agents (one row per provider).
+#' @examples
+#' initialize_provider_agents(n = 50, subspecialty = "FPMRS",
+#'                            baseline_year = 2025)
 #' @export
 initialize_provider_agents <- function(n,
                                        subspecialty = "FPMRS",

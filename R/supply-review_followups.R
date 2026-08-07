@@ -221,6 +221,10 @@ entrant_pipeline_transition <- function(matches,
 #' (see `psa_workforce_gap_inputs()`).
 #'
 #' @return A tibble: `driver`, `observability`, `priority`, `psa_knob`, `rationale`.
+#' @examples
+#' # Every driver carries an observability label, so a parameter that is merely
+#' # assumed cannot be read as one that was measured.
+#' supply_uncertainty_drivers()
 #' @export
 supply_uncertainty_drivers <- function() {
   tibble::tribble(

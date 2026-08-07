@@ -21,3 +21,8 @@ An object of class \code{urps_backtest_status}.
 The single place any output may ask "has this engine been validated?". Built
 from the prespecified 2020->2023 back-test.
 }
+\examples{
+# The interval caveat travels WITH the status, so a caller cannot report a
+# band without also reporting that it is a Monte Carlo range.
+backtest_status()
+}

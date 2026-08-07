@@ -29,3 +29,6 @@ Diagnostic used to check the hazard schedule against the published survival
 anchors. For physicians (HWSM Exhibit 17 / FutureDocs Figure 10) those are
 S(60) ~ 0.80, S(65) ~ 0.55, S(70) ~ 0.30, S(75) ~ 0.12, S(80) ~ 0.03.
 }
+\examples{
+retirement_survival(from_age = 55, to_ages = c(65, 70))
+}

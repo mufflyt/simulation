@@ -31,3 +31,6 @@ A tibble with columns \code{age}, \code{sex}, \code{years_certified}, \code{p_ac
 Convenience wrapper that calls \code{\link[=urps_p_active]{urps_p_active()}} over a grid of ages and
 returns a tibble ready for plotting or tabular reporting.
 }
+\examples{
+p_active_by_age(ages = 40:45)
+}

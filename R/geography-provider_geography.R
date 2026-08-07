@@ -191,6 +191,12 @@ apply_provider_migration <- function(agents, year, shares,
 #' @param population Tibble with `geo` and `population`.
 #' @param per Population denominator (default 1e6).
 #' @return Tibble with `geo`, `fte`, `population`, `fte_per_capita`.
+#' @examples
+#' supply_per_capita(
+#'   supply = tibble::tibble(geo = c("CO", "NY", "TX"), fte = c(60, 140, 120)),
+#'   population = tibble::tibble(geo = c("CO", "NY", "TX"),
+#'                               population = c(2.9e6, 1.0e7, 1.5e7))
+#' )
 #' @export
 supply_per_capita <- function(supply, population, per = 1e6) {
   out <- safe_left_join(supply, population, by = "geo", min_match_rate = 1.0)

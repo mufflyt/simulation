@@ -20,3 +20,10 @@ Tibble with \code{geo}, \code{fte}, \code{population}, \code{fte_per_capita}.
 Reported as FTE per million population, the unit used in the physiatry tables
 (national 27 per million; New Jersey 47, Mississippi 8).
 }
+\examples{
+supply_per_capita(
+  supply = tibble::tibble(geo = c("CO", "NY", "TX"), fte = c(60, 140, 120)),
+  population = tibble::tibble(geo = c("CO", "NY", "TX"),
+                              population = c(2.9e6, 1.0e7, 1.5e7))
+)
+}

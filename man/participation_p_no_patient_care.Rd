@@ -24,3 +24,6 @@ Numeric probability.
 The FutureDocs finding that most distinguishes the sexes; reported separately
 because it is the mechanism behind the divergence in expected FTE.
 }
+\examples{
+participation_p_no_patient_care(age = 62)
+}

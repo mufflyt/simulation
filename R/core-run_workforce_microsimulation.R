@@ -237,6 +237,30 @@ example_capacity_survey <- function() {
 #' @param verbose Logical.
 #' @return List with supply, demand, required FTE, gap, growth adequacy,
 #'   concordance, outlook, validation, and run metadata.
+#' @examples
+#' # A small, fast run. n_iterations is 200 by default; two is enough to show
+#' # the shape of the result.
+#' result <- run_workforce_microsimulation(
+#'   baseline_supply = 120,
+#'   use_certification_cohorts = FALSE,
+#'   years = 2025:2027,
+#'   n_iterations = 2,
+#'   supply_scenarios = supply_scenario_registry(20)["baseline"],
+#'   pop_by_band = example_female_population_by_band(2025:2027),
+#'   baseline_gap_estimate = baseline_gap(
+#'     120, 0.95, method = "assumed",
+#'     calibration_status = "uncalibrated_illustrative",
+#'     evidence = "illustrative example"
+#'   ),
+#'   # An analogy-derived input must be DECLARED by the caller rather than
+#'   # inherited silently; the run refuses to proceed otherwise.
+#'   allow_analogy = TRUE,
+#'   verbose = FALSE
+#' )
+#' names(result)
+#' # Every run records whether its demand side was calibrated to an
+#' # independent anchor. This one was not.
+#' result$scenario_meta$demand_calibrated
 #' @export
 run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           supply_geography = c("national", "conus"),

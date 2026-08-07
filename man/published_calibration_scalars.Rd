@@ -12,3 +12,6 @@ Tibble of published scalars.
 \description{
 Reference values for sanity-checking the magnitude of a newly fitted scalar.
 }
+\examples{
+published_calibration_scalars()
+}

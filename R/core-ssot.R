@@ -285,6 +285,10 @@ ssot_safe_divide <- function(numerator, denominator, default = NA_real_) {
 #' @param part,total Numeric vectors.
 #' @param digits Rounding digits.
 #' @return Numeric percentage.
+#' @examples
+#' # A zero denominator yields 0, not NaN or an error.
+#' ssot_safe_percent(part = 3, total = 0)
+#' ssot_safe_percent(part = 3, total = 12)
 #' @export
 ssot_safe_percent <- function(part, total, digits = 1) {
   if (has_mufflyaccess()) {

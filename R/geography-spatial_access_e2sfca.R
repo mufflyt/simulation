@@ -453,6 +453,8 @@ access_moe_ci <- function(access, est, se, stat = c("mean", "zero"),
 #' @param year Integer years.
 #' @param value Numeric annual estimates.
 #' @return Named numeric `c(slope, lo, hi, p)` (all NA if < 3 complete points).
+#' @examples
+#' annual_trend(2015:2020, c(100, 104, 110, 113, 119, 126))
 #' @export
 annual_trend <- function(year, value) {
   d <- data.frame(year = as.numeric(year), value = as.numeric(value))
@@ -475,6 +477,8 @@ annual_trend <- function(year, value) {
 #' @param n Integer sample size(s).
 #' @param conf_level Confidence level (default 0.95).
 #' @return Tibble `estimate`, `lo`, `hi` (one row per input element).
+#' @examples
+#' wilson_ci(successes = 42, n = 100)
 #' @export
 wilson_ci <- function(successes, n, conf_level = 0.95) {
   stopifnot(length(successes) == length(n), all(successes <= n, na.rm = TRUE))

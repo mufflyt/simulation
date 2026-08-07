@@ -17,3 +17,6 @@ A \code{psa_input} spec.
 \description{
 Define a normal PSA input
 }
+\examples{
+psa_normal("retirement_age", mean = 65, sd = 2)
+}

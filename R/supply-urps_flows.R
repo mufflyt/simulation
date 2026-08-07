@@ -321,6 +321,8 @@ fit_p_active_model <- function(data, weights = NULL) {
 #' @param coef Passed to [urps_p_active()].
 #' @param registry Passed to [urps_p_active()].
 #' @return A tibble with columns `age`, `sex`, `years_certified`, `p_active`.
+#' @examples
+#' p_active_by_age(ages = 40:45)
 #' @export
 p_active_by_age <- function(ages              = 30:85,
                              years_certified_fn = function(a) pmax(a - 33, 0),

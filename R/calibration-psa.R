@@ -38,6 +38,8 @@ psa_uniform <- function(name, min, max) {
 #' @param name Input name.
 #' @param mean,sd Normal parameters.
 #' @return A `psa_input` spec.
+#' @examples
+#' psa_normal("retirement_age", mean = 65, sd = 2)
 #' @export
 psa_normal <- function(name, mean, sd) {
   structure(list(name = name, type = "normal", mean = mean, sd = sd),
@@ -48,6 +50,8 @@ psa_normal <- function(name, mean, sd) {
 #' @param name Input name.
 #' @param min,mode,max Triangular parameters.
 #' @return A `psa_input` spec.
+#' @examples
+#' psa_triangular("entrants", min = 45, mode = 55, max = 70)
 #' @export
 psa_triangular <- function(name, min, mode, max) {
   assertthat::assert_that(min <= mode, mode <= max)

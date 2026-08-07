@@ -88,6 +88,8 @@ apply_calibration_scalars <- function(values, scalars, value_col = "predicted") 
 #'
 #' Reference values for sanity-checking the magnitude of a newly fitted scalar.
 #' @return Tibble of published scalars.
+#' @examples
+#' published_calibration_scalars()
 #' @export
 published_calibration_scalars <- function() {
   tibble::tribble(

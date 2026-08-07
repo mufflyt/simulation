@@ -17,3 +17,8 @@ Numeric percentage.
 \description{
 Guarded percentage
 }
+\examples{
+# A zero denominator yields 0, not NaN or an error.
+ssot_safe_percent(part = 3, total = 0)
+ssot_safe_percent(part = 3, total = 12)
+}

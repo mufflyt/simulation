@@ -168,6 +168,11 @@ urps_capacity_survey_requirements <- function() {
 #' Status of the base-year capacity anchor
 #'
 #' @return List with `resolved`, the current source, and what would resolve it.
+#' @examples
+#' # Reports whether the base-year capacity anchor is resolved. It is not:
+#' # the stand-in is a published physical-therapy distribution, and the field
+#' # naming that is part of the result rather than a footnote elsewhere.
+#' capacity_status()
 #' @export
 capacity_status <- function() {
   list(
