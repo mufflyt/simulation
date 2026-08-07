@@ -66,7 +66,8 @@ preparation** — not yet peer-reviewed — which is exactly why the validation
 scaffolding above is being built before any headline claim is made.
 
 *Deeper reading:* methods in [`docs/DEMAND_METHODS.md`](docs/DEMAND_METHODS.md),
-the module map below, the validation record in
+the complete code map in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (every
+module, the run data flow, and where to start reading), the validation record in
 [`docs/BACKTEST_2020_TO_2023.md`](docs/BACKTEST_2020_TO_2023.md), and the
 scientific-correctness benchmarks every commit must reproduce in
 [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md).
@@ -553,6 +554,12 @@ refuses `uncalibrated_illustrative` outright.
 
 ## Module map
 
+The 82 modules in `R/` are grouped into nine conceptual families (`core-`,
+`supply-`, `demand-`, `geography-`, `reporting-`, `calibration-`, `validation-`,
+`data-`). **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) is the complete map** —
+every file with its purpose, the run data flow, the contract boundary, and
+reading paths. The table below is a curated subset of the load-bearing modules.
+
 | Module | Contents |
 |---|---|
 | `core-paths.R` | external-data path resolution (no hardcoded paths anywhere) |
@@ -599,9 +606,9 @@ refuses `uncalibrated_illustrative` outright.
 | `supply-partial_pooling_hazard.R` | empirical-Bayes partial pooling for sparse hazard cells |
 | `calibration-psa.R`, `calibration-psa_workforce.R` | joint Monte-Carlo + PRCC/SRRC global sensitivity analysis |
 
-> The numeric prefix identifies a module uniquely within a branch. Keep it that
-> way when adding one — parallel branches each taking "the next number" is how
-> four of them previously collided.
+> Add new files inside an existing conceptual family (`supply-`, `demand-`, …)
+> and **never** reintroduce a numeric prefix — parallel branches each taking
+> "the next number" is how four modules previously collided.
 
 ---
 
@@ -788,7 +795,7 @@ motivated it, and what it deliberately does not check.
 
 ```
 simulation/
-├── R/                # 48 modules (numbered + named)
+├── R/                # 82 modules in 9 conceptual families (see docs/ARCHITECTURE.md)
 ├── man/              # roxygen-generated documentation
 ├── inst/legacy/      # original DPMM/SWAN/workforce scripts (NOT loaded by package)
 ├── inst/extdata/     # cited obstetric reference data, SWAN variable map
