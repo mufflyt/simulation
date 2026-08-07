@@ -62,6 +62,20 @@ cat(sprintf("\nfiles %d  tests %d  failed %d  skipped %d\n",
             length(unique(df$file)), nrow(df), nrow(bad), nrow(inv)))
 
 budget <- utils::read.csv(BUDGET, stringsAsFactors = FALSE, comment.char = "#")
+
+# A malformed pattern matches nothing and reads as a satisfied budget of zero,
+# which is the same silence this whole script exists to break. Two rows shipped
+# with `\\(` -- read.csv does no escape processing, so the regex engine saw a
+# literal backslash -- and both sat at 0/4 looking healthy while the tests they
+# covered went undeclared in CI.
+bad_pat <- vapply(budget$reason_pattern, function(p)
+  inherits(try(grepl(p, "probe", perl = FALSE), silent = TRUE), "try-error"), logical(1))
+if (any(bad_pat)) {
+  cat("ERROR: invalid regular expression in ", BUDGET, ":\n", sep = "")
+  for (p in budget$reason_pattern[bad_pat]) cat("  ", p, "\n", sep = "")
+  quit(status = 1L)
+}
+
 matched <- rep(NA_integer_, nrow(inv))
 for (b in seq_len(nrow(budget))) {
   hit <- is.na(matched) & grepl(budget$reason_pattern[b], inv$reason)
