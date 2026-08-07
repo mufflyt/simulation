@@ -8,6 +8,8 @@ clear_access_trajectory(
   panel,
   carry_backlog = FALSE,
   backlog_fraction = 1,
+  neighbors = NULL,
+  max_travel_penalty = Inf,
   appointment_window = 30,
   wait_scale = 30,
   wait_ceiling = Inf,
@@ -26,13 +28,24 @@ Default \code{FALSE} (each year cleared independently).}
 \item{backlog_fraction}{Fraction of a year's unmet demand carried into the
 next year. In 0 to 1. Default 1 (all unmet persists).}
 
+\item{neighbors}{Optional overflow edge list (see \code{\link[=overflow_access]{overflow_access()}}). When
+supplied, each year is cleared with spatial overflow composed underneath the
+backlog step: demand (plus any backlog) is reallocated across catchments
+before the year's outcomes are computed, and the backlog carried into the
+next year is the POST-overflow unmet demand. Needs a \code{catchment} id. Default
+\code{NULL} (no overflow; Phase-1 clearing each year).}
+
+\item{max_travel_penalty}{Passed to \code{\link[=overflow_access]{overflow_access()}} when \code{neighbors} is
+supplied. Default \code{Inf}.}
+
 \item{appointment_window, wait_scale, wait_ceiling, status}{Passed through to
-\code{\link[=clear_access]{clear_access()}}.}
+\code{\link[=clear_access]{clear_access()}} / \code{\link[=overflow_access]{overflow_access()}}.}
 }
 \value{
 A tibble: every \code{\link[=clear_access]{clear_access()}} output column across all years, plus
 \code{backlog_in} (demand carried in from the prior year) and
-\code{demand_workload_base} (this year's demand before any backlog).
+\code{demand_workload_base} (this year's demand before any backlog). With
+\code{neighbors}, also the \code{\link[=overflow_access]{overflow_access()}} accounting columns.
 }
 \description{
 Applies \code{\link[=clear_access]{clear_access()}} to each year of a catchment x year panel in
