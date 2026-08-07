@@ -21,7 +21,33 @@
 # (headcount_median / effective_fte_median), so headcount units stay
 # internally consistent.
 
-URPS_GAP_PROJECTION_CONTRACT_VERSION <- "0.1.0"
+# v0.2.0 ADDS supply_cohort_basis, AND IT IS REQUIRED.
+#
+# Every number in this table is a supply number or is derived from one:
+# demand_headcount is demand FTE divided by the supply side's FTE-per-provider
+# ratio, and both gap columns are differences against supply. What the supply
+# cohort actually IS therefore conditions the whole row.
+#
+# Today it is usually reconstructed rather than observed. The contract ships
+# aggregate certification counts with no age, sex or state, so
+# agents_from_certification_cohorts() derives ages from certification year for
+# the fellowship cohorts and ASSUMES them for the 2013 backlog -- 655 of 1,306
+# providers, 50.2% of the base cohort. `cohort_provenance()` has recorded that
+# since it was written, and the orchestrator has carried it in
+# `scenario_meta$cohort_provenance`. This table did not, so the moment a gap
+# projection was exported, saved or handed on, the caveat stopped travelling
+# with the numbers it qualifies.
+#
+# That is the failure mode this repository keeps rediscovering under other
+# names: a qualification that lives beside the artifact rather than inside it.
+# Required, not optional, so an export cannot quietly omit it.
+URPS_GAP_PROJECTION_CONTRACT_VERSION <- "0.2.0"
+
+# Cohort bases, from cohort_provenance()$source. Only "roster" is a measured
+# workforce; the rest are reconstructions of one.
+GAP_PROJECTION_MEASURED_BASIS <- "roster"
+GAP_PROJECTION_COHORT_BASES <- c("roster", "certification_cohorts", "synthetic",
+                                 "unknown", "undeclared")
 
 REQUIRED_COLS <- c(
   "year",
@@ -31,6 +57,7 @@ REQUIRED_COLS <- c(
   "geography_id",
   "supply_headcount",
   "supply_clinical_fte",
+  "supply_cohort_basis",
   "demand_headcount",
   "demand_clinical_fte",
   "gap_fte",
@@ -38,6 +65,7 @@ REQUIRED_COLS <- c(
 )
 
 OPTIONAL_COLS <- c(
+  "supply_observed_share",
   "lower_95", "upper_95",
   "demand_headcount_lo", "demand_headcount_hi",
   "demand_clinical_fte_lo", "demand_clinical_fte_hi",
@@ -67,6 +95,39 @@ validate_urps_gap_projection <- function(x,
     )
     if (identical(mode, "strict")) stop(msg, call. = FALSE)
     .msg_warn(msg)
+  }
+
+  # Provenance guard. A basis of "undeclared" means the caller never said what
+  # the supply cohort was, which is the state this column exists to end -- the
+  # numbers would export looking exactly like measured ones. An unrecognised
+  # basis is refused for the same reason: it cannot be read.
+  if ("supply_cohort_basis" %in% names(x)) {
+    basis <- unique(as.character(x$supply_cohort_basis))
+    unknown <- setdiff(basis, GAP_PROJECTION_COHORT_BASES)
+    if (length(unknown)) {
+      msg <- sprintf(
+        "Gap projection has unrecognised supply_cohort_basis: %s. Expected one of: %s.",
+        paste(unknown, collapse = ", "), paste(GAP_PROJECTION_COHORT_BASES, collapse = ", "))
+      if (identical(mode, "strict")) stop(msg, call. = FALSE)
+      .msg_warn(msg)
+    }
+    if ("undeclared" %in% basis) {
+      msg <- paste(
+        "Gap projection carries supply_cohort_basis = 'undeclared': the supply",
+        "cohort's provenance was never stated, so these numbers export",
+        "indistinguishable from ones built on a real roster. Pass",
+        "cohort_basis = cohort_provenance(agents)$source."
+      )
+      if (identical(mode, "strict")) stop(msg, call. = FALSE)
+      .msg_warn(msg)
+    } else if (!identical(basis, GAP_PROJECTION_MEASURED_BASIS)) {
+      # Not a failure -- a reconstructed cohort is a legitimate run, and the
+      # whole point of the column is that it can say so out loud.
+      .msg_info(sprintf(paste(
+        "Gap projection supply is a RECONSTRUCTED cohort (basis: %s), not a",
+        "measured roster. Report these as reconstructed cohort estimates."),
+        paste(basis, collapse = "/")))
+    }
   }
 
   # Arithmetic guard: gap = supply - demand on both sides.
@@ -109,6 +170,13 @@ validate_urps_gap_projection <- function(x,
 #' @param scenario_col Column in `supply` holding the scenario id.
 #' @param headcount_col Column in `supply` holding median headcount.
 #' @param fte_col Column in `supply` holding median clinical FTE.
+#' @param cohort_basis What the supply cohort is, from
+#'   [cohort_provenance()]`$source`. Only `"roster"` is a measured workforce.
+#'   Defaults to `"undeclared"`, which [validate_urps_gap_projection()] refuses
+#'   in strict mode: silence here is what let reconstructed supply export
+#'   looking measured.
+#' @param observed_share Share of the cohort with an observed certification
+#'   year, from [cohort_provenance()]`$observed_share`. Optional.
 #' @param mode Reproducibility mode; passed to [validate_urps_gap_projection()].
 #' @return Data frame conforming to the gap projection contract (REQUIRED_COLS +
 #'   optional `lower_95`, `upper_95`, `gap_pct`, `scenario_label`).
@@ -121,6 +189,8 @@ as_urps_gap_projection <- function(supply,
                                    scenario_col = "scenario",
                                    headcount_col = "headcount_median",
                                    fte_col = "effective_fte_median",
+                                   cohort_basis = "undeclared",
+                                   observed_share = NA_real_,
                                    mode = resolve_reproducibility_mode()) {
   assertthat::assert_that(is.data.frame(supply), "year" %in% names(supply))
   assertthat::assert_that(is.data.frame(fte_gap),
@@ -171,12 +241,18 @@ as_urps_gap_projection <- function(supply,
     geography_id        = geography_id,
     supply_headcount    = s_hc,
     supply_clinical_fte = s_fte,
+    # Recycled down every row on purpose. A reader filtering to one year, or
+    # binding several projections together, keeps the basis attached to the
+    # numbers rather than having to carry a separate scalar alongside.
+    supply_cohort_basis = as.character(cohort_basis %||% "undeclared"),
     demand_headcount    = d_hc,
     demand_clinical_fte = d_fte,
     gap_fte             = s_fte - d_fte,
     gap_headcount       = s_hc  - d_hc,
     stringsAsFactors    = FALSE
   )
+
+  if (is.finite(observed_share)) out$supply_observed_share <- as.numeric(observed_share)
 
   # Carry optional CI and label columns when present.
   if ("headcount_lo" %in% names(supply)) out$lower_95 <- as.numeric(supply$headcount_lo)
@@ -217,6 +293,8 @@ gap_projections_all_scenarios <- function(supply_by_scenario,
                                           specialty = "FPMRS",
                                           geography_type = "national",
                                           geography_id = "US",
+                                          cohort_basis = "undeclared",
+                                          observed_share = NA_real_,
                                           mode = resolve_reproducibility_mode()) {
   assertthat::assert_that(is.data.frame(supply_by_scenario),
                           "scenario" %in% names(supply_by_scenario))
@@ -233,6 +311,8 @@ gap_projections_all_scenarios <- function(supply_by_scenario,
                            specialty = specialty,
                            geography_type = geography_type,
                            geography_id = geography_id,
+                           cohort_basis = cohort_basis,
+                           observed_share = observed_share,
                            mode = mode)
   })
 }
@@ -242,6 +322,16 @@ print.urps_gap_projection <- function(x, ...) {
   final_year <- max(x$year, na.rm = TRUE)
   fin <- x[x$year == final_year, , drop = FALSE][1, , drop = FALSE]
   cat(sprintf("URPS gap projection (contract v%s)\n", URPS_GAP_PROJECTION_CONTRACT_VERSION))
+  if ("supply_cohort_basis" %in% names(x)) {
+    basis <- paste(sort(unique(as.character(x$supply_cohort_basis))), collapse = "/")
+    cat(sprintf("  supply:    %s%s\n", basis,
+                if (identical(basis, GAP_PROJECTION_MEASURED_BASIS)) " (measured roster)"
+                else " -- RECONSTRUCTED COHORT, not a measured roster"))
+    if ("supply_observed_share" %in% names(x)) {
+      cat(sprintf("             %.1f%% of the base cohort has an observed certification year\n",
+                  100 * x$supply_observed_share[1]))
+    }
+  }
   cat(sprintf("  scenarios: %s\n", paste(sort(unique(x$scenario_id)), collapse = ", ")))
   cat(sprintf("  years:     %d - %d\n", min(x$year, na.rm = TRUE), final_year))
   cat(sprintf("  %d supply: %.0f hc / %.0f FTE\n",
