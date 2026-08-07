@@ -27,3 +27,7 @@ A tibble of agents (one row per provider).
 \description{
 Initialise a starting cohort of provider agents
 }
+\examples{
+initialize_provider_agents(n = 50, subspecialty = "FPMRS",
+                           baseline_year = 2025)
+}

@@ -46,6 +46,8 @@ workforce_hhi <- function(counts, normalized = FALSE) {
 #' Lorenz-curve coordinates for a count vector
 #' @param x Numeric counts per unit (include zeros for the full geography).
 #' @return Tibble `cum_unit_share`, `cum_value_share`, prepended with (0, 0).
+#' @examples
+#' workforce_lorenz(c(120, 80, 40, 10, 0, 0))
 #' @export
 workforce_lorenz <- function(x) {
   x <- sort(x[is.finite(x)])
@@ -79,6 +81,11 @@ workforce_top_k_share <- function(counts, k = 5L) {
 #' @param label Geography label for the output row.
 #' @return A one-row tibble: geography, n_units, n_occupied, pct_units_zero,
 #'   gini, hhi, top5_share, top10_share.
+#' @examples
+#' # Workload is concentrated: two of six providers deliver most of the volume,
+#' # and two deliver none at all. Board certification is not the same as
+#' # delivering care, which is why this is reported beside any headcount.
+#' provider_concentration(c(120, 80, 40, 10, 0, 0))
 #' @export
 provider_concentration <- function(counts, n_units_total = length(counts),
                                    label = NA_character_) {

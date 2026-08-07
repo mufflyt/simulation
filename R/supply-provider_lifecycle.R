@@ -88,6 +88,11 @@ fte_definition <- function(hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK) {
 #' @param from_hours Hours threshold the count is expressed on.
 #' @param to_hours Hours threshold to restate onto.
 #' @return Numeric restated FTE.
+#' @examples
+#' # One FTE defined against a 50-hour week is more than one FTE against the
+#' # package's clinical-hours definition. Comparing supply figures that use
+#' # different denominators is the error this exists to prevent.
+#' restate_fte(fte = 1, from_hours = 50)
 #' @export
 restate_fte <- function(fte, from_hours, to_hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK) {
   assertthat::assert_that(is.numeric(from_hours), from_hours > 0,
@@ -262,6 +267,8 @@ shift_retirement_schedule <- function(delta_years, schedule = RETIREMENT_HAZARD_
 #'   what the published survival curves are drawn against.
 #' @param ... Passed to [departure_hazard()].
 #' @return Named numeric vector of survival probabilities.
+#' @examples
+#' retirement_survival(from_age = 55, to_ages = c(65, 70))
 #' @export
 retirement_survival <- function(from_age = 50, to_ages = c(60, 65, 70, 75, 80),
                                 sex = "male", ...) {
@@ -592,6 +599,8 @@ participation_fte <- function(age, sex = "female", table = FUTUREDOCS_PARTICIPAT
 #' @param sex Character sex.
 #' @param table Participation probability table.
 #' @return Numeric probability.
+#' @examples
+#' participation_p_no_patient_care(age = 62)
 #' @export
 participation_p_no_patient_care <- function(age, sex = "female",
                                             table = FUTUREDOCS_PARTICIPATION) {

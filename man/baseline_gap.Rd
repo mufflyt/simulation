@@ -63,3 +63,17 @@ Central constructor. Carries the method, the adequacy, the FTE anchor, and an
 demand scenario from double-counting a deficit already inside the base-year
 gap.
 }
+\examples{
+# The calibration tier is required, not inferred. The same arithmetic is
+# 'calibrated' from a fielded URPS survey and 'derived_by_analogy' from
+# another specialty's published distribution, and the function refuses to
+# guess which one it was handed.
+gap <- baseline_gap(
+  base_supply_fte = 1306,
+  adequacy = 0.95,
+  method = "capacity_survey",
+  calibration_status = "uncalibrated_illustrative",
+  evidence = "illustrative example, not a published estimate"
+)
+gap$calibration_status
+}

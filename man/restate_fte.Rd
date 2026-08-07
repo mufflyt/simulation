@@ -20,3 +20,9 @@ Numeric restated FTE.
 Guards the cross-model comparison trap: 8,853 physiatrist FTE at 37.2 hrs/wk
 and 6,533 nephrologist FTE at 70 hrs/wk are not on the same scale.
 }
+\examples{
+# One FTE defined against a 50-hour week is more than one FTE against the
+# package's clinical-hours definition. Comparing supply figures that use
+# different denominators is the error this exists to prevent.
+restate_fte(fte = 1, from_hours = 50)
+}

@@ -21,3 +21,6 @@ Port of cliff::calculate_proportion_ci. The Wilson interval is well-behaved
 for small samples and near 0/1 (unlike the Wald interval), so it is the right
 choice for rural/subgroup access-desert proportions and validation rates.
 }
+\examples{
+wilson_ci(successes = 42, n = 100)
+}

@@ -138,6 +138,8 @@ nrmp_entrants <- function(subspecialty = "URPS", mode = resolve_reproducibility_
 #'
 #' @param mode Reproducibility mode.
 #' @return Tibble `age`, `rel_to_peak`, `work_usd`.
+#' @examples
+#' head(urps_age_productivity_curve())
 #' @export
 urps_age_productivity_curve <- function(mode = resolve_reproducibility_mode()) {
   path <- resolve_canonical("urps_age_productivity", mode = mode)

@@ -17,3 +17,6 @@ The current model defines FTE as an hours threshold (R/supply-provider_lifecycle
 step function, so this is a VALIDATION reference (and an override for the
 deprecated \code{legacy_weight} FTE method) rather than the default.
 }
+\examples{
+head(urps_age_productivity_curve())
+}

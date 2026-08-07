@@ -292,6 +292,8 @@ resolve_demand_population <- function(years = 2025:2050,
 #' @param y1,v1 Second anchor (year, value).
 #' @param base Base year at which the index equals 1.
 #' @return Numeric index vector aligned to `years`.
+#' @examples
+#' anchor_index(2025:2030, y0 = 2025, v0 = 100, y1 = 2030, v1 = 120)
 #' @export
 anchor_index <- function(years, y0, v0, y1, v1, base = DEMAND_INDEX_BASE_YEAR) {
   assertthat::assert_that(y1 != y0, v0 > 0, v1 > 0)

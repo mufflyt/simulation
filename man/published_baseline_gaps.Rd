@@ -12,3 +12,6 @@ Tibble of reference values.
 \description{
 Published base-year adequacy estimates from the Dall-family literature
 }
+\examples{
+published_baseline_gaps()
+}

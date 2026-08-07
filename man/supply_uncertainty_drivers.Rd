@@ -16,3 +16,8 @@ is a prominently labeled driver, not a routine point parameter. The \code{psa_kn
 column points to the input each driver is varied through in the PSA
 (see \code{psa_workforce_gap_inputs()}).
 }
+\examples{
+# Every driver carries an observability label, so a parameter that is merely
+# assumed cannot be read as one that was measured.
+supply_uncertainty_drivers()
+}

@@ -48,3 +48,12 @@ An object of class \code{urps_param_spec}.
 \description{
 Specify which supply parameters vary across Monte Carlo iterations
 }
+\examples{
+# Draws the entrant rate per iteration from an observed series. Without a
+# spec, every iteration shares one entrant rate and the resulting interval
+# describes individual stochasticity only -- in the 2020->2023 back-test
+# those intervals covered the observation in 0 of 8 arms.
+spec <- supply_parameter_spec(entrant_series = c(50, 57, 53, 59, 59),
+                              entrant_mean = 55)
+spec$quantified
+}

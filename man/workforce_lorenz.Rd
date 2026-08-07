@@ -15,3 +15,6 @@ Tibble \code{cum_unit_share}, \code{cum_value_share}, prepended with (0, 0).
 \description{
 Lorenz-curve coordinates for a count vector
 }
+\examples{
+workforce_lorenz(c(120, 80, 40, 10, 0, 0))
+}

@@ -12,3 +12,9 @@ List with \code{resolved}, the current source, and what would resolve it.
 \description{
 Status of the base-year capacity anchor
 }
+\examples{
+# Reports whether the base-year capacity anchor is resolved. It is not:
+# the stand-in is a published physical-therapy distribution, and the field
+# naming that is part of the result rather than a footnote elsewhere.
+capacity_status()
+}

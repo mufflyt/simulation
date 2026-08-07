@@ -88,6 +88,14 @@ series_mean_se <- function(x) {
 #' @param entrant_regime_include Components of the regime draw to switch on; see
 #'   [draw_entrant_paths()].
 #' @return An object of class `urps_param_spec`.
+#' @examples
+#' # Draws the entrant rate per iteration from an observed series. Without a
+#' # spec, every iteration shares one entrant rate and the resulting interval
+#' # describes individual stochasticity only -- in the 2020->2023 back-test
+#' # those intervals covered the observation in 0 of 8 arms.
+#' spec <- supply_parameter_spec(entrant_series = c(50, 57, 53, 59, 59),
+#'                               entrant_mean = 55)
+#' spec$quantified
 #' @export
 supply_parameter_spec <- function(entrant_series = NULL,
                                   entrant_mean = NULL,

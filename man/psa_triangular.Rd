@@ -17,3 +17,6 @@ A \code{psa_input} spec.
 \description{
 Define a triangular PSA input (min / mode / max) -- the common PSA default
 }
+\examples{
+psa_triangular("entrants", min = 45, mode = 55, max = 70)
+}

@@ -409,6 +409,19 @@ required_fte_base_year <- function(base_supply_fte, adequacy) {
 #'   propagated (with the required-FTE inversion) to `required_fte_ci` and
 #'   `shortfall_fte_ci`.
 #' @return An object of class `urps_baseline_gap`.
+#' @examples
+#' # The calibration tier is required, not inferred. The same arithmetic is
+#' # 'calibrated' from a fielded URPS survey and 'derived_by_analogy' from
+#' # another specialty's published distribution, and the function refuses to
+#' # guess which one it was handed.
+#' gap <- baseline_gap(
+#'   base_supply_fte = 1306,
+#'   adequacy = 0.95,
+#'   method = "capacity_survey",
+#'   calibration_status = "uncalibrated_illustrative",
+#'   evidence = "illustrative example, not a published estimate"
+#' )
+#' gap$calibration_status
 #' @export
 baseline_gap <- function(base_supply_fte, adequacy,
                          method = c("capacity_survey", "hpsa_removal", "assumed", "external_anchor"),
@@ -654,6 +667,8 @@ assert_access_not_double_counted <- function(gap, scenario_components,
 
 #' Published base-year adequacy estimates from the Dall-family literature
 #' @return Tibble of reference values.
+#' @examples
+#' published_baseline_gaps()
 #' @export
 published_baseline_gaps <- function() {
   tibble::tribble(

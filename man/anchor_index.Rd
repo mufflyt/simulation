@@ -23,3 +23,6 @@ Port of cliff::anchor_index. Given two anchor totals (y0,v0) and (y1,v1),
 fits a constant annual growth rate and returns the index over \code{years},
 normalised so the value at \code{base} equals 1.
 }
+\examples{
+anchor_index(2025:2030, y0 = 2025, v0 = 100, y1 = 2030, v1 = 120)
+}

@@ -18,3 +18,6 @@ Named numeric \code{c(slope, lo, hi, p)} (all NA if < 3 complete points).
 Port of twostep::annual_trend. Fits \code{value ~ year} and returns the slope with
 its 95\% t-interval and p-value; the access-per-year change over a study window.
 }
+\examples{
+annual_trend(2015:2020, c(100, 104, 110, 113, 119, 126))
+}

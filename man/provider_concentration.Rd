@@ -26,3 +26,9 @@ gini, hhi, top5_share, top10_share.
 \description{
 One-row provider-concentration summary for a geography level
 }
+\examples{
+# Workload is concentrated: two of six providers deliver most of the volume,
+# and two deliver none at all. Board certification is not the same as
+# delivering care, which is why this is reported beside any headcount.
+provider_concentration(c(120, 80, 40, 10, 0, 0))
+}

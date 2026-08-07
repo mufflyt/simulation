@@ -749,24 +749,36 @@ conservative care.
 ## Test suite
 
 ```
-[ PASS 1197 | FAIL 0 | SKIP 2 | WARN 0 ]   (42 test files)
+[ FAIL 0 | WARN 0 | SKIP 59 | PASS 2432 ]   (86 test files, 923 tests)
 
 Key test files:
-  test-38-fraher-agent-supply.R     Fraher agent engine (13 tests)
-  test-interval-coverage.R          rolling-origin coverage, inflation solver (14 tests)
-  test-urps-population.R            BRFSS cells, D4, crosswalk (28 tests)
+  test-38-fraher-agent-supply.R     Fraher agent engine
+  test-interval-coverage.R          rolling-origin coverage, inflation solver
+  test-urps-population.R            BRFSS cells, D4, crosswalk
   test-urps-prevention.R            DPMM-lite prevention multipliers
   test-workload-to-fte.R            sensitivity invariants (inputs that cancel)
-  test-retraction-guards-10-errors.R  5 critical regression guards
   test-backtest.R                   leakage-free historical validation
+  test-export-wiring.R              exports that reach no pipeline
+  test-provider-coordinates.R       merge damage, and points that are simply wrong
 ```
 
 Run locally:
 
 ```bash
-Rscript -e 'devtools::test()'
+# The packaging gate.
 Rscript -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"))'
+
+# The full gate. Not a substitute for the above, and not substitutable BY it:
+# R CMD check runs tests inside <pkg>.Rcheck/, where config/, artifacts/ and
+# data-raw/ do not exist, so ~36 gates -- including the frozen back-test drift
+# gate and the mufflyaccess contract pin -- skip themselves and report as
+# passing. This runs them, and enforces tests/skip-budget.csv so a gate going
+# dark fails the build instead of blending into the summary line.
+Rscript scripts/ci/check_suite.R
 ```
+
+See [docs/GUARDS.md](docs/GUARDS.md) for what each guard checks, the defect that
+motivated it, and what it deliberately does not check.
 
 ---
 
@@ -840,15 +852,31 @@ Ordered by how much each actually moves the deliverable:
    `external_anchor_gap()` citation are the only routes to a `calibrated` tier.
 2. **The headcount → FTE step is unvalidated.** The hours schedule comes from
    general internal medicine and drifts FTE-per-head ~3% over the horizon.
-3. **No individual provider roster.** The contract ships aggregate counts only,
-   so half the base cohort's ages are assumed.
-4. **Weibull shape/scale unvalidated for URPS.** Currently `derived_by_analogy`
+3. **The default cohort is still aggregate.** A production roster exists —
+   1,339 board-certified providers matched to NPI, with Medicare CY2024 billing
+   as the activity attestation — and `scripts/run_with_production_roster.R`
+   runs on it, reporting `example_only = FALSE`. It is **not in this
+   repository**: `data-raw/urps_roster` is deliberately not whitelisted,
+   because the extract carries NPIs. Without it the run builds agents from
+   aggregate certification counts, `cohort_composition()` refuses to call that
+   a production cohort, and half the base cohort's ages are assumed.
+4. **Geographic access is not wired.** Provider point locations are now present
+   for 1,336 of 1,339 (99.8%; 99.9% ABOG, 99.4% ABU), which closes the input
+   that was blocking everything else — coverage was 72% overall and 0% for the
+   urology pathway. What remains is drive-time isochrones, calling
+   `R/geography-spatial_access_e2sfca.R` from the orchestrator rather than
+   merely loading it, and a geographic check in `validation_report()`. See
+   `geographic_access_status()`, which enforces the ordering: an access surface
+   built before the coordinates existed would have run, produced entirely
+   plausible ratios, and understated access wherever the missing providers
+   practise.
+5. **Weibull shape/scale unvalidated for URPS.** Currently `derived_by_analogy`
    from HWSM general physician curves. ABOG departure data would sharpen both
    parameters and `hazard_cv`.
-5. **BRFSS UI/POP/FI module absent in 2023 core.** D4 uses imputed Nygaard
+6. **BRFSS UI/POP/FI module absent in 2023 core.** D4 uses imputed Nygaard
    prevalence. Wiring a module-year (e.g., 2016 or a state that opted in) would
    move D4 to `brfss_observed`.
-6. **Service volumes and the case mix are illustrative** — but see the sensitivity
+7. **Service volumes and the case mix are illustrative** — but see the sensitivity
    table above: the *level* cancels entirely and a mix shift moves 25-year growth
    by under 1%.
 

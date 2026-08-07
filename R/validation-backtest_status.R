@@ -208,6 +208,10 @@ backtest_status_from_summary <- function(summary,
 #' @param record Scored arms; defaults to the frozen published record.
 #' @param source Provenance string.
 #' @return An object of class `urps_backtest_status`.
+#' @examples
+#' # The interval caveat travels WITH the status, so a caller cannot report a
+#' # band without also reporting that it is a Monte Carlo range.
+#' backtest_status()
 #' @export
 backtest_status <- function(record = BACKTEST_RECORD_2020_2023,
                             source = BACKTEST_RECORD_SOURCE) {
