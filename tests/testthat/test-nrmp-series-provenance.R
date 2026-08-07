@@ -13,7 +13,7 @@ nsp_csv <- function() {
 }
 
 test_that("every source row passes GATE 1: filled/offered reproduces printed % filled", {
-  p <- nsp_csv(); skip_if(is.null(p))
+  p <- nsp_csv(); skip_if(is.null(p), "NRMP series CSV not reachable (source tree absent under R CMD check)")
   d <- utils::read.csv(p, stringsAsFactors = FALSE)
   recomputed <- round(100 * d$positions_filled / d$positions_offered, 1)
   # This is the gate that proves the column mapping, independently of any
@@ -26,7 +26,7 @@ test_that("every source row passes GATE 1: filled/offered reproduces printed % f
 })
 
 test_that("every source row passes GATE 2: values match the documented human read", {
-  p <- nsp_csv(); skip_if(is.null(p))
+  p <- nsp_csv(); skip_if(is.null(p), "NRMP series CSV not reachable (source tree absent under R CMD check)")
   d <- utils::read.csv(p, stringsAsFactors = FALSE)
   expected_filled <- c(`2010` = 30L, `2011` = 40L, `2012` = 37L, `2013` = 48L,
                        `2014` = 50L, `2015` = 57L, `2016` = 53L, `2017` = 59L,
@@ -36,7 +36,7 @@ test_that("every source row passes GATE 2: values match the documented human rea
 })
 
 test_that("self-verification fixtures span the format eras", {
-  p <- nsp_csv(); skip_if(is.null(p))
+  p <- nsp_csv(); skip_if(is.null(p), "NRMP series CSV not reachable (source tree absent under R CMD check)")
   d <- utils::read.csv(p, stringsAsFactors = FALSE)
   get <- function(y, f) d[[f]][d$appointment_year == y]
 
@@ -53,7 +53,7 @@ test_that("self-verification fixtures span the format eras", {
 })
 
 test_that("appointment years are unique and no report is counted twice", {
-  p <- nsp_csv(); skip_if(is.null(p))
+  p <- nsp_csv(); skip_if(is.null(p), "NRMP series CSV not reachable (source tree absent under R CMD check)")
   d <- utils::read.csv(p, stringsAsFactors = FALSE)
   expect_equal(anyDuplicated(d$appointment_year), 0L)
   expect_equal(anyDuplicated(d$source_url), 0L)
@@ -64,7 +64,7 @@ test_that("appointment years are unique and no report is counted twice", {
 })
 
 test_that("full provenance travels with every row", {
-  p <- nsp_csv(); skip_if(is.null(p))
+  p <- nsp_csv(); skip_if(is.null(p), "NRMP series CSV not reachable (source tree absent under R CMD check)")
   d <- utils::read.csv(p, stringsAsFactors = FALSE)
   for (f in c("report_title", "table_name", "source_url", "retrieved_on")) {
     expect_true(all(nzchar(as.character(d[[f]]))), info = f)
@@ -78,7 +78,7 @@ test_that("filled never exceeds offered, and the compiled series matches the CSV
   expect_true(all(s$positions_filled <= s$positions_offered))
   expect_equal(anyDuplicated(s$appointment_year), 0L)
 
-  p <- nsp_csv(); skip_if(is.null(p))
+  p <- nsp_csv(); skip_if(is.null(p), "NRMP series CSV not reachable (source tree absent under R CMD check)")
   d <- utils::read.csv(p, stringsAsFactors = FALSE)
   m <- merge(d, s, by = "appointment_year", suffixes = c("_csv", "_pkg"))
   expect_equal(nrow(m), nrow(s))
