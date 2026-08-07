@@ -18,7 +18,8 @@ Named list of scenario definitions.
 Adopts \code{mufflyaccess::urps_scenarios()} as the single source of truth and
 translates it into the shape this package's engine consumes. The registry
 carries \code{entrant_multiplier}, \code{retirement_shift_years},
-\code{late_career_fte_factor} and \code{late_career_fte_onset_age}.
+\code{late_career_fte_factor}, \code{late_career_fte_onset_age} and (from registry
+v1.3.0) \code{career_change_multiplier} (the burnout / early-exit lever).
 }
 \details{
 Two mapping notes:
