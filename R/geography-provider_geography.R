@@ -67,10 +67,15 @@ opportunity_placement_shares <- function(demand_growth, retirements) {
   assertthat::assert_that(all(c("geo", "demand_growth_fte") %in% names(demand_growth)))
   assertthat::assert_that(all(c("geo", "retirements_fte") %in% names(retirements)))
 
-  joined <- safe_left_join(demand_growth, retirements, by = "geo", min_match_rate = 1.0)
+  # Full join, not left: a geo present only in `retirements` (retirements but no
+  # projected demand-growth row) is a real opportunity a left join would silently
+  # drop from the placement distribution, understating that geo's entrant share.
+  # Coalesce the unmatched side's fte to 0.
+  joined <- dplyr::full_join(demand_growth, retirements, by = "geo")
   out <- dplyr::mutate(
     joined,
-    requirements_fte = pmax(.data$demand_growth_fte, 0) + pmax(.data$retirements_fte, 0)
+    requirements_fte = pmax(dplyr::coalesce(.data$demand_growth_fte, 0), 0) +
+      pmax(dplyr::coalesce(.data$retirements_fte, 0), 0)
   )
   total <- sum(out$requirements_fte, na.rm = TRUE)
   if (total <= 0) {

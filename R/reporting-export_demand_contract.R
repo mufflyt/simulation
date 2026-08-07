@@ -400,6 +400,7 @@ export_dmdm_demand_contract <- function(trajectory,
   status_rank <- c(placeholder_uncalibrated = 1L, uncalibrated_illustrative = 1L,
                    derived_by_analogy = 2L, fitted = 3L, calibrated = 4L)
   weakest <- function(s) {
+    if (!length(s)) return(NA_character_)
     r <- status_rank[s]; r[is.na(r)] <- 0L
     s[which.min(r)]
   }
@@ -414,7 +415,12 @@ export_dmdm_demand_contract <- function(trajectory,
            dmdm_ui  = or_default(prov$ui,  calibration_status),
            dmdm_pop = or_default(prov$pop, calibration_status),
            dmdm_ai  = or_default(prov$ai,  calibration_status),
-           tier3_prevalent_pfd = weakest(c(prov$ui, prov$pop, prov$ai)),
+           # Count a NULL condition at the object status (its true weakness),
+           # not by dropping it -- else a tier composed from unset provenance is
+           # stamped stronger than the placeholder inputs it is made of.
+           tier3_prevalent_pfd = weakest(c(or_default(prov$ui,  calibration_status),
+                                           or_default(prov$pop, calibration_status),
+                                           or_default(prov$ai,  calibration_status))),
            calibration_status)
   }
 

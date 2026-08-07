@@ -239,7 +239,10 @@ thin_roster_by_p_active <- function(agents,
                      coef        = coef)
 
   if (isTRUE(stochastic)) {
-    keep <- stats::runif(nrow(agents)) < p
+    # `!is.na(p) &`: an NA activity probability (e.g. from an NA age) would make
+    # `keep` NA, and `agents[NA, ]` inserts a phantom all-NA row per NA index,
+    # silently corrupting the roster. Treat undetermined activity as not-kept.
+    keep <- !is.na(p) & stats::runif(nrow(agents)) < p
     agents[keep, , drop = FALSE]
   } else {
     agents$p_active <- p
