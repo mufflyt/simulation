@@ -30,10 +30,9 @@ SCENARIO_REGISTRY_VERSION <- "2.0.0-local-fallback"
 
 # Policy-lever scenarios modeled as parameter shifts on the supply axes the
 # engine already consumes (clinical hours via `hours_multiplier`, retirement age
-# via `retirement_shift_years`). When mufflyaccess is installed it remains
-# authoritative for every id it owns; the public registry appends only extension
-# ids missing from the SSOT, so local policy levers are reachable without
-# overriding a contract-owned definition.
+# via `retirement_shift_years`). They live in the local fallback only. When
+# mufflyaccess is installed, its scenario ids remain the complete public registry
+# until the contract itself adopts any extension ids.
 # Each is ASSUMED/ILLUSTRATIVE until its magnitude is calibrated; the source says so.
 SUPPLY_SCENARIO_LOCAL_EXTENSIONS <- c("telemedicine", "ai_documentation", "burnout_reduction")
 
@@ -45,11 +44,11 @@ ACCESS_COMPONENTS <- c("uninsured", "nonmetro", "racial_equity", "income")
 
 #' Supply scenario registry
 #'
-#' Returns the mufflyaccess registry when available, plus local policy-lever
-#' extensions that the SSOT does not yet carry. For any id present in
-#' mufflyaccess, the SSOT definition wins. When the contract is absent this falls
-#' back to [local_supply_scenario_registry()]. Pass `prefer_ssot = FALSE` to
-#' force the local fallback even when mufflyaccess is present.
+#' Returns the mufflyaccess registry when available; its ids ARE the registry and
+#' are never locally extended. When the contract is absent this falls back to
+#' [local_supply_scenario_registry()], which is also where the policy-lever
+#' extensions live. Pass `prefer_ssot = FALSE` to force the local fallback (and
+#' reach those extensions) even when mufflyaccess is present.
 #'
 #' @param baseline_entrants Baseline annual entrants to practice.
 #' @param prefer_ssot Use `mufflyaccess::urps_scenarios()` when available.
@@ -57,10 +56,11 @@ ACCESS_COMPONENTS <- c("uninsured", "nonmetro", "racial_equity", "income")
 #' @export
 supply_scenario_registry <- function(baseline_entrants = 55, prefer_ssot = TRUE) {
   if (isTRUE(prefer_ssot) && has_mufflyaccess()) {
-    ssot <- ssot_supply_scenarios(baseline_entrants)
-    local <- local_supply_scenario_registry(baseline_entrants)
-    extension_ids <- setdiff(SUPPLY_SCENARIO_LOCAL_EXTENSIONS, names(ssot))
-    return(c(ssot, local[extension_ids]))
+    # The SSOT is authoritative: its ids ARE the registry, never locally
+    # extended. Appending local-only ids here is silent divergence -- and the
+    # policy-lever extensions already live in the local fallback until the
+    # projection contract carries them (see local_supply_scenario_registry()).
+    return(ssot_supply_scenarios(baseline_entrants))
   }
   .msg_warn("Using the LOCAL scenario fallback; ids will not validate against ",
             "the mufflyaccess projection contract.")
