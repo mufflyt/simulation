@@ -11,20 +11,17 @@ calculate_replacement_gap(
 )
 }
 \arguments{
-\item{retirees_by_subspec}{Data frame: \code{subspecialty}, \code{retiring_count}.}
+\item{retirees_by_subspec}{Tibble: \code{subspecialty}, \code{retiring_count}.}
 
-\item{fellowship_grads}{Data frame: \code{subspecialty}, \code{graduates} (per year rows).}
+\item{fellowship_grads}{Tibble: \code{subspecialty}, \code{graduates} (per year rows).}
 
 \item{horizon_years}{Projection horizon (default 5).}
 }
 \value{
-List: \code{by_subspecialty} (data frame) and \code{overall} (summary list).
+List: \code{by_subspecialty} (tibble) and \code{overall} (summary list).
 }
 \description{
-Thin delegation to \code{\link[mufflyaccess:calculate_replacement_gap]{mufflyaccess::calculate_replacement_gap()}}, which is the
-single implementation. Kept as a local name so existing call sites and the
-package's own exports do not change.
-}
-\seealso{
-\code{\link[mufflyaccess:calculate_replacement_gap]{mufflyaccess::calculate_replacement_gap()}}
+Port of cliff::calculate_replacement_gap. Projects 5 years of graduates
+against projected retirements per subspecialty and reports the net gap,
+replacement ratio, and an adequacy flag.
 }

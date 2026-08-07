@@ -135,24 +135,51 @@ calculate_rural_metro_comparison <- function(rural_at_risk, rural_total,
 
 #' Subspecialty replacement-gap analysis (retirees vs fellowship graduates)
 #'
-#' Thin delegation to [mufflyaccess::calculate_replacement_gap()], which is the
-#' single implementation. Kept as a local name so existing call sites and the
-#' package's own exports do not change.
+#' Port of cliff::calculate_replacement_gap. Projects 5 years of graduates
+#' against projected retirements per subspecialty and reports the net gap,
+#' replacement ratio, and an adequacy flag.
 #'
-#' @param retirees_by_subspec Data frame: `subspecialty`, `retiring_count`.
-#' @param fellowship_grads Data frame: `subspecialty`, `graduates` (per year rows).
+#' @param retirees_by_subspec Tibble: `subspecialty`, `retiring_count`.
+#' @param fellowship_grads Tibble: `subspecialty`, `graduates` (per year rows).
 #' @param horizon_years Projection horizon (default 5).
-#' @return List: `by_subspecialty` (data frame) and `overall` (summary list).
-#' @seealso [mufflyaccess::calculate_replacement_gap()]
+#' @return List: `by_subspecialty` (tibble) and `overall` (summary list).
 #' @export
 calculate_replacement_gap <- function(retirees_by_subspec, fellowship_grads,
-                                      horizon_years = 5) {
-  # SSOT: mufflyaccess owns this. It lived here, in cliff, and in isochrones,
-  # and the three DISAGREED -- one name, one apparent meaning, three answers.
-  # This delegation keeps the local call sites working while there is exactly
-  # one implementation left to be wrong.
-  mufflyaccess::calculate_replacement_gap(retirees_by_subspec, fellowship_grads,
-                                          horizon_years = horizon_years)
+                                       horizon_years = 5) {
+  assertthat::assert_that(all(c("subspecialty", "retiring_count") %in% names(retirees_by_subspec)))
+  assertthat::assert_that(all(c("subspecialty", "graduates") %in% names(fellowship_grads)))
+
+  grad_summary <- fellowship_grads %>%
+    dplyr::group_by(.data$subspecialty) %>%
+    dplyr::summarise(annual_grads = mean(.data$graduates, na.rm = TRUE),
+                     total_grads = sum(.data$graduates, na.rm = TRUE), .groups = "drop")
+
+  by_sub <- retirees_by_subspec %>%
+    safe_left_join(grad_summary, by = "subspecialty") %>%
+    dplyr::mutate(
+      annual_grads = tidyr::replace_na(.data$annual_grads, 0),
+      projected_grads = .data$annual_grads * horizon_years,
+      replacement_ratio = .wf_safe_divide(.data$projected_grads, .data$retiring_count),
+      net_gap = .data$retiring_count - .data$projected_grads,
+      gap_percentage = .wf_safe_percentage(.data$net_gap, .data$retiring_count),
+      adequate_replacement = .data$replacement_ratio >= 1.0
+    ) %>%
+    dplyr::arrange(.data$subspecialty)
+
+  total_retiring <- sum(by_sub$retiring_count, na.rm = TRUE)
+  total_proj <- sum(by_sub$projected_grads, na.rm = TRUE)
+  overall_gap <- total_retiring - total_proj
+
+  list(
+    by_subspecialty = by_sub,
+    overall = list(
+      total_retiring = total_retiring,
+      total_graduates_projected = total_proj,
+      net_gap = overall_gap,
+      gap_percentage = .wf_safe_percentage(overall_gap, total_retiring),
+      replacement_ratio = .wf_safe_divide(total_proj, total_retiring)
+    )
+  )
 }
 
 # ---- State vulnerability ranking -------------------------------------------
@@ -178,7 +205,7 @@ calculate_state_vulnerability <- function(state_impacts, top_n = 10) {
     dplyr::filter(!is.na(.data$pct_loss_if_retire)) %>%
     dplyr::mutate(vulnerability_score = .data$pct_loss_if_retire *
                     log10(pmax(1, .data$count_active))) %>%
-    dplyr::arrange(dplyr::desc(.data$pct_loss_if_retire)) %>%
+    dplyr::arrange(dplyr::desc(.data$vulnerability_score)) %>%
     dplyr::slice_head(n = top_n) %>%
     dplyr::select(dplyr::all_of(c(needed, "vulnerability_score")))
 }

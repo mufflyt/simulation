@@ -340,7 +340,7 @@ predict_urps_annual_visits <- function(model, newdata, ci = FALSE) {
   }
 
   interval <- if (ci) "prediction" else "none"
-  p <- stats::predict(model, newdata = newdata, interval = interval, na.action = na.pass)
+  p <- stats::predict(model, newdata = newdata, interval = interval, na.action = stats::na.pass)
   if (ci) {
     newdata$predicted_visits_per_1000 <- exp(p[, "fit"])
     newdata$predicted_lo              <- exp(p[, "lwr"])
