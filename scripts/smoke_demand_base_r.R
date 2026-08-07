@@ -132,6 +132,19 @@ ok(cmp$scorecard$interval_score_skill[cmp$scorecard$model == "good"] > 0,
 ok(cmp$rank_stability$best_fraction[cmp$rank_stability$model == "good"] == 1,
    "compare_forecasts: rank stability flags the model that wins at every cutoff")
 
+cat("== forecast probabilities (R/validation-forecast_probabilities.R) ==\n")
+src("R/validation-forecast_probabilities.R")   # base-R: median + PI + exceedance probabilities
+gp <- c(rep(0, 25), rep(10, 75))    # 75% of draws show a 10% gap, 25% show none
+fp <- forecast_probabilities(gp, prob_level = 0.90, exceed = c(0, 5), label = "gap_pct")
+ok(fp$summary$median == 10 && fp$exceedance$probability[fp$exceedance$threshold == 5] == 0.75,
+   "forecast_probabilities: median + P(exceeds threshold) off the draws")
+ok(forecast_probabilities(c(1, 2, 3, NA, NA), exceed = 0)$summary$n_na == 2,
+   "forecast_probabilities: failed (NA) draws are counted, not silently dropped")
+wg <- workforce_gap_probabilities(list(draws = data.frame(gap_pct = gp)),
+                                  metric = "gap_pct", shortage_thresholds = c(0, 5, 10))
+ok(all(diff(wg$probabilities$probability) <= 0) && grepl("any shortage", wg$probabilities$statement[1]),
+   "workforce_gap_probabilities: monotone shortage probabilities, phrased as statements")
+
 cat("== literature POP transitions (R/supply-roster) ==\n")
 ptr <- dmdm_transitions_with_pop_literature()
 ok(ptr$calibration_status == "derived_by_analogy", "POP overlay marked derived_by_analogy")

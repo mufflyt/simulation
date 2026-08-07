@@ -1,0 +1,91 @@
+# Exported symbols that NOTHING in R/, scripts/ or vignettes/ calls.
+#
+# Enforced by tests/testthat/test-export-wiring.R. The list is the point: this
+# repository's most persistent defect is a capability that is implemented,
+# tested, documented -- and reachable from no pipeline. hours_coef,
+# assert_demand_calibrated(), opportunity_placement_shares(), param_spec in
+# run_backtest() and apply_hrsa_surgical_fte() were each found that way, one at
+# a time, by accident. Sixty-seven exports are in that position today.
+#
+# Being on this list is not automatically wrong. An analysis helper a USER calls
+# is orphaned by construction -- the package has no reason to call it. What is
+# wrong is not knowing which kind you have. So every orphan must declare one:
+#
+#   api           A user calls it directly. Orphan status is expected.
+#   unwired_gate  An assertion or status check that NOTHING invokes. A guard
+#                 nobody calls does not guard anything; this is real debt.
+#   dormant       A capability implemented and connected to no pipeline. Either
+#                 wire it or drop it -- it is not doing anything meanwhile.
+# The gate fails when a NEW orphan appears unregistered, and when a registered
+# orphan becomes wired (delete the row) or stops being exported (delete the row).
+# Adding a row is a decision, which is the whole idea -- the previous state was
+# sixty-seven decisions nobody made.
+"export","category"
+"anchor_index","api"
+"annual_trend","api"
+"baseline_anchor_sensitivity","api"
+"calculate_replacement_gap","api"
+"calculate_rural_metro_comparison","api"
+"calculate_state_vulnerability","api"
+"lifecourse_risk_params_cited","api"
+"load_sensitivity_table","api"
+"npp_women_65plus","api"
+"p_active_by_age","api"
+"participation_p_no_patient_care","api"
+"pfd_prevalence_ownership","api"
+"provider_concentration","api"
+"psa_normal","api"
+"psa_triangular","api"
+"publish_access_outcomes","api"
+"published_baseline_gaps","api"
+"published_calibration_scalars","api"
+"restate_fte","api"
+"retirement_survival","api"
+"ssot_rurality","api"
+"ssot_safe_percent","api"
+"stamped_backtest_status","api"
+"supply_per_capita","api"
+"supply_uncertainty_drivers","api"
+"urps_age_productivity_curve","api"
+"wilson_ci","api"
+"workforce_lorenz","api"
+"access_weight_sensitivity","dormant"
+"advance_urps_agents","dormant"
+"agent_urbanicity_summary","dormant"
+"apply_age_specific_surgery_demand","dormant"
+"apply_calibration_scalars","dormant"
+"apply_provider_migration","dormant"
+"apply_urps_migration","dormant"
+"assign_access_category","dormant"
+"blend_placement_shares","dormant"
+"build_hazard_table","dormant"
+"career_departure_by_state","dormant"
+"delegation_capacity_sensitivity","dormant"
+"dmdm_population_audit","dormant"
+"dmdm_prevalence_trajectory","dormant"
+"e2sfca_bands","dormant"
+"entrant_trajectory_scenarios","dormant"
+"hazard_shrinkage_summary","dormant"
+"legacy_collisions","dormant"
+"load_legacy","dormant"
+"migration_drift_scenario","dormant"
+"prevention_volume_summary","dormant"
+"project_supply_deterministic","dormant"
+"read_artifact_with_provenance","dormant"
+"real_access_surface","dormant"
+"setting_scenario_summary","dormant"
+"spatial_access_ratio","dormant"
+"state_departure_hazard","dormant"
+"summarise_stratum_coverage","dormant"
+"swan_dmdm_panel_from_archive","dormant"
+"urps_hazard_exposure","dormant"
+"assert_backtest_record_current","unwired_gate"
+"assert_external_anchor","unwired_gate"
+"assert_mufflyaccess_contract","unwired_gate"
+"assert_publishable_demand_coefficients","unwired_gate"
+"assert_publishable_supply_transitions","unwired_gate"
+"backtest_attrition_requirement","unwired_gate"
+"check_external_data","unwired_gate"
+"check_legacy_canonical","unwired_gate"
+"fte_curve_status","unwired_gate"
+"unresolved_calibration_items","unwired_gate"

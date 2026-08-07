@@ -29,12 +29,12 @@
 # ---- HWMM age bands (HDMM Exhibit 5) ----------------------------------------
 #
 # Five adult bands used throughout demand modules.  The upper two align with
-# mufflyaccess::pfd_prevalence() contract bands (65-79, 80+).
+# mufflyaccess::pfd_prevalence() contract bands (65-74, 75+).
 
 #' Adult age bands used across the demand modules
 #'
 #' Five HWMM/HDMM adult bands (Exhibit 5). The upper two align exactly with the
-#' `mufflyaccess::pfd_prevalence()` contract bands (65-79, 80+) so prevalence can
+#' `mufflyaccess::pfd_prevalence()` contract bands (65-74, 75+) so prevalence can
 #' be joined without a wrong-grain error.
 #'
 #' @format Character vector of five band labels.
@@ -84,8 +84,8 @@ URPS_POP_AGE_BANDS <- c("18-34", "35-44", "45-64", "65-74", "75+")
   tier <- rep(NA_character_, length(income3))
   tier[income3 %in% 1:4]  <- "LT25k"
   tier[income3 %in% 5:6]  <- "25k_50k"
-  tier[income3 %in% 7:9]  <- "50k_100k"
-  tier[income3 %in% 10:11] <- "GT100k"
+  tier[income3 %in% 7:8]  <- "50k_100k"   # 7=$50-75k, 8=$75-100k
+  tier[income3 %in% 9:11] <- "GT100k"      # 9=$100-150k, 10=$150-200k, 11=$200k+
   tier
 }
 
@@ -284,9 +284,10 @@ load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
   bmi_class <- .BMI5CAT_LABELS[as.character(raw[["X_BMI5CAT"]])]
   smoker    <- .SMOKER3_LABELS[as.character(raw[["X_SMOKER3"]])]
 
-  # Children ever born: CHILDREN = 88 means "none"; 99 = refused
+  # Children ever born: CHILDREN = 88 means "none" (zero); 99 = refused (missing).
   n_ch <- raw[["CHILDREN"]]
-  n_ch[n_ch %in% c(88L, 99L)] <- NA_integer_
+  n_ch[n_ch == 88L] <- 0L
+  n_ch[n_ch == 99L] <- NA_integer_
 
   # PFD self-report: optional BRFSS module -- absent in 2023 core
   ui_flag  <- .extract_pfd_flag(raw, c("BLADCON", "URINCON", "INCONTI"))
@@ -402,32 +403,9 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
 
   pfd_observed <- !all(is.na(brfss_women$ui_flag))
 
-  cells <- aggregate(
-    cbind(n_respondents = seq_len(nrow(brfss_women)),
-          pop_weight    = brfss_women$survey_wt,
-          n_smoker      = as.integer(!is.na(brfss_women$smoker) &
-                                       brfss_women$smoker %in%
-                                       c("Current_Daily", "Current_Some")),
-          n_children    = ifelse(is.na(brfss_women$n_children), 0,
-                                 brfss_women$n_children),
-          n_ui_flag     = ifelse(is.na(brfss_women$ui_flag), 0,
-                                 brfss_women$ui_flag),
-          n_pop_flag    = ifelse(is.na(brfss_women$pop_flag), 0,
-                                 brfss_women$pop_flag),
-          n_fi_flag     = ifelse(is.na(brfss_women$fi_flag), 0,
-                                 brfss_women$fi_flag)),
-    by = list(
-      age_group   = brfss_women$age_group,
-      race_eth    = brfss_women$race_eth,
-      insurance   = brfss_women$insurance,
-      income_tier = brfss_women$income_tier,
-      metro       = brfss_women$metro,
-      bmi_class   = brfss_women$bmi_class
-    ),
-    FUN = function(x) if (identical(names(x), "n_respondents")) length(x) else sum(x, na.rm = TRUE)
-  )
-
-  # Recompute properly via split-apply (aggregate FUN contract is tricky)
+  # Aggregate to cells via split-apply: aggregate()'s single per-column FUN can't
+  # express "count rows for one column, weighted sums for the rest" in one pass,
+  # so the cells are built explicitly below.
   grp_cols <- c("age_group", "race_eth", "insurance", "income_tier", "metro", "bmi_class")
   rows <- split(seq_len(nrow(brfss_women)), brfss_women[, grp_cols], drop = TRUE)
 
@@ -851,7 +829,7 @@ load_mcbs_women65 <- function(mcbs_rds = NULL, verbose = TRUE) {
   if (verbose) {
     n65 <- sum(out$age_group == "65-74", na.rm = TRUE)
     n75 <- sum(out$age_group == "75+",   na.rm = TRUE)
-    ui_prev <- weighted.mean(out$ui_loss == 1L,
+    ui_prev <- stats::weighted.mean(out$ui_loss == 1L,
                              w = ifelse(is.na(out$survey_wt), 1, out$survey_wt),
                              na.rm = TRUE)
     message(sprintf(
@@ -886,7 +864,7 @@ blend_mcbs_prevalence <- function(cells, mcbs = NULL, verbose = TRUE) {
     sub <- mcbs[!is.na(mcbs$age_group) & as.character(mcbs$age_group) == band, ]
     if (nrow(sub) == 0L) next
     wt   <- ifelse(is.na(sub$survey_wt), 1, sub$survey_wt)
-    prev <- weighted.mean(sub$ui_loss == 1L, w = wt, na.rm = TRUE)
+    prev <- stats::weighted.mean(sub$ui_loss == 1L, w = wt, na.rm = TRUE)
 
     rows <- !is.na(cells$age_group) & as.character(cells$age_group) == band
     if (any(rows)) {

@@ -95,9 +95,10 @@ test_that("the capacity factor is falsifiable through implied productivity", {
 test_that("the real artifact corroborates the borrowed ordering", {
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
-  skip_if(length(root) == 0)
+  skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   skip_if_not(length(list.files(file.path(root[1], "artifacts"),
-                                pattern = "^medicare_realized_care_.*\\.rds$")) > 0)
+                                pattern = "^medicare_realized_care_.*\\.rds$")) > 0,
+              "realized Medicare artifact not present")
   c1 <- medicare_delegation_corroboration(
     urpssim:::.load_realized_medicare(file.path(root[1], "artifacts")))
   # The Forte SHAPE transfers -- care-management services are the most delegated

@@ -26,7 +26,9 @@
 #'   `wait_censored`, `p_appointment`, and, for panel size,
 #'   `accessible_population`/`accessible_fte`).
 #' @return A tidy tibble: `estimand` (A1-A5, with `A1b`/`A5b` auxiliary shares),
-#'   `label`, `value`, `unit`, `calibration_status`.
+#'   `label`, `value`, `unit`, `calibration_status`. When `cleared` carries
+#'   spatial-overflow columns (from [overflow_access()]), two more rows are
+#'   appended: `A6` (`spilled_share`) and `A7` (`overflow_travel_time`).
 #' @export
 access_outcomes_national <- function(cleared) {
   need <- c("demand_workload", "accessible_capacity", "served", "unmet_demand",
@@ -59,7 +61,7 @@ access_outcomes_national <- function(cleared) {
   status <- unique(stats::na.omit(cleared$calibration_status))
   status <- if (length(status) == 1L) status else paste(status, collapse = "+")
 
-  tibble::tibble(
+  out <- tibble::tibble(
     estimand = c("A1", "A1b", "A2", "A3", "A4", "A5", "A5b"),
     label = c("wait_time", "wait_censored_share", "p_appointment",
               "panel_size", "utilization", "unmet_demand", "unmet_fraction"),
@@ -69,6 +71,27 @@ access_outcomes_national <- function(cleared) {
              "fraction", "workload", "fraction"),
     calibration_status = status
   )
+
+  # A6/A7: spatial-overflow outcomes, present only when `cleared` came from
+  # overflow_access() (Phase 2). Demand that was met only by sending the patient
+  # to another catchment, and the mean extra travel that cost -- computed from
+  # columns so they survive a trajectory roll-up (attr() would not).
+  if (all(c("spilled_out", "overflow_travel_time") %in% names(cleared))) {
+    base_demand <- if ("demand_workload_pre_overflow" %in% names(cleared)) {
+      sum(cleared$demand_workload_pre_overflow, na.rm = TRUE)
+    } else tot_demand
+    tot_spilled <- sum(cleared$spilled_out, na.rm = TRUE)
+    spilled_share <- if (base_demand > 0) tot_spilled / base_demand else NA_real_
+    ovt_nat <- .access_dwmean(cleared$overflow_travel_time, cleared$spilled_out)
+    out <- rbind(out, tibble::tibble(
+      estimand = c("A6", "A7"),
+      label = c("spilled_share", "overflow_travel_time"),
+      value = c(spilled_share, ovt_nat),
+      unit = c("fraction", "time"),
+      calibration_status = status
+    ))
+  }
+  out
 }
 
 # TRUE for TRUE, FALSE for FALSE or NA -- so an NA censored flag never counts as
@@ -130,4 +153,54 @@ access_outcomes_trajectory <- function(cleared) {
   })
   res <- dplyr::bind_rows(parts)
   res[, c("year", setdiff(names(res), "year")), drop = FALSE]
+}
+
+#' National access outcomes stratified by severity class
+#'
+#' Applies [access_outcomes_national()] within each severity class of a
+#' severity-stratified clearing table (from [clear_access_by_severity()]) and
+#' stacks the results, so the A-series can be read per severity (e.g. an urgent
+#' wait that must clear a 7-day window vs a routine 30-day one).
+#'
+#' @param cleared A tibble from [clear_access_by_severity()].
+#' @param severity_col Name of the severity column. Default `"severity"`.
+#' @return The [access_outcomes_national()] tibble per severity class, stacked,
+#'   with a leading severity column.
+#' @export
+access_outcomes_by_severity <- function(cleared, severity_col = "severity") {
+  if (!is.data.frame(cleared) || !severity_col %in% names(cleared)) {
+    stop("access_outcomes_by_severity(): `cleared` needs a `", severity_col,
+         "` column (from clear_access_by_severity()).", call. = FALSE)
+  }
+  levels <- unique(cleared[[severity_col]])
+  parts <- lapply(levels, function(s) {
+    nat <- access_outcomes_national(cleared[cleared[[severity_col]] == s, , drop = FALSE])
+    nat[[severity_col]] <- s
+    nat
+  })
+  res <- dplyr::bind_rows(parts)
+  res[, c(severity_col, setdiff(names(res), severity_col)), drop = FALSE]
+}
+
+#' Roll up and publish access outcomes, guarding calibration
+#'
+#' The single publish-path seam for the access layer: it produces the national
+#' A-series roll-up and then refuses to hand it back unless every outcome carries
+#' a calibration label and, by default, is actually calibrated (not still
+#' `assumed`/`illustrative`). Wiring [assert_access_outcomes_labeled()] in HERE
+#' means an un-calibrated access number cannot leave the layer as a published
+#' figure by accident -- the same governance the demand/supply layers use.
+#'
+#' @param cleared A per-catchment clearing table from [clear_access()] (or a
+#'   spatial-overflow clearing).
+#' @param require_calibrated If `TRUE` (default, the publishing posture), error
+#'   when any outcome is still `assumed`/`illustrative`. Set `FALSE` to roll up
+#'   an explicitly-labeled draft without the calibration gate.
+#' @return The [access_outcomes_national()] tibble, invisibly returned only after
+#'   it passes the guard.
+#' @export
+publish_access_outcomes <- function(cleared, require_calibrated = TRUE) {
+  national <- access_outcomes_national(cleared)
+  assert_access_outcomes_labeled(national, require_calibrated = require_calibrated)
+  national
 }

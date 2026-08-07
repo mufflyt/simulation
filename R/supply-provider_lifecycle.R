@@ -238,7 +238,11 @@ shift_retirement_schedule <- function(delta_years, schedule = RETIREMENT_HAZARD_
   # (career change already covers that age range).
   keep <- as.integer(names(out)) >= RETIREMENT_MIN_AGE
   out <- out[keep]
-  gap_ages <- setdiff(RETIREMENT_MIN_AGE:(min(as.integer(names(out))) - 1L), integer(0))
+  # Only retiring LATER (delta > 0) leaves a young-end gap to fill. When the
+  # youngest kept age is already the floor (delta <= 0), there is no gap: guard
+  # against RETIREMENT_MIN_AGE:(floor-1) evaluating to a descending range.
+  min_age <- min(as.integer(names(out)))
+  gap_ages <- if (min_age > RETIREMENT_MIN_AGE) RETIREMENT_MIN_AGE:(min_age - 1L) else integer(0)
   if (length(gap_ages) > 0) {
     filler <- stats::setNames(rep(min(schedule), length(gap_ages)), as.character(gap_ages))
     out <- c(filler, out)
