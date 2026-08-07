@@ -26,8 +26,8 @@ apply_hrsa_surgical_fte <- function(agents,
                                     verbose            = TRUE) {
   assertthat::assert_that(
     is.data.frame(agents),
-    all(c("age", "sex") %in% colnames(agents)),
-    msg = "agents must have age and sex columns"
+    all(c("age", "sex", "status") %in% colnames(agents)),
+    msg = "agents must have age, sex and status columns"
   )
 
   # HRSA HWSM surgical specialty hours
