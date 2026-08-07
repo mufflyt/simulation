@@ -16,3 +16,17 @@ Character classification(s).
 Replacement ratio = annual entrants / annual departures. cliff cutpoints:
 Adequate (>= 1.2), Marginal (0.8-1.2), Insufficient (< 0.8).
 }
+\seealso{
+Other provider microsimulation: 
+\code{\link{build_hazard_table}()},
+\code{\link{initialize_provider_agents}()},
+\code{\link{microsim_age_band_of}()},
+\code{\link{project_supply_deterministic}()},
+\code{\link{provider_active_in_year}()},
+\code{\link{provider_clinical_fte}()},
+\code{\link{retirement_hazard}()},
+\code{\link{run_supply_microsimulation}()},
+\code{\link{simulate_provider_career_once}()}
+}
+\concept{provider microsimulation}
+\concept{supply}

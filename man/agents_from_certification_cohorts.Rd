@@ -37,3 +37,13 @@ The 2013 backlog cohort gets the assumed distribution above. The result
 carries \code{cohort_source} per agent so the observed and assumed halves stay
 distinguishable downstream.
 }
+\seealso{
+Other roster: 
+\code{\link{cohort_composition}()},
+\code{\link{cohort_provenance}()},
+\code{\link{implied_gross_entrants}()},
+\code{\link{observed_entrant_rate}()},
+\code{\link{urps_certification_cohorts}()}
+}
+\concept{roster}
+\concept{supply}

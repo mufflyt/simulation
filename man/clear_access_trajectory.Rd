@@ -29,8 +29,8 @@ Default \code{FALSE} (each year cleared independently).}
 next year. In 0 to 1. Default 1 (all unmet persists).}
 
 \item{neighbors}{Optional overflow edge list (see \code{\link[=overflow_access]{overflow_access()}}). When
-supplied, each year is cleared with spatial overflow composed underneath the
-backlog step: demand (plus any backlog) is reallocated across catchments
+supplied, each year is cleared with spatial overflow composed underneath
+the backlog step: demand (plus any backlog) is reallocated across catchments
 before the year's outcomes are computed, and the backlog carried into the
 next year is the POST-overflow unmet demand. Needs a \code{catchment} id. Default
 \code{NULL} (no overflow; Phase-1 clearing each year).}
@@ -54,3 +54,12 @@ catchment's unmet demand is added to that catchment's demand in the following
 year (matched by \code{catchment}), so a persistent shortfall compounds instead of
 vanishing at the year boundary.
 }
+\seealso{
+Other access clearing: 
+\code{\link{catchment_neighbors_from_coords}()},
+\code{\link{clear_access}()},
+\code{\link{overflow_access}()},
+\code{\link{overflow_conservation}()}
+}
+\concept{access clearing}
+\concept{geography}

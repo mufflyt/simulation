@@ -15,4 +15,27 @@ The default \code{retirement_schedule} for \code{\link[=simulate_provider_career
 \code{\link[=run_supply_microsimulation]{run_supply_microsimulation()}} and five other exported functions. A user who
 cannot name it cannot state what baseline their scenario deviates from.
 }
+\seealso{
+Other provider lifecycle: 
+\code{\link{agents_from_roster}()},
+\code{\link{calibrate_hours_intercept}()},
+\code{\link{calibrate_retirement_schedule}()},
+\code{\link{deduplicate_provider_roster}()},
+\code{\link{departure_hazard}()},
+\code{\link{fit_clinical_hours_model}()},
+\code{\link{fte_definition}()},
+\code{\link{hwsm_reference_hours}()},
+\code{\link{implied_annual_departure_rate}()},
+\code{\link{participation_fte}()},
+\code{\link{participation_p_no_patient_care}()},
+\code{\link{predict_clinical_hours}()},
+\code{\link{restate_fte}()},
+\code{\link{retirement_survival}()},
+\code{\link{shift_retirement_schedule}()},
+\code{\link{urps_baseline_supply}()},
+\code{\link{validate_participation_table}()},
+\code{\link{validate_provider_roster}()}
+}
+\concept{provider lifecycle}
+\concept{supply}
 \keyword{datasets}

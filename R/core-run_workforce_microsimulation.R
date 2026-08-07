@@ -74,6 +74,8 @@ load_workforce_microsimulation <- function(r_dir = "R") {
 #' @param base_pop Named base-year population by age band.
 #' @param growth Named annual growth rate by age band.
 #' @return Tibble `year`, `age_band`, `female_pop`.
+#' @family run workforce microsimulation
+#' @concept core
 #' @export
 example_female_population_by_band <- function(
     years = 2025:2050,
@@ -96,6 +98,8 @@ example_female_population_by_band <- function(
 #' @param demand_long Long demand tibble; D2 drives consultations and D3 drives
 #'   procedures, so volumes track the demand projection.
 #' @return Tibble `year`, `service`, `volume`.
+#' @family run workforce microsimulation
+#' @concept core
 #' @export
 example_service_volumes <- function(demand_long) {
   consults <- dplyr::filter(demand_long, .data$estimand == "D2")
@@ -142,6 +146,8 @@ example_service_volumes <- function(demand_long) {
 #' that range -- see [published_baseline_gaps()].
 #'
 #' @return Tibble in the shape [capacity_survey_adequacy()] expects.
+#' @family run workforce microsimulation
+#' @concept core
 #' @export
 example_capacity_survey <- function() {
   tibble::tribble(
@@ -261,6 +267,8 @@ example_capacity_survey <- function() {
 #' # Every run records whether its demand side was calibrated to an
 #' # independent anchor. This one was not.
 #' result$scenario_meta$demand_calibrated
+#' @family run workforce microsimulation
+#' @concept core
 #' @export
 run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           supply_geography = c("national", "conus"),

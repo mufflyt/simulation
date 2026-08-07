@@ -12,7 +12,7 @@ telemedicine_reach(
 )
 }
 \arguments{
-\item{catchments}{A catchment table with `accessible_capacity` and a
+\item{catchments}{A catchment table with \code{accessible_capacity} and a
 metro/nonmetro column.}
 
 \item{nonmetro_uplift}{Fractional increase applied to a nonmetro catchment's
@@ -41,3 +41,5 @@ The uplift is ASSUMED/ILLUSTRATIVE -- a scenario lever, not a measured
 telehealth-reach effect. Supply a cited rural tele-reach estimate before any
 published number rests on it.
 }
+\concept{geography}
+\concept{telemedicine reach}

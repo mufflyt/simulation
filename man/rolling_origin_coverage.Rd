@@ -37,3 +37,12 @@ fell inside its interval. A single 2020 cutoff gives one realization of
 the forecast problem no matter how many model arms run against it;
 this gives one per fold.
 }
+\seealso{
+Other interval coverage: 
+\code{\link{assert_interval_coverage_publishable}()},
+\code{\link{fit_certification_baseline}()},
+\code{\link{forecast_certification}()},
+\code{\link{solve_interval_inflation}()}
+}
+\concept{interval coverage}
+\concept{validation}

@@ -20,3 +20,17 @@ retirement_year (first-inactive = last_active + 1) is strictly greater than Y.
 The strict \code{>} and first-inactive convention are load-bearing: retirement_year
 == Y means last active Y-1, i.e. NOT active in Y.
 }
+\seealso{
+Other provider microsimulation: 
+\code{\link{build_hazard_table}()},
+\code{\link{classify_workforce_outlook}()},
+\code{\link{initialize_provider_agents}()},
+\code{\link{microsim_age_band_of}()},
+\code{\link{project_supply_deterministic}()},
+\code{\link{provider_clinical_fte}()},
+\code{\link{retirement_hazard}()},
+\code{\link{run_supply_microsimulation}()},
+\code{\link{simulate_provider_career_once}()}
+}
+\concept{provider microsimulation}
+\concept{supply}

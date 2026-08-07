@@ -13,4 +13,12 @@ MUFFLYACCESS_PINNED_SHA
 \description{
 Commit the contract is pinned to in DESCRIPTION
 }
+\seealso{
+Other contract pin: 
+\code{\link{MUFFLYACCESS_REQUIRED_EXPORTS}},
+\code{\link{assert_mufflyaccess_contract}()},
+\code{\link{mufflyaccess_build}()}
+}
+\concept{contract pin}
+\concept{core}
 \keyword{datasets}

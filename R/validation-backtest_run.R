@@ -45,6 +45,8 @@ BACKTEST_ARMS <- tibble::tribble(
 #'   intervals carry forecast uncertainty. It does NOT move the point estimate.
 #' @param seed RNG seed.
 #' @return List with per-iteration trajectories and the arm's settings.
+#' @family backtest run
+#' @concept validation
 #' @export
 run_backtest_arm <- function(cohort = c("derived", "synthetic"),
                              entrants_per_year,
@@ -125,6 +127,8 @@ run_backtest_arm <- function(cohort = c("derived", "synthetic"),
 #' @param observed Named numeric vector of observed counts keyed by year.
 #' @param label Arm label.
 #' @return One-row tibble of metrics.
+#' @family backtest run
+#' @concept validation
 #' @export
 score_backtest_arm <- function(arm, observed, label = "") {
   # Settings are pulled out first: inside tibble(), `arm = label` would rebind
@@ -186,6 +190,8 @@ score_backtest_arm <- function(arm, observed, label = "") {
 #' @param expected_target The 2023 count the run is scored against, stated
 #'   explicitly so a different-but-valid count cannot be substituted silently.
 #' @return List with `summary`, `iterations`, `trajectory`, `target`, `entrants`.
+#' @family backtest run
+#' @concept validation
 #' @export
 run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
                          target_year = BACKTEST_TARGET_YEAR,

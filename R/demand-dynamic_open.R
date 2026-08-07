@@ -63,6 +63,8 @@
 #'   `inc_ui`/`inc_pop`/`inc_ai` (expected national new cases in the year). When
 #'   reweighting, also `share_unanchored`, with the full per-year audit on the
 #'   `population_audit` attribute (see [dmdm_population_audit()]).
+#' @family dynamic open
+#' @concept demand
 #' @export
 simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
                                transitions = dmdm_default_transitions(),
@@ -190,6 +192,8 @@ simulate_dmdm_open <- function(init, entrants = NULL, start_year, end_year,
 #'
 #' @param x Result of [simulate_dmdm_open()] run with `pop_by_age_year`.
 #' @return Tibble of the per-year audit, or NULL when the run did not reweight.
+#' @family dynamic open
+#' @concept demand
 #' @export
 dmdm_population_audit <- function(x) {
   a <- attr(x, "population_audit", exact = TRUE)
@@ -233,6 +237,8 @@ dmdm_population_audit <- function(x) {
 #' @param allow_uncalibrated Declare an exploratory run; passed through to
 #'   [simulate_dmdm_open()].
 #' @return The per-year data frame from [simulate_dmdm_open()].
+#' @family dynamic open
+#' @concept demand
 #' @export
 dmdm_open_prevalence_trajectory <- function(pop_by_age_year, start_year, end_year,
                                             entry_age = 40L, n_init = 5e4, n_entrants = 2e3,

@@ -28,3 +28,11 @@ any mismatch/missing/corrupt condition the artifact is rejected (returns NULL
 in relaxed mode, \code{stop()}s in strict mode) so the caller recomputes rather
 than trusting stale or tampered data.
 }
+\seealso{
+Other repro provenance: 
+\code{\link{resolve_reproducibility_mode}()},
+\code{\link{seed_microsimulation}()},
+\code{\link{write_artifact_with_provenance}()}
+}
+\concept{core}
+\concept{repro provenance}

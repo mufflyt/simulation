@@ -114,6 +114,8 @@ ssot_scenario_registry_version <- function() {
 #' @param ids Scenario ids used by a run.
 #' @param mode Reproducibility mode; strict errors on an unregistered id.
 #' @return (Invisibly) the unregistered ids.
+#' @family ssot
+#' @concept core
 #' @export
 assert_scenarios_registered <- function(ids, mode = resolve_reproducibility_mode()) {
   if (!has_mufflyaccess()) return(invisible(character(0)))
@@ -147,6 +149,8 @@ assert_scenarios_registered <- function(ids, mode = resolve_reproducibility_mode
 #' @param geography_type,geography_id Geography identifiers.
 #' @param validate Validate against the contract before returning.
 #' @return A data frame conforming to `mufflyaccess::urps_projection_schema()`.
+#' @family ssot
+#' @concept core
 #' @export
 as_urps_projection <- function(supply,
                                specialty = "URPS",
@@ -242,6 +246,8 @@ ssot_primary_access_band <- function(units = c("min", "sec")) {
 #'
 #' @param code RUCA code(s).
 #' @return Character classification.
+#' @family ssot
+#' @concept core
 #' @export
 ssot_rurality <- function(code) {
   .require_mufflyaccess("RUCA rurality classification")
@@ -279,6 +285,8 @@ ssot_provenance <- function(detailed = FALSE) {
 #' @param numerator,denominator Numeric vectors.
 #' @param default Value returned when the denominator is effectively zero.
 #' @return Numeric vector.
+#' @family ssot
+#' @concept core
 #' @export
 ssot_safe_divide <- function(numerator, denominator, default = NA_real_) {
   if (has_mufflyaccess()) {
@@ -295,6 +303,8 @@ ssot_safe_divide <- function(numerator, denominator, default = NA_real_) {
 #' # A zero denominator yields 0, not NaN or an error.
 #' ssot_safe_percent(part = 3, total = 0)
 #' ssot_safe_percent(part = 3, total = 12)
+#' @family ssot
+#' @concept core
 #' @export
 ssot_safe_percent <- function(part, total, digits = 1) {
   if (has_mufflyaccess()) {
@@ -308,6 +318,8 @@ ssot_safe_percent <- function(part, total, digits = 1) {
 #' Which model quantities are owned by the SSOT, and which are local
 #'
 #' @return Tibble of `quantity`, `owner`, `note`.
+#' @family ssot
+#' @concept core
 #' @export
 ssot_coverage_report <- function() {
   tibble::tribble(

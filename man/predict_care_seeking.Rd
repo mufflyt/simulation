@@ -19,3 +19,12 @@ The two parts multiplied: P(seeks care) x E[visits | seeks care]. Returning
 the parts alongside the product is deliberate -- a change in expected visits
 means something different depending on which part moved.
 }
+\seealso{
+Other meps care seeking: 
+\code{\link{MEPS_PELVIC_FLOOR_ICD10}},
+\code{\link{build_meps_care_seeking_panel}()},
+\code{\link{care_seeking_multipliers}()},
+\code{\link{fit_care_seeking_model}()}
+}
+\concept{data}
+\concept{meps care seeking}

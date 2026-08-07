@@ -18,3 +18,14 @@ Tibble with stratum covariates plus:
 \description{
 Join NAMCS visit totals with BRFSS denominators -> per-capita visit rates
 }
+\seealso{
+Other namcs visit equations: 
+\code{\link{brfss_population_by_stratum}()},
+\code{\link{compute_namcs_demand_estimand}()},
+\code{\link{fit_urps_visit_rate_model}()},
+\code{\link{flag_urps_visits}()},
+\code{\link{load_namcs_2019}()},
+\code{\link{namcs_urps_stratum_visits}()}
+}
+\concept{demand}
+\concept{namcs visit equations}

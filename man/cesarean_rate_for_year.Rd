@@ -15,3 +15,12 @@ Numeric cesarean fraction per year (clamped at the anchor range ends).
 \description{
 US total-cesarean rate, interpolated across cited anchor years
 }
+\seealso{
+Other obstetric exposure: 
+\code{\link{cohort_vaginal_exposure}()},
+\code{\link{completed_parity_for_cohort}()},
+\code{\link{compute_demand_denominators_lifecourse}()},
+\code{\link{obstetric_exposure_multiplier}()}
+}
+\concept{demand}
+\concept{obstetric exposure}

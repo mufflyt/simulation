@@ -119,3 +119,17 @@ the distribution of headcount / effective-FTE per year (median + CI band),
 giving DISTRIBUTIONAL supply projections rather than a single deterministic
 line. Seeded via \code{\link[=seed_microsimulation]{seed_microsimulation()}} for reproducibility.
 }
+\seealso{
+Other provider microsimulation: 
+\code{\link{build_hazard_table}()},
+\code{\link{classify_workforce_outlook}()},
+\code{\link{initialize_provider_agents}()},
+\code{\link{microsim_age_band_of}()},
+\code{\link{project_supply_deterministic}()},
+\code{\link{provider_active_in_year}()},
+\code{\link{provider_clinical_fte}()},
+\code{\link{retirement_hazard}()},
+\code{\link{simulate_provider_career_once}()}
+}
+\concept{provider microsimulation}
+\concept{supply}

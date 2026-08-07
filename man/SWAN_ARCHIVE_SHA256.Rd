@@ -15,4 +15,13 @@ SHA-256 of the archive as extracted from the Dropbox export on 2026-08-03 and
 used for the fitted UI transitions. A file that hashes differently is a
 different vintage, whatever it is named.
 }
+\seealso{
+Other swan archive: 
+\code{\link{SWAN_ARCHIVE_BYTES}},
+\code{\link{load_swan_archive}()},
+\code{\link{swan_archive_provenance}()},
+\code{\link{swan_dmdm_panel_from_archive}()}
+}
+\concept{data}
+\concept{swan archive}
 \keyword{datasets}

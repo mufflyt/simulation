@@ -30,6 +30,8 @@ E2SFCA_DEFAULT_WEIGHTS <- c("30" = 1.00, "60" = 0.68, "120" = 0.22, "180" = 0.09
 #' diverge from `twostep` and `isochrones`. A test asserts the shipped weights
 #' still key to the canonical bands.
 #' @return Integer vector of bands in minutes.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 e2sfca_bands <- function() ssot_access_bands()
 
@@ -69,6 +71,8 @@ e2sfca_band_weights <- function(weights = E2SFCA_DEFAULT_WEIGHTS) {
 #' @param weights Cumulative band weights ([e2sfca_band_weights()]).
 #' @param step2_power 1 for E2SFCA (default), 2 for M2SFCA.
 #' @return Named numeric vector of incremental weights (outermost = W_last^power).
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 e2sfca_incremental_weights <- function(weights = E2SFCA_DEFAULT_WEIGHTS, step2_power = 1) {
   w <- e2sfca_band_weights(weights)
@@ -104,6 +108,8 @@ e2sfca_incremental_weights <- function(weights = E2SFCA_DEFAULT_WEIGHTS, step2_p
 #' @param step2_power 1 = E2SFCA, 2 = M2SFCA.
 #' @param per_capita_scale Scale for reporting (e.g. 1e5 => access per 100k).
 #' @return List: `access` (per demand unit), `provider_ratios`, `audit`, `meta`.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 compute_e2sfca_access <- function(membership, supply, demand,
                                   weights = E2SFCA_DEFAULT_WEIGHTS,
@@ -185,6 +191,8 @@ compute_e2sfca_access <- function(membership, supply, demand,
 #' @param access Access tibble from [compute_e2sfca_access()].
 #' @param thresholds Access thresholds for population-share reporting.
 #' @return List: `mean_access`, `zero_access_share`, `threshold_shares`.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 summarize_access <- function(access, thresholds = c(0, 1, 5, 10, 20, 50)) {
   w <- access$population
@@ -212,6 +220,8 @@ summarize_access <- function(access, thresholds = c(0, 1, 5, 10, 20, 50)) {
 #'
 #' @param access Access tibble ([compute_e2sfca_access()]).
 #' @return The access tibble with a `relative_access` column added.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 spatial_access_ratio <- function(access) {
   s <- summarize_access(access)
@@ -228,6 +238,8 @@ spatial_access_ratio <- function(access) {
 #'
 #' @param access_scaled Numeric scaled access values.
 #' @return Integer category 1-5.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 assign_access_category <- function(access_scaled) {
   cat <- rep(1L, length(access_scaled))
@@ -246,6 +258,8 @@ assign_access_category <- function(access_scaled) {
 #' Great-circle (haversine) distance in kilometres
 #' @param lat1,lon1,lat2,lon2 Coordinates in decimal degrees (vectorised).
 #' @return Distance(s) in km.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 haversine_km <- function(lat1, lon1, lat2, lon2) {
   to_rad <- pi / 180
@@ -262,6 +276,8 @@ haversine_km <- function(lat1, lon1, lat2, lon2) {
 #'
 #' @param lat,lon Decimal-degree coordinates.
 #' @return Logical vector.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 conus_ok <- function(lat, lon) {
   !is.na(lat) & !is.na(lon) &
@@ -282,6 +298,8 @@ conus_ok <- function(lat, lon) {
 #' @param threshold_km Match radius (default 5 km).
 #' @return `points` with `matched_coord_id`, `match_km`, `matched` columns.
 #'   Points outside CONUS or beyond the threshold are unmatched (matched = FALSE).
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 match_points_to_isochrones <- function(points, iso_centers, threshold_km = ISOCHRONE_MATCH_KM) {
   assertthat::assert_that(all(c("id", "lat", "lon") %in% names(points)))
@@ -325,6 +343,8 @@ match_points_to_isochrones <- function(points, iso_centers, threshold_km = ISOCH
 #'   [compute_e2sfca_access()].
 #' @param method "E2SFCA" (default) or "M2SFCA".
 #' @return The [compute_e2sfca_access()] result for the chosen method.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 compute_access <- function(membership, supply, demand,
                            method = c("E2SFCA", "M2SFCA"),
@@ -346,6 +366,8 @@ compute_access <- function(membership, supply, demand,
 #' @inheritParams compute_access
 #' @return List: `e2sfca` / `m2sfca` (full results), `mean_e2sfca` /
 #'   `mean_m2sfca` (national pop-weighted means), `penalty_share`.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 compare_access_methods <- function(membership, supply, demand,
                                    weights = E2SFCA_DEFAULT_WEIGHTS,
@@ -378,6 +400,8 @@ compare_access_methods <- function(membership, supply, demand,
 #' @param a Numeric values.
 #' @param w Numeric weights (same length as `a`).
 #' @return Weighted mean, or NA if the weights sum to 0 / are non-finite.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 weighted_mean_all <- function(a, w) {
   stopifnot(length(a) == length(w))
@@ -395,6 +419,8 @@ weighted_mean_all <- function(a, w) {
 #' @param access Numeric accessibility values.
 #' @param w Numeric weights.
 #' @return Percent in `[0, 100]` under non-negative weights, or NA.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 zero_access_share <- function(access, w) {
   stopifnot(length(access) == length(w))
@@ -423,6 +449,8 @@ zero_access_share <- function(access, w) {
 #' @param probs Interval quantiles.
 #' @param seed RNG seed (restored on exit).
 #' @return Named numeric `c(point, lo, hi)`.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 access_moe_ci <- function(access, est, se, stat = c("mean", "zero"),
                           B = 2000L, probs = c(0.025, 0.975), seed = 1L) {
@@ -455,6 +483,8 @@ access_moe_ci <- function(access, est, se, stat = c("mean", "zero"),
 #' @return Named numeric `c(slope, lo, hi, p)` (all NA if < 3 complete points).
 #' @examples
 #' annual_trend(2015:2020, c(100, 104, 110, 113, 119, 126))
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 annual_trend <- function(year, value) {
   d <- data.frame(year = as.numeric(year), value = as.numeric(value))
@@ -479,6 +509,8 @@ annual_trend <- function(year, value) {
 #' @return Tibble `estimate`, `lo`, `hi` (one row per input element).
 #' @examples
 #' wilson_ci(successes = 42, n = 100)
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 wilson_ci <- function(successes, n, conf_level = 0.95) {
   stopifnot(length(successes) == length(n), all(successes <= n, na.rm = TRUE))
@@ -509,6 +541,8 @@ wilson_ci <- function(successes, n, conf_level = 0.95) {
 #' @param bands Integer drive-time bands (minutes).
 #' @param sigma Gaussian bandwidth in minutes.
 #' @return Named numeric cumulative weights keyed by band.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 gaussian_band_weights <- function(bands = c(30L, 60L, 120L, 180L), sigma = 60) {
   g <- exp(-(bands^2) / (2 * sigma^2))
@@ -528,6 +562,8 @@ E2SFCA_WEIGHT_PRESETS <- list(
 
 #' List the available E2SFCA weight presets
 #' @return Character vector of preset names.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 e2sfca_weight_presets <- function() names(E2SFCA_WEIGHT_PRESETS)
 
@@ -538,6 +574,8 @@ e2sfca_weight_presets <- function() names(E2SFCA_WEIGHT_PRESETS)
 #' @param step2_power 1 = E2SFCA, 2 = M2SFCA.
 #' @param per_capita_scale Reporting scale.
 #' @return The [compute_e2sfca_access()] result under that preset's weights.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 compute_access_preset <- function(membership, supply, demand,
                                   preset = "base", step2_power = 1,
@@ -561,6 +599,8 @@ compute_access_preset <- function(membership, supply, demand,
 #' @param presets Presets to sweep (default all).
 #' @param step2_power 1 = E2SFCA, 2 = M2SFCA.
 #' @return Tibble: `preset`, `mean_access`, `zero_access_share`.
+#' @family spatial access e2sfca
+#' @concept geography
 #' @export
 access_weight_sensitivity <- function(membership, supply, demand,
                                       presets = e2sfca_weight_presets(),

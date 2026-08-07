@@ -39,3 +39,11 @@ the year) and \code{inc_ui}/\code{inc_pop}/\code{inc_ai} (new onsets during the 
 \description{
 Simulate a closed cohort forward through the pelvic-floor multistate model
 }
+\seealso{
+Other dynamic multistate: 
+\code{\link{assert_calibrated_transitions}()},
+\code{\link{dmdm_default_transitions}()},
+\code{\link{dmdm_prevalence_trajectory}()}
+}
+\concept{demand}
+\concept{dynamic multistate}

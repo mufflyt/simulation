@@ -29,6 +29,8 @@
 #' @return A list: `summary` (one-row data frame: `label`, `n`, `n_na`, `mean`,
 #'   `median`, `pi_lo`, `pi_hi`, `prob_level`) and `exceedance` (a data frame of
 #'   `threshold`, `direction`, `probability`, `statement`, or `NULL`).
+#' @family forecast probabilities
+#' @concept validation
 #' @export
 forecast_probabilities <- function(x, prob_level = 0.95, exceed = NULL,
                                    direction = c("above", "below"),
@@ -78,6 +80,8 @@ forecast_probabilities <- function(x, prob_level = 0.95, exceed = NULL,
 #' @return A list: `summary` (one-row data frame) and `probabilities` (a data
 #'   frame of `threshold`, `probability`, `statement`).
 #' @seealso [psa_workforce_gap()], [forecast_probabilities()]
+#' @family forecast probabilities
+#' @concept validation
 #' @export
 workforce_gap_probabilities <- function(psa, metric = c("gap_pct", "gap_fte"),
                                         shortage_thresholds = c(0, 5, 10, 15),

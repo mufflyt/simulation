@@ -15,4 +15,13 @@ A named list of lists. Each entry must supply at least \code{ui_uptake} and
 \code{pop_uptake}. \code{surgical_reduction}, \code{office_reduction}, \code{pt_visits_per_case},
 and \code{pessary_visits_per_case} default to their function defaults when absent.
 }
+\seealso{
+Other prevention: 
+\code{\link{apply_named_prevention_scenario}()},
+\code{\link{apply_prevention_multipliers}()},
+\code{\link{conservative_management_multipliers}()},
+\code{\link{prevention_volume_summary}()}
+}
+\concept{demand}
+\concept{prevention}
 \keyword{datasets}

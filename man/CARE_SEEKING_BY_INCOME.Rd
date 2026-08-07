@@ -14,4 +14,19 @@ CARE_SEEKING_BY_INCOME
 Applied per demand cell in \code{project_urps_demand()} before aggregation.
 Source: MEPS 2020 specialty visit rate by income quartile.
 }
+\seealso{
+Other urps population: 
+\code{\link{CARE_SEEKING_BY_INSURANCE}},
+\code{\link{URPS_POP_AGE_BANDS}},
+\code{\link{blend_mcbs_prevalence}()},
+\code{\link{blend_nhanes_ui_prevalence}()},
+\code{\link{brfss_pfd_prevalence_for_demand_bands}()},
+\code{\link{build_calibrated_population_cells}()},
+\code{\link{build_urps_population_cells}()},
+\code{\link{load_brfss_women}()},
+\code{\link{project_urps_demand}()},
+\code{\link{summarise_stratum_coverage}()}
+}
+\concept{data}
+\concept{urps population}
 \keyword{datasets}

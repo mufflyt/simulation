@@ -24,3 +24,10 @@ Tibble \code{category}, \code{predicted} (base-year national totals).
 \description{
 Aggregate life-course service volumes into national anchor categories
 }
+\seealso{
+Other demand lifecourse: 
+\code{\link{backtest_lifecourse}()},
+\code{\link{calibrate_lifecourse_demand}()}
+}
+\concept{calibration}
+\concept{demand lifecourse}

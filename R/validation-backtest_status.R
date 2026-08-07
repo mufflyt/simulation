@@ -58,6 +58,8 @@
 #'
 #' @format Tibble of scored arms with `arm`, `percent_error`, `within_80`,
 #'   `within_95`.
+#' @family backtest status
+#' @concept validation
 #' @export
 BACKTEST_RECORD_2020_2023 <- tibble::tribble(
   ~arm,                                          ~percent_error,  ~within_80,  ~within_95,
@@ -123,6 +125,8 @@ BACKTEST_COVERAGE_REQUIRED <- 0.8
 #' @param source Provenance string recorded in the status.
 #' @param required Share of arms whose 95% interval must cover the observation.
 #' @return An object of class `urps_backtest_status`.
+#' @family backtest status
+#' @concept validation
 #' @export
 backtest_status_from_summary <- function(summary,
                                          source = "live run_backtest() result",
@@ -212,6 +216,8 @@ backtest_status_from_summary <- function(summary,
 #' # The interval caveat travels WITH the status, so a caller cannot report a
 #' # band without also reporting that it is a Monte Carlo range.
 #' backtest_status()
+#' @family backtest status
+#' @concept validation
 #' @export
 backtest_status <- function(record = BACKTEST_RECORD_2020_2023,
                             source = BACKTEST_RECORD_SOURCE) {
@@ -227,6 +233,8 @@ backtest_status <- function(record = BACKTEST_RECORD_2020_2023,
 #' @param status A [backtest_status()] object.
 #' @param ci Nominal interval width.
 #' @return A character label.
+#' @family backtest status
+#' @concept validation
 #' @export
 interval_label <- function(status = backtest_status(), ci = 0.95) {
   pct <- format(round(100 * ci))
@@ -257,6 +265,8 @@ interval_label <- function(status = backtest_status(), ci = 0.95) {
 #' @param status A [backtest_status()] object.
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
 #' @return (Invisibly) TRUE when the language is permitted.
+#' @family backtest status
+#' @concept validation
 #' @export
 assert_forecast_intervals_validated <- function(status = backtest_status(),
                                                 mode = resolve_reproducibility_mode()) {
@@ -284,6 +294,8 @@ assert_forecast_intervals_validated <- function(status = backtest_status(),
 #' @param x Object to stamp (typically a projection data frame).
 #' @param status A [backtest_status()] object.
 #' @return `x`, with a `backtest_status` attribute.
+#' @family backtest status
+#' @concept validation
 #' @export
 stamp_backtest_status <- function(x, status = backtest_status()) {
   attr(x, "backtest_status") <- status
@@ -294,6 +306,8 @@ stamp_backtest_status <- function(x, status = backtest_status()) {
 #'
 #' @param x A stamped object.
 #' @return The [backtest_status()] object, or NULL if the object is unstamped.
+#' @family backtest status
+#' @concept validation
 #' @export
 stamped_backtest_status <- function(x) attr(x, "backtest_status", exact = TRUE)
 
@@ -347,6 +361,8 @@ print.urps_backtest_status <- function(x, ...) {
 #'
 #' Regenerating the artifact changes this. If it no longer matches, the record
 #' is stale until proven otherwise -- update both together, in one commit.
+#' @family backtest status
+#' @concept validation
 #' @export
 BACKTEST_RECORD_SHA256 <- "d9a895446d24d6debdb8ff6f634f652123003de0918e428f9c99cf1346b01d8d"
 
@@ -362,6 +378,8 @@ BACKTEST_RECORD_TOLERANCE <- 1e-6
 #'
 #' @param start Directory to search upward from.
 #' @return Path, or NULL.
+#' @family backtest status
+#' @concept validation
 #' @export
 backtest_artifact_path <- function(start = ".") {
   candidates <- c(start, file.path(start, ".."), file.path(start, "..", ".."))
@@ -379,6 +397,8 @@ backtest_artifact_path <- function(start = ".") {
 #' @param tolerance Absolute tolerance on `percent_error`.
 #' @return List with `checked`, `current`, `checksum_matches`, and `mismatches`
 #'   (a tibble, empty when the record is current).
+#' @family backtest status
+#' @concept validation
 #' @export
 verify_backtest_record <- function(path = NULL,
                                    record = BACKTEST_RECORD_2020_2023,
@@ -460,6 +480,8 @@ verify_backtest_record <- function(path = NULL,
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
 #' @param path Artifact path; located automatically when NULL.
 #' @return (Invisibly) TRUE when the record is current or unverifiable.
+#' @family backtest status
+#' @concept validation
 #' @export
 assert_backtest_record_current <- function(mode = resolve_reproducibility_mode(),
                                            path = NULL) {

@@ -17,3 +17,16 @@ assert_validation_passed(report, mode = resolve_reproducibility_mode())
 \description{
 Summarise a validation report and fail closed on internal failures
 }
+\seealso{
+Other validation: 
+\code{\link{apply_calibration_scalars}()},
+\code{\link{assert_demand_calibrated}()},
+\code{\link{assert_estimands_independent}()},
+\code{\link{detect_proportional_estimands}()},
+\code{\link{fit_calibration_scalars}()},
+\code{\link{published_calibration_scalars}()},
+\code{\link{two_method_agreement}()},
+\code{\link{validation_report}()}
+}
+\concept{calibration}
+\concept{validation}

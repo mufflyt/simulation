@@ -15,3 +15,18 @@ The \code{\link[=backtest_status]{backtest_status()}} object, or NULL if the obj
 \description{
 Read the back-test status stamped on an object
 }
+\seealso{
+Other backtest status: 
+\code{\link{BACKTEST_RECORD_2020_2023}},
+\code{\link{BACKTEST_RECORD_SHA256}},
+\code{\link{assert_backtest_record_current}()},
+\code{\link{assert_forecast_intervals_validated}()},
+\code{\link{backtest_artifact_path}()},
+\code{\link{backtest_status}()},
+\code{\link{backtest_status_from_summary}()},
+\code{\link{interval_label}()},
+\code{\link{stamp_backtest_status}()},
+\code{\link{verify_backtest_record}()}
+}
+\concept{backtest status}
+\concept{validation}

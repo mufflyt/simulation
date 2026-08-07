@@ -20,3 +20,12 @@ table (from \code{\link[=clear_access_trajectory]{clear_access_trajectory()}}) a
 outcomes can be read as trajectories (e.g. a wait time that climbs as a
 shortfall compounds under backlog).
 }
+\seealso{
+Other access outcomes: 
+\code{\link{access_outcomes_by_severity}()},
+\code{\link{access_outcomes_national}()},
+\code{\link{assert_access_outcomes_labeled}()},
+\code{\link{publish_access_outcomes}()}
+}
+\concept{access outcomes}
+\concept{reporting}

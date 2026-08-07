@@ -128,6 +128,8 @@ urps_entrant_series <- function(through_year = BACKTEST_CUTOFF_YEAR,
 #' @return Tibble of `year`, `count`, `regime`, `expected`, `lower_bound`.
 #'
 #' @importFrom stats glm poisson predict residuals qnbinom qpois median
+#' @family entrant regime
+#' @concept supply
 #' @export
 #'
 #' @examples
@@ -232,6 +234,8 @@ classify_certification_regimes <- function(series,
 #' @return An object of class `urps_entrant_regime`.
 #'
 #' @importFrom stats glm poisson predict residuals
+#' @family entrant regime
+#' @concept supply
 #' @export
 #'
 #' @examples
@@ -398,6 +402,8 @@ print.urps_entrant_regime <- function(x, ...) {
 #' @param model A [fit_entrant_regime_model()] object.
 #' @param years Integer vector of projection years, all after the cutoff.
 #' @return Tibble of `year`, `steady`, `backlog_release`, `expected`.
+#' @family entrant regime
+#' @concept supply
 #' @export
 project_entrant_path <- function(model, years) {
   stopifnot(inherits(model, "urps_entrant_regime"))
@@ -438,6 +444,8 @@ project_entrant_path <- function(model, years) {
 #' @return Numeric matrix, `n_draws` rows by `length(years)` columns.
 #'
 #' @importFrom stats rnbinom rpois rbeta runif
+#' @family entrant regime
+#' @concept supply
 #' @export
 draw_entrant_paths <- function(model, years, n_draws = 1000L,
                                include = c("trend", "dispersion", "break",
@@ -520,6 +528,8 @@ draw_entrant_paths <- function(model, years, n_draws = 1000L,
 #' @return List with `folds`, `coverage_95`, `n_folds`, and `naive_coverage_95`.
 #'
 #' @importFrom stats quantile
+#' @family entrant regime
+#' @concept supply
 #' @export
 entrant_regime_rolling_validation <- function(series,
                                               cumulative_series,

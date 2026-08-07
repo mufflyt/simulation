@@ -26,3 +26,18 @@ from the prespecified 2020->2023 back-test.
 # band without also reporting that it is a Monte Carlo range.
 backtest_status()
 }
+\seealso{
+Other backtest status: 
+\code{\link{BACKTEST_RECORD_2020_2023}},
+\code{\link{BACKTEST_RECORD_SHA256}},
+\code{\link{assert_backtest_record_current}()},
+\code{\link{assert_forecast_intervals_validated}()},
+\code{\link{backtest_artifact_path}()},
+\code{\link{backtest_status_from_summary}()},
+\code{\link{interval_label}()},
+\code{\link{stamp_backtest_status}()},
+\code{\link{stamped_backtest_status}()},
+\code{\link{verify_backtest_record}()}
+}
+\concept{backtest status}
+\concept{validation}

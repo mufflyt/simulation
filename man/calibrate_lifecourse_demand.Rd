@@ -34,3 +34,10 @@ Fits multiplicative scalars (\code{observed / predicted}) against the anchor
 categories via \code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}}, so downstream FTE conversion runs
 on anchored volumes rather than raw model output.
 }
+\seealso{
+Other demand lifecourse: 
+\code{\link{backtest_lifecourse}()},
+\code{\link{lifecourse_anchor_predictions}()}
+}
+\concept{calibration}
+\concept{demand lifecourse}

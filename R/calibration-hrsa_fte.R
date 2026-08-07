@@ -17,6 +17,8 @@
 #' @return agents with clinical_fte, fte_source, fte_calibration_tier.
 #' @importFrom assertthat assert_that
 #' @importFrom dplyr mutate left_join case_when if_else select n
+#' @family hrsa fte
+#' @concept calibration
 #' @export
 apply_hrsa_surgical_fte <- function(agents,
                                     reference_hrs      = 37.2,

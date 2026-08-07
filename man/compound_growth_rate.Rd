@@ -17,3 +17,11 @@ Numeric annual growth rate.
 \description{
 Compound annual growth rate between the endpoints of a series
 }
+\seealso{
+Other entrant trajectory: 
+\code{\link{entrant_trajectory}()},
+\code{\link{entrant_trajectory_scenarios}()},
+\code{\link{nrmp_growth_rates}()}
+}
+\concept{entrant trajectory}
+\concept{supply}

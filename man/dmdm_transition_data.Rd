@@ -43,3 +43,9 @@ and t+1 (\code{to_stage}); the binary \code{from}/\code{event} are then derived 
 staged columns feed \code{\link[=fit_dmdm_transitions]{fit_dmdm_transitions()}}'s per-stage progression/regression
 fit. \code{from_stage}/\code{to_stage} are \code{NA} for conditions without a stage column.
 }
+\seealso{
+Other dmdm fit transitions: 
+\code{\link{fit_dmdm_transitions}()}
+}
+\concept{demand}
+\concept{dmdm fit transitions}

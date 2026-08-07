@@ -48,6 +48,8 @@
 #'   `value`, `ci_low`, `ci_high`, `confidence`, `source`, `notes`.
 #' @seealso [dmdm_transitions_with_pop_literature()] to compile these into a
 #'   transition object the DMDM engines can run.
+#' @family pop transitions
+#' @concept demand
 #' @export
 pop_transition_parameters <- function() {
   .pop_transition_extdata()
@@ -110,6 +112,8 @@ pop_transition_parameters <- function() {
 #' @return A transition list as in [dmdm_default_transitions()], with the POP
 #'   `onset`/`remission` replaced by literature values, plus `pop_progression`,
 #'   `pop_regression`, `calibration_status` and `provenance`.
+#' @family pop transitions
+#' @concept demand
 #' @export
 dmdm_transitions_with_pop_literature <- function(base = dmdm_default_transitions(),
                                                  params = pop_transition_parameters()) {

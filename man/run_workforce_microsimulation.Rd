@@ -167,3 +167,11 @@ names(result)
 # independent anchor. This one was not.
 result$scenario_meta$demand_calibrated
 }
+\seealso{
+Other run workforce microsimulation: 
+\code{\link{example_capacity_survey}()},
+\code{\link{example_female_population_by_band}()},
+\code{\link{example_service_volumes}()}
+}
+\concept{core}
+\concept{run workforce microsimulation}

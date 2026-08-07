@@ -17,3 +17,12 @@ A single sentence.
 \description{
 The claim this gap supports, in words
 }
+\seealso{
+Other baseline gap reporting: 
+\code{\link{assert_external_anchor}()},
+\code{\link{baseline_anchor_sensitivity}()},
+\code{\link{baseline_gap_provenance}()},
+\code{\link{has_external_anchor}()}
+}
+\concept{baseline gap reporting}
+\concept{reporting}

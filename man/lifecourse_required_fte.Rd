@@ -33,3 +33,12 @@ to required FTE with \code{\link[=convert_workload_to_fte]{convert_workload_to_f
 delegation matrix and the work-RVU conversion are therefore REUSED, not
 reimplemented here.
 }
+\seealso{
+Other lifecourse: 
+\code{\link{lifecourse_demand_estimand}()},
+\code{\link{lifecourse_demand_trajectory}()},
+\code{\link{lifecourse_risk_params_cited}()},
+\code{\link{simulate_lifecourse_demand}()}
+}
+\concept{demand}
+\concept{lifecourse}

@@ -122,6 +122,8 @@ WU2011_SURGERY_RATE_PER_1000 <- stats::setNames(
 #'
 #' @param condition Condition passed to the contract.
 #' @return Named numeric vector over `DEMAND_AGE_BANDS`.
+#' @family urps
+#' @concept demand
 #' @export
 pfd_prevalence_by_band <- function(condition = "any_PFD") {
   local_65plus <- c("65-79" = 0.368, "80+" = 0.497)
@@ -137,6 +139,8 @@ pfd_prevalence_by_band <- function(condition = "any_PFD") {
 
 #' Which age bands are owned by the contract
 #' @return Tibble of `age_band` and `owner`.
+#' @family urps
+#' @concept demand
 #' @export
 pfd_prevalence_ownership <- function() {
   tibble::tibble(
@@ -205,6 +209,8 @@ npp_total_female <- function(df) {
 #' @param mode Reproducibility mode (governs SHA-256 drift handling in the
 #'   resolver).
 #' @return Tibble `year`, `age_band` (a `DEMAND_AGE_BANDS` factor order), `female_pop`.
+#' @family urps
+#' @concept demand
 #' @export
 npp_female_by_band <- function(series = c("mid", "low", "hi"),
                                years = NULL,
@@ -236,6 +242,8 @@ npp_female_by_band <- function(series = c("mid", "low", "hi"),
 #'
 #' @inheritParams npp_female_by_band
 #' @return Tibble `year`, `population_65_plus`.
+#' @family urps
+#' @concept demand
 #' @export
 npp_women_65plus <- function(series = c("mid", "low", "hi"),
                              years = NULL,
@@ -258,6 +266,8 @@ npp_women_65plus <- function(series = c("mid", "low", "hi"),
 #' @param mode Reproducibility mode.
 #' @return List: `pop_by_band` (tibble) and `source` ("census_npp_<series>" or
 #'   "example").
+#' @family urps
+#' @concept demand
 #' @export
 resolve_demand_population <- function(years = 2025:2050,
                                       series = "mid",
@@ -294,6 +304,8 @@ resolve_demand_population <- function(years = 2025:2050,
 #' @return Numeric index vector aligned to `years`.
 #' @examples
 #' anchor_index(2025:2030, y0 = 2025, v0 = 100, y1 = 2030, v1 = 120)
+#' @family urps
+#' @concept demand
 #' @export
 anchor_index <- function(years, y0, v0, y1, v1, base = DEMAND_INDEX_BASE_YEAR) {
   assertthat::assert_that(y1 != y0, v0 > 0, v1 > 0)
@@ -308,6 +320,8 @@ anchor_index <- function(years, y0, v0, y1, v1, base = DEMAND_INDEX_BASE_YEAR) {
 #' @param value Numeric values.
 #' @param base_year Year to rebase on.
 #' @return Numeric rebased series.
+#' @family urps
+#' @concept demand
 #' @export
 rebase_to_year <- function(year, value, base_year = DEMAND_INDEX_BASE_YEAR) {
   base_val <- value[year == base_year]
@@ -339,6 +353,8 @@ rebase_to_year <- function(year, value, base_year = DEMAND_INDEX_BASE_YEAR) {
 #' @param consult_rate Named age-band consultation rate for D2.
 #' @param surgery_rate_per_1000 Named age-band surgery rate per 1,000 for D3.
 #' @return Long tibble: `year`, `estimand` (D1/D2/D3), `label`, `demand_cases`.
+#' @family urps
+#' @concept demand
 #' @export
 compute_demand_denominators <- function(pop_by_band,
                                         pfd_prevalence = pfd_prevalence_by_band(),
@@ -385,6 +401,8 @@ compute_demand_denominators <- function(pop_by_band,
 #' @param population_65plus Tibble with `year` and `population_65_plus`.
 #' @param pfd_prevalence,consult_rate,surgery_rate_per_1000 Crude rates.
 #' @return Long tibble in the same shape as [compute_demand_denominators()].
+#' @family urps
+#' @concept demand
 #' @export
 compute_demand_denominators_crude <- function(population_65plus,
                                               pfd_prevalence = PFD_PREVALENCE_65PLUS,
@@ -430,6 +448,8 @@ compute_demand_denominators_crude <- function(population_65plus,
 #'   defaults to `WU2011_SURGERY_RATE_COMPONENTS`.
 #' @return Tibble of `year` plus either `surgical_cases`, or `sui_cases` and
 #'   `pop_cases` when `by_condition = TRUE`.
+#' @family urps
+#' @concept demand
 #' @export
 apply_age_specific_surgery_demand <- function(pop_by_band,
                                               rates = WU2011_SURGERY_RATE_PER_1000,
@@ -494,6 +514,8 @@ apply_age_specific_surgery_demand <- function(pop_by_band,
 #' @param base_year Rebase year.
 #' @return Long tibble: `year`, `estimand`, `label`, `supply_index`,
 #'   `demand_index`, `growth_adequacy`.
+#' @family urps
+#' @concept demand
 #' @export
 compute_growth_adequacy <- function(supply, demand_long,
                                     supply_col = "effective_fte_median",
@@ -516,7 +538,16 @@ compute_growth_adequacy <- function(supply, demand_long,
 
 #' Deprecated alias that refuses the dimensionally invalid coverage ratio
 #'
+#' Provider FTE divided by a count of prevalent cases, consultations or
+#' procedures is dimensionally meaningless -- the two sides are not in the same
+#' units. Use [compute_growth_adequacy()], which compares indices, or convert
+#' the volumes to required FTE first with the workload-to-FTE path.
+#'
 #' @param ... Ignored.
+#' @return Never returns. Always raises an error naming the replacement, because
+#'   silently computing the ratio was the original defect.
+#' @family urps
+#' @concept demand
 #' @export
 compute_demand_coverage <- function(...) {
   stop(paste(
@@ -541,6 +572,8 @@ compute_demand_coverage <- function(...) {
 #'   proportionality check.
 #' @return List: `spearman`, `min_adequacy_by_estimand`, `final_year_adequacy`,
 #'   `robust`, `trough_year`, `informative`, `proportional_pairs`.
+#' @family urps
+#' @concept demand
 #' @export
 assess_demand_concordance <- function(adequacy, demand_long = NULL) {
   measure <- if ("growth_adequacy" %in% names(adequacy)) "growth_adequacy" else "adequacy"
@@ -648,6 +681,8 @@ assess_demand_concordance <- function(adequacy, demand_long = NULL) {
 #' @param referral_rate Fraction of care-seeking women reaching a
 #'   urogynecologist.  Default 0.50 (placeholder; calibrate to Kirby 2013).
 #' @return Long tibble: `year`, `estimand = "D4"`, `label`, `demand_cases`.
+#' @family urps
+#' @concept demand
 #' @export
 compute_brfss_demand_estimand <- function(pop_by_band,
                                            brfss_cells,

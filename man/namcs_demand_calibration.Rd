@@ -28,3 +28,10 @@ The \code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}} tibble, ca
 \description{
 Fit demand calibration scalars against the NAMCS national anchor
 }
+\seealso{
+Other namcs demand: 
+\code{\link{apply_demand_calibration}()},
+\code{\link{namcs_urps_visit_anchor}()}
+}
+\concept{calibration}
+\concept{namcs demand}

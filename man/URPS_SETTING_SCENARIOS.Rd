@@ -18,4 +18,18 @@ Each entry is a list with:
 \code{from} setting, the \code{to} setting, and the \code{fraction} of volume to move.}
 }
 }
+\seealso{
+Other urps settings: 
+\code{\link{URPS_DEFAULT_SETTING_MIX}},
+\code{\link{apply_setting_productivity}()},
+\code{\link{apply_setting_scenario}()},
+\code{\link{apply_setting_shift}()},
+\code{\link{load_psps_pos_shares}()},
+\code{\link{setting_scenario_summary}()},
+\code{\link{split_volumes_by_setting}()},
+\code{\link{validate_setting_mix}()},
+\code{\link{volumes_with_setting}()}
+}
+\concept{supply}
+\concept{urps settings}
 \keyword{datasets}

@@ -21,3 +21,11 @@ List with \code{offered}, \code{filled}, \code{fill_rate_first}, \code{fill_rate
 \description{
 Growth rates implied by the NRMP fellowship series
 }
+\seealso{
+Other entrant trajectory: 
+\code{\link{compound_growth_rate}()},
+\code{\link{entrant_trajectory}()},
+\code{\link{entrant_trajectory_scenarios}()}
+}
+\concept{entrant trajectory}
+\concept{supply}

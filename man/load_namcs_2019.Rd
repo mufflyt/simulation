@@ -15,3 +15,14 @@ Tibble with all retained NAMCS columns (8,250 rows).
 \description{
 Reads the RDS produced by \code{data-raw/namcs/01-namcs_acquire.R}.
 }
+\seealso{
+Other namcs visit equations: 
+\code{\link{brfss_population_by_stratum}()},
+\code{\link{compute_namcs_demand_estimand}()},
+\code{\link{compute_urps_visit_rates}()},
+\code{\link{fit_urps_visit_rate_model}()},
+\code{\link{flag_urps_visits}()},
+\code{\link{namcs_urps_stratum_visits}()}
+}
+\concept{demand}
+\concept{namcs visit equations}

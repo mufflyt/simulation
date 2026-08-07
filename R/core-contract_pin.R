@@ -18,6 +18,8 @@
 # already sitting in a library from being loaded.
 
 #' Commit the contract is pinned to in DESCRIPTION
+#' @family contract pin
+#' @concept core
 #' @export
 MUFFLYACCESS_PINNED_SHA <- "a88dba8f4bafec7659df3f3c1404aca814709208"
 
@@ -32,6 +34,8 @@ MUFFLYACCESS_PINNED_SHA <- "a88dba8f4bafec7659df3f3c1404aca814709208"
 #' documentation mentions would demand capabilities the package does not use,
 #' and reject a build that could run it perfectly well.
 #'
+#' @family contract pin
+#' @concept core
 #' @export
 MUFFLYACCESS_REQUIRED_EXPORTS <- c(
   "get_canonical_bands", "get_primary_access_band",
@@ -47,6 +51,8 @@ MUFFLYACCESS_REQUIRED_EXPORTS <- c(
 #'
 #' @return List with `version`, `sha`, `sha_matches_pin`, `n_exports`,
 #'   `missing_exports`, `usable`.
+#' @family contract pin
+#' @concept core
 #' @export
 mufflyaccess_build <- function() {
   if (!requireNamespace("mufflyaccess", quietly = TRUE)) {
@@ -80,6 +86,8 @@ mufflyaccess_build <- function() {
 #'
 #' @param mode Reproducibility mode; strict errors on a capability failure.
 #' @return (Invisibly) TRUE when the build can support this package.
+#' @family contract pin
+#' @concept core
 #' @export
 assert_mufflyaccess_contract <- function(mode = resolve_reproducibility_mode()) {
   b <- mufflyaccess_build()

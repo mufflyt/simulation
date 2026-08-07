@@ -28,6 +28,8 @@
 #' @param name Input name (matches the `evaluate` argument).
 #' @param min,max Range.
 #' @return A `psa_input` spec.
+#' @family psa
+#' @concept calibration
 #' @export
 psa_uniform <- function(name, min, max) {
   structure(list(name = name, type = "uniform", min = min, max = max),
@@ -40,6 +42,8 @@ psa_uniform <- function(name, min, max) {
 #' @return A `psa_input` spec.
 #' @examples
 #' psa_normal("retirement_age", mean = 65, sd = 2)
+#' @family psa
+#' @concept calibration
 #' @export
 psa_normal <- function(name, mean, sd) {
   structure(list(name = name, type = "normal", mean = mean, sd = sd),
@@ -52,6 +56,8 @@ psa_normal <- function(name, mean, sd) {
 #' @return A `psa_input` spec.
 #' @examples
 #' psa_triangular("entrants", min = 45, mode = 55, max = 70)
+#' @family psa
+#' @concept calibration
 #' @export
 psa_triangular <- function(name, min, mode, max) {
   assertthat::assert_that(min <= mode, mode <= max)
@@ -64,6 +70,8 @@ psa_triangular <- function(name, min, mode, max) {
 #' @param values Character/numeric vector of allowed values.
 #' @param probs Optional selection probabilities (default uniform).
 #' @return A `psa_input` spec.
+#' @family psa
+#' @concept calibration
 #' @export
 psa_discrete <- function(name, values, probs = NULL) {
   if (is.null(probs)) probs <- rep(1 / length(values), length(values))
@@ -106,6 +114,8 @@ psa_discrete <- function(name, values, probs = NULL) {
 #' @param seed RNG seed (the caller's stream is restored on exit).
 #' @return Tibble with `n` rows: one numeric column per input (discrete inputs
 #'   hold the category index) plus `<name>_value` columns for discrete inputs.
+#' @family psa
+#' @concept calibration
 #' @export
 psa_sample <- function(inputs, n, seed = 20260801L) {
   old <- if (exists(".Random.seed", envir = .GlobalEnv)) get(".Random.seed", envir = .GlobalEnv) else NULL
@@ -140,6 +150,8 @@ psa_sample <- function(inputs, n, seed = 20260801L) {
 #' @param verbose Logical progress.
 #' @return List: `draws` (tibble of inputs + outputs), `inputs`, `n`, `seed`,
 #'   `n_failed` (evaluations that errored -> NA).
+#' @family psa
+#' @concept calibration
 #' @export
 run_psa <- function(inputs, evaluate, n = 500, seed = 20260801L, verbose = TRUE) {
   assertthat::assert_that(is.function(evaluate))
@@ -196,6 +208,8 @@ run_psa <- function(inputs, evaluate, n = 500, seed = 20260801L, verbose = TRUE)
 #' @param psa A [run_psa()] result.
 #' @param output Output column name (default the first output).
 #' @return Tibble `input`, `prcc`, `p_value`, ordered by descending |prcc|.
+#' @family psa
+#' @concept calibration
 #' @export
 psa_prcc <- function(psa, output = psa$output_names[1]) {
   vars <- .psa_input_names(psa)
@@ -248,6 +262,8 @@ psa_prcc <- function(psa, output = psa$output_names[1]) {
 #' @param output Output column name.
 #' @return List: `coefficients` (tibble `input`, `srrc`, `var_share`) ordered by
 #'   descending |srrc|, and `model_r2`.
+#' @family psa
+#' @concept calibration
 #' @export
 psa_srrc <- function(psa, output = psa$output_names[1]) {
   vars <- .psa_input_names(psa)
@@ -288,6 +304,8 @@ psa_srrc <- function(psa, output = psa$output_names[1]) {
 #' @param output Output column name.
 #' @param method "prcc" (default) or "srrc".
 #' @return Tibble `input`, `index`, `direction` ordered by descending magnitude.
+#' @family psa
+#' @concept calibration
 #' @export
 psa_tornado <- function(psa, output = psa$output_names[1], method = c("prcc", "srrc")) {
   method <- match.arg(method)
@@ -308,6 +326,8 @@ psa_tornado <- function(psa, output = psa$output_names[1], method = c("prcc", "s
 #' @param tornado A [psa_tornado()] table.
 #' @param title Plot title.
 #' @return A ggplot object (requires ggplot2).
+#' @family psa
+#' @concept calibration
 #' @export
 plot_psa_tornado <- function(tornado, title = "PSA sensitivity (tornado)") {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {

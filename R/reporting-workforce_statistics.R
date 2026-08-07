@@ -38,6 +38,8 @@
 #' @param conf_level Confidence level (default 0.95).
 #' @return List: `proportion`, `lower_ci`, `upper_ci` (proportions in `[0,1]`),
 #'   `method`, `note`.
+#' @family workforce statistics
+#' @concept reporting
 #' @export
 calculate_proportion_ci <- function(x, n, conf_level = 0.95) {
   if (isTRUE(n == 0) || is.na(n)) {
@@ -70,6 +72,8 @@ calculate_proportion_ci <- function(x, n, conf_level = 0.95) {
 #' @param x2,n2 Successes and total in group 2.
 #' @param min_sample_size Minimum per-group n for an inferential test.
 #' @return List with `method`, `p_value`, `p_value_formatted`, `significant`, `note`.
+#' @family workforce statistics
+#' @concept reporting
 #' @export
 calculate_two_prop_test <- function(x1, n1, x2, n2, min_sample_size = 30) {
   if (n1 < min_sample_size || n2 < min_sample_size) {
@@ -108,6 +112,8 @@ calculate_two_prop_test <- function(x1, n1, x2, n2, min_sample_size = 30) {
 #' @param rural_at_risk,rural_total Rural at-risk count and denominator.
 #' @param metro_at_risk,metro_total Metro at-risk count and denominator.
 #' @return List: `rural`, `metro`, `comparison` (rate difference + test).
+#' @family workforce statistics
+#' @concept reporting
 #' @export
 calculate_rural_metro_comparison <- function(rural_at_risk, rural_total,
                                              metro_at_risk, metro_total) {
@@ -143,6 +149,8 @@ calculate_rural_metro_comparison <- function(rural_at_risk, rural_total,
 #' @param fellowship_grads Tibble: `subspecialty`, `graduates` (per year rows).
 #' @param horizon_years Projection horizon (default 5).
 #' @return List: `by_subspecialty` (tibble) and `overall` (summary list).
+#' @family workforce statistics
+#' @concept reporting
 #' @export
 calculate_replacement_gap <- function(retirees_by_subspec, fellowship_grads,
                                        horizon_years = 5) {
@@ -195,6 +203,8 @@ calculate_replacement_gap <- function(retirees_by_subspec, fellowship_grads,
 #' @param top_n Number of top-vulnerable states to return.
 #' @return Tibble of the `top_n` most vulnerable states with a
 #'   `vulnerability_score`.
+#' @family workforce statistics
+#' @concept reporting
 #' @export
 calculate_state_vulnerability <- function(state_impacts, top_n = 10) {
   needed <- c("state", "count_active", "count_at_risk", "pct_loss_if_retire",
@@ -233,6 +243,8 @@ SENSITIVITY_TABLES <- c(
 #' List the available vetted sensitivity-analysis datasets
 #'
 #' @return Character vector of logical sensitivity-table names.
+#' @family workforce statistics
+#' @concept reporting
 #' @export
 sensitivity_registry <- function() names(SENSITIVITY_TABLES)
 
@@ -245,6 +257,8 @@ sensitivity_registry <- function() names(SENSITIVITY_TABLES)
 #' @param name One of [sensitivity_registry()].
 #' @param mode Reproducibility mode.
 #' @return Tibble of the sensitivity dataset.
+#' @family workforce statistics
+#' @concept reporting
 #' @export
 load_sensitivity_table <- function(name, mode = resolve_reproducibility_mode()) {
   if (!name %in% names(SENSITIVITY_TABLES)) {

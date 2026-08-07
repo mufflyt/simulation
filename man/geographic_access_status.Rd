@@ -24,3 +24,11 @@ that is fully plausible and means nothing. A dormant module produces no
 number; a wired one running on the wrong geometry produces a publishable one.
 Coordinates and isochrones come first.
 }
+\seealso{
+Other practice survey: 
+\code{\link{fte_curve_status}()},
+\code{\link{unresolved_calibration_items}()},
+\code{\link{urps_practice_survey_requirements}()}
+}
+\concept{data}
+\concept{practice survey}

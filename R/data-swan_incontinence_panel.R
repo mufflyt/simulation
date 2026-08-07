@@ -169,6 +169,8 @@
 #' @importFrom rlang .data
 #' @importFrom stringr str_match
 #' @importFrom tibble tibble
+#' @family swan incontinence panel
+#' @concept data
 #' @export
 build_swan_incontinence_panel <- function(swan_visit_frames,
                                           variable_map = NULL,

@@ -32,3 +32,12 @@ One-row provider-concentration summary for a geography level
 # delivering care, which is why this is reported beside any headcount.
 provider_concentration(c(120, 80, 40, 10, 0, 0))
 }
+\seealso{
+Other workforce concentration: 
+\code{\link{workforce_gini}()},
+\code{\link{workforce_hhi}()},
+\code{\link{workforce_lorenz}()},
+\code{\link{workforce_top_k_share}()}
+}
+\concept{reporting}
+\concept{workforce concentration}

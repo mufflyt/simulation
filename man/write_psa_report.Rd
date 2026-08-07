@@ -50,3 +50,9 @@ The provenance fingerprint covers the model inputs, the PSA input specs, the
 chosen output, and the deficit definition. Reading the artifact back with any
 of those changed fails rather than returning a stale object.
 }
+\seealso{
+Other psa reporting: 
+\code{\link{psa_outcome_summary}()}
+}
+\concept{calibration}
+\concept{psa reporting}

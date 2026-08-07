@@ -22,3 +22,11 @@ supply this distribution implies a 71 FTE shortfall; Dall's physiatry survey
 implies 155 and Dall's neurology assumption 161. Nothing in the model narrows
 that range -- see \code{\link[=published_baseline_gaps]{published_baseline_gaps()}}.
 }
+\seealso{
+Other run workforce microsimulation: 
+\code{\link{example_female_population_by_band}()},
+\code{\link{example_service_volumes}()},
+\code{\link{run_workforce_microsimulation}()}
+}
+\concept{core}
+\concept{run workforce microsimulation}

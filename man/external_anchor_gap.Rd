@@ -61,3 +61,18 @@ Returns a finished \code{\link[=baseline_gap]{baseline_gap()}} object rather tha
 this is the only route that already carries everything the object needs --
 the tier and the source travel with the anchor itself.
 }
+\seealso{
+Other baseline gap: 
+\code{\link{assert_access_not_double_counted}()},
+\code{\link{assert_baseline_gap_estimated}()},
+\code{\link{assumed_baseline_gap}()},
+\code{\link{baseline_gap}()},
+\code{\link{capacity_category_adequacy}()},
+\code{\link{capacity_survey_adequacy}()},
+\code{\link{capacity_survey_shortfall_bottom_up}()},
+\code{\link{hpsa_removal_shortfall}()},
+\code{\link{published_baseline_gaps}()},
+\code{\link{required_fte_base_year}()}
+}
+\concept{baseline gap}
+\concept{reporting}

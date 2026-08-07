@@ -32,3 +32,18 @@ measurement, and it reaches the headline number undamped -- so it needs the
 same explicit opt-in \code{\link[=assert_publishable_workload]{assert_publishable_workload()}} requires of an
 analogy-derived delegation matrix.
 }
+\seealso{
+Other baseline gap: 
+\code{\link{assert_access_not_double_counted}()},
+\code{\link{assumed_baseline_gap}()},
+\code{\link{baseline_gap}()},
+\code{\link{capacity_category_adequacy}()},
+\code{\link{capacity_survey_adequacy}()},
+\code{\link{capacity_survey_shortfall_bottom_up}()},
+\code{\link{external_anchor_gap}()},
+\code{\link{hpsa_removal_shortfall}()},
+\code{\link{published_baseline_gaps}()},
+\code{\link{required_fte_base_year}()}
+}
+\concept{baseline gap}
+\concept{reporting}

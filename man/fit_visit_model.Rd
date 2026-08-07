@@ -36,3 +36,10 @@ package is installed and \code{weights_col} is supplied; (2) \code{MASS::glm.nb}
 quasipoisson (always available) with a warning that the SEs are not
 design-based.
 }
+\seealso{
+Other utilization models: 
+\code{\link{fit_sling_rate_model}()},
+\code{\link{predict_count_with_uncertainty}()}
+}
+\concept{demand}
+\concept{utilization models}

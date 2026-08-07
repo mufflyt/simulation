@@ -13,3 +13,23 @@ Tibble of \code{service}, \code{setting}, \code{unit}, \code{work_rvu}, \code{la
 \description{
 The URPS service workload basket
 }
+\seealso{
+Other workload to fte: 
+\code{\link{URPS_DELEGATION_MATRIX}},
+\code{\link{WRVU_PER_FTE_BENCHMARK}},
+\code{\link{allocate_fte_by_setting}()},
+\code{\link{apportion_service_volume}()},
+\code{\link{assert_publishable_workload}()},
+\code{\link{calibrate_wrvu_per_fte}()},
+\code{\link{calibration_status_report}()},
+\code{\link{check_productivity_plausible}()},
+\code{\link{compute_fte_gap}()},
+\code{\link{convert_workload_to_fte}()},
+\code{\link{implied_urps_share}()},
+\code{\link{rescale_delegation_to_capacity}()},
+\code{\link{service_volume_to_wrvu}()},
+\code{\link{urps_service_workload_status}()},
+\code{\link{validate_delegation_matrix}()}
+}
+\concept{supply}
+\concept{workload to fte}

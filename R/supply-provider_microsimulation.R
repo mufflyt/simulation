@@ -81,6 +81,8 @@ stopifnot(
 #' Bucket an age (or vector of ages) into a cliff-style age band label
 #' @param age Numeric age(s).
 #' @return Character age-band label(s).
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 microsim_age_band_of <- function(age) {
   idx <- cut(age, breaks = MICROSIM_AGE_BANDS, labels = MICROSIM_AGE_BAND_LABELS,
@@ -97,6 +99,8 @@ microsim_age_band_of <- function(age) {
 #' @param reference_shape Reference age-band hazards (the age gradient).
 #' @param reference_rate The overall rate implied by `reference_shape`.
 #' @return Named numeric vector of absolute annual hazards by age band.
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 build_hazard_table <- function(baseline_rate,
                                reference_shape = MICROSIM_REFERENCE_HAZARD,
@@ -109,6 +113,8 @@ build_hazard_table <- function(baseline_rate,
 #' @param age Numeric age(s).
 #' @param hazard_table Named vector of band hazards (see [build_hazard_table()]).
 #' @return Numeric hazard(s) in the unit interval.
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 retirement_hazard <- function(age, hazard_table) {
   bands <- microsim_age_band_of(age)
@@ -158,6 +164,8 @@ productivity_weight_raw <- function(age) {
 #'   value from [calibrate_hours_intercept()] so the hours schedule and the FTE
 #'   threshold are internally consistent.
 #' @return Numeric clinical FTE per provider.
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 provider_clinical_fte <- function(age, sex = "female",
                                   method = c("hours", "participation", "legacy_weight"),
@@ -188,6 +196,8 @@ provider_clinical_fte <- function(age, sex = "female",
 #' @param agents Agent tibble with `entry_year` and `retirement_year` (NA = never).
 #' @param year Integer year.
 #' @return Logical vector, TRUE where the agent is active in `year`.
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 provider_active_in_year <- function(agents, year) {
   entered <- agents$entry_year <= year
@@ -208,6 +218,8 @@ provider_active_in_year <- function(agents, year) {
 #' @examples
 #' initialize_provider_agents(n = 50, subspecialty = "FPMRS",
 #'                            baseline_year = 2025)
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 initialize_provider_agents <- function(n,
                                        subspecialty = "FPMRS",
@@ -283,6 +295,8 @@ initialize_provider_agents <- function(n,
 #'   test-provider-state-machine.R).
 #' @return List with `panel` (per-year summary tibble) and `agents` (final agent
 #'   table incl. drawn retirement years) so the temporal cohort is reconstructible.
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 simulate_provider_career_once <- function(agents,
                                           years,
@@ -650,6 +664,8 @@ simulate_provider_career_once <- function(agents,
 #'   panels), and `scenario` metadata. `scenario$entrants_per_year` is the rate
 #'   the engine RESOLVED (the spec's mean when the spec won, not the argument),
 #'   and `scenario$entrants_source` names which input supplied it.
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 run_supply_microsimulation <- function(initial_workforce = 1306,
                                         years = 2025:2050,
@@ -1036,6 +1052,8 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
 #' @param hours_intercept Intercept for the reference hours schedule.
 #' @param sex Sex mix to evaluate the hazard and hours schedules against.
 #' @return Per-year tibble with expected headcount and effective FTE.
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 project_supply_deterministic <- function(agents, years, entrants_per_year,
                                          hazard_table = NULL,
@@ -1108,6 +1126,8 @@ project_supply_deterministic <- function(agents, years, entrants_per_year,
 #'
 #' @param ratio Numeric replacement ratio(s).
 #' @return Character classification(s).
+#' @family provider microsimulation
+#' @concept supply
 #' @export
 classify_workforce_outlook <- function(ratio) {
   dplyr::case_when(

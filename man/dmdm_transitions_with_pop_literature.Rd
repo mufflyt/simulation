@@ -36,3 +36,9 @@ for the two-state run and available to a staged consumer. The object is marked
 per-condition status so the mixed pedigree (POP literature-derived; UI/AI still
 placeholder) is explicit.
 }
+\seealso{
+Other pop transitions: 
+\code{\link{pop_transition_parameters}()}
+}
+\concept{demand}
+\concept{pop transitions}

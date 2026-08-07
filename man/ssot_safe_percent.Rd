@@ -22,3 +22,13 @@ Guarded percentage
 ssot_safe_percent(part = 3, total = 0)
 ssot_safe_percent(part = 3, total = 12)
 }
+\seealso{
+Other ssot: 
+\code{\link{as_urps_projection}()},
+\code{\link{assert_scenarios_registered}()},
+\code{\link{ssot_coverage_report}()},
+\code{\link{ssot_rurality}()},
+\code{\link{ssot_safe_divide}()}
+}
+\concept{core}
+\concept{ssot}

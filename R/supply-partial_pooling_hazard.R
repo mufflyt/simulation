@@ -26,6 +26,8 @@
 #' @param wide Data frame with `band` and `<sub>_events` / `<sub>_py` columns.
 #' @param subspecialties Subspecialty prefixes to extract (default go/urps/migs).
 #' @return Tibble `subspecialty`, `band`, `py`, `ev` (cells with py > 0).
+#' @family partial pooling hazard
+#' @concept supply
 #' @export
 hazard_pooled_long <- function(wide, subspecialties = c("go", "urps", "migs")) {
   assertthat::assert_that("band" %in% names(wide))
@@ -48,6 +50,8 @@ hazard_pooled_long <- function(wide, subspecialties = c("go", "urps", "migs")) {
 #'   (cliff uses shape = 2, rate = 0.5).
 #' @return List: `hazards` (tibble with `unpooled`, `pooled`, `partial` columns),
 #'   `fit` (the bglmer object), `status` ("fitted").
+#' @family partial pooling hazard
+#' @concept supply
 #' @export
 fit_partial_pooled_hazards <- function(agg, band_levels = NULL,
                                        prior_shape = 2, prior_rate = 0.5) {
@@ -101,6 +105,8 @@ fit_partial_pooled_hazards <- function(agg, band_levels = NULL,
 #'
 #' @param hazards The `hazards` tibble from [fit_partial_pooled_hazards()].
 #' @return Tibble `band`, `sd_unpooled`, `sd_partial` (SD across subspecialties).
+#' @family partial pooling hazard
+#' @concept supply
 #' @export
 hazard_shrinkage_summary <- function(hazards) {
   hazards %>%

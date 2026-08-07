@@ -35,3 +35,11 @@ Convenience composer: loads the real tract demand, builds membership from the
 supplied provider isochrones, and runs the E2SFCA engine. The provider
 isochrones are the only non-vendored input (see \code{\link[=load_provider_isochrones]{load_provider_isochrones()}}).
 }
+\seealso{
+Other spatial access data: 
+\code{\link{build_access_membership}()},
+\code{\link{load_provider_isochrones}()},
+\code{\link{load_tract_demand}()}
+}
+\concept{geography}
+\concept{spatial access data}

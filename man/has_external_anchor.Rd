@@ -18,3 +18,12 @@ tier says so. \code{method == "external_anchor"} alone is not enough: the same
 call can carry a borrowed distribution, which is exactly the case the
 method/tier split exists to distinguish.
 }
+\seealso{
+Other baseline gap reporting: 
+\code{\link{assert_external_anchor}()},
+\code{\link{baseline_anchor_sensitivity}()},
+\code{\link{baseline_gap_claim}()},
+\code{\link{baseline_gap_provenance}()}
+}
+\concept{baseline gap reporting}
+\concept{reporting}

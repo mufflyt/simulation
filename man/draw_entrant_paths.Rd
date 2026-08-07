@@ -45,3 +45,12 @@ term lowers the median as well as widening the band.}
 the pre-cutoff data pins the clearance schedule.}
 }
 }
+\seealso{
+Other entrant regime: 
+\code{\link{classify_certification_regimes}()},
+\code{\link{entrant_regime_rolling_validation}()},
+\code{\link{fit_entrant_regime_model}()},
+\code{\link{project_entrant_path}()}
+}
+\concept{entrant regime}
+\concept{supply}

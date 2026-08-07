@@ -41,3 +41,5 @@ A \code{\link[=run_psa]{run_psa()}} result with outputs \code{gap_pct} and \code
 Wires \code{\link[=run_workforce_microsimulation]{run_workforce_microsimulation()}} as the PSA evaluator and returns the
 distribution of the final-year gap over joint draws of the uncertain inputs.
 }
+\concept{calibration}
+\concept{psa workforce}

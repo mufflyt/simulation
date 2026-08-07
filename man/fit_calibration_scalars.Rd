@@ -22,3 +22,16 @@ Tibble with \code{category}, \code{predicted}, \code{observed}, \code{scalar}, \
 \description{
 Fit multiplicative calibration scalars against independent national anchors
 }
+\seealso{
+Other validation: 
+\code{\link{apply_calibration_scalars}()},
+\code{\link{assert_demand_calibrated}()},
+\code{\link{assert_estimands_independent}()},
+\code{\link{assert_validation_passed}()},
+\code{\link{detect_proportional_estimands}()},
+\code{\link{published_calibration_scalars}()},
+\code{\link{two_method_agreement}()},
+\code{\link{validation_report}()}
+}
+\concept{calibration}
+\concept{validation}

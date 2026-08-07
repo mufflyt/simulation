@@ -16,3 +16,11 @@ observed values (\code{observed = NA}, \code{status = "target_unpopulated"}); po
 \code{observed} from a specialty survey (see data-practice_survey) before treating
 the corresponding outcome as calibrated.
 }
+\seealso{
+Other access: 
+\code{\link{fit_wait_scale}()},
+\code{\link{set_access_target}()},
+\code{\link{validate_access_outcomes}()}
+}
+\concept{access}
+\concept{validation}

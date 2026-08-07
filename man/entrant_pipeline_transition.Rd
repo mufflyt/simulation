@@ -57,3 +57,11 @@ absent yield \code{NA} (leading edge of the lag).
 \code{active_entrants[y] = matched[y - cert_lag - active_lag] * p_complete_cert * p_active_practice}. Each stage is an explicit, labeled conversion; a fellowship
 MATCH is not an active US clinical entrant.
 }
+\seealso{
+Other review followups: 
+\code{\link{international_migration_assumption}()},
+\code{\link{nrmp_match_to_cert_ratio}()},
+\code{\link{supply_uncertainty_drivers}()}
+}
+\concept{review followups}
+\concept{supply}

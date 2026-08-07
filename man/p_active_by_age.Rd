@@ -34,3 +34,9 @@ returns a tibble ready for plotting or tabular reporting.
 \examples{
 p_active_by_age(ages = 40:45)
 }
+\seealso{
+Other urps flows: 
+\code{\link{urps_p_active}()}
+}
+\concept{supply}
+\concept{urps flows}

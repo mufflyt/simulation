@@ -19,3 +19,17 @@ For each input, the partial correlation of its rank with the output's rank,
 controlling for all other inputs' ranks. Signed and robust for monotone
 models. NA output rows are dropped.
 }
+\seealso{
+Other psa: 
+\code{\link{plot_psa_tornado}()},
+\code{\link{psa_discrete}()},
+\code{\link{psa_normal}()},
+\code{\link{psa_sample}()},
+\code{\link{psa_srrc}()},
+\code{\link{psa_tornado}()},
+\code{\link{psa_triangular}()},
+\code{\link{psa_uniform}()},
+\code{\link{run_psa}()}
+}
+\concept{calibration}
+\concept{psa}

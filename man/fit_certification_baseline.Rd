@@ -55,3 +55,12 @@ baseline <- fit_certification_baseline(
 )
 round(baseline$dispersion, 1)
 }
+\seealso{
+Other interval coverage: 
+\code{\link{assert_interval_coverage_publishable}()},
+\code{\link{forecast_certification}()},
+\code{\link{rolling_origin_coverage}()},
+\code{\link{solve_interval_inflation}()}
+}
+\concept{interval coverage}
+\concept{validation}

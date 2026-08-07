@@ -15,3 +15,22 @@ assert_no_leakage(through_year = BACKTEST_CUTOFF_YEAR)
 \description{
 Assert that no contract read exceeded the cutoff
 }
+\seealso{
+Other backtest: 
+\code{\link{.series_through}()},
+\code{\link{BACKTEST_TARGET_YEAR}},
+\code{\link{backtest_attrition_requirement}()},
+\code{\link{backtest_cohort_at}()},
+\code{\link{backtest_cohorts_through}()},
+\code{\link{backtest_entrant_estimate}()},
+\code{\link{backtest_loo_validation}()},
+\code{\link{backtest_multi_window}()},
+\code{\link{backtest_oos_interval}()},
+\code{\link{backtest_retirement_regime}()},
+\code{\link{backtest_rolling_origin}()},
+\code{\link{backtest_target_candidates}()},
+\code{\link{reset_leakage_audit}()},
+\code{\link{validate_backtest_target}()}
+}
+\concept{backtest}
+\concept{validation}

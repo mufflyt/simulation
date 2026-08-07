@@ -65,6 +65,8 @@ NAMCS_MIN_RECORDS <- 30L
 #'   marked unreliable.
 #' @return One-row tibble with `category`, `observed`, `n_records`, `reliable`,
 #'   carrying `provenance` and `data_year` attributes.
+#' @family namcs demand
+#' @concept calibration
 #' @export
 namcs_urps_visit_anchor <- function(namcs = NULL, min_records = NAMCS_MIN_RECORDS) {
   if (is.null(namcs)) namcs <- load_namcs_2019()
@@ -113,6 +115,8 @@ NAMCS_COMPARABLE_SERVICES <- c("new_consultation", "return_visit")
 #' @param services Model services counted as ambulatory visits.
 #' @return The [fit_calibration_scalars()] tibble, carrying `provenance`,
 #'   `base_year` and `anchor_year` attributes.
+#' @family namcs demand
+#' @concept calibration
 #' @export
 namcs_demand_calibration <- function(service_volumes,
                                      base_year = NULL,
@@ -165,6 +169,8 @@ namcs_demand_calibration <- function(service_volumes,
 #' @param volumes Tibble with `year`, `service`, `volume`.
 #' @param calibration Tibble from [namcs_demand_calibration()].
 #' @return `volumes` with `volume` scaled and a `calibration_scalar` column.
+#' @family namcs demand
+#' @concept calibration
 #' @export
 apply_demand_calibration <- function(volumes, calibration) {
   assertthat::assert_that(is.data.frame(volumes),

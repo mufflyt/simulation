@@ -39,3 +39,11 @@ run. This mirrors \code{\link[=assert_publishable_workload]{assert_publishable_w
 loudly, and the override is always an affirmative argument rather than a
 default the caller can inherit without noticing.
 }
+\seealso{
+Other dynamic multistate: 
+\code{\link{dmdm_default_transitions}()},
+\code{\link{dmdm_prevalence_trajectory}()},
+\code{\link{simulate_dmdm}()}
+}
+\concept{demand}
+\concept{dynamic multistate}

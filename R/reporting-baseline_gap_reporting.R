@@ -25,6 +25,8 @@
 #'
 #' @param gap A [baseline_gap()] object.
 #' @return Tibble of one row per reported field.
+#' @family baseline gap reporting
+#' @concept reporting
 #' @export
 baseline_gap_provenance <- function(gap) {
   if (!inherits(gap, "urps_baseline_gap")) {
@@ -65,6 +67,8 @@ baseline_gap_provenance <- function(gap) {
 #'
 #' @param gap A [baseline_gap()] object.
 #' @return Single logical.
+#' @family baseline gap reporting
+#' @concept reporting
 #' @export
 has_external_anchor <- function(gap) {
   if (!inherits(gap, "urps_baseline_gap")) return(FALSE)
@@ -82,6 +86,8 @@ has_external_anchor <- function(gap) {
 #' @param gap A [baseline_gap()] object.
 #' @param digits Rounding for the reported FTE.
 #' @return A single sentence.
+#' @family baseline gap reporting
+#' @concept reporting
 #' @export
 baseline_gap_claim <- function(gap, digits = 0) {
   n <- format(round(gap$shortfall_fte, digits), big.mark = ",")
@@ -112,6 +118,8 @@ baseline_gap_claim <- function(gap, digits = 0) {
 #' @param gap A [baseline_gap()] object.
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
 #' @return (Invisibly) TRUE when the claim is supportable.
+#' @family baseline gap reporting
+#' @concept reporting
 #' @export
 assert_external_anchor <- function(gap, mode = resolve_reproducibility_mode()) {
   if (has_external_anchor(gap)) return(invisible(TRUE))
@@ -138,6 +146,8 @@ assert_external_anchor <- function(gap, mode = resolve_reproducibility_mode()) {
 #' @param anchor_multipliers Multipliers on the anchor to tabulate.
 #' @return List with the break-even anchor, the adequacy implying it, the
 #'   elasticity, and a sensitivity table.
+#' @family baseline gap reporting
+#' @concept reporting
 #' @export
 baseline_anchor_sensitivity <- function(gap, supply_at_target, demand_growth,
                                         anchor_multipliers = c(0.8, 0.9, 1, 1.1, 1.25, 1.5)) {

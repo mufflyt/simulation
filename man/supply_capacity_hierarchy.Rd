@@ -42,3 +42,5 @@ explicit. Map it over pathways/years and \code{dplyr::bind_rows()} the results; 
 \code{group} to label each call. Report ABU and ABOG separately (a scope assumption
 that should not be buried in one pooled stock) by calling once per pathway.
 }
+\concept{capacity hierarchy}
+\concept{supply}

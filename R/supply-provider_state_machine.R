@@ -70,6 +70,8 @@ CAREER_STATE_LATE_ONSET_AGE <- 60L
 #' @param entered Logical; has the provider entered practice (recycled).
 #' @param retired Logical; has the provider retired (recycled). Takes precedence.
 #' @return An ordered factor with levels `CAREER_STATES`.
+#' @family provider state machine
+#' @concept supply
 #' @export
 career_state_of <- function(age, entered = TRUE, retired = FALSE) {
   age <- as.numeric(age)
@@ -110,6 +112,8 @@ career_state_of <- function(age, entered = TRUE, retired = FALSE) {
 #' @return A tibble with `from_state`, `to_state`, `trigger`, `param`, `value`,
 #'   `age_lo`, `age_hi`, `ci_low`, `ci_high`, `calibration_tier`, `source`,
 #'   `role`, `notes`.
+#' @family provider state machine
+#' @concept supply
 #' @export
 career_transition_registry <- function() {
   row <- function(from_state, to_state, trigger, param, value,
@@ -242,6 +246,8 @@ career_transition_registry <- function() {
 #' @param sex Character sex.
 #' @param ... Passed to [departure_hazard()].
 #' @return Numeric hazard(s).
+#' @family provider state machine
+#' @concept supply
 #' @export
 state_departure_hazard <- function(age, sex = "female", ...) {
   departure_hazard(age, sex = sex, ...)
@@ -257,6 +263,8 @@ state_departure_hazard <- function(age, sex = "female", ...) {
 #' @param sex Character sex(es), recycled.
 #' @param ... Passed to [departure_hazard()].
 #' @return A tibble of `career_state`, `n`, `mean_hazard`.
+#' @family provider state machine
+#' @concept supply
 #' @export
 career_departure_by_state <- function(age, sex = "female", ...) {
   age <- as.numeric(age)
@@ -290,6 +298,8 @@ career_departure_by_state <- function(age, sex = "female", ...) {
 #' @param allow_analogy Permit `derived_by_analogy` transitions.
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
 #' @return (Invisibly) `TRUE` when publishable, `FALSE` otherwise.
+#' @family provider state machine
+#' @concept supply
 #' @export
 assert_publishable_supply_transitions <- function(include_scenario_levers = FALSE,
                                                   allow_analogy = FALSE,

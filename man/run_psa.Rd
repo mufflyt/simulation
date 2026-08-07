@@ -26,3 +26,17 @@ List: \code{draws} (tibble of inputs + outputs), \code{inputs}, \code{n}, \code{
 \description{
 Samples the inputs jointly (LHS) and evaluates \code{evaluate} once per draw.
 }
+\seealso{
+Other psa: 
+\code{\link{plot_psa_tornado}()},
+\code{\link{psa_discrete}()},
+\code{\link{psa_normal}()},
+\code{\link{psa_prcc}()},
+\code{\link{psa_sample}()},
+\code{\link{psa_srrc}()},
+\code{\link{psa_tornado}()},
+\code{\link{psa_triangular}()},
+\code{\link{psa_uniform}()}
+}
+\concept{calibration}
+\concept{psa}

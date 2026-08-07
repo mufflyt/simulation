@@ -31,3 +31,19 @@ most cells empty and many rows resting on a handful of moves. Fraher et al.
 avoided the problem by using nine census divisions rather than states; the
 shrinkage argument is the alternative when a finer geography is required.
 }
+\seealso{
+Other provider geography: 
+\code{\link{add_returning_providers}()},
+\code{\link{apply_provider_migration}()},
+\code{\link{apply_provider_migration_matrix}()},
+\code{\link{assign_entrant_geography}()},
+\code{\link{benchmark_density_shortfall}()},
+\code{\link{blend_placement_shares}()},
+\code{\link{historical_placement_shares}()},
+\code{\link{migration_hazard}()},
+\code{\link{opportunity_placement_shares}()},
+\code{\link{supply_per_capita}()},
+\code{\link{validate_migration_matrix}()}
+}
+\concept{geography}
+\concept{provider geography}

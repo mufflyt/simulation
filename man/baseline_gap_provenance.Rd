@@ -16,3 +16,12 @@ Tibble of one row per reported field.
 Every field a reader needs to decide what the number means, with \code{NA}
 reported as "undeclared" rather than quietly omitted.
 }
+\seealso{
+Other baseline gap reporting: 
+\code{\link{assert_external_anchor}()},
+\code{\link{baseline_anchor_sensitivity}()},
+\code{\link{baseline_gap_claim}()},
+\code{\link{has_external_anchor}()}
+}
+\concept{baseline gap reporting}
+\concept{reporting}

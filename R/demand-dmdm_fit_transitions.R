@@ -41,6 +41,8 @@
 #' @return Tibble: `person_id`, `condition`, `year`, the covariates at t, `from`
 #'   (0/1 at-risk state), `event` (1 if the binary state changed by t+1), and
 #'   `from_stage`/`to_stage` (graded stage at t and t+1, or `NA`).
+#' @family dmdm fit transitions
+#' @concept demand
 #' @export
 dmdm_transition_data <- function(panel, conditions = c("ui", "pop", "ai"),
                                  stage_cols = NULL) {
@@ -172,6 +174,8 @@ dmdm_transition_data <- function(panel, conditions = c("ui", "pop", "ai"),
 #' @return A transitions list: `status`, `onset` (per-condition coef vectors),
 #'   `remission` (per-condition annual probabilities), `mortality`, and for each
 #'   staged condition `<cc>_progression`/`<cc>_regression` per-stage vectors.
+#' @family dmdm fit transitions
+#' @concept demand
 #' @export
 fit_dmdm_transitions <- function(transition_data,
                                  mortality = dmdm_default_transitions()$mortality,

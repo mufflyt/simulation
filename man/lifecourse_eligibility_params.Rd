@@ -17,3 +17,11 @@ by default (\code{p_eligible = 1}: all referred patients assumed eligible), so
 unchanged. Pass to \code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}} via \code{eligibility_params} to
 gate treatment on medical eligibility.
 }
+\seealso{
+Other transition registry: 
+\code{\link{assert_publishable_demand_coefficients}()},
+\code{\link{demand_transition_registry}()},
+\code{\link{lifecourse_severity_params}()}
+}
+\concept{demand}
+\concept{transition registry}

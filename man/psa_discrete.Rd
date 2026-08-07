@@ -19,3 +19,17 @@ A \code{psa_input} spec.
 \description{
 Define a discrete PSA input (unordered or ordered categories)
 }
+\seealso{
+Other psa: 
+\code{\link{plot_psa_tornado}()},
+\code{\link{psa_normal}()},
+\code{\link{psa_prcc}()},
+\code{\link{psa_sample}()},
+\code{\link{psa_srrc}()},
+\code{\link{psa_tornado}()},
+\code{\link{psa_triangular}()},
+\code{\link{psa_uniform}()},
+\code{\link{run_psa}()}
+}
+\concept{calibration}
+\concept{psa}

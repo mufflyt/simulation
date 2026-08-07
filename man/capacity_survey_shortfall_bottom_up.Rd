@@ -21,3 +21,18 @@ who were "not busy enough" carried -33.7\% capacity and REDUCED the estimated
 shortfall. A single scalar adequacy fraction cannot represent that offset,
 which is why this route is offered alongside the ratio route.
 }
+\seealso{
+Other baseline gap: 
+\code{\link{assert_access_not_double_counted}()},
+\code{\link{assert_baseline_gap_estimated}()},
+\code{\link{assumed_baseline_gap}()},
+\code{\link{baseline_gap}()},
+\code{\link{capacity_category_adequacy}()},
+\code{\link{capacity_survey_adequacy}()},
+\code{\link{external_anchor_gap}()},
+\code{\link{hpsa_removal_shortfall}()},
+\code{\link{published_baseline_gaps}()},
+\code{\link{required_fte_base_year}()}
+}
+\concept{baseline gap}
+\concept{reporting}

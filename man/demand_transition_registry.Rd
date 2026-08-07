@@ -16,3 +16,11 @@ life-course pathway, with its calibration tier (from \code{CALIBRATION_TIERS}) a
 source. \code{variant = "default"} rows are the placeholder set; \code{variant = "cited"} rows are the literature-anchored overrides applied by
 \code{\link[=lifecourse_risk_params_cited]{lifecourse_risk_params_cited()}}.
 }
+\seealso{
+Other transition registry: 
+\code{\link{assert_publishable_demand_coefficients}()},
+\code{\link{lifecourse_eligibility_params}()},
+\code{\link{lifecourse_severity_params}()}
+}
+\concept{demand}
+\concept{transition registry}

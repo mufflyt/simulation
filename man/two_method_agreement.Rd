@@ -29,3 +29,16 @@ sources; rescaling one population series by three constants does not qualify,
 and \code{independent = FALSE} records that fact in the output rather than letting
 a tautological rho be read as robustness.
 }
+\seealso{
+Other validation: 
+\code{\link{apply_calibration_scalars}()},
+\code{\link{assert_demand_calibrated}()},
+\code{\link{assert_estimands_independent}()},
+\code{\link{assert_validation_passed}()},
+\code{\link{detect_proportional_estimands}()},
+\code{\link{fit_calibration_scalars}()},
+\code{\link{published_calibration_scalars}()},
+\code{\link{validation_report}()}
+}
+\concept{calibration}
+\concept{validation}

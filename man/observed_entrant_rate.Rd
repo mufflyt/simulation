@@ -40,3 +40,13 @@ The consequence matters for anything downstream: because no departures are
 netted out, the mean of this flow IS the gross entrant rate. Adding modelled
 departures on top double-counts them -- see \code{\link[=implied_gross_entrants]{implied_gross_entrants()}}.
 }
+\seealso{
+Other roster: 
+\code{\link{agents_from_certification_cohorts}()},
+\code{\link{cohort_composition}()},
+\code{\link{cohort_provenance}()},
+\code{\link{implied_gross_entrants}()},
+\code{\link{urps_certification_cohorts}()}
+}
+\concept{roster}
+\concept{supply}

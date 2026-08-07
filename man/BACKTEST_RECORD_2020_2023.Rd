@@ -16,4 +16,19 @@ The default \code{record} for \code{\link[=backtest_status]{backtest_status()}} 
 Exported because it is a default argument of exported functions: a caller who
 cannot name the default cannot reproduce or audit it.
 }
+\seealso{
+Other backtest status: 
+\code{\link{BACKTEST_RECORD_SHA256}},
+\code{\link{assert_backtest_record_current}()},
+\code{\link{assert_forecast_intervals_validated}()},
+\code{\link{backtest_artifact_path}()},
+\code{\link{backtest_status}()},
+\code{\link{backtest_status_from_summary}()},
+\code{\link{interval_label}()},
+\code{\link{stamp_backtest_status}()},
+\code{\link{stamped_backtest_status}()},
+\code{\link{verify_backtest_record}()}
+}
+\concept{backtest status}
+\concept{validation}
 \keyword{datasets}

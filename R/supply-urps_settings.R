@@ -64,6 +64,8 @@ URPS_SETTING_NAMES <- c("office", "telehealth", "hospital_outpatient",
 #' A tibble with columns `service`, `setting`, `share`. Each service's shares
 #' sum to 1. Illustrative until replaced by PSPS place-of-service data.
 #'
+#' @family urps settings
+#' @concept supply
 #' @export
 URPS_DEFAULT_SETTING_MIX <- tibble::tribble(
   ~service,                ~setting,               ~share,
@@ -167,6 +169,8 @@ URPS_SETTING_PRODUCTIVITY <- c(
 #'     `from` setting, the `to` setting, and the `fraction` of volume to move.}
 #' }
 #'
+#' @family urps settings
+#' @concept supply
 #' @export
 URPS_SETTING_SCENARIOS <- list(
   baseline = list(
@@ -216,6 +220,8 @@ URPS_SETTING_SCENARIOS <- list(
 #' @param mix Tibble with `service`, `setting`, `share`.
 #' @param tol Tolerance on row sums.
 #' @return (Invisibly) `mix`, or error naming offending services.
+#' @family urps settings
+#' @concept supply
 #' @export
 validate_setting_mix <- function(mix, tol = 1e-8) {
   assertthat::assert_that(is.data.frame(mix),
@@ -250,6 +256,8 @@ validate_setting_mix <- function(mix, tol = 1e-8) {
 #' @param volumes Tibble with at least `service` and `volume`.
 #' @param workload Service basket from [urps_service_workload()].
 #' @return `volumes` with an added `setting` column.
+#' @family urps settings
+#' @concept supply
 #' @export
 volumes_with_setting <- function(volumes,
                                   workload = urps_service_workload()) {
@@ -279,6 +287,8 @@ volumes_with_setting <- function(volumes,
 #' @param mix Setting-mix table; see [URPS_DEFAULT_SETTING_MIX].
 #' @return Longer tibble with `service`, `setting`, `volume` (and `year` if
 #'   present in `volumes`).
+#' @family urps settings
+#' @concept supply
 #' @export
 #'
 #' @examples
@@ -321,6 +331,8 @@ split_volumes_by_setting <- function(volumes,
 #' @param to Character setting name to shift volume toward.
 #' @param fraction Fraction of `from` volume to move to `to`. In \[0, 1\].
 #' @return Updated volumes_split tibble.
+#' @family urps settings
+#' @concept supply
 #' @export
 apply_setting_shift <- function(volumes_split, service, from, to, fraction) {
   if (!is.numeric(fraction) || length(fraction) != 1 ||
@@ -386,6 +398,8 @@ apply_setting_shift <- function(volumes_split, service, from, to, fraction) {
 #' @return `volumes_split` with `volume` divided by the productivity multiplier
 #'   (effective volume = raw volume / productivity, so lower productivity →
 #'   larger effective volume → more FTE required).
+#' @family urps settings
+#' @concept supply
 #' @export
 apply_setting_productivity <- function(volumes_split,
                                         productivity = URPS_SETTING_PRODUCTIVITY) {
@@ -427,6 +441,8 @@ apply_setting_productivity <- function(volumes_split,
 #' @return A tibble compatible with [convert_workload_to_fte()].
 #' @seealso [split_volumes_by_setting()], [apply_setting_productivity()],
 #'   [URPS_SETTING_SCENARIOS]
+#' @family urps settings
+#' @concept supply
 #' @export
 #'
 #' @examples
@@ -489,6 +505,8 @@ apply_setting_scenario <- function(volumes,
 #' @return Tibble: `service`, `setting`, `share` in the shape of
 #'   [URPS_DEFAULT_SETTING_MIX]. Write this to replace the illustrative
 #'   defaults.
+#' @family urps settings
+#' @concept supply
 #' @export
 load_psps_pos_shares <- function(path,
                                   basket    = URPS_CPT_BASKET,
@@ -576,6 +594,8 @@ load_psps_pos_shares <- function(path,
 #' @param year_filter Optional year to subset.
 #' @return Tibble: `service`, `volume_baseline`, `volume_adjusted`,
 #'   `volume_delta`, `pct_change`.
+#' @family urps settings
+#' @concept supply
 #' @export
 setting_scenario_summary <- function(volumes,
                                       scenario_id = "telehealth_10pct",

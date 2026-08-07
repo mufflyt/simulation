@@ -15,3 +15,14 @@ Tibble \code{age_band}, \code{person_years}, \code{events}, \code{annual_hazard}
 \description{
 Observed URPS age-band person-years and events (for CIs / weighting)
 }
+\seealso{
+Other sources: 
+\code{\link{nrmp_entrant_series}()},
+\code{\link{nrmp_entrants}()},
+\code{\link{nrmp_track_split}()},
+\code{\link{urps_age_productivity_curve}()},
+\code{\link{urps_empirical_hazard_by_ageband}()},
+\code{\link{urps_empirical_retirement_schedule}()}
+}
+\concept{calibration}
+\concept{sources}

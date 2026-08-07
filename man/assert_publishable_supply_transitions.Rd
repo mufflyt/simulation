@@ -35,3 +35,12 @@ scenario levers are \code{uncalibrated_illustrative}; including them forces a
 refusal, which is the point: activating burnout / parental-leave /
 participation knobs makes a run uncalibrated.
 }
+\seealso{
+Other provider state machine: 
+\code{\link{career_departure_by_state}()},
+\code{\link{career_state_of}()},
+\code{\link{career_transition_registry}()},
+\code{\link{state_departure_hazard}()}
+}
+\concept{provider state machine}
+\concept{supply}

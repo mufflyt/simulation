@@ -42,6 +42,8 @@
 #'
 #' @return Tibble of `service`, `setting`, `unit`, `work_rvu`, `label`,
 #'   `calibration_status`, `source`.
+#' @family workload to fte
+#' @concept supply
 #' @export
 urps_service_workload <- function() {
   if (is.null(.urps_workload_cache$tbl)) {
@@ -52,6 +54,8 @@ urps_service_workload <- function() {
 
 #' Calibration status of the workload basket
 #' @return Character status.
+#' @family workload to fte
+#' @concept supply
 #' @export
 urps_service_workload_status <- function() {
   unique(urps_service_workload()$calibration_status)[1]
@@ -142,6 +146,8 @@ URPS_DELEGATION_FORTE_RAW <- tibble::tribble(
 #' @param matrix Delegation matrix to rescale.
 #' @param factor Multiplier on the URPS shares.
 #' @return The rescaled matrix.
+#' @family workload to fte
+#' @concept supply
 #' @export
 rescale_delegation_to_capacity <- function(matrix = URPS_DELEGATION_FORTE_RAW,
                                            factor = URPS_DELEGATION_CAPACITY_FACTOR) {
@@ -165,6 +171,8 @@ URPS_DELEGATION_CAPACITY_FACTOR <- 0.434
 #'
 #' Forte's cross-service pattern with the subspecialist level rescaled to what a
 #' subspecialty of this size can actually deliver.
+#' @family workload to fte
+#' @concept supply
 #' @export
 URPS_DELEGATION_MATRIX <- rescale_delegation_to_capacity(
   URPS_DELEGATION_FORTE_RAW, 0.434
@@ -196,6 +204,8 @@ URPS_DELEGATION_SOURCE <- paste(
 #' @param matrix Delegation tibble with `service` and share columns.
 #' @param tol Tolerance on the row sums.
 #' @return (Invisibly) the matrix.
+#' @family workload to fte
+#' @concept supply
 #' @export
 validate_delegation_matrix <- function(matrix = URPS_DELEGATION_MATRIX, tol = 1e-8) {
   share_cols <- .share_cols(matrix)
@@ -219,6 +229,8 @@ validate_delegation_matrix <- function(matrix = URPS_DELEGATION_MATRIX, tol = 1e
 #' @param volumes Tibble with `service` and `volume` (and optionally `year`).
 #' @param matrix Delegation matrix.
 #' @return Long tibble: `year` (if present), `service`, `provider_type`, `volume`.
+#' @family workload to fte
+#' @concept supply
 #' @export
 apportion_service_volume <- function(volumes, matrix = URPS_DELEGATION_MATRIX) {
   assertthat::assert_that(all(c("service", "volume") %in% names(volumes)))
@@ -244,6 +256,8 @@ apportion_service_volume <- function(volumes, matrix = URPS_DELEGATION_MATRIX) {
 #' @param provider_type Provider type to total (default the URPS share).
 #' @param delegation Delegation matrix; NULL uses the full volume.
 #' @return Tibble with `year` (if present) and `work_rvu`.
+#' @family workload to fte
+#' @concept supply
 #' @export
 service_volume_to_wrvu <- function(volumes,
                                    workload = urps_service_workload(),
@@ -285,6 +299,8 @@ service_volume_to_wrvu <- function(volumes,
 #'   was calibrated without the gross-up and base-year required FTE misses its
 #'   own anchor by 1/(1 - indirect_share).
 #' @return Numeric annual work RVUs per clinical FTE.
+#' @family workload to fte
+#' @concept supply
 #' @export
 calibrate_wrvu_per_fte <- function(base_year_wrvu, base_year_required_fte,
                                    indirect_share = INDIRECT_TIME_SHARE) {
@@ -307,6 +323,8 @@ calibrate_wrvu_per_fte <- function(base_year_wrvu, base_year_required_fte,
 #' specialty. Productivity surveys (MGMA, AMGA) put the median in the high
 #' thousands, not the tens of thousands. REPLACE with the specific survey
 #' edition you have licensed before publishing.
+#' @family workload to fte
+#' @concept supply
 #' @export
 WRVU_PER_FTE_BENCHMARK <- c(low = 3500, median = 7500, high = 12000)
 
@@ -323,6 +341,8 @@ WRVU_PER_FTE_BENCHMARK <- c(low = 3500, median = 7500, high = 12000)
 #' @param benchmark Named low/median/high benchmark.
 #' @param mode Reproducibility mode; strict errors outside the range.
 #' @return (Invisibly) TRUE when within range.
+#' @family workload to fte
+#' @concept supply
 #' @export
 check_productivity_plausible <- function(wrvu_per_fte,
                                          benchmark = WRVU_PER_FTE_BENCHMARK,
@@ -371,6 +391,8 @@ check_productivity_plausible <- function(wrvu_per_fte,
 #' @param workload Service workload basket.
 #' @param indirect_share Indirect-time share.
 #' @return Numeric implied uniform URPS share.
+#' @family workload to fte
+#' @concept supply
 #' @export
 implied_urps_share <- function(volumes, required_fte,
                                wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]],
@@ -412,6 +434,8 @@ implied_urps_share <- function(volumes, required_fte,
 #'   returned.
 #' @return Tibble with `year` (if present), `required_fte`, and the method used.
 #'   When `by_setting = TRUE`, also includes a `setting` column.
+#' @family workload to fte
+#' @concept supply
 #' @export
 convert_workload_to_fte <- function(volumes,
                                     wrvu_per_fte = NULL,
@@ -494,6 +518,8 @@ convert_workload_to_fte <- function(volumes,
 #' @param total_fte Total required FTE.
 #' @param time_shares Named numeric vector of setting shares summing to 1.
 #' @return Tibble with `setting` and `required_fte`.
+#' @family workload to fte
+#' @concept supply
 #' @export
 allocate_fte_by_setting <- function(total_fte,
                                     time_shares = c(ambulatory = 0.82, operative = 0.15, inpatient = 0.03)) {
@@ -519,6 +545,8 @@ allocate_fte_by_setting <- function(total_fte,
 #' @param supply_col Name of the supplied-FTE column.
 #' @return Tibble: `year`, `supplied_fte`, `required_fte`, `gap_fte`, `gap_pct`,
 #'   `pct_supply_to_demand`.
+#' @family workload to fte
+#' @concept supply
 #' @export
 compute_fte_gap <- function(supply, required, supply_col = "effective_fte_median") {
   assertthat::assert_that(supply_col %in% names(supply),
@@ -554,6 +582,8 @@ compute_fte_gap <- function(supply, required, supply_col = "effective_fte_median
 #' @param what Label used in the message.
 #' @param mode Reproducibility mode; strict errors, relaxed warns.
 #' @return (Invisibly) TRUE when publishable.
+#' @family workload to fte
+#' @concept supply
 #' @export
 assert_publishable_workload <- function(status = urps_service_workload_status(),
                                         allow_analogy = FALSE,
@@ -590,6 +620,8 @@ assert_publishable_workload <- function(status = urps_service_workload_status(),
 #' Calibration status of every model input, in one table
 #'
 #' @return Tibble of `input`, `status`, `source`.
+#' @family workload to fte
+#' @concept supply
 #' @export
 calibration_status_report <- function() {
   tibble::tibble(

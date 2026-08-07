@@ -35,3 +35,11 @@ function definitions with analysis code that reads data files at top level --
 filesystem that may not exist and would run analyses nobody asked for, so the
 loader evaluates the function definitions and skips the rest.
 }
+\seealso{
+Other legacy loader: 
+\code{\link{LEGACY_CANONICAL}},
+\code{\link{check_legacy_canonical}()},
+\code{\link{legacy_collisions}()}
+}
+\concept{core}
+\concept{legacy loader}

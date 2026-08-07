@@ -20,3 +20,17 @@ Define a triangular PSA input (min / mode / max) -- the common PSA default
 \examples{
 psa_triangular("entrants", min = 45, mode = 55, max = 70)
 }
+\seealso{
+Other psa: 
+\code{\link{plot_psa_tornado}()},
+\code{\link{psa_discrete}()},
+\code{\link{psa_normal}()},
+\code{\link{psa_prcc}()},
+\code{\link{psa_sample}()},
+\code{\link{psa_srrc}()},
+\code{\link{psa_tornado}()},
+\code{\link{psa_uniform}()},
+\code{\link{run_psa}()}
+}
+\concept{calibration}
+\concept{psa}

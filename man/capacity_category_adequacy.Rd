@@ -38,3 +38,18 @@ shortage_unmet  1 - additional / seen
 35 appointments per week ... 14.2\% of total demand"
 ->  85.8\%
 }
+\seealso{
+Other baseline gap: 
+\code{\link{assert_access_not_double_counted}()},
+\code{\link{assert_baseline_gap_estimated}()},
+\code{\link{assumed_baseline_gap}()},
+\code{\link{baseline_gap}()},
+\code{\link{capacity_survey_adequacy}()},
+\code{\link{capacity_survey_shortfall_bottom_up}()},
+\code{\link{external_anchor_gap}()},
+\code{\link{hpsa_removal_shortfall}()},
+\code{\link{published_baseline_gaps}()},
+\code{\link{required_fte_base_year}()}
+}
+\concept{baseline gap}
+\concept{reporting}

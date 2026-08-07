@@ -31,3 +31,17 @@ in facility vs. non-facility settings.
 \details{
 See \code{data-raw/cms_psps/DOWNLOAD.md} for download instructions.
 }
+\seealso{
+Other urps settings: 
+\code{\link{URPS_DEFAULT_SETTING_MIX}},
+\code{\link{URPS_SETTING_SCENARIOS}},
+\code{\link{apply_setting_productivity}()},
+\code{\link{apply_setting_scenario}()},
+\code{\link{apply_setting_shift}()},
+\code{\link{setting_scenario_summary}()},
+\code{\link{split_volumes_by_setting}()},
+\code{\link{validate_setting_mix}()},
+\code{\link{volumes_with_setting}()}
+}
+\concept{supply}
+\concept{urps settings}

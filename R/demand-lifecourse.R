@@ -51,6 +51,8 @@ lifecourse_risk_params <- function() .demand_risk_params("default")
 #' `bbmi` per +5 kg/m^2 from Giri 2017 AJOG (obese vs normal RR ~1.47). All
 #' PROVISIONAL: full-text verification recommended before publication.
 #' @return A risk-params list in the shape of `lifecourse_risk_params()`.
+#' @family lifecourse
+#' @concept demand
 #' @export
 lifecourse_risk_params_cited <- function() .demand_risk_params("cited")
 
@@ -233,6 +235,8 @@ lifecourse_service_map <- function() {
 #'   `service`, `volume`), `care_seeking_national`, `treated_national`, and `meta`.
 #'   When the staged pathway is used, `meta$stage_volumes` carries the same
 #'   volumes broken out by condition and stage.
+#' @family lifecourse
+#' @concept demand
 #' @export
 simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
                                        n = 1e5, seed = NULL,
@@ -321,6 +325,8 @@ simulate_lifecourse_demand <- function(pop_by_age, year, scenario = "baseline",
 #' @return A list with `service_volumes` (tibble `year`, `service`, `volume`) and
 #'   `demand_summary` (tibble `year`, `care_seeking_national`,
 #'   `service_units_national`).
+#' @family lifecourse
+#' @concept demand
 #' @export
 lifecourse_demand_trajectory <- function(pop_by_age_year,
                                          years = sort(unique(pop_by_age_year$year)),
@@ -357,6 +363,8 @@ lifecourse_demand_trajectory <- function(pop_by_age_year,
 #' @param scenario,n,seed,... Passed to [lifecourse_demand_trajectory()].
 #' @return A list with `service_volumes`, `demand_summary`, and `required_fte`
 #'   (the tibble returned by [convert_workload_to_fte()]).
+#' @family lifecourse
+#' @concept demand
 #' @export
 lifecourse_required_fte <- function(pop_by_age_year, wrvu_per_fte,
                                     scenario = "baseline", n = 1e5, seed = NULL, ...) {
@@ -390,6 +398,8 @@ lifecourse_required_fte <- function(pop_by_age_year, wrvu_per_fte,
 #'   load) or "care_seeking".
 #' @param estimand,label Estimand id and label.
 #' @return Tibble with `year`, `estimand`, `label`, `demand_cases`.
+#' @family lifecourse
+#' @concept demand
 #' @export
 lifecourse_demand_estimand <- function(demand_summary,
                                        measure = c("service_units", "care_seeking"),

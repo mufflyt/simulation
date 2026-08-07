@@ -20,4 +20,12 @@ to the next stage (\code{p_advance}, constant within a condition-stage).
 }
 \seealso{
 \code{\link[=pathway_service_volumes]{pathway_service_volumes()}}, \code{\link[=validate_condition_pathway]{validate_condition_pathway()}}
+
+Other condition service pathway: 
+\code{\link{condition_pathway_status}()},
+\code{\link{pathway_service_volumes}()},
+\code{\link{pathway_stage_entrants}()},
+\code{\link{validate_condition_pathway}()}
 }
+\concept{condition service pathway}
+\concept{demand}

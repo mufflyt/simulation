@@ -44,3 +44,9 @@ features that distinguish POP from incontinence: it is graded, and mild stages
 regress. The extra elements are inert for the two-state engine and available to
 a staged consumer.
 }
+\seealso{
+Other dmdm fit transitions: 
+\code{\link{dmdm_transition_data}()}
+}
+\concept{demand}
+\concept{dmdm fit transitions}

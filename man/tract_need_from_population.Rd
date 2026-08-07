@@ -40,3 +40,13 @@ population in each demand age band by that band's PFD prevalence and sums, so
 geographic analogue of the D1 prevalent-PFD denominator (\code{R/demand-urps}), applied to
 local population instead of the national age structure.
 }
+\seealso{
+Other demand: 
+\code{\link{accessible_need_vs_capacity}()},
+\code{\link{demand_by_travel_band}()},
+\code{\link{geographic_demand_summary}()},
+\code{\link{isochrone_demand_from_tracts}()},
+\code{\link{need_weighted_access}()}
+}
+\concept{demand}
+\concept{geography}

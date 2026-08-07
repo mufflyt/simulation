@@ -19,6 +19,8 @@
 #' @importFrom assertthat assert_that
 #' @importFrom dplyr mutate row_number case_when if_else filter bind_rows left_join select
 #' @importFrom tidyr replace_na
+#' @family fraher agent supply
+#' @concept supply
 #' @export
 initialize_urps_agents <- function(roster_source  = "mufflyaccess",
                                    duckdb_path    = NULL,
@@ -145,6 +147,8 @@ initialize_urps_agents <- function(roster_source  = "mufflyaccess",
 #' @importFrom assertthat assert_that
 #' @importFrom dplyr filter mutate bind_rows left_join select if_else n
 #' @importFrom tidyr replace_na
+#' @family fraher agent supply
+#' @concept supply
 #' @export
 advance_urps_agents <- function(agents,
                                 exit_hazard,

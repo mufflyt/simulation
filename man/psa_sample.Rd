@@ -21,3 +21,17 @@ hold the category index) plus \verb{<name>_value} columns for discrete inputs.
 Each input's marginal is stratified into \code{n} equal-probability bins; inputs
 are permuted independently so joint draws are near-orthogonal.
 }
+\seealso{
+Other psa: 
+\code{\link{plot_psa_tornado}()},
+\code{\link{psa_discrete}()},
+\code{\link{psa_normal}()},
+\code{\link{psa_prcc}()},
+\code{\link{psa_srrc}()},
+\code{\link{psa_tornado}()},
+\code{\link{psa_triangular}()},
+\code{\link{psa_uniform}()},
+\code{\link{run_psa}()}
+}
+\concept{calibration}
+\concept{psa}

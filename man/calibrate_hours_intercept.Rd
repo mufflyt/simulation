@@ -34,3 +34,26 @@ This solves for the intercept that makes mean predicted hours over the
 base-year cohort equal the FTE threshold, so base-year FTE tracks headcount
 and all subsequent movement comes from the changing age and sex composition.
 }
+\seealso{
+Other provider lifecycle: 
+\code{\link{RETIREMENT_HAZARD_BY_AGE}},
+\code{\link{agents_from_roster}()},
+\code{\link{calibrate_retirement_schedule}()},
+\code{\link{deduplicate_provider_roster}()},
+\code{\link{departure_hazard}()},
+\code{\link{fit_clinical_hours_model}()},
+\code{\link{fte_definition}()},
+\code{\link{hwsm_reference_hours}()},
+\code{\link{implied_annual_departure_rate}()},
+\code{\link{participation_fte}()},
+\code{\link{participation_p_no_patient_care}()},
+\code{\link{predict_clinical_hours}()},
+\code{\link{restate_fte}()},
+\code{\link{retirement_survival}()},
+\code{\link{shift_retirement_schedule}()},
+\code{\link{urps_baseline_supply}()},
+\code{\link{validate_participation_table}()},
+\code{\link{validate_provider_roster}()}
+}
+\concept{provider lifecycle}
+\concept{supply}

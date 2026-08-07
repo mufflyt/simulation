@@ -29,3 +29,16 @@ mat   <- urps_migration_matrix(c("NY", "CA", "WV", "MT"),
                                rural_to_urban = drift$rural_to_urban,
                                urban_to_rural = drift$urban_to_rural)
 }
+\seealso{
+Other urps migration: 
+\code{\link{CONUS_STATE_URBANICITY}},
+\code{\link{URPS_MIGRATION_HAZARD}},
+\code{\link{URPS_RURAL_URBAN_DRIFT}},
+\code{\link{agent_urbanicity_summary}()},
+\code{\link{apply_urps_migration}()},
+\code{\link{classify_state_urbanicity}()},
+\code{\link{rural_urban_concentration}()},
+\code{\link{urps_migration_matrix}()}
+}
+\concept{geography}
+\concept{urps migration}

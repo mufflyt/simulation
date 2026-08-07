@@ -30,6 +30,8 @@
 #' different vintage, whatever it is named.
 #'
 #' @format Named character vector; names are bare file names.
+#' @family swan archive
+#' @concept data
 #' @export
 SWAN_ARCHIVE_SHA256 <- c(
   swan_all_visits.rds = "9ca085dd516de07a9bd0ab009760cdb36f151137a40be726dd6d7c1bdd209405"
@@ -38,6 +40,8 @@ SWAN_ARCHIVE_SHA256 <- c(
 #' Expected sizes in bytes, as a cheap pre-check before hashing
 #'
 #' @format Named numeric vector; names are bare file names.
+#' @family swan archive
+#' @concept data
 #' @export
 SWAN_ARCHIVE_BYTES <- c(
   swan_all_visits.rds = 29537163
@@ -72,6 +76,8 @@ SWAN_ARCHIVE_BYTES <- c(
 #'   `reference_source`).
 #' @seealso [swan_archive_provenance()], [build_swan_dmdm_panel()],
 #'   [swan_dmdm_panel_from_archive()]
+#' @family swan archive
+#' @concept data
 #' @export
 load_swan_archive <- function(file = "swan_all_visits.rds",
                               path = NULL,
@@ -172,6 +178,8 @@ load_swan_archive <- function(file = "swan_all_visits.rds",
 #'   one by [build_swan_dmdm_panel()].
 #' @return The provenance list, or `NULL` when the object did not come through
 #'   the archive loader.
+#' @family swan archive
+#' @concept data
 #' @export
 swan_archive_provenance <- function(x) {
   p <- attr(x, "swan_archive_provenance")
@@ -193,6 +201,8 @@ swan_archive_provenance <- function(x) {
 #' @param verbose Narrate both steps.
 #' @return The panel from [build_swan_dmdm_panel()], whose
 #'   `swan_dmdm_provenance` attribute carries an `archive` element.
+#' @family swan archive
+#' @concept data
 #' @export
 swan_dmdm_panel_from_archive <- function(file = "swan_all_visits.rds",
                                          path = NULL,

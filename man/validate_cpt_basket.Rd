@@ -17,3 +17,9 @@ validate_cpt_basket(basket = URPS_CPT_BASKET, tol = 1e-08)
 \description{
 Validate that a CPT basket's mix weights sum to 1 per service
 }
+\seealso{
+Other cms rvu: 
+\code{\link{CMS_WORK_RVU}}
+}
+\concept{cms rvu}
+\concept{data}

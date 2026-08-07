@@ -23,3 +23,12 @@ with Medicare CY2024 activity. Physician NAMES are deliberately absent: the
 model needs age, sex, state, certification year and workload, and nothing in
 the pipeline needs to identify an individual.
 }
+\seealso{
+Other roster capacity: 
+\code{\link{capacity_status}()},
+\code{\link{roster_workload_concentration}()},
+\code{\link{urps_capacity_survey_requirements}()},
+\code{\link{urps_provider_roster}()}
+}
+\concept{roster capacity}
+\concept{supply}

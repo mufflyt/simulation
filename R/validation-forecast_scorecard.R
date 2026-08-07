@@ -37,6 +37,8 @@
 #' @param quantile_levels Numeric length-`m` vector of probability levels in
 #'   (0, 1); must include `0.5` and symmetric pairs (`a` and `1 - a`).
 #' @return Numeric vector of length `n`: the WIS per case (lower is better).
+#' @family forecast scorecard
+#' @concept validation
 #' @export
 weighted_interval_score <- function(y, quantiles, quantile_levels) {
   if (is.null(dim(quantiles))) quantiles <- matrix(quantiles, nrow = 1)
@@ -81,6 +83,8 @@ weighted_interval_score <- function(y, quantiles, quantile_levels) {
 #' @return A one-row data frame: `label`, `n`, `mape`, `rmse`, `signed_bias`,
 #'   `signed_pct_bias`, and (when intervals given) `coverage`, `mean_width`,
 #'   `mean_interval_score`, `calibration_slope`.
+#' @family forecast scorecard
+#' @concept validation
 #' @export
 forecast_scorecard <- function(data, observed = "observed", point = "predicted",
                                lower = "lower", upper = "upper",
@@ -129,6 +133,8 @@ forecast_scorecard <- function(data, observed = "observed", point = "predicted",
 #' @return A list: `scorecard` (per-model metrics + skill columns), `rank_stability`
 #'   (`model`, `mean_rank`, `rank_sd`, `best_fraction`, `n_cutoffs`) or `NULL`, and
 #'   `benchmark`.
+#' @family forecast scorecard
+#' @concept validation
 #' @export
 compare_forecasts <- function(data, model = "model", cutoff = "cutoff",
                               observed = "observed", point = "predicted",

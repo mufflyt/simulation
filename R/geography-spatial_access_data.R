@@ -21,6 +21,8 @@
 #'
 #' @param mode Reproducibility mode (SHA-256 drift handling in the resolver).
 #' @return Tibble `demand_id` (GEOID), `population` (fem65), `lon`, `lat`.
+#' @family spatial access data
+#' @concept geography
 #' @export
 load_tract_demand <- function(mode = resolve_reproducibility_mode()) {
   path <- resolve_canonical("tract_fem65_centroids", mode = mode)
@@ -44,6 +46,8 @@ load_tract_demand <- function(mode = resolve_reproducibility_mode()) {
 #' @param bands Drive-time bands to load (minutes).
 #' @return An `sf` object with `coord_id`, `drive_time` (band), and polygon
 #'   geometry (rows stacked across bands).
+#' @family spatial access data
+#' @concept geography
 #' @export
 load_provider_isochrones <- function(artifacts_dir = Sys.getenv("ISOCHRONES_ARTIFACTS_DIR", ""),
                                      bands = c(30L, 60L, 120L, 180L)) {
@@ -82,6 +86,8 @@ load_provider_isochrones <- function(artifacts_dir = Sys.getenv("ISOCHRONES_ARTI
 #' @param band_col Name of the band (minutes) column in `iso_sf`.
 #' @param crs Coordinate reference system of the tract lon/lat (default 4326).
 #' @return Tibble `demand_id`, `provider_id`, `band` (one row per containment).
+#' @family spatial access data
+#' @concept geography
 #' @export
 build_access_membership <- function(iso_sf, tracts,
                                     provider_col = "coord_id",
@@ -124,6 +130,8 @@ build_access_membership <- function(iso_sf, tracts,
 #' @param provider_col,band_col Column names in `iso_sf`.
 #' @param mode Reproducibility mode.
 #' @return The [compute_e2sfca_access()] result over the real tract demand.
+#' @family spatial access data
+#' @concept geography
 #' @export
 real_access_surface <- function(iso_sf, supply,
                                 weights = E2SFCA_DEFAULT_WEIGHTS,

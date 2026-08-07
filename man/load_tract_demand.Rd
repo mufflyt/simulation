@@ -15,3 +15,11 @@ Tibble \code{demand_id} (GEOID), \code{population} (fem65), \code{lon}, \code{la
 \description{
 Load the real tract demand denominator (female 65+, with centroids)
 }
+\seealso{
+Other spatial access data: 
+\code{\link{build_access_membership}()},
+\code{\link{load_provider_isochrones}()},
+\code{\link{real_access_surface}()}
+}
+\concept{geography}
+\concept{spatial access data}

@@ -38,6 +38,8 @@
 #' `pop_uptake`. `surgical_reduction`, `office_reduction`, `pt_visits_per_case`,
 #' and `pessary_visits_per_case` default to their function defaults when absent.
 #'
+#' @family prevention
+#' @concept demand
 #' @export
 URPS_PREVENTION_SCENARIOS <- list(
   baseline = list(
@@ -112,6 +114,8 @@ URPS_PREVENTION_SCENARIOS <- list(
 #'   listed in the workload basket are silently excluded from the result (they
 #'   are unaffected by definition).
 #' @seealso [apply_prevention_multipliers()], [URPS_PREVENTION_SCENARIOS]
+#' @family prevention
+#' @concept demand
 #' @export
 #'
 #' @examples
@@ -212,6 +216,8 @@ conservative_management_multipliers <- function(ui_uptake         = 0,
 #'   returned tibble for audit purposes.
 #' @seealso [conservative_management_multipliers()],
 #'   [prevention_demand_trajectory()]
+#' @family prevention
+#' @concept demand
 #' @export
 #'
 #' @examples
@@ -262,6 +268,8 @@ apply_prevention_multipliers <- function(volumes, multipliers) {
 #' @param registry Named list with the same structure as
 #'   [URPS_PREVENTION_SCENARIOS]. Defaults to [URPS_PREVENTION_SCENARIOS].
 #' @return Modified volumes tibble.
+#' @family prevention
+#' @concept demand
 #' @export
 #'
 #' @examples
@@ -320,6 +328,8 @@ prevention_demand_trajectory <- function(demand_long,
 #' @param registry See [apply_named_prevention_scenario()].
 #' @return Tibble: `year` (if multi-year), `service`, `volume_baseline`,
 #'   `volume_prevention`, `volume_delta`, `pct_change`.
+#' @family prevention
+#' @concept demand
 #' @export
 prevention_volume_summary <- function(demand_long,
                                       scenario_id  = "conservative_25pct",

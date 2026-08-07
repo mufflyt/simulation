@@ -34,3 +34,22 @@ occurred by the origin, so the interval for an early window can be informed
 by outcomes from years after it. Do not report this as predictive
 calibration.
 }
+\seealso{
+Other backtest: 
+\code{\link{.series_through}()},
+\code{\link{BACKTEST_TARGET_YEAR}},
+\code{\link{assert_no_leakage}()},
+\code{\link{backtest_attrition_requirement}()},
+\code{\link{backtest_cohort_at}()},
+\code{\link{backtest_cohorts_through}()},
+\code{\link{backtest_entrant_estimate}()},
+\code{\link{backtest_multi_window}()},
+\code{\link{backtest_oos_interval}()},
+\code{\link{backtest_retirement_regime}()},
+\code{\link{backtest_rolling_origin}()},
+\code{\link{backtest_target_candidates}()},
+\code{\link{reset_leakage_audit}()},
+\code{\link{validate_backtest_target}()}
+}
+\concept{backtest}
+\concept{validation}

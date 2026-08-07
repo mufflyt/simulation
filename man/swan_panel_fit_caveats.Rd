@@ -19,3 +19,9 @@ not their pedigree. This returns the caveats as text so they can be printed
 beside a fit, pasted into a methods note, or attached to a transitions object
 before it reaches \code{\link[=export_dmdm_demand_contract]{export_dmdm_demand_contract()}}.
 }
+\seealso{
+Other swan dmdm panel: 
+\code{\link{build_swan_dmdm_panel}()}
+}
+\concept{data}
+\concept{swan dmdm panel}

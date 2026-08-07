@@ -18,3 +18,12 @@ Status of the base-year capacity anchor
 # naming that is part of the result rather than a footnote elsewhere.
 capacity_status()
 }
+\seealso{
+Other roster capacity: 
+\code{\link{load_urps_roster}()},
+\code{\link{roster_workload_concentration}()},
+\code{\link{urps_capacity_survey_requirements}()},
+\code{\link{urps_provider_roster}()}
+}
+\concept{roster capacity}
+\concept{supply}

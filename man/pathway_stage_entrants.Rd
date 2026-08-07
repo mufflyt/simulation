@@ -19,3 +19,12 @@ Compounds \code{p_advance} along \link{PATHWAY_STAGES}: everyone treated enters
 \code{conservative}, and each subsequent stage receives the previous stage's
 entrants multiplied by that stage's advance probability.
 }
+\seealso{
+Other condition service pathway: 
+\code{\link{condition_pathway_status}()},
+\code{\link{condition_service_pathway}()},
+\code{\link{pathway_service_volumes}()},
+\code{\link{validate_condition_pathway}()}
+}
+\concept{condition service pathway}
+\concept{demand}

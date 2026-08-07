@@ -43,3 +43,21 @@ single total. They are different clinical pathways with different age curves
 (Wu 2014: SUI is bimodal, POP rises monotonically to ~71-73), and R/51's
 condition cascade models them separately, so a summed rate cannot feed it.
 }
+\seealso{
+Other urps: 
+\code{\link{anchor_index}()},
+\code{\link{assess_demand_concordance}()},
+\code{\link{compute_brfss_demand_estimand}()},
+\code{\link{compute_demand_coverage}()},
+\code{\link{compute_demand_denominators}()},
+\code{\link{compute_demand_denominators_crude}()},
+\code{\link{compute_growth_adequacy}()},
+\code{\link{npp_female_by_band}()},
+\code{\link{npp_women_65plus}()},
+\code{\link{pfd_prevalence_by_band}()},
+\code{\link{pfd_prevalence_ownership}()},
+\code{\link{rebase_to_year}()},
+\code{\link{resolve_demand_population}()}
+}
+\concept{demand}
+\concept{urps}

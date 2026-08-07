@@ -60,4 +60,10 @@ demand-contract schema, emitting \code{tier3_prevalent_pfd} (any-PFD) plus
 per-condition \code{dmdm_ui}/\code{dmdm_pop}/\code{dmdm_ai}, indexed to the base year, with a
 JSON provenance manifest.
 }
+\seealso{
+Other export demand contract: 
+\code{\link{export_hdmm_demand_contract}()}
+}
+\concept{export demand contract}
+\concept{reporting}
 \keyword{internal}

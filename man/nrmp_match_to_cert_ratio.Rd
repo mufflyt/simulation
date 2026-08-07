@@ -38,3 +38,11 @@ say nothing about how many matched fellows eventually certify -- 2020 alone
 pulls the pre-cutoff mean from 0.75 to 0.60.
 }
 }
+\seealso{
+Other review followups: 
+\code{\link{entrant_pipeline_transition}()},
+\code{\link{international_migration_assumption}()},
+\code{\link{supply_uncertainty_drivers}()}
+}
+\concept{review followups}
+\concept{supply}

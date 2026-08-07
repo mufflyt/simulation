@@ -26,3 +26,14 @@ over the model's age bands (\code{MICROSIM_AGE_BAND_LABELS}). Because the observ
 70+ cell is 0/16, hazards are made monotone non-decreasing from the \code{60-64}
 band onward, so \verb{70+} inherits the \code{65-69} hazard instead of collapsing to 0.
 }
+\seealso{
+Other sources: 
+\code{\link{nrmp_entrant_series}()},
+\code{\link{nrmp_entrants}()},
+\code{\link{nrmp_track_split}()},
+\code{\link{urps_age_productivity_curve}()},
+\code{\link{urps_empirical_retirement_schedule}()},
+\code{\link{urps_hazard_exposure}()}
+}
+\concept{calibration}
+\concept{sources}

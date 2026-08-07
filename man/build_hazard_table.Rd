@@ -24,3 +24,17 @@ Named numeric vector of absolute annual hazards by age band.
 Scales the reference age gradient so the level matches the subspecialty's
 published overall annual retirement rate.
 }
+\seealso{
+Other provider microsimulation: 
+\code{\link{classify_workforce_outlook}()},
+\code{\link{initialize_provider_agents}()},
+\code{\link{microsim_age_band_of}()},
+\code{\link{project_supply_deterministic}()},
+\code{\link{provider_active_in_year}()},
+\code{\link{provider_clinical_fte}()},
+\code{\link{retirement_hazard}()},
+\code{\link{run_supply_microsimulation}()},
+\code{\link{simulate_provider_career_once}()}
+}
+\concept{provider microsimulation}
+\concept{supply}

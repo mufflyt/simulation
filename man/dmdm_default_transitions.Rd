@@ -15,3 +15,11 @@ age).
 \description{
 Default annual transition parameters for the DMDM (placeholder)
 }
+\seealso{
+Other dynamic multistate: 
+\code{\link{assert_calibrated_transitions}()},
+\code{\link{dmdm_prevalence_trajectory}()},
+\code{\link{simulate_dmdm}()}
+}
+\concept{demand}
+\concept{dynamic multistate}

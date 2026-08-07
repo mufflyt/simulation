@@ -31,3 +31,13 @@ the largest band), and — when the columns exist — \code{need_weighted_access
 Combines \code{\link[=demand_by_travel_band]{demand_by_travel_band()}} with the optional access measures into a
 single summary for a projection year.
 }
+\seealso{
+Other demand: 
+\code{\link{accessible_need_vs_capacity}()},
+\code{\link{demand_by_travel_band}()},
+\code{\link{isochrone_demand_from_tracts}()},
+\code{\link{need_weighted_access}()},
+\code{\link{tract_need_from_population}()}
+}
+\concept{demand}
+\concept{geography}

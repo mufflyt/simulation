@@ -24,3 +24,11 @@ Reads \verb{isochrones_\{band\}min_consolidated.rds} polygon sets from a local
 directory (these are large Valhalla-produced artifacts, not vendored). Fails
 closed if the directory or files are absent. Requires \code{sf}.
 }
+\seealso{
+Other spatial access data: 
+\code{\link{build_access_membership}()},
+\code{\link{load_tract_demand}()},
+\code{\link{real_access_surface}()}
+}
+\concept{geography}
+\concept{spatial access data}

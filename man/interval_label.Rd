@@ -19,3 +19,18 @@ Returns the phrase that belongs in a table caption or figure legend. While
 coverage fails, "forecast interval" is not available: the back-test refuted
 exactly that claim, and the honest description is a Monte Carlo range.
 }
+\seealso{
+Other backtest status: 
+\code{\link{BACKTEST_RECORD_2020_2023}},
+\code{\link{BACKTEST_RECORD_SHA256}},
+\code{\link{assert_backtest_record_current}()},
+\code{\link{assert_forecast_intervals_validated}()},
+\code{\link{backtest_artifact_path}()},
+\code{\link{backtest_status}()},
+\code{\link{backtest_status_from_summary}()},
+\code{\link{stamp_backtest_status}()},
+\code{\link{stamped_backtest_status}()},
+\code{\link{verify_backtest_record}()}
+}
+\concept{backtest status}
+\concept{validation}

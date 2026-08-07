@@ -25,3 +25,14 @@ Port of cliff::calculate_replacement_gap. Projects 5 years of graduates
 against projected retirements per subspecialty and reports the net gap,
 replacement ratio, and an adequacy flag.
 }
+\seealso{
+Other workforce statistics: 
+\code{\link{calculate_proportion_ci}()},
+\code{\link{calculate_rural_metro_comparison}()},
+\code{\link{calculate_state_vulnerability}()},
+\code{\link{calculate_two_prop_test}()},
+\code{\link{load_sensitivity_table}()},
+\code{\link{sensitivity_registry}()}
+}
+\concept{reporting}
+\concept{workforce statistics}

@@ -35,4 +35,9 @@ X\%) at each threshold. A threshold of \code{0} reads as "P(any shortage)".
 }
 \seealso{
 \code{\link[=psa_workforce_gap]{psa_workforce_gap()}}, \code{\link[=forecast_probabilities]{forecast_probabilities()}}
+
+Other forecast probabilities: 
+\code{\link{forecast_probabilities}()}
 }
+\concept{forecast probabilities}
+\concept{validation}

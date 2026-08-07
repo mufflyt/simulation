@@ -41,6 +41,8 @@
 #' @param floor_sparse If TRUE (default), apply the monotone 70+ guard.
 #' @param mode Reproducibility mode (SHA-256 drift handling in the resolver).
 #' @return Named numeric vector of annual hazards over `MICROSIM_AGE_BAND_LABELS`.
+#' @family sources
+#' @concept calibration
 #' @export
 urps_empirical_hazard_by_ageband <- function(pooling = c("urps", "pooled", "pooled_migs", "go"),
                                              floor_sparse = TRUE,
@@ -83,6 +85,8 @@ urps_empirical_hazard_by_ageband <- function(pooling = c("urps", "pooled", "pool
 #' @param tail_schedule Single-year schedule supplying the 70+ tail.
 #' @param mode Reproducibility mode.
 #' @return Named numeric vector of single-year hazards (names = ages as strings).
+#' @family sources
+#' @concept calibration
 #' @export
 urps_empirical_retirement_schedule <- function(pooling = "urps",
                                                tail_schedule = RETIREMENT_HAZARD_PHYSICIAN,
@@ -106,6 +110,8 @@ urps_empirical_retirement_schedule <- function(pooling = "urps",
 #'
 #' @param mode Reproducibility mode.
 #' @return Tibble `age_band`, `person_years`, `events`, `annual_hazard`.
+#' @family sources
+#' @concept calibration
 #' @export
 urps_hazard_exposure <- function(mode = resolve_reproducibility_mode()) {
   path <- resolve_canonical("urps_retirement_hazard_ageband", mode = mode)
@@ -118,6 +124,8 @@ urps_hazard_exposure <- function(mode = resolve_reproducibility_mode()) {
 #' @param subspecialty Subspecialty label; "FPMRS" is treated as "URPS".
 #' @param mode Reproducibility mode.
 #' @return Integer annual filled positions for the subspecialty.
+#' @family sources
+#' @concept calibration
 #' @export
 nrmp_entrants <- function(subspecialty = "URPS", mode = resolve_reproducibility_mode()) {
   abbrev <- if (toupper(subspecialty) == "FPMRS") "URPS" else toupper(subspecialty)
@@ -139,7 +147,13 @@ nrmp_entrants <- function(subspecialty = "URPS", mode = resolve_reproducibility_
 #' @param mode Reproducibility mode.
 #' @return Tibble `age`, `rel_to_peak`, `work_usd`.
 #' @examples
-#' head(urps_age_productivity_curve())
+#' # The curve resolves through the canonical source registry, and config/ is
+#' # .Rbuildignore'd -- so this runs in a source checkout and is skipped inside
+#' # <pkg>.Rcheck/, where config/ does not exist. Same guard the tests use.
+#' curve <- tryCatch(urps_age_productivity_curve(), error = function(e) NULL)
+#' if (!is.null(curve)) head(curve)
+#' @family sources
+#' @concept calibration
 #' @export
 urps_age_productivity_curve <- function(mode = resolve_reproducibility_mode()) {
   path <- resolve_canonical("urps_age_productivity", mode = mode)
@@ -211,6 +225,8 @@ NRMP_PLATEAU_FROM <- 2015L
 #'   back-test cutoff to guarantee no post-cutoff report is used.
 #' @return Tibble with `appointment_year`, `positions_offered`,
 #'   `positions_filled`, `available_by_year`.
+#' @family sources
+#' @concept calibration
 #' @export
 nrmp_entrant_series <- function(available_by = NULL) {
   s <- NRMP_URPS_ENTRANT_SERIES
@@ -297,6 +313,8 @@ NRMP_URPS_TRACK_SPLIT <- tibble::tribble(
 #' @return Tibble of `appointment_year`, `track`, `n_programs`,
 #'   `positions_offered`, `positions_filled`, `residual_offered`,
 #'   `residual_filled`, `reconciles_exactly`, `urology_share`.
+#' @family sources
+#' @concept calibration
 #' @export
 #'
 #' @examples

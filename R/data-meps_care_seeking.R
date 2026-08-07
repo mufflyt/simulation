@@ -43,6 +43,8 @@
 #' construction rather than by choice.
 #'
 #' @format Character vector of ICD-10 prefixes.
+#' @family meps care seeking
+#' @concept data
 #' @export
 MEPS_PELVIC_FLOOR_ICD10 <- c("N39", "N81", "R32", "R15")
 
@@ -65,6 +67,8 @@ MEPS_PELVIC_FLOOR_ICD10 <- c("N39", "N81", "R32", "R15")
 #' @param icd10 Pelvic-floor ICD-10 prefixes.
 #' @return A person-level data frame of adult women: `sought` (0/1), `pf_visits`,
 #'   `pf_spend`, `n_comorbid`, the covariates, and the survey-design columns.
+#' @family meps care seeking
+#' @concept data
 #' @export
 build_meps_care_seeking_panel <- function(fyc, cond, clnk, ob,
                                           year = 2023L,
@@ -154,6 +158,8 @@ build_meps_care_seeking_panel <- function(fyc, cond, clnk, ob,
 #' @param part1_terms Right-hand side for the care-seeking (hurdle) model.
 #' @param part2_terms Right-hand side for the visit-count model.
 #' @return An object of class `urps_care_seeking_model`.
+#' @family meps care seeking
+#' @concept data
 #' @export
 fit_care_seeking_model <- function(panel,
                                    part1_terms = c("age_c", "insurance", "income",
@@ -204,6 +210,8 @@ fit_care_seeking_model <- function(panel,
 #' @param model A [fit_care_seeking_model()] object.
 #' @param newdata Covariate frame.
 #' @return Data frame of `p_seek`, `visits_if_seek`, `expected_visits`.
+#' @family meps care seeking
+#' @concept data
 #' @export
 predict_care_seeking <- function(model, newdata) {
   stopifnot(inherits(model, "urps_care_seeking_model"))
@@ -226,6 +234,8 @@ predict_care_seeking <- function(model, newdata) {
 #' @param level Confidence level.
 #' @return Data frame: `variable`, `level`, `multiplier`, `conf_low`,
 #'   `conf_high`, `identified`.
+#' @family meps care seeking
+#' @concept data
 #' @export
 care_seeking_multipliers <- function(model, variable, reference, level = 0.95) {
   stopifnot(inherits(model, "urps_care_seeking_model"))

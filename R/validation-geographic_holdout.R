@@ -75,6 +75,8 @@
 #' @return A list: `predictions` (one row per geography: `geo`, `region`, `fold`,
 #'   `observed`, `predicted`), `metrics` (`n`, `mape`, `rmse`, `r2_oos`,
 #'   `calibration_slope`, `spearman`), and the `scheme`/`family` used.
+#' @family geographic holdout
+#' @concept validation
 #' @export
 geographic_holdout_cv <- function(data, observed, predictors, geo = NULL,
                                   region = NULL, scheme = c("loo", "region", "kfold"),

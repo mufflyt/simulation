@@ -142,6 +142,8 @@
 #' @importFrom assertthat assert_that
 #' @importFrom dplyr mutate
 #' @importFrom rlang .data
+#' @family severity sandvik
+#' @concept demand
 #' @export
 score_sandvik_severity <- function(swan_incontinence_panel,
                                    amount_crosswalk = c(

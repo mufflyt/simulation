@@ -26,3 +26,12 @@ finite (non-censored) wait only; the demand share sitting in unbounded queues
 is reported separately as \code{wait_censored_share} so a saturated system is never
 hidden behind a finite-looking mean.
 }
+\seealso{
+Other access outcomes: 
+\code{\link{access_outcomes_by_severity}()},
+\code{\link{access_outcomes_trajectory}()},
+\code{\link{assert_access_outcomes_labeled}()},
+\code{\link{publish_access_outcomes}()}
+}
+\concept{access outcomes}
+\concept{reporting}

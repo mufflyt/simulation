@@ -17,3 +17,12 @@ HHI in \verb{[0, 1]}; \code{NA_real_} if the total is 0.
 \description{
 Herfindahl-Hirschman Index of provider share
 }
+\seealso{
+Other workforce concentration: 
+\code{\link{provider_concentration}()},
+\code{\link{workforce_gini}()},
+\code{\link{workforce_lorenz}()},
+\code{\link{workforce_top_k_share}()}
+}
+\concept{reporting}
+\concept{workforce concentration}

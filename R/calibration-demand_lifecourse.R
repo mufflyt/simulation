@@ -27,6 +27,8 @@ LIFECOURSE_ANCHOR_MAP <- tibble::tribble(
 #' @param base_year Year whose totals are compared to the anchors. Default 2025.
 #' @param map Service-to-anchor-category map. Default `LIFECOURSE_ANCHOR_MAP`.
 #' @return Tibble `category`, `predicted` (base-year national totals).
+#' @family demand lifecourse
+#' @concept calibration
 #' @export
 lifecourse_anchor_predictions <- function(service_volumes, base_year = 2025L,
                                           map = LIFECOURSE_ANCHOR_MAP) {
@@ -53,6 +55,8 @@ lifecourse_anchor_predictions <- function(service_volumes, base_year = 2025L,
 #' @return List: `scalars` (from [fit_calibration_scalars()]) and
 #'   `service_volumes` (calibrated; each service scaled by its category scalar,
 #'   unanchored services unchanged).
+#' @family demand lifecourse
+#' @concept calibration
 #' @export
 calibrate_lifecourse_demand <- function(service_volumes, observed, base_year = 2025L,
                                         max_scalar = 3, map = LIFECOURSE_ANCHOR_MAP) {
@@ -83,6 +87,8 @@ calibrate_lifecourse_demand <- function(service_volumes, observed, base_year = 2
 #' @param map Service-to-anchor-category map.
 #' @return List: `by_category` (`category`, `predicted`, `observed`, `ratio`,
 #'   `abs_pct_error`) and `summary` (`mape`, `n`, `target_year`).
+#' @family demand lifecourse
+#' @concept calibration
 #' @export
 backtest_lifecourse <- function(service_volumes, observed_fit, observed_target,
                                 fit_through_year = 2017L, target_year = 2023L,

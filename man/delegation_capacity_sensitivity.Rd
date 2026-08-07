@@ -49,3 +49,9 @@ of 0.473 implies a factor near 0.69 and 12,934 wRVU/FTE -- ABOVE the
 benchmark ceiling. That tension is evidence about the service-volume basket,
 not about the delegation matrix.
 }
+\seealso{
+Other delegation evidence: 
+\code{\link{medicare_delegation_corroboration}()}
+}
+\concept{delegation evidence}
+\concept{supply}

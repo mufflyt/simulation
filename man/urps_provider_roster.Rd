@@ -23,3 +23,12 @@ with no Medicare activity get NA rather than a guess -- being unconfirmed is
 information, and \code{\link[=validate_provider_roster]{validate_provider_roster()}} requires the field to exist,
 not to be populated.
 }
+\seealso{
+Other roster capacity: 
+\code{\link{capacity_status}()},
+\code{\link{load_urps_roster}()},
+\code{\link{roster_workload_concentration}()},
+\code{\link{urps_capacity_survey_requirements}()}
+}
+\concept{roster capacity}
+\concept{supply}

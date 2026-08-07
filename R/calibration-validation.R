@@ -46,6 +46,8 @@
 #'   indicate a structural problem rather than a calibration offset and are
 #'   flagged rather than silently applied.
 #' @return Tibble with `category`, `predicted`, `observed`, `scalar`, `flagged`.
+#' @family validation
+#' @concept calibration
 #' @export
 fit_calibration_scalars <- function(predicted, observed, max_scalar = 3) {
   assertthat::assert_that(all(c("category", "predicted") %in% names(predicted)))
@@ -75,6 +77,8 @@ fit_calibration_scalars <- function(predicted, observed, max_scalar = 3) {
 #' @param scalars Tibble from [fit_calibration_scalars()].
 #' @param value_col Name of the column to scale.
 #' @return `values` with the column scaled and a `calibration_scalar` column.
+#' @family validation
+#' @concept calibration
 #' @export
 apply_calibration_scalars <- function(values, scalars, value_col = "predicted") {
   assertthat::assert_that(value_col %in% names(values), "category" %in% names(values))
@@ -90,6 +94,8 @@ apply_calibration_scalars <- function(values, scalars, value_col = "predicted") 
 #' @return Tibble of published scalars.
 #' @examples
 #' published_calibration_scalars()
+#' @family validation
+#' @concept calibration
 #' @export
 published_calibration_scalars <- function() {
   tibble::tribble(
@@ -115,6 +121,8 @@ published_calibration_scalars <- function() {
 #' @param calibration Tibble from [fit_calibration_scalars()], or NULL.
 #' @param mode Reproducibility mode.
 #' @return (Invisibly) TRUE when calibration is present.
+#' @family validation
+#' @concept calibration
 #' @export
 assert_demand_calibrated <- function(calibration, mode = resolve_reproducibility_mode()) {
   msg <- paste(
@@ -165,6 +173,8 @@ assert_demand_calibrated <- function(calibration, mode = resolve_reproducibility
 #' @param measure_a,measure_b Column names of the measures.
 #' @param independent Whether the two methods are genuinely independent.
 #' @return List with Spearman rho, agreement on sign, and a verdict.
+#' @family validation
+#' @concept calibration
 #' @export
 two_method_agreement <- function(a, b, measure_a = "adequacy", measure_b = "adequacy",
                                  independent = TRUE) {
@@ -215,6 +225,8 @@ two_method_agreement <- function(a, b, measure_a = "adequacy", measure_b = "adeq
 #' @param value_col Value column name.
 #' @param tol Relative tolerance on the constancy of the ratio.
 #' @return Tibble of proportional estimand pairs (empty when all are distinct).
+#' @family validation
+#' @concept calibration
 #' @export
 detect_proportional_estimands <- function(long, value_col = "demand_cases", tol = 1e-8) {
   assertthat::assert_that(all(c("year", "estimand", value_col) %in% names(long)))
@@ -244,6 +256,8 @@ detect_proportional_estimands <- function(long, value_col = "demand_cases", tol 
 #' @param value_col Value column.
 #' @param mode Reproducibility mode.
 #' @return (Invisibly) the proportional pairs found.
+#' @family validation
+#' @concept calibration
 #' @export
 assert_estimands_independent <- function(long, value_col = "demand_cases",
                                          mode = resolve_reproducibility_mode()) {
@@ -280,6 +294,8 @@ assert_estimands_independent <- function(long, value_col = "demand_cases",
 #'   added: (1) all REQUIRED_COLS are present; (2) gap arithmetic is consistent
 #'   (`gap_fte == supply_clinical_fte - demand_clinical_fte` to ±0.01 FTE).
 #' @return Tibble of checks with pass/fail and detail.
+#' @family validation
+#' @concept calibration
 #' @export
 validation_report <- function(supply, required = NULL, gap = NULL,
                               state_totals = NULL, gap_projection = NULL) {
@@ -379,6 +395,8 @@ validation_report <- function(supply, required = NULL, gap = NULL,
 #' @param report Tibble from [validation_report()].
 #' @param mode Reproducibility mode.
 #' @return (Invisibly) the report.
+#' @family validation
+#' @concept calibration
 #' @export
 assert_validation_passed <- function(report, mode = resolve_reproducibility_mode()) {
   failed <- report[report$type == "internal" & !is.na(report$passed) & !report$passed, ]

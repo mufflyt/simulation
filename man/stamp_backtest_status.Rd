@@ -19,3 +19,18 @@ The URPS projection contract is a fixed 13-column schema, so the status rides
 as an attribute rather than a column: adding one would fail
 \code{mufflyaccess::validate_urps_projection()}.
 }
+\seealso{
+Other backtest status: 
+\code{\link{BACKTEST_RECORD_2020_2023}},
+\code{\link{BACKTEST_RECORD_SHA256}},
+\code{\link{assert_backtest_record_current}()},
+\code{\link{assert_forecast_intervals_validated}()},
+\code{\link{backtest_artifact_path}()},
+\code{\link{backtest_status}()},
+\code{\link{backtest_status_from_summary}()},
+\code{\link{interval_label}()},
+\code{\link{stamped_backtest_status}()},
+\code{\link{verify_backtest_record}()}
+}
+\concept{backtest status}
+\concept{validation}

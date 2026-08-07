@@ -30,6 +30,8 @@
 #'   definition used.
 #'
 #' @importFrom stats median quantile sd
+#' @family psa reporting
+#' @concept calibration
 #' @export
 psa_outcome_summary <- function(psa,
                                 output = psa$output_names[1],
@@ -103,6 +105,8 @@ psa_outcome_summary <- function(psa,
 #'   `srrc`, and `plot` (NA when not written).
 #'
 #' @importFrom utils write.csv
+#' @family psa reporting
+#' @concept calibration
 #' @export
 write_psa_report <- function(psa,
                              output = psa$output_names[1],

@@ -43,12 +43,20 @@ none spilled). System-level overflow totals are attached as
 }
 \description{
 The Phase-2 spatial-overflow step. Each catchment is first cleared locally
-(as in \code{\link[=clear_access]{clear_access()}}); a shortage catchment's residual demand is
-then offered to neighbouring catchments with spare capacity, cheapest edge
-first, until it is placed or no reachable neighbour has room. Demand is
-conserved: \code{demand = served_local + spilled_out + unmet} per catchment, and
+(as in \code{\link[=clear_access]{clear_access()}}); a shortage catchment's residual demand is then
+offered to neighbouring catchments with spare capacity, cheapest edge first,
+until it is placed or no reachable neighbour has room. Demand is conserved:
+\code{demand = served_local + spilled_out + unmet} per catchment, and
 \code{sum(spilled_out) == sum(spilled_in)} across the system. Post-overflow waits,
-appointment probabilities and utilization are recomputed by
-\code{\link[=clear_access]{clear_access()}} on each catchment's effective demand
-(\code{demand - spilled_out + spilled_in}).
+appointment probabilities and utilization are recomputed by \code{\link[=clear_access]{clear_access()}}
+on each catchment's effective demand (\code{demand - spilled_out + spilled_in}).
 }
+\seealso{
+Other access clearing: 
+\code{\link{catchment_neighbors_from_coords}()},
+\code{\link{clear_access}()},
+\code{\link{clear_access_trajectory}()},
+\code{\link{overflow_conservation}()}
+}
+\concept{access clearing}
+\concept{geography}

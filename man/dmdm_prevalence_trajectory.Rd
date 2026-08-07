@@ -34,3 +34,11 @@ The per-year data frame from \code{\link[=simulate_dmdm]{simulate_dmdm()}}.
 \description{
 Convenience wrapper: build the base-year cohort and run \code{\link[=simulate_dmdm]{simulate_dmdm()}}.
 }
+\seealso{
+Other dynamic multistate: 
+\code{\link{assert_calibrated_transitions}()},
+\code{\link{dmdm_default_transitions}()},
+\code{\link{simulate_dmdm}()}
+}
+\concept{demand}
+\concept{dynamic multistate}

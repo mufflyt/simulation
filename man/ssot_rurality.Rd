@@ -16,3 +16,13 @@ Character classification.
 Gives the \code{nonmetro} access component in \code{\link[=demand_scenario_registry]{demand_scenario_registry()}} an
 operational definition instead of leaving it a bare label.
 }
+\seealso{
+Other ssot: 
+\code{\link{as_urps_projection}()},
+\code{\link{assert_scenarios_registered}()},
+\code{\link{ssot_coverage_report}()},
+\code{\link{ssot_safe_divide}()},
+\code{\link{ssot_safe_percent}()}
+}
+\concept{core}
+\concept{ssot}

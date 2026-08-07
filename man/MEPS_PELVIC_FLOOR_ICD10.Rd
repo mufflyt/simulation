@@ -16,4 +16,13 @@ prolapse), R32 (unspecified urinary incontinence), R15 (fecal incontinence).
 MEPS releases ICD-10 truncated to three characters, so these are prefixes by
 construction rather than by choice.
 }
+\seealso{
+Other meps care seeking: 
+\code{\link{build_meps_care_seeking_panel}()},
+\code{\link{care_seeking_multipliers}()},
+\code{\link{fit_care_seeking_model}()},
+\code{\link{predict_care_seeking}()}
+}
+\concept{data}
+\concept{meps care seeking}
 \keyword{datasets}

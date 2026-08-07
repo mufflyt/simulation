@@ -26,3 +26,21 @@ Tibble \code{year}, \code{age_band} (a \code{DEMAND_AGE_BANDS} factor order), \c
 Reads the canonical NPP series, applies the SSOT female filter, and sums the
 single-year POP_\if{html}{\out{<age>}} columns into the model's demand age bands.
 }
+\seealso{
+Other urps: 
+\code{\link{anchor_index}()},
+\code{\link{apply_age_specific_surgery_demand}()},
+\code{\link{assess_demand_concordance}()},
+\code{\link{compute_brfss_demand_estimand}()},
+\code{\link{compute_demand_coverage}()},
+\code{\link{compute_demand_denominators}()},
+\code{\link{compute_demand_denominators_crude}()},
+\code{\link{compute_growth_adequacy}()},
+\code{\link{npp_women_65plus}()},
+\code{\link{pfd_prevalence_by_band}()},
+\code{\link{pfd_prevalence_ownership}()},
+\code{\link{rebase_to_year}()},
+\code{\link{resolve_demand_population}()}
+}
+\concept{demand}
+\concept{urps}
