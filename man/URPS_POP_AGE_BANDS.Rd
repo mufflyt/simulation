@@ -12,7 +12,7 @@ URPS_POP_AGE_BANDS
 }
 \description{
 Five HWMM/HDMM adult bands (Exhibit 5). The upper two align exactly with the
-\code{mufflyaccess::pfd_prevalence()} contract bands (65-79, 80+) so prevalence can
+\code{mufflyaccess::pfd_prevalence()} contract bands (65-74, 75+) so prevalence can
 be joined without a wrong-grain error.
 }
 \keyword{datasets}

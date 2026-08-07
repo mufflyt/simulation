@@ -12,10 +12,10 @@ workforce_gap_probabilities(
 )
 }
 \arguments{
-\item{psa}{A \code{\link[=psa_workforce_gap]{psa_workforce_gap()}} result (a list with \code{$draws}), or a numeric
+\item{psa}{A \code{\link[=psa_workforce_gap]{psa_workforce_gap()}} result (a list with \verb{$draws}), or a numeric
 vector of gap draws.}
 
-\item{metric}{Column of \code{$draws} to summarise when \code{psa} is a PSA result;
+\item{metric}{Column of \verb{$draws} to summarise when \code{psa} is a PSA result;
 \code{"gap_pct"} (percent of demand, default) or \code{"gap_fte"}.}
 
 \item{shortage_thresholds}{Numeric thresholds for the shortage probabilities,
