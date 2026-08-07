@@ -175,6 +175,26 @@ test_that("summarise_stratum_coverage returns share in (0, 1]", {
   expect_true(cov["complete_cell_share"] <= 1)
 })
 
+test_that("build_urps_population_cells retains missing-stratum respondents (no silent weight loss)", {
+  mini <- .harmonise_mini(.mini_brfss())
+  # the mini fixture deliberately carries rows with NA insurance / income_tier /
+  # bmi_class (HLTHPL1 = 9, INCOME3 = 77/99, BMI = NA). A drop = TRUE split
+  # silently discarded them and their survey weight, and made coverage read 1.0.
+  stopifnot(any(is.na(mini$insurance) | is.na(mini$income_tier) | is.na(mini$bmi_class)))
+
+  cells <- build_urps_population_cells(mini, verbose = FALSE)
+
+  # (1) No survey weight is lost -- every respondent's weight reaches a cell.
+  expect_equal(sum(cells$pop_weight), sum(mini$survey_wt, na.rm = TRUE))
+
+  # (2) Incomplete strata now survive as cells, so the coverage diagnostic can
+  #     actually see them -- it is no longer a constant 1.0.
+  expect_true(any(is.na(cells$insurance) | is.na(cells$income_tier)))
+  cov <- summarise_stratum_coverage(cells)
+  expect_lt(cov[["complete_cell_share"]], 1)
+  expect_gt(cov[["complete_cell_share"]], 0)
+})
+
 test_that("brfss_pfd_prevalence_for_demand_bands returns named vector over DEMAND_AGE_BANDS", {
   mini <- .harmonise_mini(.mini_brfss())
   cells <- build_urps_population_cells(mini, verbose = FALSE)
