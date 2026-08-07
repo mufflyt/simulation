@@ -225,3 +225,99 @@ nrmp_entrant_series <- function(available_by = NULL) {
 # Fellowship length in years: appointment year + this = graduation, with
 # certification following shortly after.
 URPS_FELLOWSHIP_YEARS <- 3L
+
+# ---- NRMP track split: OB/GYN-based vs urology-based -----------------------
+#
+# NRMP prints ONE aggregate row for the subspecialty and footnotes it "Urology
+# and OB/GYN", so the published tables cannot say which pathway a matched fellow
+# entered by. The split is reconstructible: each program is listed individually
+# and the NRMP specialty code is embedded in the program code -- ...221F0 for the
+# OB/GYN track, ...486F0 for the urology track.
+#
+# WHAT RECONCILIATION MEANS HERE. A year ships when obgyn + urology lands within
+# 2 of Table 1's printed offered and filled, and EVERY ROW CARRIES ITS RESIDUAL.
+# Ten of sixteen years qualify; four of those are exact. The remaining six are
+# reported by the fetcher and not shipped (2014 misses by 3; 2010-2013 and 2025
+# yield no program table at all).
+#
+# A RESIDUAL IS A MISSING PROGRAM, NOT NOISE. The program table is laid out in
+# wrapped multi-column blocks, and an entry split across a line break is lost
+# whole. Two facts bound what that costs: every residual is NEGATIVE, so the
+# extractor only ever under-recovers and never double-counts; and nothing says
+# WHICH track a missing program belonged to. A residual of 2 filled positions is
+# therefore up to 2 positions of uncertainty in the urology share -- roughly 3
+# percentage points at these totals. Filter on `reconciles_exactly` for the
+# subset with no such slack.
+#
+# THIS IS A CROSS-CHECK, NOT THE SOURCE. ACGME publishes the same split directly
+# and for every year (see acgme_urps_fellows()); use that for anything that needs
+# a complete series. What this adds is an INDEPENDENT reading of the pathway mix
+# from the match side, which is worth having because the two disagree: NRMP puts
+# the urology share of matched positions at 23-27%, ACGME puts the urology share
+# of entering fellows at 17-22%.
+NRMP_URPS_TRACK_SPLIT <- tibble::tribble(
+  ~appointment_year, ~track,     ~n_programs, ~positions_offered, ~positions_filled, ~residual_offered, ~residual_filled, ~reconciles_exactly,
+  2015L,             "obgyn",     42L,          45L,                44L,               0L,               0L,              TRUE,
+  2015L,             "urology",   11L,          13L,                13L,               0L,               0L,              TRUE,
+  2016L,             "obgyn",     40L,          44L,                43L,               -1L,               0L,              FALSE,
+  2016L,             "urology",   8L,          9L,                10L,               -1L,               0L,              FALSE,
+  2017L,             "obgyn",     44L,          46L,                42L,               -1L,               -1L,              FALSE,
+  2017L,             "urology",   14L,          17L,                16L,               -1L,               -1L,              FALSE,
+  2018L,             "obgyn",     45L,          46L,                45L,               0L,               0L,              TRUE,
+  2018L,             "urology",   12L,          14L,                14L,               0L,               0L,              TRUE,
+  2019L,             "obgyn",     43L,          46L,                43L,               -1L,               -1L,              FALSE,
+  2019L,             "urology",   15L,          17L,                14L,               -1L,               -1L,              FALSE,
+  2020L,             "obgyn",     42L,          44L,                39L,               -2L,               -2L,              FALSE,
+  2020L,             "urology",   17L,          19L,                15L,               -2L,               -2L,              FALSE,
+  2021L,             "obgyn",     43L,          45L,                45L,               0L,               0L,              TRUE,
+  2021L,             "urology",   18L,          18L,                17L,               0L,               0L,              TRUE,
+  2022L,             "obgyn",     41L,          47L,                47L,               -1L,               -1L,              FALSE,
+  2022L,             "urology",   16L,          17L,                13L,               -1L,               -1L,              FALSE,
+  2023L,             "obgyn",     44L,          48L,                46L,               0L,               0L,              TRUE,
+  2023L,             "urology",   17L,          17L,                15L,               0L,               0L,              TRUE,
+  2024L,             "obgyn",     46L,          48L,                47L,               -1L,               -1L,              FALSE,
+  2024L,             "urology",   15L,          18L,                17L,               -1L,               -1L,              FALSE,
+)
+
+#' NRMP matched positions split into the OB/GYN and urology tracks
+#'
+#' Reconstructed from the per-program listings, which carry the NRMP specialty
+#' code that the aggregate table collapses. Carries the years whose
+#' reconstruction lands within 2 of Table 1, each stamped with its own residual;
+#' `reconciles_exactly` marks the four that reproduce it precisely. A residual is
+#' an unrecovered program of unknown track, so treat the split as accurate to
+#' about 3 percentage points where it is non-zero.
+#'
+#' @param available_by Keep only reports published by this year. Each report
+#'   appears in its own appointment year.
+#' @param track Optional filter, `"obgyn"` or `"urology"`.
+#' @param exact_only Keep only years that reproduce Table 1 exactly.
+#' @return Tibble of `appointment_year`, `track`, `n_programs`,
+#'   `positions_offered`, `positions_filled`, `residual_offered`,
+#'   `residual_filled`, `reconciles_exactly`, `urology_share`.
+#' @export
+#'
+#' @examples
+#' nrmp_track_split(track = "urology")[, c("appointment_year", "positions_filled")]
+nrmp_track_split <- function(available_by = NULL, track = NULL,
+                             exact_only = FALSE) {
+  x <- NRMP_URPS_TRACK_SPLIT
+  if (isTRUE(exact_only)) x <- x[x$reconciles_exactly, , drop = FALSE]
+  if (!is.null(available_by)) {
+    x <- x[x$appointment_year <= available_by, , drop = FALSE]
+    if (!nrow(x)) {
+      stop("nrmp_track_split(): no reconciled NRMP track split published by ",
+           available_by, call. = FALSE)
+    }
+  }
+  tot <- stats::aggregate(positions_filled ~ appointment_year, x, sum)
+  x$urology_share <- ifelse(
+    x$track == "urology",
+    x$positions_filled / tot$positions_filled[match(x$appointment_year, tot$appointment_year)],
+    NA_real_)
+  if (!is.null(track)) {
+    track <- match.arg(track, c("obgyn", "urology"))
+    x <- x[x$track == track, , drop = FALSE]
+  }
+  x
+}

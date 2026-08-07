@@ -59,7 +59,8 @@ Suggests:
     sf,
     survey,
     testthat (>= 3.0.0),
-    withr
+    withr,
+    zipcodeR
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/mufflyt/simulation

@@ -178,8 +178,7 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   if (is.null(cliff_duckdb_path) || !file.exists(cliff_duckdb_path)) {
     if (verbose) {
       message(sprintf(
-        "build_urps_exit_hazard(): cliff DuckDB unavailable. ",
-        "Using Weibull survival curves (HWSM Exhibits 17-18 analogy, scale_shift=%.1f).",
+        "build_urps_exit_hazard(): cliff DuckDB unavailable. Using Weibull survival curves (HWSM Exhibits 17-18 analogy, scale_shift=%.1f).",
         scale_shift
       ))
     }
