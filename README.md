@@ -66,8 +66,10 @@ preparation** — not yet peer-reviewed — which is exactly why the validation
 scaffolding above is being built before any headline claim is made.
 
 *Deeper reading:* methods in [`docs/DEMAND_METHODS.md`](docs/DEMAND_METHODS.md),
-the module map below, and the validation record in
-[`docs/BACKTEST_2020_TO_2023.md`](docs/BACKTEST_2020_TO_2023.md).
+the module map below, the validation record in
+[`docs/BACKTEST_2020_TO_2023.md`](docs/BACKTEST_2020_TO_2023.md), and the
+scientific-correctness benchmarks every commit must reproduce in
+[`docs/BENCHMARKS.md`](docs/BENCHMARKS.md).
 
 ```r
 # install.packages("pak")
