@@ -459,11 +459,62 @@ test_that("validate_urps_gap_projection errors in strict mode on arithmetic inco
     year = 2025L, scenario_id = "baseline", specialty = "FPMRS",
     geography_type = "national", geography_id = "US",
     supply_headcount = 1300, supply_clinical_fte = 1200,
+    supply_cohort_basis = "roster",
     demand_headcount = 1350, demand_clinical_fte = 1300,
     gap_fte = -50,       # wrong: should be -100
     gap_headcount = -50
   )
   expect_error(validate_urps_gap_projection(gp, mode = "strict"), "gap_fte does not equal")
+})
+
+test_that("an exported gap projection carries what its supply cohort is", {
+  # Every column in this table is a supply number or derived from one, so the
+  # cohort's provenance conditions the whole row. It used to live only in
+  # scenario_meta, which meant the caveat stopped travelling the moment a
+  # projection was saved or handed on.
+  supply <- tibble::tibble(
+    year = 2025:2026, scenario = "baseline",
+    headcount_median = c(1300, 1295), effective_fte_median = c(1200, 1195)
+  )
+  req <- tibble::tibble(year = 2025:2026, required_fte = c(1300, 1310))
+  gap_tbl <- compute_fte_gap(supply, req)
+
+  gp <- as_urps_gap_projection(supply, gap_tbl, cohort_basis = "certification_cohorts",
+                               observed_share = 0.498)
+  expect_true("supply_cohort_basis" %in% urpssim:::REQUIRED_COLS)
+  # Recycled down every row, so filtering to one year keeps the basis attached.
+  expect_equal(unique(gp$supply_cohort_basis), "certification_cohorts")
+  expect_equal(nrow(gp), 2L)
+  expect_equal(unique(gp$supply_observed_share), 0.498)
+  expect_output(print(structure(gp, class = c("urps_gap_projection", class(gp)))),
+                "RECONSTRUCTED COHORT")
+
+  # A measured roster says so, and says it without the warning.
+  ros <- as_urps_gap_projection(supply, gap_tbl, cohort_basis = "roster")
+  expect_equal(unique(ros$supply_cohort_basis), "roster")
+  expect_silent(validate_urps_gap_projection(ros, mode = "strict"))
+})
+
+test_that("supply provenance cannot be left undeclared or unreadable", {
+  supply <- tibble::tibble(year = 2025L, scenario = "baseline",
+                           headcount_median = 1300, effective_fte_median = 1200)
+  req <- tibble::tibble(year = 2025L, required_fte = 1300)
+  gap_tbl <- compute_fte_gap(supply, req)
+
+  # Silence is the state this column exists to end: without it the numbers
+  # export indistinguishable from ones built on a real roster.
+  expect_error(
+    as_urps_gap_projection(supply, gap_tbl, mode = "strict"),
+    "undeclared"
+  )
+  # Relaxed mode warns rather than stopping, but still says it.
+  expect_message(as_urps_gap_projection(supply, gap_tbl, mode = "relaxed"), "undeclared")
+
+  # A basis nobody can interpret is refused for the same reason.
+  expect_error(
+    as_urps_gap_projection(supply, gap_tbl, cohort_basis = "vibes", mode = "strict"),
+    "unrecognised supply_cohort_basis"
+  )
 })
 
 test_that("validation_report includes gap_projection checks when supplied", {
