@@ -13,7 +13,8 @@ validate_access_outcomes(national, targets = access_validation_targets())
 }
 \value{
 A tibble: \code{target}, \code{predicted}, \code{observed}, \code{rel_diff}, \code{rel_tol},
-\code{status} (\code{pass} / \code{fail} / \code{no_target}).
+\code{status} (\code{pass} / \code{fail} / \code{no_target}), and \code{target_status} (the target's own
+calibration state, e.g. \code{target_unpopulated} / \code{assumed} / \code{calibrated}).
 }
 \description{
 Joins the \code{A}-series roll-up to \code{\link[=access_validation_targets]{access_validation_targets()}} by outcome name
