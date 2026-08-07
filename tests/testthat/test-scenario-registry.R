@@ -2,18 +2,22 @@
 # (reporting-scenario_registry.R): telemedicine, AI documentation, burnout
 # reduction. Each is modeled as a small parameter shift on an axis the engine
 # already consumes (hours_multiplier / retirement_shift_years), and each must be
-# first-class (present via supply_scenario_registry()) and contract-valid.
+# present via the local fallback registry, and contract-valid. The SSOT stays
+# authoritative -- these ids are absent from the SSOT-backed registry until the
+# projection contract carries them (guarded by test-demand-and-validation.R).
 
 NEW_SCENARIOS <- c("telemedicine", "ai_documentation", "burnout_reduction")
 
-test_that("the three policy-lever scenarios are registered and first-class", {
+test_that("the three policy-lever scenarios live in the local fallback", {
   loc <- local_supply_scenario_registry(55)
   expect_true(all(NEW_SCENARIOS %in% names(loc)))
-  # first-class through the public entry point too (SSOT or fallback), never
-  # shadowing an existing id.
-  reg <- supply_scenario_registry(55)
+  # Reachable through the public entry point in FALLBACK mode: prefer_ssot =
+  # FALSE forces the local registry even when mufflyaccess is installed. The
+  # SSOT-backed registry (prefer_ssot = TRUE) must NOT carry these ids until the
+  # contract adds them -- injecting them there is the silent divergence the
+  # module warns against.
+  reg <- supply_scenario_registry(55, prefer_ssot = FALSE)
   expect_true(all(NEW_SCENARIOS %in% names(reg)))
-  # extensions are appended, not overriding the reference scenario
   expect_true(any(c("baseline", "status_quo") %in% names(reg)))
 })
 
@@ -40,7 +44,9 @@ test_that("each scenario changes only the intended parameters", {
 
 test_that("the extended registry still satisfies the supply contract", {
   expect_invisible(validate_scenario_registry(local_supply_scenario_registry(55), "supply"))
-  expect_invisible(validate_scenario_registry(supply_scenario_registry(55), "supply"))
+  # The fallback registry (which carries the policy-lever extensions) validates.
+  expect_invisible(validate_scenario_registry(
+    supply_scenario_registry(55, prefer_ssot = FALSE), "supply"))
   # No scalar hazard multiplier crept in (the convention the validator forbids).
   loc <- local_supply_scenario_registry(55)
   expect_true(all(vapply(NEW_SCENARIOS, function(s) is.null(loc[[s]]$hazard_mult), logical(1))))
