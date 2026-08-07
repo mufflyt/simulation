@@ -310,7 +310,7 @@ test_that("the NRMP and ACGME pathway mixes disagree, and both are retained", {
   nu <- nrmp_track_split(track = "urology")
   ac <- acgme_urps_fellows()
   yrs <- intersect(nu$appointment_year, ac$entry_year)
-  skip_if(length(yrs) < 3)
+  skip_if(length(yrs) < 3, "fewer than three overlapping years in the observed series")
   a_share <- vapply(yrs, function(y) {
     r <- ac[ac$entry_year == y, ]
     r$year_1[r$parent == "urology"] / sum(r$year_1)
