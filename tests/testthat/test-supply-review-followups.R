@@ -93,9 +93,15 @@ test_that("the NRMP series is contiguous, so the pipeline can span the validatio
 test_that("the certification lag defaults to the documented fellowship length", {
   # A 1-year default contradicted the three-year fellowship this package
   # documents, and scored worse against every observed certification year.
-  expect_equal(eval(formals(entrant_pipeline_transition)$cert_lag),
-               URPS_FELLOWSHIP_YEARS)
-  expect_equal(URPS_FELLOWSHIP_YEARS, 3L)
+  #
+  # Evaluate the default IN THE NAMESPACE. URPS_FELLOWSHIP_YEARS is internal, so
+  # a bare eval() resolves it in the test environment, where it does not exist
+  # under R CMD check export semantics -- the test passed only because
+  # load_all(export_all = TRUE) had put it within reach.
+  expect_equal(eval(formals(entrant_pipeline_transition)$cert_lag,
+                    envir = asNamespace("urpssim")),
+               urpssim:::URPS_FELLOWSHIP_YEARS)
+  expect_equal(urpssim:::URPS_FELLOWSHIP_YEARS, 3L)
 })
 
 test_that("the match-to-cert conversion is estimated, and excludes uninformative years", {
