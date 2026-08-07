@@ -99,7 +99,9 @@ backtest_lifecourse <- function(service_volumes, observed_fit, observed_target,
     dplyr::inner_join(observed_target, by = "category") %>%
     dplyr::mutate(
       ratio = dplyr::if_else(.data$observed > 0, .data$predicted / .data$observed, NA_real_),
-      abs_pct_error = 100 * abs(.data$predicted - .data$observed) / .data$observed
+      abs_pct_error = dplyr::if_else(.data$observed > 0,
+                                     100 * abs(.data$predicted - .data$observed) / .data$observed,
+                                     NA_real_)
     ) %>%
     dplyr::select("category", "predicted", "observed", "ratio", "abs_pct_error")
 

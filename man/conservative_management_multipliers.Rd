@@ -51,7 +51,7 @@ The arithmetic is:
 sling_multiplier    = 1 − ui_uptake  × surgical_reduction
 prolapse_multiplier = 1 − pop_uptake × surgical_reduction
 new_consultation and return_visit multiplier:
-= 1 − (ui_uptake + pop_uptake) / 2 × office_reduction
+= 1 − (0.55 × ui_uptake + 0.45 × pop_uptake) × office_reduction
 pessary_care multiplier = 1 + pop_uptake × pessary_visits_per_case / baseline_pessary_rate
 (scaled so the conservative cohort generates additional pessary_care above
 the baseline rate; expressed as a multiplier on existing baseline volume)

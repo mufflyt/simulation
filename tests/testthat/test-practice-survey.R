@@ -72,7 +72,7 @@ test_that("R/calibration-hrsa_fte really is dormant, so the warning stays true",
   # fails and fte_curve_status()$do_not_fix must be rewritten.
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
-  skip_if(length(root) == 0)
+  skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   r_files <- list.files(file.path(root[1], "R"), pattern = "[.]R$", full.names = TRUE)
   # Exclude the definition, and exclude R/data-practice_survey -- it names the function inside
   # fte_curve_status()'s message string precisely to warn people off it, which
@@ -125,10 +125,9 @@ test_that("geographic access is registered as absent, not as miscalibrated", {
   expect_equal(unname(st["tract_centroids"]), "PRESENT")
   expect_equal(unname(st["demand_machinery"]), "WIRED")
   # What is actually missing.
-  # PARTIAL, not MISSING: coordinates were imported from mufflyt/isochrones and
-  # cover 964 of 1,339 -- but 0% of the ABU pathway, so they are not yet usable.
-  # provider_coordinate_coverage() carries that blocker.
-  expect_equal(unname(st["provider_coordinates"]), "PARTIAL")
+  # PRESENT: five merged geocoding runs put both pathways near 99% and clear the
+  # 95% floor. Isochrones and the validation gate are what remain.
+  expect_equal(unname(st["provider_coordinates"]), "PRESENT")
   expect_equal(unname(st["drive_time_isochrones"]), "MISSING")
   expect_equal(unname(st["supply_machinery"]), "DORMANT")
   expect_equal(unname(st["validation_gate"]), "MISSING")
@@ -178,7 +177,7 @@ test_that("R/geography-spatial_access_e2sfca really is dormant, so the trap warn
   # provider coordinates arrived first.
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
-  skip_if(length(root) == 0)
+  skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   files <- c(list.files(file.path(root[1], "R"), pattern = "[.]R$", full.names = TRUE),
              list.files(file.path(root[1], "scripts"), pattern = "[.]R$",
                         full.names = TRUE, recursive = TRUE))
@@ -205,7 +204,7 @@ test_that("every file path the register names actually exists", {
   # worse than no message, because it looks authoritative.
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
-  skip_if(length(root) == 0)
+  skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
 
   texts <- c(unlist(fte_curve_status()), unlist(capacity_status()),
              unlist(geographic_access_status()[setdiff(names(geographic_access_status()),
@@ -215,7 +214,7 @@ test_that("every file path the register names actually exists", {
   paths <- unique(unlist(regmatches(
     texts, gregexpr("(R|tests|scripts|data-raw|artifacts|docs)/[A-Za-z0-9_./-]+", texts))))
   paths <- sub("[.,;:]+$", "", paths)
-  skip_if(length(paths) == 0)
+  skip_if(length(paths) == 0, "repository root not reachable (source tree absent under R CMD check)")
 
   missing <- paths[!vapply(paths, function(p) {
     file.exists(file.path(root[1], p)) || length(Sys.glob(file.path(root[1], p))) > 0

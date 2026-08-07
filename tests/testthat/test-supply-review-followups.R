@@ -93,9 +93,15 @@ test_that("the NRMP series is contiguous, so the pipeline can span the validatio
 test_that("the certification lag defaults to the documented fellowship length", {
   # A 1-year default contradicted the three-year fellowship this package
   # documents, and scored worse against every observed certification year.
-  expect_equal(eval(formals(entrant_pipeline_transition)$cert_lag),
-               URPS_FELLOWSHIP_YEARS)
-  expect_equal(URPS_FELLOWSHIP_YEARS, 3L)
+  #
+  # Evaluate the default IN THE NAMESPACE. URPS_FELLOWSHIP_YEARS is internal, so
+  # a bare eval() resolves it in the test environment, where it does not exist
+  # under R CMD check export semantics -- the test passed only because
+  # load_all(export_all = TRUE) had put it within reach.
+  expect_equal(eval(formals(entrant_pipeline_transition)$cert_lag,
+                    envir = asNamespace("urpssim")),
+               urpssim:::URPS_FELLOWSHIP_YEARS)
+  expect_equal(urpssim:::URPS_FELLOWSHIP_YEARS, 3L)
 })
 
 test_that("the match-to-cert conversion is estimated, and excludes uninformative years", {
@@ -110,9 +116,13 @@ test_that("the match-to-cert conversion is estimated, and excludes uninformative
   expect_lt(r$ratio, 1.0)
   expect_gt(nrmp_match_to_cert_ratio(2020L, exclude_disrupted = FALSE)$ratio, 2)
 
-  # The default must be the estimated conversion, not the old 0.95 assumption.
-  expect_equal(eval(formals(entrant_pipeline_transition)$p_complete_cert),
-               round(r$ratio, 2), tolerance = 0.02)
+  # This estimator is retained for the back-test, which must not see past its
+  # cutoff -- but it is NO LONGER the pipeline default. Its window holds the
+  # cancelled-exam trough without the release that repays it, so it reads low.
+  # The default now comes from entrant_to_cert_ratio(), pooled over a window
+  # spanning both; see "pooling, not the source, is what corrected the
+  # conversion" below.
+  expect_lt(r$ratio, eval(formals(entrant_pipeline_transition)$p_complete_cert))
 })
 
 test_that("a per-year conversion represents a cancelled examination", {
@@ -167,4 +177,144 @@ test_that("malformed conversion schedules are rejected", {
   part <- entrant_pipeline_transition(
     m, p_complete_cert = data.frame(year = 2020, p_complete_cert = 0.1))
   expect_true(all(is.finite(part$p_complete_cert)))
+})
+
+# ---- ACGME fellow counts, and what recalibrating against them did ----------
+
+test_that("the ACGME series carries both parent pathways and respects publication lag", {
+  x <- acgme_urps_fellows()
+  expect_setequal(unique(x$parent), c("obgyn", "urology"))
+  # Each Data Resource Book appears the autumn AFTER its academic year closes,
+  # so a back-test at cutoff 2020 may not see the 2020-2021 book.
+  expect_true(all(x$available_by_year == x$entry_year + 1L))
+  expect_false(2020L %in% acgme_urps_fellows(available_by = 2020L)$entry_year)
+  expect_true(2019L %in% acgme_urps_fellows(available_by = 2020L)$entry_year)
+
+  # year_1..3 must sum to the printed total -- the arithmetic that identified
+  # the row in the first place, re-checked in-package.
+  expect_equal(x$active_total, x$year_1 + x$year_2 + x$year_3)
+})
+
+test_that("ACGME sees entrants NRMP does not, and the gap widens", {
+  a <- entrant_source_series("acgme")
+  n <- entrant_source_series("nrmp")
+  m <- merge(a, n, by = "entry_year", suffixes = c("_a", "_n"))
+  gap <- m$entrants_a - m$entrants_n
+
+  # ACGME counts fellows on duty, so it includes off-match entry.
+  expect_true(mean(gap) > 0)
+  # And the undercount grows: the recent gap is far larger than the early one.
+  early <- gap[m$entry_year <= 2018]
+  late  <- gap[m$entry_year >= 2022]
+  expect_gt(mean(late), mean(early))
+  expect_gt(max(gap), 10)
+})
+
+test_that("active_total is a stock and is never used as the entry flow", {
+  # ~215 fellows on duty against ~74 entering: confusing them would treat the
+  # whole three-year pipeline as one year's entry.
+  x <- acgme_urps_fellows()
+  latest <- x[x$entry_year == max(x$entry_year), ]
+  expect_gt(sum(latest$active_total), 2 * sum(latest$year_1))
+  expect_equal(sum(acgme_entering_cohort()$entering_cohort[
+    acgme_entering_cohort()$entry_year == max(x$entry_year)]),
+    sum(latest$year_1))
+})
+
+test_that("pooling, not the source, is what corrected the conversion", {
+  old   <- nrmp_match_to_cert_ratio(2020L)$ratio              # 0.754
+  nrmp_pooled  <- entrant_to_cert_ratio("nrmp",  pooled = TRUE)$ratio
+  acgme_pooled <- entrant_to_cert_ratio("acgme", pooled = TRUE)$ratio
+
+  # The window/pooling change moved the estimate an order of magnitude more than
+  # swapping the entry source did. Recorded so the ACGME fetch is not
+  # mis-remembered as having fixed the conversion.
+  expect_gt(abs(nrmp_pooled - old), 10 * abs(acgme_pooled - nrmp_pooled))
+  expect_equal(acgme_pooled, 0.86, tolerance = 0.02)
+
+  # The pipeline default must be the ACGME pooled conversion.
+  expect_equal(eval(formals(entrant_pipeline_transition)$p_complete_cert),
+               round(acgme_pooled, 2), tolerance = 0.02)
+})
+
+test_that("a window holding a disruption but not its release is biased low", {
+  # This is why the old 0.75 was wrong: certifications through 2020 include the
+  # cancelled-exam trough, while the 2021 release that repays it sits outside.
+  short <- entrant_to_cert_ratio("acgme", through_year = 2020L, pooled = TRUE)$ratio
+  full  <- entrant_to_cert_ratio("acgme", pooled = TRUE)$ratio
+  expect_lt(short, full)
+  expect_lt(short, 0.7)
+})
+
+test_that("an unknown entry source is rejected rather than silently defaulted", {
+  expect_error(entrant_source_series("scopus"), "should be one of")
+  expect_error(entrant_to_cert_ratio("scopus"), "should be one of")
+})
+
+# ---- NRMP track split (OB/GYN vs urology) ----------------------------------
+
+test_that("the shipped track split reconciles with NRMP's own aggregate", {
+  s <- nrmp_track_split()
+  tot <- stats::aggregate(cbind(positions_offered, positions_filled) ~ appointment_year,
+                          s, sum)
+  ref <- nrmp_entrant_series()
+  m <- merge(tot, ref, by.x = "appointment_year", by.y = "appointment_year")
+
+  # The gate that decides what ships: reconstruction within 2 of Table 1 on both
+  # counts. Nothing outside that tolerance may be present.
+  expect_true(all(abs(m$positions_offered.x - m$positions_offered.y) <= 2))
+  expect_true(all(abs(m$positions_filled.x - m$positions_filled.y) <= 2))
+
+  # Each row states its own residual, and the stated residual must be the real
+  # one -- otherwise the caveat is decorative.
+  for (y in unique(s$appointment_year)) {
+    r <- s[s$appointment_year == y, ]
+    expect_equal(unique(r$residual_offered),
+                 sum(r$positions_offered) - m$positions_offered.y[m$appointment_year == y])
+    expect_equal(unique(r$residual_filled),
+                 sum(r$positions_filled) - m$positions_filled.y[m$appointment_year == y])
+  }
+})
+
+test_that("residuals only ever under-recover, never double-count", {
+  # A missed program is a whole entry lost to a line wrap; there is no mechanism
+  # that invents one. A positive residual would mean the extractor is matching
+  # something it should not, which the sign check would catch.
+  s <- nrmp_track_split()
+  expect_true(all(s$residual_offered <= 0))
+  expect_true(all(s$residual_filled <= 0))
+})
+
+test_that("reconciles_exactly identifies the slack-free subset", {
+  s <- nrmp_track_split()
+  e <- nrmp_track_split(exact_only = TRUE)
+  expect_true(all(e$residual_offered == 0 & e$residual_filled == 0))
+  expect_setequal(unique(e$appointment_year), c(2015L, 2018L, 2021L, 2023L))
+  expect_lt(nrow(e), nrow(s))
+  expect_equal(s$reconciles_exactly, s$residual_offered == 0 & s$residual_filled == 0)
+})
+
+test_that("both tracks are present every year, and urology is the minority", {
+  s <- nrmp_track_split()
+  per_year <- table(s$appointment_year)
+  expect_true(all(per_year == 2L))   # a year with one track would understate entry
+  u <- s[s$track == "urology", ]
+  expect_true(all(u$urology_share > 0.15 & u$urology_share < 0.35))
+  expect_true(all(is.na(s$urology_share[s$track == "obgyn"])))
+})
+
+test_that("the NRMP and ACGME pathway mixes disagree, and both are retained", {
+  # NRMP puts the urology share of MATCHED POSITIONS higher than ACGME puts the
+  # urology share of ENTERING FELLOWS. Neither is corrected to the other: they
+  # count different things, and the gap is a finding rather than an error.
+  nu <- nrmp_track_split(track = "urology")
+  ac <- acgme_urps_fellows()
+  yrs <- intersect(nu$appointment_year, ac$entry_year)
+  skip_if(length(yrs) < 3, "fewer than three overlapping years in the observed series")
+  a_share <- vapply(yrs, function(y) {
+    r <- ac[ac$entry_year == y, ]
+    r$year_1[r$parent == "urology"] / sum(r$year_1)
+  }, numeric(1))
+  n_share <- nu$urology_share[match(yrs, nu$appointment_year)]
+  expect_gt(mean(n_share), mean(a_share))
 })

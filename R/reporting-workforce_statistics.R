@@ -205,7 +205,7 @@ calculate_state_vulnerability <- function(state_impacts, top_n = 10) {
     dplyr::filter(!is.na(.data$pct_loss_if_retire)) %>%
     dplyr::mutate(vulnerability_score = .data$pct_loss_if_retire *
                     log10(pmax(1, .data$count_active))) %>%
-    dplyr::arrange(dplyr::desc(.data$pct_loss_if_retire)) %>%
+    dplyr::arrange(dplyr::desc(.data$vulnerability_score)) %>%
     dplyr::slice_head(n = top_n) %>%
     dplyr::select(dplyr::all_of(c(needed, "vulnerability_score")))
 }

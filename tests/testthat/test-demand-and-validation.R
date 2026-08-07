@@ -95,12 +95,40 @@ test_that("supply scenarios come from the mufflyaccess SSOT registry", {
   skip_if_not_installed("mufflyaccess")
   reg <- supply_scenario_registry(55)
   expect_silent(validate_scenario_registry(reg, "supply"))
-  # The ids are the contract's SSOT plus the local policy-lever extensions
-  # (telemedicine, AI-documentation, burnout-reduction) that supply_scenario_registry()
-  # appends first-class because the mufflyaccess contract does not carry them.
-  expect_setequal(
-    names(reg),
-    union(mufflyaccess::urps_scenario_ids(), urpssim:::SUPPLY_SCENARIO_LOCAL_EXTENSIONS))
+  # WHETHER THE LOCAL POLICY LEVERS BELONG IN THIS REGISTRY IS AN OPEN DESIGN
+  # QUESTION, not something a test should settle. It has been decided three
+  # times in opposite directions inside six hours -- 61128a6 made the SSOT
+  # exclusive, e5fb995 restored the append, 00866a8 made it exclusive again --
+  # and each flip broke whichever assertion had been written to the previous
+  # one. Pinning the id set again would just queue up the next false failure.
+  #
+  # So this asserts only what is true under BOTH designs, which is also the
+  # part that actually protects anything.
+  ssot <- mufflyaccess::urps_scenario_ids()
+  ext <- urpssim:::SUPPLY_SCENARIO_LOCAL_EXTENSIONS
+
+  # 1. The contract's ids are all present. Losing one is a real regression
+  #    under any design.
+  expect_true(all(ssot %in% names(reg)))
+
+  # 2. Nothing else is present except, possibly, the declared extensions. This
+  #    is what stops an arbitrary id being invented; it permits either design
+  #    without permitting a third.
+  expect_setequal(setdiff(names(reg), ssot), intersect(names(reg), ext))
+
+  # 3. The extensions are all-in or all-out, never a partial set -- a registry
+  #    carrying one of three levers is a bug in either design.
+  expect_true(sum(ext %in% names(reg)) %in% c(0L, length(ext)))
+
+  # 4. An SSOT id is never served from the local fallback. THIS is the failure
+  #    the module warns about and the only one that is silent: an id defined in
+  #    both places takes the local definition and still validates downstream,
+  #    because the NAME is on the contract's list while the CONTENT is not.
+  from_ssot <- urpssim:::ssot_supply_scenarios(55)
+  local_only <- suppressMessages(supply_scenario_registry(55, prefer_ssot = FALSE))
+  for (id in intersect(names(local_only), ssot)) {
+    expect_identical(reg[[id]], from_ssot[[id]])
+  }
   expect_true("baseline" %in% names(reg))
   expect_equal(reg$retire_2yr_later$retirement_shift_years, 2)
   expect_equal(reg$retire_2yr_earlier$retirement_shift_years, -2)
@@ -111,6 +139,19 @@ test_that("supply scenarios come from the mufflyaccess SSOT registry", {
   # And the late-career FTE scenario carries an onset age, not a flat multiplier.
   expect_equal(reg$lower_late_career_fte$late_career_fte_factor, 0.75)
   expect_equal(reg$lower_late_career_fte$late_career_fte_onset_age, 60)
+})
+
+test_that("the local policy levers stay reachable, and announce that they are not the SSOT", {
+  # Dropping the extensions from the SSOT assertion above would otherwise leave
+  # them untested entirely -- three scenarios defined, exported and reachable by
+  # nobody's test, which is how a capability ends up implemented and never
+  # connected. They live in the local fallback until the contract carries them.
+  expect_message(supply_scenario_registry(55, prefer_ssot = FALSE),
+                 "will not validate against")
+  reg <- suppressMessages(supply_scenario_registry(55, prefer_ssot = FALSE))
+  expect_true(all(urpssim:::SUPPLY_SCENARIO_LOCAL_EXTENSIONS %in% names(reg)))
+  # The warning is the point: a caller who reaches these ids must know the
+  # registry they got is no longer the one downstream validation checks against.
 })
 
 test_that("an unregistered scenario id is refused", {
