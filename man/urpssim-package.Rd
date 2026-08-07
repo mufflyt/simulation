@@ -8,13 +8,79 @@
 \description{
 A stochastic, individual-level microsimulation of the supply of and demand for urogynecology and reconstructive pelvic surgery (URPS) services in the United States. Supply is projected from a provider cohort using age- and sex-specific hours worked, separate retirement and career-change hazards, and geographic placement, with parameters redrawn each Monte Carlo iteration so reported intervals carry forecast uncertainty rather than sampling noise. Demand is projected from age-banded Census population series through a reproductive life-course pathway and a work-RVU workload conversion, giving required full-time-equivalent providers, so supply and demand are always compared in the same units. The base-year shortfall is estimated rather than assumed, every input carries an explicit calibration tier, and a leakage-free historical back-test scores the engine against a held-out period. Methods follow the IHS Markit / Dall Health Workforce Microsimulation Model and its published applications in physiatry, neurology and physical therapy.
 }
-\seealso{
-Useful links:
-\itemize{
-  \item \url{https://github.com/mufflyt/simulation}
-  \item Report bugs at \url{https://github.com/mufflyt/simulation/issues}
+\details{
+\code{urpssim} projects the supply of and demand for urogynecology and
+reconstructive pelvic surgery (URPS) providers in the United States, and
+reports the gap between them \strong{in the same units on both sides}.
+}
+\section{Where to start}{
+One call runs the whole pipeline:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{result <- run_workforce_microsimulation(
+  years = 2025:2050,
+  baseline_gap_estimate = baseline_gap(
+    base_supply_fte = 1306, adequacy = 0.95, method = "capacity_survey",
+    calibration_status = "uncalibrated_illustrative", evidence = "example"),
+  allow_analogy = TRUE
+)
+}\if{html}{\out{</div>}}
+
+See \code{vignette("getting-started", package = "urpssim")} for a worked run and
+\code{?run_workforce_microsimulation} for the arguments.
 }
 
+\section{The four things that will surprise you}{
+This package is unusually opinionated about what it refuses to do, because
+each refusal exists for a defect that reached production.
+
+\enumerate{
+\item \strong{An interval is not automatically a forecast interval.} Without a
+\code{\link[=supply_parameter_spec]{supply_parameter_spec()}}, every Monte Carlo iteration shares one entrant
+rate, so the band describes individual stochasticity only. In the
+2020->2023 back-test such bands covered the observation in 0 of 8 arms.
+\code{\link[=interval_label]{interval_label()}} will not call them prediction intervals.
+\item \strong{Every input declares a calibration tier.} \code{\link[=baseline_gap]{baseline_gap()}} requires
+\code{calibration_status} rather than inferring it: identical arithmetic is
+\emph{calibrated} from a fielded survey and \emph{derived by analogy} from another
+specialty, and the function refuses to guess which it was handed.
+\item \strong{Supply and demand are always compared as FTE.} Provider FTE over a
+count of cases or procedures is dimensionally meaningless;
+\code{compute_demand_coverage()} errors rather than computing it.
+\item \strong{The base-year capacity anchor is not resolved.} \code{\link[=capacity_status]{capacity_status()}}
+says so in the returned object. It is a published physical-therapy
+distribution standing in for a URPS survey nobody has fielded, and it
+passes to the headline gap with a coefficient of one.
+}
+}
+
+\section{Finding your way around 400+ functions}{
+Every exported object carries a \verb{@concept} naming its layer, so
+\code{help.search("supply", package = "urpssim")} narrows to that layer, and a
+\verb{@family} naming its module, so each help page lists its siblings under
+"See also". The eight layers match the \verb{R/} filename prefixes:
+
+\describe{
+\item{\code{supply}}{provider cohort, hours, retirement, entrants}
+\item{\code{demand}}{population -> service volumes -> required FTE}
+\item{\code{geography}}{coordinates, placement, drive-time access}
+\item{\code{calibration}}{parameter draws, PSA, anchors to observed data}
+\item{\code{validation}}{back-test, leakage guards, coverage}
+\item{\code{reporting}}{the gap, scenarios, export contract}
+\item{\code{core}}{orchestration, paths, provenance, the SSOT contract}
+\item{\code{data}}{shipped inputs and their provenance}
+}
+}
+
+\section{Reading the source}{
+\code{docs/ARCHITECTURE.md} maps the code and \code{docs/GUARDS.md} explains each guard
+and the defect that motivated it. Both are in the repository rather than the
+installed package.
+}
+
+\seealso{
+\code{\link[=run_workforce_microsimulation]{run_workforce_microsimulation()}} to run the model,
+\code{\link[=baseline_gap]{baseline_gap()}} to state the base-year shortfall,
+\code{\link[=capacity_status]{capacity_status()}} and \code{\link[=backtest_status]{backtest_status()}} for what is not yet resolved.
 }
 \author{
 \strong{Maintainer}: Tyler Muffly \email{tyler.muffly@dhha.org}

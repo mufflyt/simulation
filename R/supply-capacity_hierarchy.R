@@ -44,6 +44,11 @@
 #'   `provider_equivalent`, `retained_vs_headcount`.
 #' @family capacity hierarchy
 #' @concept supply
+#' @examples
+#' # Headcount is not capacity. Each step removes a reason a certified provider
+#' # is not delivering an accessible URPS service-hour.
+#' supply_capacity_hierarchy(headcount = 1306, clinical_fte = 0.8,
+#'                           accessible_fraction = 0.9)
 #' @export
 supply_capacity_hierarchy <- function(headcount, clinical_fte,
                                       wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]],

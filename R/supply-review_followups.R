@@ -123,6 +123,13 @@ nrmp_match_to_cert_ratio <- function(through_year = BACKTEST_CUTOFF_YEAR,
 #'   absent yield `NA` (leading edge of the lag).
 #' @family review followups
 #' @concept supply
+#' @examples
+#' # NRMP matches -> board certification -> active practice, with the three-year
+#' # fellowship lag. Early years are NA because their source cohort predates the
+#' # series rather than because nobody entered.
+#' entrant_pipeline_transition(
+#'   data.frame(year = 2018:2023, matched = c(55, 58, 60, 60, 62, 64))
+#' )
 #' @export
 entrant_pipeline_transition <- function(matches,
                                         p_complete_cert = 0.86,

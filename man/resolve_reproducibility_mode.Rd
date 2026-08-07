@@ -17,6 +17,11 @@ Mirrors the isochrones \code{REPRODUCIBILITY_MODE} contract: \code{strict} for
 manuscript / production runs (fully seeded, fail-closed), \code{relaxed} for
 interactive development.
 }
+\examples{
+# 'strict' makes uncalibrated inputs and fixed-parameter intervals refuse to
+# run rather than warn. Set REPRODUCIBILITY_MODE=strict for a publication run.
+resolve_reproducibility_mode()
+}
 \seealso{
 Other repro provenance: 
 \code{\link{read_artifact_with_provenance}()},

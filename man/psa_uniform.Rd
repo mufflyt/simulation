@@ -17,6 +17,9 @@ A \code{psa_input} spec.
 \description{
 Define a uniform PSA input
 }
+\examples{
+psa_uniform("indirect_share", min = 0.20, max = 0.35)
+}
 \seealso{
 Other psa: 
 \code{\link{plot_psa_tornado}()},

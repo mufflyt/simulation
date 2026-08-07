@@ -1,4 +1,78 @@
 #' @keywords internal
+#'
+#' @details
+#' `urpssim` projects the supply of and demand for urogynecology and
+#' reconstructive pelvic surgery (URPS) providers in the United States, and
+#' reports the gap between them **in the same units on both sides**.
+#'
+#' # Where to start
+#'
+#' One call runs the whole pipeline:
+#'
+#' ```r
+#' result <- run_workforce_microsimulation(
+#'   years = 2025:2050,
+#'   baseline_gap_estimate = baseline_gap(
+#'     base_supply_fte = 1306, adequacy = 0.95, method = "capacity_survey",
+#'     calibration_status = "uncalibrated_illustrative", evidence = "example"),
+#'   allow_analogy = TRUE
+#' )
+#' ```
+#'
+#' See `vignette("getting-started", package = "urpssim")` for a worked run and
+#' `?run_workforce_microsimulation` for the arguments.
+#'
+#' # The four things that will surprise you
+#'
+#' This package is unusually opinionated about what it refuses to do, because
+#' each refusal exists for a defect that reached production.
+#'
+#' \enumerate{
+#'   \item **An interval is not automatically a forecast interval.** Without a
+#'     [supply_parameter_spec()], every Monte Carlo iteration shares one entrant
+#'     rate, so the band describes individual stochasticity only. In the
+#'     2020->2023 back-test such bands covered the observation in 0 of 8 arms.
+#'     [interval_label()] will not call them prediction intervals.
+#'   \item **Every input declares a calibration tier.** [baseline_gap()] requires
+#'     `calibration_status` rather than inferring it: identical arithmetic is
+#'     *calibrated* from a fielded survey and *derived by analogy* from another
+#'     specialty, and the function refuses to guess which it was handed.
+#'   \item **Supply and demand are always compared as FTE.** Provider FTE over a
+#'     count of cases or procedures is dimensionally meaningless;
+#'     `compute_demand_coverage()` errors rather than computing it.
+#'   \item **The base-year capacity anchor is not resolved.** [capacity_status()]
+#'     says so in the returned object. It is a published physical-therapy
+#'     distribution standing in for a URPS survey nobody has fielded, and it
+#'     passes to the headline gap with a coefficient of one.
+#' }
+#'
+#' # Finding your way around 400+ functions
+#'
+#' Every exported object carries a `@concept` naming its layer, so
+#' `help.search("supply", package = "urpssim")` narrows to that layer, and a
+#' `@family` naming its module, so each help page lists its siblings under
+#' "See also". The eight layers match the `R/` filename prefixes:
+#'
+#' \describe{
+#'   \item{`supply`}{provider cohort, hours, retirement, entrants}
+#'   \item{`demand`}{population -> service volumes -> required FTE}
+#'   \item{`geography`}{coordinates, placement, drive-time access}
+#'   \item{`calibration`}{parameter draws, PSA, anchors to observed data}
+#'   \item{`validation`}{back-test, leakage guards, coverage}
+#'   \item{`reporting`}{the gap, scenarios, export contract}
+#'   \item{`core`}{orchestration, paths, provenance, the SSOT contract}
+#'   \item{`data`}{shipped inputs and their provenance}
+#' }
+#'
+#' # Reading the source
+#'
+#' `docs/ARCHITECTURE.md` maps the code and `docs/GUARDS.md` explains each guard
+#' and the defect that motivated it. Both are in the repository rather than the
+#' installed package.
+#'
+#' @seealso [run_workforce_microsimulation()] to run the model,
+#'   [baseline_gap()] to state the base-year shortfall,
+#'   [capacity_status()] and [backtest_status()] for what is not yet resolved.
 "_PACKAGE"
 
 ## usethis namespace: start

@@ -297,6 +297,13 @@ initialize_provider_agents <- function(n,
 #'   table incl. drawn retirement years) so the temporal cohort is reconstructible.
 #' @family provider microsimulation
 #' @concept supply
+#' @examples
+#' # One Monte Carlo draw. run_supply_microsimulation() repeats this and
+#' # summarises across iterations.
+#' agents <- initialize_provider_agents(40, "FPMRS", 2025)
+#' sim <- simulate_provider_career_once(agents, 2025:2028,
+#'                                      entrants_per_year = 10, fte_method = "hours")
+#' head(sim$panel)
 #' @export
 simulate_provider_career_once <- function(agents,
                                           years,
@@ -666,6 +673,20 @@ simulate_provider_career_once <- function(agents,
 #'   and `scenario$entrants_source` names which input supplied it.
 #' @family provider microsimulation
 #' @concept supply
+#' @examples
+#' # param_spec is what makes the interval carry forecast uncertainty. Without
+#' # it every iteration shares one entrant rate and the band describes
+#' # individual stochasticity only -- see supply_parameter_spec().
+#' out <- run_supply_microsimulation(
+#'   initial_workforce = 100,
+#'   years             = 2025:2027,
+#'   entrants_per_year = 10,
+#'   n_iterations      = 3,
+#'   param_spec        = supply_parameter_spec(
+#'     entrant_series = c(8, 10, 12, 9, 11), entrant_mean = 10),
+#'   verbose           = FALSE
+#' )
+#' out$summary
 #' @export
 run_supply_microsimulation <- function(initial_workforce = 1306,
                                         years = 2025:2050,

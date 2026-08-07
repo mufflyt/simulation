@@ -44,6 +44,10 @@
 #' @return Character scalar, one of "strict" or "relaxed".
 #' @family repro provenance
 #' @concept core
+#' @examples
+#' # 'strict' makes uncalibrated inputs and fixed-parameter intervals refuse to
+#' # run rather than warn. Set REPRODUCIBILITY_MODE=strict for a publication run.
+#' resolve_reproducibility_mode()
 #' @export
 resolve_reproducibility_mode <- function(default = "relaxed") {
   mode <- Sys.getenv("REPRODUCIBILITY_MODE", unset = default)

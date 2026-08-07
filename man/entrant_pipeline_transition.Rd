@@ -57,6 +57,14 @@ absent yield \code{NA} (leading edge of the lag).
 \code{active_entrants[y] = matched[y - cert_lag - active_lag] * p_complete_cert * p_active_practice}. Each stage is an explicit, labeled conversion; a fellowship
 MATCH is not an active US clinical entrant.
 }
+\examples{
+# NRMP matches -> board certification -> active practice, with the three-year
+# fellowship lag. Early years are NA because their source cohort predates the
+# series rather than because nobody entered.
+entrant_pipeline_transition(
+  data.frame(year = 2018:2023, matched = c(55, 58, 60, 60, 62, 64))
+)
+}
 \seealso{
 Other review followups: 
 \code{\link{international_migration_assumption}()},

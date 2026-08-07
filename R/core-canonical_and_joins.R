@@ -132,6 +132,14 @@ if (!exists("%||%", envir = baseenv())) {
 #' @return The joined data frame.
 #' @family canonical and joins
 #' @concept core
+#' @examples
+#' # A plain left_join silently drops rows that do not match. This one states a
+#' # required match rate and refuses to return a quietly-truncated table.
+#' safe_left_join(
+#'   tibble::tibble(geo = c("CO", "NY"), fte = c(60, 140)),
+#'   tibble::tibble(geo = c("CO", "NY"), population = c(2.9e6, 1.0e7)),
+#'   by = "geo"
+#' )
 #' @export
 safe_left_join <- function(x, y, by, allow_fanout = FALSE,
                            min_match_rate = NULL,

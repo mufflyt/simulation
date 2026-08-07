@@ -15,6 +15,9 @@ age).
 \description{
 Default annual transition parameters for the DMDM (placeholder)
 }
+\examples{
+str(dmdm_default_transitions(), max.level = 1)
+}
 \seealso{
 Other dynamic multistate: 
 \code{\link{assert_calibrated_transitions}()},

@@ -42,5 +42,11 @@ explicit. Map it over pathways/years and \code{dplyr::bind_rows()} the results; 
 \code{group} to label each call. Report ABU and ABOG separately (a scope assumption
 that should not be buried in one pooled stock) by calling once per pathway.
 }
+\examples{
+# Headcount is not capacity. Each step removes a reason a certified provider
+# is not delivering an accessible URPS service-hour.
+supply_capacity_hierarchy(headcount = 1306, clinical_fte = 0.8,
+                          accessible_fraction = 0.9)
+}
 \concept{capacity hierarchy}
 \concept{supply}
