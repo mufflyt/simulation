@@ -58,6 +58,93 @@ validate_access_outcomes <- function(national, targets = access_validation_targe
     observed = obs,
     rel_diff = rel,
     rel_tol = targets$rel_tol,
-    status = status
+    status = status,
+    # Carry the TARGET's own calibration state (target_unpopulated / assumed /
+    # calibrated) alongside the pass/fail, so a "pass" against an ASSUMED
+    # benchmark is never mistaken for a pass against a measured anchor.
+    target_status = if ("status" %in% names(targets)) targets$status else NA_character_
   )
+}
+
+# ---- Calibration mechanisms ------------------------------------------------
+#
+# The two knobs the A-series depends on -- the wait mapping's constant and the
+# panel benchmark -- are fit HERE, not hard-coded. Both ship uncalibrated; these
+# turn a supplied observation into a fitted constant / a populated target,
+# without inventing the observation itself.
+
+#' Fit the wait-mapping constant `wait_scale` to an observed wait
+#'
+#' The national demand-weighted wait is LINEAR in `wait_scale`
+#' (`wait = wait_scale * rho/(1-rho)`), so the fit is closed-form: clear the
+#' catchments at `wait_scale = 1`, take the demand-weighted mean wait over the
+#' catchments with a finite (non-censored) wait, and scale it to the observation.
+#' The result makes `access_outcomes_national()`'s `A1` (`wait_time`) equal
+#' `observed_wait` by construction. Supply `observed_wait` from a specialty wait
+#' survey (see [access_validation_targets()]); this does not invent it.
+#'
+#' @param catchments A per-catchment table for [clear_access()] (needs
+#'   `demand_workload` and `accessible_capacity`).
+#' @param observed_wait The observed national wait to fit to. Positive scalar,
+#'   same time unit as the appointment window.
+#' @return A list: `wait_scale` (the fitted constant), `unit_wait` (national wait
+#'   at `wait_scale = 1`), `observed_wait`, `n_catchments_used`, and
+#'   `censored_demand_share` (demand share in saturated queues the fit cannot
+#'   see). Feed `wait_scale` back into [clear_access()].
+#' @export
+fit_wait_scale <- function(catchments, observed_wait) {
+  stopifnot(length(observed_wait) == 1L, is.finite(observed_wait), observed_wait > 0)
+  cl <- clear_access(catchments, wait_scale = 1)
+  d <- cl$demand_workload
+  censored <- !is.na(cl$wait_censored) & cl$wait_censored
+  ok <- is.finite(cl$wait_time) & !censored & is.finite(d)
+  if (!any(ok) || sum(d[ok]) == 0) {
+    stop("fit_wait_scale(): no finite-wait catchment carries demand to fit ",
+         "against (every catchment is saturated, rho >= 1).", call. = FALSE)
+  }
+  unit_wait <- sum(cl$wait_time[ok] * d[ok]) / sum(d[ok])
+  tot <- sum(d, na.rm = TRUE)
+  list(
+    wait_scale = observed_wait / unit_wait,
+    unit_wait = unit_wait,
+    observed_wait = observed_wait,
+    n_catchments_used = sum(ok),
+    censored_demand_share = if (tot > 0) sum(d[censored], na.rm = TRUE) / tot else NA_real_
+  )
+}
+
+#' Populate an access validation target with an observed (or benchmark) value
+#'
+#' The targets from [access_validation_targets()] ship UNPOPULATED. This fills
+#' one in -- a wait from [fit_wait_scale()]/a survey, or a published panel-size
+#' benchmark -- and stamps the target's `status`. Use `status = "assumed"` for a
+#' benchmark that stands in for a measured value (a `pass` against it is then
+#' visibly assumed in [validate_access_outcomes()], never mistaken for a
+#' measured-anchor pass); `status = "calibrated"` for a cited observation.
+#'
+#' @param targets A targets tibble; defaults to [access_validation_targets()].
+#' @param target Which target to populate (e.g. `"wait_time"`, `"panel_size"`).
+#' @param observed The observed/benchmark value. Finite scalar.
+#' @param status Calibration status to stamp. Default `"assumed"`.
+#' @param rel_tol Optional replacement relative tolerance for this target.
+#' @return The targets tibble with that row populated.
+#' @export
+set_access_target <- function(targets = access_validation_targets(), target, observed,
+                              status = "assumed", rel_tol = NULL) {
+  stopifnot(is.data.frame(targets),
+            all(c("target", "observed", "rel_tol", "status") %in% names(targets)))
+  i <- match(target, targets$target)
+  if (is.na(i)) {
+    stop(sprintf("set_access_target(): unknown target '%s'. Known: %s",
+                 target, paste(targets$target, collapse = ", ")), call. = FALSE)
+  }
+  stopifnot(length(observed) == 1L, is.finite(observed),
+            length(status) == 1L, is.character(status), nzchar(status))
+  targets$observed[i] <- observed
+  targets$status[i]   <- status
+  if (!is.null(rel_tol)) {
+    stopifnot(length(rel_tol) == 1L, is.finite(rel_tol), rel_tol >= 0)
+    targets$rel_tol[i] <- rel_tol
+  }
+  targets
 }
