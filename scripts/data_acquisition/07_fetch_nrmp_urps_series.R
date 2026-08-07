@@ -242,3 +242,114 @@ cat("Wrote", OUT, "\n")
 print(out[, c("appointment_year", "positions_offered", "positions_filled", "pct_filled_all")],
       row.names = FALSE)
 cat(sprintf("\n%d years added; %d rejected.\n", nrow(out), length(bad)))
+
+# ---- Track split: OB/GYN-based vs urology-based ----------------------------
+#
+# Table 1 prints ONE row for the subspecialty, and its own footnote says why:
+# "Female Pelvic Medicine and Reconstructive Surgery: Urology and OB/GYN". The
+# aggregate therefore cannot answer which pathway a matched fellow came from --
+# but the report also lists EVERY participating program individually, and the
+# NRMP specialty code is embedded in each program code:
+#
+#   ...221F0   OB/GYN-based track
+#   ...486F0   urology-based track
+#
+# Summing the program rows reconstructs the split. THE GATE IS THAT IT MUST
+# REPRODUCE TABLE 1: obgyn + urology has to equal the printed offered and filled
+# exactly, or the year is rejected. That is not a formality -- the program table
+# is laid out in wrapped multi-column blocks, and a code split across a line
+# break is silently missed.
+#
+# TOLERANCE. A year ships when the reconstruction is within SPLIT_TOLERANCE of
+# Table 1 on BOTH offered and filled, and every row records its residual so the
+# imprecision is carried in the data rather than assumed away. Exact
+# reconciliation happens in four years; a tolerance of 2 admits six more, on
+# totals near 60 (~3%). Years outside it are REPORTED, NOT SHIPPED.
+#
+# WHAT A RESIDUAL MEANS. It is a whole missing program, not measurement noise,
+# and NOTHING SAYS WHICH TRACK IT BELONGS TO. A residual of 2 filled positions
+# is therefore up to 2 positions of uncertainty in the urology share -- around 3
+# percentage points at these totals. Use reconciles_exactly to get the clean
+# subset when that matters.
+#
+# ACGME publishes this split directly and completely (R/supply-acgme_fellows.R),
+# so this exists as an independent cross-check on that source, not as a
+# replacement for it.
+
+SPLIT_OUT <- "data-raw/calibration/nrmp_urps_track_split.csv"
+TRACKS <- c(obgyn = "221", urology = "486")
+SPLIT_TOLERANCE <- as.integer(Sys.getenv("NRMP_SPLIT_TOLERANCE", unset = "2"))
+
+split_for <- function(year) {
+  txt_path <- file.path(tmp, sprintf("sms_%s.txt", year))
+  if (!file.exists(txt_path)) return(NULL)
+  txt <- paste(readLines(txt_path, warn = FALSE), collapse = "\n")
+  rows <- list()
+  for (nm in names(TRACKS)) {
+    # Anchor on the CODE, not the specialty label: the label wraps mid-entry.
+    # The code can itself be split by the wrap, hence the optional last digit,
+    # and the two counts may sit past the wrapped label, hence the long
+    # digit-free run. Over-reach is what the Table 1 gate catches.
+    pat <- sprintf("[0-9]{4}%sF[0-9]?[^0-9]{0,120}?([0-9]{1,3})[^0-9]{1,12}([0-9]{1,3})",
+                   TRACKS[[nm]])
+    hits <- regmatches(txt, gregexpr(pat, txt))[[1]]
+    q <- m <- integer(0)
+    for (h in hits) {
+      nums <- as.integer(unlist(regmatches(h, gregexpr("[0-9]+", h))))
+      n <- length(nums)
+      q <- c(q, nums[n - 1]); m <- c(m, nums[n])
+    }
+    rows[[nm]] <- data.frame(appointment_year = as.integer(year), track = nm,
+                             n_programs = length(hits), positions_offered = sum(q),
+                             positions_filled = sum(m), stringsAsFactors = FALSE)
+  }
+  do.call(rbind, rows)
+}
+
+split_rows <- list(); split_bad <- list()
+for (y in out$appointment_year) {
+  s <- split_for(y)
+  ref <- out[out$appointment_year == y, ]
+  if (is.null(s)) {
+    split_bad[[length(split_bad) + 1L]] <-
+      sprintf("  %s  NO_TEXT       program table not extracted", y)
+    next
+  }
+  # GATE: the reconstruction must land within SPLIT_TOLERANCE of Table 1 on both
+  # counts. The residual is carried on every row.
+  d_off <- sum(s$positions_offered) - ref$positions_offered
+  d_fil <- sum(s$positions_filled) - ref$positions_filled
+  if (abs(d_off) > SPLIT_TOLERANCE || abs(d_fil) > SPLIT_TOLERANCE) {
+    split_bad[[length(split_bad) + 1L]] <- sprintf(
+      "  %s  UNRECONCILED  reconstructed %d/%d against Table 1 %d/%d (off %+d/%+d)", y,
+      sum(s$positions_offered), sum(s$positions_filled),
+      ref$positions_offered, ref$positions_filled, d_off, d_fil)
+    next
+  }
+  s$residual_offered <- d_off
+  s$residual_filled <- d_fil
+  s$reconciles_exactly <- (d_off == 0L && d_fil == 0L)
+  split_rows[[length(split_rows) + 1L]] <- s
+}
+
+if (length(split_bad)) {
+  cat("\n=== TRACK SPLIT: YEARS NOT SHIPPED (reported, never imputed) ===\n")
+  for (b in split_bad) cat(b, "\n")
+}
+if (length(split_rows)) {
+  sp <- do.call(rbind, split_rows)
+  sp$available_by_year <- sp$appointment_year
+  sp$retrieved_on <- RETRIEVED
+  sp$source_url <- unname(URLS[as.character(sp$appointment_year)])
+
+  utils::write.csv(sp, SPLIT_OUT, row.names = FALSE)
+  cat("\nWrote", SPLIT_OUT, "\n")
+  print(sp[, c("appointment_year", "track", "n_programs", "positions_offered",
+               "positions_filled", "residual_offered", "residual_filled",
+               "reconciles_exactly")], row.names = FALSE)
+  cat(sprintf("\n%d of %d years within tolerance %d and shipped (%d exact).\n",
+              length(split_rows), nrow(out), SPLIT_TOLERANCE,
+              sum(vapply(split_rows, function(z) z$reconciles_exactly[1], logical(1)))))
+} else {
+  cat("\nNo year's track split reconciles with Table 1; nothing written.\n")
+}
