@@ -36,6 +36,7 @@
 "provider_concentration","api"
 "psa_normal","api"
 "psa_triangular","api"
+"publish_access_outcomes","api"
 "published_baseline_gaps","api"
 "published_calibration_scalars","api"
 "restate_fte","api"
