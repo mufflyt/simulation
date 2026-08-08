@@ -26,6 +26,16 @@ List: \code{draws} (tibble of inputs + outputs), \code{inputs}, \code{n}, \code{
 \description{
 Samples the inputs jointly (LHS) and evaluates \code{evaluate} once per draw.
 }
+\details{
+Probabilistic sensitivity analysis over declared input distributions. Each of
+\code{n} iterations draws every input and calls \code{evaluate}, which must return a
+named numeric vector; the names become \code{output_names}.
+
+This answers a different question from the Monte Carlo interval on a
+projection. The projection's band says how uncertain the answer is; PSA, via
+\code{\link[=psa_prcc]{psa_prcc()}}, says WHICH input is responsible, which is what tells you where
+another measurement would actually help.
+}
 \examples{
 # Probabilistic sensitivity analysis over declared input distributions.
 psa <- run_psa(

@@ -143,6 +143,15 @@ psa_sample <- function(inputs, n, seed = 20260801L) {
 #'
 #' Samples the inputs jointly (LHS) and evaluates `evaluate` once per draw.
 #'
+#' @details
+#' Probabilistic sensitivity analysis over declared input distributions. Each of
+#' `n` iterations draws every input and calls `evaluate`, which must return a
+#' named numeric vector; the names become `output_names`.
+#'
+#' This answers a different question from the Monte Carlo interval on a
+#' projection. The projection's band says how uncertain the answer is; PSA, via
+#' [psa_prcc()], says WHICH input is responsible, which is what tells you where
+#' another measurement would actually help.
 #' @param inputs List of `psa_input()` specs.
 #' @param evaluate Function taking a named list of input values (discrete inputs
 #'   passed as their mapped value) and returning a numeric scalar, or a named

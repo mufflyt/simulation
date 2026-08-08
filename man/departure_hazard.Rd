@@ -36,6 +36,18 @@ Combines the two distinct processes: an age-graded retirement hazard from
 \code{RETIREMENT_MIN_AGE}, and an age-flat career-change hazard below it. Everyone
 at or above \code{MICROSIM_TERMINAL_AGE} departs with probability 1.
 }
+\details{
+Two processes with different shapes, not one curve. Below
+\code{RETIREMENT_MIN_AGE} the hazard is the age-flat career-change rate; at and
+above it, the age-graded retirement schedule applies. Everyone at
+\code{MICROSIM_TERMINAL_AGE} departs with probability 1.
+
+The career-change component is a PERMANENT occupational separation. HWSM
+instead models labour-force participation, which is temporary and admits
+re-entry; the two are not interchangeable, and conflating them understates
+supply because providers who return are never counted back in. Both
+components are represented here, with re-entry handled separately.
+}
 \examples{
 # Combined retirement and career-change hazard.
 departure_hazard(age = c(55, 65, 75), sex = "female")

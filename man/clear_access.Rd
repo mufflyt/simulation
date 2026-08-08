@@ -52,6 +52,18 @@ approximation \code{P(wait <= W) = 1 - exp(-W / wait)}, multiplied by the share 
 capacity that will accept the patient (\code{insurance_fraction}). Panel size is
 \code{accessible_population / accessible_fte}.
 }
+\details{
+A catchment clears only its own demand; nothing spills to a neighbour. Use
+\code{\link[=overflow_access]{overflow_access()}} for the alternative, and read the pair as bounds rather
+than as competing estimates: no spill and free spill bracket the truth.
+
+AT SATURATION THE WAIT IS INFINITE, not merely long. When
+\code{demand_workload >= accessible_capacity} the queue never clears, so
+\code{wait_time} is \code{Inf} and \code{p_appointment} is 0. That is the honest answer for
+a steady-state model, and it is also why \code{wait_ceiling} exists: setting it
+censors the wait at a finite value and flags the row in \code{wait_censored}, so a
+downstream mean is not silently destroyed by one saturated catchment.
+}
 \examples{
 # Capacity that exists is not capacity that is reachable in time. Catchment A
 # is oversubscribed, so some of its demand goes unmet even though the system

@@ -70,6 +70,11 @@ load_workforce_microsimulation <- function(r_dir = "R") {
 #' is the whole point of giving each its own age profile. Replace with ACS/Census
 #' projections resolved through [resolve_canonical()] for production runs.
 #'
+#' @details
+#' A synthetic population for examples, tests and vignettes, with the age bands
+#' and growth rates roughly in the right proportions. It is NOT a Census series
+#' and nothing computed from it is publishable; real runs pass observed series
+#' through `pop_by_band`.
 #' @param years Integer years.
 #' @param base_pop Named base-year population by age band.
 #' @param growth Named annual growth rate by age band.

@@ -51,6 +51,16 @@ until it is placed or no reachable neighbour has room. Demand is conserved:
 appointment probabilities and utilization are recomputed by \code{\link[=clear_access]{clear_access()}}
 on each catchment's effective demand (\code{demand - spilled_out + spilled_in}).
 }
+\details{
+The permissive bound on the pair whose other half is \code{\link[=clear_access]{clear_access()}}. Unmet
+demand in one catchment is absorbed by neighbours listed in \code{neighbors}
+(columns \code{from}, \code{to}, \code{travel_penalty}), which assumes patients will travel
+and that the receiving capacity is genuinely available to them.
+
+Neither function is the right answer on its own. Real spill is somewhere
+between none and free, and the two runs together say how much of the
+conclusion depends on which assumption you make.
+}
 \examples{
 # Unmet demand in one catchment can be absorbed by a neighbour, at a travel
 # penalty. Compare with clear_access(), which strands it.

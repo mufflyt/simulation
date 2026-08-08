@@ -347,6 +347,16 @@ rebase_to_year <- function(year, value, base_year = DEMAND_INDEX_BASE_YEAR) {
 #' point; [compute_demand_denominators_crude()] reproduces the old single-rate
 #' behaviour and is retained only for backward comparison.
 #'
+#' @details
+#' Three estimands with genuinely different age profiles: surgery peaks at 60-79
+#' and falls by half at 80+, while prevalence keeps rising. That difference is
+#' what makes them informative.
+#'
+#' The failure this replaced computed every estimand as
+#' `population_65plus * constant`, which makes D1, D2 and D3 the same series up
+#' to scale -- three numbers that look like corroboration and are one number
+#' printed three times. [detect_proportional_estimands()] tests for exactly that
+#' and [assert_estimands_independent()] refuses it in strict mode.
 #' @param pop_by_band Tibble with `year`, `age_band` (one of `DEMAND_AGE_BANDS`)
 #'   and `female_pop`.
 #' @param pfd_prevalence Named age-band prevalence for D1.

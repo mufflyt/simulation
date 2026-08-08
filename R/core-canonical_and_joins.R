@@ -128,6 +128,16 @@ if (!exists("%||%", envir = baseenv())) {
 #' `allow_fanout = TRUE`, performs the join, and fails if the result row count
 #' differs from the left input (which can only happen via fan-out).
 #'
+#' @details
+#' Three distinct failures, all of which a plain [dplyr::left_join()] performs
+#' silently: a missing key column, a fan-out that duplicates left rows because
+#' the right table's key is not unique, and a join that succeeds while matching
+#' almost nothing.
+#'
+#' Only the third is a judgement call, which is why `min_match_rate` is
+#' explicit. Below it, the behaviour follows `mode`: a warning in `relaxed`, an
+#' error in `strict`. A low match rate is usually a key-grain mismatch -- state
+#' against state-year, ZIP against ZCTA -- rather than genuinely absent data.
 #' @param x,y Data frames.
 #' @param by Join specification (as in [dplyr::left_join()]).
 #' @param allow_fanout If FALSE (default), a non-unique key in `y` is an error.

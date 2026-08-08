@@ -40,6 +40,16 @@
 #' manuscript / production runs (fully seeded, fail-closed), `relaxed` for
 #' interactive development.
 #'
+#' @details
+#' Reads the `REPRODUCIBILITY_MODE` environment variable, falling back to
+#' `default`. An unrecognised value warns and falls back rather than failing, so
+#' a typo degrades to the permissive mode rather than stopping a run.
+#'
+#' The two modes differ in what they do about an input that cannot support the
+#' claim being made of it. In `relaxed` an uncalibrated workload basket, an
+#' analogy-derived baseline gap, or a Monte Carlo run in which no parameter
+#' varies each emit a warning and proceed. In `strict` each is an error. Use
+#' `strict` for anything whose numbers will be published.
 #' @param default Character fallback when the environment variable is unset.
 #' @return Character scalar, one of "strict" or "relaxed".
 #' @family repro provenance
