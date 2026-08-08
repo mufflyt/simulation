@@ -91,19 +91,126 @@ test_that("discordance is detected only for directional rows", {
   expect_true(adequacy_evidence_is_discordant(discordant))
 })
 
-test_that("the conclusion sentence stays conditional and never names a value", {
+test_that("the conclusion sentence stays conditional and preserves the asymmetry", {
   tab <- adequacy_evidence_table(
     evidence = "Provider growth", model_implication = "capacity should improve",
     observed = "timely access worsened",
     interpretation = "headcount_not_effective_capacity", citation = "audit")
-  s <- adequacy_conclusion_sentence(tab, flip_multiplier = 1.5)
+  s <- adequacy_conclusion_sentence(tab, flip_multiplier = 1.37)
 
   expect_match(s, "conditional on the assumed base-year adequacy")
-  expect_match(s, "no validated national URPS adequacy estimate exists")
-  expect_match(s, "does not identify the correct calibration")
-  # It may report WHERE the sign flips; it must not assert that is the truth.
-  expect_match(s, "reverses the projected sign")
+  expect_match(s, "raises concern")
+  # THE ASYMMETRY: concern and its limit must travel together, so neither can be
+  # quoted without the other.
+  expect_match(s, "cannot establish the magnitude")
+  expect_match(s, "does not invert to a required-FTE level")
+  # The threshold may be reported; it must not be offered as an estimate.
+  expect_match(s, "37% greater than the reference calibration")
+  expect_match(s, "threshold, not an estimate")
   expect_false(grepl("the anchor is|should be|correct value is", s))
+})
+
+test_that("the literature claim degrades without a citation", {
+  tab <- adequacy_evidence_table(
+    evidence = "Reference calibration", model_implication = "~5% shortfall",
+    observed = "waits stable", interpretation = "consistent_with_reference_calibration",
+    citation = "audit")
+  # Unattributed: a claim about the AUTHORS, which is free.
+  expect_match(adequacy_conclusion_sentence(tab), "we are not aware of a validated")
+  # Attributed: a claim about the LITERATURE, which is not.
+  cited <- adequacy_conclusion_sentence(tab, no_estimate_citation = "Zarek 2025; HRSA 2024")
+  expect_match(cited, "no validated national URPS adequacy estimate exists \\(Zarek 2025; HRSA 2024\\)")
+})
+
+test_that("identifying language is refused, but its negation is not", {
+  g <- urpssim:::.assert_no_identifying_language
+  # These are the sentences this module exists to write.
+  expect_silent(g("It does not identify the correct calibration.", "t"))
+  expect_silent(g("Access evidence cannot establish the magnitude.", "t"))
+  # These are upgrades the guard must catch.
+  for (bad in c("This demonstrates that need is higher.",
+                "The audit proves the anchor is too low.",
+                "This identifies the calibration.",
+                "The evidence establishes baseline unmet need.")) {
+    expect_error(g(bad, "t"), "identifying language")
+  }
+})
+
+test_that("a model implication cannot masquerade as external evidence", {
+  # Without this, "2050 shortage ~326 FTE" could be filed under observed
+  # evidence and the table would appear to corroborate itself.
+  expect_error(
+    adequacy_evidence_table(
+      evidence = "1.5x calibration", model_implication = "2050 shortage ~326 FTE",
+      observed = "shortage of 326 FTE", interpretation = "stress_scenario_not_an_estimate",
+      citation = "the model", evidence_type = "model_implication"),
+    "cannot carry an external observation")
+  expect_error(
+    adequacy_evidence_table(
+      evidence = "x", model_implication = "y", observed = NA_character_,
+      interpretation = "not_identifiable_from_this_evidence",
+      evidence_type = "hearsay"),
+    "evidence_type must be one of")
+})
+
+test_that("evidence_type is recorded even though it is provenance, not meaning", {
+  tab <- adequacy_evidence_table(
+    evidence = c("Wait times", "1.5x calibration"),
+    model_implication = c("~5% shortfall", "2050 shortage ~326 FTE"),
+    observed = c("waits rose", NA_character_),
+    interpretation = c("consistent_with_under_calibration", "stress_scenario_not_an_estimate"),
+    citation = c("audit", NA_character_),
+    evidence_type = c("empirical_observation", "model_implication"))
+  expect_true("evidence_type" %in% names(tab))
+  expect_equal(tab$evidence_type, c("empirical_observation", "model_implication"))
+})
+
+# ---- balance-reversal threshold -------------------------------------------
+
+.mk_gap <- function(supply = 1339, adequacy = REFERENCE_ADEQUACY_CALIBRATION)
+  baseline_gap(base_supply_fte = supply, adequacy = adequacy, method = "assumed",
+               evidence = "test", calibration_status = "derived_by_analogy")
+
+test_that("the threshold is solved continuously, not snapped to a scenario", {
+  # The crossing must be able to land between prespecified multipliers.
+  gap <- .mk_gap()
+  r <- balance_reversal_threshold(gap, supply_at_target = 2051, demand_growth = 1.15)
+  expect_s3_class(r, "urps_balance_reversal")
+  expect_true(is.finite(r$reversal_multiplier))
+  # closed form: supply / (anchor * growth)
+  expect_equal(r$reversal_multiplier, 2051 / (gap$required_fte * 1.15), tolerance = 1e-9)
+  expect_false(r$reversal_multiplier %in% c(0.8, 0.9, 1, 1.1, 1.25, 1.5, 2))
+})
+
+test_that("the headline is a deviation, not a rival adequacy estimate", {
+  gap <- .mk_gap()
+  r <- balance_reversal_threshold(gap, supply_at_target = 2051, demand_growth = 1.15)
+  expect_equal(r$reversal_pct_deviation, 100 * (r$reversal_multiplier - 1), tolerance = 1e-9)
+  # The implied adequacy is retained but named so it cannot be quoted as an estimate.
+  expect_true("implied_adequacy_at_reversal_NOT_AN_ESTIMATE" %in% names(r))
+})
+
+test_that("no reversal in range returns NA with an explanation, not an endpoint", {
+  # Manufacturing a tipping point that was never examined is the failure mode.
+  gap <- .mk_gap()
+  r <- balance_reversal_threshold(gap, supply_at_target = 50, demand_growth = 1.15,
+                                  examined_range = c(0.9, 1.1))
+  expect_true(is.na(r$reversal_multiplier))
+  expect_true(is.na(r$reversal_pct_deviation))
+  expect_false(r$reversal_within_examined_range)
+  expect_match(r$note, "No sign reversal occurs")
+  expect_match(r$note, "outside the range considered plausible")
+  expect_match(balance_reversal_sentence(r, 2050), "did not change sign")
+})
+
+test_that("the reversal sentence reports a threshold and refuses to identify", {
+  gap <- .mk_gap()
+  r <- balance_reversal_threshold(gap, supply_at_target = 2051, demand_growth = 1.15)
+  s <- balance_reversal_sentence(r, 2050)
+  expect_match(s, "reversed from surplus to shortage")
+  expect_match(s, "approximately \\d+% greater than the reference calibration")
+  expect_match(s, "threshold, not an estimate of baseline need")
+  expect_false(grepl("baseline need is", s))
 })
 
 test_that("the anchor sensitivity spans beyond the published analogue spread", {
