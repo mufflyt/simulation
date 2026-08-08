@@ -738,10 +738,27 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                   gap_projection = gap_projection)
   assert_validation_passed(validation, mode)
 
+  # Geographic access layer. Runs only when the imported isochrone membership
+  # AND a coordinate-bearing roster both exist: the national cohort carries no
+  # provider identity to match membership on, so a synthetic run fails closed to
+  # `resolved = FALSE` with a reason -- output-preserving until the isochrones
+  # are imported, and NEVER computed on fallback geometry (the ordering trap
+  # geographic_access_status() warns against). `run_geographic_access()` is the
+  # single fail-closed entry point; the roster case supplies provider_supply.
+  provider_supply <- if (any(c("npi", "provider_id") %in% names(agents))) {
+    idc <- if ("npi" %in% names(agents)) "npi" else "provider_id"
+    tibble::tibble(provider_id = as.character(agents[[idc]]), supply = 1)
+  } else NULL
+  geographic_access <- tryCatch(
+    run_geographic_access(provider_supply = provider_supply, mode = mode),
+    error = function(e) list(resolved = FALSE, reason = conditionMessage(e),
+                             access = NULL, national = NULL))
+
   result <- list(
     supply = supply_by_scenario,
     projection = projection,
     gap_projection = gap_projection,
+    geographic_access = geographic_access,
     demand = demand_long,
     service_volumes = volumes,
     required_fte = required,
