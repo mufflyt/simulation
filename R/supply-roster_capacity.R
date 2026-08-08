@@ -69,6 +69,10 @@ load_urps_roster <- function(path = "data-raw/urps_roster/urps_roster_2026-07-22
 #' @concept supply
 #' @export
 urps_provider_roster <- function(roster = load_urps_roster(), unknown_sex = "female") {
+  .req <- c("gender", "npi", "age_proxy_from_cert", "state", "cert_year")
+  if (!is.data.frame(roster) || !all(.req %in% names(roster)))
+    stop("urps_provider_roster(): roster is missing required column(s): ",
+         paste(setdiff(.req, names(roster)), collapse = ", "), call. = FALSE)
   sex <- ifelse(roster$gender == "F", "female",
                 ifelse(roster$gender == "M", "male", NA_character_))
   n_unknown <- sum(is.na(sex))

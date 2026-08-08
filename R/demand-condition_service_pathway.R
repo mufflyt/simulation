@@ -169,6 +169,10 @@ validate_condition_pathway <- function(pathway = condition_service_pathway(),
 #' @export
 pathway_stage_entrants <- function(treated, pathway = condition_service_pathway()) {
   validate_condition_pathway(pathway)
+  if (!is.numeric(treated) || is.null(names(treated)) || any(!nzchar(names(treated))))
+    stop("pathway_stage_entrants(): `treated` must be a NAMED numeric vector ",
+         "(condition -> count); an unnamed vector iterates zero times and returns ",
+         "empty, i.e. zero downstream demand with no error.", call. = FALSE)
   rows <- list()
   for (cond in names(treated)) {
     p_cond <- pathway[pathway$condition == cond, , drop = FALSE]

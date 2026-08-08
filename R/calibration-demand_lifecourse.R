@@ -116,7 +116,10 @@ backtest_lifecourse <- function(service_volumes, observed_fit, observed_target,
     summary = tibble::tibble(
       target_year = target_year,
       n = nrow(by_cat),
-      mape = mean(by_cat$abs_pct_error, na.rm = TRUE)
+      # NA (not a NaN "score") when no category is comparable, so an empty
+      # back-test does not read as a normal result.
+      mape = if (any(is.finite(by_cat$abs_pct_error)))
+        mean(by_cat$abs_pct_error, na.rm = TRUE) else NA_real_
     )
   )
 }

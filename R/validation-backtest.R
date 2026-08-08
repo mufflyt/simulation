@@ -94,6 +94,9 @@ reset_leakage_audit <- function() {
            x$board_pathway == board_pathway, c("year", "n_active")]
   a <- a[order(a$year), ]
   a <- a[a$year <= through_year, , drop = FALSE]
+  if (nrow(a) == 0L)
+    stop(sprintf("%s: no data at or before year %d.", what, as.integer(through_year)),
+         call. = FALSE)
 
   if (is.null(.backtest_audit$max_year)) reset_leakage_audit()
   .backtest_audit$max_year <- max(.backtest_audit$max_year, max(a$year))
@@ -390,7 +393,8 @@ backtest_attrition_requirement <- function() {
   status_source <- attr(regime, "source")
   n_retired_populated <- "n_retired" %in% names(series) &&
     any(is.finite(series$n_retired) & series$n_retired > 0)
-  active_equals_ever <- all(series$n_active == series$n_ever_certified, na.rm = TRUE)
+  .cmp <- series$n_active == series$n_ever_certified
+  active_equals_ever <- any(!is.na(.cmp)) && all(.cmp, na.rm = TRUE)
 
   ascertained <- identical(status, "ascertained") && n_retired_populated
 
@@ -489,6 +493,9 @@ backtest_entrant_estimate <- function(through_year = BACKTEST_CUTOFF_YEAR,
          through_year, call. = FALSE)
   }
   flow <- mean(steady$n_certified)
+  if (!is.data.frame(agents) || !"age" %in% names(agents))
+    stop("backtest_entrant_estimate(): `agents` must be a data frame with an `age` column.",
+         call. = FALSE)
   rate <- implied_annual_departure_rate(
     agents$age, if ("sex" %in% names(agents)) agents$sex else "female")
   departures <- nrow(agents) * rate

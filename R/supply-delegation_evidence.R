@@ -68,10 +68,13 @@ medicare_delegation_corroboration <- function(realized = NULL,
     all(c("service", "provider_type", "billed_services") %in% names(realized)))
 
   is_app <- realized$provider_type %in% MEDICARE_APP_PROVIDER_TYPES
+  # na.pass + sum(na.rm): the default na.omit would drop a row with an NA
+  # billed_services from BOTH the numerator and denominator, biasing the app
+  # share. Keep the group and ignore the NA within the sum instead.
   agg <- stats::aggregate(
     cbind(billed_services = realized$billed_services,
           app_services = realized$billed_services * is_app) ~ realized$service,
-    FUN = sum)
+    FUN = function(x) sum(x, na.rm = TRUE), na.action = stats::na.pass)
   names(agg)[1] <- "service"
   agg$measured_app_share <- agg$app_services / agg$billed_services
 
@@ -114,7 +117,9 @@ medicare_delegation_corroboration <- function(realized = NULL,
   parts <- lapply(files, function(f) tryCatch(readRDS(f), error = function(e) NULL))
   parts <- Filter(function(p) is.data.frame(p) && "provider_type" %in% names(p), parts)
   if (length(parts) == 0) return(NULL)
-  do.call(rbind, parts)
+  # bind_rows aligns by column name, so artifacts written with differing column
+  # sets/order combine instead of erroring cryptically as do.call(rbind) would.
+  dplyr::bind_rows(parts)
 }
 
 #' Sensitivity to the delegation capacity factor
