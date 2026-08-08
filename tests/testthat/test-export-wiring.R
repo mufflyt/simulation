@@ -114,15 +114,17 @@ test_that("the unwired surface does not grow", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
   o <- ew_orphans(root)
-  # A ratchet, not a target. 58 of 418 exports reach no pipeline; this fails if
+  # A ratchet, not a target. 51 of 418 exports reach no pipeline; this fails if
   # that gets worse, and the number is meant to be edited DOWNWARD as gates are
   # wired and dormant capabilities are connected or dropped.
   #
-  # It has moved 67 -> 58 by wiring all ten unwired_gate entries. What remains
-  # is `api` (a user calls it directly, so orphan status is expected) and
-  # `dormant` (implemented, connected to nothing) -- the latter is the next
-  # thing worth working, and unlike the gates it needs a judgement per entry
-  # about whether to wire or drop.
-  expect_lte(length(o$orphans), 58L)
+  # It has moved 67 -> 58 by wiring all ten unwired_gate entries, then 58 -> 51 by
+  # wiring seven `dormant` summarisers into a runnable diagnostics scorecard
+  # (scripts/diagnostics/urps_model_diagnostics_scorecard.R). What remains is
+  # `api` (a user calls it directly, so orphan status is expected) and the rest of
+  # `dormant` (implemented, connected to nothing) -- the latter is the next thing
+  # worth working, and unlike the gates it needs a judgement per entry about
+  # whether to wire or drop.
+  expect_lte(length(o$orphans), 51L)
   expect_lte(length(o$orphans) / length(o$exports), 0.14)
 })

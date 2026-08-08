@@ -5,12 +5,17 @@
 # tested, documented -- and reachable from no pipeline. hours_coef,
 # assert_demand_calibrated(), opportunity_placement_shares(), param_spec in
 # run_backtest() and apply_hrsa_surgical_fte() were each found that way, one at
-# a time, by accident. Fifty-eight exports are in that position today, down from sixty-seven. All ten
-# `unwired_gate` entries -- assertions and status checks that were implemented,
-# tested, documented and invoked from nothing -- have been wired: six into
-# validation_report(), which the orchestrator runs on every projection, and
-# check_legacy_canonical() into scripts/ci/check_suite.R, because it is a
-# property of the source tree rather than of a projection.
+# a time, by accident. Fifty-one exports are in that position today, down from
+# sixty-seven. All ten `unwired_gate` entries -- assertions and status checks
+# that were implemented, tested, documented and invoked from nothing -- have been
+# wired: six into validation_report(), which the orchestrator runs on every
+# projection, and check_legacy_canonical() into scripts/ci/check_suite.R, because
+# it is a property of the source tree rather than of a projection. Then seven
+# `dormant` summarisers -- setting_scenario_summary(), prevention_volume_summary(),
+# delegation_capacity_sensitivity(), entrant_trajectory_scenarios(),
+# agent_urbanicity_summary(), migration_drift_scenario() and urps_hazard_exposure()
+# -- were wired into scripts/diagnostics/urps_model_diagnostics_scorecard.R, a
+# runnable scorecard that drives each from the package's own example helpers.
 #
 # Being on this list is not automatically wrong. An analysis helper a USER calls
 # is orphaned by construction -- the package has no reason to call it. What is
@@ -59,7 +64,6 @@
 "workforce_lorenz","api"
 "access_weight_sensitivity","dormant"
 "advance_urps_agents","dormant"
-"agent_urbanicity_summary","dormant"
 "apply_age_specific_surgery_demand","dormant"
 "apply_calibration_scalars","dormant"
 "apply_provider_migration","dormant"
@@ -68,22 +72,16 @@
 "blend_placement_shares","dormant"
 "build_hazard_table","dormant"
 "career_departure_by_state","dormant"
-"delegation_capacity_sensitivity","dormant"
 "dmdm_population_audit","dormant"
 "dmdm_prevalence_trajectory","dormant"
 "e2sfca_bands","dormant"
-"entrant_trajectory_scenarios","dormant"
 "hazard_shrinkage_summary","dormant"
 "legacy_collisions","dormant"
 "load_legacy","dormant"
-"migration_drift_scenario","dormant"
-"prevention_volume_summary","dormant"
 "project_supply_deterministic","dormant"
 "read_artifact_with_provenance","dormant"
 "real_access_surface","dormant"
-"setting_scenario_summary","dormant"
 "spatial_access_ratio","dormant"
 "state_departure_hazard","dormant"
 "summarise_stratum_coverage","dormant"
 "swan_dmdm_panel_from_archive","dormant"
-"urps_hazard_exposure","dormant"
