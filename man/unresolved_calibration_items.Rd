@@ -23,6 +23,7 @@ layer is dormant -- so it cannot be wrong, only absent.
 }
 \seealso{
 Other practice survey: 
+\code{\link{fte_curve_gradient_leverage}()},
 \code{\link{fte_curve_status}()},
 \code{\link{geographic_access_status}()},
 \code{\link{urps_practice_survey_requirements}()}

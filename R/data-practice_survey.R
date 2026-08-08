@@ -104,9 +104,14 @@ fte_curve_status <- function() {
       "provider working fewer hours from one billing less per hour."),
     leverage = paste(
       "The curve's LEVEL is absorbed by calibrate_hours_intercept() -- mean",
-      "clinical FTE is 1.000 at base year by construction. Its SHAPE is not:",
-      "FTE per head falls to 0.9231 by 2050, removing 176 FTE from supply. This",
-      "does NOT cancel, unlike delegation and demand calibration."),
+      "clinical FTE is 1.000 at base year by construction. Its SHAPE is not, and",
+      "does NOT cancel, unlike delegation and demand calibration. Two magnitudes,",
+      "both measured by fte_curve_gradient_leverage() rather than asserted:",
+      "ageing the base cohort 25 years with no renewal costs 20.0% of FTE per",
+      "head (-200 FTE per 1,000), which is the gradient's own effect; in the full",
+      "model young entrants absorb about half of it and FTE per head lands at",
+      "0.911 in 2050, some 169 FTE. Earlier text here said 0.9231/176 FTE and the",
+      "README said ~3%: three numbers for one quantity, none computed."),
     do_not_fix = paste(
       "R/calibration-hrsa_fte.R carries TODO-FTE-001 and looks like the",
       "target. It is dormant -- apply_hrsa_surgical_fte() is called by nothing",
@@ -206,4 +211,100 @@ geographic_access_status <- function() {
     # the already-wired layer resolves.
     resolved_by = c("drive-time isochrones imported from mufflyt/isochrones")
   )
+}
+
+
+# ---- Hours-curve shape sensitivity ----------------------------------------
+#
+# WHY THIS EXISTS. `fte_curve_status()` says the borrowed hours curve's LEVEL
+# cancels and its SHAPE does not. That distinction is right, but the shape's
+# magnitude was a hardcoded sentence, and it went stale: the recorded "0.9231 by
+# 2050, removing 176 FTE" reads 0.9115 and 169 FTE against the current model,
+# while README described the same quantity as "~3%" when it is nearer 9%. Three
+# numbers for one quantity, none of them computed.
+#
+# The LEVEL cancels because calibrate_hours_intercept() solves the intercept so
+# mean clinical FTE is exactly 1.000 in the base year. Nothing does that for the
+# age GRADIENT, so every year after the base year applies the age profile of a
+# general-internal-medicine curve to urogynaecologists.
+#
+# The cohort is held fixed and aged: no retirement, no entrants. That is
+# deliberate. The full model replaces retirees with young entrants, which offsets
+# part of the ageing and makes the curve look less consequential than it is.
+# Holding the cohort fixed answers "what does the borrowed SHAPE do", which is
+# the question the analogy actually raises.
+
+# Hours offset with the age gradient scaled. Deliberately NOT implemented by
+# reassigning HWSM_HOURS_AGE_EFFECT: a package namespace is locked after load,
+# and a sensitivity helper that mutates a published constant would be a worse
+# defect than the one it measures.
+.hours_offset_scaled <- function(age, sex, gradient_scale) {
+  age <- as.numeric(age)
+  sex <- tolower(as.character(rep_len(sex, length(age))))
+  band <- as.character(cut(age, breaks = HWSM_HOURS_AGE_BANDS,
+                           labels = HWSM_HOURS_AGE_LABELS,
+                           right = FALSE, include.lowest = TRUE))
+
+  age_eff <- unname(HWSM_HOURS_AGE_EFFECT[band]) * gradient_scale
+  age_eff[is.na(age_eff)] <- 0
+
+  female <- sex == "female"
+  # The female INTERACTION is age-varying, so it is part of the gradient and
+  # scales with it. The female MAIN effect is a level and does not.
+  fem_int <- unname(HWSM_HOURS_FEMALE_INTERACTION[band]) * gradient_scale
+  fem_int[is.na(fem_int)] <- 0
+
+  age_eff + ifelse(female, HWSM_HOURS_FEMALE_MAIN, 0) + ifelse(female, fem_int, 0)
+}
+
+#' Leverage of the borrowed hours curve's age gradient
+#'
+#' Scales the published HWSM age gradient by `gradient_scale` and reports mean
+#' clinical FTE per head after ageing the cohort `horizon_years`.
+#' `gradient_scale = 0` is a flat curve (hours independent of age); `1` is the
+#' published gradient; `>1` steepens it.
+#'
+#' The intercept is re-solved for every scale, so each row is normalised to
+#' 1.000 FTE per head in the base year and the rows differ ONLY in shape. That
+#' is the point: the level is not what is borrowed in a way that matters.
+#'
+#' @param agents Cohort with `age` and `sex`.
+#' @param horizon_years Years to age the cohort by.
+#' @param gradient_scale Multipliers on the published age gradient.
+#' @param fte_hours Clinical hours defining 1.0 FTE.
+#' @return Tibble of `gradient_scale`, `fte_per_head_base`,
+#'   `fte_per_head_horizon`, `drift_pct`, `fte_delta_per_1000_head`.
+#' @family practice survey
+#' @concept data
+#' @export
+fte_curve_gradient_leverage <- function(agents,
+                                        horizon_years = 25L,
+                                        gradient_scale = c(0, 0.5, 1, 1.5),
+                                        fte_hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK) {
+  assertthat::assert_that(is.data.frame(agents),
+                          all(c("age", "sex") %in% names(agents)))
+  assertthat::assert_that(is.numeric(horizon_years), length(horizon_years) == 1L,
+                          is.finite(horizon_years), horizon_years >= 0)
+  assertthat::assert_that(is.numeric(gradient_scale), length(gradient_scale) >= 1L,
+                          all(is.finite(gradient_scale)))
+
+  rows <- lapply(gradient_scale, function(k) {
+    off_base <- .hours_offset_scaled(agents$age, agents$sex, k)
+    # Solve the intercept so mean FTE per head is exactly 1.000 at base year,
+    # mirroring calibrate_hours_intercept() for the scaled gradient.
+    ic <- fte_hours - mean(off_base)
+    fte_at <- function(extra) {
+      mean(pmax(ic + .hours_offset_scaled(agents$age + extra, agents$sex, k), 0)) / fte_hours
+    }
+    base <- fte_at(0)
+    horiz <- fte_at(horizon_years)
+    tibble::tibble(
+      gradient_scale = k,
+      fte_per_head_base = base,
+      fte_per_head_horizon = horiz,
+      drift_pct = 100 * (horiz / base - 1),
+      fte_delta_per_1000_head = 1000 * (horiz - base)
+    )
+  })
+  dplyr::bind_rows(rows)
 }

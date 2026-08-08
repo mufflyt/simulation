@@ -860,7 +860,14 @@ Ordered by how much each actually moves the deliverable:
    `hpsa_removal_shortfall()` has no URPS input to read: a fielded survey or an
    `external_anchor_gap()` citation are the only routes to a `calibrated` tier.
 2. **The headcount → FTE step is unvalidated.** The hours schedule comes from
-   general internal medicine and drifts FTE-per-head ~3% over the horizon.
+   general internal medicine. Its *level* cancels — `calibrate_hours_intercept()`
+   solves mean clinical FTE to exactly 1.000 in the base year — but its *age
+   gradient* does not, and that is the part being borrowed. Ageing the base
+   cohort 25 years with no renewal costs **20.0% of FTE per head** (−200 FTE per
+   1,000); in the full model young entrants absorb about half, leaving FTE per
+   head at **0.911 by 2050, ≈169 FTE off supply**. Measured by
+   `fte_curve_gradient_leverage()`, not asserted. (This entry previously read
+   "~3%", which understated it roughly threefold.)
 3. **The default cohort is still aggregate.** A production roster exists —
    1,339 board-certified providers matched to NPI, with Medicare CY2024 billing
    as the activity attestation — and `scripts/run_with_production_roster.R`
