@@ -20,6 +20,8 @@ Other baseline gap reporting:
 \code{\link{ADEQUACY_ANALOGUES}},
 \code{\link{ADEQUACY_EVIDENCE_TYPES}},
 \code{\link{CALIBRATION_STATUS_RANK}},
+\code{\link{DEMAND_CALIBRATION_DIMENSIONS}},
+\code{\link{DEMAND_ESTIMANDS}},
 \code{\link{REFERENCE_ADEQUACY_CALIBRATION}},
 \code{\link{REPORTABLE_MIN_CALIBRATION}},
 \code{\link{adequacy_conclusion_sentence}()},
@@ -31,6 +33,8 @@ Other baseline gap reporting:
 \code{\link{baseline_gap_claim}()},
 \code{\link{baseline_gap_provenance}()},
 \code{\link{demand_calibration_is_provisional}()},
+\code{\link{demand_estimand_status}()},
+\code{\link{demand_estimand_table}()},
 \code{\link{has_external_anchor}()}
 }
 \concept{baseline gap reporting}

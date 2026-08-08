@@ -19,11 +19,15 @@ cannot name the default cannot reproduce or audit it.
 \seealso{
 Other backtest status: 
 \code{\link{BACKTEST_RECORD_SHA256}},
+\code{\link{COVERAGE_RATE_PHRASINGS}},
 \code{\link{assert_backtest_record_current}()},
 \code{\link{assert_forecast_intervals_validated}()},
+\code{\link{assert_no_coverage_rate_claim}()},
 \code{\link{backtest_artifact_path}()},
 \code{\link{backtest_status}()},
 \code{\link{backtest_status_from_summary}()},
+\code{\link{containment_statement}()},
+\code{\link{coverage_is_estimable}()},
 \code{\link{interval_label}()},
 \code{\link{stamp_backtest_status}()},
 \code{\link{stamped_backtest_status}()},
