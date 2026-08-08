@@ -1,8 +1,36 @@
 # FPMRS national capacity survey — instrument and scoring specification
 
+**Version 0.1 — frozen for cognitive interviewing. Not yet fielded.**
+
 Design document. No code changes accompany it, and deliberately so: the survey
 has to tell us whether a system-capacity decomposition is empirically
 identifiable before the model grows a dimension to hold it.
+
+The next uncertainty is not modelling. It is whether practising urogynecologists
+interpret these questions the way the scoring specification assumes. The path
+from here is fixed: cognitive interviews with 5-10 physicians across practice
+settings, revise WORDING AND INTERPRETABILITY ONLY while the prespecified
+scoring architecture stays put, pilot in a larger group, and only then decide on
+a fifth calibration dimension. Changing the scoring architecture in response to
+pilot results would be fitting the instrument to the answers.
+
+## THE UNIT, frozen before anything else
+
+Every count in Section A is:
+
+> **unique new patients requesting FPMRS evaluation during the past 4 weeks**
+
+Not referrals received, not unique patients requesting any appointment, not all
+encounters, not procedures. Those are different denominators, and without a
+frozen unit a high-volume practice answering in visits and another answering in
+referrals both satisfy the scoring contract while measuring different things --
+an error no downstream validation can detect, because both responses are
+internally coherent.
+
+Recall period is 4 weeks, not "a typical week". A typical week invites an
+idealised average; 4 weeks is long enough to smooth clinic-schedule variation
+and short enough to recall. The weekly figures the scorer expects are derived by
+dividing by 4, in analysis, not by the respondent.
 
 ## Why a survey at all, when we have claims
 
@@ -63,28 +91,39 @@ Kept structurally intact for continuity with the PT and physiatry models. Only
 the clinical noun changes. **Do not reword the four options into FPMRS-specific
 language** — their comparability is the reason this item exists.
 
-> **A1.** Thinking about your current clinical schedule over a typical recent
-> month, which best describes your practice's ability to accommodate patients
-> seeking urogynecology / reconstructive pelvic surgery care?
+> **A1.** Over the **past 4 weeks**, thinking about **unique new patients
+> requesting FPMRS evaluation**, which best describes your practice's ability to
+> accommodate them?
 >
 > 1. We met all requests, and could **not** have taken more without extending hours → `equilibrium`
 > 2. We met all requests, and could have taken **more** without extending hours → `surplus`
 > 3. We met all requests, but **only by** extending hours or adding sessions → `shortage_hours`
 > 4. We could **not** meet all requests → `shortage_unmet`
 
-> **A2.** In a typical week, how many patient appointments did you personally
-> deliver? *(completed visits and procedures; exclude no-shows and cancellations)*
-> → `seen`, numeric, must be > 0
+> **A2.** Over the **past 4 weeks**, how many **unique new patients requesting
+> FPMRS evaluation** did you personally see? *(completed visits only; exclude
+> no-shows and cancellations)*
+> → `seen_4wk`, numeric, must be > 0; `seen = seen_4wk / 4`
 
 > **A3.** *(branch on A1; not asked for `equilibrium`)*
-> - If **surplus**: how many *additional* appointments could you have delivered without extending hours?
-> - If **shortage_hours**: how many appointments were accommodated *only by* extending hours or adding sessions?
-> - If **shortage_unmet**: how many appointments could *not* be accommodated?
+> Over the same **past 4 weeks**, and in the same unit (**unique new patients
+> requesting FPMRS evaluation**):
+> - If **surplus**: how many *additional* such patients could you have seen without extending hours?
+> - If **shortage_hours**: how many were accommodated *only by* extending hours or adding sessions?
+> - If **shortage_unmet**: how many could *not* be accommodated?
 >
-> → `additional`, numeric, ≥ 0; if `shortage_hours`, must be **<** A2
+> → `additional_4wk`, numeric, ≥ 0; if `shortage_hours`, must be **<** A2.
+> `additional = additional_4wk / 4`
 
-Aggregation for `capacity_survey_adequacy()`: median `seen` and median
-`additional` **within each category**, with `n` (or FTE weight) per category.
+Aggregation for `capacity_survey_adequacy()`: convert both counts to a weekly
+rate (divide by 4), then take the median `seen` and median `additional`
+**within each category**, with `n` (or FTE weight) per category. The division is
+an analysis step so that respondents are never asked to average.
+
+**Section A is the primary empirical observation and is retained raw.** Whatever
+decomposition Sections B and C support later, the effective-system adequacy
+computed from A alone is what was measured; everything downstream of it requires
+additional assumptions. That distinction survives into the manuscript.
 
 ---
 
@@ -130,12 +169,17 @@ requires. Two questions, deliberately concrete, requiring no abstract percentage
 
 The joint distribution is the point:
 
-| C1 | C2 | interpretation |
+| More physician FTE helps (C1) | More system capacity helps (C2) | Interpretation |
 |---|---|---|
-| Yes | No | **physician-limited** — additional FTE converts to care |
-| No | Yes | **complementary-input-limited** — FTE would not |
-| Yes | Yes | jointly limited; both inputs bind |
-| No | No | at capacity for reasons neither input relieves, or demand-limited |
+| Yes | No | Primarily **physician-constrained** |
+| No | Yes | Primarily **system-constrained** |
+| Yes | Yes | **Joint / complementary** constraint — both inputs bind |
+| No | No | Constraint **not explained by either** intervention |
+
+`Unsure` on either item is a fifth state and is kept as genuinely unidentified.
+It is never imputed into one of the four cells. Analyses report best-case and
+worst-case bounds by scoring `Unsure` as Yes and as No; if the conclusion turns
+on which, the honest output is a range.
 
 `0.5 FTE` rather than "more physician time" because a vague increment invites
 respondents to imagine whatever amount would help. Half an FTE is a realistic
@@ -188,12 +232,19 @@ physician FTE would increase care delivered, physician-attributable adequacy is
 smaller one.** Reporting effective adequacy as a physician shortage is the
 overstatement this instrument exists to prevent.
 
-Report both. The difference between them is itself a finding: it quantifies how
-much of the access problem more urogynecologists would not fix.
+Report both, and report Output 1 as the measurement. Output 2 is a
+**derivation** that assumes the counterfactual judgements in C1 are accurate and
+that constrained practices are exchangeable with respect to it. Neither
+assumption is testable from this instrument. The difference between the two is
+itself a finding — it quantifies how much of the access problem more
+urogynecologists would not fix — but the primary empirical observation remains
+effective-system adequacy.
 
-Sensitivity: score `Unsure` as Yes and as No, and report the range. If the
-conclusion turns on how Unsure is treated, the decomposition is not identified
-and should be reported as a range rather than a point.
+Sensitivity: score `Unsure` as Yes and as No and report the range. Where Yes/Yes
+predominates, replace the point attribution with a sensitivity allocation across
+the plausible physician share, for the reason given under the decision rule
+below: joint constraint is a finding about the world, not a defect in the
+measurement.
 
 ---
 
@@ -227,21 +278,36 @@ Add a formal `system_capacity` dimension **only if** all three hold:
 1. **Prevalence.** A non-trivial share of constrained respondents name a
    non-physician constraint as most important (B2). Pre-specified threshold:
    **≥ 25%**.
-2. **Discrimination.** C1 and C2 are not near-perfectly correlated. If almost
-   everyone answers Yes/Yes, respondents are not distinguishing the inputs and
-   the decomposition is not identified regardless of B2.
+2. **Attribution is identifiable.** Note carefully what this does and does not
+   mean. **A predominance of Yes/Yes is NOT a failure of the instrument.** It is
+   a substantive finding: urogynecologist time and complementary resources are
+   jointly binding, which is a real and reportable state of the world. What
+   Yes/Yes leaves unidentified is narrower -- *how much of the observed capacity
+   deficit to attribute to physician FTE* -- because a jointly binding
+   constraint does not apportion itself.
+
+   So the criterion is not "did respondents discriminate?" but "can the
+   attribution share be estimated?" If Yes/Yes predominates, the correct
+   response is a **sensitivity allocation** over the plausible physician share,
+   reported as a range, rather than a new point estimate or a declaration that
+   the decomposition failed.
 3. **Consequence.** `adequacy_physician` and `adequacy_effective` differ enough
    to move the balance-reversal threshold beyond its reporting precision.
 
-If (1) fails, system capacity is a minor mechanism → explanatory metadata on
-`baseline_adequacy`. If (2) fails, the survey cannot identify it whatever its
-prevalence → metadata, and say why. If (1) and (2) hold but (3) fails, record it
-as a finding — the decomposition is real but does not change the projection —
-and still keep it as metadata.
+**Criterion (1) is a model-governance threshold, not a scientific cutoff.**
+There is nothing special about 25%; it is a pre-registered line drawn to stop
+the decision being made after seeing the data. Criteria (2) and (3) are the ones
+carrying scientific weight. A 20% non-physician bottleneck that moves the
+balance-reversal threshold substantially matters more than a 30% one that
+changes nothing, and if that case arises the governance threshold should be
+overridden explicitly and in writing -- not quietly.
 
-Only all three together earn a dimension, because a dimension that never changes
-a verdict is scaffolding, and the estimand table is only useful while every row
-in it can bite.
+If (2) cannot be satisfied even by a sensitivity allocation, system capacity
+stays explanatory metadata on `baseline_adequacy`, with the reason stated. If
+(1) and (2) hold but (3) fails, record it as a finding — the decomposition is
+real but does not change the projection — and still keep it as metadata: a
+dimension that never changes a verdict is scaffolding, and the estimand table is
+only useful while every row in it can bite.
 
 ## Not in version 1
 
