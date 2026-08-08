@@ -198,3 +198,73 @@ demand_estimand_table <- function(dimension_status) {
   })
   do.call(rbind, rows)
 }
+
+# ---- Wiring the dimensions to the repository's actual evidence state --------
+#
+# THE GAP THIS CLOSES. demand_estimand_status() and demand_estimand_table()
+# have existed with no caller that supplies a real `dimension_status`: the only
+# ones in the repository are tests passing hypothetical vectors. So the package
+# could describe what each estimand WOULD need and could not say what any of
+# them currently IS. A reportability framework nothing can evaluate is the same
+# defect as a guard nothing calls, which tests/export-registry.csv exists to
+# surface -- this one just hid behind an argument.
+#
+# Every tier below is READ from the object that owns it, never restated here.
+# Restating is how the FTE-curve leverage ended up asserted three different ways
+# in three places; the fix there and the design here are the same.
+
+#' Current calibration tier of each demand evidence dimension
+#'
+#' Derived, not declared. Each dimension is read from whichever object in this
+#' package owns that evidence, so the answer cannot drift from the thing it
+#' describes.
+#'
+#' \describe{
+#'   \item{disease_burden}{Prevalence. `calibrated` only when a fitted onset
+#'     model is supplied; otherwise the literature-derived prevalence in use is
+#'     `derived_by_analogy` -- PFD prevalence is contract-supplied for 65+ and
+#'     Nygaard-derived literals below 65.}
+#'   \item{care_seeking}{Read from the `demand_calibration` row of
+#'     [unresolved_calibration_items()], which records the NAMCS fit.}
+#'   \item{access_barriers}{Read from [geographic_access_status()]. The layer is
+#'     loaded and called by nothing, so this is ABSENT rather than wrong --
+#'     which still blocks every estimand that requires it.}
+#'   \item{baseline_adequacy}{Read from the supplied [baseline_gap()] object's
+#'     own `calibration_status`. Undeclared without one, because an adequacy
+#'     nobody stated is not an adequacy.}
+#' }
+#'
+#' @param gap Optional [baseline_gap()] object supplying the adequacy tier.
+#' @param onset_model Optional fitted onset object
+#'   ([fit_prevalence_consistent_transitions()]); raises `disease_burden` to
+#'   `fitted` when supplied.
+#' @return Named character vector over `DEMAND_CALIBRATION_DIMENSIONS`.
+#' @family baseline gap reporting
+#' @concept reporting
+#' @export
+demand_dimension_status <- function(gap = NULL, onset_model = NULL) {
+  items <- unresolved_calibration_items()
+  item_resolved <- function(id) {
+    row <- items[items$item == id, , drop = FALSE]
+    nrow(row) == 1L && isTRUE(row$resolved[1])
+  }
+
+  care <- if (item_resolved("demand_calibration")) "calibrated" else "derived_by_analogy"
+
+  access <- if (isTRUE(geographic_access_status()$resolved)) "calibrated" else {
+    # Absent, not wrong. Ranked at the floor so it blocks, which is correct: an
+    # access counterfactual cannot be reported off a layer nothing runs.
+    "uncalibrated_illustrative"
+  }
+
+  burden <- if (!is.null(onset_model)) "fitted" else "derived_by_analogy"
+
+  adequacy <- if (inherits(gap, "urps_baseline_gap")) {
+    gap$calibration_status %||% "undeclared"
+  } else "undeclared"
+
+  c(disease_burden    = burden,
+    care_seeking      = care,
+    access_barriers   = access,
+    baseline_adequacy = adequacy)
+}

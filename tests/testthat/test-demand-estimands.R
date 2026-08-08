@@ -171,3 +171,54 @@ test_that("strong access evidence cannot turn direction into magnitude", {
       interpretation = "adequacy is 1.5x", citation = "audit 2026"),
     "controlled vocabulary")
 })
+
+# ---- Live dimension statuses ------------------------------------------------
+#
+# demand_estimand_status() existed with no caller supplying a real
+# dimension_status -- only tests passing hypothetical vectors. The framework
+# could say what each estimand WOULD need and not what any of them IS.
+
+test_that("dimension statuses are read from the objects that own them", {
+  st <- demand_dimension_status()
+  expect_setequal(names(st), DEMAND_CALIBRATION_DIMENSIONS)
+
+  # Access is ABSENT rather than wrong -- the layer is called by nothing -- and
+  # absence must still block, so it sits at the floor of the ranking.
+  expect_identical(unname(st["access_barriers"]),
+                   if (isTRUE(geographic_access_status()$resolved)) "calibrated"
+                   else "uncalibrated_illustrative")
+
+  # Adequacy is undeclared without a gap object: an adequacy nobody stated is
+  # not an adequacy, and silence must not buy reportability.
+  expect_identical(unname(st["baseline_adequacy"]), "undeclared")
+
+  g <- baseline_gap(1306, 0.948, method = "capacity_survey",
+                    calibration_status = "derived_by_analogy")
+  expect_identical(unname(demand_dimension_status(gap = g)["baseline_adequacy"]),
+                   "derived_by_analogy")
+  # A measured gap propagates too -- the tier is read, not assumed.
+  g2 <- baseline_gap(1306, 0.948, method = "capacity_survey",
+                     calibration_status = "calibrated")
+  expect_identical(unname(demand_dimension_status(gap = g2)["baseline_adequacy"]),
+                   "calibrated")
+})
+
+test_that("no estimand is reportable under the current evidence state", {
+  # Records the state rather than asserting it is acceptable. If a fit or an
+  # access import later lifts a dimension, this fails and must be re-read --
+  # which is the point: reportability should never change silently.
+  tab <- demand_estimand_table(demand_dimension_status())
+  expect_false(any(tab$reportable))
+  expect_identical(tab$weakest_dimension[tab$estimand == "realized_care"],
+                   "disease_burden")
+  expect_identical(tab$weakest_dimension[tab$estimand == "reduced_barrier"],
+                   "access_barriers")
+
+  # realized_care is ONE fit away: supplying an onset model lifts disease_burden
+  # to `fitted`, which is the reportability floor.
+  st <- demand_dimension_status(onset_model = structure(list(), class = "stub"))
+  tab2 <- demand_estimand_table(st)
+  expect_true(tab2$reportable[tab2$estimand == "realized_care"])
+  # ...and does NOT rescue the two that need access.
+  expect_false(any(tab2$reportable[tab2$estimand != "realized_care"]))
+})
