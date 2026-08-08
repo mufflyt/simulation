@@ -750,6 +750,21 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
               "distribution, so effective_fte_lo/hi collapse onto the median. ",
               "The reported band is not an interval of any width.")
   }
+  # The n >= 2 case has its own floor. Two draws give a band, but a 95% band
+  # needs 40 before its bounds are quantiles instead of the sample extremes --
+  # and the extremes UNDERSTATE the spread, so the failure is a band that looks
+  # reassuringly tight rather than obviously broken.
+  #
+  # WARNS rather than stops, in every mode, and that is deliberate. Computing the
+  # band at low n is not the error; PUBLISHING it as a 95% interval is. This
+  # mirrors interval_label() and the back-test warning, which likewise constrain
+  # how a band may be DESCRIBED rather than refusing to produce it -- and a
+  # three-iteration smoke test has no interval to misreport. The fail-closed hook
+  # lives with the data instead: `bounds_are_quantiles` rides in the summary, so
+  # a publication path can gate on it, and assert_monte_carlo_adequate() remains
+  # available in strict mode for callers who want the stop.
+  assert_monte_carlo_adequate(n_iterations, ci = ci, mode = "relaxed",
+                              what = "run_supply_microsimulation()")
 
   seed_microsimulation(seed)
 
@@ -1005,9 +1020,24 @@ run_supply_microsimulation <- function(initial_workforce = 1306,
       effective_fte_median = stats::median(.data$effective_fte),
       effective_fte_lo = stats::quantile(.data$effective_fte, lo),
       effective_fte_hi = stats::quantile(.data$effective_fte, hi),
+      # Simulation error travels WITH the band, in the same row. Kept out of the
+      # scenario metadata on purpose: a consumer reading effective_fte_lo/hi
+      # from a saved panel would not look there, and the whole question these
+      # answer -- is this band the workforce or the simulator? -- is one you have
+      # at the moment you read the bound.
+      effective_fte_mcse = monte_carlo_se(.data$effective_fte)$mcse_median,
+      headcount_mcse = monte_carlo_se(.data$headcount)$mcse_median,
+      # The share of the band that is simulation error rather than workforce
+      # spread. Near or above 1 means a re-run on a different seed would move
+      # the band materially, which is the single most useful thing to know about
+      # an interval and cannot be read off the bounds themselves.
+      effective_fte_noise_share =
+        monte_carlo_diagnostics(.data$effective_fte, ci = ci)$noise_share,
       mean_age_median = stats::median(.data$mean_age, na.rm = TRUE),
       .groups = "drop"
     )
+  summary$n_iterations <- n_iterations
+  summary$bounds_are_quantiles <- n_iterations >= mc_min_iterations(ci)
 
   list(
     summary = summary,
