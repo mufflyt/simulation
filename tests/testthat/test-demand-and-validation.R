@@ -555,6 +555,49 @@ test_that("validation_report includes gap_projection checks when supplied", {
   expect_true(rep$passed[rep$check == "gap_projection_arithmetic"])
 })
 
+test_that("publishable_run_report passes only manuscript-ready run objects", {
+  ok_status <- backtest_status_from_summary(
+    tibble::tibble(within_95 = rep(TRUE, 5), percent_error = c(-1, 0, 1, 2, -2)),
+    required = 0.8)
+  ok_gap <- baseline_gap(
+    100, 0.9, method = "external_anchor", calibration_status = "calibrated",
+    source = "fielded URPS capacity anchor")
+  ok <- list(
+    run_id = "publishable_test",
+    projection = tibble::tibble(year = 2025L, supply_headcount = 100),
+    baseline_gap = ok_gap,
+    validation = tibble::tibble(check = "no_negative_supply", type = "internal",
+                                passed = TRUE, detail = "ok"),
+    scenario_meta = list(
+      example_only = FALSE,
+      cohort_provenance = list(source = "roster", is_production = TRUE),
+      demand_calibrated = TRUE,
+      backtest = ok_status
+    )
+  )
+  artifact <- tempfile(fileext = ".rds")
+  write_artifact_with_provenance(ok, artifact, inputs = list(seed = 1),
+                                 run_id = "publishable_test")
+  rep <- publishable_run_report(ok, artifact_path = artifact)
+  expect_true(all(rep$passed))
+  expect_silent(assert_publishable_run(ok, artifact_path = artifact, mode = "strict"))
+
+  weak <- ok
+  weak$projection <- tibble::tibble(year = 2025L, lower_95 = 1, upper_95 = 2)
+  weak$baseline_gap <- baseline_gap(
+    100, 0.95, method = "capacity_survey",
+    calibration_status = "derived_by_analogy",
+    source = "stand-in donor specialty")
+  weak$scenario_meta$demand_calibrated <- FALSE
+  weak$scenario_meta$backtest <- backtest_status()
+  bad <- publishable_run_report(weak, artifact_path = artifact)
+  expect_false(bad$passed[bad$check == "demand_calibrated"])
+  expect_false(bad$passed[bad$check == "base_year_capacity_anchor"])
+  expect_false(bad$passed[bad$check == "forecast_intervals"])
+  expect_error(assert_publishable_run(weak, artifact_path = artifact, mode = "strict"),
+               "Run is not publishable")
+})
+
 test_that("gap_projections_all_scenarios covers every scenario", {
   supply <- tibble::tibble(
     year = rep(2025:2026, 2),

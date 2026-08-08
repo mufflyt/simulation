@@ -22,8 +22,10 @@ Other validation:
 \code{\link{apply_calibration_scalars}()},
 \code{\link{assert_demand_calibrated}()},
 \code{\link{assert_estimands_independent}()},
+\code{\link{assert_publishable_run}()},
 \code{\link{detect_proportional_estimands}()},
 \code{\link{fit_calibration_scalars}()},
+\code{\link{publishable_run_report}()},
 \code{\link{published_calibration_scalars}()},
 \code{\link{two_method_agreement}()},
 \code{\link{validation_report}()}
