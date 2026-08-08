@@ -15,6 +15,18 @@ assert_no_leakage(through_year = BACKTEST_CUTOFF_YEAR)
 \description{
 Assert that no contract read exceeded the cutoff
 }
+\details{
+The audit is STATEFUL. \code{.series_through()} records the maximum year of every
+contract read; this checks that maximum against the declared cutoff. Call
+\code{\link[=reset_leakage_audit]{reset_leakage_audit()}} at the start of a run, or the audit carries reads
+from the previous one.
+
+IT FAILS WHEN NOTHING WAS AUDITED, and that is deliberate. No recorded read
+means either the back-test reached the contract outside \code{.series_through()}
+-- so the guard saw nothing and proves nothing -- or it never read the
+contract at all. Both are failures, and treating an empty audit as "clean"
+would make the guard silently vacuous, which is worse than absent.
+}
 \seealso{
 Other backtest: 
 \code{\link{.series_through}()},

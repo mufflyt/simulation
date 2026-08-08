@@ -78,6 +78,14 @@ resolve_reproducibility_mode <- function(default = "relaxed") {
 #' so Monte-Carlo trajectories are bit-identical across machines. In `relaxed`
 #' mode we honour an explicit seed if given but otherwise leave the RNG alone.
 #'
+#' @details
+#' In `strict` mode the RNG is always seeded, so Monte Carlo trajectories are
+#' bit-identical across machines and a reported figure can be reproduced exactly.
+#' In `relaxed` mode an explicit seed is honoured but none is imposed, which
+#' keeps repeated exploratory runs from looking more stable than they are.
+#'
+#' Returns the seed actually applied, so a run can record it rather than leaving
+#' reproducibility to a claim in a method section.
 #' @param seed Integer seed. If NULL, uses `MICROSIM_SEED` env var or 20260801.
 #' @param mode Reproducibility mode (see [resolve_reproducibility_mode()]).
 #' @return (Invisibly) the integer seed actually applied, or NA if none.
@@ -258,6 +266,16 @@ write_artifact_with_provenance <- function(object,
 #' in relaxed mode, `stop()`s in strict mode) so the caller recomputes rather
 #' than trusting stale or tampered data.
 #'
+#' @details
+#' The hash is recomputed and compared BEFORE deserialising, which is the only
+#' ordering that catches a payload that is valid R but not the payload the
+#' sidecar describes. Checking after loading would already have trusted it.
+#'
+#' Rejection is not an error condition to be worked around -- it means recompute.
+#' In `relaxed` mode the function returns NULL so the caller regenerates the
+#' artifact; in `strict` it stops. `expected_inputs` extends the same idea
+#' upstream: an artifact whose recorded input fingerprint does not match the
+#' inputs you hold is stale, even if its own content hash is intact.
 #' @param artifact_path Path to the `.rds` artifact.
 #' @param expected_inputs If supplied, the loaded artifact is rejected unless its
 #'   recorded `input_fingerprint` matches `fingerprint_object(expected_inputs)`.

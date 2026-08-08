@@ -34,6 +34,17 @@ Fails closed on every dimension that could make the comparison invalid. The
 attrition mismatch is separated out because it does not invalidate the target
 choice -- it changes what the comparison means.
 }
+\details{
+Establishes what the back-test is scoring against before any arm runs:
+geography, board pathway, measure, and whether the observed series has
+attrition applied.
+
+\code{acknowledge_no_attrition} must be passed explicitly when the target series
+is a gross flow. The certification series never nets departures out, so an
+arm that also subtracts departures is scored against a target that does not,
+and the mismatch shows up as apparent model error rather than as the
+definition difference it actually is.
+}
 \seealso{
 Other backtest: 
 \code{\link{.series_through}()},

@@ -35,6 +35,20 @@ Searches a grid for the smallest inflation factor whose rolling-origin
 empirical coverage reaches \code{nominal_coverage}. When no factor in the grid
 reaches it, returns the best attainable and flags \code{reached_nominal = FALSE}.
 }
+\details{
+Searches for the smallest factor whose rolling-origin empirical coverage
+reaches nominal. If no factor in the grid gets there, it returns the best
+attainable and sets \code{reached_nominal = FALSE} rather than silently reporting
+the grid maximum as a solution.
+
+AN INFLATION FACTOR IS A POST HOC WIDENING, not a repair. It buys nominal
+coverage by making every interval wider, including the ones that were already
+right, and it does nothing about the reason the intervals were too narrow --
+here, that parameters were held fixed across iterations. Prefer fixing the
+generating model (see \code{\link[=supply_parameter_spec]{supply_parameter_spec()}}); use this to quantify how
+far off the intervals are, and report the factor alongside any interval it
+widened.
+}
 \seealso{
 Other interval coverage: 
 \code{\link{assert_interval_coverage_publishable}()},

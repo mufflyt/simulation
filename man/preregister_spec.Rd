@@ -33,6 +33,19 @@ to register a DIFFERENT spec at an existing path errors unless \code{force = TRU
 because a change after the freeze is exactly the contamination this guards
 against -- register a new protocol version instead.
 }
+\details{
+Freezes the model specification and evaluation protocol BEFORE the held-out
+period is scored, and records a hash of it. \code{frozen_at} is required and is
+metadata only -- it does not enter \code{spec_hash} -- so the record states when
+the freeze happened relative to the data vintage, which is the claim a reader
+actually needs to evaluate.
+
+Re-registering a DIFFERENT spec at the same path is an error, because
+changing the specification after seeing the test period is model selection on
+the test set no matter how it is described afterwards. Register a new
+protocol version at a new path instead; \code{force = TRUE} exists only to correct
+a mistake made before any data was seen.
+}
 \seealso{
 \code{\link[=assert_spec_matches_prereg]{assert_spec_matches_prereg()}}, \code{\link[=rolling_origin_evaluation]{rolling_origin_evaluation()}}
 

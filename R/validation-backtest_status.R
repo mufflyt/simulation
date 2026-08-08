@@ -230,6 +230,14 @@ backtest_status <- function(record = BACKTEST_RECORD_2020_2023,
 #' coverage fails, "forecast interval" is not available: the back-test refuted
 #' exactly that claim, and the honest description is a Monte Carlo range.
 #'
+#' @details
+#' Returns the caveat AS PART OF the label, so a band cannot be quoted without
+#' the evidence about whether it deserves to be believed. The engine's intervals
+#' are currently a Monte Carlo range: in the 2020->2023 back-test the observed
+#' value fell outside them in 8 of 10 arms.
+#'
+#' The alternative -- a footnote elsewhere in the document -- is exactly how a
+#' range becomes a prediction interval on its way to a reader.
 #' @param status A [backtest_status()] object.
 #' @param ci Nominal interval width.
 #' @return A character label.
@@ -392,6 +400,16 @@ backtest_artifact_path <- function(start = ".") {
 
 #' Verify the frozen record against the scored artifact, row by row
 #'
+#' @details
+#' The recorded back-test summary is quoted in warnings, in the documentation
+#' and in the manuscript. If the artifact is regenerated without updating the
+#' record, every one of those statements silently becomes a claim about a file
+#' that no longer exists -- and nothing in a normal run would notice.
+#'
+#' This recomputes the artifact's SHA-256 and compares it with
+#' `BACKTEST_RECORD_SHA256`. Do not regenerate the artifact unless
+#' `BACKTEST_RECORD_2020_2023` and its reproduction test are updated in the same
+#' change; updating one alone is the drift this exists to prevent.
 #' @param path Artifact path; located automatically when NULL.
 #' @param record Frozen record to check.
 #' @param tolerance Absolute tolerance on `percent_error`.

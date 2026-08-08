@@ -19,6 +19,15 @@ Returns the phrase that belongs in a table caption or figure legend. While
 coverage fails, "forecast interval" is not available: the back-test refuted
 exactly that claim, and the honest description is a Monte Carlo range.
 }
+\details{
+Returns the caveat AS PART OF the label, so a band cannot be quoted without
+the evidence about whether it deserves to be believed. The engine's intervals
+are currently a Monte Carlo range: in the 2020->2023 back-test the observed
+value fell outside them in 8 of 10 arms.
+
+The alternative -- a footnote elsewhere in the document -- is exactly how a
+range becomes a prediction interval on its way to a reader.
+}
 \seealso{
 Other backtest status: 
 \code{\link{BACKTEST_RECORD_2020_2023}},
