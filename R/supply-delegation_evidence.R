@@ -114,7 +114,27 @@ medicare_delegation_corroboration <- function(realized = NULL,
                       full.names = TRUE)
   files <- files[!grepl("provenance", files)]
   if (length(files) == 0) return(NULL)
-  parts <- lapply(files, function(f) tryCatch(readRDS(f), error = function(e) NULL))
+  # READ THROUGH THE PROVENANCE GUARD, not readRDS(). These artifacts are
+  # WRITTEN by write_artifact_with_provenance() -- the sidecars sit beside them
+  # in artifacts/ -- and nothing verified them on the way back in, so the
+  # content hash was computed, stored, and never once checked. The guard
+  # recomputes it BEFORE deserialising, which is the only ordering that catches
+  # a payload that is valid R but not the payload the sidecar describes.
+  #
+  # A rejected artifact yields NULL in relaxed mode and is dropped rather than
+  # corroborating anything, which is the right answer: an artifact whose
+  # provenance cannot be verified is not evidence. It is announced rather than
+  # dropped in silence, because a corroboration that quietly lost half its
+  # inputs still returns a confident-looking number.
+  parts <- lapply(files, function(f)
+    tryCatch(read_artifact_with_provenance(f), error = function(e) NULL))
+  rejected <- vapply(parts, is.null, logical(1))
+  if (any(rejected)) {
+    .msg_warn(sprintf(paste("%d of %d realized-care artifact(s) failed the",
+                            "provenance check and are excluded: %s"),
+                      sum(rejected), length(files),
+                      paste(basename(files[rejected]), collapse = ", ")))
+  }
   parts <- Filter(function(p) is.data.frame(p) && "provider_type" %in% names(p), parts)
   if (length(parts) == 0) return(NULL)
   # bind_rows aligns by column name, so artifacts written with differing column
