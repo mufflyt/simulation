@@ -51,6 +51,18 @@ until it is placed or no reachable neighbour has room. Demand is conserved:
 appointment probabilities and utilization are recomputed by \code{\link[=clear_access]{clear_access()}}
 on each catchment's effective demand (\code{demand - spilled_out + spilled_in}).
 }
+\examples{
+# Unmet demand in one catchment can be absorbed by a neighbour, at a travel
+# penalty. Compare with clear_access(), which strands it.
+catchments <- tibble::tibble(
+  catchment           = c("A", "B", "C"),
+  demand_workload     = c(1200, 800, 400),
+  accessible_capacity = c(900, 900, 500)
+)
+neighbors <- tibble::tibble(from = c("A", "A", "B"), to = c("B", "C", "C"),
+                            travel_penalty = c(10, 25, 15))
+overflow_access(catchments, neighbors)[, c("catchment", "spilled_out", "spilled_in")]
+}
 \seealso{
 Other access clearing: 
 \code{\link{catchment_neighbors_from_coords}()},

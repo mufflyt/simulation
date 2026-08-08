@@ -681,6 +681,10 @@ validate_participation_table <- function(table = FUTUREDOCS_PARTICIPATION) {
 #' @return Numeric intercept for [hwsm_reference_hours()].
 #' @family provider lifecycle
 #' @concept supply
+#' @examples
+#' # Solves the intercept so the age/sex hours schedule reproduces 1.0 FTE at
+#' # the package's clinical-hours definition.
+#' calibrate_hours_intercept(age = c(45, 55, 65))
 #' @export
 calibrate_hours_intercept <- function(age, sex = "female",
                                       fte_hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK) {

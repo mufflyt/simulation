@@ -31,6 +31,13 @@
 #'   appended: `A6` (`spilled_share`) and `A7` (`overflow_travel_time`).
 #' @family access outcomes
 #' @concept reporting
+#' @examples
+#' catchments <- tibble::tibble(
+#'   catchment           = c("A", "B", "C"),
+#'   demand_workload     = c(1200, 800, 400),
+#'   accessible_capacity = c(900, 900, 500)
+#' )
+#' access_outcomes_national(clear_access(catchments))
 #' @export
 access_outcomes_national <- function(cleared) {
   need <- c("demand_workload", "accessible_capacity", "served", "unmet_demand",

@@ -26,6 +26,14 @@ finite (non-censored) wait only; the demand share sitting in unbounded queues
 is reported separately as \code{wait_censored_share} so a saturated system is never
 hidden behind a finite-looking mean.
 }
+\examples{
+catchments <- tibble::tibble(
+  catchment           = c("A", "B", "C"),
+  demand_workload     = c(1200, 800, 400),
+  accessible_capacity = c(900, 900, 500)
+)
+access_outcomes_national(clear_access(catchments))
+}
 \seealso{
 Other access outcomes: 
 \code{\link{access_outcomes_by_severity}()},

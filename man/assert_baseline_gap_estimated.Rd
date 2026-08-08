@@ -32,6 +32,15 @@ measurement, and it reaches the headline number undamped -- so it needs the
 same explicit opt-in \code{\link[=assert_publishable_workload]{assert_publishable_workload()}} requires of an
 analogy-derived delegation matrix.
 }
+\examples{
+# In strict mode an analogy-derived gap is refused unless the caller says
+# allow_analogy = TRUE. The point is that the acknowledgement is explicit and
+# recorded, never inherited.
+gap <- baseline_gap(1306, 0.95, method = "assumed",
+                    calibration_status = "uncalibrated_illustrative",
+                    evidence = "illustrative example")
+assert_baseline_gap_estimated(gap, mode = "relaxed", allow_analogy = TRUE)
+}
 \seealso{
 Other baseline gap: 
 \code{\link{assert_access_not_double_counted}()},

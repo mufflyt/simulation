@@ -287,6 +287,11 @@ ssot_provenance <- function(detailed = FALSE) {
 #' @return Numeric vector.
 #' @family ssot
 #' @concept core
+#' @examples
+#' # A zero denominator yields the default, not Inf or NaN. Division that
+#' # silently produced Inf is how a per-capita figure once became infinite for
+#' # a geography with no recorded population.
+#' ssot_safe_divide(c(3, 5), c(4, 0))
 #' @export
 ssot_safe_divide <- function(numerator, denominator, default = NA_real_) {
   if (has_mufflyaccess()) {

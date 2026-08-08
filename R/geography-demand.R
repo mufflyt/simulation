@@ -131,6 +131,15 @@ accessible_need_vs_capacity <- function(geo, need_col = "need", capacity_col = "
 #' @return `tracts` with a numeric `need` column added.
 #' @family demand
 #' @concept geography
+#' @examples
+#' # Age-banded tract population becomes expected PFD cases. Column names are
+#' # fixed by TRACT_AGE_BAND_COLUMNS; a missing band is an error, not a zero.
+#' tract_need_from_population(tibble::tibble(
+#'   GEOID         = c("08031001", "08031002"),
+#'   female_20_39  = c(900, 1200), female_40_59 = c(800, 700),
+#'   female_60_64  = c(200, 180),  female_65_79 = c(300, 260),
+#'   female_80plus = c(90, 70)
+#' ))
 #' @export
 tract_need_from_population <- function(tracts,
                                        prevalence = pfd_prevalence_by_band(),

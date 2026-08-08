@@ -26,6 +26,16 @@ List: \code{draws} (tibble of inputs + outputs), \code{inputs}, \code{n}, \code{
 \description{
 Samples the inputs jointly (LHS) and evaluates \code{evaluate} once per draw.
 }
+\examples{
+# Probabilistic sensitivity analysis over declared input distributions.
+psa <- run_psa(
+  inputs   = list(psa_normal("a", 10, 2), psa_uniform("b", 1, 3)),
+  evaluate = function(a, b) c(y = a * b),
+  n        = 60,
+  verbose  = FALSE
+)
+psa$output_names
+}
 \seealso{
 Other psa: 
 \code{\link{plot_psa_tornado}()},
