@@ -292,6 +292,13 @@ as_urps_gap_projection <- function(supply,
 #' @return Long data frame of gap projections for all scenarios.
 #' @family urps projection
 #' @concept reporting
+#' @examples
+#' \dontrun{
+#' # supply_by_scenario: named list of supply tibbles (one per scenario);
+#' # required_fte: required FTE by year. Returns one validated gap projection
+#' # per scenario, ready for the downstream contract.
+#' gap_projections_all_scenarios(supply_by_scenario, required_fte)
+#' }
 #' @export
 gap_projections_all_scenarios <- function(supply_by_scenario,
                                           required_fte,

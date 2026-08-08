@@ -48,6 +48,14 @@ scenario column of the full supply panel, joining each scenario to the
 same \code{required_fte} series (demand is scenario-independent in the status-
 quo case; pass scenario-specific demand in \code{fte_gap_by_scenario} if needed).
 }
+\examples{
+\dontrun{
+# supply_by_scenario: named list of supply tibbles (one per scenario);
+# required_fte: required FTE by year. Returns one validated gap projection
+# per scenario, ready for the downstream contract.
+gap_projections_all_scenarios(supply_by_scenario, required_fte)
+}
+}
 \seealso{
 Other urps projection: 
 \code{\link{as_urps_gap_projection}()},

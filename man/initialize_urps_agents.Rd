@@ -29,6 +29,15 @@ Data frame with one row per physician.
 \description{
 Initialize URPS Physician Agent Population
 }
+\examples{
+\dontrun{
+# Reproducible synthetic roster (no external data required):
+agents <- initialize_urps_agents(roster_source = "mufflyaccess", verbose = FALSE)
+head(agents)
+# Advance one simulated year against an age x sex exit-hazard table:
+advance_urps_agents(agents, exit_hazard = build_urps_exit_hazard())
+}
+}
 \seealso{
 Other fraher agent supply: 
 \code{\link{advance_urps_agents}()}

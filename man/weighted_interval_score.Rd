@@ -24,6 +24,15 @@ The proper multi-level generalization of the interval score (Bracher et al.
 scores of the central intervals implied by symmetric quantile pairs. Rewards
 both calibration and sharpness, so a wide, uninformative forecast cannot win.
 }
+\examples{
+# WIS for one forecast: observation 1300 scored against a 50\% central interval
+# (lower is better). quantile_levels must include the median.
+weighted_interval_score(
+  y = 1300,
+  quantiles = c(1200, 1300, 1400),
+  quantile_levels = c(0.25, 0.5, 0.75)
+)
+}
 \seealso{
 Other forecast scorecard: 
 \code{\link{compare_forecasts}()},
