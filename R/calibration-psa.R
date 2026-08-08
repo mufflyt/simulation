@@ -154,6 +154,18 @@ psa_sample <- function(inputs, n, seed = 20260801L) {
 #'   `n_failed` (evaluations that errored -> NA).
 #' @family psa
 #' @concept calibration
+#' @examples
+#' \dontrun{
+#' # Propagate input uncertainty through any evaluator returning named outputs.
+#' inputs <- list(
+#'   psa_uniform("baseline_entrants", 45, 90),
+#'   psa_uniform("base_adequacy", 0.85, 1.02)
+#' )
+#' evaluate <- function(p)
+#'   list(gap = -(1 - p$base_adequacy) * 100 - 0.15 * (p$baseline_entrants - 67))
+#' psa <- run_psa(inputs, evaluate, n = 200, seed = 1, verbose = FALSE)
+#' psa_tornado(psa, output = "gap", method = "prcc")
+#' }
 #' @export
 run_psa <- function(inputs, evaluate, n = 500, seed = 20260801L, verbose = TRUE) {
   assertthat::assert_that(is.function(evaluate))

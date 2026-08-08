@@ -28,6 +28,16 @@ penalty as a first-class toggle rather than a numeric power. M2SFCA
 (Delamater 2013) squares the CUMULATIVE band weights before differencing
 (\code{step2_power = 2}), penalising supply that is present but poorly located.
 }
+\examples{
+\dontrun{
+# membership: isochrone-band membership of each demand point;
+# supply / demand: provider capacity and population need per location.
+compute_access(membership, supply, demand, method = "E2SFCA")
+# M2SFCA squares the cumulative band weights, penalising supply that is
+# present but poorly located:
+compute_access(membership, supply, demand, method = "M2SFCA")
+}
+}
 \seealso{
 Other spatial access e2sfca: 
 \code{\link{access_moe_ci}()},

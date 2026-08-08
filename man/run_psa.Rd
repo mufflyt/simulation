@@ -26,6 +26,19 @@ List: \code{draws} (tibble of inputs + outputs), \code{inputs}, \code{n}, \code{
 \description{
 Samples the inputs jointly (LHS) and evaluates \code{evaluate} once per draw.
 }
+\examples{
+\dontrun{
+# Propagate input uncertainty through any evaluator returning named outputs.
+inputs <- list(
+  psa_uniform("baseline_entrants", 45, 90),
+  psa_uniform("base_adequacy", 0.85, 1.02)
+)
+evaluate <- function(p)
+  list(gap = -(1 - p$base_adequacy) * 100 - 0.15 * (p$baseline_entrants - 67))
+psa <- run_psa(inputs, evaluate, n = 200, seed = 1, verbose = FALSE)
+psa_tornado(psa, output = "gap", method = "prcc")
+}
+}
 \seealso{
 Other psa: 
 \code{\link{plot_psa_tornado}()},

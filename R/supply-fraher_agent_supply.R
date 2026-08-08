@@ -21,6 +21,14 @@
 #' @importFrom tidyr replace_na
 #' @family fraher agent supply
 #' @concept supply
+#' @examples
+#' \dontrun{
+#' # Reproducible synthetic roster (no external data required):
+#' agents <- initialize_urps_agents(roster_source = "mufflyaccess", verbose = FALSE)
+#' head(agents)
+#' # Advance one simulated year against an age x sex exit-hazard table:
+#' advance_urps_agents(agents, exit_hazard = build_urps_exit_hazard())
+#' }
 #' @export
 initialize_urps_agents <- function(roster_source  = "mufflyaccess",
                                    duckdb_path    = NULL,

@@ -30,6 +30,11 @@ base-year required FTE equals the base-year demand anchor (base-year supply
 plus the estimated starting shortfall). Every later year then inherits a
 denominator that reproduces a known quantity in the base year.
 }
+\examples{
+# SOLVE the productivity denominator so base-year required FTE reproduces the
+# base-year demand anchor, rather than asserting it from a survey.
+calibrate_wrvu_per_fte(base_year_wrvu = 9.8e6, base_year_required_fte = 1306)
+}
 \seealso{
 Other workload to fte: 
 \code{\link{URPS_DELEGATION_MATRIX}},

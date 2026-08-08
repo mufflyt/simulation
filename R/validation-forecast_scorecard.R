@@ -39,6 +39,14 @@
 #' @return Numeric vector of length `n`: the WIS per case (lower is better).
 #' @family forecast scorecard
 #' @concept validation
+#' @examples
+#' # WIS for one forecast: observation 1300 scored against a 50% central interval
+#' # (lower is better). quantile_levels must include the median.
+#' weighted_interval_score(
+#'   y = 1300,
+#'   quantiles = c(1200, 1300, 1400),
+#'   quantile_levels = c(0.25, 0.5, 0.75)
+#' )
 #' @export
 weighted_interval_score <- function(y, quantiles, quantile_levels) {
   if (is.null(dim(quantiles))) quantiles <- matrix(quantiles, nrow = 1)

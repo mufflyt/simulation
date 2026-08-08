@@ -23,6 +23,13 @@ be in provider-FTE units; a count of prevalent cases, consultations or
 procedures is rejected. Sign convention follows the published tables: a
 negative gap is a shortfall.
 }
+\examples{
+\dontrun{
+# supply: projected provider FTE by year; required: required FTE by year.
+# Both sides are FTE, so the difference is meaningful.
+compute_fte_gap(supply, required)
+}
+}
 \seealso{
 Other workload to fte: 
 \code{\link{URPS_DELEGATION_MATRIX}},

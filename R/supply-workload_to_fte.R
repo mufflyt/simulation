@@ -301,6 +301,10 @@ service_volume_to_wrvu <- function(volumes,
 #' @return Numeric annual work RVUs per clinical FTE.
 #' @family workload to fte
 #' @concept supply
+#' @examples
+#' # SOLVE the productivity denominator so base-year required FTE reproduces the
+#' # base-year demand anchor, rather than asserting it from a survey.
+#' calibrate_wrvu_per_fte(base_year_wrvu = 9.8e6, base_year_required_fte = 1306)
 #' @export
 calibrate_wrvu_per_fte <- function(base_year_wrvu, base_year_required_fte,
                                    indirect_share = INDIRECT_TIME_SHARE) {
@@ -556,6 +560,12 @@ allocate_fte_by_setting <- function(total_fte,
 #'   `pct_supply_to_demand`.
 #' @family workload to fte
 #' @concept supply
+#' @examples
+#' \dontrun{
+#' # supply: projected provider FTE by year; required: required FTE by year.
+#' # Both sides are FTE, so the difference is meaningful.
+#' compute_fte_gap(supply, required)
+#' }
 #' @export
 compute_fte_gap <- function(supply, required, supply_col = "effective_fte_median") {
   assertthat::assert_that(supply_col %in% names(supply),

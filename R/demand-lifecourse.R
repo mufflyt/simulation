@@ -365,6 +365,18 @@ lifecourse_demand_trajectory <- function(pop_by_age_year,
 #'   (the tibble returned by [convert_workload_to_fte()]).
 #' @family lifecourse
 #' @concept demand
+#' @examples
+#' \dontrun{
+#' # Single-year-of-age population, then required FTE via the work-RVU basket.
+#' pop <- tidyr::expand_grid(year = 2025:2030, age = 40:85)
+#' pop$population <- round(2e6 * exp(-0.02 * (pop$age - 40)))
+#' fte <- lifecourse_required_fte(
+#'   pop,
+#'   wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]],
+#'   scenario = "baseline", n = 5000, seed = 1
+#' )
+#' fte$required_fte
+#' }
 #' @export
 lifecourse_required_fte <- function(pop_by_age_year, wrvu_per_fte,
                                     scenario = "baseline", n = 1e5, seed = NULL, ...) {
