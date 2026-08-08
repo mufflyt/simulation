@@ -120,7 +120,7 @@ build_meps_care_seeking_panel <- function(fyc, cond, clnk, ob,
 
   p <- fyc[fyc$SEX == 2 & fyc$AGELAST >= 18, , drop = FALSE]
   keep <- intersect(c("DUPERSID", "AGELAST", "RACETHX", paste0("POVCAT", yy),
-                      paste0("INSURC", yy), wt, "VARPSU", "VARSTR"), names(p))
+                      paste0("INSCOV", yy), wt, "VARPSU", "VARSTR"), names(p))
   p <- p[, keep, drop = FALSE]
   p <- merge(p, per_visits, by = "DUPERSID", all.x = TRUE)
   if (!is.null(per_spend)) p <- merge(p, per_spend, by = "DUPERSID", all.x = TRUE)
@@ -134,19 +134,30 @@ build_meps_care_seeking_panel <- function(fyc, cond, clnk, ob,
 
   p$weight <- p[[wt]]
   p$age_c <- (p$AGELAST - 50) / 10
-  pov <- paste0("POVCAT", yy); ins <- paste0("INSURC", yy)
+  pov <- paste0("POVCAT", yy); ins <- paste0("INSCOV", yy)
   if (ins %in% names(p)) {
+    # MEPS INSCOVyy: full-year coverage in 3 mutually-exclusive categories
+    # (1 = any private, 2 = public only, 3 = uninsured), matching the repo's own
+    # acquisition recode in scripts/data_acquisition/05_download_meps_2022.R.
+    # Chosen over the 8-category, age-split INSURCyy so the private/public/
+    # uninsured collapse is fully codebook-verifiable, with no 65+ code ambiguity.
+    if (any(!p[[ins]] %in% 1:3, na.rm = TRUE))
+      warning("MEPS ", ins, " has value(s) outside 1-3 (e.g. -7/-8/-9 DK/refused); ",
+              "those rows resolve to NA insurance.", call. = FALSE)
     p$insurance <- factor(
-      ifelse(p[[ins]] %in% c(1, 2, 4, 5, 6), "Private",
-             ifelse(p[[ins]] %in% c(3, 7), "Public", "Uninsured")),
+      c("Private", "Public", "Uninsured")[match(p[[ins]], 1:3)],
       levels = c("Private", "Public", "Uninsured"))
   }
   if (pov %in% names(p)) {
     if (any(!p[[pov]] %in% 1:5, na.rm = TRUE))
       warning("MEPS ", pov, " has value(s) outside the expected 1-5 domain; those ",
               "rows resolve to NA income and drop from the design.", call. = FALSE)
+    # MEPS POVCAT: 1 Poor (<100% FPL), 2 Near-poor (100-124%), 3 Low (125-199%),
+    # 4 Middle (200-399%), 5 High (>=400%). Category 2 is ABOVE the poverty line,
+    # so it belongs in 100_199FPL, not LT100FPL (the prior mapping under-counted
+    # near-poor income and over-counted <100% FPL).
     p$income <- factor(
-      c("LT100FPL", "LT100FPL", "100_199FPL", "200_399FPL", "GE400FPL")[p[[pov]]],
+      c("LT100FPL", "100_199FPL", "100_199FPL", "200_399FPL", "GE400FPL")[p[[pov]]],
       levels = c("GE400FPL", "200_399FPL", "100_199FPL", "LT100FPL"))
   }
   if (any(!p$RACETHX %in% 1:5, na.rm = TRUE))

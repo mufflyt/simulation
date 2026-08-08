@@ -14,7 +14,7 @@ mcs_fixture <- function(n = 900, seed = 42) {
     AGELAST = sample(18:85, n, TRUE),
     RACETHX = sample(1:5, n, TRUE),
     POVCAT23 = sample(1:5, n, TRUE),
-    INSURC23 = sample(c(1, 3, 8), n, TRUE),
+    INSCOV23 = sample(c(1, 2, 3), n, TRUE),   # INSCOV: 1 Private, 2 Public, 3 Uninsured
     PERWT23F = runif(n, 2000, 9000),
     VARPSU = sample(1:3, n, TRUE),
     VARSTR = sample(1:12, n, TRUE),
