@@ -67,7 +67,7 @@ mat    <- urps_migration_matrix(states)
 validate_migration_matrix(mat)
 }
 \seealso{
-\code{\link[=apply_provider_migration_matrix]{apply_provider_migration_matrix()}}, \code{\link[=apply_urps_migration]{apply_urps_migration()}},
+\code{\link[=apply_provider_migration_matrix]{apply_provider_migration_matrix()}},
 \link{CONUS_STATE_URBANICITY}, \link{URPS_RURAL_URBAN_DRIFT}
 
 Other urps migration: 
@@ -75,7 +75,6 @@ Other urps migration:
 \code{\link{URPS_MIGRATION_HAZARD}},
 \code{\link{URPS_RURAL_URBAN_DRIFT}},
 \code{\link{agent_urbanicity_summary}()},
-\code{\link{apply_urps_migration}()},
 \code{\link{classify_state_urbanicity}()},
 \code{\link{migration_drift_scenario}()},
 \code{\link{rural_urban_concentration}()}

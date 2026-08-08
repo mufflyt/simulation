@@ -86,29 +86,6 @@ opportunity_placement_shares <- function(demand_growth, retirements) {
     dplyr::select("geo", "requirements_fte", "share")
 }
 
-#' Blend historical and opportunity-responsive placement
-#'
-#' @param historical Tibble from [historical_placement_shares()].
-#' @param opportunity Tibble from [opportunity_placement_shares()].
-#' @param weight Weight on the opportunity-responsive shares (0 = purely
-#'   historical, 1 = purely opportunity-responsive).
-#' @return Tibble with `geo` and blended `share`.
-#' @family provider geography
-#' @concept geography
-#' @export
-blend_placement_shares <- function(historical, opportunity, weight = 0.5) {
-  assertthat::assert_that(weight >= 0, weight <= 1)
-  h <- dplyr::select(historical, "geo", historical_share = "share")
-  o <- dplyr::select(opportunity, "geo", opportunity_share = "share")
-  out <- dplyr::full_join(h, o, by = "geo")
-  out$historical_share[is.na(out$historical_share)] <- 0
-  out$opportunity_share[is.na(out$opportunity_share)] <- 0
-  out <- dplyr::mutate(
-    out,
-    share = (1 - weight) * .data$historical_share + weight * .data$opportunity_share
-  )
-  dplyr::mutate(out, share = .data$share / sum(.data$share))
-}
 
 #' Assign entrants to geographies from a share distribution
 #'
@@ -174,34 +151,6 @@ migration_hazard <- function(years_since_entry, age = NA_real_,
   out
 }
 
-#' Apply one year of stochastic provider migration
-#'
-#' @param agents Agent tibble with `state`, `entry_year`.
-#' @param year Current calendar year.
-#' @param shares Destination share distribution (`geo`, `share`).
-#' @param hazards Migration hazards.
-#' @return The agent tibble with updated `state` and an incremented `n_moves`.
-#' @family provider geography
-#' @concept geography
-#' @export
-apply_provider_migration <- function(agents, year, shares,
-                                     hazards = PROVIDER_MIGRATION_HAZARD) {
-  if (!"state" %in% names(agents)) return(agents)
-  if (!"entry_year" %in% names(agents))
-    stop("provider migration requires an `entry_year` column on `agents`; without it the ",
-         "hazard is length-0 and migration silently becomes a no-op.", call. = FALSE)
-  if (!"n_moves" %in% names(agents)) agents$n_moves <- 0L
-
-  yrs <- year - agents$entry_year
-  h <- migration_hazard(yrs, agents$age, hazards)
-  moves <- stats::runif(nrow(agents)) < h & !is.na(agents$state)
-
-  if (any(moves)) {
-    agents$state[moves] <- assign_entrant_geography(sum(moves), shares, stochastic = TRUE)
-    agents$n_moves[moves] <- agents$n_moves[moves] + 1L
-  }
-  agents
-}
 
 # ---- Reporting ------------------------------------------------------------
 
@@ -434,7 +383,8 @@ migration_matrix_from_moves <- function(moves, prior_shares = NULL,
 
 #' Apply one year of origin-dependent provider migration
 #'
-#' The origin-dependent counterpart to [apply_provider_migration()]. A mover's
+#' The origin-dependent counterpart to `apply_provider_migration()`, which is
+#' archived in inst/archive/geography.R. A mover's
 #' destination is drawn from the row of `matrix` matching their current
 #' geography, so a dominant diagonal, an asymmetric corridor between two
 #' geographies, and an absorbing out-of-country state are all representable.
@@ -448,7 +398,8 @@ migration_matrix_from_moves <- function(moves, prior_shares = NULL,
 #' @param year Current calendar year.
 #' @param matrix Origin-by-destination matrix; see
 #'   [migration_matrix_from_moves()].
-#' @param hazards Migration hazards, as in [apply_provider_migration()].
+#' @param hazards Migration hazards, as in the archived
+#'   `apply_provider_migration()` (inst/archive/geography.R).
 #' @param out_of_country Destination label treated as an absorbing sink, or
 #'   `NULL` for none.
 #' @return The agent tibble with updated `state`, `n_moves`, `left_country`.

@@ -118,32 +118,3 @@ build_access_membership <- function(iso_sf, tracts,
   )
 }
 
-#' Compute a real access surface (tract demand x provider isochrones x supply)
-#'
-#' Convenience composer: loads the real tract demand, builds membership from the
-#' supplied provider isochrones, and runs the E2SFCA engine. The provider
-#' isochrones are the only non-vendored input (see [load_provider_isochrones()]).
-#'
-#' @param iso_sf Provider isochrones (`sf`); e.g. [load_provider_isochrones()].
-#' @param supply Tibble `provider_id`, `supply` (S_j).
-#' @param weights Cumulative band weights.
-#' @param step2_power 1 = E2SFCA, 2 = M2SFCA.
-#' @param provider_col,band_col Column names in `iso_sf`.
-#' @param mode Reproducibility mode.
-#' @return The [compute_e2sfca_access()] result over the real tract demand.
-#' @family spatial access data
-#' @concept geography
-#' @export
-real_access_surface <- function(iso_sf, supply,
-                                weights = E2SFCA_DEFAULT_WEIGHTS,
-                                step2_power = 1,
-                                provider_col = "coord_id",
-                                band_col = "drive_time",
-                                mode = resolve_reproducibility_mode()) {
-  tracts <- load_tract_demand(mode = mode)
-  membership <- build_access_membership(iso_sf, tracts,
-                                        provider_col = provider_col, band_col = band_col)
-  demand <- dplyr::select(tracts, "demand_id", "population")
-  compute_e2sfca_access(membership, supply, demand,
-                        weights = weights, step2_power = step2_power)
-}

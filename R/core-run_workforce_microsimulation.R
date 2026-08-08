@@ -216,7 +216,8 @@ example_capacity_survey <- function() {
 #'   migrate mid-career. Build it with [opportunity_placement_shares()] for the
 #'   HWSM rule (demand growth plus retirements, which lets existing
 #'   maldistribution persist), [historical_placement_shares()] for the
-#'   reproduce-today's-distribution comparison, or [blend_placement_shares()].
+#'   reproduce-today's-distribution comparison. (An opportunity-responsive
+#'   blend lived in `blend_placement_shares()`, now in inst/archive/geography.R.)
 #'   Requires a cohort carrying `state`.
 #' @param seed_base_geography When `placement_shares` is supplied but the cohort
 #'   has no `state` column, draw the base cohort's states from those shares

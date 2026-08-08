@@ -17,3 +17,4 @@
 ^CONTRIBUTING\.md$
 ^Makefile$
 ^\.githooks$
+^inst/archive$

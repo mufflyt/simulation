@@ -236,7 +236,7 @@ agent_urbanicity_summary <- function(agents,
 #'   Set to 0 to omit.
 #' @return Long-format tibble with columns `origin`, `destination`,
 #'   `probability`. Passes [validate_migration_matrix()].
-#' @seealso [apply_provider_migration_matrix()], [apply_urps_migration()],
+#' @seealso [apply_provider_migration_matrix()],
 #'   [CONUS_STATE_URBANICITY], [URPS_RURAL_URBAN_DRIFT]
 #' @family urps migration
 #' @concept geography
@@ -349,56 +349,6 @@ urps_migration_matrix <- function(states,
 
 # ---- Annual migration step ---------------------------------------------------
 
-#' Apply one year of URPS-specific provider migration
-#'
-#' Convenience wrapper that selects per-agent hazards from [URPS_MIGRATION_HAZARD]
-#' and dispatches to [apply_provider_migration_matrix()] using a pre-built or
-#' on-the-fly origin-by-destination matrix. Agents without a `state` column
-#' are returned unchanged.
-#'
-#' @param agents Agent tibble with at least `state` and `entry_year`.
-#' @param year Current calendar year.
-#' @param migration_matrix Pre-built matrix from [urps_migration_matrix()].
-#'   When `NULL`, one is built on the fly from the agent states using equal
-#'   destination weights — useful for prototyping but slower in a loop.
-#' @param hazards Named migration hazard vector. Defaults to
-#'   [URPS_MIGRATION_HAZARD].
-#' @param urbanicity State urbanicity lookup. Defaults to
-#'   [CONUS_STATE_URBANICITY].
-#' @param ... Additional arguments passed to [urps_migration_matrix()] when
-#'   `migration_matrix = NULL`.
-#' @return The agent tibble with updated `state`, `n_moves`, and `left_country`.
-#' @family urps migration
-#' @concept geography
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Build matrix once before the loop, reuse every year
-#' states <- unique(na.omit(agents$state))
-#' mat    <- urps_migration_matrix(states)
-#' for (yr in 2026:2050) {
-#'   agents <- apply_urps_migration(agents, yr, migration_matrix = mat)
-#'   agents <- agents[!isTRUE(agents$left_country), ]   # filter gone providers
-#' }
-#' }
-apply_urps_migration <- function(agents,
-                                  year,
-                                  migration_matrix = NULL,
-                                  hazards          = URPS_MIGRATION_HAZARD,
-                                  urbanicity       = CONUS_STATE_URBANICITY,
-                                  ...) {
-  if (!"state" %in% names(agents) || nrow(agents) == 0L) return(agents)
-
-  if (is.null(migration_matrix)) {
-    states <- sort(unique(na.omit(agents$state)))
-    if (length(states) < 2L) return(agents)
-    migration_matrix <- urps_migration_matrix(states, urbanicity = urbanicity, ...)
-  }
-
-  apply_provider_migration_matrix(agents, year = year, matrix = migration_matrix,
-                                  hazards = hazards)
-}
 
 # ---- Geographic concentration reporting --------------------------------------
 

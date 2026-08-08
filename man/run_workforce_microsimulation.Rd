@@ -91,7 +91,8 @@ geographic layer: entrants are placed by this distribution and providers may
 migrate mid-career. Build it with \code{\link[=opportunity_placement_shares]{opportunity_placement_shares()}} for the
 HWSM rule (demand growth plus retirements, which lets existing
 maldistribution persist), \code{\link[=historical_placement_shares]{historical_placement_shares()}} for the
-reproduce-today's-distribution comparison, or \code{\link[=blend_placement_shares]{blend_placement_shares()}}.
+reproduce-today's-distribution comparison. (An opportunity-responsive
+blend lived in \code{blend_placement_shares()}, now in inst/archive/geography.R.)
 Requires a cohort carrying \code{state}.}
 
 \item{seed_base_geography}{When \code{placement_shares} is supplied but the cohort

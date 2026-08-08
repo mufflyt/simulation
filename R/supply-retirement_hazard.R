@@ -121,7 +121,8 @@ urps_survival_curve <- function(ages = 30:85, sex = "Female",
 
 #' Build URPS Age-Specific Retirement Hazard
 #'
-#' Returns a per-age exit probability table for use in [advance_urps_agents()].
+#' Returns a per-age exit probability table. Its consumer,
+#' `advance_urps_agents()`, is archived in inst/archive/supply.R.
 #' The default fallback uses the Weibull survival curves from
 #' [urps_weibull_exit_probs()] (derived-by-analogy from HWSM Exhibits 17–18),
 #' replacing the previous coarse step function.  When a cliff DuckDB is

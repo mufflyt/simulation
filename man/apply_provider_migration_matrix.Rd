@@ -20,7 +20,8 @@ apply_provider_migration_matrix(
 \item{matrix}{Origin-by-destination matrix; see
 \code{\link[=migration_matrix_from_moves]{migration_matrix_from_moves()}}.}
 
-\item{hazards}{Migration hazards, as in \code{\link[=apply_provider_migration]{apply_provider_migration()}}.}
+\item{hazards}{Migration hazards, as in the archived
+\code{apply_provider_migration()} (inst/archive/geography.R).}
 
 \item{out_of_country}{Destination label treated as an absorbing sink, or
 \code{NULL} for none.}
@@ -29,7 +30,8 @@ apply_provider_migration_matrix(
 The agent tibble with updated \code{state}, \code{n_moves}, \code{left_country}.
 }
 \description{
-The origin-dependent counterpart to \code{\link[=apply_provider_migration]{apply_provider_migration()}}. A mover's
+The origin-dependent counterpart to \code{apply_provider_migration()}, which is
+archived in inst/archive/geography.R. A mover's
 destination is drawn from the row of \code{matrix} matching their current
 geography, so a dominant diagonal, an asymmetric corridor between two
 geographies, and an absorbing out-of-country state are all representable.
@@ -43,10 +45,8 @@ counts should filter them out.
 \seealso{
 Other provider geography: 
 \code{\link{add_returning_providers}()},
-\code{\link{apply_provider_migration}()},
 \code{\link{assign_entrant_geography}()},
 \code{\link{benchmark_density_shortfall}()},
-\code{\link{blend_placement_shares}()},
 \code{\link{historical_placement_shares}()},
 \code{\link{migration_hazard}()},
 \code{\link{migration_matrix_from_moves}()},
