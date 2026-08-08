@@ -109,4 +109,12 @@ cat("capacity anchor resolved:", cs$resolved, "\n")
 cat(strwrap(cs$leverage, 78, prefix = "  "), sep = "\n")
 cat("\nbacktest:", format(backtest_status()$coverage_95 * 100), "% coverage of",
     backtest_status()$n_arms, "arms -- intervals are a Monte Carlo range.\n")
+
+cat("\n===== PUBLISHABLE RUN GATE =====\n")
+publishable <- publishable_run_report(result)
+cat("publishable:", all(publishable$passed), "\n")
+print(publishable)
+if (identical(tolower(Sys.getenv("REQUIRE_PUBLISHABLE", unset = "false")), "true")) {
+  assert_publishable_run(result, mode = "strict")
+}
 cat("Run id:", result$run_id, "\n")

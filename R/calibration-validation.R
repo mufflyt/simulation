@@ -544,3 +544,143 @@ assert_validation_passed <- function(report, mode = resolve_reproducibility_mode
   }
   invisible(report)
 }
+
+.publishable_run_has_interval_bounds <- function(result) {
+  interval_cols <- function(x) {
+    if (!is.data.frame(x)) return(character(0))
+    grep("(^lower_95$|^upper_95$|(_lo|_hi)$)", names(x), value = TRUE)
+  }
+  objs <- list(result$projection, result$gap_projection, result$supply,
+               result$required_fte, result$fte_gap)
+  unique(unlist(lapply(objs, interval_cols), use.names = FALSE))
+}
+
+.publishable_default_artifact_path <- function(result) {
+  run_id <- result$run_id %||% NA_character_
+  if (!is.character(run_id) || length(run_id) != 1L || !nzchar(run_id)) {
+    return(NA_character_)
+  }
+  file.path("outputs", sprintf("workforce_microsim_%s.rds", run_id))
+}
+
+#' Report whether a microsimulation run is publishable
+#'
+#' This is a manuscript-readiness gate, not another arithmetic validation. It
+#' checks the claims a reader would infer from a result object: measured cohort,
+#' calibrated demand, non-analogy base-year capacity, validated or suppressed
+#' intervals, and a reproducible artifact sidecar.
+#'
+#' @param result A [run_workforce_microsimulation()] result.
+#' @param artifact_path Optional path to the saved artifact. When omitted, the
+#'   conventional `outputs/workforce_microsim_<run_id>.rds` path is checked.
+#' @param require_artifact Require the artifact payload and provenance sidecar.
+#' @return Tibble with `check`, `passed`, and `detail`.
+#' @family validation
+#' @concept calibration
+#' @export
+publishable_run_report <- function(result, artifact_path = NULL,
+                                   require_artifact = TRUE) {
+  checks <- list()
+  add <- function(name, passed, detail) {
+    checks[[length(checks) + 1L]] <<- tibble::tibble(
+      check = name, passed = passed, detail = detail
+    )
+  }
+
+  meta <- result$scenario_meta %||% list()
+  cohort <- meta$cohort_provenance %||% list()
+  production <- isFALSE(meta$example_only) &&
+    isTRUE(cohort$is_production) &&
+    identical(cohort$source %||% NA_character_, "roster")
+  add("production_cohort", production,
+      if (production) "cohort is a production roster"
+      else sprintf("not a production roster: example_only=%s, source=%s, is_production=%s",
+                   as.character(meta$example_only %||% NA),
+                   as.character(cohort$source %||% NA),
+                   as.character(cohort$is_production %||% NA)))
+
+  demand_calibrated <- isTRUE(meta$demand_calibrated)
+  add("demand_calibrated", demand_calibrated,
+      if (demand_calibrated) "demand calibration artifact applied"
+      else "demand is not calibrated to an independent national anchor")
+
+  gap <- result$baseline_gap
+  tier <- if (inherits(gap, "urps_baseline_gap")) {
+    gap$calibration_status %||% NA_character_
+  } else {
+    NA_character_
+  }
+  measured_capacity <- identical(tier, "calibrated")
+  add("base_year_capacity_anchor", measured_capacity,
+      if (measured_capacity) sprintf("base-year gap calibrated: %s", gap$source %||% gap$method)
+      else sprintf("base-year capacity is not URPS-measured/calibrated (tier=%s)",
+                   if (is.na(tier)) "missing" else tier))
+
+  status <- meta$backtest %||% backtest_status()
+  bounds <- .publishable_run_has_interval_bounds(result)
+  intervals_ok <- isTRUE(status$validated) || length(bounds) == 0L
+  add("forecast_intervals", intervals_ok,
+      if (isTRUE(status$validated)) "forecast intervals validated by back-test"
+      else if (length(bounds) == 0L) "interval columns absent/suppressed"
+      else sprintf("interval-like column(s) present but not validated: %s; %s",
+                   paste(bounds, collapse = ", "), interval_label(status)))
+
+  internal_ok <- TRUE
+  if (is.data.frame(result$validation) &&
+      all(c("type", "passed", "check", "detail") %in% names(result$validation))) {
+    failed <- result$validation[
+      result$validation$type == "internal" &
+        !is.na(result$validation$passed) &
+        !result$validation$passed, , drop = FALSE]
+    internal_ok <- nrow(failed) == 0L
+    add("internal_validation", internal_ok,
+        if (internal_ok) "all internal validation checks passed"
+        else sprintf("internal validation failed: %s",
+                     paste(sprintf("%s (%s)", failed$check, failed$detail),
+                           collapse = "; ")))
+  } else {
+    add("internal_validation", FALSE,
+        "validation report absent or missing required columns")
+  }
+
+  if (isTRUE(require_artifact)) {
+    path <- artifact_path %||% .publishable_default_artifact_path(result)
+    artifact_ok <- is.character(path) && length(path) == 1L && !is.na(path) &&
+      file.exists(path) && file.exists(paste0(path, ".provenance.json"))
+    add("reproducibility_artifact", artifact_ok,
+        if (artifact_ok) sprintf("artifact and provenance sidecar present: %s", path)
+        else sprintf("artifact or provenance sidecar absent: %s",
+                     if (is.na(path)) "<unknown>" else path))
+  } else {
+    add("reproducibility_artifact", TRUE, "artifact check not required")
+  }
+
+  dplyr::bind_rows(checks)
+}
+
+#' Assert that a microsimulation run is publishable
+#'
+#' @param result A [run_workforce_microsimulation()] result.
+#' @param artifact_path Optional artifact path, passed to
+#'   [publishable_run_report()].
+#' @param require_artifact Require the artifact payload and provenance sidecar.
+#' @param mode Reproducibility mode; strict errors, relaxed warns.
+#' @return Invisibly, the publishability report.
+#' @family validation
+#' @concept calibration
+#' @export
+assert_publishable_run <- function(result, artifact_path = NULL,
+                                   require_artifact = TRUE,
+                                   mode = resolve_reproducibility_mode()) {
+  report <- publishable_run_report(result, artifact_path = artifact_path,
+                                   require_artifact = require_artifact)
+  failed <- report[!is.na(report$passed) & !report$passed, , drop = FALSE]
+  if (nrow(failed) > 0L) {
+    msg <- sprintf("Run is not publishable: %s",
+                   paste(sprintf("%s (%s)", failed$check, failed$detail),
+                         collapse = "; "))
+    if (identical(mode, "strict")) stop(msg, call. = FALSE)
+    .msg_warn(msg)
+  }
+  invisible(report)
+}
