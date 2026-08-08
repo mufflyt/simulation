@@ -859,6 +859,17 @@ Ordered by how much each actually moves the deliverable:
    primary medical care, dental and mental health, **not subspecialties**, so
    `hpsa_removal_shortfall()` has no URPS input to read: a fielded survey or an
    `external_anchor_gap()` citation are the only routes to a `calibrated` tier.
+
+   **But the 2050 conclusion does not turn on that choice.** Computed with
+   `baseline_anchor_sensitivity()`: the base-year anchor would have to rise
+   **1.34×** — a base-year adequacy of **0.708, a 29% shortfall** — before the
+   projected 2050 surplus becomes a shortage. All three published donor anchors
+   sit at 0.890–0.948, far above that breakeven, and across the whole published
+   range the 2050 gap moves only from +537 to +433 FTE. It stays a surplus in
+   every case. So the anchor dominates the **base-year** number and not the
+   **direction** of the projection, and the two claims must not be conflated.
+   The survey remains the highest-value input for stating a defensible base-year
+   shortfall; it is not what the surplus finding is waiting on.
 2. **The headcount → FTE step is unvalidated.** The hours schedule comes from
    general internal medicine. Its *level* cancels — `calibrate_hours_intercept()`
    solves mean clinical FTE to exactly 1.000 in the base year — but its *age
