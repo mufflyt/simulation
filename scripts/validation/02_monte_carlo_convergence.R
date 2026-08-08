@@ -36,11 +36,17 @@ suppressPackageStartupMessages({
   if (!requireNamespace("urpssim", quietly = TRUE)) pkgload::load_all(".", quiet = TRUE) else library(urpssim)
 })
 
+source(file.path("scripts", "validation", "_provenance.R"))
+
 ITERATIONS <- c(250L, 500L, 1000L, 2000L)
 SEEDS      <- c(20260801L, 11L, 202L)
 HAZARD_CV  <- c(fixed = 0, moderate = 0.15, high = 0.30)
 CRIT_MEDIAN_PCT <- 0.5
 CRIT_ENDPOINT_PCT <- 5
+
+RUN <- begin_validation_run("mc_convergence", seeds = SEEDS, iterations = ITERATIONS,
+                            params = list(hazard_cv = HAZARD_CV, entrant_mean = 70, horizon_years = "2025-2050", criterion_median_pct = CRIT_MEDIAN_PCT, criterion_endpoint_pct = CRIT_ENDPOINT_PCT),
+                            require_clean = as.logical(Sys.getenv("VALIDATION_REQUIRE_CLEAN", "TRUE")))
 
 roster <- urps_provider_roster(load_urps_roster())
 gap <- baseline_gap(
@@ -92,3 +98,8 @@ cat(sprintf("\n== retirement-hazard sensitivity at n = %d ==\n", n_ref))
 print(haz[, c("label", "hazard_cv", "median", "lo", "hi", "width",
               "width_inflation_pct", "median_shift_pct")], row.names = FALSE, digits = 4)
 cat("\nCVs are declared sensitivity assumptions, NOT estimated uncertainty.\n")
+
+complete_validation_run(RUN, tables = list(
+  convergence = agg,
+  retirement_sensitivity = haz[, c("label", "hazard_cv", "median", "lo", "hi",
+                                   "width", "width_inflation_pct", "median_shift_pct")]))
