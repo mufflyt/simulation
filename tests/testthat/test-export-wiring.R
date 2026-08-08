@@ -91,6 +91,27 @@ test_that("every registered orphan declares which kind of orphan it is", {
   expect_true(all(nzchar(reg$export)))
 })
 
+test_that("the dormant list is short enough to be decided entry by entry", {
+  root <- ew_root()
+  skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
+  reg <- ew_registry(root)
+  dormant <- sort(reg$export[reg$category == "dormant"])
+
+  # 30 -> 5, and most of that was a CORRECTION: a sensitivity sweep or a summary
+  # table is orphaned by construction because the package has no reason to call
+  # what a user calls, so 23 were re-read individually and moved to `api`. A
+  # register that overstates its debt is no more useful than one that hides it.
+  #
+  # These five are real -- whole capabilities reachable from nothing -- and are
+  # pinned by NAME so the list can only shrink by a decision, never by a sweep.
+  expect_equal(dormant, c(
+    "advance_urps_agents",
+    "apply_provider_migration",
+    "apply_urps_migration",
+    "blend_placement_shares",
+    "real_access_surface"))
+})
+
 test_that("no guard is left unwired, and the category stays in the schema", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
@@ -114,15 +135,10 @@ test_that("the unwired surface does not grow", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
   o <- ew_orphans(root)
-  # A ratchet, not a target. 58 of 418 exports reach no pipeline; this fails if
-  # that gets worse, and the number is meant to be edited DOWNWARD as gates are
-  # wired and dormant capabilities are connected or dropped.
-  #
-  # It has moved 67 -> 58 by wiring all ten unwired_gate entries. What remains
-  # is `api` (a user calls it directly, so orphan status is expected) and
-  # `dormant` (implemented, connected to nothing) -- the latter is the next
-  # thing worth working, and unlike the gates it needs a judgement per entry
-  # about whether to wire or drop.
-  expect_lte(length(o$orphans), 58L)
+  # A ratchet, not a target: 56 of 418 exports reach no pipeline. It has moved
+  # 67 -> 56 by wiring every unwired_gate entry, and the remainder is now
+  # almost entirely `api` -- functions a user calls, which are orphaned by
+  # construction and are not debt.
+  expect_lte(length(o$orphans), 56L)
   expect_lte(length(o$orphans) / length(o$exports), 0.14)
 })

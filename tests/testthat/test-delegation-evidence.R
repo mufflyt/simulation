@@ -107,3 +107,59 @@ test_that("the real artifact corroborates the borrowed ordering", {
   expect_gt(attr(c1, "rank_correlation"), 0.5)
   expect_gt(max(c1$ratio, na.rm = TRUE), 2)
 })
+
+# ---- Realized-care artifacts are read through the provenance guard ----------
+#
+# THE DEFECT THIS PINS. These artifacts are WRITTEN by
+# write_artifact_with_provenance() -- the sidecars sit beside them in
+# artifacts/ -- and .load_realized_medicare() read them back with a bare
+# readRDS(). The content hash was computed, stored, and never once checked, so
+# the guard's whole purpose (catch a payload that is valid R but not the one the
+# sidecar describes) was unrealised. read_artifact_with_provenance() was
+# registered as an unwired export for exactly this reason.
+
+test_that("an artifact whose payload changed under its sidecar is refused", {
+  dir <- withr::local_tempdir()
+  good <- data.frame(provider_type = "urps", n_services = 10)
+  f <- file.path(dir, "medicare_realized_care_2013_2014.rds")
+  write_artifact_with_provenance(good, f, inputs = list(seed = 1))
+  expect_true(file.exists(paste0(f, ".provenance.json")))
+
+  # Baseline: it loads.
+  expect_equal(nrow(urpssim:::.load_realized_medicare(dir)), 1L)
+
+  # Swap the payload for something equally valid, leaving the sidecar in place.
+  # readRDS() cannot tell the difference; the hash can.
+  saveRDS(data.frame(provider_type = "urps", n_services = 999999), f)
+  expect_message(r <- urpssim:::.load_realized_medicare(dir), "provenance check")
+  # Refused, not silently substituted -- the tampered row must not corroborate
+  # anything. With no surviving artifact the loader returns NULL.
+  expect_null(r)
+})
+
+test_that("a rejected artifact is announced rather than dropped in silence", {
+  # A corroboration that quietly lost an input still returns a confident-looking
+  # number, which is the failure mode that matters more than the rejection.
+  dir <- withr::local_tempdir()
+  ok <- data.frame(provider_type = "urps", n_services = 10)
+  f1 <- file.path(dir, "medicare_realized_care_2013_2014.rds")
+  f2 <- file.path(dir, "medicare_realized_care_2015_2016.rds")
+  write_artifact_with_provenance(ok, f1, inputs = list(seed = 1))
+  saveRDS(ok, f2)   # no sidecar at all
+
+  expect_message(r <- urpssim:::.load_realized_medicare(dir),
+                 "1 of 2 realized-care artifact")
+  # The verifiable one still loads; only the unverifiable one is excluded.
+  expect_equal(nrow(r), 1L)
+})
+
+test_that("artifacts with intact provenance still load unchanged", {
+  # The guard must not become a coverage cap. If it rejected sound artifacts the
+  # corroboration would quietly weaken while looking stricter.
+  dir <- withr::local_tempdir()
+  d <- data.frame(provider_type = c("urps", "gyn"), n_services = c(10, 20))
+  f <- file.path(dir, "medicare_realized_care_2013_2014.rds")
+  write_artifact_with_provenance(d, f, inputs = list(seed = 1))
+  expect_silent(r <- urpssim:::.load_realized_medicare(dir))
+  expect_equal(nrow(r), 2L)
+})

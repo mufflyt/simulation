@@ -124,12 +124,24 @@ if (nrow(bad)) problems <- c(problems, sprintf("%d test(s) failed.", nrow(bad)))
 # source tree, not of a projection, and this script is the job that has the
 # source tree. Absent legacy sources are not a failure -- there is simply
 # nothing to disagree about.
+# legacy_collisions() reports names defined by MORE THAN ONE legacy script --
+# the condition that makes "which definition wins" depend on load order at all.
+# check_legacy_canonical() then asks whether the winner is the declared one.
+# Reporting collisions beside the ownership check is what makes an ownership
+# failure diagnosable rather than just detected.
+collisions <- tryCatch(legacy_collisions(), error = function(e) NULL)
+
 legacy <- tryCatch(check_legacy_canonical(), error = function(e) NULL)
 if (is.data.frame(legacy) && nrow(legacy) > 0) {
   cat("\n==== LEGACY CANONICAL MISMATCH ====\n")
   for (i in seq_len(nrow(legacy)))
     cat(sprintf("  %-34s declared %s, actually resolves to %s\n",
                 legacy$fn[i], legacy$declared[i], legacy$actual[i]))
+  if (is.data.frame(collisions) && nrow(collisions) > 0) {
+    cat("  -- names defined in more than one legacy script --\n")
+    for (i in seq_len(nrow(collisions)))
+      cat(sprintf("  %-34s %s\n", collisions$fn[i], collisions$files[i]))
+  }
   problems <- c(problems, sprintf(
     "%d legacy function(s) resolve to a different file from the one LEGACY_CANONICAL declares.",
     nrow(legacy)))
