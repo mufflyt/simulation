@@ -243,7 +243,11 @@ build_swan_dmdm_panel <- function(swan_wide,
     }
     pull_num <- function(nm) if (present(nm)) as.numeric(as.character(swan_wide[[nm]])) else NA_real_
     meno_code <- if (present(cols$menopause)) swan_label_to_integer(swan_wide[[cols$menopause]]) else NA_integer_
-    meno <- ifelse(meno_code %in% SWAN_MENOPAUSE_UNKNOWN_CODES, NA_integer_,
+    # A genuinely-missing STATUS (meno_code NA) must stay NA: NA %in% codes is
+    # FALSE, so without this it fell through to as.integer(FALSE) = 0 and a woman
+    # of unknown menopause status was classified premenopausal.
+    meno <- ifelse(is.na(meno_code) | meno_code %in% SWAN_MENOPAUSE_UNKNOWN_CODES,
+                   NA_integer_,
                    as.integer(meno_code %in% SWAN_POSTMENOPAUSAL_CODES))
 
     out <- tibble::tibble(

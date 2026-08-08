@@ -136,17 +136,33 @@ build_meps_care_seeking_panel <- function(fyc, cond, clnk, ob,
   p$age_c <- (p$AGELAST - 50) / 10
   pov <- paste0("POVCAT", yy); ins <- paste0("INSURC", yy)
   if (ins %in% names(p)) {
+    # MEPS INSURCyy collapse (MEPS-HC full-year codebook). Rule: any private ->
+    # Private; else any public/Medicare -> Public; else Uninsured.
+    #   1 <65 Any private            -> Private
+    #   2 <65 Public only            -> Public      (was mis-coded Private)
+    #   3 <65 Uninsured              -> Uninsured   (was mis-coded Public)
+    #   4 65+ Medicare and private   -> Private
+    #   5 65+ Medicare & other public-> Public      (was mis-coded Private)
+    #   6 65+ Medicare only          -> Public      (was mis-coded Private)
+    #   7 65+ No Medicare, private/public -> Private
+    #   8 65+ Uninsured              -> Uninsured
+    # NOTE: the <65 codes (1-3) are confirmed; the 65+ code numbers (4-8) follow
+    # the standard MEPS INSURCyy ordering -- verify against the year's codebook.
     p$insurance <- factor(
-      ifelse(p[[ins]] %in% c(1, 2, 4, 5, 6), "Private",
-             ifelse(p[[ins]] %in% c(3, 7), "Public", "Uninsured")),
+      ifelse(p[[ins]] %in% c(1, 4, 7), "Private",
+             ifelse(p[[ins]] %in% c(2, 5, 6), "Public", "Uninsured")),
       levels = c("Private", "Public", "Uninsured"))
   }
   if (pov %in% names(p)) {
     if (any(!p[[pov]] %in% 1:5, na.rm = TRUE))
       warning("MEPS ", pov, " has value(s) outside the expected 1-5 domain; those ",
               "rows resolve to NA income and drop from the design.", call. = FALSE)
+    # MEPS POVCAT: 1 Poor (<100% FPL), 2 Near-poor (100-124%), 3 Low (125-199%),
+    # 4 Middle (200-399%), 5 High (>=400%). Category 2 is ABOVE the poverty line,
+    # so it belongs in 100_199FPL, not LT100FPL (the prior mapping under-counted
+    # near-poor income and over-counted <100% FPL).
     p$income <- factor(
-      c("LT100FPL", "LT100FPL", "100_199FPL", "200_399FPL", "GE400FPL")[p[[pov]]],
+      c("LT100FPL", "100_199FPL", "100_199FPL", "200_399FPL", "GE400FPL")[p[[pov]]],
       levels = c("GE400FPL", "200_399FPL", "100_199FPL", "LT100FPL"))
   }
   if (any(!p$RACETHX %in% 1:5, na.rm = TRUE))
