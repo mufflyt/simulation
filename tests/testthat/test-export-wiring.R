@@ -97,19 +97,16 @@ test_that("the dormant list is short enough to be decided entry by entry", {
   reg <- ew_registry(root)
   dormant <- sort(reg$export[reg$category == "dormant"])
 
-  # 30 -> 5, and most of that was a CORRECTION: a sensitivity sweep or a summary
+  # 30 -> 0. Most of the fall was a CORRECTION: a sensitivity sweep or a summary
   # table is orphaned by construction because the package has no reason to call
   # what a user calls, so 23 were re-read individually and moved to `api`. A
   # register that overstates its debt is no more useful than one that hides it.
   #
-  # These five are real -- whole capabilities reachable from nothing -- and are
-  # pinned by NAME so the list can only shrink by a decision, never by a sweep.
-  expect_equal(dormant, c(
-    "advance_urps_agents",
-    "apply_provider_migration",
-    "apply_urps_migration",
-    "blend_placement_shares",
-    "real_access_surface"))
+  # The five that were genuinely dormant are ARCHIVED in inst/archive/, source
+  # and tests together, rather than deleted -- the implementation is the
+  # expensive part. They are no longer exports, so they leave this register
+  # entirely rather than sitting in it forever as permanent debt.
+  expect_equal(dormant, character(0))
 })
 
 test_that("no guard is left unwired, and the category stays in the schema", {
@@ -135,10 +132,15 @@ test_that("the unwired surface does not grow", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
   o <- ew_orphans(root)
-  # A ratchet, not a target: 56 of 418 exports reach no pipeline. It has moved
-  # 67 -> 56 by wiring every unwired_gate entry, and the remainder is now
-  # almost entirely `api` -- functions a user calls, which are orphaned by
-  # construction and are not debt.
-  expect_lte(length(o$orphans), 56L)
-  expect_lte(length(o$orphans) / length(o$exports), 0.14)
+  # A ratchet, not a target: 52 of 413 exports reach no pipeline, down from 67.
+  # Every unwired_gate entry was wired and every dormant one archived, so what
+  # remains is entirely `api` -- functions a user calls, orphaned by
+  # construction, which are not debt.
+  #
+  # It is 52 rather than 51 because archiving real_access_surface() orphaned
+  # load_tract_demand(), its only in-package caller. The gate caught that on the
+  # same run, which is the behaviour worth having: removing code moves work, it
+  # does not always remove it.
+  expect_lte(length(o$orphans), 52L)
+  expect_lte(length(o$orphans) / length(o$exports), 0.13)
 })

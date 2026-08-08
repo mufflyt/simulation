@@ -36,8 +36,7 @@ base-R engine (\code{\link[=compute_e2sfca_access]{compute_e2sfca_access()}}) co
 \seealso{
 Other spatial access data: 
 \code{\link{load_provider_isochrones}()},
-\code{\link{load_tract_demand}()},
-\code{\link{real_access_surface}()}
+\code{\link{load_tract_demand}()}
 }
 \concept{geography}
 \concept{spatial access data}

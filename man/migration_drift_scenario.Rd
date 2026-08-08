@@ -35,7 +35,6 @@ Other urps migration:
 \code{\link{URPS_MIGRATION_HAZARD}},
 \code{\link{URPS_RURAL_URBAN_DRIFT}},
 \code{\link{agent_urbanicity_summary}()},
-\code{\link{apply_urps_migration}()},
 \code{\link{classify_state_urbanicity}()},
 \code{\link{rural_urban_concentration}()},
 \code{\link{urps_migration_matrix}()}

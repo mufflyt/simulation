@@ -236,18 +236,6 @@ test_that("historical placement reproduces existing maldistribution", {
   expect_equal(h$share[h$geo == "A"], 0.8)
 })
 
-test_that("the two placement rules give different answers when demand has moved", {
-  roster <- tibble::tibble(state = c(rep("A", 90), rep("B", 10)))
-  h <- historical_placement_shares(roster, "state")
-  o <- opportunity_placement_shares(
-    tibble::tibble(geo = c("A", "B"), demand_growth_fte = c(10, 90)),
-    tibble::tibble(geo = c("A", "B"), retirements_fte = c(5, 5))
-  )
-  expect_gt(o$share[o$geo == "B"], h$share[h$geo == "B"])
-  blend <- blend_placement_shares(h, o, weight = 0.5)
-  expect_equal(sum(blend$share), 1, tolerance = 1e-12)
-  expect_gt(blend$share[blend$geo == "B"], h$share[h$geo == "B"])
-})
 
 test_that("entrant placement is deterministic when asked to be", {
   shares <- tibble::tibble(geo = c("A", "B"), share = c(0.75, 0.25))

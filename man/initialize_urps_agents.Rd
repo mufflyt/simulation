@@ -35,12 +35,8 @@ Initialize URPS Physician Agent Population
 agents <- initialize_urps_agents(roster_source = "mufflyaccess", verbose = FALSE)
 head(agents)
 # Advance one simulated year against an age x sex exit-hazard table:
-advance_urps_agents(agents, exit_hazard = build_urps_exit_hazard())
+# advance_urps_agents() is archived in inst/archive/supply.R.
 }
-}
-\seealso{
-Other fraher agent supply: 
-\code{\link{advance_urps_agents}()}
 }
 \concept{fraher agent supply}
 \concept{supply}

@@ -29,7 +29,8 @@ Named list: \code{exit_probs} (data frame), \code{source}, \code{n_events},
 \code{hazard_cv}, \code{weibull_params} (the parameters used in the fallback).
 }
 \description{
-Returns a per-age exit probability table for use in \code{\link[=advance_urps_agents]{advance_urps_agents()}}.
+Returns a per-age exit probability table. Its consumer,
+\code{advance_urps_agents()}, is archived in inst/archive/supply.R.
 The default fallback uses the Weibull survival curves from
 \code{\link[=urps_weibull_exit_probs]{urps_weibull_exit_probs()}} (derived-by-analogy from HWSM Exhibits 17–18),
 replacing the previous coarse step function.  When a cliff DuckDB is

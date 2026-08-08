@@ -18,8 +18,7 @@ Load the real tract demand denominator (female 65+, with centroids)
 \seealso{
 Other spatial access data: 
 \code{\link{build_access_membership}()},
-\code{\link{load_provider_isochrones}()},
-\code{\link{real_access_surface}()}
+\code{\link{load_provider_isochrones}()}
 }
 \concept{geography}
 \concept{spatial access data}
