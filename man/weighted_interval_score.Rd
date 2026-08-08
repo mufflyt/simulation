@@ -24,6 +24,17 @@ The proper multi-level generalization of the interval score (Bracher et al.
 scores of the central intervals implied by symmetric quantile pairs. Rewards
 both calibration and sharpness, so a wide, uninformative forecast cannot win.
 }
+\details{
+A proper scoring rule over a QUANTILE forecast (\code{quantiles} at
+\code{quantile_levels}), not a single interval. It rewards being calibrated and
+sharp at once, so a forecast cannot score well merely by being wide enough to
+always contain the observation -- which is exactly how coverage alone can be
+bought, and why coverage and WIS are reported together.
+
+Lower is better, on the scale of the quantity forecast. For an observation of
+100, a tight covering forecast scores 0.24, a very wide one that still covers
+scores 5, and one that misses entirely scores 25.2.
+}
 \examples{
 # WIS for one forecast: observation 1300 scored against a 50\% central interval
 # (lower is better). quantile_levels must include the median.

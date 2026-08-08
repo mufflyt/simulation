@@ -58,6 +58,13 @@
 #' `"kfold"`. Leakage-free by construction: each fold's fit sees only its training
 #' rows.
 #'
+#' @details
+#' Holding out random rows overstates accuracy whenever neighbouring units
+#' resemble one another, because a held-out tract's neighbours -- carrying
+#' nearly the same information -- stay in the training set. The `region` scheme
+#' holds out whole regions and is the honest test of transfer to unseen
+#' geography; `loo` and `kfold` are retained for comparison, and a large gap
+#' between them is itself the finding.
 #' @param data Data frame, one row per geography, with the observed column, the
 #'   predictor column(s), and optionally a `region` grouping and an offset column.
 #' @param observed Name of the observed count/stock column (the validation target).

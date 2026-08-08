@@ -17,6 +17,18 @@ Checks CAPABILITY first and identity second. A build missing a required
 export fails regardless of what version it claims; a build whose commit
 differs from the pin warns, because it may be newer rather than broken.
 }
+\details{
+CAPABILITY IS CHECKED BEFORE IDENTITY, and the order matters. A build that
+does not export something this package calls is refused whatever version it
+claims; a build that provides everything but sits on a different commit warns
+rather than failing, so a legitimate contract upgrade is not blocked by the
+pin.
+
+The pin exists because a version number could not express the difference that
+actually occurred: two builds both reporting 0.10.0, one with 56 exports and
+one with 98, disagreeing about whether \code{n_retired} is served as NA or as
+integer zero -- the field the back-test attrition guard reads.
+}
 \seealso{
 Other contract pin: 
 \code{\link{MUFFLYACCESS_PINNED_SHA}},

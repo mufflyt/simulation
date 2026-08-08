@@ -57,5 +57,13 @@ leave-one-region-out (\code{"region"}, the classic geographic hold-out), and ran
 \code{"kfold"}. Leakage-free by construction: each fold's fit sees only its training
 rows.
 }
+\details{
+Holding out random rows overstates accuracy whenever neighbouring units
+resemble one another, because a held-out tract's neighbours -- carrying
+nearly the same information -- stay in the training set. The \code{region} scheme
+holds out whole regions and is the honest test of transfer to unseen
+geography; \code{loo} and \code{kfold} are retained for comparison, and a large gap
+between them is itself the finding.
+}
 \concept{geographic holdout}
 \concept{validation}

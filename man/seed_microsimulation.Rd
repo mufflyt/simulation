@@ -19,6 +19,15 @@ In \code{strict} mode we always seed (default 20260801, the study reference date
 so Monte-Carlo trajectories are bit-identical across machines. In \code{relaxed}
 mode we honour an explicit seed if given but otherwise leave the RNG alone.
 }
+\details{
+In \code{strict} mode the RNG is always seeded, so Monte Carlo trajectories are
+bit-identical across machines and a reported figure can be reproduced exactly.
+In \code{relaxed} mode an explicit seed is honoured but none is imposed, which
+keeps repeated exploratory runs from looking more stable than they are.
+
+Returns the seed actually applied, so a run can record it rather than leaving
+reproducibility to a claim in a method section.
+}
 \seealso{
 Other repro provenance: 
 \code{\link{read_artifact_with_provenance}()},

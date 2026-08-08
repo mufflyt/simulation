@@ -28,6 +28,17 @@ any mismatch/missing/corrupt condition the artifact is rejected (returns NULL
 in relaxed mode, \code{stop()}s in strict mode) so the caller recomputes rather
 than trusting stale or tampered data.
 }
+\details{
+The hash is recomputed and compared BEFORE deserialising, which is the only
+ordering that catches a payload that is valid R but not the payload the
+sidecar describes. Checking after loading would already have trusted it.
+
+Rejection is not an error condition to be worked around -- it means recompute.
+In \code{relaxed} mode the function returns NULL so the caller regenerates the
+artifact; in \code{strict} it stops. \code{expected_inputs} extends the same idea
+upstream: an artifact whose recorded input fingerprint does not match the
+inputs you hold is stale, even if its own content hash is intact.
+}
 \seealso{
 Other repro provenance: 
 \code{\link{resolve_reproducibility_mode}()},

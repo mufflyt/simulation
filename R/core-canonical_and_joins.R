@@ -38,6 +38,15 @@
 #' missing files always `stop()`. A recorded SHA-256 that does not match the
 #' file's actual digest `stop()`s in strict mode and warns in relaxed mode.
 #'
+#' @details
+#' Fail-closed by design: an unknown logical name and a missing file both
+#' `stop()` unconditionally. A recorded SHA-256 that does not match the file's
+#' actual digest `stop()`s in `strict` mode and warns in `relaxed`.
+#'
+#' The indirection is the point. Code refers to inputs by logical NAME, so the
+#' path and the checksum live in one registry rather than being spelled out at
+#' each call site, and a file that changed underneath the analysis is caught at
+#' read time instead of surfacing as an unexplained shift in a result.
 #' @param name Logical name of the source (a key under `sources:` in the YAML).
 #' @param config_path Path to the canonical-sources YAML.
 #' @param mode Reproducibility mode ([resolve_reproducibility_mode()]).

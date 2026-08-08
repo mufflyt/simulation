@@ -34,6 +34,22 @@ occurred by the origin, so the interval for an early window can be informed
 by outcomes from years after it. Do not report this as predictive
 calibration.
 }
+\details{
+KEPT ONLY AS THE COMPARATOR that shows what rolling origin corrects. Never
+report it as predictive calibration.
+
+The leak is concrete: leave-one-out trains on every other window regardless
+of when its outcome occurred, so the interval for an early origin can be
+informed by outcomes from years AFTER it -- information the forecaster could
+not have had. \code{n_train_future} counts, per row, how many training windows
+were in that position, which makes the size of the advantage visible instead
+of leaving it as an argument.
+
+\code{\link[=backtest_rolling_origin]{backtest_rolling_origin()}} admits a training window only when its outcome
+was observable at the origin (\code{target_year <= origin}). Comparing the two is
+the point: any coverage LOO enjoys over rolling origin is borrowed from the
+future.
+}
 \seealso{
 Other backtest: 
 \code{\link{.series_through}()},

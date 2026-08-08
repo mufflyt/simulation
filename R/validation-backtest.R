@@ -107,6 +107,17 @@ reset_leakage_audit <- function() {
 
 #' Assert that no contract read exceeded the cutoff
 #'
+#' @details
+#' The audit is STATEFUL. `.series_through()` records the maximum year of every
+#' contract read; this checks that maximum against the declared cutoff. Call
+#' [reset_leakage_audit()] at the start of a run, or the audit carries reads
+#' from the previous one.
+#'
+#' IT FAILS WHEN NOTHING WAS AUDITED, and that is deliberate. No recorded read
+#' means either the back-test reached the contract outside `.series_through()`
+#' -- so the guard saw nothing and proves nothing -- or it never read the
+#' contract at all. Both are failures, and treating an empty audit as "clean"
+#' would make the guard silently vacuous, which is worse than absent.
 #' @param through_year The cutoff the run declared.
 #' @return (Invisibly) the audit log.
 #' @family backtest
@@ -200,6 +211,16 @@ backtest_retirement_regime <- function(series = NULL) {
 #' attrition mismatch is separated out because it does not invalidate the target
 #' choice -- it changes what the comparison means.
 #'
+#' @details
+#' Establishes what the back-test is scoring against before any arm runs:
+#' geography, board pathway, measure, and whether the observed series has
+#' attrition applied.
+#'
+#' `acknowledge_no_attrition` must be passed explicitly when the target series
+#' is a gross flow. The certification series never nets departures out, so an
+#' arm that also subtracts departures is scored against a target that does not,
+#' and the mismatch shows up as apparent model error rather than as the
+#' definition difference it actually is.
 #' @param target_year Year being scored.
 #' @param geography,board_pathway,measure Dimensions the cohort was built on.
 #' @param acknowledge_no_attrition Proceed despite the observed series applying
@@ -743,6 +764,21 @@ backtest_rolling_origin <- function(cutoffs = 2013:2020, horizon = 3L,
 #' by outcomes from years after it. Do not report this as predictive
 #' calibration.
 #'
+#' @details
+#' KEPT ONLY AS THE COMPARATOR that shows what rolling origin corrects. Never
+#' report it as predictive calibration.
+#'
+#' The leak is concrete: leave-one-out trains on every other window regardless
+#' of when its outcome occurred, so the interval for an early origin can be
+#' informed by outcomes from years AFTER it -- information the forecaster could
+#' not have had. `n_train_future` counts, per row, how many training windows
+#' were in that position, which makes the size of the advantage visible instead
+#' of leaving it as an argument.
+#'
+#' [backtest_rolling_origin()] admits a training window only when its outcome
+#' was observable at the origin (`target_year <= origin`). Comparing the two is
+#' the point: any coverage LOO enjoys over rolling origin is borrowed from the
+#' future.
 #' @inheritParams backtest_rolling_origin
 #' @return Tibble, one row per window.
 #' @family backtest

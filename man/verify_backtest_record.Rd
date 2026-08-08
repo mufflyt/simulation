@@ -24,6 +24,17 @@ List with \code{checked}, \code{current}, \code{checksum_matches}, and \code{mis
 \description{
 Verify the frozen record against the scored artifact, row by row
 }
+\details{
+The recorded back-test summary is quoted in warnings, in the documentation
+and in the manuscript. If the artifact is regenerated without updating the
+record, every one of those statements silently becomes a claim about a file
+that no longer exists -- and nothing in a normal run would notice.
+
+This recomputes the artifact's SHA-256 and compares it with
+\code{BACKTEST_RECORD_SHA256}. Do not regenerate the artifact unless
+\code{BACKTEST_RECORD_2020_2023} and its reproduction test are updated in the same
+change; updating one alone is the drift this exists to prevent.
+}
 \seealso{
 Other backtest status: 
 \code{\link{BACKTEST_RECORD_2020_2023}},

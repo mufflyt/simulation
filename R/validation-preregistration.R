@@ -68,6 +68,18 @@
 #' because a change after the freeze is exactly the contamination this guards
 #' against -- register a new protocol version instead.
 #'
+#' @details
+#' Freezes the model specification and evaluation protocol BEFORE the held-out
+#' period is scored, and records a hash of it. `frozen_at` is required and is
+#' metadata only -- it does not enter `spec_hash` -- so the record states when
+#' the freeze happened relative to the data vintage, which is the claim a reader
+#' actually needs to evaluate.
+#'
+#' Re-registering a DIFFERENT spec at the same path is an error, because
+#' changing the specification after seeing the test period is model selection on
+#' the test set no matter how it is described afterwards. Register a new
+#' protocol version at a new path instead; `force = TRUE` exists only to correct
+#' a mistake made before any data was seen.
 #' @param spec A named list fully describing the frozen model: form, fixed
 #'   hyperparameters, predictor set, and the evaluation protocol (origins,
 #'   horizon, metric). Field order does not matter; values do.

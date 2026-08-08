@@ -26,6 +26,16 @@ path string or a mapping with \code{path} and optional \code{sha256}. Unknown na
 missing files always \code{stop()}. A recorded SHA-256 that does not match the
 file's actual digest \code{stop()}s in strict mode and warns in relaxed mode.
 }
+\details{
+Fail-closed by design: an unknown logical name and a missing file both
+\code{stop()} unconditionally. A recorded SHA-256 that does not match the file's
+actual digest \code{stop()}s in \code{strict} mode and warns in \code{relaxed}.
+
+The indirection is the point. Code refers to inputs by logical NAME, so the
+path and the checksum live in one registry rather than being spelled out at
+each call site, and a file that changed underneath the analysis is caught at
+read time instead of surfacing as an unexplained shift in a result.
+}
 \seealso{
 Other canonical and joins: 
 \code{\link{safe_left_join}()}
