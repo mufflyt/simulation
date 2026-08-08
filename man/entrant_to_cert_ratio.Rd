@@ -50,6 +50,8 @@ to 1.197 across successive windows.
 Other acgme fellows: 
 \code{\link{acgme_entering_cohort}()},
 \code{\link{acgme_urps_fellows}()},
+\code{\link{assert_denominator_estimand}()},
+\code{\link{denominator_estimands}()},
 \code{\link{entrant_source_series}()}
 }
 \concept{acgme fellows}

@@ -451,3 +451,71 @@ entrant_to_cert_ratio_by_pathway <- function(through_year = NULL,
     if (is.finite(cert_lag)) sprintf(" Lag used: %d.", cert_lag) else ""),
     call. = FALSE)
 }
+
+# ---- Denominator estimands must not be interchanged ------------------------
+#
+# THE CONTRACT MAKES THIS ERROR INVISIBLE, which is why it is asserted rather
+# than trusted. `n_active` equals `n_ever_certified` in every row of
+# urps_counts_long(), so code that means one and reads the other gets the right
+# number today and a wrong one the moment retirement is ascertained. See
+# docs/DENOMINATOR_AUDIT.md: 1,306 is the 2025 roster back-projected by
+# certification year, which is neither an ever-certified stock nor an active
+# workforce stock.
+
+#' Denominator estimands this project distinguishes
+#'
+#' Three quantities that the shipped contract currently renders as one number.
+#' Naming them is what lets a caller state which it meant.
+#'
+#' @return Tibble of `estimand`, `question_it_answers`, `available`, `note`.
+#' @family acgme fellows
+#' @concept supply
+#' @export
+denominator_estimands <- function() {
+  tibble::tribble(
+    ~estimand,             ~question_it_answers,                                  ~available, ~note,
+    "ever_certified",      "how many have ever achieved URPS certification",       FALSE,
+    "Needs an ABOG/ABU registry count. The Oct-2023 statement of ~1,700 is the only external glimpse; 1,306 is NOT this.",
+    "active_workforce",    "how many are practising URPS clinically in year Y",    FALSE,
+    "Needs retirement/death/exit ascertainment. urps_retirement_status() reports 'not_ascertained'.",
+    "roster_resolvable",   "how many NPI-identified providers carry a URPS cert year <= Y", TRUE,
+    "What 1,306 is: a 2025 roster back-projected by cert year, survivor-filtered, retired/unmatched dropped, ABU counted net-new."
+  )
+}
+
+#' Refuse to treat one denominator estimand as another
+#'
+#' Fails closed when a caller asks for an estimand the contract cannot serve,
+#' and names what 1,306 actually is instead of returning it silently.
+#'
+#' @param estimand One of `denominator_estimands()$estimand`.
+#' @param value Optional value being attributed to that estimand.
+#' @return (Invisibly) `value`, when the estimand is available.
+#' @family acgme fellows
+#' @concept supply
+#' @export
+assert_denominator_estimand <- function(estimand, value = NULL) {
+  tbl <- denominator_estimands()
+  if (!estimand %in% tbl$estimand) {
+    stop("assert_denominator_estimand(): unknown estimand '", estimand,
+         "'. Known: ", paste(tbl$estimand, collapse = ", "), call. = FALSE)
+  }
+  row <- tbl[tbl$estimand == estimand, ]
+  if (!row$available) {
+    stop(sprintf(paste(
+      "assert_denominator_estimand(): '%s' is NOT available from this contract.",
+      "%s Do not substitute the roster_resolvable count (1,306) for it: they",
+      "answer different questions, and because n_active equals n_ever_certified",
+      "in every row the substitution would be invisible. See",
+      "docs/DENOMINATOR_AUDIT.md."), estimand, row$note), call. = FALSE)
+  }
+  # A denominator-derived proportion above 1 is the same impossible-ratio
+  # signature .assert_possible_conversion() exists for.
+  if (!is.null(value) && is.numeric(value) && any(value > 1 & value < 100, na.rm = TRUE)) {
+    if (all(value <= 1.5, na.rm = TRUE)) {
+      stop("assert_denominator_estimand(): a share attributed to '", estimand,
+           "' exceeds 1.0, which is impossible for a proportion.", call. = FALSE)
+    }
+  }
+  invisible(value)
+}

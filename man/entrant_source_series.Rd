@@ -23,6 +23,8 @@ off-match entry; \code{"nrmp"} counts matched positions and does not.
 Other acgme fellows: 
 \code{\link{acgme_entering_cohort}()},
 \code{\link{acgme_urps_fellows}()},
+\code{\link{assert_denominator_estimand}()},
+\code{\link{denominator_estimands}()},
 \code{\link{entrant_to_cert_ratio}()}
 }
 \concept{acgme fellows}

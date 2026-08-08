@@ -20,6 +20,8 @@ calibrated against (ABOG plus ABU) also spans both.
 \seealso{
 Other acgme fellows: 
 \code{\link{acgme_urps_fellows}()},
+\code{\link{assert_denominator_estimand}()},
+\code{\link{denominator_estimands}()},
 \code{\link{entrant_source_series}()},
 \code{\link{entrant_to_cert_ratio}()}
 }

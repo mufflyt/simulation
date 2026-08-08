@@ -24,6 +24,8 @@ ACGME URPS fellow counts by academic year and parent specialty
 \seealso{
 Other acgme fellows: 
 \code{\link{acgme_entering_cohort}()},
+\code{\link{assert_denominator_estimand}()},
+\code{\link{denominator_estimands}()},
 \code{\link{entrant_source_series}()},
 \code{\link{entrant_to_cert_ratio}()}
 }

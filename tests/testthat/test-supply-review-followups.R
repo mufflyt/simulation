@@ -427,3 +427,61 @@ test_that("the guard is wired into the functions that return conversions", {
                                      pooled = FALSE),
                "impossible")
 })
+
+# ---- Denominator estimands (docs/DENOMINATOR_AUDIT.md) ---------------------
+
+test_that("the three denominator estimands are named and their availability is honest", {
+  d <- denominator_estimands()
+  expect_setequal(d$estimand,
+                  c("ever_certified", "active_workforce", "roster_resolvable"))
+  # Only the roster count exists. Claiming either of the others would be the
+  # substitution the audit exists to prevent.
+  expect_true(d$available[d$estimand == "roster_resolvable"])
+  expect_false(d$available[d$estimand == "ever_certified"])
+  expect_false(d$available[d$estimand == "active_workforce"])
+})
+
+test_that("ever-certified and active-workforce cannot be served by the roster count", {
+  # The contract makes this error INVISIBLE: n_active equals n_ever_certified in
+  # every row, so reading the wrong one returns the right number today and a
+  # wrong one the moment retirement is ascertained.
+  expect_error(assert_denominator_estimand("ever_certified"), "NOT available")
+  expect_error(assert_denominator_estimand("active_workforce"), "NOT available")
+  expect_error(assert_denominator_estimand("ever_certified"), "1,306")
+  expect_silent(assert_denominator_estimand("roster_resolvable", 1306))
+  expect_error(assert_denominator_estimand("nonsense"), "unknown estimand")
+})
+
+test_that("a denominator-derived share above 1 is refused", {
+  expect_error(assert_denominator_estimand("roster_resolvable", 1.2),
+               "impossible for a proportion")
+  expect_silent(assert_denominator_estimand("roster_resolvable", 0.83))
+})
+
+test_that("the contract still renders ever-certified and active as one number", {
+  skip_if_not_installed("mufflyaccess")
+  # The audit's central fact, pinned so a future contract that separates them
+  # fails here loudly instead of silently changing what 1,306 means.
+  x <- as.data.frame(mufflyaccess::urps_counts_long())
+  expect_true(all(x$n_active == x$n_ever_certified, na.rm = TRUE))
+  expect_true(all(is.na(x$n_retired)))
+  expect_identical(mufflyaccess::urps_retirement_status(), "not_ascertained")
+
+  # And 1,306 is the 2025 roster back-projected: roster minus the 33 whose cert
+  # year postdates 2023. If that identity ever breaks, the target changed meaning.
+  n <- x[x$geography == "national" & x$board_pathway == "ABOG_PLUS_ABU", ]
+  roster <- n$n_active[n$measure == "roster_snapshot"]
+  target <- n$n_active[n$measure == "board_certified_active" & n$year == 2023]
+  expect_equal(target, 1306L)
+  expect_equal(roster - target, 33L)
+})
+
+test_that("the back-test target is unchanged by this audit", {
+  skip_if_not_installed("mufflyaccess")
+  # The audit explains 1,306; it does not move it, and does not recalibrate any
+  # entrant-to-certification conversion.
+  expect_equal(mufflyaccess::urps_count(2023, include_urology = TRUE), 1306L)
+  r <- entrant_to_cert_ratio_by_pathway()
+  expect_equal(r$ratio[r$parent == "obgyn"], 0.843, tolerance = 0.01)
+  expect_equal(r$ratio[r$parent == "urology"], 0.782, tolerance = 0.01)
+})
