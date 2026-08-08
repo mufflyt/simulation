@@ -97,17 +97,18 @@ test_that("the unwired gates are named individually, not counted", {
   # invokes -- a guard nobody calls does not guard anything -- and the point of
   # naming them is that the list should shrink as each is wired. A count would
   # let one be silently swapped for another.
+  # Was ten. assert_publishable_demand_coefficients(),
+  # assert_publishable_supply_transitions() and unresolved_calibration_items()
+  # are now called from validation_report(), which the orchestrator runs on
+  # every projection -- so they are guards that actually execute.
   expect_equal(gates, c(
     "assert_backtest_record_current",
     "assert_external_anchor",
     "assert_mufflyaccess_contract",
-    "assert_publishable_demand_coefficients",
-    "assert_publishable_supply_transitions",
     "backtest_attrition_requirement",
     "check_external_data",
     "check_legacy_canonical",
-    "fte_curve_status",
-    "unresolved_calibration_items"))
+    "fte_curve_status"))
 })
 
 test_that("the unwired surface does not grow", {

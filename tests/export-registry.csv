@@ -5,7 +5,9 @@
 # tested, documented -- and reachable from no pipeline. hours_coef,
 # assert_demand_calibrated(), opportunity_placement_shares(), param_spec in
 # run_backtest() and apply_hrsa_surgical_fte() were each found that way, one at
-# a time, by accident. Sixty-seven exports are in that position today.
+# a time, by accident. Sixty-four exports are in that position today. It was sixty-seven: assert_publishable_demand_coefficients(),
+# assert_publishable_supply_transitions() and unresolved_calibration_items()
+# were wired into validation_report(), which is what this register is for.
 #
 # Being on this list is not automatically wrong. An analysis helper a USER calls
 # is orphaned by construction -- the package has no reason to call it. What is
@@ -82,10 +84,7 @@
 "assert_backtest_record_current","unwired_gate"
 "assert_external_anchor","unwired_gate"
 "assert_mufflyaccess_contract","unwired_gate"
-"assert_publishable_demand_coefficients","unwired_gate"
-"assert_publishable_supply_transitions","unwired_gate"
 "backtest_attrition_requirement","unwired_gate"
 "check_external_data","unwired_gate"
 "check_legacy_canonical","unwired_gate"
 "fte_curve_status","unwired_gate"
-"unresolved_calibration_items","unwired_gate"
