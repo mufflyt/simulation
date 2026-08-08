@@ -4,11 +4,20 @@
 \alias{fte_curve_status}
 \title{Status of the hours-to-FTE curve}
 \usage{
-fte_curve_status()
+fte_curve_status(agents = NULL)
+}
+\arguments{
+\item{agents}{Optional cohort with \code{age} and \code{sex}. When supplied, the
+leverage is MEASURED for this cohort via \code{\link[=fte_curve_gradient_leverage]{fte_curve_gradient_leverage()}}
+and returned in \code{leverage_measured}, rather than being read off the prose
+below. Supply it whenever the number matters: the prose figure went stale
+once already, and a hardcoded magnitude for an input that does not cancel
+is the specific failure this argument exists to remove.}
 }
 \value{
 List with \code{resolved}, the current source, why it is unresolved, its
-leverage, and the variables that would resolve it.
+leverage, and the variables that would resolve it. Plus \code{leverage_measured}
+when \code{agents} is supplied.
 }
 \description{
 Status of the hours-to-FTE curve

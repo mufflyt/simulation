@@ -300,3 +300,21 @@ test_that("the published gradient's leverage is what the status object claims", 
   expect_match(fte_curve_status()$leverage, "20.0%", fixed = TRUE)
   expect_match(fte_curve_status()$leverage, "fte_curve_gradient_leverage", fixed = TRUE)
 })
+
+test_that("fte_curve_status measures its leverage when given a cohort", {
+  # The prose figure is documentation; this is the number. Supplying a cohort
+  # is what turns the status object from an assertion into a measurement, and
+  # it is also what makes fte_curve_gradient_leverage() genuinely reachable
+  # rather than named in a string literal -- the export-wiring gate reads a
+  # mention as a call, so a prose-only reference would have registered as wired
+  # while nothing invoked it.
+  expect_null(fte_curve_status()$leverage_measured)
+
+  agents <- data.frame(age = seq(34, 70, by = 4), sex = rep(c("female", "male"), 5))
+  m <- fte_curve_status(agents)$leverage_measured
+  expect_s3_class(m, "data.frame")
+  expect_setequal(m$gradient_scale, c(0, 1))
+  # Flat gradient does not drift; the published one does.
+  expect_equal(m$drift_pct[m$gradient_scale == 0], 0, tolerance = 1e-9)
+  expect_lt(m$drift_pct[m$gradient_scale == 1], -5)
+})

@@ -86,12 +86,19 @@ urps_practice_survey_requirements <- function(resolves = NULL) {
 
 #' Status of the hours-to-FTE curve
 #'
+#' @param agents Optional cohort with `age` and `sex`. When supplied, the
+#'   leverage is MEASURED for this cohort via [fte_curve_gradient_leverage()]
+#'   and returned in `leverage_measured`, rather than being read off the prose
+#'   below. Supply it whenever the number matters: the prose figure went stale
+#'   once already, and a hardcoded magnitude for an input that does not cancel
+#'   is the specific failure this argument exists to remove.
 #' @return List with `resolved`, the current source, why it is unresolved, its
-#'   leverage, and the variables that would resolve it.
+#'   leverage, and the variables that would resolve it. Plus `leverage_measured`
+#'   when `agents` is supplied.
 #' @family practice survey
 #' @concept data
 #' @export
-fte_curve_status <- function() {
+fte_curve_status <- function(agents = NULL) {
   list(
     resolved = FALSE,
     current_source = paste(
@@ -116,7 +123,11 @@ fte_curve_status <- function() {
       "R/calibration-hrsa_fte.R carries TODO-FTE-001 and looks like the",
       "target. It is dormant -- apply_hrsa_surgical_fte() is called by nothing",
       "but its own tests -- so replacing it would change no output."),
-    resolved_by = urps_practice_survey_requirements("fte_curve")$variable
+    resolved_by = urps_practice_survey_requirements("fte_curve")$variable,
+    leverage_measured = if (is.null(agents)) NULL else {
+      fte_curve_gradient_leverage(agents, horizon_years = 25L,
+                                  gradient_scale = c(0, 1))
+    }
   )
 }
 
