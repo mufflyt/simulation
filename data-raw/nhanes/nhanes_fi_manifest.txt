@@ -1,0 +1,6 @@
+NHANES 2005-2010 FI endpoints (women, survey-weighted)
+built: 2026-08-08 13:53:44.869365
+n women 20+: 8829
+FI_wu overall  = 0.095 (0.087-0.103)  [Wu 2014 ~0.09 check]
+FI_nhs overall = 0.080 (0.072-0.087)  [definition-matched]
+endpoints: FI_wu (mucus/liquid/solid), FI_nhs (liquid/solid); >=monthly; source CDC NHANES via nhanesA (no DUA)
