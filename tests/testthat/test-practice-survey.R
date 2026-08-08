@@ -126,11 +126,13 @@ test_that("geographic access is registered as absent, not as miscalibrated", {
   expect_equal(unname(st["demand_machinery"]), "WIRED")
   # What is actually missing.
   # PRESENT: five merged geocoding runs put both pathways near 99% and clear the
-  # 95% floor. The validation gate is now WIRED (validation_report reports the
-  # geographic status); drive-time isochrones are the remaining hard blocker.
+  # 95% floor. The validation gate AND the supply machinery are now WIRED
+  # (validation_report reports the status; run_geographic_access() is the
+  # fail-closed entry point run_workforce_microsimulation() calls). Drive-time
+  # isochrones are the ONE remaining hard blocker.
   expect_equal(unname(st["provider_coordinates"]), "PRESENT")
   expect_equal(unname(st["drive_time_isochrones"]), "MISSING")
-  expect_equal(unname(st["supply_machinery"]), "DORMANT")
+  expect_equal(unname(st["supply_machinery"]), "WIRED")
   expect_equal(unname(st["validation_gate"]), "WIRED")
 })
 
@@ -146,11 +148,12 @@ test_that("the ordering trap is recorded, because the wrong step looks easiest",
   expect_match(g$ordering_trap, "first")
   expect_match(g$ordering_trap, "state-level geometry")
   expect_true(any(grepl("isochrones", g$resolved_by)))
-  # The validation_report check is DONE (validation_gate is WIRED), so it is no
-  # longer listed as remaining work -- only the isochrone import and the
-  # orchestrator wiring are.
+  # Both the validation_report check and the orchestrator wiring are DONE
+  # (validation_gate and supply_machinery are WIRED), so neither is listed as
+  # remaining work. The isochrone import is the ONE item left.
   expect_false(any(grepl("validation_report", g$resolved_by)))
-  expect_true(any(grepl("orchestrator", g$resolved_by)))
+  expect_false(any(grepl("orchestrator", g$resolved_by)))
+  expect_length(g$resolved_by, 1L)
 })
 
 test_that("geographic access is NOT listed as survey-resolvable", {
@@ -176,10 +179,14 @@ test_that("the register distinguishes 'cancels out' from 'not in the estimand'",
   expect_true(is.na(u$cancels_out[u$item == "geographic_access"]))
 })
 
-test_that("R/geography-spatial_access_e2sfca really is dormant, so the trap warning stays true", {
-  # If a future change calls the access layer from R/ or scripts/, this fails
-  # and geographic_access_status() must be re-checked -- especially whether
-  # provider coordinates arrived first.
+test_that("the access layer is reached only through the fail-closed entry point", {
+  # The layer is no longer dormant: run_geographic_access() calls compute_access()
+  # (in the same file) and the orchestrator calls run_geographic_access(). But
+  # that wrapper is where the fail-closed guard lives -- no membership artifact,
+  # no computation, never fallback geometry. This asserts nothing calls
+  # compute_access()/match_points_to_isochrones() DIRECTLY from R/ or scripts/,
+  # i.e. bypasses the guard. A new direct call fails here and must instead route
+  # through run_geographic_access() (or re-check the ordering trap).
   root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
                  c(".", "..", file.path("..", "..")))
   skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")

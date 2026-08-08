@@ -633,3 +633,109 @@ access_weight_sensitivity <- function(membership, supply, demand,
   })
   dplyr::bind_rows(rows)
 }
+
+# ---- Orchestrator entry point (fail-closed) --------------------------------
+
+#' Run the geographic access layer end-to-end, or report why it cannot
+#'
+#' @details
+#' The single entry point that turns the imported isochrone `membership` table,
+#' per-provider supply, and per-tract demand into an E2SFCA access surface and
+#' its national roll-up. This is the wiring `geographic_access_status()` names as
+#' "called from the orchestrator, not merely loaded": [run_workforce_microsimulation()]
+#' calls it and attaches the result.
+#'
+#' It FAILS CLOSED. If the membership artifact, the per-provider supply, or the
+#' tract demand is missing, it returns `resolved = FALSE` with the reason and
+#' computes nothing. It never falls back to state-level geometry -- the ordering
+#' trap that produces a plausible-but-meaningless access ratio, which
+#' `geographic_access_status()` and [validation_report()]'s geographic gate exist
+#' to prevent. A run without the imported isochrones therefore *reports the gap*;
+#' it does not fabricate a number. The membership table is produced by
+#' `scripts/data_acquisition/12_build_provider_isochrone_membership.R`.
+#'
+#' @param membership A long `(demand_id, provider_id, band)` table, or a path to
+#'   the `.rds` the import script writes.
+#' @param provider_supply Tibble `(provider_id, supply)` keyed to match
+#'   `membership$provider_id`. `NULL` is unresolved: the national aggregate has
+#'   no per-provider identity to place.
+#' @param tract_demand Tibble `(demand_id, population)`, or a path to the tract
+#'   centroid CSV (`GEOID` + `fem65`).
+#' @param method "E2SFCA" (default) or "M2SFCA".
+#' @param mode Reproducibility mode (reserved; the layer itself is deterministic).
+#' @return A list. Unresolved: `resolved = FALSE`, `reason`, and `NULL` surface.
+#'   Resolved: `resolved = TRUE`, `access` (per-tract), `national` (roll-up),
+#'   `method`, `n_providers`, `n_tracts`, `audit`, `membership_provenance`.
+#' @family spatial access e2sfca
+#' @concept geography
+#' @export
+run_geographic_access <- function(membership = "data-raw/spatial/provider_isochrone_membership.rds",
+                                  provider_supply = NULL,
+                                  tract_demand = "data-raw/spatial/tract_fem65_centroids.csv",
+                                  method = c("E2SFCA", "M2SFCA"),
+                                  mode = resolve_reproducibility_mode()) {
+  method <- match.arg(method)
+  unresolved <- function(reason)
+    list(resolved = FALSE, reason = reason, access = NULL, national = NULL,
+         method = method)
+
+  # --- membership: the imported isochrones. No artifact, no run. ---
+  prov_path <- NA_character_
+  if (is.character(membership)) {
+    if (!file.exists(membership))
+      return(unresolved(sprintf(paste(
+        "membership artifact absent (%s); run",
+        "scripts/data_acquisition/12_build_provider_isochrone_membership.R where",
+        "the drive-time isochrones live, then commit the output."), membership)))
+    prov_path <- paste0(membership, ".provenance.json")
+    membership <- readRDS(membership)
+  }
+  if (!is.data.frame(membership) ||
+      !all(c("demand_id", "provider_id", "band") %in% names(membership)))
+    return(unresolved("membership must carry columns demand_id, provider_id, band."))
+
+  # --- per-provider supply: needs an identity that matches membership. ---
+  if (is.null(provider_supply))
+    return(unresolved(paste(
+      "no per-provider supply; the national aggregate cannot be placed",
+      "geographically. Supply provider_supply keyed to membership$provider_id",
+      "(e.g. from a coordinate-bearing roster).")))
+  if (!is.data.frame(provider_supply) ||
+      !all(c("provider_id", "supply") %in% names(provider_supply)))
+    return(unresolved("provider_supply must carry columns provider_id, supply."))
+
+  # --- tract demand: the denominator. ---
+  if (is.character(tract_demand)) {
+    if (!file.exists(tract_demand))
+      return(unresolved(sprintf("tract demand absent (%s).", tract_demand)))
+    d <- utils::read.csv(tract_demand, stringsAsFactors = FALSE)
+    id  <- if ("demand_id" %in% names(d)) "demand_id" else if ("GEOID" %in% names(d)) "GEOID" else NA
+    pop <- if ("population" %in% names(d)) "population" else if ("fem65" %in% names(d)) "fem65" else NA
+    if (anyNA(c(id, pop)))
+      return(unresolved("tract demand needs demand_id/GEOID + population/fem65."))
+    tract_demand <- tibble::tibble(demand_id = as.character(d[[id]]),
+                                   population = as.numeric(d[[pop]]))
+  }
+  if (!is.data.frame(tract_demand) ||
+      !all(c("demand_id", "population") %in% names(tract_demand)))
+    return(unresolved("tract_demand must carry columns demand_id, population."))
+
+  membership <- dplyr::mutate(membership, provider_id = as.character(.data$provider_id),
+                              demand_id = as.character(.data$demand_id))
+  provider_supply <- dplyr::mutate(provider_supply,
+                                   provider_id = as.character(.data$provider_id))
+
+  res  <- compute_access(membership, provider_supply, tract_demand, method = method)
+  natl <- summarize_access(res$access)
+
+  list(
+    resolved    = TRUE,
+    access      = res$access,
+    national    = natl,
+    method      = method,
+    n_providers = length(unique(membership$provider_id)),
+    n_tracts    = length(unique(res$access$demand_id)),
+    audit       = res$audit,
+    membership_provenance = if (file.exists(prov_path)) prov_path else NA_character_
+  )
+}

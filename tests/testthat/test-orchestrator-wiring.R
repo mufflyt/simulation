@@ -185,3 +185,41 @@ test_that("a roster with state does not require placement shares", {
   base <- sim$agents[sim$agents$origin_cohort == "roster", ]
   expect_true(all(base$state %in% c("CO", "TX", "NY")))
 })
+
+test_that("the geographic access layer is wired into the run, fail-closed", {
+  r <- suppressMessages(ow_run())
+  # The orchestrator attaches $geographic_access. With no imported membership
+  # artifact (data-raw/ is absent under R CMD check) and a synthetic cohort that
+  # carries no provider identity, it resolves to FALSE with a reason -- wired,
+  # but never computed on fallback geometry (the ordering trap).
+  expect_false(is.null(r$geographic_access))
+  expect_false(isTRUE(r$geographic_access$resolved))
+  expect_true(nzchar(r$geographic_access$reason))
+})
+
+test_that("run_geographic_access() fails closed on each missing input, resolves on none", {
+  mem <- tibble::tibble(demand_id = c("t1", "t2", "t3"),
+                        provider_id = c("A", "A", "B"), band = c(30L, 60L, 30L))
+  dem <- tibble::tibble(demand_id = c("t1", "t2", "t3"), population = c(100, 200, 50))
+  sup <- tibble::tibble(provider_id = c("A", "B"), supply = c(2, 1))
+
+  # a membership artifact that does not exist -> unresolved, with the reason.
+  miss <- run_geographic_access(membership = tempfile(fileext = ".rds"),
+                                provider_supply = sup, tract_demand = dem)
+  expect_false(miss$resolved)
+  expect_match(miss$reason, "membership artifact absent")
+
+  # no per-provider supply -> unresolved (the national aggregate can't be placed).
+  nosup <- run_geographic_access(membership = mem, provider_supply = NULL,
+                                 tract_demand = dem)
+  expect_false(nosup$resolved)
+  expect_match(nosup$reason, "per-provider supply")
+
+  # all three real inputs present -> a resolved surface + national roll-up.
+  ok <- run_geographic_access(membership = mem, provider_supply = sup, tract_demand = dem)
+  expect_true(ok$resolved)
+  expect_s3_class(ok$access, "data.frame")
+  expect_equal(ok$n_providers, 2L)
+  expect_equal(ok$n_tracts, 3L)
+  expect_false(is.null(ok$national$mean_access))
+})
