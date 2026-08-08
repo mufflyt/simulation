@@ -247,8 +247,19 @@ backtest_status <- function(record = BACKTEST_RECORD_2020_2023,
 interval_label <- function(status = backtest_status(), ci = 0.95) {
   pct <- format(round(100 * ci))
   if (isTRUE(status$validated)) {
-    return(sprintf("%s%% forecast interval (back-test coverage %.0f%% of %d arms)",
-                   pct, 100 * status$coverage_95, status$n_arms))
+    # Even when validated, only say "coverage" if coverage is ESTIMABLE. The
+    # 2020->2023 arms all score the same single target, so k/n is a containment
+    # count, not a rate -- see R/validation-coverage_language.R. Emitting the
+    # rate here would smuggle the false claim in through the one function whose
+    # job is to keep language honest.
+    if (isTRUE(status$coverage_is_estimable)) {
+      return(sprintf("%s%% forecast interval (back-test coverage %.0f%% of %d arms)",
+                     pct, 100 * status$coverage_95, status$n_arms))
+    }
+    return(sprintf(paste("%s%% forecast interval (%d of %d model configurations",
+                         "contained the single observed target; coverage not",
+                         "estimable from one target)"),
+                   pct, round(status$coverage_95 * status$n_arms), status$n_arms))
   }
   # Coverage can be NaN when every arm's flag is NA -- an unscorable back-test.
   # sprintf("%d", NaN) is an ERROR, not a fallback, so this crashed rather than
