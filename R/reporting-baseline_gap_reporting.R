@@ -140,6 +140,14 @@ assert_external_anchor <- function(gap, mode = resolve_reproducibility_mode()) {
 #' conclusion flips, which is the number a reader needs in order to judge how
 #' much the anchor's provenance matters.
 #'
+#' THIS IS A MAIN RESULT, NOT A SUPPLEMENTARY CHECK. The anchor is the only
+#' input that can change the SIGN of the projected 2050 balance -- the
+#' delegation matrix and the demand calibration cancel out of the ratio. A
+#' projection reported without this table has concealed its dominant
+#' uncertainty. The default multipliers span 0.8x to 2x for that reason: the
+#' reference calibration is an analogy (see [REFERENCE_ADEQUACY_CALIBRATION]),
+#' so multipliers well beyond the published analogue spread are in play.
+#'
 #' @param gap A [baseline_gap()] object supplying the anchor.
 #' @param supply_at_target Projected supply FTE at the horizon.
 #' @param demand_growth Ratio of target-year to base-year demand.
@@ -150,7 +158,7 @@ assert_external_anchor <- function(gap, mode = resolve_reproducibility_mode()) {
 #' @concept reporting
 #' @export
 baseline_anchor_sensitivity <- function(gap, supply_at_target, demand_growth,
-                                        anchor_multipliers = c(0.8, 0.9, 1, 1.1, 1.25, 1.5)) {
+                                        anchor_multipliers = c(0.8, 0.9, 1, 1.1, 1.25, 1.5, 2)) {
   stopifnot(inherits(gap, "urps_baseline_gap"),
             is.numeric(supply_at_target), is.numeric(demand_growth),
             demand_growth > 0)
