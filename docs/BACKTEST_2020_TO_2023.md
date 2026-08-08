@@ -1,8 +1,33 @@
 # Historical back-test: fit through 2020, project 2021–2023
 
-**Result: the back-test failed in all eight arms.** Every arm under-predicts the
-2023 count, and the observed value falls outside the 95% prediction interval
-everywhere. No parameter was re-tuned after the error was examined.
+**Result: 2 of 10 model configurations produced an interval containing the
+observed 2023 count.** Every arm under-predicts it, and the eight that miss do so
+in the same direction. No parameter was re-tuned after the error was examined.
+
+**This is a containment count, not a coverage rate, and the distinction is not
+pedantic.** All ten arms are scored against the SAME single target: the 2023
+value of 1,306. They are ten alternative model specifications, not ten
+independent forecast occasions. Coverage is a repeated-sampling property — the
+share of independent occasions on which an interval contains the realised value —
+and it is not estimable from one realised value. Writing "20% coverage" would
+invite exactly the wrong reading.
+
+Restricting to the five definition-matched arms and reporting 2/5 does not fix
+it. The denominator is not the problem; there is still one realised target.
+
+What a single target CAN support: the point error, the direction of the miss,
+and the interval score, which evaluates width and miss jointly and is computable
+on one observation. What it cannot support is interval calibration. That is
+precisely why the rolling-origin validation exists — it supplies the repeated
+out-of-sample targets this design cannot.
+
+`backtest_status()` carries this as `coverage_is_estimable = FALSE`, and
+`assert_no_coverage_rate_claim()` refuses coverage-rate wording downstream
+(`R/validation-coverage_language.R`).
+
+An earlier version of this document read "failed in all eight arms". That
+predated the paired `[no-attrition]` arms, which brought the design to ten and
+of which two contain the observation.
 
 Run: 1,000 Monte Carlo iterations per arm, seed 20260802, using the same engine
 as the main projections.
@@ -125,7 +150,7 @@ removed from one side of the comparison.
 Certification more than doubled in the validation window. The 2020 value of 10
 is a COVID-year collapse that sits inside the fitting window and drags the
 estimate down; 2021's 81 is partly that backlog clearing. **No model fitted only
-on 2018–2020 could have predicted this**, and none of the eight arms does.
+on 2018–2020 could have predicted this**, and none of the ten arms does.
 
 This is a real limitation of short-window extrapolation for a young subspecialty
 whose certification pipeline is still not in steady state — not a bug.
