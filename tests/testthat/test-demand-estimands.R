@@ -97,3 +97,77 @@ test_that("the table reports the repo's ACTUAL current position", {
   expect_true(tab2$reportable[tab2$estimand == "realized_care"])
   expect_false(tab2$reportable[tab2$estimand == "adequate_need"])
 })
+
+# ---- no dimension inherits credibility from another ------------------------
+#
+# THE RULE: evidence about one dimension must never raise the standing of a
+# different one. Two specific failures it forbids:
+#
+#   realized_care = calibrated   must never promote   baseline_adequacy
+#   strong access_barriers       must never convert a DIRECTIONAL adequacy
+#                                concern into an identified MAGNITUDE
+#
+# This is the whole reason the dimensions are separate. If they could borrow
+# from each other, splitting them would be decoration: one well-anchored
+# utilization dataset would quietly license every downstream claim, which is
+# precisely the "assume the base year is in equilibrium" move the Dall lineage
+# moved away from.
+
+test_that("raising one dimension never changes another's recorded status", {
+  # Property test over every ordered pair: perturb one dimension, confirm no
+  # other dimension's status moves. Independence proven, not asserted.
+  base <- setNames(rep("placeholder_uncalibrated", length(DEMAND_CALIBRATION_DIMENSIONS)),
+                   DEMAND_CALIBRATION_DIMENSIONS)
+  for (a in DEMAND_CALIBRATION_DIMENSIONS) {
+    bumped <- base
+    bumped[[a]] <- "calibrated"
+    for (e in names(DEMAND_ESTIMANDS)) {
+      s0 <- demand_estimand_status(base, e)$dimension_status
+      s1 <- demand_estimand_status(bumped, e)$dimension_status
+      others <- setdiff(names(s1), a)
+      expect_identical(s1[others], s0[others],
+                       info = paste("bumping", a, "moved another dimension in", e))
+    }
+  }
+})
+
+test_that("a calibrated realized_care does not release adequate_need", {
+  # The headline case. Perfect utilization evidence, adequacy still an analogy.
+  st <- c(disease_burden = "calibrated", care_seeking = "calibrated",
+          access_barriers = "calibrated", baseline_adequacy = "derived_by_analogy")
+  expect_true(demand_estimand_status(st, "realized_care")$reportable)
+  expect_true(demand_estimand_status(st, "reduced_barrier")$reportable)
+  expect_false(demand_estimand_status(st, "adequate_need")$reportable)
+  expect_equal(demand_estimand_status(st, "adequate_need")$weakest_dimension,
+               "baseline_adequacy")
+})
+
+test_that("only baseline_adequacy can release adequate_need", {
+  # Every other dimension maxed; adequate_need still blocked. Then raise
+  # adequacy alone and it releases. No substitute exists for that evidence.
+  st <- setNames(rep("calibrated", length(DEMAND_CALIBRATION_DIMENSIONS)),
+                 DEMAND_CALIBRATION_DIMENSIONS)
+  st[["baseline_adequacy"]] <- "derived_by_analogy"
+  expect_false(demand_estimand_status(st, "adequate_need")$reportable)
+
+  st[["baseline_adequacy"]] <- "calibrated"
+  expect_true(demand_estimand_status(st, "adequate_need")$reportable)
+})
+
+test_that("strong access evidence cannot turn direction into magnitude", {
+  # access_barriers = calibrated is exactly the state the mystery-caller work
+  # aims at. It must still leave the adequacy interpretation directional: the
+  # vocabulary offers no term asserting a level, whatever the access evidence.
+  st <- setNames(rep("calibrated", length(DEMAND_CALIBRATION_DIMENSIONS)),
+                 DEMAND_CALIBRATION_DIMENSIONS)
+  st[["baseline_adequacy"]] <- "derived_by_analogy"
+  expect_false(demand_estimand_status(st, "adequate_need")$reportable)
+
+  # And the evidence layer still refuses to name a magnitude.
+  expect_error(
+    adequacy_evidence_table(
+      evidence = "Mystery-caller access", model_implication = "~5% shortfall",
+      observed = "32% obtained an appointment",
+      interpretation = "adequacy is 1.5x", citation = "audit 2026"),
+    "controlled vocabulary")
+})
