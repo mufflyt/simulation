@@ -120,7 +120,7 @@ build_meps_care_seeking_panel <- function(fyc, cond, clnk, ob,
 
   p <- fyc[fyc$SEX == 2 & fyc$AGELAST >= 18, , drop = FALSE]
   keep <- intersect(c("DUPERSID", "AGELAST", "RACETHX", paste0("POVCAT", yy),
-                      paste0("INSURC", yy), wt, "VARPSU", "VARSTR"), names(p))
+                      paste0("INSCOV", yy), wt, "VARPSU", "VARSTR"), names(p))
   p <- p[, keep, drop = FALSE]
   p <- merge(p, per_visits, by = "DUPERSID", all.x = TRUE)
   if (!is.null(per_spend)) p <- merge(p, per_spend, by = "DUPERSID", all.x = TRUE)
@@ -134,23 +134,18 @@ build_meps_care_seeking_panel <- function(fyc, cond, clnk, ob,
 
   p$weight <- p[[wt]]
   p$age_c <- (p$AGELAST - 50) / 10
-  pov <- paste0("POVCAT", yy); ins <- paste0("INSURC", yy)
+  pov <- paste0("POVCAT", yy); ins <- paste0("INSCOV", yy)
   if (ins %in% names(p)) {
-    # MEPS INSURCyy collapse (MEPS-HC full-year codebook). Rule: any private ->
-    # Private; else any public/Medicare -> Public; else Uninsured.
-    #   1 <65 Any private            -> Private
-    #   2 <65 Public only            -> Public      (was mis-coded Private)
-    #   3 <65 Uninsured              -> Uninsured   (was mis-coded Public)
-    #   4 65+ Medicare and private   -> Private
-    #   5 65+ Medicare & other public-> Public      (was mis-coded Private)
-    #   6 65+ Medicare only          -> Public      (was mis-coded Private)
-    #   7 65+ No Medicare, private/public -> Private
-    #   8 65+ Uninsured              -> Uninsured
-    # NOTE: the <65 codes (1-3) are confirmed; the 65+ code numbers (4-8) follow
-    # the standard MEPS INSURCyy ordering -- verify against the year's codebook.
+    # MEPS INSCOVyy: full-year coverage in 3 mutually-exclusive categories
+    # (1 = any private, 2 = public only, 3 = uninsured), matching the repo's own
+    # acquisition recode in scripts/data_acquisition/05_download_meps_2022.R.
+    # Chosen over the 8-category, age-split INSURCyy so the private/public/
+    # uninsured collapse is fully codebook-verifiable, with no 65+ code ambiguity.
+    if (any(!p[[ins]] %in% 1:3, na.rm = TRUE))
+      warning("MEPS ", ins, " has value(s) outside 1-3 (e.g. -7/-8/-9 DK/refused); ",
+              "those rows resolve to NA insurance.", call. = FALSE)
     p$insurance <- factor(
-      ifelse(p[[ins]] %in% c(1, 4, 7), "Private",
-             ifelse(p[[ins]] %in% c(2, 5, 6), "Public", "Uninsured")),
+      c("Private", "Public", "Uninsured")[match(p[[ins]], 1:3)],
       levels = c("Private", "Public", "Uninsured"))
   }
   if (pov %in% names(p)) {
