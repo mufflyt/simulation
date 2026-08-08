@@ -336,11 +336,19 @@ test_that("the validation report fails closed on internal checks", {
 test_that("the report records the validation types that cannot be automated", {
   rep <- validation_report(tibble::tibble(year = 2025, effective_fte_median = 1))
   expect_setequal(unique(rep$type), c("internal", "conceptual", "external", "data"))
-  # The placeholders for manual review stay NA. Two external checks ARE decidable
-  # from the run and so carry a real TRUE/FALSE, not NA: base_year_gap_measured
-  # (a property of the gap object) and geographic_access_validated (a property of
-  # geographic_access_status()).
-  decidable <- c("base_year_gap_measured", "geographic_access_validated")
+  # The placeholders for manual review stay NA. The external checks that ARE
+  # decidable from the run carry a real TRUE/FALSE instead. The distinction is
+  # the point of the type field: "external" marks a question the code cannot
+  # answer by arithmetic, but some of those are still answerable by inspecting
+  # the inputs the run was given, and those must not masquerade as unreviewed.
+  #
+  # The publishability checks are external rather than internal on purpose:
+  # assert_validation_passed() stops in strict mode on a failed INTERNAL check,
+  # and these ask whether a fielded survey or an external anchor exists yet --
+  # which no code change can produce. See test-orchestrator-wiring.R.
+  decidable <- c("base_year_gap_measured", "geographic_access_validated",
+                 "demand_coefficients_publishable", "supply_transitions_publishable",
+                 "base_year_gap_externally_anchored", "calibration_items_resolved")
   manual <- rep$type %in% c("conceptual", "external", "data") &
     !rep$check %in% decidable
   expect_true(all(is.na(rep$passed[manual])))

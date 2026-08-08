@@ -401,6 +401,63 @@ validation_report <- function(supply, required = NULL, gap = NULL,
         "geographic access layer wired and validated against provider coordinates + isochrones"
       else gas$why_unresolved)
 
+  # ---- Publishability of the inputs themselves -----------------------------
+  #
+  # THE DEFECT THIS CLOSES. These four were defined, tested, documented -- and
+  # called by nothing, which is this repository's most persistent failure mode
+  # and the reason tests/export-registry.csv exists. A guard nobody calls does
+  # not guard anything, and it is indistinguishable from a guard that passes.
+  #
+  # They are recorded here rather than asserted. `mode = "relaxed"` is passed
+  # deliberately: validation_report() REPORTS, and turning it into a gate that
+  # halts a run would change the behaviour of every existing caller. A run that
+  # must not proceed on analogy-derived inputs gets that from
+  # assert_validation_report() / strict mode, which reads these rows.
+  # TYPED "external", NOT "internal", and the distinction is load-bearing.
+  # assert_validation_passed() STOPS in strict mode on any failed internal
+  # check. These four ask whether the evidence behind an input exists yet --
+  # a fielded URPS practice survey, an external base-year anchor -- which no
+  # code change can satisfy. Typing them internal would make strict mode
+  # unusable for the entire package on conditions the code cannot fix, so they
+  # follow the convention base_year_gap_measured and geographic_access_validated
+  # already set: evidence questions are external and are REPORTED.
+  relaxed_check <- function(f) tryCatch(
+    isTRUE(suppressMessages(f())), error = function(e) FALSE)
+
+  dc <- relaxed_check(function() assert_publishable_demand_coefficients(mode = "relaxed"))
+  add("demand_coefficients_publishable", "external", dc,
+      if (dc) "every demand coefficient is calibrated or externally cited"
+      else "at least one demand coefficient is analogy-derived or illustrative")
+
+  st <- relaxed_check(function() assert_publishable_supply_transitions(mode = "relaxed"))
+  add("supply_transitions_publishable", "external", st,
+      if (st) "every core career-transition coefficient is calibrated"
+      else "at least one core career-transition coefficient is analogy-derived")
+
+  # Separate from base_year_gap_measured: that asks whether the gap was
+  # estimated rather than assumed, this asks whether it has a DIRECT external
+  # anchor -- the only thing that licenses "the current shortage is X" instead
+  # of "the model-implied gap under the specified calibration is X".
+  if (!is.null(gap)) {
+    ea <- tryCatch(isTRUE(has_external_anchor(gap)), error = function(e) FALSE)
+    add("base_year_gap_externally_anchored", "external", ea,
+        if (ea) "base-year adequacy is externally measured in this specialty"
+        else tryCatch(baseline_gap_claim(gap), error = function(e)
+          "no direct external anchor; report the model-implied gap, not a shortage"))
+  }
+
+  # Not pass/fail: a standing register of what is still unresolved, so the
+  # count travels with the run instead of living only in a status function
+  # nobody calls.
+  uci <- tryCatch(unresolved_calibration_items(), error = function(e) NULL)
+  if (!is.null(uci)) {
+    open_items <- uci$item[!uci$resolved]
+    add("calibration_items_resolved", "external", length(open_items) == 0L,
+        if (length(open_items) == 0L) "all registered calibration items resolved"
+        else sprintf("%d of %d unresolved: %s", length(open_items), nrow(uci),
+                     paste(open_items, collapse = ", ")))
+  }
+
   add("conceptual_validation", "conceptual", NA,
       "Peer review / advisory-panel critique of the framework: manual")
   add("external_validation", "external", NA,

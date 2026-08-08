@@ -223,3 +223,81 @@ test_that("run_geographic_access() fails closed on each missing input, resolves 
   expect_equal(ok$n_tracts, 3L)
   expect_false(is.null(ok$national$mean_access))
 })
+
+
+# ---- Input-publishability guards reach a run ------------------------------
+#
+# THE DEFECT THIS PINS. assert_publishable_demand_coefficients(),
+# assert_publishable_supply_transitions() and unresolved_calibration_items()
+# were each defined, tested, documented -- and called by nothing. A guard nobody
+# calls does not guard anything, and from the outside it is indistinguishable
+# from a guard that passes. They now run inside validation_report(), which the
+# orchestrator calls on every projection.
+
+ow_report <- function(gap = NULL) {
+  suppressMessages(validation_report(
+    tibble::tibble(year = 2025:2027, effective_fte_median = c(1300, 1310, 1320)),
+    gap = gap))
+}
+
+test_that("the input-publishability guards appear in every validation report", {
+  v <- ow_report()
+  expect_true(all(c("demand_coefficients_publishable",
+                    "supply_transitions_publishable",
+                    "calibration_items_resolved") %in% v$check))
+})
+
+test_that("the guards report the tier honestly rather than passing by default", {
+  # Nothing in the package is calibrated from a fielded URPS survey yet, so all
+  # three must be FALSE. A TRUE here means either a survey landed (update this
+  # test) or a guard started passing vacuously (the failure mode that matters).
+  v <- ow_report()
+  expect_false(v$passed[v$check == "demand_coefficients_publishable"])
+  expect_false(v$passed[v$check == "supply_transitions_publishable"])
+  expect_false(v$passed[v$check == "calibration_items_resolved"])
+  # The detail must name what is unresolved, not just say "no".
+  expect_match(v$detail[v$check == "calibration_items_resolved"], "capacity_anchor")
+})
+
+test_that("the external anchor check distinguishes measured from merely estimated", {
+  gap <- baseline_gap(1306, 0.95, method = "capacity_survey",
+                      calibration_status = "derived_by_analogy",
+                      source = "another specialty", evidence = "test")
+  v <- ow_report(gap)
+  # base_year_gap_estimated asks whether it was estimated rather than assumed;
+  # this asks whether it was MEASURED IN THIS SPECIALTY. An analogy-derived gap
+  # can pass the first and must fail the second -- that gap between them is the
+  # whole reason the second check exists.
+  expect_false(v$passed[v$check == "base_year_gap_externally_anchored"])
+  expect_true(any(v$check == "base_year_gap_externally_anchored"))
+  # With no gap supplied the row is absent rather than silently FALSE.
+  expect_false("base_year_gap_externally_anchored" %in% ow_report()$check)
+})
+
+test_that("the new checks are external, so strict mode is not made unusable", {
+  # assert_validation_passed() stops in strict mode on any failed INTERNAL
+  # check. These four ask whether evidence exists -- a fielded practice survey,
+  # an external anchor -- which no code change can produce. Typing them internal
+  # would make strict mode impossible for the whole package on conditions the
+  # code cannot fix, so they follow base_year_gap_measured and
+  # geographic_access_validated in being external and reported.
+  v <- ow_report(baseline_gap(1306, 0.95, method = "assumed",
+                              calibration_status = "uncalibrated_illustrative",
+                              evidence = "test"))
+  new <- c("demand_coefficients_publishable", "supply_transitions_publishable",
+           "base_year_gap_externally_anchored", "calibration_items_resolved")
+  expect_true(all(v$type[v$check %in% new] == "external"))
+  # And strict mode still stops only on the pre-existing internal failure.
+  failed_internal <- v$check[v$type == "internal" & !is.na(v$passed) & !v$passed]
+  expect_false(any(new %in% failed_internal))
+})
+
+test_that("a guard that errors is recorded as failed, never as passed", {
+  # The wrapper is tryCatch(..., error = FALSE). If a guard throws -- a missing
+  # contract, a renamed registry -- the check must read FALSE. Recording an
+  # erroring guard as TRUE would be the vacuous-pass failure in its purest form.
+  local_mocked_bindings(
+    assert_publishable_demand_coefficients = function(...) stop("registry gone"))
+  v <- ow_report()
+  expect_false(v$passed[v$check == "demand_coefficients_publishable"])
+})
