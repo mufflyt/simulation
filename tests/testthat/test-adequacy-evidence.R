@@ -194,7 +194,8 @@ test_that("no reversal in range returns NA with an explanation, not an endpoint"
   # Manufacturing a tipping point that was never examined is the failure mode.
   gap <- .mk_gap()
   r <- balance_reversal_threshold(gap, supply_at_target = 50, demand_growth = 1.15,
-                                  examined_range = c(0.9, 1.1))
+                                  examined_range = c(0.9, 1.1),
+                                  demand_calibration_status = "calibrated")
   expect_true(is.na(r$reversal_multiplier))
   expect_true(is.na(r$reversal_pct_deviation))
   expect_false(r$reversal_within_examined_range)
@@ -205,7 +206,8 @@ test_that("no reversal in range returns NA with an explanation, not an endpoint"
 
 test_that("the reversal sentence reports a threshold and refuses to identify", {
   gap <- .mk_gap()
-  r <- balance_reversal_threshold(gap, supply_at_target = 2051, demand_growth = 1.15)
+  r <- balance_reversal_threshold(gap, supply_at_target = 2051, demand_growth = 1.15,
+                                  demand_calibration_status = "calibrated")
   s <- balance_reversal_sentence(r, 2050)
   expect_match(s, "reversed from surplus to shortage")
   expect_match(s, "approximately \\d+% greater than the reference calibration")
@@ -219,4 +221,85 @@ test_that("the anchor sensitivity spans beyond the published analogue spread", {
   defaults <- eval(formals(baseline_anchor_sensitivity)$anchor_multipliers)
   expect_true(all(c(1, 1.25, 1.5, 2) %in% defaults))
   expect_gte(max(defaults), 2)
+})
+
+# ---- reportability gate ----------------------------------------------------
+#
+# A threshold computed from placeholder demand coefficients is a software
+# result. The distinction is invisible six months later, when the number has
+# been pasted into a figure caption and nobody remembers which run made it.
+
+test_that("undeclared calibration is treated as provisional", {
+  # Silence must not buy a clean number. Fail closed.
+  expect_true(demand_calibration_is_provisional(NULL))
+  expect_true(demand_calibration_is_provisional(NA_character_))
+  expect_true(demand_calibration_is_provisional(character(0)))
+  # An unrecognised string is not a promotion either.
+  expect_true(demand_calibration_is_provisional("looks_fine_to_me"))
+})
+
+test_that("derived_by_analogy is NOT sufficient to report", {
+  # That is the tier the adequacy anchor itself sits at; accepting it would let
+  # the assumption certify itself.
+  expect_true(demand_calibration_is_provisional("placeholder_uncalibrated"))
+  expect_true(demand_calibration_is_provisional("uncalibrated_illustrative"))
+  expect_true(demand_calibration_is_provisional("derived_by_analogy"))
+  expect_false(demand_calibration_is_provisional("fitted"))
+  expect_false(demand_calibration_is_provisional("calibrated"))
+  # The weakest input governs.
+  expect_true(demand_calibration_is_provisional(c("calibrated", "placeholder_uncalibrated")))
+})
+
+test_that("a provisional threshold refuses to emit a manuscript sentence", {
+  gap <- .mk_gap()
+  r <- balance_reversal_threshold(gap, supply_at_target = 2051, demand_growth = 1.15,
+                                  demand_calibration_status = "placeholder_uncalibrated")
+  # The number is still computed -- development needs it.
+  expect_true(is.finite(r$reversal_multiplier))
+  expect_false(r$reportable)
+  expect_match(r$reportable_note, "NOT REPORTABLE")
+  expect_match(r$reportable_note, "software-validation result")
+
+  expect_error(balance_reversal_sentence(r, 2050), "NOT REPORTABLE")
+  # The escape hatch exists, and it labels rather than hides.
+  s <- balance_reversal_sentence(r, 2050, allow_provisional = TRUE)
+  expect_match(s, "\\[PROVISIONAL, NOT FOR PUBLICATION\\]")
+})
+
+test_that("a calibrated threshold reports cleanly and unmarked", {
+  gap <- .mk_gap()
+  r <- balance_reversal_threshold(gap, supply_at_target = 2051, demand_growth = 1.15,
+                                  demand_calibration_status = "calibrated")
+  expect_true(r$reportable)
+  expect_true(is.na(r$reportable_note))
+  s <- balance_reversal_sentence(r, 2050)
+  expect_false(grepl("PROVISIONAL", s))
+  expect_match(s, "threshold, not an estimate of baseline need")
+})
+
+test_that("the no-reversal sentence is gated too", {
+  # The absence of a tipping point is also a claim about the model.
+  gap <- .mk_gap()
+  r <- balance_reversal_threshold(gap, supply_at_target = 50, demand_growth = 1.15,
+                                  examined_range = c(0.9, 1.1),
+                                  demand_calibration_status = "placeholder_uncalibrated")
+  expect_error(balance_reversal_sentence(r, 2050), "NOT REPORTABLE")
+  expect_match(balance_reversal_sentence(r, 2050, allow_provisional = TRUE),
+               "\\[PROVISIONAL, NOT FOR PUBLICATION\\]")
+})
+
+test_that("the calibration ranking does not drift from the demand-contract copy", {
+  # R/reporting-export_demand_contract.R carries a local status_rank. Two
+  # rankings that disagree would mean the two layers disagree about what counts
+  # as calibrated -- the same silent-divergence failure as a duplicated function.
+  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
+                 c(".", "..", file.path("..", "..")))
+  skip_if(!length(root))
+  f <- file.path(root[1], "R", "reporting-export_demand_contract.R")
+  skip_if(!file.exists(f))
+  src <- paste(readLines(f, warn = FALSE), collapse = " ")
+  for (nm in names(CALIBRATION_STATUS_RANK)) {
+    expect_match(src, sprintf("%s = %dL", nm, CALIBRATION_STATUS_RANK[[nm]]), fixed = FALSE,
+                 info = paste("ranking drifted for", nm))
+  }
 })
