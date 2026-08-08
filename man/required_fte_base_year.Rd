@@ -15,8 +15,14 @@ required_fte_base_year(base_supply_fte, adequacy)
 Numeric required FTE.
 }
 \description{
-required = supply / adequacy. With adequacy 0.948 (Zarek) this is the same as
-\code{supply / (1 - 0.052)}.
+required = supply / adequacy. At the reference adequacy calibration
+(\link{REFERENCE_ADEQUACY_CALIBRATION}, 0.948) this is \code{supply / (1 - 0.052)}.
+}
+\details{
+That value is a CALIBRATION CHOICE, not an estimate for this specialty: it is
+the Zarek physical-therapy figure adopted by analogy, and no validated
+national URPS adequacy estimate exists. Report it alongside
+\code{\link[=baseline_anchor_sensitivity]{baseline_anchor_sensitivity()}}, never alone.
 }
 \seealso{
 Other baseline gap: 
