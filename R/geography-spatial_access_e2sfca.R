@@ -364,6 +364,15 @@ match_points_to_isochrones <- function(points, iso_centers, threshold_km = ISOCH
 #' @return The [compute_e2sfca_access()] result for the chosen method.
 #' @family spatial access e2sfca
 #' @concept geography
+#' @examples
+#' \dontrun{
+#' # membership: isochrone-band membership of each demand point;
+#' # supply / demand: provider capacity and population need per location.
+#' compute_access(membership, supply, demand, method = "E2SFCA")
+#' # M2SFCA squares the cumulative band weights, penalising supply that is
+#' # present but poorly located:
+#' compute_access(membership, supply, demand, method = "M2SFCA")
+#' }
 #' @export
 compute_access <- function(membership, supply, demand,
                            method = c("E2SFCA", "M2SFCA"),

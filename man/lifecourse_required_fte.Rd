@@ -33,6 +33,19 @@ to required FTE with \code{\link[=convert_workload_to_fte]{convert_workload_to_f
 delegation matrix and the work-RVU conversion are therefore REUSED, not
 reimplemented here.
 }
+\examples{
+\dontrun{
+# Single-year-of-age population, then required FTE via the work-RVU basket.
+pop <- tidyr::expand_grid(year = 2025:2030, age = 40:85)
+pop$population <- round(2e6 * exp(-0.02 * (pop$age - 40)))
+fte <- lifecourse_required_fte(
+  pop,
+  wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]],
+  scenario = "baseline", n = 5000, seed = 1
+)
+fte$required_fte
+}
+}
 \seealso{
 Other lifecourse: 
 \code{\link{lifecourse_demand_estimand}()},
