@@ -56,7 +56,8 @@
 #' binomial SE is used. Failing loudly when neither uncertainty source is present
 #' keeps an "exact" observation from silently dominating the likelihood.
 #'
-#' @param band label; @param age_start,age_end inclusive integer ages of the interval.
+#' @param band Label for the age band.
+#' @param age_start,age_end Inclusive integer ages of the interval.
 #' @param prevalence observed prevalence in (0,1).
 #' @param ci_lower,ci_upper reported CI bounds (optional).
 #' @param se reported standard error (optional, takes precedence).
@@ -215,6 +216,8 @@ fit_prevalence_consistent_transitions <- function(observations, remission,
 #' @param n_draws number of PSA draws.
 #' @param report_age age at which to read the onset level for the identifiability
 #'   correlation (default 65).
+#' @param seed RNG seed for the draws, so a reported identifiability correlation
+#'   is reproducible.
 #' @return list: `draws` (data frame: remission, onset_at_report_age, worst_z,
 #'   compatible, plausible), `incidence_draws` (matrix ages x n_draws),
 #'   `identifiability` (cor of remission vs onset@report_age).

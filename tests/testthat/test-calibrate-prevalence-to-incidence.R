@@ -6,8 +6,15 @@
 # observations within their uncertainty given an external remission, and
 # (e) expose the onset<->remission joint identifiability so PSA samples the pair.
 
-suppressPackageStartupMessages(library(here))
-source(here::here("R", "calibrate_prevalence_to_incidence.R"))
+# NO source() OF PACKAGE CODE. This file used to do
+#   source(here::here("R", "calibrate_prevalence_to_incidence.R"))
+# which works in a source checkout and fails under R CMD check, where the package
+# is installed and no source R/ directory exists -- the connection cannot be
+# opened and the whole file errors before a single expectation runs. It was the
+# only test in the repository that sourced package code; every other one reaches
+# the loaded namespace, which is what testthat::test_check() provides. Internal
+# dot-prefixed helpers are visible that way too, because the test environment's
+# parent IS the package namespace.
 
 # Wu 2014 clinical UI older-age bands, with plausible survey SEs expressed as CIs.
 WU_UI <- do.call(rbind, list(

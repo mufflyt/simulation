@@ -17,11 +17,15 @@ is stale until proven otherwise -- update both together, in one commit.
 \seealso{
 Other backtest status: 
 \code{\link{BACKTEST_RECORD_2020_2023}},
+\code{\link{COVERAGE_RATE_PHRASINGS}},
 \code{\link{assert_backtest_record_current}()},
 \code{\link{assert_forecast_intervals_validated}()},
+\code{\link{assert_no_coverage_rate_claim}()},
 \code{\link{backtest_artifact_path}()},
 \code{\link{backtest_status}()},
 \code{\link{backtest_status_from_summary}()},
+\code{\link{containment_statement}()},
+\code{\link{coverage_is_estimable}()},
 \code{\link{interval_label}()},
 \code{\link{stamp_backtest_status}()},
 \code{\link{stamped_backtest_status}()},
