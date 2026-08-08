@@ -274,6 +274,61 @@ adequacy_conclusion_sentence <- function(tab, flip_multiplier = NA_real_,
 #      the threshold is NA and carries an explanation. Silently returning the
 #      range endpoint would manufacture a tipping point that does not exist.
 
+# ---- Reportability gate ----------------------------------------------------
+#
+# A threshold computed from placeholder demand coefficients is a software result,
+# not a scientific one. The distinction is invisible six months later, when the
+# number has been pasted into an abstract, a figure caption, or a frozen
+# artifact and nobody remembers which run produced it.
+#
+# So the reporting layer refuses to certify a threshold as manuscript-ready
+# unless the demand calibration is at least `fitted`. Computation is always
+# allowed -- development and testing need it -- but the SENTENCE is gated.
+#
+# Silence is treated as non-reportable. Calling the threshold without declaring
+# a calibration status does not produce an unlabelled number; it produces one
+# marked provisional. Fail-closed, in the idiom of assert_external_anchor().
+
+#' Calibration status ranking, weakest first
+#'
+#' MUST AGREE with the local `status_rank` in
+#' `R/reporting-export_demand_contract.R`. A test asserts they match; if this
+#' ever drifts, the two layers would disagree about what counts as calibrated.
+#'
+#' @format Named integer vector.
+#' @family baseline gap reporting
+#' @concept reporting
+#' @export
+CALIBRATION_STATUS_RANK <- c(placeholder_uncalibrated = 1L, uncalibrated_illustrative = 1L,
+                             derived_by_analogy = 2L, fitted = 3L, calibrated = 4L)
+
+#' Minimum calibration status for a reportable threshold
+#'
+#' `derived_by_analogy` is deliberately NOT sufficient: that is the tier the
+#' adequacy anchor itself sits at, and the whole point of this module is that it
+#' is an assumption.
+#'
+#' @format Character scalar.
+#' @family baseline gap reporting
+#' @concept reporting
+#' @export
+REPORTABLE_MIN_CALIBRATION <- "fitted"
+
+#' Is a demand calibration status too provisional to report?
+#'
+#' @param status Calibration status string, or NULL / NA when undeclared.
+#' @return TRUE when a threshold built on it must not be reported.
+#' @family baseline gap reporting
+#' @concept reporting
+#' @export
+demand_calibration_is_provisional <- function(status) {
+  if (is.null(status) || length(status) == 0L) return(TRUE)
+  if (any(is.na(status))) return(TRUE)
+  rank <- CALIBRATION_STATUS_RANK[status]
+  rank[is.na(rank)] <- 0L                       # unknown string: not a promotion
+  min(rank) < CALIBRATION_STATUS_RANK[[REPORTABLE_MIN_CALIBRATION]]
+}
+
 #' Adequacy multiplier at which the projected balance changes sign
 #'
 #' Required FTE is `anchor x demand_growth`, so the projected balance is linear
@@ -290,12 +345,16 @@ adequacy_conclusion_sentence <- function(tab, flip_multiplier = NA_real_,
 #' @param supply_at_target Projected supply FTE at the horizon.
 #' @param demand_growth Ratio of target-year to base-year demand.
 #' @param examined_range Multiplier range searched for a sign change.
+#' @param demand_calibration_status Calibration status of the demand
+#'   coefficients the projection was built from. Undeclared (the default) is
+#'   treated as provisional: the threshold is computed but marked non-reportable.
 #' @return An object of class `urps_balance_reversal`.
 #' @family baseline gap reporting
 #' @concept reporting
 #' @export
 balance_reversal_threshold <- function(gap, supply_at_target, demand_growth,
-                                       examined_range = c(0.5, 3)) {
+                                       examined_range = c(0.5, 3),
+                                       demand_calibration_status = NULL) {
   stopifnot(inherits(gap, "urps_baseline_gap"),
             is.numeric(supply_at_target), length(supply_at_target) == 1L,
             is.numeric(demand_growth), length(demand_growth) == 1L, demand_growth > 0,
@@ -325,8 +384,22 @@ balance_reversal_threshold <- function(gap, supply_at_target, demand_growth,
     examined_range[1], examined_range[2],
     if (at_reference > 0) "a surplus" else "a shortage", mult)
 
+  provisional <- demand_calibration_is_provisional(demand_calibration_status)
+  reportable_note <- if (!provisional) NA_character_ else sprintf(
+    paste("NOT REPORTABLE. Demand calibration is %s, below the '%s' tier required for a",
+          "manuscript-ready threshold. This value is a software-validation result:",
+          "it verifies the machinery, not the workforce. Recompute from scratch",
+          "once the demand coefficients are calibrated."),
+    if (is.null(demand_calibration_status) || all(is.na(demand_calibration_status)))
+      "undeclared" else paste(demand_calibration_status, collapse = "/"),
+    REPORTABLE_MIN_CALIBRATION)
+
   out <- list(
     reference_anchor_fte = anchor,
+    demand_calibration_status = if (is.null(demand_calibration_status)) NA_character_
+                                else paste(demand_calibration_status, collapse = "/"),
+    reportable = !provisional,
+    reportable_note = reportable_note,
     balance_at_reference = at_reference,
     # The headline. NA when no reversal is examined, never snapped to a scenario.
     reversal_multiplier = if (in_range) mult else NA_real_,
@@ -377,6 +450,7 @@ FORBIDDEN_INFERENCE_VERBS <- c(
 #' @export
 print.urps_balance_reversal <- function(x, ...) {
   cat("Balance-reversal threshold (tipping point, not an adequacy estimate)\n")
+  if (!isTRUE(x$reportable)) cat("  ** ", x$reportable_note, "\n", sep = "")
   if (is.na(x$reversal_multiplier)) {
     cat("  reversal: NONE in examined range\n  ", x$note, "\n", sep = "")
   } else {
@@ -391,16 +465,26 @@ print.urps_balance_reversal <- function(x, ...) {
 #'
 #' @param x A [balance_reversal_threshold()] object.
 #' @param horizon Label for the projection horizon, e.g. `2050`.
+#' @param allow_provisional Emit a sentence for a non-reportable threshold,
+#'   prefixed with an explicit marker. Defaults to FALSE, which errors instead:
+#'   a provisional number should not reach a manuscript by accident.
 #' @return A single sentence, validated to contain no identifying language.
 #' @family baseline gap reporting
 #' @concept reporting
 #' @export
-balance_reversal_sentence <- function(x, horizon = "the projection horizon") {
+balance_reversal_sentence <- function(x, horizon = "the projection horizon",
+                                      allow_provisional = FALSE) {
   stopifnot(inherits(x, "urps_balance_reversal"))
+  if (!isTRUE(x$reportable) && !isTRUE(allow_provisional)) {
+    stop("balance_reversal_sentence: ", x$reportable_note,
+         " Pass allow_provisional = TRUE to emit it anyway; it will be labelled.",
+         call. = FALSE)
+  }
+  mark <- if (isTRUE(x$reportable)) "" else "[PROVISIONAL, NOT FOR PUBLICATION] "
   if (is.na(x$reversal_multiplier)) {
     return(.assert_no_identifying_language(
-      sprintf("The projected %s workforce balance did not change sign for any adequacy calibration in the examined range (%.2fx to %.2fx the reference).",
-              horizon, x$examined_range[1], x$examined_range[2]),
+      sprintf("%sThe projected %s workforce balance did not change sign for any adequacy calibration in the examined range (%.2fx to %.2fx the reference).",
+              mark, horizon, x$examined_range[1], x$examined_range[2]),
       "balance_reversal_sentence()"))
   }
   from_to <- switch(x$direction,
@@ -408,10 +492,10 @@ balance_reversal_sentence <- function(x, horizon = "the projection horizon") {
     shortage_to_surplus = "from shortage to surplus",
     "across zero")
   .assert_no_identifying_language(
-    sprintf(paste("The projected %s workforce balance reversed %s when assumed",
+    sprintf(paste("%sThe projected %s workforce balance reversed %s when assumed",
                   "baseline need was approximately %.0f%% greater than the",
                   "reference calibration. This is a threshold, not an estimate of",
                   "baseline need."),
-            horizon, from_to, x$reversal_pct_deviation),
+            mark, horizon, from_to, x$reversal_pct_deviation),
     "balance_reversal_sentence()")
 }
