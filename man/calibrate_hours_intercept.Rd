@@ -34,6 +34,11 @@ This solves for the intercept that makes mean predicted hours over the
 base-year cohort equal the FTE threshold, so base-year FTE tracks headcount
 and all subsequent movement comes from the changing age and sex composition.
 }
+\examples{
+# Solves the intercept so the age/sex hours schedule reproduces 1.0 FTE at
+# the package's clinical-hours definition.
+calibrate_hours_intercept(age = c(45, 55, 65))
+}
 \seealso{
 Other provider lifecycle: 
 \code{\link{RETIREMENT_HAZARD_BY_AGE}},

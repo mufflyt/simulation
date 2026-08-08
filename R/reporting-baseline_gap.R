@@ -564,6 +564,14 @@ print.urps_baseline_gap <- function(x, ...) {
 #' @return (Invisibly) TRUE when a genuine gap estimate is present.
 #' @family baseline gap
 #' @concept reporting
+#' @examples
+#' # In strict mode an analogy-derived gap is refused unless the caller says
+#' # allow_analogy = TRUE. The point is that the acknowledgement is explicit and
+#' # recorded, never inherited.
+#' gap <- baseline_gap(1306, 0.95, method = "assumed",
+#'                     calibration_status = "uncalibrated_illustrative",
+#'                     evidence = "illustrative example")
+#' assert_baseline_gap_estimated(gap, mode = "relaxed", allow_analogy = TRUE)
 #' @export
 assert_baseline_gap_estimated <- function(gap, mode = resolve_reproducibility_mode(),
                                           allow_analogy = FALSE) {

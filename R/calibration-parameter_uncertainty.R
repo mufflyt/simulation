@@ -193,6 +193,14 @@ print.urps_param_spec <- function(x, ...) {
 #' @return List with `entrants`, `retirement_schedule`, `hours_coef`.
 #' @family parameter uncertainty
 #' @concept calibration
+#' @examples
+#' # One draw per Monte Carlo iteration. `quantified` records WHICH parameters
+#' # actually vary -- anything published without a standard error is held fixed
+#' # and says so, rather than being given an invented spread.
+#' spec <- supply_parameter_spec(entrant_series = c(50, 57, 53, 59, 59),
+#'                               entrant_mean = 55)
+#' draw <- draw_supply_parameters(spec)
+#' draw$entrants_per_year
 #' @export
 draw_supply_parameters <- function(spec, schedule = RETIREMENT_HAZARD_BY_AGE,
                                    years = NULL) {

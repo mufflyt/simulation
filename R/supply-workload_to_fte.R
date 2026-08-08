@@ -258,6 +258,11 @@ apportion_service_volume <- function(volumes, matrix = URPS_DELEGATION_MATRIX) {
 #' @return Tibble with `year` (if present) and `work_rvu`.
 #' @family workload to fte
 #' @concept supply
+#' @examples
+#' service_volume_to_wrvu(tibble::tibble(
+#'   service = c("new_consultation", "return_visit", "cystoscopy"),
+#'   volume  = c(120000, 240000, 45000)
+#' ))
 #' @export
 service_volume_to_wrvu <- function(volumes,
                                    workload = urps_service_workload(),
@@ -301,6 +306,12 @@ service_volume_to_wrvu <- function(volumes,
 #' @return Numeric annual work RVUs per clinical FTE.
 #' @family workload to fte
 #' @concept supply
+#' @examples
+#' # Productivity is SOLVED against a base-year anchor, not assumed. That is
+#' # why the workload levels and the delegation matrix cancel out of
+#' # required_fte(t) = anchor * wRVU(t) / wRVU(base): only the anchor and the
+#' # SHAPE of demand growth move the answer.
+#' calibrate_wrvu_per_fte(base_year_wrvu = 7.5e6, base_year_required_fte = 1306)
 #' @export
 calibrate_wrvu_per_fte <- function(base_year_wrvu, base_year_required_fte,
                                    indirect_share = INDIRECT_TIME_SHARE) {
@@ -556,6 +567,13 @@ allocate_fte_by_setting <- function(total_fte,
 #'   `pct_supply_to_demand`.
 #' @family workload to fte
 #' @concept supply
+#' @examples
+#' # Both sides are FTE, so the difference is meaningful. This is the check
+#' # compute_demand_coverage() refuses to do with a case count.
+#' compute_fte_gap(
+#'   tibble::tibble(year = 2025:2027, effective_fte_median = c(1300, 1310, 1320)),
+#'   tibble::tibble(year = 2025:2027, required_fte = c(1400, 1440, 1480))
+#' )
 #' @export
 compute_fte_gap <- function(supply, required, supply_col = "effective_fte_median") {
   assertthat::assert_that(supply_col %in% names(supply),

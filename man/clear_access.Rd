@@ -52,6 +52,17 @@ approximation \code{P(wait <= W) = 1 - exp(-W / wait)}, multiplied by the share 
 capacity that will accept the patient (\code{insurance_fraction}). Panel size is
 \code{accessible_population / accessible_fte}.
 }
+\examples{
+# Capacity that exists is not capacity that is reachable in time. Catchment A
+# is oversubscribed, so some of its demand goes unmet even though the system
+# as a whole has spare capacity.
+catchments <- tibble::tibble(
+  catchment           = c("A", "B", "C"),
+  demand_workload     = c(1200, 800, 400),
+  accessible_capacity = c(900, 900, 500)
+)
+clear_access(catchments)[, c("catchment", "utilization", "unmet_demand")]
+}
 \seealso{
 Other access clearing: 
 \code{\link{catchment_neighbors_from_coords}()},

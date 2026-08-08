@@ -19,6 +19,13 @@ For each input, the partial correlation of its rank with the output's rank,
 controlling for all other inputs' ranks. Signed and robust for monotone
 models. NA output rows are dropped.
 }
+\examples{
+# Partial rank correlation: which input drives the output, controlling for
+# the others. Rank-based, so it survives a nonlinear response.
+psa <- run_psa(list(psa_normal("a", 10, 2), psa_uniform("b", 1, 3)),
+               function(a, b) c(y = a * b), n = 60, verbose = FALSE)
+psa_prcc(psa)
+}
 \seealso{
 Other psa: 
 \code{\link{plot_psa_tornado}()},
