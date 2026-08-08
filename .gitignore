@@ -126,3 +126,4 @@ outputs/
 !data-raw/sensitivity/*.csv
 data-raw/brfss/*.XPT
 data-raw/brfss/*.xpt
+^artifacts/validation$

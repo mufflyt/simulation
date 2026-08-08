@@ -1,8 +1,97 @@
 # Validation results
 
 Produced by `scripts/validation/01_temporal_validation.R` and
-`scripts/validation/02_monte_carlo_convergence.R` against the production roster
-(n = 1,339), contract v3.0.0, roster snapshot 2026-07-22.
+`scripts/validation/02_monte_carlo_convergence.R`.
+
+## Provenance
+
+Both scripts emit a provenance block (`scripts/validation/_provenance.R`) so the
+figures below remain attributable after the model moves on. A results document
+without this is a claim about a state of the world that no longer exists.
+
+| field | value |
+|---|---|
+| analysis date | 2026-08-08 |
+| git SHA | `6781098` |
+| package sources clean | yes |
+| R | 4.4.2 |
+| urpssim | 0.5.0 |
+| mufflyaccess | 0.10.0 (pinned by commit) |
+| contract version | 3.0.0 |
+| roster snapshot | 2026-07-22 (n = 1,339) |
+| contract source commit | `74085a9e695eec5350275a29d8655512ad57422b` |
+| baseline supply 2023 | 1,306 |
+| RNG seeds | 20260801, 11, 202 |
+| iteration counts | 250, 500, 1,000, 2,000 |
+
+## Evidentiary status
+
+Three labels, kept distinct so "reproduced" stays an evidentiary claim rather
+than a workflow status:
+
+| label | meaning |
+|---|---|
+| **Provisional historical** | Generated while `main` was changing. No single repository state corresponds to the complete analysis, so it cannot be reproduced even in principle. |
+| **Authoritative pinned** | First complete run from an immutable pinned model state, with the manifest written BEFORE computation. |
+| **Reproduced** | A second independent run against that exact pinned specification regenerates the authoritative numbers. |
+
+### Why the numbers below are Provisional historical
+
+Not an administrative oversight, and not merely "the SHA was not recorded."
+
+**Concurrent commits modified supply-model source files during execution**, so
+no single repository state corresponds to the complete original analysis. The
+R/-touching commits landed at 12:24:45, 12:42:23 and 12:47:09 while the supply
+runs were in flight; `23af29e` ("refuse an impossible conversion, and stop the
+lag from drifting") changed `R/supply-acgme_fellows.R` and
+`R/supply-review_followups.R` — supply-side files, while supply-side numbers
+were being produced.
+
+The code stayed syntactically valid and the numbers stayed plausible throughout.
+What changed was the scientific object being evaluated. That failure mode is
+more dangerous than a merge conflict precisely because nothing looks wrong.
+
+If a pinned run reproduces these values exactly, that demonstrates robustness —
+it does **not** retroactively confer provenance on them.
+
+| script | status |
+|---|---|
+| `01_temporal_validation.R` | **Provisional historical.** Regenerates every figure in sections 1–4 on rerun, and the rerun caught a reporting discrepancy (the median is 7.545%, not 7.55%), which is why section 1 reports 7.5%. Still provisional: the model was moving. |
+| `02_monte_carlo_convergence.R` | **Provisional historical.** Sections 5–6 record what this computation produced. A pinned run at `b9757fe` is in progress. |
+
+### Run identity is established before computation
+
+`begin_validation_run()` writes the manifest **first**, refuses to start from a
+dirty model tree, and returns a run directory the analysis writes its tables
+into, so a number and its provenance share a directory and cannot be separated.
+Manifests live in `artifacts/validation/<timestamp>_<analysis>_<model_sha>/`.
+
+Manuscript analyses run from an **isolated pinned worktree by default**, not as
+a precaution for important runs:
+
+```sh
+git worktree add --detach /tmp/urpssim-validation <model-sha>
+# data-raw/, artifacts/ and config/ are gitignored or .Rbuildignore'd, so link
+# them in: the worktree pins CODE, and data identity is recorded by checksum.
+```
+
+### What the four SHA fields mean
+
+They are not expected to agree.
+
+| field | identifies |
+|---|---|
+| `head_sha` | repository state when provenance was inspected |
+| `model_sha` | the model implementation that generated the analysis |
+| `validation_sha` | the validation implementation that measured it |
+| `contract_sha` | the governing data contract (mufflyaccess artifact) |
+
+## Recommended production default
+
+**n = 1,000 iterations.** Not chosen conventionally: it is the smallest
+simulation size satisfying a criterion declared before the multi-seed results
+were viewed. Use n = 2,000 for final manuscript sensitivity analyses where the
+extra numerical stability is cheap.
 
 These are **validation of the calculation, not validation of the calibration**.
 Everything here tests whether the engine forecasts and converges properly. None

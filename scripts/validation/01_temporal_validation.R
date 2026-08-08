@@ -42,10 +42,16 @@ suppressPackageStartupMessages({
   if (!requireNamespace("urpssim", quietly = TRUE)) pkgload::load_all(".", quiet = TRUE) else library(urpssim)
 })
 
+source(file.path("scripts", "validation", "_provenance.R"))
+
 CUTOFFS_PRIMARY <- 2017:2020          # backtest_multi_window() default
 CUTOFFS_STRESS  <- 2013:2020
 HORIZON <- 3L
 MIN_TRAIN <- 2L
+
+RUN <- begin_validation_run("temporal_validation", seeds = NULL, iterations = NULL,
+                            params = list(cutoffs_primary = "2017-2020", cutoffs_stress = "2013-2020", horizon = HORIZON, min_train = MIN_TRAIN, winkler_alpha = 0.05),
+                            require_clean = as.logical(Sys.getenv("VALIDATION_REQUIRE_CLEAN", "TRUE")))
 
 # Winkler interval score at level alpha. Lower is better, and it cannot be
 # improved by widening -- the point of reporting it beside coverage.
@@ -102,3 +108,8 @@ cat(sprintf("additive lower factor  1 + mu - t*s      = %+.3f  (negative)\n",
             1 + mean(e) - tq * stats::sd(e)))
 cat(sprintf("log-scale (SECONDARY)  exp(mu_l - t*s_l) = %+.3f  (positive support)\n",
             exp(mean(log(1 + e)) - tq * stats::sd(log(1 + e)))))
+
+complete_validation_run(RUN, tables = list(
+  matched_origin_leakage = tab,
+  multi_window_accuracy  = as.data.frame(w[, c("cutoff_year", "target_year",
+                                               "predicted", "observed", "percent_error")])))
