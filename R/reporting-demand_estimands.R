@@ -40,6 +40,23 @@
 # estimands, and a rule that an estimand is reportable only when every dimension
 # it depends on is. Nothing here estimates anything -- it decides what may be
 # claimed.
+#
+# THE NON-INHERITANCE RULE
+#
+# No dimension inherits credibility from another. Evidence about one must never
+# raise the standing of a different one. Concretely:
+#
+#   realized_care = calibrated   must never promote   baseline_adequacy
+#   strong access_barriers       must never convert a DIRECTIONAL adequacy
+#                                concern into an identified MAGNITUDE
+#
+# Without that rule the split would be decoration: one well-anchored utilization
+# dataset would quietly license every downstream claim, which is the "assume the
+# base year is in equilibrium" move the Dall lineage moved away from. The
+# independence is a property of the design -- each dimension carries its own
+# status and the weakest required one governs -- and
+# test-demand-estimands.R proves it over every ordered pair of dimensions rather
+# than trusting the design to hold as the code changes.
 
 #' Evidence dimensions underpinning demand
 #'
