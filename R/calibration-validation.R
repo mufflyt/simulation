@@ -439,7 +439,7 @@ validation_report <- function(supply, required = NULL, gap = NULL,
   # anchor -- the only thing that licenses "the current shortage is X" instead
   # of "the model-implied gap under the specified calibration is X".
   if (!is.null(gap)) {
-    ea <- tryCatch(isTRUE(has_external_anchor(gap)), error = function(e) FALSE)
+    ea <- relaxed_check(function() assert_external_anchor(gap, mode = "relaxed"))
     add("base_year_gap_externally_anchored", "external", ea,
         if (ea) "base-year adequacy is externally measured in this specialty"
         else tryCatch(baseline_gap_claim(gap), error = function(e)
@@ -456,6 +456,64 @@ validation_report <- function(supply, required = NULL, gap = NULL,
         if (length(open_items) == 0L) "all registered calibration items resolved"
         else sprintf("%d of %d unresolved: %s", length(open_items), nrow(uci),
                      paste(open_items, collapse = ", ")))
+  }
+
+  # ---- Reproducibility and definition gates ---------------------------------
+  #
+  # Same rationale as the block above: each of these was implemented, tested and
+  # called by nothing. They are wired here because validation_report() is the
+  # one function every run reaches, and each answers a question about whether
+  # this run's OUTPUTS can be trusted rather than about its arithmetic.
+
+  # The frozen back-test record against the artifact it describes. Fixable by
+  # code -- regenerate the artifact and the record together -- so a drift here
+  # IS an internal failure and strict mode should stop. When the artifact is not
+  # reachable (artifacts/ is .Rbuildignore'd) verify_backtest_record() reports
+  # `checked = FALSE` and the assert passes, so this cannot fail vacuously.
+  br <- relaxed_check(function() assert_backtest_record_current(mode = "relaxed"))
+  add("backtest_record_current", "internal", br,
+      if (br) "frozen back-test record matches the artifact it describes"
+      else "the back-test artifact was regenerated without updating BACKTEST_RECORD_2020_2023")
+
+  # Only when the contract is installed. A build that is present but does not
+  # export what this package calls is an internal failure worth stopping on; a
+  # build that is simply absent is not, and adding a FALSE row would make strict
+  # mode impossible for every contract-free run.
+  if (requireNamespace("mufflyaccess", quietly = TRUE)) {
+    mc <- relaxed_check(function() assert_mufflyaccess_contract(mode = "relaxed"))
+    add("mufflyaccess_contract_usable", "internal", mc,
+        if (mc) "installed contract provides every export this package calls"
+        else "installed mufflyaccess build is missing an export this package calls")
+
+    # Definition match, not model error. The certification series is a gross
+    # flow that never nets departures out; an arm that subtracts departures is
+    # scored against a target that does not, and the mismatch reads as apparent
+    # model error rather than the definition difference it is.
+    ar <- tryCatch(backtest_attrition_requirement(), error = function(e) NULL)
+    if (!is.null(ar)) {
+      asc <- isTRUE(ar$status == "ascertained")
+      add("backtest_attrition_ascertained", "external", asc,
+          if (asc) "observed series has attrition ascertained"
+          else "observed series does not net departures out; arms must match that definition")
+    }
+  }
+
+  # The FTE curve, alongside the capacity anchor it sits next to in leverage.
+  fcs <- tryCatch(fte_curve_status(), error = function(e) NULL)
+  if (!is.null(fcs)) {
+    add("fte_curve_calibrated", "external", isTRUE(fcs$resolved),
+        if (isTRUE(fcs$resolved)) "hours curve calibrated on URPS providers"
+        else fcs$why_unresolved)
+  }
+
+  # Makes the data tier decidable instead of a standing manual placeholder.
+  ext <- tryCatch(check_external_data(), error = function(e) NULL)
+  if (!is.null(ext)) {
+    absent <- ext$name[!ext$exists]
+    add("external_data_present", "data", length(absent) == 0L,
+        if (length(absent) == 0L) "every declared external input is present"
+        else sprintf("%d of %d external inputs absent: %s", length(absent),
+                     nrow(ext), paste(absent, collapse = ", ")))
   }
 
   add("conceptual_validation", "conceptual", NA,

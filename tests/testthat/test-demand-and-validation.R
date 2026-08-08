@@ -348,7 +348,9 @@ test_that("the report records the validation types that cannot be automated", {
   # which no code change can produce. See test-orchestrator-wiring.R.
   decidable <- c("base_year_gap_measured", "geographic_access_validated",
                  "demand_coefficients_publishable", "supply_transitions_publishable",
-                 "base_year_gap_externally_anchored", "calibration_items_resolved")
+                 "base_year_gap_externally_anchored", "calibration_items_resolved",
+                 "backtest_attrition_ascertained", "fte_curve_calibrated",
+                 "external_data_present")
   manual <- rep$type %in% c("conceptual", "external", "data") &
     !rep$check %in% decidable
   expect_true(all(is.na(rep$passed[manual])))

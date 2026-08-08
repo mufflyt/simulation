@@ -44,6 +44,7 @@ Other spatial access e2sfca:
 \code{\link{e2sfca_weight_presets}()},
 \code{\link{gaussian_band_weights}()},
 \code{\link{haversine_km}()},
+\code{\link{run_geographic_access}()},
 \code{\link{spatial_access_ratio}()},
 \code{\link{summarize_access}()},
 \code{\link{weighted_mean_all}()},

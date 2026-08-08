@@ -36,6 +36,7 @@ Other spatial access e2sfca:
 \code{\link{gaussian_band_weights}()},
 \code{\link{haversine_km}()},
 \code{\link{match_points_to_isochrones}()},
+\code{\link{run_geographic_access}()},
 \code{\link{spatial_access_ratio}()},
 \code{\link{weighted_mean_all}()},
 \code{\link{wilson_ci}()},

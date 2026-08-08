@@ -13,14 +13,14 @@ run_geographic_access(
 )
 }
 \arguments{
-\item{membership}{A long \code{(demand_id, provider_id, band)} table, or a path to
+\item{membership}{A long \verb{(demand_id, provider_id, band)} table, or a path to
 the \code{.rds} the import script writes.}
 
-\item{provider_supply}{Tibble \code{(provider_id, supply)} keyed to match
+\item{provider_supply}{Tibble \verb{(provider_id, supply)} keyed to match
 \code{membership$provider_id}. \code{NULL} is unresolved: the national aggregate has
 no per-provider identity to place.}
 
-\item{tract_demand}{Tibble \code{(demand_id, population)}, or a path to the tract
+\item{tract_demand}{Tibble \verb{(demand_id, population)}, or a path to the tract
 centroid CSV (\code{GEOID} + \code{fem65}).}
 
 \item{method}{"E2SFCA" (default) or "M2SFCA".}
@@ -49,6 +49,30 @@ trap that produces a plausible-but-meaningless access ratio, which
 \code{geographic_access_status()} and \code{\link[=validation_report]{validation_report()}}'s geographic gate exist
 to prevent. A run without the imported isochrones therefore \emph{reports the gap};
 it does not fabricate a number. The membership table is produced by
-\code{scripts/data_acquisition/12_build_provider_isochrone_membership.R}.
+\verb{scripts/data_acquisition/12_build_provider_isochrone_membership.R}.
+}
+\seealso{
+Other spatial access e2sfca: 
+\code{\link{access_moe_ci}()},
+\code{\link{access_weight_sensitivity}()},
+\code{\link{annual_trend}()},
+\code{\link{assign_access_category}()},
+\code{\link{compare_access_methods}()},
+\code{\link{compute_access}()},
+\code{\link{compute_access_preset}()},
+\code{\link{compute_e2sfca_access}()},
+\code{\link{conus_ok}()},
+\code{\link{e2sfca_bands}()},
+\code{\link{e2sfca_incremental_weights}()},
+\code{\link{e2sfca_weight_presets}()},
+\code{\link{gaussian_band_weights}()},
+\code{\link{haversine_km}()},
+\code{\link{match_points_to_isochrones}()},
+\code{\link{spatial_access_ratio}()},
+\code{\link{summarize_access}()},
+\code{\link{weighted_mean_all}()},
+\code{\link{wilson_ci}()},
+\code{\link{zero_access_share}()}
 }
 \concept{geography}
+\concept{spatial access e2sfca}
