@@ -20,6 +20,12 @@ An ordered factor with levels \code{CAREER_STATES}.
 Deterministic mapping from age and lifecycle status to a career state. This is
 a labelling VIEW over the existing agent table: it never alters departures.
 }
+\examples{
+# Age maps to career state (boundaries: mid-career >= 45, late-career >= 60).
+career_state_of(c(38, 52, 66))
+# A provider who has retired is in the absorbing state regardless of age:
+career_state_of(58, retired = TRUE)
+}
 \seealso{
 Other provider state machine: 
 \code{\link{assert_publishable_supply_transitions}()},
