@@ -91,3 +91,45 @@ test_that("relaxed mode warns rather than erroring", {
   expect_false(suppressWarnings(suppressMessages(
     assert_no_coverage_rate_claim("coverage was 20%", s, mode = "relaxed"))))
 })
+
+test_that("negated mentions pass; the same phrase as a claim does not", {
+  # Found by the manuscript tripping its own guard on
+  # "a containment count, not a 20% coverage rate" -- which is exactly the
+  # sentence this module exists to produce. A guard that rejects its own
+  # disclaimer gets muted.
+  s <- backtest_status()
+  for (ok in c("a containment count, not a 20% coverage rate",
+               "this is never a coverage rate",
+               "rather than an empirical coverage figure",
+               "these are containment counts, not observed coverage")) {
+    expect_silent(assert_no_coverage_rate_claim(ok, s, mode = "strict"))
+  }
+  for (bad in c("the coverage rate was 40%",
+                "observed coverage 0.20 across the arms",
+                "empirical coverage of 0.2")) {
+    expect_error(assert_no_coverage_rate_claim(bad, s, mode = "strict"), "coverage RATE")
+  }
+})
+
+test_that("an earlier negation does not launder a later claim", {
+  # The look-back window is deliberately short. A disclaimer in one sentence
+  # must not license an assertion two sentences later.
+  s <- backtest_status()
+  expect_error(
+    assert_no_coverage_rate_claim(
+      paste("This is not a coverage estimate.",
+            "We report substantial detail on the design and the arms involved.",
+            "The coverage rate was 40%."), s, mode = "strict"),
+    "coverage RATE")
+})
+
+test_that("the manuscript narrative passes the guard", {
+  # The document is generated prose; it should be held to the rule it states.
+  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
+                 c(".", "..", file.path("..", "..")))
+  skip_if(!length(root))
+  f <- file.path(root[1], "docs", "VALIDATION_PAPER.md")
+  skip_if(!file.exists(f))
+  expect_silent(assert_no_coverage_rate_claim(readLines(f, warn = FALSE),
+                                              backtest_status(), mode = "strict"))
+})

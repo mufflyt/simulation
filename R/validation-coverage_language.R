@@ -48,7 +48,10 @@ COVERAGE_RATE_PHRASINGS <- c(
   "empirical coverage",
   "coverage rate",
   "observed coverage",
-  "coverage (failed|fails|met|meets|below|above)",
+  # \\b matters: without it "met" matches inside "coverage metrics", which flags
+  # the entirely legitimate sentence "conventional coverage metrics may fail to
+  # reveal this". Found when the manuscript tripped on its own thesis statement.
+  "coverage (failed|fails|met|meets|below|above)\\b",
   "achieved [0-9.]+\\s*%?\\s*coverage"
 )
 
@@ -82,9 +85,27 @@ assert_no_coverage_rate_claim <- function(text, status = backtest_status(),
                                           mode = resolve_reproducibility_mode()) {
   if (coverage_is_estimable(status)) return(invisible(TRUE))
   joined <- paste(text, collapse = " ")
-  hits <- COVERAGE_RATE_PHRASINGS[
-    vapply(COVERAGE_RATE_PHRASINGS,
-           function(p) grepl(p, joined, ignore.case = TRUE, perl = TRUE), logical(1))]
+
+  # NEGATED MENTIONS ARE THE DISCLAIMERS THIS MODULE EXISTS TO WRITE.
+  # "a containment count, not a 20% coverage rate" contains "coverage rate" and
+  # must pass; "the coverage rate was 40%" must not. This manuscript tripped its
+  # own guard on exactly that sentence, which is how the omission was found.
+  #
+  # A phrase is treated as negated when a negator appears in the ~48 characters
+  # preceding it -- wide enough to span "not a 20%", narrow enough that a
+  # negation in an earlier clause does not launder a later claim.
+  is_negated <- function(txt, start) {
+    lo <- max(1L, start - 48L)
+    grepl("\\b(not|never|cannot|can not|is not|isn't|rather than|instead of|no)\\b",
+          substr(txt, lo, start - 1L), ignore.case = TRUE, perl = TRUE)
+  }
+  matched <- vapply(COVERAGE_RATE_PHRASINGS, function(p) {
+    m <- gregexpr(p, joined, ignore.case = TRUE, perl = TRUE)[[1]]
+    if (m[1] == -1L) return(FALSE)
+    # An unnegated occurrence anywhere is enough to refuse.
+    any(!vapply(as.integer(m), function(st) is_negated(joined, st), logical(1)))
+  }, logical(1))
+  hits <- COVERAGE_RATE_PHRASINGS[matched]
   if (!length(hits)) return(invisible(TRUE))
 
   msg <- paste(
