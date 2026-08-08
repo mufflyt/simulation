@@ -222,3 +222,184 @@ entrant_to_cert_ratio <- function(source = c("acgme", "nrmp"),
        n_years = sum(keep), excluded = excluded, cert_lag = as.integer(cert_lag),
        pooled = isTRUE(pooled), annual = annual)
 }
+
+# ---- Fellowship length, completion, and the pipeline already in train -------
+#
+# LENGTH IS PATHWAY-SPECIFIC, and treating it as uniform misaligns half the
+# series. OB/GYN-based URPS fellowship is three years; urology-based is two.
+# Aligning ABU certifications to urology entrants three years back returns a
+# conversion of 1.050 -- more certifying than entered, the same impossible
+# signature that flagged the deferral problem. At two years it returns 0.776.
+#
+# A note on the ACGME year_3 column for the urology rows: it is small but not
+# zero (5-9 fellows). That is NOT evidence of a three-year urology program and
+# must not be read as one -- an earlier draft of this module inferred a
+# "shift from three-year to two-year urology fellowships" from the declining
+# ratio of that column to year_1, which was an artifact of dividing two
+# unrelated cohorts. Urology URPS has been two years throughout. The residual
+# column is left unexplained rather than given an invented meaning.
+URPS_FELLOWSHIP_YEARS_BY_PATHWAY <- c(obgyn = 3L, urology = 2L)
+
+#' Follow each entering cohort through its program
+#'
+#' Reads the ACGME books on the diagonal: fellows entering in year `Y` are
+#' `year_1` in the book for `Y`, `year_2` in the book for `Y + 1`, and so on. The
+#' ratio of the final program year to `year_1` measures how much of an entering
+#' class is still enrolled at the end -- within-fellowship attrition, which the
+#' entrant pipeline otherwise has to assume.
+#'
+#' Only years within the pathway's own fellowship length are followed, so the
+#' urology cohorts are tracked to year 2 rather than year 3.
+#'
+#' @param parent `"obgyn"` or `"urology"`.
+#' @return Tibble of `entry_year`, `year_1`, `final_year`, `final_year_n`,
+#'   `retention`.
+#' @export
+acgme_cohort_tracking <- function(parent = c("obgyn", "urology")) {
+  parent <- match.arg(parent)
+  d <- acgme_urps_fellows(parent = parent)
+  len <- URPS_FELLOWSHIP_YEARS_BY_PATHWAY[[parent]]
+  col <- paste0("year_", len)
+  rows <- list()
+  for (y in sort(d$entry_year)) {
+    y1 <- d$year_1[d$entry_year == y]
+    fin <- d[[col]][d$entry_year == y + (len - 1L)]
+    if (!length(fin) || !length(y1) || !is.finite(y1) || y1 <= 0) next
+    rows[[length(rows) + 1L]] <- tibble::tibble(
+      entry_year = y, year_1 = y1, final_year = len,
+      final_year_n = fin, retention = fin / y1)
+  }
+  if (!length(rows)) {
+    stop("acgme_cohort_tracking(): no cohort can be followed to year ", len,
+         " for '", parent, "'.", call. = FALSE)
+  }
+  dplyr::bind_rows(rows)
+}
+
+#' Measured within-fellowship completion
+#'
+#' The mean retention from [acgme_cohort_tracking()]. For the OB/GYN pathway it is
+#' ~0.99 across eight cohorts, and that is the point: fellowship attrition is
+#' close to zero, so a conversion of 0.84 from entry to certification is NOT
+#' mostly people leaving training. It is certification behaviour -- not sitting
+#' the exam, not passing it, or certifying later than the lag allows. Those have
+#' different causes and different levers from dropping out, and one parameter
+#' spanning both invites the wrong reading.
+#'
+#' IT IS NOT IDENTIFIABLE FOR UROLOGY, and this fails rather than returning a
+#' number. The urology year_2/year_1 diagonal runs from 1.00 to 2.00 -- more
+#' fellows in the second year than entered the first. Retention cannot exceed 1,
+#' so those columns are not following a cohort, and averaging them yields 1.349,
+#' which would be reported as a completion rate and read as one. Whatever the
+#' urology columns encode, it is not a cohort progression, and an unusable
+#' quantity is refused rather than dressed up.
+#'
+#' @param parent `"obgyn"` or `"urology"`.
+#' @return List with `rate`, `n_cohorts`, `range`, and `parent`.
+#' @export
+fellowship_completion_rate <- function(parent = c("obgyn", "urology")) {
+  parent <- match.arg(parent)
+  tr <- acgme_cohort_tracking(parent)
+  rate <- mean(tr$retention)
+  if (rate > 1 || mean(tr$retention > 1) > 0.5) {
+    stop(sprintf(paste(
+      "fellowship_completion_rate(): retention for '%s' averages %.3f, and %.0f%%",
+      "of cohorts exceed 1.0. A completion rate above one is impossible, so the",
+      "year-by-year columns are not tracking a cohort for this pathway and no",
+      "completion rate is identifiable from them. Do not substitute the combined",
+      "conversion here -- that would hide the problem rather than state it."),
+      parent, rate, 100 * mean(tr$retention > 1)), call. = FALSE)
+  }
+  list(rate = rate, n_cohorts = nrow(tr), range = range(tr$retention),
+       parent = parent)
+}
+
+#' Certifications already determined by fellows in training
+#'
+#' Fellows partway through a programme will certify on a known schedule, so the
+#' next year or two of certifications is largely fixed already and needs no
+#' entrant model, no regime-break term, and no view on which entry source
+#' undercounts. This is the tightest forecast available at short horizon, and the
+#' only one whose inputs are observed rather than projected.
+#'
+#' @param available_by Passed to [acgme_urps_fellows()].
+#' @param certification_rate Named vector of per-pathway conversions. Defaults to
+#'   the pathway-specific values from [entrant_to_cert_ratio_by_pathway()], each
+#'   aligned on its own fellowship length; a single pooled number would apply the
+#'   OB/GYN conversion to urology fellows at the wrong lag.
+#' @return Tibble of `certifying_year`, `parent`, `fellows_in_training`,
+#'   `program_year`, `certification_rate`, `expected_certifications`.
+#' @export
+locked_in_certifications <- function(available_by = NULL,
+                                     certification_rate = NULL) {
+  if (is.null(certification_rate)) {
+    r <- entrant_to_cert_ratio_by_pathway(through_year = available_by)
+    certification_rate <- stats::setNames(r$ratio, r$parent)
+  }
+  d <- acgme_urps_fellows(available_by)
+  latest <- max(d$entry_year)
+  d <- d[d$entry_year == latest, , drop = FALSE]
+  rows <- list()
+  for (i in seq_len(nrow(d))) {
+    p <- d$parent[i]
+    len <- URPS_FELLOWSHIP_YEARS_BY_PATHWAY[[p]]
+    for (yr in seq_len(len)) {
+      n <- d[[paste0("year_", yr)]][i]
+      if (!length(n) || !is.finite(n)) next
+      cr <- if (p %in% names(certification_rate)) certification_rate[[p]] else
+        stop("locked_in_certifications(): no certification rate for pathway '",
+             p, "'.", call. = FALSE)
+      rows[[length(rows) + 1L]] <- tibble::tibble(
+        # A fellow in program year `yr` has (len - yr) years left, then certifies.
+        certifying_year = latest + 1L + (len - yr),
+        parent = p, program_year = yr, fellows_in_training = n,
+        certification_rate = cr, expected_certifications = n * cr)
+    }
+  }
+  out <- dplyr::bind_rows(rows)
+  out[order(out$certifying_year, out$parent), ]
+}
+
+#' Entry-to-certification conversion with a pathway-specific lag
+#'
+#' Splits [entrant_to_cert_ratio()] by pathway so each is aligned on its own
+#' fellowship length, and matches each to the certification series it actually
+#' produces: ABOG certifications come from the OB/GYN pathway, ABU from urology.
+#'
+#' @param through_year Latest year either series may be read to.
+#' @param exclude_disrupted Drop backlog years from the certification side.
+#' @return Tibble of `parent`, `cert_lag`, `certifications`, `entrants`, `ratio`,
+#'   `years`.
+#' @export
+entrant_to_cert_ratio_by_pathway <- function(through_year = NULL,
+                                             exclude_disrupted = TRUE) {
+  .require_mufflyaccess("The certification series")
+  ec <- mufflyaccess::urps_entry_counts()
+  ec <- ec[ec$geography == "national", , drop = FALSE]
+  cert_col <- c(obgyn = "abog_entrants", urology = "abu_entrants")
+
+  drop_years <- integer(0)
+  if (isTRUE(exclude_disrupted)) {
+    reg <- classify_certification_regimes(
+      data.frame(year = ec$year, count = ec$combined_entrants), verbose = FALSE)
+    drop_years <- reg$year[reg$regime == "backlog"]
+  }
+
+  rows <- list()
+  for (p in names(URPS_FELLOWSHIP_YEARS_BY_PATHWAY)) {
+    lag <- URPS_FELLOWSHIP_YEARS_BY_PATHWAY[[p]]
+    ent <- acgme_urps_fellows(available_by = through_year, parent = p)
+    cy <- ec$year[!ec$year %in% drop_years]
+    if (!is.null(through_year)) cy <- cy[cy <= through_year]
+    e <- ent$year_1[match(cy - lag, ent$entry_year)]
+    keep <- is.finite(e) & e > 0
+    if (!any(keep)) next
+    rows[[length(rows) + 1L]] <- tibble::tibble(
+      parent = p, cert_lag = lag,
+      certifications = sum(ec[[cert_col[[p]]]][match(cy[keep], ec$year)]),
+      entrants = sum(e[keep]),
+      ratio = sum(ec[[cert_col[[p]]]][match(cy[keep], ec$year)]) / sum(e[keep]),
+      years = paste(range(cy[keep]), collapse = "-"))
+  }
+  dplyr::bind_rows(rows)
+}
