@@ -364,10 +364,15 @@ test_that("the new external gates do not change what strict mode stops on", {
 })
 
 test_that("check_legacy_canonical reports declared-vs-actual ownership", {
-  # Wired in scripts/ci/check_suite.R. Asserted here on its contract rather than
-  # its wiring, because a test cannot observe the CI script running: an empty
-  # frame means every legacy function resolves to the file LEGACY_CANONICAL
-  # says owns it.
+  # inst/legacy is FROZEN reference material and is .Rbuildignore'd, so
+  # legacy_dir() errors inside <pkg>.Rcheck/ by design -- which is also exactly
+  # why the gate itself lives in scripts/ci/check_suite.R, where the source tree
+  # is present, rather than in a model run.
+  skip_if(is.null(tryCatch(urpssim:::legacy_dir(), error = function(e) NULL)),
+          "legacy reference sources not reachable (inst/legacy is .Rbuildignore'd)")
+  # Asserted on its contract rather than its wiring, because a test cannot
+  # observe the CI script running: an empty frame means every legacy function
+  # resolves to the file LEGACY_CANONICAL says owns it.
   r <- check_legacy_canonical()
   expect_s3_class(r, "data.frame")
   expect_equal(nrow(r), 0L)

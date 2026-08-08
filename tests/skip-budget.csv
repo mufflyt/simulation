@@ -21,6 +21,7 @@ reason_pattern,max_tests,why
 "NRMP series CSV not reachable",6,"config/ and data-raw/calibration are .Rbuildignore'd."
 "roster/coordinate extract not present",3,"data-raw/urps_roster carries NPIs and is deliberately not in git; these cannot run in CI at all."
 "coordinate extract not present",3,"Same extract, single-path variant."
+"legacy reference sources not reachable",1,"inst/legacy is FROZEN reference material and is .Rbuildignore'd, so it is unreachable inside <pkg>.Rcheck/. The gate that uses it runs in scripts/ci/check_suite.R, where the source tree is present."
 "canonical source registry not reachable",2,"config/ is not shipped."
 "NAMCS 2019 cleaned file not present",4,"Downloaded survey extract, not in git."
 "BRFSS 2023 cleaned file not present",4,"Downloaded survey extract, not in git."
