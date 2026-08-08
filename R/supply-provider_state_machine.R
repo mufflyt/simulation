@@ -72,6 +72,11 @@ CAREER_STATE_LATE_ONSET_AGE <- 60L
 #' @return An ordered factor with levels `CAREER_STATES`.
 #' @family provider state machine
 #' @concept supply
+#' @examples
+#' # Age maps to career state (boundaries: mid-career >= 45, late-career >= 60).
+#' career_state_of(c(38, 52, 66))
+#' # A provider who has retired is in the absorbing state regardless of age:
+#' career_state_of(58, retired = TRUE)
 #' @export
 career_state_of <- function(age, entered = TRUE, retired = FALSE) {
   age <- as.numeric(age)

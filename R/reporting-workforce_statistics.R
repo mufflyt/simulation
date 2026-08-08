@@ -40,6 +40,9 @@
 #'   `method`, `note`.
 #' @family workforce statistics
 #' @concept reporting
+#' @examples
+#' # Wilson-score confidence interval for 12 of 50 (robust at small n and near 0/1).
+#' calculate_proportion_ci(x = 12, n = 50)
 #' @export
 calculate_proportion_ci <- function(x, n, conf_level = 0.95) {
   if (isTRUE(n == 0) || is.na(n)) {

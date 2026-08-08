@@ -15,6 +15,11 @@ Numeric standard error of the mean.
 \description{
 Standard error of a mean estimated from an observed annual series
 }
+\examples{
+# Standard error of the mean of an entrant-count series (feeds the parameter
+# spec that turns a Monte Carlo band into a forecast interval).
+series_mean_se(c(50, 57, 53, 59, 59))
+}
 \seealso{
 Other parameter uncertainty: 
 \code{\link{assert_parameter_uncertainty}()},

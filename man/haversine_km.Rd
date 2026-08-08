@@ -15,6 +15,10 @@ Distance(s) in km.
 \description{
 Great-circle (haversine) distance in kilometres
 }
+\examples{
+# Great-circle distance (km) between Denver and Chicago.
+haversine_km(39.74, -104.99, 41.88, -87.63)
+}
 \seealso{
 Other spatial access e2sfca: 
 \code{\link{access_moe_ci}()},

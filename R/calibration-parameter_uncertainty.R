@@ -60,6 +60,10 @@
 #' @return Numeric standard error of the mean.
 #' @family parameter uncertainty
 #' @concept calibration
+#' @examples
+#' # Standard error of the mean of an entrant-count series (feeds the parameter
+#' # spec that turns a Monte Carlo band into a forecast interval).
+#' series_mean_se(c(50, 57, 53, 59, 59))
 #' @export
 series_mean_se <- function(x) {
   x <- x[is.finite(x)]

@@ -82,6 +82,12 @@ forecast_probabilities <- function(x, prob_level = 0.95, exceed = NULL,
 #' @seealso [psa_workforce_gap()], [forecast_probabilities()]
 #' @family forecast probabilities
 #' @concept validation
+#' @examples
+#' # Decision-relevant probabilities from a vector of gap draws (percent):
+#' # P(any shortage) and P(shortage exceeds 10%).
+#' set.seed(1)
+#' workforce_gap_probabilities(rnorm(500, mean = 8, sd = 4),
+#'                             metric = "gap_pct", shortage_thresholds = c(0, 10))
 #' @export
 workforce_gap_probabilities <- function(psa, metric = c("gap_pct", "gap_fte"),
                                         shortage_thresholds = c(0, 5, 10, 15),
