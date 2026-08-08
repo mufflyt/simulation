@@ -56,6 +56,9 @@ hazard_pooled_long <- function(wide, subspecialties = c("go", "urps", "migs")) {
 fit_partial_pooled_hazards <- function(agg, band_levels = NULL,
                                        prior_shape = 2, prior_rate = 0.5) {
   assertthat::assert_that(all(c("subspecialty", "band", "py", "ev") %in% names(agg)))
+  if (any(!is.finite(agg$py)) || any(agg$py <= 0))
+    stop("fit_partial_pooled_hazards(): every `py` (person-years) must be finite and > 0; ",
+         "a zero/negative cell makes the unpooled hazard ev/py non-finite.", call. = FALSE)
   for (pkg in c("blme", "lme4")) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
       stop(sprintf("fit_partial_pooled_hazards() needs the '%s' package (Suggests). Install it to fit.", pkg),

@@ -177,7 +177,8 @@ baseline_anchor_sensitivity <- function(gap, supply_at_target, demand_growth,
       gap$base_supply_fte / breakeven else NA_real_,
     # d(gap)/d(anchor) = -demand_growth. As an elasticity: the % change in the
     # gap per 1% change in the anchor.
-    elasticity = -anchor * demand_growth / g0,
+    elasticity = if (abs(g0) > .Machine$double.eps^0.5)
+      -anchor * demand_growth / g0 else NA_real_,
     sensitivity = tab
   )
 }

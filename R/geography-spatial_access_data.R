@@ -99,6 +99,7 @@ build_access_membership <- function(iso_sf, tracts,
   assertthat::assert_that(all(c(provider_col, band_col) %in% names(iso_sf)))
 
   pts <- if (inherits(tracts, "sf")) {
+    assertthat::assert_that("demand_id" %in% names(tracts))
     tracts
   } else {
     assertthat::assert_that(all(c("demand_id", "lon", "lat") %in% names(tracts)))

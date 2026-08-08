@@ -122,6 +122,12 @@ compute_e2sfca_access <- function(membership, supply, demand,
   w_cum <- e2sfca_band_weights(weights)
   w_incr <- e2sfca_incremental_weights(weights, step2_power)
   band_key <- as.character(membership$band)
+  unknown_bands <- setdiff(unique(band_key), names(w_cum))
+  if (length(unknown_bands))
+    stop("compute_e2sfca_access(): membership band(s) not in the weight table: ",
+         paste(unknown_bands, collapse = ", "),
+         " -- they would map to NA weight and be silently dropped from access.",
+         call. = FALSE)
 
   mem <- membership %>%
     dplyr::mutate(
