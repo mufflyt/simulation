@@ -182,6 +182,9 @@ entrant_source_series <- function(source = c("acgme", "nrmp"),
 #'   disrupted and release years too. Under pooling the disruption is retained on
 #'   purpose, because dropping half of a deferral pair biases the ratio.
 #' @param pooled Sum both sides before dividing.
+#' @param allow_implausible Return a conversion above 1.0 instead of erroring.
+#'   Only for deliberately demonstrating a misalignment -- a rate above one means
+#'   more people reached the outcome than entered, so the default refuses it.
 #' @return List with `ratio`, `source`, `years`, `n_years`, `excluded`,
 #'   `cert_lag`, `pooled`, and `annual`.
 #' @family acgme fellows
@@ -191,7 +194,8 @@ entrant_to_cert_ratio <- function(source = c("acgme", "nrmp"),
                                   through_year = NULL,
                                   cert_lag = URPS_FELLOWSHIP_YEARS,
                                   exclude_disrupted = TRUE,
-                                  pooled = TRUE) {
+                                  pooled = TRUE,
+                                  allow_implausible = FALSE) {
   source <- match.arg(source)
   entry <- entrant_source_series(source, available_by = through_year)
   certs <- urps_entrant_series(if (is.null(through_year)) 2100L else through_year)
@@ -218,6 +222,8 @@ entrant_to_cert_ratio <- function(source = c("acgme", "nrmp"),
   annual <- stats::setNames(certs$count[keep] / ent[keep], certs$year[keep])
   ratio <- if (isTRUE(pooled)) sum(certs$count[keep]) / sum(ent[keep]) else mean(annual)
 
+  .assert_possible_conversion(ratio, "entrant_to_cert_ratio()", cert_lag, source,
+                              allow_implausible)
   list(ratio = unname(ratio), source = source, years = certs$year[keep],
        n_years = sum(keep), excluded = excluded, cert_lag = as.integer(cert_lag),
        pooled = isTRUE(pooled), annual = annual)
@@ -225,20 +231,8 @@ entrant_to_cert_ratio <- function(source = c("acgme", "nrmp"),
 
 # ---- Fellowship length, completion, and the pipeline already in train -------
 #
-# LENGTH IS PATHWAY-SPECIFIC, and treating it as uniform misaligns half the
-# series. OB/GYN-based URPS fellowship is three years; urology-based is two.
-# Aligning ABU certifications to urology entrants three years back returns a
-# conversion of 1.050 -- more certifying than entered, the same impossible
-# signature that flagged the deferral problem. At two years it returns 0.776.
-#
-# A note on the ACGME year_3 column for the urology rows: it is small but not
-# zero (5-9 fellows). That is NOT evidence of a three-year urology program and
-# must not be read as one -- an earlier draft of this module inferred a
-# "shift from three-year to two-year urology fellowships" from the declining
-# ratio of that column to year_1, which was an artifact of dividing two
-# unrelated cohorts. Urology URPS has been two years throughout. The residual
-# column is left unexplained rather than given an invented meaning.
-URPS_FELLOWSHIP_YEARS_BY_PATHWAY <- c(obgyn = 3L, urology = 2L)
+# Fellowship length by pathway now lives in R/calibration-sources.R, beside the
+# derived URPS_FELLOWSHIP_YEARS scalar, so the two cannot be defined apart.
 
 #' Follow each entering cohort through its program
 #'
@@ -273,6 +267,9 @@ acgme_cohort_tracking <- function(parent = c("obgyn", "urology")) {
     stop("acgme_cohort_tracking(): no cohort can be followed to year ", len,
          " for '", parent, "'.", call. = FALSE)
   }
+  # NO conversion guard here on purpose: retention above 1 is exactly the
+  # finding for the urology diagonal, and fellowship_completion_rate() is where
+  # it is refused. Guarding it here would hide the evidence.
   dplyr::bind_rows(rows)
 }
 
@@ -401,5 +398,56 @@ entrant_to_cert_ratio_by_pathway <- function(through_year = NULL,
       ratio = sum(ec[[cert_col[[p]]]][match(cy[keep], ec$year)]) / sum(e[keep]),
       years = paste(range(cy[keep]), collapse = "-"))
   }
-  dplyr::bind_rows(rows)
+  out <- dplyr::bind_rows(rows)
+  for (i in seq_len(nrow(out))) {
+    .assert_possible_conversion(
+      out$ratio[i],
+      sprintf("entrant_to_cert_ratio_by_pathway() for '%s'", out$parent[i]),
+      out$cert_lag[i])
+  }
+  out
+}
+
+# ---- The guard that would have caught the wrong fellowship length ----------
+#
+# A CONVERSION ABOVE 1.0 IS THE SIGNATURE OF A MISALIGNMENT, and it has appeared
+# four times in this model's history, each time as a plausible-looking number
+# that a reader would have taken at face value:
+#
+#   1.197  NRMP entry, 3-year lag, window holding a deferral release
+#   1.050  ABU certifications against urology entrants at a 3-year lag
+#   1.349  "fellowship completion" from a urology cohort diagonal
+#   4.019  certifications against entrants including the backlog era
+#
+# None was caught by a guard. Each was caught by someone noticing that a rate
+# exceeded one, which is not a control. More people certified than ever entered
+# is arithmetically impossible, so the estimate is not "high" -- it is measuring
+# something other than what its name says, and the usual cause is that the lag,
+# the window, or the denominator does not match the numerator.
+#
+# Documenting the fellowship length did not prevent the 1.050: the length WAS
+# documented, as a single scalar, and the scalar was correct for OB/GYN and
+# wrong for urology. A constant cannot enforce that a caller applies it to the
+# right pathway. This can.
+.assert_possible_conversion <- function(ratio, what, cert_lag = NA_integer_,
+                                        source = NA_character_,
+                                        allow_implausible = FALSE,
+                                        tolerance = 1e-8) {
+  bad <- is.finite(ratio) & ratio > 1 + tolerance
+  if (!any(bad) || isTRUE(allow_implausible)) return(invisible(ratio))
+  stop(sprintf(paste(
+    "%s returned a conversion of %s, which is impossible: more people reached",
+    "the outcome than ever entered. The estimate is not high, it is misaligned.",
+    "Check, in this order: (1) the lag -- fellowship length is PATHWAY-SPECIFIC",
+    "(URPS_FELLOWSHIP_YEARS_BY_PATHWAY: obgyn %d, urology %d), and a uniform lag",
+    "produced exactly this at 1.050; (2) the window -- one holding a deferral",
+    "release but not the entry cohort deferred into it inflates the ratio; (3)",
+    "the denominator -- backlog-era certifications never passed through a",
+    "fellowship at all.%s Pass allow_implausible = TRUE only to demonstrate the",
+    "defect deliberately."),
+    what, paste(sprintf("%.3f", ratio[bad]), collapse = ", "),
+    URPS_FELLOWSHIP_YEARS_BY_PATHWAY[["obgyn"]],
+    URPS_FELLOWSHIP_YEARS_BY_PATHWAY[["urology"]],
+    if (is.finite(cert_lag)) sprintf(" Lag used: %d.", cert_lag) else ""),
+    call. = FALSE)
 }

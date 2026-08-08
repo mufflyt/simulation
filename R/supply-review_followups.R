@@ -47,13 +47,17 @@
 #' @param through_year Latest year either series may be read to.
 #' @param cert_lag Years from appointment to certification.
 #' @param exclude_disrupted Drop disrupted certification years.
+#' @param allow_implausible Return a conversion above 1.0 instead of erroring.
+#'   Only for deliberately demonstrating a misalignment -- a rate above one means
+#'   more people reached the outcome than entered, so the default refuses it.
 #' @return List with `ratio`, `years`, `n_years`, `excluded`, and `annual`.
 #' @family review followups
 #' @concept supply
 #' @export
 nrmp_match_to_cert_ratio <- function(through_year = BACKTEST_CUTOFF_YEAR,
                                      cert_lag = URPS_FELLOWSHIP_YEARS,
-                                     exclude_disrupted = TRUE) {
+                                     exclude_disrupted = TRUE,
+                                     allow_implausible = FALSE) {
   nrmp <- nrmp_entrant_series(available_by = through_year)
   certs <- urps_entrant_series(through_year)
 
@@ -76,6 +80,8 @@ nrmp_match_to_cert_ratio <- function(through_year = BACKTEST_CUTOFF_YEAR,
   }
   annual <- stats::setNames(certs$count[keep] / matched[keep], certs$year[keep])
 
+  .assert_possible_conversion(mean(annual), "nrmp_match_to_cert_ratio()",
+                              cert_lag, "nrmp", allow_implausible)
   list(
     ratio = unname(mean(annual)),
     years = certs$year[keep],

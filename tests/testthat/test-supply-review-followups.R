@@ -114,7 +114,12 @@ test_that("the match-to-cert conversion is estimated, and excludes uninformative
   expect_true(all(c(2013L, 2014L, 2015L, 2020L) %in% r$excluded))
   expect_gt(r$ratio, 0.5)
   expect_lt(r$ratio, 1.0)
-  expect_gt(nrmp_match_to_cert_ratio(2020L, exclude_disrupted = FALSE)$ratio, 2)
+  # Including them now requires the explicit escape: the guard refuses an
+  # impossible conversion by default rather than returning 4.019 as a rate.
+  expect_error(nrmp_match_to_cert_ratio(2020L, exclude_disrupted = FALSE),
+               "impossible")
+  expect_gt(nrmp_match_to_cert_ratio(2020L, exclude_disrupted = FALSE,
+                                     allow_implausible = TRUE)$ratio, 2)
 
   # This estimator is retained for the back-test, which must not see past its
   # cutoff -- but it is NO LONGER the pipeline default. Its window holds the
@@ -375,4 +380,50 @@ test_that("the locked-in pipeline forecasts from fellows already in training", {
   # The horizon is bounded by the longest programme: nothing beyond it is known.
   expect_lte(max(l$certifying_year) - min(l$certifying_year),
              max(URPS_FELLOWSHIP_YEARS_BY_PATHWAY) - 1L)
+})
+
+# ---- Preventing a wrong fellowship length from recurring --------------------
+
+test_that("the scalar fellowship length is derived from the pathway map", {
+  # A bare `URPS_FELLOWSHIP_YEARS <- 3L` stated independently is how a uniform
+  # lag reached the urology arm. Deriving it means the two cannot drift, and the
+  # scalar can only ever be the OB/GYN length.
+  expect_identical(URPS_FELLOWSHIP_YEARS,
+                   URPS_FELLOWSHIP_YEARS_BY_PATHWAY[["obgyn"]])
+  expect_false(URPS_FELLOWSHIP_YEARS == URPS_FELLOWSHIP_YEARS_BY_PATHWAY[["urology"]])
+})
+
+test_that("an impossible conversion is refused wherever a rate is returned", {
+  skip_if_not_installed("mufflyaccess")
+  # The detector for this whole class of bug: more people reaching the outcome
+  # than ever entered. It has appeared four times (1.197, 1.050, 1.349, 4.019)
+  # and was each time caught by a human reading the number, which is not a control.
+  expect_error(
+    urpssim:::.assert_possible_conversion(1.05, "test()", cert_lag = 3L),
+    "impossible")
+  # The message must name the lag as the first thing to check, because that is
+  # what produced the 1.050.
+  err <- tryCatch(urpssim:::.assert_possible_conversion(1.05, "test()", 3L),
+                  error = function(e) conditionMessage(e))
+  expect_match(err, "PATHWAY-SPECIFIC")
+  expect_match(err, "urology")
+
+  # Legitimate rates pass untouched, and the deliberate-demonstration escape works.
+  expect_silent(urpssim:::.assert_possible_conversion(0.86, "test()"))
+  expect_silent(urpssim:::.assert_possible_conversion(
+    4.019, "test()", allow_implausible = TRUE))
+})
+
+test_that("the guard is wired into the functions that return conversions", {
+  skip_if_not_installed("mufflyaccess")
+  # Wired, not merely defined: every pathway ratio must survive its own guard.
+  expect_silent(entrant_to_cert_ratio_by_pathway())
+  expect_true(all(entrant_to_cert_ratio_by_pathway()$ratio <= 1))
+  expect_true(entrant_to_cert_ratio("acgme")$ratio <= 1)
+
+  # The backlog-era demonstration still needs the explicit escape, which is the
+  # only way past the guard.
+  expect_error(entrant_to_cert_ratio("nrmp", exclude_disrupted = FALSE,
+                                     pooled = FALSE),
+               "impossible")
 })

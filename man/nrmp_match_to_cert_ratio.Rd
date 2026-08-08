@@ -7,7 +7,8 @@
 nrmp_match_to_cert_ratio(
   through_year = BACKTEST_CUTOFF_YEAR,
   cert_lag = URPS_FELLOWSHIP_YEARS,
-  exclude_disrupted = TRUE
+  exclude_disrupted = TRUE,
+  allow_implausible = FALSE
 )
 }
 \arguments{
@@ -16,6 +17,10 @@ nrmp_match_to_cert_ratio(
 \item{cert_lag}{Years from appointment to certification.}
 
 \item{exclude_disrupted}{Drop disrupted certification years.}
+
+\item{allow_implausible}{Return a conversion above 1.0 instead of erroring.
+Only for deliberately demonstrating a misalignment -- a rate above one means
+more people reached the outcome than entered, so the default refuses it.}
 }
 \value{
 List with \code{ratio}, \code{years}, \code{n_years}, \code{excluded}, and \code{annual}.
