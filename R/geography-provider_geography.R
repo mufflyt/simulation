@@ -188,7 +188,7 @@ apply_provider_migration <- function(agents, year, shares,
                                      hazards = PROVIDER_MIGRATION_HAZARD) {
   if (!"state" %in% names(agents)) return(agents)
   if (!"entry_year" %in% names(agents))
-    stop("apply_provider_migration(): `agents` is missing `entry_year`; without it the ",
+    stop("provider migration requires an `entry_year` column on `agents`; without it the ",
          "hazard is length-0 and migration silently becomes a no-op.", call. = FALSE)
   if (!"n_moves" %in% names(agents)) agents$n_moves <- 0L
 

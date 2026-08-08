@@ -154,10 +154,14 @@ tract_need_from_population <- function(tracts,
     stop("tract_need_from_population(): non-finite prevalence for band(s): ",
          paste(bands[!is.finite(rate)], collapse = ", "), call. = FALSE)
 
-  .band_num <- vapply(tracts[, unname(band_cols), drop = FALSE], is.numeric, logical(1))
-  if (!all(.band_num))
-    stop("tract_need_from_population(): band population column(s) are not numeric: ",
-         paste(unname(band_cols)[!.band_num], collapse = ", "),
+  # character/factor only: an all-NA logical column is the documented "NA
+  # population -> treated as zero" case and must pass, but a character column
+  # would coerce the whole matrix to character and make %*% error cryptically.
+  .band_bad <- vapply(tracts[, unname(band_cols), drop = FALSE],
+                      function(col) is.character(col) || is.factor(col), logical(1))
+  if (any(.band_bad))
+    stop("tract_need_from_population(): band population column(s) are character/factor: ",
+         paste(unname(band_cols)[.band_bad], collapse = ", "),
          " -- as.matrix() would coerce to character and the %*% product would error.",
          call. = FALSE)
   pop <- as.matrix(tracts[, unname(band_cols), drop = FALSE])
