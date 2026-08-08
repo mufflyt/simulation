@@ -126,6 +126,9 @@ assign_entrant_geography <- function(n_entrants, shares, stochastic = TRUE) {
   assertthat::assert_that(all(c("geo", "share") %in% names(shares)))
   n_entrants <- as.integer(n_entrants)
   if (n_entrants <= 0) return(character(0))
+  if (any(!is.finite(shares$share)) || any(shares$share < 0) || sum(shares$share) <= 0)
+    stop("assign_entrant_geography(): `share` must be finite, non-negative and sum to > 0 ",
+         "(an NA or all-zero share makes sample()'s prob vector invalid).", call. = FALSE)
   p <- shares$share / sum(shares$share)
 
   if (isTRUE(stochastic)) {
@@ -184,6 +187,9 @@ migration_hazard <- function(years_since_entry, age = NA_real_,
 apply_provider_migration <- function(agents, year, shares,
                                      hazards = PROVIDER_MIGRATION_HAZARD) {
   if (!"state" %in% names(agents)) return(agents)
+  if (!"entry_year" %in% names(agents))
+    stop("apply_provider_migration(): `agents` is missing `entry_year`; without it the ",
+         "hazard is length-0 and migration silently becomes a no-op.", call. = FALSE)
   if (!"n_moves" %in% names(agents)) agents$n_moves <- 0L
 
   yrs <- year - agents$entry_year

@@ -349,7 +349,14 @@ entrant_spec_from_series <- function(agents, from_year = 2018L,
 
   supply_parameter_spec(
     entrant_series = series,
-    entrant_mean = entrant_mean %||% mean(series),
+    entrant_mean = entrant_mean %||% {
+      m <- if (length(series)) mean(series, na.rm = TRUE) else NA_real_
+      if (!is.finite(m))
+        stop("entrant_spec_from_series(): the entrant series is empty/all-NA over the ",
+             "selected window; cannot derive entrant_mean. Supply `entrant_mean` or ",
+             "widen the year window.", call. = FALSE)
+      m
+    },
     departures = departures,
     hazard_cv = hazard_cv,
     hours_model = hours_model

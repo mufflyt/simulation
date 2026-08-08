@@ -433,8 +433,13 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
     base <- data.frame(
       n_respondents  = length(idx),
       pop_weight     = sum(wt),
-      pct_smoker     = mean(sub$smoker %in% c("Current_Daily", "Current_Some"),
-                            na.rm = TRUE),
+      pct_smoker     = {
+        # %in% never returns NA, so na.rm is inert and Unknown/NA smokers would
+        # fold into the denominator as non-smokers. Exclude them explicitly.
+        .known <- !is.na(sub$smoker) & sub$smoker != "Unknown"
+        if (any(.known))
+          mean(sub$smoker[.known] %in% c("Current_Daily", "Current_Some")) else NA_real_
+      },
       mean_children  = mean(sub$n_children, na.rm = TRUE),
       n_ui_obs       = sum(sub$ui_flag == 1L, na.rm = TRUE),
       n_pop_obs      = sum(sub$pop_flag == 1L, na.rm = TRUE),

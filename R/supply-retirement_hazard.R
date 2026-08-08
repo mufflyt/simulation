@@ -254,6 +254,11 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
     if (nrow(sex_data) < 10)
       return(weibull_fallback()[weibull_fallback()$sex == s, ])
 
+    # Neither an age column nor a retirement-year column: fall back to the
+    # analogy tier rather than indexing sex_data[[NA]] (subscript error).
+    if (is.na(age_col) && is.na(retire_col))
+      return(weibull_fallback()[weibull_fallback()$sex == s, ])
+
     ref_yr     <- 2023L
     age_at_ret <- if (!is.na(age_col)) sex_data[[age_col]]
                   else ref_yr - sex_data[[retire_col]] + 50L

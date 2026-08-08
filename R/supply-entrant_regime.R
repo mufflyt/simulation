@@ -557,7 +557,10 @@ entrant_regime_rolling_validation <- function(series,
 
     base <- cumulative_series$n_active[cumulative_series$year == cy]
     obs <- cumulative_series$n_active[cumulative_series$year == max(yrs)]
-    if (!length(base) || !length(obs)) next
+    # length != 1 (not just 0): a duplicated year in cumulative_series would make
+    # base/obs length > 1 and silently recycle through base + rowSums(paths),
+    # corrupting the quantiles.
+    if (length(base) != 1L || length(obs) != 1L) next
 
     paths <- draw_entrant_paths(fit, yrs, n_draws)
     cum <- base + rowSums(paths)

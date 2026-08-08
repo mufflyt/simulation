@@ -63,6 +63,11 @@ resolve_canonical <- function(name,
 
   entry <- sources[[name]]
   path <- if (is.list(entry)) entry$path else entry
+  # Fail closed: a registry entry missing `path:` would otherwise leave `path`
+  # NULL, file.path() drop it, and the resolver return the registry's parent
+  # DIRECTORY as a "verified" canonical file.
+  if (is.null(path) || !is.character(path) || length(path) != 1L || !nzchar(path))
+    stop(sprintf("Canonical source '%s' has no usable 'path'.", name), call. = FALSE)
   recorded_sha <- if (is.list(entry)) entry$sha256 else NULL
 
   # Resolve relative paths against the registry's directory.
