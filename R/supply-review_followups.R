@@ -92,6 +92,18 @@ nrmp_match_to_cert_ratio <- function(through_year = BACKTEST_CUTOFF_YEAR,
 #' p_active_practice`. Each stage is an explicit, labeled conversion; a fellowship
 #' MATCH is not an active US clinical entrant.
 #'
+#' @details
+#' Three stages: NRMP matches, board certification `cert_lag` years later, then
+#' active practice after `active_lag`. Leading years are `NA` because their
+#' source cohort predates the supplied series -- that is a missing input, not an
+#' estimate of zero entrants, and it must not be filled with one.
+#'
+#' `p_complete_cert` accepts a per-year schedule as well as a scalar, which is
+#' what makes a cancelled examination representable: 2020's board examination
+#' did not happen. With `defer_shortfall = TRUE` (the default) the fellows a
+#' suppressed year fails to certify are carried forward into the following year
+#' as `deferred_in` rather than deleted, because a cancelled exam delays a
+#' cohort, it does not destroy it.
 #' @param matches Data frame with integer `year` and non-negative `matched`
 #'   (NRMP fellowship matches per year).
 #' @param p_complete_cert Fraction of matched fellows who complete fellowship and

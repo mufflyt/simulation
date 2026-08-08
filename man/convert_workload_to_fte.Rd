@@ -51,10 +51,26 @@ When \code{by_setting = TRUE}, also includes a \code{setting} column.
 \description{
 Convert a service-volume schedule to required provider FTE
 }
+\details{
+Service volumes become required FTE through a work-RVU basket, so supply and
+demand end up in the same units and the difference between them is
+meaningful. A service name absent from \code{workload} does not silently vanish:
+the join reports the shortfall in match rate, warning in \code{relaxed} mode and
+failing in \code{strict}. A dropped service understates demand invisibly, so a
+publication run should not be made in \code{relaxed}.
+
+WHAT THIS DOES NOT CHANGE. Because productivity is solved against a base-year
+anchor -- \code{required_fte(t) = anchor * wRVU(t) / wRVU(base)} -- the workload
+LEVELS and the delegation matrix cancel out of the projection. Changing them
+moves the base year and the projection together. A 2.1x change in demand
+calibration moved 2050 required FTE by 0.25\%. What does not cancel is the
+SHAPE of demand growth, and the anchor itself.
+}
 \examples{
 # Service volumes become REQUIRED FTE through a work-RVU basket, so supply
 # and demand end up in the same units. Service names must exist in
-# urps_service_workload(); an unmatched name is refused, not dropped.
+# urps_service_workload(); an unmatched name is reported as a low match rate
+# (a warning in relaxed mode, an error in strict), never dropped in silence.
 volumes <- tibble::tibble(
   service = c("new_consultation", "return_visit", "cystoscopy", "prolapse_procedure"),
   volume  = c(120000, 240000, 45000, 32000)

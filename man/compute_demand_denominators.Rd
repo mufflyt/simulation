@@ -30,6 +30,17 @@ respond differently to a shifting age structure. This is the sanctioned entry
 point; \code{\link[=compute_demand_denominators_crude]{compute_demand_denominators_crude()}} reproduces the old single-rate
 behaviour and is retained only for backward comparison.
 }
+\details{
+Three estimands with genuinely different age profiles: surgery peaks at 60-79
+and falls by half at 80+, while prevalence keeps rising. That difference is
+what makes them informative.
+
+The failure this replaced computed every estimand as
+\code{population_65plus * constant}, which makes D1, D2 and D3 the same series up
+to scale -- three numbers that look like corroboration and are one number
+printed three times. \code{\link[=detect_proportional_estimands]{detect_proportional_estimands()}} tests for exactly that
+and \code{\link[=assert_estimands_independent]{assert_estimands_independent()}} refuses it in strict mode.
+}
 \examples{
 # Three estimands with genuinely different age profiles -- not one series
 # rescaled three ways, which is what detect_proportional_estimands() catches.

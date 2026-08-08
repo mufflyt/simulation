@@ -34,6 +34,17 @@ asserts keys are present, checks the right table has unique keys unless
 \code{allow_fanout = TRUE}, performs the join, and fails if the result row count
 differs from the left input (which can only happen via fan-out).
 }
+\details{
+Three distinct failures, all of which a plain \code{\link[dplyr:mutate-joins]{dplyr::left_join()}} performs
+silently: a missing key column, a fan-out that duplicates left rows because
+the right table's key is not unique, and a join that succeeds while matching
+almost nothing.
+
+Only the third is a judgement call, which is why \code{min_match_rate} is
+explicit. Below it, the behaviour follows \code{mode}: a warning in \code{relaxed}, an
+error in \code{strict}. A low match rate is usually a key-grain mismatch -- state
+against state-year, ZIP against ZCTA -- rather than genuinely absent data.
+}
 \examples{
 # A plain left_join silently drops rows that do not match. This one states a
 # required match rate and refuses to return a quietly-truncated table.

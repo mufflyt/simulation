@@ -400,6 +400,18 @@ required_fte_base_year <- function(base_supply_fte, adequacy) {
 #' demand scenario from double-counting a deficit already inside the base-year
 #' gap.
 #'
+#' @details
+#' The base-year shortfall, which rebasing supply and demand to 1.0 cannot
+#' produce: that construction guarantees adequacy of 1.0 in the base year
+#' whether or not the workforce is short, so the absolute deficit has to be
+#' estimated separately and enters the headline gap with a coefficient of one.
+#'
+#' `method` names only the ARITHMETIC. `calibration_status` names the evidence,
+#' and the two are independent: a capacity survey fielded on urogynecologists
+#' and another specialty's published distribution borrowed wholesale produce
+#' identical output through identical arithmetic. Because a borrowed number must
+#' not be reportable as a measurement, this refuses to infer the tier for any
+#' method but `assumed`.
 #' @param base_supply_fte Base-year supplied FTE.
 #' @param adequacy Base-year adequacy ratio.
 #' @param method One of `BASELINE_GAP_METHODS`. Names the arithmetic only.

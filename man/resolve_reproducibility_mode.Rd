@@ -17,6 +17,17 @@ Mirrors the isochrones \code{REPRODUCIBILITY_MODE} contract: \code{strict} for
 manuscript / production runs (fully seeded, fail-closed), \code{relaxed} for
 interactive development.
 }
+\details{
+Reads the \code{REPRODUCIBILITY_MODE} environment variable, falling back to
+\code{default}. An unrecognised value warns and falls back rather than failing, so
+a typo degrades to the permissive mode rather than stopping a run.
+
+The two modes differ in what they do about an input that cannot support the
+claim being made of it. In \code{relaxed} an uncalibrated workload basket, an
+analogy-derived baseline gap, or a Monte Carlo run in which no parameter
+varies each emit a warning and proceed. In \code{strict} each is an error. Use
+\code{strict} for anything whose numbers will be published.
+}
 \examples{
 # 'strict' makes uncalibrated inputs and fixed-parameter intervals refuse to
 # run rather than warn. Set REPRODUCIBILITY_MODE=strict for a publication run.

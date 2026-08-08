@@ -69,6 +69,18 @@ series_mean_se <- function(x) {
 
 #' Specify which supply parameters vary across Monte Carlo iterations
 #'
+#' @details
+#' Declares which parameters are redrawn each Monte Carlo iteration. This is the
+#' difference between an interval that describes forecast uncertainty and one
+#' that describes only the luck of who retires when. In the 2020->2023
+#' back-test, intervals built without a spec were 0-40 providers wide on a count
+#' near 1,300 -- two arms had zero width -- and covered the observation in 0 of
+#' 8 arms; drawing the entrant rate widens them to 129-148.
+#'
+#' A parameter is drawn only where an uncertainty estimate genuinely exists.
+#' `quantified` records which ones those are, so a fixed parameter is visible as
+#' a limitation rather than being given an invented spread to make the interval
+#' look complete.
 #' @param entrant_series Observed annual entrant counts behind the entrant rate.
 #'   Supplying it turns the entrant rate into a drawn parameter.
 #' @param entrant_mean Point estimate of gross annual entrants.
