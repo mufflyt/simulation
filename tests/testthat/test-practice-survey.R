@@ -251,3 +251,52 @@ test_that("the register's function references resolve to real objects", {
                info = paste("status text names unknown function(s):",
                             paste(unknown, collapse = ", ")))
 })
+
+# ---- Hours-curve gradient leverage -----------------------------------------
+#
+# The defect these pin: one quantity carried three different values at once --
+# fte_curve_status() said FTE per head reaches 0.9231 by 2050 (176 FTE), README
+# said "~3%", and the model produced 0.9115 (169 FTE). All three were prose. A
+# borrowed input that does NOT cancel is exactly the one whose magnitude must be
+# computed, so these assert the computation rather than the sentence.
+
+test_that("a flat age gradient produces no FTE-per-head drift, by construction", {
+  agents <- data.frame(age = c(35, 45, 55, 65), sex = "female")
+  z <- fte_curve_gradient_leverage(agents, horizon_years = 25L, gradient_scale = 0)
+  # gradient_scale = 0 means hours do not depend on age, so ageing changes
+  # nothing. If this ever drifts, the scaling is not isolating the gradient.
+  expect_equal(z$fte_per_head_base, 1, tolerance = 1e-9)
+  expect_equal(z$fte_per_head_horizon, 1, tolerance = 1e-9)
+  expect_equal(z$drift_pct, 0, tolerance = 1e-9)
+})
+
+test_that("every scale is normalised to 1.0 FTE per head at base year", {
+  agents <- data.frame(age = seq(34, 70, by = 4), sex = rep(c("female", "male"), 5))
+  z <- fte_curve_gradient_leverage(agents, horizon_years = 20L,
+                                   gradient_scale = c(0, 0.5, 1, 1.5))
+  # The rows must differ ONLY in shape. If the base column moved with the scale,
+  # the comparison would be confounded by level and the whole helper would be
+  # measuring the thing that already cancels.
+  expect_true(all(abs(z$fte_per_head_base - 1) < 1e-9))
+  # Steeper gradient, strictly more drift.
+  expect_true(all(diff(z$drift_pct) < 0))
+})
+
+test_that("the published gradient's leverage is what the status object claims", {
+  skip_if_not_installed("mufflyaccess")
+  set.seed(1)
+  agents <- suppressMessages(agents_from_certification_cohorts(2023L))
+  z <- fte_curve_gradient_leverage(agents, horizon_years = 25L, gradient_scale = 1)
+
+  # ~20% of FTE per head over 25 years on a cohort with no renewal. Pinned
+  # loosely enough to survive cohort re-draws, tightly enough that the "~3%"
+  # README figure -- which this replaces -- would fail.
+  expect_gt(-z$drift_pct, 15)
+  expect_lt(-z$drift_pct, 25)
+  expect_lt(z$fte_delta_per_1000_head, -150)
+
+  # And the status object's prose must carry a number in that range rather than
+  # a stale one, since that is how the three-way disagreement arose.
+  expect_match(fte_curve_status()$leverage, "20.0%", fixed = TRUE)
+  expect_match(fte_curve_status()$leverage, "fte_curve_gradient_leverage", fixed = TRUE)
+})

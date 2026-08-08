@@ -20,6 +20,7 @@ status function reports only what bears on it.
 }
 \seealso{
 Other practice survey: 
+\code{\link{fte_curve_gradient_leverage}()},
 \code{\link{fte_curve_status}()},
 \code{\link{geographic_access_status}()},
 \code{\link{unresolved_calibration_items}()}
