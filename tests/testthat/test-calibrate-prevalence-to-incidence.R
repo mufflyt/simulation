@@ -15,6 +15,9 @@
 # the loaded namespace, which is what testthat::test_check() provides. Internal
 # dot-prefixed helpers are visible that way too, because the test environment's
 # parent IS the package namespace.
+#
+# Fifth instance of this shape in this repository (config/ twice,
+# inst/legacy, and now R/): a test must never reach for a source-tree path.
 
 # Wu 2014 clinical UI older-age bands, with plausible survey SEs expressed as CIs.
 WU_UI <- do.call(rbind, list(
