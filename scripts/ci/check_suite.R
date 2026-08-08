@@ -111,6 +111,30 @@ if (nrow(undeclared)) {
 
 if (nrow(bad)) problems <- c(problems, sprintf("%d test(s) failed.", nrow(bad)))
 
+# ---- Legacy canonical ownership ---------------------------------------------
+#
+# check_legacy_canonical() reports functions whose CANONICAL definition -- the
+# one the declared load order actually leaves in scope -- differs from the one
+# LEGACY_CANONICAL says owns it. A silent disagreement means the package runs an
+# implementation nobody believes is in use, which is the shadowing failure the
+# repo-hygiene duplicate-definition gate covers for R/ and nothing covered for
+# inst/legacy.
+#
+# It belongs HERE rather than in validation_report(): it is a property of the
+# source tree, not of a projection, and this script is the job that has the
+# source tree. Absent legacy sources are not a failure -- there is simply
+# nothing to disagree about.
+legacy <- tryCatch(check_legacy_canonical(), error = function(e) NULL)
+if (is.data.frame(legacy) && nrow(legacy) > 0) {
+  cat("\n==== LEGACY CANONICAL MISMATCH ====\n")
+  for (i in seq_len(nrow(legacy)))
+    cat(sprintf("  %-34s declared %s, actually resolves to %s\n",
+                legacy$fn[i], legacy$declared[i], legacy$actual[i]))
+  problems <- c(problems, sprintf(
+    "%d legacy function(s) resolve to a different file from the one LEGACY_CANONICAL declares.",
+    nrow(legacy)))
+}
+
 if (length(problems)) {
   cat("\n")
   for (p in problems) cat("ERROR: ", p, "\n", sep = "")

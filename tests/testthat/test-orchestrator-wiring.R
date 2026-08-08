@@ -301,3 +301,74 @@ test_that("a guard that errors is recorded as failed, never as passed", {
   v <- ow_report()
   expect_false(v$passed[v$check == "demand_coefficients_publishable"])
 })
+
+# ---- The last seven gates ---------------------------------------------------
+#
+# The `unwired_gate` register reached zero here. Six of these run inside
+# validation_report(); check_legacy_canonical() is a property of the SOURCE TREE
+# rather than of a projection, so it runs in scripts/ci/check_suite.R instead --
+# wiring it into a model run would have put a repo-structure check on the hot
+# path and told a user nothing about their result.
+
+test_that("the reproducibility and definition gates appear in every report", {
+  v <- ow_report()
+  expect_true(all(c("backtest_record_current", "fte_curve_calibrated",
+                    "external_data_present") %in% v$check))
+})
+
+test_that("the frozen-record gate passes when reachable and cannot pass vacuously", {
+  # A drifted record IS fixable by code -- regenerate the artifact and the
+  # record together -- so this is INTERNAL and strict mode should stop on it.
+  v <- ow_report()
+  expect_equal(v$type[v$check == "backtest_record_current"], "internal")
+  # Where the artifact is unreachable, verify_backtest_record() reports
+  # checked = FALSE and the assert passes. That is not a vacuous pass: there is
+  # nothing to have drifted from. Where it IS reachable it must genuinely match.
+  vb <- verify_backtest_record()
+  if (isTRUE(vb$checked)) {
+    expect_true(v$passed[v$check == "backtest_record_current"])
+    expect_false(isFALSE(vb$checksum_matches))
+  }
+})
+
+test_that("the contract check appears only when the contract is installed", {
+  v <- ow_report()
+  present <- "mufflyaccess_contract_usable" %in% v$check
+  expect_equal(present, requireNamespace("mufflyaccess", quietly = TRUE))
+  # A build that is ABSENT is not an internal failure -- adding a FALSE row
+  # would make strict mode impossible for every contract-free run. A build that
+  # is PRESENT but missing an export this package calls is.
+  if (present) expect_equal(v$type[v$check == "mufflyaccess_contract_usable"], "internal")
+})
+
+test_that("external data presence is decidable rather than a manual placeholder", {
+  v <- ow_report()
+  row <- v[v$check == "external_data_present", ]
+  expect_equal(row$type, "data")
+  expect_false(is.na(row$passed))
+  # The detail names WHICH inputs are absent; a bare FALSE would send a reader
+  # looking through check_external_data() by hand.
+  if (!row$passed) expect_match(row$detail, "absent")
+})
+
+test_that("the new external gates do not change what strict mode stops on", {
+  # The whole batch is FALSE today and waits on evidence no code change can
+  # produce -- a fielded survey, an ascertained attrition series, downloaded
+  # archives. Only backtest_record_current and mufflyaccess_contract_usable are
+  # internal, and both are conditions the repository CAN satisfy.
+  v <- ow_report(baseline_gap(1306, 0.95, method = "assumed",
+                              calibration_status = "uncalibrated_illustrative",
+                              evidence = "test"))
+  failed_internal <- v$check[v$type == "internal" & !is.na(v$passed) & !v$passed]
+  expect_setequal(failed_internal, "base_year_gap_estimated")
+})
+
+test_that("check_legacy_canonical reports declared-vs-actual ownership", {
+  # Wired in scripts/ci/check_suite.R. Asserted here on its contract rather than
+  # its wiring, because a test cannot observe the CI script running: an empty
+  # frame means every legacy function resolves to the file LEGACY_CANONICAL
+  # says owns it.
+  r <- check_legacy_canonical()
+  expect_s3_class(r, "data.frame")
+  expect_equal(nrow(r), 0L)
+})

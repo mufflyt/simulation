@@ -5,9 +5,12 @@
 # tested, documented -- and reachable from no pipeline. hours_coef,
 # assert_demand_calibrated(), opportunity_placement_shares(), param_spec in
 # run_backtest() and apply_hrsa_surgical_fte() were each found that way, one at
-# a time, by accident. Sixty-four exports are in that position today. It was sixty-seven: assert_publishable_demand_coefficients(),
-# assert_publishable_supply_transitions() and unresolved_calibration_items()
-# were wired into validation_report(), which is what this register is for.
+# a time, by accident. Fifty-eight exports are in that position today, down from sixty-seven. All ten
+# `unwired_gate` entries -- assertions and status checks that were implemented,
+# tested, documented and invoked from nothing -- have been wired: six into
+# validation_report(), which the orchestrator runs on every projection, and
+# check_legacy_canonical() into scripts/ci/check_suite.R, because it is a
+# property of the source tree rather than of a projection.
 #
 # Being on this list is not automatically wrong. An analysis helper a USER calls
 # is orphaned by construction -- the package has no reason to call it. What is
@@ -15,7 +18,10 @@
 #
 #   api           A user calls it directly. Orphan status is expected.
 #   unwired_gate  An assertion or status check that NOTHING invokes. A guard
-#                 nobody calls does not guard anything; this is real debt.
+#                 nobody calls does not guard anything. THIS CATEGORY IS NOW
+#                 EMPTY -- all ten were wired -- and it is kept in the schema
+#                 deliberately, so the next one that appears has somewhere
+#                 honest to be recorded rather than being quietly filed as api.
 #   dormant       A capability implemented and connected to no pipeline. Either
 #                 wire it or drop it -- it is not doing anything meanwhile.
 # The gate fails when a NEW orphan appears unregistered, and when a registered
@@ -81,10 +87,3 @@
 "summarise_stratum_coverage","dormant"
 "swan_dmdm_panel_from_archive","dormant"
 "urps_hazard_exposure","dormant"
-"assert_backtest_record_current","unwired_gate"
-"assert_external_anchor","unwired_gate"
-"assert_mufflyaccess_contract","unwired_gate"
-"backtest_attrition_requirement","unwired_gate"
-"check_external_data","unwired_gate"
-"check_legacy_canonical","unwired_gate"
-"fte_curve_status","unwired_gate"

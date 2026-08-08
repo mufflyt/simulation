@@ -55,6 +55,11 @@ ew_orphans <- function(root) {
   list(exports = ex, orphans = sort(ex[!used]))
 }
 
+# The schema. Declared once so the "every orphan declares a kind" check and the
+# "unwired_gate still exists" check cannot drift apart -- if they did, the
+# category could be deleted from one and silently accepted by the other.
+EW_CATEGORIES <- c("api", "unwired_gate", "dormant")
+
 ew_registry <- function(root) {
   utils::read.csv(file.path(root, "tests", "export-registry.csv"),
                   stringsAsFactors = FALSE, comment.char = "#")
@@ -81,43 +86,43 @@ test_that("every registered orphan declares which kind of orphan it is", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
   reg <- ew_registry(root)
-  expect_true(all(reg$category %in%
-                    c("api", "unwired_gate", "dormant")))
+  expect_true(all(reg$category %in% EW_CATEGORIES))
   expect_equal(anyDuplicated(reg$export), 0L)
   expect_true(all(nzchar(reg$export)))
 })
 
-test_that("the unwired gates are named individually, not counted", {
+test_that("no guard is left unwired, and the category stays in the schema", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
   reg <- ew_registry(root)
-  gates <- sort(reg$export[reg$category == "unwired_gate"])
 
-  # Pinned by name rather than by count. These are assertions that NOTHING
-  # invokes -- a guard nobody calls does not guard anything -- and the point of
-  # naming them is that the list should shrink as each is wired. A count would
-  # let one be silently swapped for another.
-  # Was ten. assert_publishable_demand_coefficients(),
-  # assert_publishable_supply_transitions() and unresolved_calibration_items()
-  # are now called from validation_report(), which the orchestrator runs on
-  # every projection -- so they are guards that actually execute.
-  expect_equal(gates, c(
-    "assert_backtest_record_current",
-    "assert_external_anchor",
-    "assert_mufflyaccess_contract",
-    "backtest_attrition_requirement",
-    "check_external_data",
-    "check_legacy_canonical",
-    "fte_curve_status"))
+  # THIS LIST REACHED ZERO. It was pinned by NAME rather than by count so that
+  # it could only shrink and no entry could be silently swapped for another; all
+  # ten have now been wired. Six went into validation_report(), which the
+  # orchestrator runs on every projection, and check_legacy_canonical() into
+  # scripts/ci/check_suite.R -- it is a property of the source tree, not of a
+  # projection, so wiring it into a run would have been the wrong home.
+  expect_equal(sort(reg$export[reg$category == "unwired_gate"]), character(0))
+
+  # The category stays valid in the schema deliberately. Removing it would force
+  # the next guard that arrives unwired to be filed as `api`, which is precisely
+  # how "implemented and connected to nothing" stays invisible.
+  expect_true("unwired_gate" %in% EW_CATEGORIES)
 })
 
 test_that("the unwired surface does not grow", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
   o <- ew_orphans(root)
-  # A ratchet, not a target. 68 of 411 exports reach no pipeline; this fails if
+  # A ratchet, not a target. 58 of 418 exports reach no pipeline; this fails if
   # that gets worse, and the number is meant to be edited DOWNWARD as gates are
   # wired and dormant capabilities are connected or dropped.
-  expect_lte(length(o$orphans), 68L)
-  expect_lte(length(o$orphans) / length(o$exports), 0.17)
+  #
+  # It has moved 67 -> 58 by wiring all ten unwired_gate entries. What remains
+  # is `api` (a user calls it directly, so orphan status is expected) and
+  # `dormant` (implemented, connected to nothing) -- the latter is the next
+  # thing worth working, and unlike the gates it needs a judgement per entry
+  # about whether to wire or drop.
+  expect_lte(length(o$orphans), 58L)
+  expect_lte(length(o$orphans) / length(o$exports), 0.14)
 })
