@@ -318,3 +318,61 @@ test_that("the NRMP and ACGME pathway mixes disagree, and both are retained", {
   n_share <- nu$urology_share[match(yrs, nu$appointment_year)]
   expect_gt(mean(n_share), mean(a_share))
 })
+
+# ---- Pathway-specific lag, completion, and the locked-in pipeline -----------
+
+test_that("fellowship length is pathway-specific", {
+  # OB/GYN-based URPS is three years, urology-based is two. Treating them alike
+  # misaligns half the series.
+  expect_equal(URPS_FELLOWSHIP_YEARS_BY_PATHWAY[["obgyn"]], 3L)
+  expect_equal(URPS_FELLOWSHIP_YEARS_BY_PATHWAY[["urology"]], 2L)
+})
+
+test_that("each pathway's conversion is possible once aligned on its own lag", {
+  skip_if_not_installed("mufflyaccess")
+  r <- entrant_to_cert_ratio_by_pathway()
+  expect_setequal(r$parent, c("obgyn", "urology"))
+  expect_equal(r$cert_lag[r$parent == "urology"], 2L)
+
+  # A conversion above 1.0 means more certified than ever entered, which is the
+  # signature of a wrong alignment rather than a real rate. Urology at lag 3
+  # returned 1.050; at its own lag it must be a possible number.
+  expect_true(all(r$ratio > 0 & r$ratio < 1))
+})
+
+test_that("OB/GYN fellowship attrition is measured, and is near zero", {
+  skip_if_not_installed("mufflyaccess")
+  r <- fellowship_completion_rate("obgyn")
+  expect_gt(r$rate, 0.95)
+  expect_gte(r$n_cohorts, 5)
+  # This is the point of measuring it: the entry-to-certification conversion is
+  # NOT mostly fellows leaving training, so it must not be described as such.
+  ratio <- entrant_to_cert_ratio_by_pathway()
+  expect_lt(ratio$ratio[ratio$parent == "obgyn"], r$rate)
+})
+
+test_that("an impossible completion rate is refused, not reported", {
+  skip_if_not_installed("mufflyaccess")
+  # Urology year_2 exceeds year_1 in most cohorts, so the columns are not
+  # following a cohort and the mean (1.349) is not a completion rate. Returning
+  # it would put an impossible number into a field named for a probability.
+  expect_error(fellowship_completion_rate("urology"), "impossible")
+  tr <- acgme_cohort_tracking("urology")
+  expect_gt(mean(tr$retention > 1), 0.5)
+})
+
+test_that("the locked-in pipeline forecasts from fellows already in training", {
+  skip_if_not_installed("mufflyaccess")
+  l <- locked_in_certifications()
+  # Every fellow counted must be in a real program year for their pathway.
+  for (p in unique(l$parent)) {
+    expect_true(all(l$program_year[l$parent == p] <=
+                      URPS_FELLOWSHIP_YEARS_BY_PATHWAY[[p]]))
+  }
+  # Each pathway is converted at its OWN rate, not a pooled one.
+  expect_equal(length(unique(l$certification_rate)), 2L)
+  expect_true(all(l$expected_certifications <= l$fellows_in_training))
+  # The horizon is bounded by the longest programme: nothing beyond it is known.
+  expect_lte(max(l$certifying_year) - min(l$certifying_year),
+             max(URPS_FELLOWSHIP_YEARS_BY_PATHWAY) - 1L)
+})
