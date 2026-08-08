@@ -18,6 +18,12 @@ Numeric vector.
 Delegates to \code{mufflyaccess::safe_divide()} when available so this package
 uses the house convention for divide-by-zero rather than producing \code{Inf}.
 }
+\examples{
+# A zero denominator yields the default, not Inf or NaN. Division that
+# silently produced Inf is how a per-capita figure once became infinite for
+# a geography with no recorded population.
+ssot_safe_divide(c(3, 5), c(4, 0))
+}
 \seealso{
 Other ssot: 
 \code{\link{as_urps_projection}()},

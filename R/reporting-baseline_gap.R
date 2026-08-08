@@ -400,6 +400,18 @@ required_fte_base_year <- function(base_supply_fte, adequacy) {
 #' demand scenario from double-counting a deficit already inside the base-year
 #' gap.
 #'
+#' @details
+#' The base-year shortfall, which rebasing supply and demand to 1.0 cannot
+#' produce: that construction guarantees adequacy of 1.0 in the base year
+#' whether or not the workforce is short, so the absolute deficit has to be
+#' estimated separately and enters the headline gap with a coefficient of one.
+#'
+#' `method` names only the ARITHMETIC. `calibration_status` names the evidence,
+#' and the two are independent: a capacity survey fielded on urogynecologists
+#' and another specialty's published distribution borrowed wholesale produce
+#' identical output through identical arithmetic. Because a borrowed number must
+#' not be reportable as a measurement, this refuses to infer the tier for any
+#' method but `assumed`.
 #' @param base_supply_fte Base-year supplied FTE.
 #' @param adequacy Base-year adequacy ratio.
 #' @param method One of `BASELINE_GAP_METHODS`. Names the arithmetic only.
@@ -564,6 +576,14 @@ print.urps_baseline_gap <- function(x, ...) {
 #' @return (Invisibly) TRUE when a genuine gap estimate is present.
 #' @family baseline gap
 #' @concept reporting
+#' @examples
+#' # In strict mode an analogy-derived gap is refused unless the caller says
+#' # allow_analogy = TRUE. The point is that the acknowledgement is explicit and
+#' # recorded, never inherited.
+#' gap <- baseline_gap(1306, 0.95, method = "assumed",
+#'                     calibration_status = "uncalibrated_illustrative",
+#'                     evidence = "illustrative example")
+#' assert_baseline_gap_estimated(gap, mode = "relaxed", allow_analogy = TRUE)
 #' @export
 assert_baseline_gap_estimated <- function(gap, mode = resolve_reproducibility_mode(),
                                           allow_analogy = FALSE) {

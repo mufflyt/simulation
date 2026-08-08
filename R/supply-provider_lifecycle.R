@@ -180,6 +180,17 @@ PROFESSIONAL_MORTALITY_MULTIPLIER <- c(male = 0.75, female = 0.85)
 #' `RETIREMENT_MIN_AGE`, and an age-flat career-change hazard below it. Everyone
 #' at or above `MICROSIM_TERMINAL_AGE` departs with probability 1.
 #'
+#' @details
+#' Two processes with different shapes, not one curve. Below
+#' `RETIREMENT_MIN_AGE` the hazard is the age-flat career-change rate; at and
+#' above it, the age-graded retirement schedule applies. Everyone at
+#' `MICROSIM_TERMINAL_AGE` departs with probability 1.
+#'
+#' The career-change component is a PERMANENT occupational separation. HWSM
+#' instead models labour-force participation, which is temporary and admits
+#' re-entry; the two are not interchangeable, and conflating them understates
+#' supply because providers who return are never counted back in. Both
+#' components are represented here, with re-entry handled separately.
 #' @param age Numeric age(s).
 #' @param sex Character sex ("male"/"female"), recycled to length of `age`.
 #'   Female physicians retire slightly earlier (HWSM Exhibit 17).
@@ -681,6 +692,10 @@ validate_participation_table <- function(table = FUTUREDOCS_PARTICIPATION) {
 #' @return Numeric intercept for [hwsm_reference_hours()].
 #' @family provider lifecycle
 #' @concept supply
+#' @examples
+#' # Solves the intercept so the age/sex hours schedule reproduces 1.0 FTE at
+#' # the package's clinical-hours definition.
+#' calibrate_hours_intercept(age = c(45, 55, 65))
 #' @export
 calibrate_hours_intercept <- function(age, sex = "female",
                                       fte_hours = URPS_FTE_CLINICAL_HOURS_PER_WEEK) {

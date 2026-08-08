@@ -48,6 +48,19 @@ An object of class \code{urps_param_spec}.
 \description{
 Specify which supply parameters vary across Monte Carlo iterations
 }
+\details{
+Declares which parameters are redrawn each Monte Carlo iteration. This is the
+difference between an interval that describes forecast uncertainty and one
+that describes only the luck of who retires when. In the 2020->2023
+back-test, intervals built without a spec were 0-40 providers wide on a count
+near 1,300 -- two arms had zero width -- and covered the observation in 0 of
+8 arms; drawing the entrant rate widens them to 129-148.
+
+A parameter is drawn only where an uncertainty estimate genuinely exists.
+\code{quantified} records which ones those are, so a fixed parameter is visible as
+a limitation rather than being given an invented spread to make the interval
+look complete.
+}
 \examples{
 # Draws the entrant rate per iteration from an observed series. Without a
 # spec, every iteration shares one entrant rate and the resulting interval

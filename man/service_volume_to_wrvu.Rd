@@ -26,6 +26,12 @@ Tibble with \code{year} (if present) and \code{work_rvu}.
 \description{
 Total annual work RVUs implied by a service-volume schedule
 }
+\examples{
+service_volume_to_wrvu(tibble::tibble(
+  service = c("new_consultation", "return_visit", "cystoscopy"),
+  volume  = c(120000, 240000, 45000)
+))
+}
 \seealso{
 Other workload to fte: 
 \code{\link{URPS_DELEGATION_MATRIX}},

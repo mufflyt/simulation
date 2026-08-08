@@ -69,6 +69,18 @@ series_mean_se <- function(x) {
 
 #' Specify which supply parameters vary across Monte Carlo iterations
 #'
+#' @details
+#' Declares which parameters are redrawn each Monte Carlo iteration. This is the
+#' difference between an interval that describes forecast uncertainty and one
+#' that describes only the luck of who retires when. In the 2020->2023
+#' back-test, intervals built without a spec were 0-40 providers wide on a count
+#' near 1,300 -- two arms had zero width -- and covered the observation in 0 of
+#' 8 arms; drawing the entrant rate widens them to 129-148.
+#'
+#' A parameter is drawn only where an uncertainty estimate genuinely exists.
+#' `quantified` records which ones those are, so a fixed parameter is visible as
+#' a limitation rather than being given an invented spread to make the interval
+#' look complete.
 #' @param entrant_series Observed annual entrant counts behind the entrant rate.
 #'   Supplying it turns the entrant rate into a drawn parameter.
 #' @param entrant_mean Point estimate of gross annual entrants.
@@ -193,6 +205,14 @@ print.urps_param_spec <- function(x, ...) {
 #' @return List with `entrants`, `retirement_schedule`, `hours_coef`.
 #' @family parameter uncertainty
 #' @concept calibration
+#' @examples
+#' # One draw per Monte Carlo iteration. `quantified` records WHICH parameters
+#' # actually vary -- anything published without a standard error is held fixed
+#' # and says so, rather than being given an invented spread.
+#' spec <- supply_parameter_spec(entrant_series = c(50, 57, 53, 59, 59),
+#'                               entrant_mean = 55)
+#' draw <- draw_supply_parameters(spec)
+#' draw$entrants_per_year
 #' @export
 draw_supply_parameters <- function(spec, schedule = RETIREMENT_HAZARD_BY_AGE,
                                    years = NULL) {
@@ -349,7 +369,14 @@ entrant_spec_from_series <- function(agents, from_year = 2018L,
 
   supply_parameter_spec(
     entrant_series = series,
-    entrant_mean = entrant_mean %||% mean(series),
+    entrant_mean = entrant_mean %||% {
+      m <- if (length(series)) mean(series, na.rm = TRUE) else NA_real_
+      if (!is.finite(m))
+        stop("entrant_spec_from_series(): the entrant series is empty/all-NA over the ",
+             "selected window; cannot derive entrant_mean. Supply `entrant_mean` or ",
+             "widen the year window.", call. = FALSE)
+      m
+    },
     departures = departures,
     hazard_cv = hazard_cv,
     hours_model = hours_model

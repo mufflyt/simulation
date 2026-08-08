@@ -159,9 +159,11 @@ There are over 400 exported objects. Two roxygen tags make them navigable:
 * **`@family`** names the module, so every help page lists its siblings under
   "See also". Start anywhere and walk sideways.
 
-For the code itself, `docs/ARCHITECTURE.md` maps the package and
-`docs/GUARDS.md` explains each guard and the defect that motivated it. Both live
-in the repository rather than the installed package.
+For the code itself, `docs/ARCHITECTURE.md` maps the package,
+`docs/GUARDS.md` explains each guard and the defect that motivated it, and
+`docs/GLOSSARY.md` defines the workforce, epidemiology, and credentialing jargon
+the help pages assume. All live in the repository rather than the installed
+package.
 
 ## Where to go next
 

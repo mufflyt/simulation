@@ -24,11 +24,12 @@ procedures is rejected. Sign convention follows the published tables: a
 negative gap is a shortfall.
 }
 \examples{
-\dontrun{
-# supply: projected provider FTE by year; required: required FTE by year.
-# Both sides are FTE, so the difference is meaningful.
-compute_fte_gap(supply, required)
-}
+# Both sides are FTE, so the difference is meaningful. This is the check
+# compute_demand_coverage() refuses to do with a case count.
+compute_fte_gap(
+  tibble::tibble(year = 2025:2027, effective_fte_median = c(1300, 1310, 1320)),
+  tibble::tibble(year = 2025:2027, required_fte = c(1400, 1440, 1480))
+)
 }
 \seealso{
 Other workload to fte: 

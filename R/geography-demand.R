@@ -115,6 +115,11 @@ accessible_need_vs_capacity <- function(geo, need_col = "need", capacity_col = "
 #' geographic analogue of the D1 prevalent-PFD denominator (`R/demand-urps`), applied to
 #' local population instead of the national age structure.
 #'
+#' @details
+#' Applies age-band PFD prevalence to tract population counts. Band column names
+#' are fixed by `TRACT_AGE_BAND_COLUMNS`; a missing band is an error rather than
+#' a zero, because a silently-absent band understates need for every tract at
+#' once and the total still looks plausible.
 #' @param tracts Data frame with a geography id and one female-population column
 #'   per demand age band (default columns are those written by
 #'   `scripts/data_acquisition/08_download_acs_tracts.R`). Any other columns
@@ -131,6 +136,15 @@ accessible_need_vs_capacity <- function(geo, need_col = "need", capacity_col = "
 #' @return `tracts` with a numeric `need` column added.
 #' @family demand
 #' @concept geography
+#' @examples
+#' # Age-banded tract population becomes expected PFD cases. Column names are
+#' # fixed by TRACT_AGE_BAND_COLUMNS; a missing band is an error, not a zero.
+#' tract_need_from_population(tibble::tibble(
+#'   GEOID         = c("08031001", "08031002"),
+#'   female_20_39  = c(900, 1200), female_40_59 = c(800, 700),
+#'   female_60_64  = c(200, 180),  female_65_79 = c(300, 260),
+#'   female_80plus = c(90, 70)
+#' ))
 #' @export
 tract_need_from_population <- function(tracts,
                                        prevalence = pfd_prevalence_by_band(),
@@ -154,6 +168,16 @@ tract_need_from_population <- function(tracts,
     stop("tract_need_from_population(): non-finite prevalence for band(s): ",
          paste(bands[!is.finite(rate)], collapse = ", "), call. = FALSE)
 
+  # character/factor only: an all-NA logical column is the documented "NA
+  # population -> treated as zero" case and must pass, but a character column
+  # would coerce the whole matrix to character and make %*% error cryptically.
+  .band_bad <- vapply(tracts[, unname(band_cols), drop = FALSE],
+                      function(col) is.character(col) || is.factor(col), logical(1))
+  if (any(.band_bad))
+    stop("tract_need_from_population(): band population column(s) are character/factor: ",
+         paste(unname(band_cols)[.band_bad], collapse = ", "),
+         " -- as.matrix() would coerce to character and the %*% product would error.",
+         call. = FALSE)
   pop <- as.matrix(tracts[, unname(band_cols), drop = FALSE])
   pop[is.na(pop)] <- 0
   tracts[[need_col]] <- as.numeric(pop %*% rate)   # sum_band(pop_band * prevalence_band)

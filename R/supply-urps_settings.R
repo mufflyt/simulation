@@ -615,6 +615,8 @@ setting_scenario_summary <- function(volumes,
   ) |>
     dplyr::mutate(
       volume_delta = .data$volume_adjusted - .data$volume_baseline,
-      pct_change   = 100 * .data$volume_delta / .data$volume_baseline
+      pct_change   = ifelse(.data$volume_baseline > 0,
+                            100 * .data$volume_delta / .data$volume_baseline,
+                            NA_real_)
     )
 }

@@ -417,7 +417,20 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
   # express "count rows for one column, weighted sums for the rest" in one pass,
   # so the cells are built explicitly below.
   grp_cols <- c("age_group", "race_eth", "insurance", "income_tier", "metro", "bmi_class")
-  rows <- split(seq_len(nrow(brfss_women)), brfss_women[, grp_cols], drop = TRUE)
+  # Retain respondents whose stratum values are MISSING rather than letting
+  # split(drop = TRUE) silently discard them -- and their survey weight -- from
+  # the population. summarise_stratum_coverage() diagnoses completeness by looking
+  # for NA in these columns, so the NA rows must survive as cells for it to mean
+  # anything (otherwise it always reports 1.0). A sentinel keys the missing groups
+  # through split(); it is converted back to NA when the keys are rebuilt below.
+  .NA_KEY <- "__NA_STRATUM__"
+  key_cols <- lapply(grp_cols, function(cl) {
+    v <- as.character(brfss_women[[cl]])
+    v[is.na(v)] <- .NA_KEY
+    v
+  })
+  names(key_cols) <- grp_cols
+  rows <- split(seq_len(nrow(brfss_women)), key_cols, drop = TRUE)
 
   cc_cols <- grep("^cc_", names(brfss_women), value = TRUE)
 
@@ -433,8 +446,13 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
     base <- data.frame(
       n_respondents  = length(idx),
       pop_weight     = sum(wt),
-      pct_smoker     = mean(sub$smoker %in% c("Current_Daily", "Current_Some"),
-                            na.rm = TRUE),
+      pct_smoker     = {
+        # %in% never returns NA, so na.rm is inert and Unknown/NA smokers would
+        # fold into the denominator as non-smokers. Exclude them explicitly.
+        .known <- !is.na(sub$smoker) & sub$smoker != "Unknown"
+        if (any(.known))
+          mean(sub$smoker[.known] %in% c("Current_Daily", "Current_Some")) else NA_real_
+      },
       mean_children  = mean(sub$n_children, na.rm = TRUE),
       n_ui_obs       = sum(sub$ui_flag == 1L, na.rm = TRUE),
       n_pop_obs      = sum(sub$pop_flag == 1L, na.rm = TRUE),
@@ -447,6 +465,7 @@ build_urps_population_cells <- function(brfss_women = NULL, verbose = TRUE) {
 
   key_df <- do.call(rbind, lapply(names(rows), function(nm) {
     vals <- strsplit(nm, "\\.")[[1]]
+    vals[vals == .NA_KEY] <- NA_character_
     setNames(as.data.frame(t(vals), stringsAsFactors = FALSE), grp_cols)
   }))
   cell_df <- do.call(rbind, cell_list)

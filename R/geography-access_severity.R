@@ -92,6 +92,10 @@ clear_access_by_severity <- function(catchments,
   }
   ids <- unique(catchments$catchment)
   cap <- stats::setNames(cap_all[match(ids, catchments$catchment)], ids)
+  if (anyDuplicated(paste(catchments$catchment, sv, sep = "\r")))
+    stop("clear_access_by_severity(): duplicate (catchment, severity) rows; each pair must ",
+         "be unique or a row's demand_workload is silently discarded by the lookup.",
+         call. = FALSE)
   ins_all <- if ("insurance_fraction" %in% names(catchments)) {
     stats::setNames(catchments$insurance_fraction, paste(catchments$catchment, sv, sep = "\r"))
   } else NULL

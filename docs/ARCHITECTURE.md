@@ -249,6 +249,10 @@ SSOT-dependent tests skip themselves.
 
 ## 6. Reading paths
 
+**Lost in the jargon?** [`GLOSSARY.md`](GLOSSARY.md) defines the workforce,
+epidemiology, and credentialing terms (FTE, wRVU, E2SFCA, HWSM, DMDM,
+calibration tiers, SSOT, PFD/SUI/POP, …) the code and help pages assume.
+
 **New scientist / reviewer** — README "Orientation" → "Model architecture" →
 [`DEMAND_METHODS.md`](DEMAND_METHODS.md) → [`BENCHMARKS.md`](BENCHMARKS.md) (the
 values the model must reproduce) → [`BACKTEST_2020_TO_2023.md`](BACKTEST_2020_TO_2023.md).

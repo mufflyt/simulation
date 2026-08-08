@@ -31,9 +31,11 @@ plus the estimated starting shortfall). Every later year then inherits a
 denominator that reproduces a known quantity in the base year.
 }
 \examples{
-# SOLVE the productivity denominator so base-year required FTE reproduces the
-# base-year demand anchor, rather than asserting it from a survey.
-calibrate_wrvu_per_fte(base_year_wrvu = 9.8e6, base_year_required_fte = 1306)
+# Productivity is SOLVED against a base-year anchor, not assumed. That is
+# why the workload levels and the delegation matrix cancel out of
+# required_fte(t) = anchor * wRVU(t) / wRVU(base): only the anchor and the
+# SHAPE of demand growth move the answer.
+calibrate_wrvu_per_fte(base_year_wrvu = 7.5e6, base_year_required_fte = 1306)
 }
 \seealso{
 Other workload to fte: 

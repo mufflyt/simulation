@@ -42,6 +42,19 @@ explicit. Map it over pathways/years and \code{dplyr::bind_rows()} the results; 
 \code{group} to label each call. Report ABU and ABOG separately (a scope assumption
 that should not be buried in one pooled stock) by calling once per pathway.
 }
+\details{
+Four tiers, and THE UNITS CHANGE BETWEEN THEM -- tier 1 is providers, tier 2
+is FTE, tiers 3 and 4 are annual work RVUs. They are deliberately not
+comparable to one another, because the point of the hierarchy is that each
+step removes a different reason a board-certified provider is not delivering
+an accessible URPS service-hour: not all of them practise clinically, not all
+clinical time is URPS work, and not all capacity is reachable by the patients
+who need it.
+
+\code{accessible_fraction} and \code{insurance_fraction} multiply, so supplying both
+assumes they are independent. Where they are not -- uninsured patients
+concentrated in underserved areas -- that product overstates reach.
+}
 \examples{
 # Headcount is not capacity. Each step removes a reason a certified provider
 # is not delivering an accessible URPS service-hour.

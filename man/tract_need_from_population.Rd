@@ -40,6 +40,22 @@ population in each demand age band by that band's PFD prevalence and sums, so
 geographic analogue of the D1 prevalent-PFD denominator (\code{R/demand-urps}), applied to
 local population instead of the national age structure.
 }
+\details{
+Applies age-band PFD prevalence to tract population counts. Band column names
+are fixed by \code{TRACT_AGE_BAND_COLUMNS}; a missing band is an error rather than
+a zero, because a silently-absent band understates need for every tract at
+once and the total still looks plausible.
+}
+\examples{
+# Age-banded tract population becomes expected PFD cases. Column names are
+# fixed by TRACT_AGE_BAND_COLUMNS; a missing band is an error, not a zero.
+tract_need_from_population(tibble::tibble(
+  GEOID         = c("08031001", "08031002"),
+  female_20_39  = c(900, 1200), female_40_59 = c(800, 700),
+  female_60_64  = c(200, 180),  female_65_79 = c(300, 260),
+  female_80plus = c(90, 70)
+))
+}
 \seealso{
 Other demand: 
 \code{\link{accessible_need_vs_capacity}()},

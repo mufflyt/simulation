@@ -160,6 +160,9 @@ as_urps_projection <- function(supply,
                                validate = TRUE) {
   .require_mufflyaccess("The URPS projection contract")
   assertthat::assert_that(is.data.frame(supply), "year" %in% names(supply))
+  assertthat::assert_that(
+    any(c("headcount_median", "headcount") %in% names(supply)),
+    msg = "supply must carry a headcount column ('headcount_median' or 'headcount')")
 
   scen <- if ("scenario" %in% names(supply)) supply$scenario else "baseline"
   out <- data.frame(
@@ -207,6 +210,9 @@ as_urps_projection <- function(supply,
 ssot_pfd_prevalence <- function(condition = "any_PFD") {
   .require_mufflyaccess("PFD prevalence")
   p <- mufflyaccess::pfd_prevalence(condition)
+  if (!all(c("65_79", "80plus") %in% names(p)))
+    stop("mufflyaccess::pfd_prevalence() is missing expected age bands '65_79'/'80plus'; got: ",
+         paste(names(p), collapse = ", "), call. = FALSE)
   tibble::tibble(
     age_band = c("65-79", "80+"),
     prevalence = unname(p[c("65_79", "80plus")]),
@@ -287,6 +293,11 @@ ssot_provenance <- function(detailed = FALSE) {
 #' @return Numeric vector.
 #' @family ssot
 #' @concept core
+#' @examples
+#' # A zero denominator yields the default, not Inf or NaN. Division that
+#' # silently produced Inf is how a per-capita figure once became infinite for
+#' # a geography with no recorded population.
+#' ssot_safe_divide(c(3, 5), c(4, 0))
 #' @export
 ssot_safe_divide <- function(numerator, denominator, default = NA_real_) {
   if (has_mufflyaccess()) {

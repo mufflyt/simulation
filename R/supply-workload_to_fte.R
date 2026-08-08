@@ -258,6 +258,11 @@ apportion_service_volume <- function(volumes, matrix = URPS_DELEGATION_MATRIX) {
 #' @return Tibble with `year` (if present) and `work_rvu`.
 #' @family workload to fte
 #' @concept supply
+#' @examples
+#' service_volume_to_wrvu(tibble::tibble(
+#'   service = c("new_consultation", "return_visit", "cystoscopy"),
+#'   volume  = c(120000, 240000, 45000)
+#' ))
 #' @export
 service_volume_to_wrvu <- function(volumes,
                                    workload = urps_service_workload(),
@@ -302,9 +307,11 @@ service_volume_to_wrvu <- function(volumes,
 #' @family workload to fte
 #' @concept supply
 #' @examples
-#' # SOLVE the productivity denominator so base-year required FTE reproduces the
-#' # base-year demand anchor, rather than asserting it from a survey.
-#' calibrate_wrvu_per_fte(base_year_wrvu = 9.8e6, base_year_required_fte = 1306)
+#' # Productivity is SOLVED against a base-year anchor, not assumed. That is
+#' # why the workload levels and the delegation matrix cancel out of
+#' # required_fte(t) = anchor * wRVU(t) / wRVU(base): only the anchor and the
+#' # SHAPE of demand growth move the answer.
+#' calibrate_wrvu_per_fte(base_year_wrvu = 7.5e6, base_year_required_fte = 1306)
 #' @export
 calibrate_wrvu_per_fte <- function(base_year_wrvu, base_year_required_fte,
                                    indirect_share = INDIRECT_TIME_SHARE) {
@@ -418,6 +425,20 @@ implied_urps_share <- function(volumes, required_fte,
 
 #' Convert a service-volume schedule to required provider FTE
 #'
+#' @details
+#' Service volumes become required FTE through a work-RVU basket, so supply and
+#' demand end up in the same units and the difference between them is
+#' meaningful. A service name absent from `workload` does not silently vanish:
+#' the join reports the shortfall in match rate, warning in `relaxed` mode and
+#' failing in `strict`. A dropped service understates demand invisibly, so a
+#' publication run should not be made in `relaxed`.
+#'
+#' WHAT THIS DOES NOT CHANGE. Because productivity is solved against a base-year
+#' anchor -- `required_fte(t) = anchor * wRVU(t) / wRVU(base)` -- the workload
+#' LEVELS and the delegation matrix cancel out of the projection. Changing them
+#' moves the base year and the projection together. A 2.1x change in demand
+#' calibration moved 2050 required FTE by 0.25%. What does not cancel is the
+#' SHAPE of demand growth, and the anchor itself.
 #' @param volumes Tibble with `service`, `volume`, optionally `year`.
 #' @param wrvu_per_fte Annual work RVUs per clinical FTE
 #'   ([calibrate_wrvu_per_fte()]).
@@ -443,7 +464,8 @@ implied_urps_share <- function(volumes, required_fte,
 #' @examples
 #' # Service volumes become REQUIRED FTE through a work-RVU basket, so supply
 #' # and demand end up in the same units. Service names must exist in
-#' # urps_service_workload(); an unmatched name is refused, not dropped.
+#' # urps_service_workload(); an unmatched name is reported as a low match rate
+#' # (a warning in relaxed mode, an error in strict), never dropped in silence.
 #' volumes <- tibble::tibble(
 #'   service = c("new_consultation", "return_visit", "cystoscopy", "prolapse_procedure"),
 #'   volume  = c(120000, 240000, 45000, 32000)
@@ -561,11 +583,12 @@ allocate_fte_by_setting <- function(total_fte,
 #' @family workload to fte
 #' @concept supply
 #' @examples
-#' \dontrun{
-#' # supply: projected provider FTE by year; required: required FTE by year.
-#' # Both sides are FTE, so the difference is meaningful.
-#' compute_fte_gap(supply, required)
-#' }
+#' # Both sides are FTE, so the difference is meaningful. This is the check
+#' # compute_demand_coverage() refuses to do with a case count.
+#' compute_fte_gap(
+#'   tibble::tibble(year = 2025:2027, effective_fte_median = c(1300, 1310, 1320)),
+#'   tibble::tibble(year = 2025:2027, required_fte = c(1400, 1440, 1480))
+#' )
 #' @export
 compute_fte_gap <- function(supply, required, supply_col = "effective_fte_median") {
   assertthat::assert_that(supply_col %in% names(supply),

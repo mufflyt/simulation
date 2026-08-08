@@ -57,6 +57,19 @@ absent yield \code{NA} (leading edge of the lag).
 \code{active_entrants[y] = matched[y - cert_lag - active_lag] * p_complete_cert * p_active_practice}. Each stage is an explicit, labeled conversion; a fellowship
 MATCH is not an active US clinical entrant.
 }
+\details{
+Three stages: NRMP matches, board certification \code{cert_lag} years later, then
+active practice after \code{active_lag}. Leading years are \code{NA} because their
+source cohort predates the supplied series -- that is a missing input, not an
+estimate of zero entrants, and it must not be filled with one.
+
+\code{p_complete_cert} accepts a per-year schedule as well as a scalar, which is
+what makes a cancelled examination representable: 2020's board examination
+did not happen. With \code{defer_shortfall = TRUE} (the default) the fellows a
+suppressed year fails to certify are carried forward into the following year
+as \code{deferred_in} rather than deleted, because a cancelled exam delays a
+cohort, it does not destroy it.
+}
 \examples{
 # NRMP matches -> board certification -> active practice, with the three-year
 # fellowship lag. Early years are NA because their source cohort predates the

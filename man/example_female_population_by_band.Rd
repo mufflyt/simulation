@@ -27,6 +27,12 @@ Age bands grow at different rates so the three demand estimands diverge, which
 is the whole point of giving each its own age profile. Replace with ACS/Census
 projections resolved through \code{\link[=resolve_canonical]{resolve_canonical()}} for production runs.
 }
+\details{
+A synthetic population for examples, tests and vignettes, with the age bands
+and growth rates roughly in the right proportions. It is NOT a Census series
+and nothing computed from it is publishable; real runs pass observed series
+through \code{pop_by_band}.
+}
 \examples{
 # A synthetic population for examples and tests. Real runs pass Census
 # series through `pop_by_band`.

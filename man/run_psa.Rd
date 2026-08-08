@@ -26,18 +26,25 @@ List: \code{draws} (tibble of inputs + outputs), \code{inputs}, \code{n}, \code{
 \description{
 Samples the inputs jointly (LHS) and evaluates \code{evaluate} once per draw.
 }
-\examples{
-\dontrun{
-# Propagate input uncertainty through any evaluator returning named outputs.
-inputs <- list(
-  psa_uniform("baseline_entrants", 45, 90),
-  psa_uniform("base_adequacy", 0.85, 1.02)
-)
-evaluate <- function(p)
-  list(gap = -(1 - p$base_adequacy) * 100 - 0.15 * (p$baseline_entrants - 67))
-psa <- run_psa(inputs, evaluate, n = 200, seed = 1, verbose = FALSE)
-psa_tornado(psa, output = "gap", method = "prcc")
+\details{
+Probabilistic sensitivity analysis over declared input distributions. Each of
+\code{n} iterations draws every input and calls \code{evaluate}, which must return a
+named numeric vector; the names become \code{output_names}.
+
+This answers a different question from the Monte Carlo interval on a
+projection. The projection's band says how uncertain the answer is; PSA, via
+\code{\link[=psa_prcc]{psa_prcc()}}, says WHICH input is responsible, which is what tells you where
+another measurement would actually help.
 }
+\examples{
+# Probabilistic sensitivity analysis over declared input distributions.
+psa <- run_psa(
+  inputs   = list(psa_normal("a", 10, 2), psa_uniform("b", 1, 3)),
+  evaluate = function(a, b) c(y = a * b),
+  n        = 60,
+  verbose  = FALSE
+)
+psa$output_names
 }
 \seealso{
 Other psa: 

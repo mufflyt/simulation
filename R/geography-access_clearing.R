@@ -28,6 +28,17 @@
 #' capacity that will accept the patient (`insurance_fraction`). Panel size is
 #' `accessible_population / accessible_fte`.
 #'
+#' @details
+#' A catchment clears only its own demand; nothing spills to a neighbour. Use
+#' [overflow_access()] for the alternative, and read the pair as bounds rather
+#' than as competing estimates: no spill and free spill bracket the truth.
+#'
+#' AT SATURATION THE WAIT IS INFINITE, not merely long. When
+#' `demand_workload >= accessible_capacity` the queue never clears, so
+#' `wait_time` is `Inf` and `p_appointment` is 0. That is the honest answer for
+#' a steady-state model, and it is also why `wait_ceiling` exists: setting it
+#' censors the wait at a finite value and flags the row in `wait_censored`, so a
+#' downstream mean is not silently destroyed by one saturated catchment.
 #' @param catchments A data frame with numeric `demand_workload` and
 #'   `accessible_capacity` in the SAME currency (e.g. annual wRVU-equivalent),
 #'   and optional `accessible_population`, `accessible_fte`,
@@ -51,6 +62,16 @@
 #'   `panel_size`, `median_travel_time`, `calibration_status`.
 #' @family access clearing
 #' @concept geography
+#' @examples
+#' # Capacity that exists is not capacity that is reachable in time. Catchment A
+#' # is oversubscribed, so some of its demand goes unmet even though the system
+#' # as a whole has spare capacity.
+#' catchments <- tibble::tibble(
+#'   catchment           = c("A", "B", "C"),
+#'   demand_workload     = c(1200, 800, 400),
+#'   accessible_capacity = c(900, 900, 500)
+#' )
+#' clear_access(catchments)[, c("catchment", "utilization", "unmet_demand")]
 #' @export
 clear_access <- function(catchments,
                          appointment_window = 30,
@@ -259,6 +280,15 @@ clear_access_trajectory <- function(panel,
 #' appointment probabilities and utilization are recomputed by [clear_access()]
 #' on each catchment's effective demand (`demand - spilled_out + spilled_in`).
 #'
+#' @details
+#' The permissive bound on the pair whose other half is [clear_access()]. Unmet
+#' demand in one catchment is absorbed by neighbours listed in `neighbors`
+#' (columns `from`, `to`, `travel_penalty`), which assumes patients will travel
+#' and that the receiving capacity is genuinely available to them.
+#'
+#' Neither function is the right answer on its own. Real spill is somewhere
+#' between none and free, and the two runs together say how much of the
+#' conclusion depends on which assumption you make.
 #' @param catchments A data frame with a `catchment` id (unique), numeric
 #'   `demand_workload` and `accessible_capacity` (same currency), and the
 #'   optional [clear_access()] columns. `NA` demand/capacity marks a
@@ -281,6 +311,17 @@ clear_access_trajectory <- function(panel,
 #'   `attr(x, "overflow")`.
 #' @family access clearing
 #' @concept geography
+#' @examples
+#' # Unmet demand in one catchment can be absorbed by a neighbour, at a travel
+#' # penalty. Compare with clear_access(), which strands it.
+#' catchments <- tibble::tibble(
+#'   catchment           = c("A", "B", "C"),
+#'   demand_workload     = c(1200, 800, 400),
+#'   accessible_capacity = c(900, 900, 500)
+#' )
+#' neighbors <- tibble::tibble(from = c("A", "A", "B"), to = c("B", "C", "C"),
+#'                             travel_penalty = c(10, 25, 15))
+#' overflow_access(catchments, neighbors)[, c("catchment", "spilled_out", "spilled_in")]
 #' @export
 overflow_access <- function(catchments, neighbors,
                             max_travel_penalty = Inf,

@@ -55,6 +55,11 @@ weighted_interval_score <- function(y, quantiles, quantile_levels) {
   if (!any(abs(quantile_levels - 0.5) < 1e-9))
     stop("weighted_interval_score(): quantile_levels must include the median (0.5).",
          call. = FALSE)
+  if (!length(y) %in% c(1L, nrow(quantiles)))
+    stop("weighted_interval_score(): length(y) must be 1 or nrow(quantiles) (",
+         nrow(quantiles), "); got ", length(y),
+         " -- rep_len would silently partial-recycle and score the wrong cases.",
+         call. = FALSE)
   y <- rep_len(y, nrow(quantiles))
   med <- quantiles[, which.min(abs(quantile_levels - 0.5)), drop = TRUE]
   lows <- quantile_levels[quantile_levels < 0.5]
@@ -99,12 +104,13 @@ forecast_scorecard <- function(data, observed = "observed", point = "predicted",
                                interval_level = 0.95, label = NA_character_) {
   stopifnot(is.data.frame(data), all(c(observed, point) %in% names(data)))
   y <- as.numeric(data[[observed]]); yhat <- as.numeric(data[[point]])
-  pos <- y != 0
+  ok <- is.finite(y) & is.finite(yhat)   # a single NA row must not null every metric
+  pos <- ok & y != 0
   out <- data.frame(
     label = label, n = length(y),
     mape = if (any(pos)) mean(100 * abs(yhat[pos] - y[pos]) / abs(y[pos])) else NA_real_,
-    rmse = sqrt(mean((yhat - y)^2)),
-    signed_bias = mean(yhat - y),
+    rmse = if (any(ok)) sqrt(mean((yhat[ok] - y[ok])^2)) else NA_real_,
+    signed_bias = if (any(ok)) mean(yhat[ok] - y[ok]) else NA_real_,
     signed_pct_bias = if (any(pos)) mean(100 * (yhat[pos] - y[pos]) / y[pos]) else NA_real_,
     stringsAsFactors = FALSE)
   has_int <- !is.null(lower) && !is.null(upper) &&
@@ -171,6 +177,10 @@ compare_forecasts <- function(data, model = "model", cutoff = "cutoff",
   rank_stability <- NULL
   if (!is.null(cutoff) && cutoff %in% names(data)) {
     have_int <- all(c(lower, upper) %in% names(data))
+    if (identical(rank_metric, "interval_score") && !have_int)
+      warning("compare_forecasts(): rank_metric = 'interval_score' but no lower/upper ",
+              "columns are present; ranking silently falls back to abs_pct_error.",
+              call. = FALSE)
     per_metric <- function(df) {
       y <- as.numeric(df[[observed]]); yhat <- as.numeric(df[[point]])
       if (rank_metric == "interval_score" && have_int) {

@@ -143,6 +143,15 @@ psa_sample <- function(inputs, n, seed = 20260801L) {
 #'
 #' Samples the inputs jointly (LHS) and evaluates `evaluate` once per draw.
 #'
+#' @details
+#' Probabilistic sensitivity analysis over declared input distributions. Each of
+#' `n` iterations draws every input and calls `evaluate`, which must return a
+#' named numeric vector; the names become `output_names`.
+#'
+#' This answers a different question from the Monte Carlo interval on a
+#' projection. The projection's band says how uncertain the answer is; PSA, via
+#' [psa_prcc()], says WHICH input is responsible, which is what tells you where
+#' another measurement would actually help.
 #' @param inputs List of `psa_input()` specs.
 #' @param evaluate Function taking a named list of input values (discrete inputs
 #'   passed as their mapped value) and returning a numeric scalar, or a named
@@ -155,17 +164,14 @@ psa_sample <- function(inputs, n, seed = 20260801L) {
 #' @family psa
 #' @concept calibration
 #' @examples
-#' \dontrun{
-#' # Propagate input uncertainty through any evaluator returning named outputs.
-#' inputs <- list(
-#'   psa_uniform("baseline_entrants", 45, 90),
-#'   psa_uniform("base_adequacy", 0.85, 1.02)
+#' # Probabilistic sensitivity analysis over declared input distributions.
+#' psa <- run_psa(
+#'   inputs   = list(psa_normal("a", 10, 2), psa_uniform("b", 1, 3)),
+#'   evaluate = function(a, b) c(y = a * b),
+#'   n        = 60,
+#'   verbose  = FALSE
 #' )
-#' evaluate <- function(p)
-#'   list(gap = -(1 - p$base_adequacy) * 100 - 0.15 * (p$baseline_entrants - 67))
-#' psa <- run_psa(inputs, evaluate, n = 200, seed = 1, verbose = FALSE)
-#' psa_tornado(psa, output = "gap", method = "prcc")
-#' }
+#' psa$output_names
 #' @export
 run_psa <- function(inputs, evaluate, n = 500, seed = 20260801L, verbose = TRUE) {
   assertthat::assert_that(is.function(evaluate))
@@ -224,6 +230,12 @@ run_psa <- function(inputs, evaluate, n = 500, seed = 20260801L, verbose = TRUE)
 #' @return Tibble `input`, `prcc`, `p_value`, ordered by descending |prcc|.
 #' @family psa
 #' @concept calibration
+#' @examples
+#' # Partial rank correlation: which input drives the output, controlling for
+#' # the others. Rank-based, so it survives a nonlinear response.
+#' psa <- run_psa(list(psa_normal("a", 10, 2), psa_uniform("b", 1, 3)),
+#'                function(a, b) c(y = a * b), n = 60, verbose = FALSE)
+#' psa_prcc(psa)
 #' @export
 psa_prcc <- function(psa, output = psa$output_names[1]) {
   vars <- .psa_input_names(psa)

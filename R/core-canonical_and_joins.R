@@ -63,6 +63,11 @@ resolve_canonical <- function(name,
 
   entry <- sources[[name]]
   path <- if (is.list(entry)) entry$path else entry
+  # Fail closed: a registry entry missing `path:` would otherwise leave `path`
+  # NULL, file.path() drop it, and the resolver return the registry's parent
+  # DIRECTORY as a "verified" canonical file.
+  if (is.null(path) || !is.character(path) || length(path) != 1L || !nzchar(path))
+    stop(sprintf("Canonical source '%s' has no usable 'path'.", name), call. = FALSE)
   recorded_sha <- if (is.list(entry)) entry$sha256 else NULL
 
   # Resolve relative paths against the registry's directory.
@@ -123,6 +128,16 @@ if (!exists("%||%", envir = baseenv())) {
 #' `allow_fanout = TRUE`, performs the join, and fails if the result row count
 #' differs from the left input (which can only happen via fan-out).
 #'
+#' @details
+#' Three distinct failures, all of which a plain [dplyr::left_join()] performs
+#' silently: a missing key column, a fan-out that duplicates left rows because
+#' the right table's key is not unique, and a join that succeeds while matching
+#' almost nothing.
+#'
+#' Only the third is a judgement call, which is why `min_match_rate` is
+#' explicit. Below it, the behaviour follows `mode`: a warning in `relaxed`, an
+#' error in `strict`. A low match rate is usually a key-grain mismatch -- state
+#' against state-year, ZIP against ZCTA -- rather than genuinely absent data.
 #' @param x,y Data frames.
 #' @param by Join specification (as in [dplyr::left_join()]).
 #' @param allow_fanout If FALSE (default), a non-unique key in `y` is an error.
