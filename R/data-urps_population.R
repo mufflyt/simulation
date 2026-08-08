@@ -869,7 +869,8 @@ load_mcbs_women65 <- function(mcbs_rds = NULL, verbose = TRUE) {
   if (verbose) {
     n65 <- sum(out$age_group == "65-74", na.rm = TRUE)
     n75 <- sum(out$age_group == "75+",   na.rm = TRUE)
-    ui_prev <- stats::weighted.mean(out$ui_loss == 1L,
+    ui_prev <- stats::weighted.mean(
+                             ifelse(out$ui_loss %in% c(0L, 1L), out$ui_loss == 1L, NA),
                              w = ifelse(is.na(out$survey_wt), 1, out$survey_wt),
                              na.rm = TRUE)
     message(sprintf(
@@ -906,7 +907,10 @@ blend_mcbs_prevalence <- function(cells, mcbs = NULL, verbose = TRUE) {
     sub <- mcbs[!is.na(mcbs$age_group) & as.character(mcbs$age_group) == band, ]
     if (nrow(sub) == 0L) next
     wt   <- ifelse(is.na(sub$survey_wt), 1, sub$survey_wt)
-    prev <- stats::weighted.mean(sub$ui_loss == 1L, w = wt, na.rm = TRUE)
+    # Only {0,1} count: a DK/refused/skip sentinel (7/8/-1, ...) is != 1 and would
+    # otherwise be tallied as continent, biasing the 65+ UI prevalence downward.
+    prev <- stats::weighted.mean(
+      ifelse(sub$ui_loss %in% c(0L, 1L), sub$ui_loss == 1L, NA), w = wt, na.rm = TRUE)
 
     rows <- !is.na(cells$age_group) & as.character(cells$age_group) == band
     if (any(rows)) {
