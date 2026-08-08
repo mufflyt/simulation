@@ -22,6 +22,10 @@ Port of cliff::calculate_proportion_ci. The Wilson interval is well-behaved
 for small samples and near 0/1, so it is the right choice for
 rural/subgroup access-desert or at-risk proportions.
 }
+\examples{
+# Wilson-score confidence interval for 12 of 50 (robust at small n and near 0/1).
+calculate_proportion_ci(x = 12, n = 50)
+}
 \seealso{
 Other workforce statistics: 
 \code{\link{calculate_replacement_gap}()},

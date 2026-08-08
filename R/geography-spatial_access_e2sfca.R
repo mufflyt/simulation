@@ -273,6 +273,9 @@ assign_access_category <- function(access_scaled) {
 #' @return Distance(s) in km.
 #' @family spatial access e2sfca
 #' @concept geography
+#' @examples
+#' # Great-circle distance (km) between Denver and Chicago.
+#' haversine_km(39.74, -104.99, 41.88, -87.63)
 #' @export
 haversine_km <- function(lat1, lon1, lat2, lon2) {
   to_rad <- pi / 180

@@ -33,6 +33,13 @@ vector of gap draws) and phrases the exceedance probabilities as shortage
 statements: the median gap, its prediction interval, and P(shortage exceeds
 X\%) at each threshold. A threshold of \code{0} reads as "P(any shortage)".
 }
+\examples{
+# Decision-relevant probabilities from a vector of gap draws (percent):
+# P(any shortage) and P(shortage exceeds 10\%).
+set.seed(1)
+workforce_gap_probabilities(rnorm(500, mean = 8, sd = 4),
+                            metric = "gap_pct", shortage_thresholds = c(0, 10))
+}
 \seealso{
 \code{\link[=psa_workforce_gap]{psa_workforce_gap()}}, \code{\link[=forecast_probabilities]{forecast_probabilities()}}
 
