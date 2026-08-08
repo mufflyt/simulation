@@ -242,7 +242,27 @@ nrmp_entrant_series <- function(available_by = NULL) {
 
 # Fellowship length in years: appointment year + this = graduation, with
 # certification following shortly after.
-URPS_FELLOWSHIP_YEARS <- 3L
+# LENGTH IS PATHWAY-SPECIFIC, and treating it as uniform misaligns half the
+# series. OB/GYN-based URPS fellowship is three years; urology-based is two.
+# Aligning ABU certifications to urology entrants three years back returns a
+# conversion of 1.050 -- more certifying than entered, the same impossible
+# signature that flagged the deferral problem. At two years it returns 0.776.
+#
+# A note on the ACGME year_3 column for the urology rows: it is small but not
+# zero (5-9 fellows). That is NOT evidence of a three-year urology program and
+# must not be read as one -- an earlier draft of this module inferred a
+# "shift from three-year to two-year urology fellowships" from the declining
+# ratio of that column to year_1, which was an artifact of dividing two
+# unrelated cohorts. Urology URPS has been two years throughout. The residual
+# column is left unexplained rather than given an invented meaning.
+URPS_FELLOWSHIP_YEARS_BY_PATHWAY <- c(obgyn = 3L, urology = 2L)
+
+# DERIVED, not independently stated. This is the OB/GYN-based length; urology is
+# two years. Defining it from the pathway map means the two cannot drift apart,
+# and a reader who sees `URPS_FELLOWSHIP_YEARS` used where both pathways are in
+# play has a name telling them it is only half the story. A bare `3L` here is
+# what let a uniform lag reach the urology arm and return a conversion of 1.050.
+URPS_FELLOWSHIP_YEARS <- URPS_FELLOWSHIP_YEARS_BY_PATHWAY[["obgyn"]]
 
 # ---- NRMP track split: OB/GYN-based vs urology-based -----------------------
 #

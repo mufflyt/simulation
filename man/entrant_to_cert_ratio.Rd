@@ -9,7 +9,8 @@ entrant_to_cert_ratio(
   through_year = NULL,
   cert_lag = URPS_FELLOWSHIP_YEARS,
   exclude_disrupted = TRUE,
-  pooled = TRUE
+  pooled = TRUE,
+  allow_implausible = FALSE
 )
 }
 \arguments{
@@ -24,6 +25,10 @@ disrupted and release years too. Under pooling the disruption is retained on
 purpose, because dropping half of a deferral pair biases the ratio.}
 
 \item{pooled}{Sum both sides before dividing.}
+
+\item{allow_implausible}{Return a conversion above 1.0 instead of erroring.
+Only for deliberately demonstrating a misalignment -- a rate above one means
+more people reached the outcome than entered, so the default refuses it.}
 }
 \value{
 List with \code{ratio}, \code{source}, \code{years}, \code{n_years}, \code{excluded},
