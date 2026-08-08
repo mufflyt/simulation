@@ -485,3 +485,70 @@ test_that("the back-test target is unchanged by this audit", {
   expect_equal(r$ratio[r$parent == "obgyn"], 0.843, tolerance = 0.01)
   expect_equal(r$ratio[r$parent == "urology"], 0.782, tolerance = 0.01)
 })
+
+# ---- Survivor-filter bias (docs/HISTORICAL_SERIES_FEASIBILITY.md) -----------
+
+test_that("the survivor-bias hazard bounds come from the repo's own tables", {
+  skip_if_not(dir.exists("../../data-raw/sensitivity") ||
+                dir.exists("data-raw/sensitivity"),
+              "data-raw is .Rbuildignore'd and absent from the built package")
+  root <- if (dir.exists("data-raw/sensitivity")) "." else "../.."
+  sens <- function(n) utils::read.csv(file.path(root, "data-raw/sensitivity",
+                                                paste0(n, "_sensitivity.csv")))
+  dr <- sens("departure_rate"); dr <- dr[dr$subspecialty_abbrev == "URPS", ]
+  mo <- sens("mortality");      mo <- mo[mo$subspecialty_abbrev == "URPS", ]
+  # No hazard is invented: both bounds are published cells.
+  expect_equal(dr$rate_min / 100, 0.0050, tolerance = 1e-9)
+  expect_equal(mo$rate_adj_all_pct / 100, 0.0151, tolerance = 1e-9)
+  expect_lt(dr$rate_min, mo$rate_adj_all_pct)
+})
+
+test_that("the survivor-filter correction is monotone in look-back depth", {
+  # observed_S(Y) = adjusted_S(Y) * (1 - d)^(SNAP - Y). The difference must grow
+  # the further back you look -- that is the whole mechanism, and a correction
+  # that did not would be measuring something else.
+  SNAP <- 2025
+  # Departure-ADJUSTED stock under an assumed constant hazard -- a sensitivity
+  # quantity, not a reconstruction of the historical workforce.
+  adjusted_S <- function(obs, y, d) obs / (1 - d)^(SNAP - y)
+  obs <- c(`2013` = 655, `2020` = 1099, `2023` = 1306)
+  for (d in c(0.0050, 0.0151)) {
+    miss <- vapply(names(obs), function(y)
+      adjusted_S(obs[[y]], as.integer(y), d) - obs[[y]], numeric(1))
+    expect_gt(miss[["2013"]], miss[["2020"]])
+    expect_gt(miss[["2020"]], miss[["2023"]])
+  }
+  # And the correction RAISES the target, so arm errors get worse, not better.
+  expect_gt(adjusted_S(1306, 2023, 0.0151), 1306)
+})
+
+test_that("arm ranking under target correction is demonstrated, not assumed", {
+  # Predictions held fixed; only the target moves. Rank by absolute error.
+  pred <- c(a1 = 1306 * (1 - 0.03139357), a3 = 1306 * (1 - 0.03177642),
+            a5 = 1306 * (1 - 0.04364472), a2 = 1306 * (1 - 0.08269525))
+  tgt <- function(d) 1306 / (1 - d)^2
+  order_at <- function(tv) names(sort(abs(pred - tv)))
+
+  # Scenario A (target only): stable ONLY because every prediction stays below
+  # every corrected target. Assert the condition, not just the ordering.
+  for (d in c(0, 0.0050, 0.0110, 0.0151)) {
+    expect_true(all(pred < tgt(d)))
+    expect_identical(order_at(tgt(d)), c("a1", "a3", "a5", "a2"))
+  }
+
+  # Scenario B (both endpoints): the base is corrected more than the target, so
+  # predictions cross and the ranking is NOT invariant.
+  shift <- function(d) 1099 / (1 - d)^5 - 1099
+  cross <- abs((pred + shift(0.0151)) - tgt(0.0151))
+  expect_identical(names(sort(cross))[1:2], c("a3", "a1"))   # 1 and 3 swap
+  expect_true(any((pred + shift(0.0151)) > tgt(0.0151)))      # signs flip
+})
+
+test_that("arm 5 is not the best arm at any correction", {
+  pred <- c(a1 = 1306 * (1 - 0.03139357), a3 = 1306 * (1 - 0.03177642),
+            a5 = 1306 * (1 - 0.04364472))
+  for (d in c(0, 0.0050, 0.0151)) {
+    tv <- 1306 / (1 - d)^2
+    expect_false(names(sort(abs(pred - tv)))[1] == "a5")
+  }
+})
