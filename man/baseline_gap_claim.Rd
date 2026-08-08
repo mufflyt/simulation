@@ -19,9 +19,20 @@ The claim this gap supports, in words
 }
 \seealso{
 Other baseline gap reporting: 
+\code{\link{ADEQUACY_ANALOGUES}},
+\code{\link{ADEQUACY_EVIDENCE_TYPES}},
+\code{\link{CALIBRATION_STATUS_RANK}},
+\code{\link{REFERENCE_ADEQUACY_CALIBRATION}},
+\code{\link{REPORTABLE_MIN_CALIBRATION}},
+\code{\link{adequacy_conclusion_sentence}()},
+\code{\link{adequacy_evidence_is_discordant}()},
+\code{\link{adequacy_evidence_table}()},
 \code{\link{assert_external_anchor}()},
+\code{\link{balance_reversal_sentence}()},
+\code{\link{balance_reversal_threshold}()},
 \code{\link{baseline_anchor_sensitivity}()},
 \code{\link{baseline_gap_provenance}()},
+\code{\link{demand_calibration_is_provisional}()},
 \code{\link{has_external_anchor}()}
 }
 \concept{baseline gap reporting}

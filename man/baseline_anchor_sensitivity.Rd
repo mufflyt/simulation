@@ -8,7 +8,7 @@ baseline_anchor_sensitivity(
   gap,
   supply_at_target,
   demand_growth,
-  anchor_multipliers = c(0.8, 0.9, 1, 1.1, 1.25, 1.5)
+  anchor_multipliers = c(0.8, 0.9, 1, 1.1, 1.25, 1.5, 2)
 )
 }
 \arguments{
@@ -30,11 +30,31 @@ in the anchor and the break-even is closed-form. This reports where the
 conclusion flips, which is the number a reader needs in order to judge how
 much the anchor's provenance matters.
 }
+\details{
+THIS IS A MAIN RESULT, NOT A SUPPLEMENTARY CHECK. The anchor is the only
+input that can change the SIGN of the projected 2050 balance -- the
+delegation matrix and the demand calibration cancel out of the ratio. A
+projection reported without this table has concealed its dominant
+uncertainty. The default multipliers span 0.8x to 2x for that reason: the
+reference calibration is an analogy (see \link{REFERENCE_ADEQUACY_CALIBRATION}),
+so multipliers well beyond the published analogue spread are in play.
+}
 \seealso{
 Other baseline gap reporting: 
+\code{\link{ADEQUACY_ANALOGUES}},
+\code{\link{ADEQUACY_EVIDENCE_TYPES}},
+\code{\link{CALIBRATION_STATUS_RANK}},
+\code{\link{REFERENCE_ADEQUACY_CALIBRATION}},
+\code{\link{REPORTABLE_MIN_CALIBRATION}},
+\code{\link{adequacy_conclusion_sentence}()},
+\code{\link{adequacy_evidence_is_discordant}()},
+\code{\link{adequacy_evidence_table}()},
 \code{\link{assert_external_anchor}()},
+\code{\link{balance_reversal_sentence}()},
+\code{\link{balance_reversal_threshold}()},
 \code{\link{baseline_gap_claim}()},
 \code{\link{baseline_gap_provenance}()},
+\code{\link{demand_calibration_is_provisional}()},
 \code{\link{has_external_anchor}()}
 }
 \concept{baseline gap reporting}
