@@ -37,6 +37,7 @@ Other baseline gap reporting:
 \code{\link{baseline_gap_claim}()},
 \code{\link{baseline_gap_provenance}()},
 \code{\link{demand_calibration_is_provisional}()},
+\code{\link{demand_dimension_status}()},
 \code{\link{demand_estimand_status}()},
 \code{\link{demand_estimand_table}()}
 }
