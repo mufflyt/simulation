@@ -1,0 +1,6 @@
+pathway,n_treated_episodes,n_women,index_procedure_per_pt,pre_em_neweval_per_pt,post_em_visits_per_pt,post_em_return_per_pt,post_procedures_per_pt,post_cystoscopy_per_pt,post_uds_per_pt,subsequent_pessary_visits_per_pt,subsequent_PT_sessions_per_pt,compl_surg_visits_per_pt,compl_pessPT_visits_per_pt,compl_reop_events_per_pt,reoperation_prob,fpmrs_wrvu_per_pt,post_em_visits_per_pt_SE,fpmrs_wrvu_per_pt_SE,reoperation_prob_SE
+UI Sling,5566,5468,1,0.6319,0.2109,0.198,0.5243,0.0165,0.0584,0,0,0.9436,0,0.06,0.0478,13.4229,0.0078,0.0681,0.00282
+Pessary,9616,8031,1,0.4219,1.1063,1.059,0.3474,0.0359,0.1391,0.3276,0,0,0.4835,0,0,2.9635,0.0142,0.0249,0
+PT,7381,6878,1,0.35,0.6499,0.6244,0.4315,0.0278,0.302,0,4.7143,0,0.3692,0,0,1.3831,0.0157,0.0324,0
+Open burch,64,64,1,0.5312,0.2188,0.1875,0.2812,0.0156,0.0938,0,0,0.7656,0,0,0.0156,12.9311,0.0733,0.1873,0.01499
+Laparoscopic burch,50,50,1,0.72,0.26,0.24,0.28,0.02,0,0,0,0.9,0,0.04,0.04,12.4374,0.1151,0.3598,0.02686
