@@ -688,7 +688,9 @@ simulate_provider_career_once <- function(agents,
 #' )
 #' out$summary
 #' @export
-run_supply_microsimulation <- function(initial_workforce = 1306,
+run_supply_microsimulation <- function(initial_workforce = mufflyaccess::urps_count(
+                                         year = 2023L, measure = "board_certified_active",
+                                         geography = "national", include_urology = TRUE),
                                         years = 2025:2050,
                                         entrants_per_year = 55,
                                         subspecialty = "FPMRS",
