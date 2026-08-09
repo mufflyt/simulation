@@ -19,6 +19,12 @@
 #                      name) to an installed, pinned export. Nothing to
 #                      preserve; delegation is a dependency decision, not a
 #                      correctness one, so these are NOT urgent.
+#   delegated          Resolved: the local name now forwards to the contract.
+#                      A fallback body may remain (mufflyaccess is Suggests),
+#                      in which case tests/testthat/test-ssot-delegation.R must
+#                      assert the fallback and the contract agree -- otherwise
+#                      the fallback is the duplicate, reintroduced one line
+#                      below the delegation that removed it.
 #   contract_collision THE DANGEROUS ONE. Same public-looking name, different
 #                      arguments, guards or return shape. Exact duplication is
 #                      maintenance debt; this is a correctness risk, because a
@@ -48,7 +54,7 @@ calculate_replacement_gap,isochrones,script_local_copy,"classified on the cliff 
 calculate_replacement_gap,mufflyaccess,stronger_here,"928df62 delegated here and 72a7e13 reverted it; main went red on --as-cran"
 calculate_rural_metro_comparison,cliff,equivalent,"same three-part return"
 calculate_rural_metro_comparison,isochrones,script_local_copy,"classified on the mufflyaccess row"
-calculate_rural_metro_comparison,mufflyaccess,exact_copy,"identical but for one private helper's name: .wf_safe_percentage here, .ws_percentage there"
+calculate_rural_metro_comparison,mufflyaccess,exact_copy,"identical but for one private helper name. NOT delegated: absent from the pinned commit a88dba8, added upstream in b1f33ac -- the exact pin bump 72a7e13 reverted for turning main red on --as-cran. Blocked on a pin decision, not on effort"
 calculate_state_vulnerability,cliff,stronger_here,"this version ranks by vulnerability_score; cliff sorts by a different column than the score it computes -- send upstream"
 calculate_state_vulnerability,isochrones,script_local_copy,"classified on the cliff row"
 calculate_state_vulnerability,mufflyaccess,stronger_here,"asserts required input columns"
@@ -74,6 +80,6 @@ match_points_to_isochrones,isochrones,utility_name_only,"domain-generic name; no
 npp_total_female,cliff,stronger_here,"requires YEAR in addition to SEX/ORIGIN/RACE and errors naming the missing columns; adapted from data.table to base subsetting, so a deliberate port"
 safe_inner_join,isochrones,utility_name_only,"generic join-guard name"
 safe_left_join,isochrones,utility_name_only,"generic join-guard name"
-weighted_mean_all,mufflyaccess,exact_copy,"byte-identical, six lines; also a twostep export, so likely a twostep port predating the mufflyaccess re-export"
+weighted_mean_all,mufflyaccess,delegated,"was a byte-identical six-line copy; delegated 2026-08-09. Exists at the pinned commit a88dba8. Fallback pinned by test-ssot-delegation.R"
 wilson_ci,isochrones,equivalent,"same interval, half-width written as z*sqrt((p(1-p)+z^2/4n)/n)/denom against z*sqrt(p(1-p)/n+z^2/(4n^2))/denom here -- the same expression rearranged. The second pass wrongly concluded wilson_ci had no sibling twin"
-zero_access_share,mufflyaccess,exact_copy,"byte-identical including the stopifnot, the is.finite(sw) guard and the NA_real_ return"
+zero_access_share,mufflyaccess,delegated,"was a byte-identical copy; delegated 2026-08-09. Exists at the pinned commit a88dba8 so no pin moved. Fallback retained and pinned by test-ssot-delegation.R"

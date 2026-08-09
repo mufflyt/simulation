@@ -61,7 +61,7 @@ test_that("the registry uses only the declared classifications", {
   reg <- read_overlap_registry(root)
   allowed <- c("exact_copy", "contract_collision", "stronger_here",
                "ported_weaker", "equivalent", "script_local_copy",
-               "utility_name_only", "unexamined")
+               "utility_name_only", "unexamined", "delegated")
   expect_equal(setdiff(unique(reg$classification), allowed), character())
   expect_false(any(is.na(reg$note) | !nzchar(trimws(reg$note))))
 })

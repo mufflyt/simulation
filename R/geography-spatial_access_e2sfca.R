@@ -431,10 +431,16 @@ compare_access_methods <- function(membership, supply, demand,
 #' @param a Numeric values.
 #' @param w Numeric weights (same length as `a`).
 #' @return Weighted mean, or NA if the weights sum to 0 / are non-finite.
+#'
+#' @section Canonical source:
+#' Delegates to [mufflyaccess::weighted_mean_all()]; see the note on
+#' [zero_access_share()] for why the local body is retained as a fallback.
+#'
 #' @family spatial access e2sfca
 #' @concept geography
 #' @export
 weighted_mean_all <- function(a, w) {
+  if (has_mufflyaccess()) return(mufflyaccess::weighted_mean_all(a, w))
   stopifnot(length(a) == length(w))
   sw <- sum(w)
   if (!is.finite(sw) || sw == 0) return(NA_real_)
@@ -450,10 +456,22 @@ weighted_mean_all <- function(a, w) {
 #' @param access Numeric accessibility values.
 #' @param w Numeric weights.
 #' @return Percent in `[0, 100]` under non-negative weights, or NA.
+#'
+#' @section Canonical source:
+#' Delegates to [mufflyaccess::zero_access_share()], which owns this quantity.
+#' The local body below is a **fallback for an installation without the
+#' contract**, not a second implementation: it was byte-identical to the
+#' contract's when the delegation was added (2026-08-09), and
+#' `test-ssot-delegation.R` asserts the two still agree wherever both are
+#' reachable. Keeping a fallback rather than calling `.require_mufflyaccess()`
+#' matches [ssot_safe_divide()]: `mufflyaccess` is in `Suggests`, so the package
+#' must remain usable without it.
+#'
 #' @family spatial access e2sfca
 #' @concept geography
 #' @export
 zero_access_share <- function(access, w) {
+  if (has_mufflyaccess()) return(mufflyaccess::zero_access_share(access, w))
   stopifnot(length(access) == length(w))
   sw <- sum(w)
   if (!is.finite(sw) || sw == 0) return(NA_real_)

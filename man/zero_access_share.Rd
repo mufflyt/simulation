@@ -19,6 +19,18 @@ The workforce-adequacy KPI "share of women with no modelled access". Distinct
 from the \code{zero_access_share} element of \code{\link[=summarize_access]{summarize_access()}}, which counts
 access <= 0 as a fraction; this is the twostep-faithful percent of == 0.
 }
+\section{Canonical source}{
+
+Delegates to \code{\link[mufflyaccess:zero_access_share]{mufflyaccess::zero_access_share()}}, which owns this quantity.
+The local body below is a \strong{fallback for an installation without the
+contract}, not a second implementation: it was byte-identical to the
+contract's when the delegation was added (2026-08-09), and
+\code{test-ssot-delegation.R} asserts the two still agree wherever both are
+reachable. Keeping a fallback rather than calling \code{.require_mufflyaccess()}
+matches \code{\link[=ssot_safe_divide]{ssot_safe_divide()}}: \code{mufflyaccess} is in \code{Suggests}, so the package
+must remain usable without it.
+}
+
 \seealso{
 Other spatial access e2sfca: 
 \code{\link{access_moe_ci}()},

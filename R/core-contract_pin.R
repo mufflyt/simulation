@@ -50,7 +50,14 @@ MUFFLYACCESS_REQUIRED_EXPORTS <- c(
   # CONUS list, tract_vintage_of()/acs_year_of() instead of inferring vintage
   # from GEOID width, zero_access_share() instead of counting `== 0` (it is
   # population weighted, which is the statistic that matters).
-  "NON_CONTIGUOUS_CODES", "tract_vintage_of", "acs_year_of", "zero_access_share"
+  "NON_CONTIGUOUS_CODES", "tract_vintage_of", "acs_year_of", "zero_access_share",
+  # zero_access_share() and weighted_mean_all() are also DELEGATED to rather
+  # than merely called: the local definitions in R/geography-spatial_access_e2sfca.R
+  # were byte-identical ports and now forward to the contract, keeping a
+  # fallback body because mufflyaccess is in Suggests. Both exist at the pinned
+  # commit, so this delegation moves no pin -- which is the whole reason these
+  # two were separable from calculate_rural_metro_comparison, which does not.
+  "weighted_mean_all"
 )
 
 #' Identity of the installed contract build

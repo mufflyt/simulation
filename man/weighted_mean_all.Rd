@@ -19,6 +19,12 @@ Sums over every element rather than filtering \code{w > 0}, so a sparse group's
 point estimate stays inside its own Monte-Carlo interval (twostep documents
 that filtering pushes sparse-group estimates outside their CIs).
 }
+\section{Canonical source}{
+
+Delegates to \code{\link[mufflyaccess:weighted_mean_all]{mufflyaccess::weighted_mean_all()}}; see the note on
+\code{\link[=zero_access_share]{zero_access_share()}} for why the local body is retained as a fallback.
+}
+
 \seealso{
 Other spatial access e2sfca: 
 \code{\link{access_moe_ci}()},
