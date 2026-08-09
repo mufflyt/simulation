@@ -1,0 +1,7 @@
+scope,n_women,n_episodes,women_with_gt1_episode,max_episodes_per_woman,share_episodes_from_repeat_women
+OVERALL (cohort descriptors),19426,22677,2538,10,0.2553
+UI Sling,5468,5566,92,3,0.0341
+Pessary,8031,9616,1164,9,0.2859
+PT,6878,7381,414,7,0.1242
+Open burch,64,64,0,1,0
+Laparoscopic burch,50,50,0,1,0

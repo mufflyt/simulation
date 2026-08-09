@@ -1,18 +1,17 @@
-logical_name,zip_member,sha256,bytes
-ZIP_ARCHIVE,/Users/tylermuffly/Documents/alternative_payments_dropbox_Data.zip,d8a23cb28a86a2a4f505b43858f53df5de04407356a4f537c32916597e7dcd18,1166078808
-march2_2023,Data/CADR_2023/march_2/data.csv,b1366e74caab84b20c3c7ec99f9afeacc3855898785f09d74e48772aada9eba3,52459417
-procedures2023,Data/CADR_2023/_Procedures.csv,87f20bb95527eb232b4ed2c4f8f86cf63769c8c3c67920260572ba970589d3ad,376713
-sling_index,Data/CADR/Sling index.csv,43e7431c9de771103fa32b33e2a6ef89c612a886db0dc63148483639fa81009e,685124
-pessary_index,Data/CADR/Pessary index.csv,0baa4b89a8c35436b7fd0e6acd8e2e742a6569a8abd9f3bb47e31f50442a322a,341276
-pt_index,Data/CADR/PT index.csv,b8f3b5c5d9b536dbdd684191ba8d9442325379f176e5146fd049f3f180395b3e,203112
-openburch_idx,Data/CADR/Open burch index.csv,743840e4f7adaf0e9cf1ee1dbad50bcb087789b4f9e6e1f93d6a22620d0bf3c3,8627
-lapburch_idx,Data/CADR/Laparoscopic burch index.csv,9b7a05552f3412c006f24ecffc973d826d48ea131ba4803786a4d6a04f624da5,6819
-em_post,Data/CADR/E-M visits post-index.csv,134f1f04403f7c7c75a86c300a1e1ef6609b44b1f0044b57180566610bad40c1,1458584
-em_pre,Data/CADR/E-M visits pre-index.csv,ad7489a3c984100a7284120f568d0278b6e90c9e78769d6a9e698884ee7b85c9,3249474
-otherproc_post,Data/CADR/Other procedures post-index.csv,bfe9d7cfcf0e857a3a5c57f46135233f4ef9b9cea96ca48939183282738fd15f,505864
-subs_pt,Data/CADR/Subsequent PT.csv,c41951e214cb439774b227940a4550520062765d266d102dd6b55acd5e90be20,816546
-subs_pessary,Data/CADR/Subsequent pessary.csv,0ca0b91060108e44d95b3cd5a5b62939761cb458e925c16d35aebb62f48c7f0b,75114
-compl_surgery,Data/CADR/Complications - surgery.csv,61c8ed1191e6c660402698662197b2742bf41f6564350118575a1610dd3beac5,641370
-compl_pessPT,Data/CADR/Complications - pessary and PT.csv,9358e938090759f6921108f2679bc936e125325eca2e941022bb56a9cb16950c,256102
-prov_spec,Data/CADR/Provider specialty index.csv,5855beff46da5771082c1d19ae21d91ea86dd9cd9b3823bb822c01d088afb0c5,2304969
-cohort_desc,Data/CADR/Cohort descriptors.csv,d940f6c4f528794c4e588d71c8cabdd9024923bc7b263d22eb7ac531fd57dc6a,1803065
+logical_name,zip_member,sha256,bytes,population,primary_utilization_vintage,role,cadr_2023_role
+ZIP_ARCHIVE,/Users/tylermuffly/Documents/alternative_payments_dropbox_Data.zip,d8a23cb28a86a2a4f505b43858f53df5de04407356a4f537c32916597e7dcd18,1166078808,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+march2_2023,Data/CADR_2023/march_2/data.csv,b1366e74caab84b20c3c7ec99f9afeacc3855898785f09d74e48772aada9eba3,52459417,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+sling_index,Data/CADR/Sling index.csv,43e7431c9de771103fa32b33e2a6ef89c612a886db0dc63148483639fa81009e,685124,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+pessary_index,Data/CADR/Pessary index.csv,0baa4b89a8c35436b7fd0e6acd8e2e742a6569a8abd9f3bb47e31f50442a322a,341276,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+pt_index,Data/CADR/PT index.csv,b8f3b5c5d9b536dbdd684191ba8d9442325379f176e5146fd049f3f180395b3e,203112,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+openburch_idx,Data/CADR/Open burch index.csv,743840e4f7adaf0e9cf1ee1dbad50bcb087789b4f9e6e1f93d6a22620d0bf3c3,8627,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+lapburch_idx,Data/CADR/Laparoscopic burch index.csv,9b7a05552f3412c006f24ecffc973d826d48ea131ba4803786a4d6a04f624da5,6819,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+em_post,Data/CADR/E-M visits post-index.csv,134f1f04403f7c7c75a86c300a1e1ef6609b44b1f0044b57180566610bad40c1,1458584,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+em_pre,Data/CADR/E-M visits pre-index.csv,ad7489a3c984100a7284120f568d0278b6e90c9e78769d6a9e698884ee7b85c9,3249474,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+otherproc_post,Data/CADR/Other procedures post-index.csv,bfe9d7cfcf0e857a3a5c57f46135233f4ef9b9cea96ca48939183282738fd15f,505864,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+subs_pt,Data/CADR/Subsequent PT.csv,c41951e214cb439774b227940a4550520062765d266d102dd6b55acd5e90be20,816546,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+subs_pessary,Data/CADR/Subsequent pessary.csv,0ca0b91060108e44d95b3cd5a5b62939761cb458e925c16d35aebb62f48c7f0b,75114,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+compl_surgery,Data/CADR/Complications - surgery.csv,61c8ed1191e6c660402698662197b2742bf41f6564350118575a1610dd3beac5,641370,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+compl_pessPT,Data/CADR/Complications - pessary and PT.csv,9358e938090759f6921108f2679bc936e125325eca2e941022bb56a9cb16950c,256102,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+prov_spec,Data/CADR/Provider specialty index.csv,5855beff46da5771082c1d19ae21d91ea86dd9cd9b3823bb822c01d088afb0c5,2304969,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)
+cohort_desc,Data/CADR/Cohort descriptors.csv,d940f6c4f528794c4e588d71c8cabdd9024923bc7b263d22eb7ac531fd57dc6a,1803065,treated Medicare women age>=65,2008-2016,workload_given_treatment,COST companion (NOT a 2023 utilization cohort)

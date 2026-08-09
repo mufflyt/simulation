@@ -1,0 +1,17 @@
+service_group,representative_cpt,description,attribution_tier,fpmrs_attributable,global_period_days,work_rvu,rationale
+index_sling,57288/51992,Midurethral/pubovaginal sling (index),1,yes,90,12.2864,Index treatment; provider specialty (OB/GYN 16 or Urology 34) available; 90d global includes routine postop.
+index_pessary,57160,Pessary fitting (index),1,yes,0,0.89,Index treatment; specialty available; 000-global (no bundled postop).
+index_open_burch,51840,Open retropubic urethropexy (index),1,yes,90,12.44,Index treatment; specialty available; 90d global includes routine postop.
+index_lap_burch,51990,Laparoscopic urethral suspension (index),1,yes,90,11.65,Index treatment; specialty available; 90d global includes routine postop.
+index_PT,97110/97001,Pelvic-floor physical therapy (index),1,no,,,"Delivered by a physical therapist (specialty 65) -> PT bucket, NOT FPMRS professional wRVU."
+pre_index_new_eval,99203-99205/99242-99245,Initial specialist evaluation (pre-index new+consult E&M),2,partial,0,,Pre-index period; index specialty proxies FPMRS but per-claim post/pre specialty not attached to each E&M -> partial.
+post_index_em_new,99202-99205,Post-index new E&M visit,2,partial,0,,"No post-index specialty; no date to split within/outside global. Counted only when NONZERO professional. Marked partial, NOT silently FPMRS."
+post_index_em_return,99211-99215,Post-index return E&M visit,2,partial,0,,No post-index specialty; no date. Nonzero-professional only. Some may be within-global modifier-25 (indistinguishable) -> partial.
+post_index_em_consult,99242-99245,Post-index consult E&M visit,2,partial,0,,No post-index specialty; no date. Nonzero-professional only -> partial.
+cystoscopy,52000,Post-index cystoscopy,2,yes,0,1.53,Service-type intrinsically FPMRS/urologic office procedure; nonzero-professional only.
+urodynamics,51726/51728/51729/51741,Post-index urodynamics (CMG/UDS/vUDS/uroflow),2,yes,0,1.89,Intrinsically FPMRS diagnostic; nonzero-professional only; mix-weighted wRVU.
+pvr,51701/51798,Post-index post-void residual,2,partial,0,0.5,cathPVR has professional work; usPVR is technical-only (0 work RVU) -> partial.
+subsequent_pessary,57160,Subsequent pessary maintenance visit,2,yes,0,0.89,Ongoing FPMRS pessary care; each visit valued at pessary wRVU.
+subsequent_PT,97110,Subsequent physical-therapy session,2,no,,,PT provider bucket -> NOT FPMRS professional wRVU (reported separately).
+complication_surgical_mgmt,varies,Surgical-complication management visit,2,partial,0,,Complication visits counted; only flagged reoperative events valued (Tier-3 proxy).
+reoperation_event,varies (sling_repair/mesh/fistula/...),FPMRS reoperative event (index-flag or complication-window),3,yes,90,,Valued by analogy at the index-procedure wRVU (no per-claim CPT for the reop) -> Tier 3.
