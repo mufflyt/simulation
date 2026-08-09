@@ -186,17 +186,81 @@ run identity. Neither CMS file is committed.
 ### The roster, and an unresolved discrepancy
 
 Inclusion rule, fixed here: rows of `urps_roster_2026-07-22.csv` with a
-non-blank NPI and `cert_year <= 2024`, deduplicated on NPI. The file holds
-1,500 rows, 1,495 distinct NPIs, 5 duplicate NPIs, 6 blank NPIs, and 1,498 rows
-with `cert_year <= 2024`.
+non-blank NPI and `cert_year <= 2024`, deduplicated on NPI.
 
 **Its provenance sidecar does not describe it.**
 `urps_roster_2026-07-22_PROVENANCE.txt` states "Rows: 1100 / Unique NPIs:
-1092"; the companion coordinates extract holds 1,552 NPIs, of which 1,437
-overlap the roster. Three artifacts, three counts. Until that is reconciled,
-**roster ascertainment for 2024 is undocumented**, and every result must say
-so rather than quoting a completeness figure. This is a reason the lower bound
-is the conservative one to lead with.
+1092"; the companion coordinates extract holds 1,552 NPIs. Three artifacts,
+three counts. Until that is reconciled, **roster ascertainment for 2024 is
+undocumented**, and every result must say so rather than quoting a completeness
+figure. This is a reason the lower bound is the conservative one to lead with.
+
+> ### Erratum, 2026-08-08 — descriptive counts, not the rule
+>
+> This section originally read "1,500 rows, 1,495 distinct NPIs, **5 duplicate
+> NPIs**, 6 blank NPIs, and 1,498 rows with `cert_year <= 2024`." Two of those
+> figures were wrong and are corrected here rather than silently edited, since
+> the document is the freeze record.
+>
+> There are **zero duplicate NPIs**. The five "duplicates" were duplicate
+> *missing* values — `duplicated()` counting six `NA`s as one distinct value
+> plus five repeats. Likewise `cert_year <= 2024` holds for **1,492** rows, not
+> 1,498, because 1,498 was computed over all 1,500 rows including the six with
+> no NPI.
+>
+> **The specified rule is unchanged and the frozen population is unchanged.**
+> Deduplication on NPI was specified, remains specified, and removes zero rows
+> rather than five. The correction is to a description of the input, not to the
+> inclusion criteria, and no bound moves: 1,500 − 6 missing − 2 certified after
+> 2024 = **1,492**, which is the count analysis 05 has used throughout.
+
+### The reconciliation, and the frozen linkage roster
+
+`scripts/validation/06_roster_reconciliation.R` settles the discrepancy by
+comparing identifiers rather than reasoning about which count looks right. It
+assigns every row of both data files exactly one disposition and emits the
+population 05 consumes.
+
+| step | n |
+|---|---:|
+| Raw canonical roster rows | 1,500 |
+| less rows with no NPI | −6 |
+| less rows failing the NPI check digit | 0 |
+| less duplicate NPI rows | 0 |
+| less rows with no certification year | 0 |
+| less certified after 2024 | −2 |
+| **Final 2024 linkage roster** | **1,492** |
+
+All 1,494 non-missing NPIs are ten digits and pass the Luhn check over the
+80840 prefix. The six missing-NPI rows are all ABU (urology) and all
+`in_model_baseline = FALSE`; the two post-2024 certifications are also ABU.
+
+`data-raw/urps_roster/urps_linkage_roster_2024.csv`, sha256
+`fbdd8332a8de6f4870b65c83cefccfec3990ccca912d53165c3333c09934132c`, 1,492 NPIs.
+Analysis 05 asserts that hash and stops on mismatch — the roster is gitignored,
+so a pinned worktree protects the code and nothing protects the numerator.
+
+**Activity in 2024 is deliberately not a criterion.** `U_s` is formed by
+intersecting with services actually billed in 2024, so a provider who did not
+bill contributes zero regardless. An activity filter cannot remove a spurious
+match; it can only discard a real one — someone flagged retired in a 2026
+snapshot who was practising in 2024 — which lowers `U`, lowers `L`, and weakens
+the bound the analysis leads with.
+
+**The sidecar is a superseded generation, not a filter.** All five of its
+checkable assertions disagree with the file it accompanies: 1,100 vs 1,500
+rows, 1,092 vs 1,495 distinct NPI values, 830 vs 1,135 ABOG rows, 270-of-294 vs
+359-of-365 ABU rows with an NPI, and `has_medicare_2024` asserted FALSE against
+1,208 rows where it is TRUE. No subset of the current file should be
+constructed to match it.
+
+**115 valid NPIs remain an unresolved ascertainment gap.** They appear in the
+coordinate extract, pass every validity check, and no roster row carries them.
+They are not added, because the coordinate file mixes source runs — one is a
+general obstetrics-and-gynaecology geocode file — and nothing reachable from
+this repository establishes that these particular records are URPS
+subspecialists. If any are, `U` and every lower bound rise, so the exclusion is
+conservative in the direction that matters.
 
 ---
 

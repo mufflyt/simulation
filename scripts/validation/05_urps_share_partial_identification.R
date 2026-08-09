@@ -31,7 +31,15 @@ source(file.path("scripts", "validation", "_provenance.R"))
 PROV_SVC <- file.path("data-raw", "cms_psps", "PHY_R26_P05_V10_D24_Prov_Svc.csv")
 GEO_SVC  <- file.path("data-raw", "cms_psps", "MUP_PHY_R26_P05_V10_D24_Geo.csv")
 TYPE_MAP <- file.path("scripts", "validation", "mappings", "cms_provider_type_class.csv")
-ROSTER   <- file.path("data-raw", "urps_roster", "urps_roster_2026-07-22.csv")
+# THE FROZEN LINKAGE ROSTER, not the raw roster CSV. 06_roster_reconciliation.R
+# settles the 1500 / 1100 / 1552 discrepancy, assigns every row of both data
+# files one disposition, and emits this file with a recorded SHA-256. Deriving
+# the population inline here -- as the first version did -- meant the numerator
+# of every bound depended on a filter that lived in the analysis rather than in
+# a hashed artifact, and on a roster whose own sidecar contradicts it.
+ROSTER   <- file.path("data-raw", "urps_roster", "urps_linkage_roster_2024.csv")
+LINKAGE_ROSTER_SHA256 <-
+  "fbdd8332a8de6f4870b65c83cefccfec3990ccca912d53165c3333c09934132c"
 
 # ---- Code sets, per PRESPEC section 3 ---------------------------------------
 #
@@ -73,32 +81,37 @@ RUN <- begin_validation_run(
     ascertainment = "roster 2024 ascertainment UNDOCUMENTED (see PRESPEC section 9)"),
   require_clean = TRUE, exploratory = FALSE,
   inputs = c(cms_prov_svc = PROV_SVC, cms_geo_svc = GEO_SVC,
-             provider_type_map = TYPE_MAP))
+             provider_type_map = TYPE_MAP, linkage_roster = ROSTER))
 
 stopifnot(file.exists(PROV_SVC), file.exists(GEO_SVC), file.exists(TYPE_MAP),
           file.exists(ROSTER))
 
-# ---- Frozen roster, per PRESPEC section 9 -----------------------------------
+# ---- Frozen linkage roster --------------------------------------------------
 #
-# cert_year <= 2024 makes the roster contemporaneous with the data year: a
-# physician certified in 2025 was not a URPS subspecialist while billing 2024
-# services, and counting them would import a later state of the workforce into
-# an earlier measurement.
+# The population is decided in 06 and only consumed here. The hash is asserted
+# rather than merely recorded: the roster is gitignored, a pinned worktree makes
+# CODE immutable and does nothing for data-raw/, and a numerator silently
+# swapped between the A and B runs would reproduce perfectly while measuring a
+# different workforce.
 ros <- fread(ROSTER, showProgress = FALSE)
-# nzchar(NA) is TRUE, so an is.na() test is required as well -- without it the
-# six NA-NPI rows survive the filter, enter roster_npi as NA, and are reported
-# as zero blanks while quietly sitting in the numerator's key set.
 ros[, npi := trimws(as.character(npi))]
-roster_npi <- unique(ros[!is.na(npi) & nzchar(npi) &
-                         !is.na(cert_year) & cert_year <= 2024L, npi])
+observed_sha <- digest::digest(file = ROSTER, algo = "sha256")
+if (!identical(observed_sha, LINKAGE_ROSTER_SHA256))
+  stop("linkage roster SHA-256 mismatch.\n  expected ", LINKAGE_ROSTER_SHA256,
+       "\n  observed ", observed_sha,
+       "\nRe-run 06_roster_reconciliation.R and update the pin deliberately; ",
+       "the numerator of every bound below is this file.", call. = FALSE)
+roster_npi <- unique(ros$npi)
 roster_note <- data.frame(
-  rows_in_file = nrow(ros),
-  distinct_npi = uniqueN(ros$npi),
-  blank_or_na_npi = sum(is.na(ros$npi) | !nzchar(ros$npi)),
-  cert_year_le_2024 = length(roster_npi),
-  provenance_sidecar_states = "1100 rows / 1092 unique NPIs -- DOES NOT DESCRIBE THIS FILE",
-  ascertainment_2024 = "UNDOCUMENTED; do not quote a completeness figure")
-cat("\n=== frozen roster ===\n"); print(t(roster_note))
+  linkage_roster = basename(ROSTER),
+  sha256 = observed_sha,
+  npis = length(roster_npi),
+  derived_by = "06_roster_reconciliation.R: non-missing, Luhn-valid, distinct NPI, cert_year <= 2024",
+  reconciliation = "1500 raw rows - 6 missing NPI - 2 certified after 2024 = 1492",
+  ascertainment_2024 = paste("UNDOCUMENTED. 115 valid NPIs appear in the coordinate",
+                             "extract and in no roster row; if any are URPS, U and",
+                             "every lower bound rise, so exclusion is conservative."))
+cat("\n=== frozen linkage roster ===\n"); print(t(roster_note))
 
 # ---- T: national totals, from the Geography release -------------------------
 geo <- fread(GEO_SVC, showProgress = FALSE)
