@@ -60,20 +60,21 @@ practice rather than cumulative certification.
 
 Whether the United States will have enough urogynecologists to meet the needs of
 an aging female population is an important question for the subspecialty.
-Workforce projections may influence fellowship training, geographic access to
-pelvic-floor care, and planning for future clinical capacity. Yet these
-projections are rarely tested against what subsequently occurs, and historical
-validation is only meaningful when the quantity predicted by the model is
-equivalent to the quantity used as the validation target.
+Symptomatic pelvic floor disorders affect approximately one in four adult U.S.
+women, and prevalence rises steeply with age.[1] Workforce projections may
+influence fellowship training, geographic access to pelvic-floor care, and
+planning for future clinical capacity. Yet these projections are rarely tested
+against what subsequently occurs.
 
 The gap is not particular to urogynecology. A systematic review of 40 health
 workforce projection studies found that 8 (20%) compared predictions with
 historical data and only 4 conducted external validation, identifying model
-validity and transparent reporting as the field's principal weaknesses.[1] Where
+validity and transparent reporting as the field's principal weaknesses.[2] Where
 validation has been done, it has compared projected totals against observed
-totals. A backtest of Dutch general-practitioner projections for target years
-1998 to 2011 reported mean absolute percentage errors of 1.9% to 14.9% and
-attributed the error to bias rather than variance.[2]
+totals. A historical comparison of Dutch
+general-practitioner projections for target years 1998 to 2011 reported mean
+absolute percentage errors of 1.9% to 14.9% and attributed the error to bias
+rather than variance.[3]
 
 Such comparisons do not ask whether the quantity the model simulates is the same
 quantity used to check it. A workforce model simulates a stock of practicing
@@ -83,10 +84,14 @@ removes physicians who retire and the registry never does, the two series measur
 different things, and the resulting discrepancy will look like a flawed
 retirement assumption to anyone examining only the residual.
 
-We built a national microsimulation of the URPS workforce and asked whether it
-reproduces the observed number of board-certified urogynecologists when the
-forecast is made from historical data alone. It does not, and the reasons matter
-more than the difference itself.
+We built a national microsimulation of the urogynecology and reconstructive
+pelvic surgery (URPS) workforce and asked whether it reproduces the observed
+number of board-certified urogynecologists when the forecast is made from
+historical data alone. It does not, and the reasons matter more than the
+difference itself. Our objective was to determine how much of the disagreement
+is attributable to the definitions of the projected and observed workforces
+rather than to assumptions about physician behavior, and whether conventional
+validation summaries distinguish the two.
 
 ---
 
@@ -174,7 +179,7 @@ was not available from their source data.
 Agreement was evaluated three ways. Percentage difference was calculated as
 100 x (projected median − observed count) / observed count. Containment recorded
 whether the observed value fell within the 95% Monte Carlo interval. The
-interval score, a proper scoring rule, penalizes both interval width and
+interval score, a proper scoring rule,[4] penalizes both interval width and
 observations falling outside the interval, so that improved containment obtained
 through wider intervals incurs an explicit loss of sharpness.
 
@@ -306,7 +311,8 @@ Conventional validation would have selected the worst forecast. Containment of
 the observed value, the summary most workforce studies report, ranked highest the
 forecast the interval score ranked last. A sufficiently wide
 interval contains almost anything, and reporting containment alone rewards
-exactly that. Apparent agreement also depends on how validation is designed:
+exactly that; proper scores were developed for forecast evaluation precisely
+because coverage can be bought with width.[5] Apparent agreement also depends on how validation is designed:
 admitting information unavailable at the forecast origin improved apparent
 accuracy 2.7-fold without changing the model, and the direction of the difference
 reversed with the choice of historical window. Any single cutoff-target
@@ -329,10 +335,10 @@ administrative purposes. Certification series are typically cumulative and rarel
 decremented, license files reflect renewal rather than practice, and national
 provider identifiers persist after retirement. A model that simulates exit,
 scored against a series that never removes anyone, is structurally guaranteed to
-under-predict. Because validation is uncommon in this literature,[1] an error
+under-predict. Because validation is uncommon in this literature,[2] an error
 class that surfaces only during validation will be under-detected, and the
 validation that does occur compares totals: the Dutch general-practitioner
-backtest attributed its error to bias rather than variance[2] without examining
+backtest attributed its error to bias rather than variance[3] without examining
 whether the projected and observed quantities were equivalent, which is the
 signature a definitional mismatch produces.
 
@@ -364,12 +370,14 @@ evaluation rather than reported as validated.
 
 ## References
 
-1. Lee JT, Crettenden I, Tran M, et al. Methods for health workforce projection
+1. Nygaard I, Barber MD, Burgio KL, et al. Prevalence of symptomatic pelvic
+   floor disorders in US women. *JAMA*. 2008;300:1311-1316.
+2. Lee JT, Crettenden I, Tran M, et al. Methods for health workforce projection
    model: systematic review and recommended good practice reporting guideline.
    *Hum Resour Health*. 2024;22:25.
-2. Van Greuningen M, Batenburg RS, Van der Velden LFJ. The accuracy of general
+3. Van Greuningen M, Batenburg RS, Van der Velden LFJ. The accuracy of general
    practitioner workforce projections. *Hum Resour Health*. 2013;11:31.
-3. Gneiting T, Raftery AE. Strictly proper scoring rules, prediction, and
+4. Gneiting T, Raftery AE. Strictly proper scoring rules, prediction, and
    estimation. *J Am Stat Assoc*. 2007;102:359-378.
-4. Bracher J, Ray EL, Gneiting T, Reich NG. Evaluating epidemic forecasts in an
+5. Bracher J, Ray EL, Gneiting T, Reich NG. Evaluating epidemic forecasts in an
    interval format. *PLoS Comput Biol*. 2021;17:e1008618.

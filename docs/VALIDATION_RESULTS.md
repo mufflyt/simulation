@@ -366,31 +366,52 @@ productivity denominator; a p25–p75 range spanning the model calibration makes
 real-world productivity heterogeneity part of the explanation rather than an
 inconvenience. **No outcome establishes workforce adequacy or unmet need.**
 
-## 9. URPS share among physician-delivered care (analysis 05)
+## 9. URPS share among physician-delivered care (analyses 05 and 06)
 
-**Reproduced.** Runs `20260808T211711` / `20260808T211844`, identical at zero
-tolerance across all six tables. Specification frozen in
-`docs/PRESPEC_URPS_SHARE.md` at commit `faf72dc`, before any roster-linked
-quantity was computed; implementation at `82de574`.
+**Computational status: reproduced.** Runs `20260808T213641` / `20260808T213802`
+for analysis 05, and `20260808T213319` / `20260808T213854` for analysis 06, each
+pair identical at zero tolerance across every table.
 
-Analysis `04` established the physician-versus-nonphysician split and could not
-address URPS-versus-other-physician, because the CADR archive carries no
-provider identifier. The 2024 Medicare Physician & Other Practitioners file
-does, so the split is reachable by joining `Rndrng_NPI` to the frozen roster
-(1,492 NPIs, `cert_year <= 2024`). CMS itself has no FPMRS provider type — it
-pools subspecialists with generalists exactly as carrier specialty code 16
-does — so the roster join is the only route, not a convenience.
+**Scientific status: input definition now reconciled and frozen; one residual
+ascertainment gap quantified.** The two statuses are reported separately on
+purpose. "Reproduced at zero tolerance" says the same arithmetic ran twice; it
+says nothing about whether the right population entered the numerator, and
+those must not be allowed to read as one claim.
 
-### Partial identification, not a point estimate
+Specification frozen in `docs/PRESPEC_URPS_SHARE.md` at `faf72dc`, before any
+roster-linked quantity was computed. Implementation at `82de574`, roster
+reconciliation and hash pin at `28f4cc2`.
 
-CMS suppresses every NPI × HCPCS × POS cell under 11 beneficiaries, which
-deletes the low-volume tail specifically. Rather than rescale by `1/capture` —
-which would assume the suppressed volume resembles the retained volume, the one
-thing the suppression mechanism rules out — the unidentified remainder `M` is
-carried as unidentified and the result is an interval.
+### The roster is now a derived, hashed artifact
 
-Primary tier: the 13 anatomically female-specific codes, covering 36.0% of the
-model's physician work RVU.
+Three artifacts claimed to describe the same workforce and reported 1,500,
+1,100 and 1,552. Analysis 06 settles it by comparing identifiers, assigning
+every row of both data files exactly one disposition:
+
+| step | n |
+|---|---:|
+| Raw canonical roster rows | 1,500 |
+| less rows with no NPI | −6 |
+| less rows failing the NPI check digit | 0 |
+| less duplicate NPI rows | 0 |
+| less rows with no certification year | 0 |
+| less certified after 2024 | −2 |
+| **Final 2024 linkage roster** | **1,492** |
+
+All 1,494 non-missing NPIs pass the Luhn check over the 80840 prefix. The
+1,100-row sidecar is a **superseded generation, not a filter** — all five of
+its checkable assertions disagree with the file it accompanies — so no subset
+was constructed to match it. Frozen at sha256 `fbdd8332…`, asserted by 05 on
+every run.
+
+**The reconciliation confirmed the analysis rather than revising it.** 1,492 is
+the population 05 had used throughout, so no bound moved. That was not the
+expected outcome and it is the reason the result below survives.
+
+### Result
+
+Primary tier: the 13 anatomically female-specific codes, 36.0% of the model's
+physician work RVU.
 
 | service | capture | L | H | observed-cell | model |
 |---|---:|---:|---:|---:|---:|
@@ -399,40 +420,50 @@ model's physician work RVU.
 | `pessary_care` | 49.4% | 18.3% | 82.6% | 51.2% | 37.3% |
 | **wRVU-weighted** | 44.3% | **28.8%** | **89.6%** | 73.4% | — |
 
-### The interval is too wide to propagate; the lower bound is not
+### What may be said, exactly
 
-`[28.8%, 89.6%]` does not resolve `P(URPS | physician)`. Propagating it through
-`03` would produce an FTE range spanning most of the plausible space, which is
-the correct answer to the question asked and not a useful input.
+> In 2024 Medicare fee-for-service claims, the suppression-robust lower bound
+> for the URPS share of physician-attributed sling workload exceeded the
+> model's reference URPS-share assumption (36.0% vs 30.5%).
 
-The **lower bound is informative on its own**, and it bites once. On
-`sling_procedure` the model assumes 30.5% of physician-delivered work is URPS,
-while at least **36.0%** of Medicare sling services demonstrably were —
-in the configuration *least* favourable to URPS, assigning every suppressed
-service to some other physician. The model under-attributes sling work to
-subspecialists on the highest-work-RVU service in the basket. `prolapse` and
-`pessary` assumptions sit inside their intervals and are not contradicted.
+That sentence is the finding. It is **not** "the model under-attributes sling
+URPS share." The model parameter is intended as a broad, all-payer delivery
+share; this is Medicare fee-for-service, where patients are older and plausibly
+reach subspecialists more often. Transporting the bound would require an
+assumption that is probably false in a known direction. State what was
+observed.
 
-### What this does not license
+`prolapse_procedure` and `pessary_care` assumptions sit inside their intervals
+and are not constrained by this evidence.
 
-The bound is a valid lower bound **for Medicare FFS 2024**. Transporting it to
-the model's all-payer estimand requires an assumption that is probably false in
-a known direction: Medicare sling patients are older, and older patients
-plausibly reach subspecialists more often, so the Medicare URPS share is likely
-*above* the all-payer share. The finding is therefore that the model's sling
-assumption is below a Medicare-specific floor, not that it is wrong nationally.
+### What the width teaches
 
-Unmatched NPIs are **non-roster physicians**, never "generalists" — non-match
-is equally consistent with a roster miss. Roster ascertainment for 2024 is
-**undocumented**: the CSV holds 1,500 rows and 1,495 NPIs, its provenance
-sidecar states 1,100 and 1,092, and the companion coordinate extract holds
-1,552. Three artifacts, three counts. No completeness figure may be quoted
-until that is reconciled, and any roster incompleteness biases `L` downward,
-which makes the sling finding conservative rather than fragile.
+`[28.8%, 89.6%]` is the answer to a real question and a useless model input.
+CMS suppression prevents this dataset from identifying
+$P_{\mathrm{URPS}\mid\mathrm{phys}}$ tightly enough to plug a point estimate
+into `03`; 44.3% capture on the primary codes leaves most volume unattributed.
+The general lesson is worth keeping: **CMS claims cannot precisely estimate the
+national URPS physician share, but service-specific lower bounds can still
+constrain or falsify individual assumptions.** Sling does; the others do not.
+
+### Residual, and its direction
+
+115 valid NPIs appear in the coordinate extract and in no roster row. They are
+not added — the coordinate file mixes source runs, one of which is a general
+obstetrics-and-gynaecology geocode file, and nothing reachable from this
+repository establishes those records are URPS. If any are, `U` and every lower
+bound **rise**, so the exclusion is conservative in the direction that matters
+and the sling finding is a floor beneath a floor. Roster ascertainment for 2024
+remains undocumented; no completeness figure may be quoted.
+
+Activity in 2024 is deliberately not an inclusion criterion. `U` is formed by
+intersecting with services actually billed, so a non-biller contributes zero
+either way — an activity filter cannot remove a spurious match, only discard a
+real one.
 
 The observed-cell share (73.4% weighted) is **not** a national share. It is the
 size of the selection: it exceeds the lower bound by 45 points because
-suppression removes low-volume providers and retains high-volume ones.
+suppression keeps high-volume providers and drops low-volume ones.
 
 The E/M component — 45.6% of physician work RVU — remains unidentified. The PUF
 carries no diagnosis field, so `99213` cannot be restricted to urogynaecologic

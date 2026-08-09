@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "artifact": "medicare_realized_care_2015_2016.rds",
+  "input_fingerprint": "e29518291497561c756ee2ea83392ef4594f5ec42542145aca907db719d44108",
+  "code_fingerprint": "9f099122022413f0c9e070345679abd6f2eb9b19df70d63e801a957b9f97ba7a",
+  "content_sha256": "7ee74c59c8ee1384032282c9df078789a815a636233792ad65a765da0cac2006",
+  "composite_key": "c9fd9d7ecac54b64fb89985f911523d434fbeea20dcf392df775c8afd144b6bb",
+  "tool_versions": {
+    "R": "4.4.2",
+    "digest": "0.6.39",
+    "payer_scope": "Medicare fee-for-service",
+    "estimand": "Provider-and-Service PUF suppresses low-volume lines and does not identify beneficiary age; use for older-population realized-use validation, not prevalence or all-payer demand."
+  },
+  "provenance": {
+    "run_id": "microsim_20260803_225233",
+    "run_mode": "relaxed",
+    "created_at": "2026-08-03T22:52:33-0600",
+    "source": "CMS Medicare Provider-and-Service PUF; procedure-specific URPS HCPCS only",
+    "count": 3553
+  }
+}

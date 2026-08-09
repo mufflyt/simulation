@@ -1,0 +1,19 @@
+{
+  "built": "2026-08-08 18:58:15.178409",
+  "mysterycall": {
+    "path": "/Users/tylermuffly/Movies/results_CorbisieroMysteryCal_DATA_LABELS_2021_03_15_1249_mutate_50.rds",
+    "sha256": "20bc25d34cfc50e645e3d8431e5686ef3b2a61b2d0176627f81d071dffa6cdd2"
+  },
+  "providers": {
+    "path": "/Users/tylermuffly/isochrones/artifacts/2sfca/ec2/e2sfca_20260712_190734/unpacked/step_4_2sfca_FPMRS_2020_providers.rds",
+    "sha256": "5c78f9edc0ccd039a44211714f0e6441e9d1ef09bf782961867526e99742b733"
+  },
+  "coord_map": {
+    "path": "/Users/tylermuffly/isochrones/artifacts/20260702_120134_90bf52ef/step_3_year_coord_map.rds",
+    "sha256": "79f0080c3897c63d8bf6f3bdf0121a2746750d1cf39229207e6e43fa858f21f9"
+  },
+  "cohort": {
+    "path": "/Users/tylermuffly/isochrones/artifacts/20260802_101936_ce1223fc/step_2.5_final_cohort.rds",
+    "sha256": "28d8a951e0eaada047af58ff8cea7bc49fb3cf2e6ed2365853edc1c31da635a4"
+  }
+}
