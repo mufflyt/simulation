@@ -75,7 +75,7 @@ BACKTEST_ARMS <- tibble::tribble(
 #' @param apply_attrition Apply the exit processes. FALSE gives the
 #'   definition-matched comparison against a series that applies none.
 #' @param career_change_hazard Annual permanent separation hazard under age 50.
-#'   Defaults to [BACKTEST_CAREER_CHANGE_HAZARD], which is 0: the 1.42% estimate
+#'   Defaults to `BACKTEST_CAREER_CHANGE_HAZARD`, which is 0: the 1.42% estimate
 #'   postdates the 2020 origin, so the historical forecast OMITS the process
 #'   rather than asserting the hazard is zero. Pass
 #'   `CAREER_CHANGE_HAZARD_UNDER_50` for the sensitivity analysis.
@@ -227,7 +227,7 @@ score_backtest_arm <- function(arm, observed, label = "") {
 #' @param n_iterations Monte Carlo replicates per arm.
 #' @param assumed_entrants The model's shipped entrant assumption.
 #' @param career_change_hazard Passed to [run_backtest_arm()]. Defaults to
-#'   [BACKTEST_CAREER_CHANGE_HAZARD] (0) so the primary historical back-test
+#'   `BACKTEST_CAREER_CHANGE_HAZARD` (0) so the primary historical back-test
 #'   uses no post-cutoff parameter.
 #' @param seed RNG seed.
 #' @param acknowledge_no_attrition Proceed despite the observed series applying

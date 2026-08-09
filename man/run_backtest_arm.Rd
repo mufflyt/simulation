@@ -31,7 +31,7 @@ run_backtest_arm(
 definition-matched comparison against a series that applies none.}
 
 \item{career_change_hazard}{Annual permanent separation hazard under age 50.
-Defaults to \link{BACKTEST_CAREER_CHANGE_HAZARD}, which is 0: the 1.42\% estimate
+Defaults to \code{BACKTEST_CAREER_CHANGE_HAZARD}, which is 0: the 1.42\% estimate
 postdates the 2020 origin, so the historical forecast OMITS the process
 rather than asserting the hazard is zero. Pass
 \code{CAREER_CHANGE_HAZARD_UNDER_50} for the sensitivity analysis.}
