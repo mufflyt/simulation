@@ -89,37 +89,113 @@ more than the difference itself.
 
 ---
 
-## Methods
+## Materials and Methods
 
-The validation target was the national count of board-certified URPS physicians
+### Validation design
+
+We conducted a historical validation in which forecasts were generated using
+only information that would have been available at a 2020 cutoff and were then
+compared with what was subsequently observed. No model parameter was retuned
+after the observed value was examined.
+
+### Benchmark and estimand
+
+The comparison series was the national count of board-certified URPS physicians
 in 2023 (n = 1,306), comprising physicians certified through the American Board
-of Obstetrics and Gynecology or the American Board of Urology, keyed on
-subspecialty certification year. Automated checks verified geography, pathway,
-measure, and certification-year basis before any comparison, failing rather than
-warning on mismatch.
+of Obstetrics and Gynecology or the American Board of Urology and keyed on
+subspecialty certification year. Automated checks verified geography, board
+pathway, measure, and certification-year basis before any comparison, failing
+rather than warning on mismatch.
 
-Forecasts were generated from information available through 2020 only. Ten
-prespecified configurations varied cohort construction (derived from the observed
-roster versus synthetically generated), entrant assumptions (an assumed 55 per
-year versus 32.67 per year estimated from pre-cutoff data), and whether career
-attrition was applied. Each configuration was run with 1,000 Monte Carlo
-iterations.
+This series is a cumulative certification count: the number retired is zero in
+every year and the active count equals the ever-certified count. The workforce
+model estimates a different quantity, the clinically active workforce, from
+which physicians exit. The two are not operationally equivalent, and the
+analysis was designed around that distinction rather than discovering it
+afterward.
 
-Agreement was summarized three ways: percentage difference from the observed
-count, whether the 95% Monte Carlo interval contained it, and the interval
-score,[3,4] which charges interval width and shortfall on a single scale and is
-therefore not improved by widening an interval to achieve containment.
+### Model configurations
 
-Because all ten configurations were scored against a single observed value, they
-represent alternative specifications rather than independent forecast occasions.
-Containment counts are reported as such and not as coverage rates. Interval
-calibration requires repeated targets, which the temporal validation supplies:
-rolling origins from 2017 to 2020, admitting a training window only when its
-outcome was observable at that origin. For contrast we repeated the exercise
-using leave-one-out validation, which admits windows whose outcomes were not yet
-observable. Secondary analyses examined five cutoff-target windows and two
-entrant definitions. Model structure, parameter sources, and reproducibility
-details appear in the Supplement.
+Ten prespecified configurations varied three elements.
+
+*Baseline cohort.* The derived cohort reconstructed individual physicians from
+the observed certification counts for each certification year, preserving
+cohort structure, with separate age-at-certification distributions for the
+backlog of established practitioners certified in or before the first URPS
+certification year and for subsequent fellowship-trained cohorts. The synthetic
+cohort matched only the aggregate headcount, drawing ages from a single
+distribution without certification-year structure. Distributional parameters
+are given in the Supplement.
+
+*Workforce entry.* Three approaches were used: the model's shipped assumption of
+55 entrants per year; a rate estimated from pre-cutoff certification data alone
+(32.67 per year); and a rate derived from National Resident Matching Program
+fellowship match reports published on or before the cutoff.
+
+*Workforce exit.* Physicians could leave the clinically active workforce through
+two processes: age-specific retirement hazards, and a 1.42% annual
+career-change hazard applied under age 50. Exits were absorbing.
+
+Corresponding no-attrition configurations set both exit hazards to zero, so that
+the identical simulation engine produced both comparisons. These configurations
+made the simulated quantity more comparable with the cumulative certification
+benchmark and were diagnostic comparisons only. They are not alternative
+estimates of the clinically active workforce, and the production model retains
+both exit processes.
+
+### Simulation and uncertainty
+
+Each configuration was simulated for 1,000 Monte Carlo iterations. The median
+simulated headcount was the point projection, and the 2.5th and 97.5th
+percentiles defined the 95% Monte Carlo interval.
+
+Entrant-rate uncertainty was estimated from pre-cutoff observations and
+propagated by redrawing the entrant rate within each Monte Carlo iteration. Each
+entrant-rate distribution was centered on the corresponding prespecified entrant
+assumption, preserving the contrasts among configurations. Retirement and
+career-change hazards were applied stochastically to individual physicians, but
+their coefficients were held fixed because sampling uncertainty for those
+parameters was not available from their source data.
+
+### Measures of agreement
+
+Agreement was evaluated three ways. Percentage difference was calculated as
+100 x (projected median − observed count) / observed count. Containment recorded
+whether the observed value fell within the 95% Monte Carlo interval. The
+interval score, a proper scoring rule, penalizes interval width and failure to
+contain the observed value on a single scale, so that lower scores indicate more
+informative intervals and the score cannot be improved by widening an interval
+to achieve containment.
+
+The ten configurations were alternative specifications evaluated against the
+same single 2023 observation and therefore did not constitute ten independent
+forecast occasions. The number of intervals containing the observed count is
+reported as a containment count rather than as an empirical coverage rate.
+
+### Temporal and sensitivity analyses
+
+To evaluate performance across independent forecast occasions, we performed
+rolling-origin validation using origins from 2017 through 2020, each with a
+three-year target horizon, producing four out-of-time comparisons. At each
+origin, model fitting was restricted to observations whose outcomes would have
+been observable at that time.
+
+We contrasted this with leave-one-out validation, which permits training
+observations whose outcomes occur after the forecast origin, to quantify the
+effect of future-information leakage on apparent agreement and interval width.
+Additional sensitivity analyses evaluated five historical cutoff-target windows
+and the alternative certification-based and match-based definitions of workforce
+entry.
+
+Model structure, parameter sources, complete configuration results, and
+reproducibility procedures are provided in the Supplement.
+
+### Institutional review
+
+[Insert institutional determination regarding whether this analysis of
+aggregate certification counts and physician roster data constituted
+human-subjects research, including protocol or determination number if
+applicable.]
 
 ---
 
