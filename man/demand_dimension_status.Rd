@@ -29,9 +29,11 @@ model is supplied; otherwise the literature-derived prevalence in use is
 Nygaard-derived literals below 65.}
 \item{care_seeking}{Read from the \code{demand_calibration} row of
 \code{\link[=unresolved_calibration_items]{unresolved_calibration_items()}}, which records the NAMCS fit.}
-\item{access_barriers}{Read from \code{\link[=geographic_access_status]{geographic_access_status()}}. The layer is
-loaded and called by nothing, so this is ABSENT rather than wrong --
-which still blocks every estimand that requires it.}
+\item{access_barriers}{Read from \code{\link[=geographic_access_status]{geographic_access_status()}}. When the
+layer resolves this is \code{measured_input_unvalidated_response}, not
+\code{calibrated}: the travel-time surface is verified but the decay function
+converting minutes into a barrier is not. When it does not resolve the
+layer is ABSENT rather than wrong, which still blocks.}
 \item{baseline_adequacy}{Read from the supplied \code{\link[=baseline_gap]{baseline_gap()}} object's
 own \code{calibration_status}. Undeclared without one, because an adequacy
 nobody stated is not an adequacy.}

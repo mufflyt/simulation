@@ -397,8 +397,13 @@ export_dmdm_demand_contract <- function(trajectory,
   # Provenance: object-level status + per-condition status from `transitions`.
   # A tier is only as trustworthy as its weakest input, so tier3 (any-PFD) takes
   # the weakest of the three conditions' statuses.
+  # Kept in lockstep with CALIBRATION_STATUS_RANK by a test that greps both
+  # sources: two rankings disagreeing about what counts as calibrated is the
+  # same silent-divergence failure as a duplicated function.
   status_rank <- c(placeholder_uncalibrated = 1L, uncalibrated_illustrative = 1L,
-                   derived_by_analogy = 2L, fitted = 3L, calibrated = 4L)
+                   derived_by_analogy = 2L,
+                   measured_input_unvalidated_response = 3L,
+                   fitted = 4L, calibrated = 5L)
   weakest <- function(s) {
     if (!length(s)) return(NA_character_)
     r <- status_rank[s]; r[is.na(r)] <- 0L

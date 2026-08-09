@@ -226,9 +226,11 @@ demand_estimand_table <- function(dimension_status) {
 #'     Nygaard-derived literals below 65.}
 #'   \item{care_seeking}{Read from the `demand_calibration` row of
 #'     [unresolved_calibration_items()], which records the NAMCS fit.}
-#'   \item{access_barriers}{Read from [geographic_access_status()]. The layer is
-#'     loaded and called by nothing, so this is ABSENT rather than wrong --
-#'     which still blocks every estimand that requires it.}
+#'   \item{access_barriers}{Read from [geographic_access_status()]. When the
+#'     layer resolves this is `measured_input_unvalidated_response`, not
+#'     `calibrated`: the travel-time surface is verified but the decay function
+#'     converting minutes into a barrier is not. When it does not resolve the
+#'     layer is ABSENT rather than wrong, which still blocks.}
 #'   \item{baseline_adequacy}{Read from the supplied [baseline_gap()] object's
 #'     own `calibration_status`. Undeclared without one, because an adequacy
 #'     nobody stated is not an adequacy.}
@@ -251,7 +253,16 @@ demand_dimension_status <- function(gap = NULL, onset_model = NULL) {
 
   care <- if (item_resolved("demand_calibration")) "calibrated" else "derived_by_analogy"
 
-  access <- if (isTRUE(geographic_access_status()$resolved)) "calibrated" else {
+  # NOT `calibrated` when resolved, and the distinction is the point. Resolving
+  # means the travel-time SURFACE is measured and verified -- canonical isochrone
+  # run, registry-matched, SHA-256 per band. It does NOT mean the BARRIER
+  # FUNCTION is validated: E2SFCA_DEFAULT_WEIGHTS (1.00/0.68/0.22/0.09) is what
+  # converts minutes into reduced access, and nothing here validates that decay
+  # against URPS care-seeking. `reduced_barrier` is a counterfactual about the
+  # response function, so a verified surface alone must not confer reportability.
+  access <- if (isTRUE(geographic_access_status()$resolved)) {
+    "measured_input_unvalidated_response"
+  } else {
     # Absent, not wrong. Ranked at the floor so it blocks, which is correct: an
     # access counterfactual cannot be reported off a layer nothing runs.
     "uncalibrated_illustrative"
