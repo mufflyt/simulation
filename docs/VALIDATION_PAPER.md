@@ -308,14 +308,14 @@ model can represent the behavior of urogynecologists faithfully and still produc
 a misleading number for fellowship planning.
 
 Conventional validation would have selected the worst forecast. Containment of
-the observed value, the summary most workforce studies report, ranked highest the
-forecast the interval score ranked last. A sufficiently wide
-interval contains almost anything, and reporting containment alone rewards
-exactly that; proper scores were developed for forecast evaluation precisely
-because coverage can be bought with width.[5] Apparent agreement also depends on how validation is designed:
-admitting information unavailable at the forecast origin improved apparent
-accuracy 2.7-fold without changing the model, and the direction of the difference
-reversed with the choice of historical window. Any single cutoff-target
+the observed value, the summary most workforce studies report, ranked highest
+the forecast that the interval score ranked last. A sufficiently wide interval
+contains almost anything, and reporting containment alone rewards exactly that;
+proper scores were developed for forecast evaluation precisely because coverage
+can be bought with width.[5] Apparent agreement also depends on how validation
+is designed: admitting information unavailable at the forecast origin improved
+apparent accuracy 2.7-fold without changing the model, and the direction of the
+difference reversed with the choice of historical window. Any single cutoff-target
 comparison would have supported a confident conclusion about the direction of
 bias, and the opposite conclusion was equally available.
 
@@ -338,7 +338,7 @@ scored against a series that never removes anyone, is structurally guaranteed to
 under-predict. Because validation is uncommon in this literature,[2] an error
 class that surfaces only during validation will be under-detected, and the
 validation that does occur compares totals: the Dutch general-practitioner
-backtest attributed its error to bias rather than variance[3] without examining
+comparison attributed its error to bias rather than variance[3] without examining
 whether the projected and observed quantities were equivalent, which is the
 signature a definitional mismatch produces.
 

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" default-locale="en-US">
+  <info>
+    <title>Obstetrics &amp; Gynecology (AMA numeric)</title>
+    <id>https://github.com/mufflyt/simulation/docs/submission/obstetrics-and-gynecology.csl</id>
+    <link href="https://github.com/mufflyt/simulation/docs/submission/obstetrics-and-gynecology.csl" rel="self"/>
+    <category citation-format="numeric"/>
+    <category field="medicine"/>
+    <summary>Numeric AMA-derived style for Obstetrics and Gynecology. Hand
+      written for this manuscript; substitute the upstream CSL project style
+      if an authoritative file is required.</summary>
+    <updated>2026-08-08T00:00:00+00:00</updated>
+    <rights license="http://creativecommons.org/licenses/by-sa/3.0/">This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 License</rights>
+  </info>
+
+  <!-- AMA lists up to six authors; with seven or more it gives the first three
+       followed by "et al". et-al-min is therefore 7, not 4. -->
+  <macro name="author">
+    <names variable="author">
+      <name delimiter=", " delimiter-precedes-last="always"
+            initialize-with="" name-as-sort-order="all" sort-separator=" "/>
+      <et-al term="et al" font-style="normal"/>
+      <substitute>
+        <names variable="editor"/>
+        <text macro="title"/>
+      </substitute>
+    </names>
+  </macro>
+
+  <macro name="title">
+    <text variable="title"/>
+  </macro>
+
+  <macro name="container">
+    <text variable="container-title" form="short" strip-periods="true"
+          font-style="italic"/>
+  </macro>
+
+  <macro name="issued-year">
+    <date variable="issued">
+      <date-part name="year"/>
+    </date>
+  </macro>
+
+  <!-- AMA omits the issue number when a volume is present. -->
+  <macro name="locators">
+    <group delimiter=":">
+      <text variable="volume"/>
+      <text variable="page"/>
+    </group>
+  </macro>
+
+  <citation collapse="citation-number" et-al-min="7" et-al-use-first="3">
+    <sort>
+      <key variable="citation-number"/>
+    </sort>
+    <layout prefix="[" suffix="]" delimiter=",">
+      <text variable="citation-number"/>
+    </layout>
+  </citation>
+
+  <bibliography et-al-min="7" et-al-use-first="3" second-field-align="flush"
+                entry-spacing="0" line-spacing="1">
+    <sort>
+      <key variable="citation-number"/>
+    </sort>
+    <layout>
+      <text variable="citation-number" suffix="."/>
+      <group delimiter=" ">
+        <text macro="author" suffix="."/>
+        <text macro="title" suffix="."/>
+        <group delimiter=". " suffix=".">
+          <text macro="container"/>
+          <group delimiter=";">
+            <text macro="issued-year"/>
+            <text macro="locators"/>
+          </group>
+        </group>
+      </group>
+    </layout>
+  </bibliography>
+</style>

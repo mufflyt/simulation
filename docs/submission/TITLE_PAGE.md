@@ -72,7 +72,7 @@ Proposed for approval, five terms:
 | Item | Count |
 |---|---:|
 | Abstract | 294 |
-| Main text (Introduction through Limitations, tables and references excluded) | 2,132 |
+| Main text (Introduction through Limitations, tables and references excluded) | 2,133 |
 | Tables | 2 |
 | Figures | 0 |
 | References | 5 |
