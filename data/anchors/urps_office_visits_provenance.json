@@ -1,0 +1,17 @@
+{
+  "anchor_id": "urps_office_visits",
+  "estimand": "pelvic-floor-related ambulatory office visits (UI/POP/pelvic-floor ICD-10 in DIAG1-3); all-provider, condition-defined",
+  "estimate": 4814760,
+  "lower_ci": 1982987,
+  "upper_ci": 7646533,
+  "source": "National Ambulatory Medical Care Survey (NAMCS) 2019 Public Use File, NCHS/CDC",
+  "source_years": "2019",
+  "definition": "Any of DIAG1/DIAG2/DIAG3 beginning with an ICD-10-CM prefix in URPS_ICD10_PREFIXES: N393, N394, N81, N3281, R32, N993, N994",
+  "local_input": "data-raw/namcs/namcs2019_clean.rds",
+  "local_input_sha256": "1e424de0c1f37b457472349cf884f2f37d439186de119dee7897de24fa69c411",
+  "producing_code": "R/calibration-namcs_demand.R::namcs_urps_visit_anchor()",
+  "date_created": "2026-08-09",
+  "evidence_status": "direct_empirical",
+  "limitations": "Office-based only (excludes HOPD/ED) -> structural lower bound; 2019 vintage; 55 unweighted records (>= NCHS floor 30); all-provider condition-defined, not FPMRS-specialist.",
+  "no_extrapolation": true
+}
