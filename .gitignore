@@ -126,4 +126,6 @@ outputs/
 !data-raw/sensitivity/*.csv
 data-raw/brfss/*.XPT
 data-raw/brfss/*.xpt
-^artifacts/validation$
+# Validation run directories: evidence is local and regenerable from the
+# manifest; committing generated CSVs would create a second thing to drift.
+artifacts/validation/
