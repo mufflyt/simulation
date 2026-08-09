@@ -57,7 +57,12 @@ MUFFLYACCESS_REQUIRED_EXPORTS <- c(
   # fallback body because mufflyaccess is in Suggests. Both exist at the pinned
   # commit, so this delegation moves no pin -- which is the whole reason these
   # two were separable from calculate_rural_metro_comparison, which does not.
-  "weighted_mean_all"
+  "weighted_mean_all",
+  # The README state maps call urps_state_female_pop() from
+  # scripts/plot_readme_figures.R. Present and exported at the pinned commit
+  # a88dba8, so declaring it moves no pin -- the check that separates a safe
+  # declaration from the pin bump 72a7e13 reverted.
+  "urps_state_female_pop"
 )
 
 #' Identity of the installed contract build
