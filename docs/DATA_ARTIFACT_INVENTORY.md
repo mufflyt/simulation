@@ -25,6 +25,52 @@ permitted to read.
 `scripts/validation/` reads a file classified below as intermediate, cache or
 obsolete. Analysis `05` already satisfies it; the test keeps it true.
 
+### How the invariant is checked, and what it cannot see
+
+Two layers, because the obvious implementation is not sufficient and saying so
+is part of the guarantee.
+
+**Layer 1 — parse and resolve (primary).** The test walks each validation
+script's AST for reader calls (`readRDS`, `fread`, `read.csv`, `readLines`,
+`digest(file=)`, …), resolves the path argument through the script's own
+top-level constants, and requires every resolved path to sit under a declared
+location. **This inverts the burden of proof.** A name scan asks "is this one
+forbidden file mentioned?" and can only ever catch files somebody thought to
+list. This asks "is everything you open declared?", so a cache invented next
+year is caught with no list to update.
+
+Verified adversarially rather than assumed. Two cases were injected into `05`
+and both were caught by name:
+
+| injected | caught as |
+|---|---|
+| `readRDS(file.path(CACHE_DIR, STEM))`, path assembled from parts | `readRDS reads a NON-CANONICAL artifact -> scratch/cache/urps_basket_prov_svc.rds` |
+| `read.csv(SIDE)` where `SIDE <- "/tmp/someones_laptop_copy.csv"` | `read.csv(SIDE) -> /tmp/someones_laptop_copy.csv` is not a declared location |
+
+The second is the one that matters: a novel path containing **no forbidden name
+anywhere**. No name-based check could ever catch it.
+
+**Layer 2 — name scan (backstop).** A grep for the classified names, over source
+with comments stripped. Comments are stripped deliberately: analysis `04`'s
+header discusses the scratchpad by name, and a gate that cannot tell a warning
+from a violation trains people to work around it. The names are checked although
+the files are deleted — the prohibition has to outlive the artifact, or the
+first person to regenerate one reintroduces the defect with nothing objecting.
+
+**The boundary, stated plainly.** Layer 1 resolves character literals and
+`file.path()` of literals through top-level constants. A path built inside a
+block, taken from a function argument, or read from a loop variable is **not
+resolved** — and is *counted* rather than passed. A third test bounds that count
+and fails if it grows, so a new unresolvable read costs a deliberate edit. Today
+exactly one exists: `03`'s `PRODUCTIVITY_REPORT`, assigned inside a block that
+picks the first of four candidate extensions present on disk.
+
+So what these tests establish is: **no declared reader in a validation script
+opens an undeclared path, and no forbidden name appears in code.** That is a
+strong guardrail. It is not a proof that no read happens — a path constructed at
+runtime through a helper the resolver does not recognise as a reader would still
+evade it. Treat it accordingly.
+
 ---
 
 ## 1. Canonical inputs

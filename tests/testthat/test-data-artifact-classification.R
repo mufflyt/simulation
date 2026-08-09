@@ -40,7 +40,167 @@ validation_scripts <- function() {
   list.files(d, pattern = "^[0-9]+_.*[.]R$", full.names = TRUE)
 }
 
-test_that("no validation script reads a non-canonical artifact", {
+# ---- Layer 1: resolve what each script actually opens -----------------------
+#
+# A NAME SCAN IS NOT PROOF OF ABSENCE. Grepping stripped source for
+# `urps_basket_prov_svc` catches the literal call and misses
+# `readRDS(file.path(cache_dir, f))` entirely. Indirection evades a text
+# pattern, so the primary check parses instead: it walks the AST for reader
+# calls, resolves the path argument through the script's own top-level
+# constants, and requires every resolved path to be a DECLARED canonical input.
+#
+# That inverts the burden. A name scan asks "is this one forbidden file
+# mentioned?" and can only ever enumerate files somebody thought of. This asks
+# "is everything you open declared?", so a new cache invented next year is
+# caught without anyone adding it to a list.
+#
+# Where it cannot resolve a path it says so rather than passing. See the
+# `unresolved` test below -- that count is the honest boundary of the guarantee.
+
+READERS <- c("readRDS", "fread", "read.csv", "read_csv", "read.delim",
+             "readLines", "read_yaml", "read.table", "load", "readxl::read_excel")
+
+# Only character literals and file.path() of them are evaluated. Anything else
+# returns NULL and is reported unresolved -- evaluating arbitrary expressions
+# from a script under test would be both unsafe and a lie about what is known.
+# as.character() on a call head can return length > 1 (`utils::read.csv`,
+# `x$y`), which errors under && in R >= 4.3. One helper, always length one.
+.head_name <- function(e) {
+  if (!is.call(e)) return("")
+  h <- e[[1]]
+  if (is.name(h)) return(as.character(h))
+  paste(deparse(h), collapse = "")
+}
+
+.static_value <- function(e, env) {
+  if (is.character(e) && length(e) == 1L) return(e)
+  if (is.name(e)) return(env[[as.character(e)]] %||% NULL)
+  if (identical(.head_name(e), "file.path")) {
+    parts <- lapply(as.list(e)[-1], .static_value, env = env)
+    if (any(vapply(parts, is.null, logical(1)))) return(NULL)
+    return(do.call(file.path, parts))
+  }
+  NULL
+}
+
+# Top-level `NAME <- <literal | file.path(...)>` only. A constant built inside a
+# block or an if() is deliberately not followed.
+.script_constants <- function(exprs) {
+  env <- list()
+  for (e in exprs) {
+    if (.head_name(e) %in% c("<-", "=") && is.name(e[[2]])) {
+      v <- .static_value(e[[3]], env)
+      if (!is.null(v)) env[[as.character(e[[2]])]] <- v
+    }
+  }
+  env
+}
+
+.walk_reads <- function(e, env, acc) {
+  if (is.call(e)) {
+    fn <- sub("^.*::", "", .head_name(e))
+    if (fn %in% sub("^.*::", "", READERS)) {
+      args <- as.list(e)[-1]
+      # digest(file = x) and read fns take the path first or as `file`/`input`.
+      p <- if (!is.null(args$file)) args$file else
+           if (!is.null(args$input)) args$input else
+           if (length(args)) args[[1]] else NULL
+      if (!is.null(p))
+        acc[[length(acc) + 1L]] <- list(
+          fn = fn, expr = paste(deparse(p), collapse = ""),
+          path = .static_value(p, env))
+    }
+    if (identical(fn, "digest") && !is.null(as.list(e)$file)) {
+      p <- as.list(e)$file
+      acc[[length(acc) + 1L]] <- list(
+        fn = "digest(file=)", expr = paste(deparse(p), collapse = ""),
+        path = .static_value(p, env))
+    }
+    for (a in as.list(e)[-1]) if (!missing(a)) acc <- .walk_reads(a, env, acc)
+  }
+  acc
+}
+
+script_reads <- function(f) {
+  exprs <- tryCatch(as.list(parse(f)), error = function(e) NULL)
+  if (is.null(exprs)) return(list())
+  env <- .script_constants(exprs)
+  acc <- list()
+  for (e in exprs) acc <- .walk_reads(e, env, acc)
+  acc
+}
+
+# Paths a validation script is allowed to open, beyond declared canonical
+# sources: its own version-controlled mapping tables, the registry, and the
+# artifacts tree it writes into and reads back for A/B comparison.
+ALLOWED_PREFIXES <- c("scripts/validation/", "config/", "artifacts/", "data-raw/")
+
+test_that("every path a validation script opens resolves to a declared location", {
+  # LAYER 1, the primary check: parse, resolve, require declaration. This is
+  # what catches indirection a name scan cannot see.
+  scripts <- validation_scripts()
+  skip_if(length(scripts) == 0L, "repository root not reachable")
+
+  bad <- character()
+  for (f in scripts) {
+    for (r in script_reads(f)) {
+      if (is.null(r$path)) next          # unresolved: reported by the next test
+      p <- sub("^[.]/", "", r$path)
+      if (!any(startsWith(p, ALLOWED_PREFIXES)))
+        bad <- c(bad, sprintf("%s: %s(%s) -> %s", basename(f), r$fn, r$expr, p))
+      if (any(vapply(FORBIDDEN, function(b) grepl(b, p, fixed = TRUE), logical(1))))
+        bad <- c(bad, sprintf("%s: %s reads a NON-CANONICAL artifact -> %s",
+                              basename(f), r$fn, p))
+    }
+  }
+
+  expect_equal(
+    bad, character(),
+    info = paste0(
+      "A validation script opens a path that is not a declared location:\n  ",
+      paste(bad, collapse = "\n  "),
+      "\nSee docs/DATA_ARTIFACT_INVENTORY.md. Either read a canonical input, ",
+      "or promote the artifact with a SHA-256 and a manifest entry."))
+})
+
+test_that("the resolver's blind spots are known and bounded", {
+  # THE HONEST BOUNDARY. Layer 1 resolves character literals and file.path() of
+  # literals through top-level constants. A path built inside a block, from a
+  # function argument, or from a loop variable is NOT resolved -- it is counted
+  # here instead of being silently treated as fine.
+  #
+  # Today exactly one read is unresolvable: 03's PRODUCTIVITY_REPORT, which is
+  # assigned inside a block that picks the first of four candidate extensions
+  # present on disk. That is legitimate and its candidates are all under
+  # data-raw/productivity/.
+  #
+  # This asserts the count does not GROW. A new unresolvable read is a new hole
+  # in the guarantee, and it should cost a deliberate edit here.
+  scripts <- validation_scripts()
+  skip_if(length(scripts) == 0L, "repository root not reachable")
+
+  unresolved <- character()
+  for (f in scripts)
+    for (r in script_reads(f))
+      if (is.null(r$path))
+        unresolved <- c(unresolved, sprintf("%s: %s(%s)", basename(f), r$fn, r$expr))
+
+  if (length(unresolved) > 2L)
+    fail(paste0(
+      "Reads whose path the resolver cannot evaluate statically:\n  ",
+      paste(unresolved, collapse = "\n  "),
+      "\nEach is a gap in the classification guarantee. Prefer a top-level ",
+      "constant; if the indirection is genuinely needed, raise this bound ",
+      "deliberately and say why."))
+  expect_lte(length(unresolved), 2L)
+})
+
+test_that("no validation script mentions a non-canonical artifact by name", {
+  # LAYER 2, a cheap backstop for the case layer 1 cannot see: a forbidden file
+  # reached through a helper this test does not know is a reader. Documented as
+  # a GUARDRAIL, not proof of absence -- if both layers pass, what has been
+  # established is that no DECLARED reader opens an UNDECLARED path, and that no
+  # forbidden name appears in code. Neither is a proof that no read happens.
   scripts <- validation_scripts()
   skip_if(length(scripts) == 0L, "repository root not reachable")
 
