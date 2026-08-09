@@ -50,8 +50,7 @@ RUN <- begin_validation_run("mc_convergence", seeds = SEEDS, iterations = ITERAT
 
 roster <- urps_provider_roster(load_urps_roster())
 gap <- baseline_gap(
-  base_supply_fte = mufflyaccess::urps_count(year = 2023L, measure = "board_certified_active",
-                                             geography = "national", include_urology = TRUE),
+  base_supply_fte = urps_baseline_supply()$national,   # SSOT adapter; 2023 national baseline
   adequacy = capacity_survey_adequacy(example_capacity_survey())$adequacy,
   method = "capacity_survey", calibration_status = "derived_by_analogy",
   source = "Zarek 2025 PTJ", evidence = "STAND-IN: physical-therapy distribution")
