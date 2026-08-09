@@ -86,28 +86,23 @@ fmt_2   <- function(x) formatC(x, format = "f", digits = 2, big.mark = ",")
 fmt_yn  <- function(x) ifelse(as.logical(x), "Yes", "No")
 fmt_sgn <- function(x, d = 1) sprintf("%+.*f", d, x)
 
-# GFM pipe table. Numeric-looking columns right-align, which is what a journal
-# copy editor expects and what makes a column of magnitudes scannable.
+# RENDERING IS knitr::kable(), NOT A LOCAL PIPE-TABLE WRITER. An earlier
+# revision hand-rolled the GFM emitter -- separator row, column widths, padding
+# -- which is a solved problem owned by a package this repo already builds its
+# vignettes with. The only thing left here is the ALIGNMENT DECISION, which is
+# not table rendering: it is a judgement about which columns are magnitudes.
 #
 # EVERY value must look numeric, not just the first. Testing only row 1 sent
-# the whole Specification column right because it begins "1. Derived cohort".
+# the whole Specification column right, because it begins "1. Derived cohort".
 md_table <- function(df, align = NULL) {
+  if (!requireNamespace("knitr", quietly = TRUE))
+    stop("build_tables.R needs the 'knitr' package (Suggests) to render tables.",
+         call. = FALSE)
   df[] <- lapply(df, as.character)
   numericish <- function(v) all(grepl("^[-+]?[0-9][0-9,]*([.][0-9]+)?$", trimws(v)))
   if (is.null(align))
-    align <- ifelse(vapply(df, numericish, logical(1)), "right", "left")
-  bar <- vapply(align, function(a) if (a == "right") "---:" else "---", character(1))
-  wid <- vapply(seq_along(df), function(i)
-    max(nchar(c(names(df)[i], df[[i]]))), integer(1))
-  pad <- function(v, i) formatC(v, width = wid[i] * if (align[i] == "right") 1 else -1)
-  rows <- c(
-    paste0("| ", paste(vapply(seq_along(df), function(i) pad(names(df)[i], i), character(1)),
-                       collapse = " | "), " |"),
-    paste0("| ", paste(bar, collapse = " | "), " |"),
-    vapply(seq_len(nrow(df)), function(r)
-      paste0("| ", paste(vapply(seq_along(df), function(i) pad(df[[i]][r], i), character(1)),
-                         collapse = " | "), " |"), character(1)))
-  paste(rows, collapse = "\n")
+    align <- ifelse(vapply(df, numericish, logical(1)), "r", "l")
+  paste(knitr::kable(df, format = "pipe", align = align), collapse = "\n")
 }
 
 # ---- Table definitions -----------------------------------------------------

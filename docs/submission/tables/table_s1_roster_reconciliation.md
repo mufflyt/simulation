@@ -4,23 +4,23 @@ Every row of the canonical roster receives exactly one disposition, evaluated in
 
 **Panel A.** waterfall
 
-| Step                                      |     n |
-| --- | ---: |
-| Raw canonical roster rows                 | 1,500 |
-|   less rows with no NPI                   |    -6 |
-|   less rows failing the NPI check digit   |     0 |
-|   less duplicate NPI rows                 |     0 |
-|   less rows with no certification year    |     0 |
-|   less certified after 2024               |    -2 |
-| Final 2024 linkage roster (distinct NPIs) | 1,492 |
+|Step                                      |     n|
+|:-----------------------------------------|-----:|
+|Raw canonical roster rows                 | 1,500|
+|less rows with no NPI                     |    -6|
+|less rows failing the NPI check digit     |     0|
+|less duplicate NPI rows                   |     0|
+|less rows with no certification year      |     0|
+|less certified after 2024                 |    -2|
+|Final 2024 linkage roster (distinct NPIs) | 1,492|
 
 **Panel B.** dispositions
 
-| Disposition        |  Rows |
-| --- | ---: |
-| included_2024      | 1,492 |
-| missing_npi        |     6 |
-| entered_after_2024 |     2 |
+|Disposition        |  Rows|
+|:------------------|-----:|
+|included_2024      | 1,492|
+|missing_npi        |     6|
+|entered_after_2024 |     2|
 
 ---
 

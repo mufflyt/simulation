@@ -788,6 +788,9 @@ Rscript scripts/ci/check_suite.R
 
 See [docs/GUARDS.md](docs/GUARDS.md) for what each guard checks, the defect that
 motivated it, and what it deliberately does not check.
+[docs/HALL_OF_SHAME.md](docs/HALL_OF_SHAME.md) is the companion: the mistakes
+themselves, including the ones made while building the guards, sorted by the
+lesson rather than the date because the lessons repeat.
 
 ---
 
