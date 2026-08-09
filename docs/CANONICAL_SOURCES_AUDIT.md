@@ -266,6 +266,39 @@ silent copy.
 
 ---
 
+## The sweep is now repeatable
+
+A finding produced by an exhaustive method decays back to anecdote the moment
+the method stops being run. Three passes of this document are the evidence: each
+one found things the previous one had walked past, and the second pass published
+a confident false negative.
+
+| artifact | role |
+|---|---|
+| `scripts/dev/audit_canonical_overlap.R` | Runs the sweep. Prints collisions by sibling, the classification tally, everything still `unexamined`, and any new unclassified name. |
+| `tests/canonical-overlap-registry.csv` | The 39 collisions above, one row each, with the classification a human reached by opening both implementations. |
+| `tests/testthat/test-canonical-overlap.R` | The gate. |
+
+**The gate does not fail on overlap.** Three classifications describe divergence
+somebody chose and one describes a byte-identical port that is not urgent to
+remove; failing on overlap would pressure whoever hit it into deleting a
+deliberate extension to get a green build. It fails on exactly two things:
+
+* a **new unclassified collision** — a name newly shared with a sibling and
+  absent from the registry;
+* a **stale row** — a registered collision that no longer exists, because a
+  registry carrying rows for functions that are gone stops being evidence.
+
+`unexamined` is an allowed classification. It is a promise recorded in a file
+rather than a way of dismissing a collision, and the script reprints every one
+of them on every run.
+
+The siblings are separate repositories, absent from CI and from
+`<pkg>.Rcheck/`, so the gate skips there — with a declared reason in
+`tests/skip-budget.csv`, so a skip cannot masquerade as a pass.
+
+---
+
 ## Recommended follow-ups, in order
 
 1. **Restore the `e2sfca_incremental_weights` M2SFCA guard.** The only finding
