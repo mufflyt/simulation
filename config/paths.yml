@@ -9,3 +9,7 @@ data_raw_subdir: "tyler/data-raw"
 # external DB; a different root than external_data_root above). Machine override:
 # config/paths.local.yml or the MEDICARE_PARTB_DUCKDB env var.
 medicare_part_b_duckdb: "/Volumes/MufflySamsung/DuckDB/nber_my_duckdb.duckdb"
+
+# Canonical drive-time isochrones (mufflyt/isochrones, run 20260508_ec2_r6i).
+# Referenced in place -- ~1.6 GB, checksum-verified, not duplicated.
+isochrones_root: "~/isochrones/artifacts/isochrones"
