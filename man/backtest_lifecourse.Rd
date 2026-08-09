@@ -27,11 +27,11 @@ backtest_lifecourse(
 
 \item{compare_categories}{Optional character vector naming the categories that
 define the PRIMARY back-test score. When \code{NULL} (default) every comparable
-category is primary (unchanged behaviour). When supplied, the summary MAPE is
-computed only over these categories; the others are retained in
-\code{by_category} as secondary diagnostics (\code{primary_backtest = FALSE}).
-Errors if none of the requested categories are comparable, so an empty
-configured set fails loudly rather than silently scoring against everything.}
+category is primary (unchanged behaviour). When supplied, the summary MAPE
+is computed only over these categories; the others are retained in
+\code{by_category} as secondary diagnostics (\code{primary_backtest = FALSE}). Errors
+if none of the requested categories are comparable, so an empty configured
+set fails loudly rather than silently scoring against everything.}
 }
 \value{
 List: \code{by_category} (\code{category}, \code{predicted}, \code{observed}, \code{ratio},

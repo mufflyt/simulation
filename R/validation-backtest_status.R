@@ -419,12 +419,7 @@ BACKTEST_RECORD_TOLERANCE <- 1e-6
 #' @concept validation
 #' @export
 backtest_artifact_path <- function(start = ".") {
-  candidates <- c(start, file.path(start, ".."), file.path(start, "..", ".."))
-  for (p in candidates) {
-    f <- file.path(p, "artifacts", "backtest_2020_to_2023_summary.csv")
-    if (file.exists(f)) return(normalizePath(f))
-  }
-  NULL
+  artifact_path("backtest_2020_to_2023_summary.csv", start = start)
 }
 
 #' Verify the frozen record against the scored artifact, row by row

@@ -119,3 +119,30 @@ check_external_data <- function() {
     exists = file.exists(unlist(items, use.names = FALSE))
   )
 }
+
+
+#' Locate a committed artifact by walking up from the working directory
+#'
+#' The one implementation of the "find `artifacts/<file>` from the package root,
+#' from `tests/testthat`, or from a script directory" search. testthat runs with
+#' the working directory two levels down, so a root-relative path silently fails
+#' there, and a check that cannot read its input must not look like a pass.
+#'
+#' Returns NULL rather than erroring: `artifacts/` does not ship, so absence is
+#' the normal case in an installed package and is not itself a fault.
+#'
+#' @param ... Path components beneath `artifacts/`.
+#' @param start Directory to search upward from.
+#' @return Normalized path, or NULL.
+#' @family paths
+#' @concept core
+#' @export
+#' @examples
+#' artifact_path("does_not_exist.csv")
+artifact_path <- function(..., start = ".") {
+  for (p in c(start, file.path(start, ".."), file.path(start, "..", ".."))) {
+    f <- file.path(p, "artifacts", ...)
+    if (file.exists(f)) return(normalizePath(f))
+  }
+  NULL
+}

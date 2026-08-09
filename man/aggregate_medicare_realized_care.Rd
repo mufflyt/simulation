@@ -30,11 +30,11 @@ validated URPS roster or diagnosis definition.}
 \item{state, provider_type, place_of_service, npi}{Optional claims columns to
 retain as dimensions when present. Set any to NULL to omit it.}
 
-\item{beneficiaries, bene_day_services}{Optional claim columns carrying the two
-OTHER CMS utilization measures, kept distinct from \code{services}:
+\item{beneficiaries, bene_day_services}{Optional claim columns carrying the
+two OTHER CMS utilization measures, kept distinct from \code{services}:
 \code{Tot_Benes} (distinct beneficiaries PER provider-code row) and
-\code{Tot_Bene_Day_Srvcs} (beneficiary-day services). Summed only when the
-column is present. The summed beneficiary count double-counts a patient seen by
+\code{Tot_Bene_Day_Srvcs} (beneficiary-day services). Summed only when the column
+is present. The summed beneficiary count double-counts a patient seen by
 several providers, so it is NOT a de-duplicated unique-patient count. Set to
 NULL to omit.}
 }

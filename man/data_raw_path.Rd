@@ -19,6 +19,7 @@ Resolve a path inside the raw-data directory
 }
 \seealso{
 Other paths: 
+\code{\link{artifact_path}()},
 \code{\link{check_external_data}()},
 \code{\link{external_path}()},
 \code{\link{swan_path}()}

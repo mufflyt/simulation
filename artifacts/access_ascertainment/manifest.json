@@ -1,0 +1,10 @@
+{
+  "subspecialty": "Female Pelvic Medicine & Reconstructive Surgery",
+  "years": [2018, 2019, 2020, 2021, 2022, 2023],
+  "cohort_path": "/Users/tylermuffly/isochrones/artifacts/20260702_120134_90bf52ef/step_2.5_final_cohort.rds",
+  "coord_map_path": "/Users/tylermuffly/isochrones/artifacts/20260702_120134_90bf52ef/step_3_year_coord_map.rds",
+  "surface_dir": "/Users/tylermuffly/isochrones/artifacts/2sfca/ec2/e2sfca_20260712_190734",
+  "producing_run_git_sha": "ff3aac4a7aa97094fc3a9e69422425fe1a52b091",
+  "isochrone_match_threshold_km": 5,
+  "note": "Read-only summary of an existing run. No geography was regenerated. Surfaces for other subspecialties in the same run share this coordinate map."
+}
