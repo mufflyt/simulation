@@ -21,6 +21,13 @@
 # The Medicare clinician directory covers 2018-2025 ONLY, so it is silent on
 # 2016-2017 and cannot rescue the early window.
 #
+# CORROBORATED BY THE CONTRACT ITSELF. mufflyaccess::urps_retirement_status()
+# returns "not_ascertained", and the contract carries no n_retired measure. The
+# claim that this series cannot separate active workforce from ever-certified is
+# therefore not our inference against the contract -- it is what the contract
+# says about itself. Pinned in the tests, so that if retirement ever IS
+# ascertained upstream, the claim gets revisited rather than repeated.
+#
 # WHERE THE NUMBERS LIVE. In exactly one place: the artifact
 # inst/extdata/survivor_falsification.json, built by
 # scripts/data_acquisition/09_build_survivor_falsification.R from the cliff

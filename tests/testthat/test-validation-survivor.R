@@ -247,3 +247,19 @@ test_that("the committed supplemental table matches its source", {
   testthat::skip_if_not(file.exists(f), "supplemental table not in this tree")
   expect_identical(readLines(f), survivor_falsification_markdown())
 })
+
+test_that("the contract still does not ascertain retirement", {
+  skip_if_no_artifact()
+  testthat::skip_if_not_installed("mufflyaccess")
+
+  # The central claim -- that this series cannot separate active workforce from
+  # ever-certified, and that absence is not retirement -- rests on the contract
+  # not ascertaining retirement. That is the contract's own declaration, not our
+  # reading of it, so it is pinned here rather than restated in prose. If this
+  # ever flips, the survivor-conditioning argument needs revisiting, not
+  # repeating.
+  expect_identical(mufflyaccess::urps_retirement_status(), "not_ascertained")
+
+  measures <- unique(as.data.frame(mufflyaccess::urps_counts_long())$measure)
+  expect_false(any(grepl("retire", measures, ignore.case = TRUE)))
+})

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-08T20:21:36-0600",
+  "generated_at": "2026-08-09T07:07:03-0600",
   "generated_by": "scripts/data_acquisition/09_build_survivor_falsification.R",
   "windows": {
     "frame": [2013, 2023],
@@ -136,6 +136,18 @@
       "commit": "7c05c87223e1c87898003a73e57ce05af2dde553",
       "committed_at": "2026-08-08T11:37:40-06:00",
       "dirty": false
+    },
+    "canonical_predicates": {
+      "inmodel": {
+        "file": "/private/tmp/claude-501/-Users-tylermuffly/5c40d364-8524-4579-a3b3-5871e78464c0/scratchpad/cliff/R/in_model_baseline.R",
+        "sha256": "490cba0cf14154f58c25adb4a547a555ef58ff0d650abbccdd0c9f1ea393d386",
+        "source": "cliff R/in_model_baseline.R"
+      },
+      "luhn_check_npi": {
+        "file": "/Users/tylermuffly/isochrones/R/npi_validation_helpers.R",
+        "sha256": "2c75c520d8beefab7c42a8d70059d3ad3d60ca549d2dbde818d785fa41db50d0",
+        "source": "isochrones R/npi_validation_helpers.R"
+      }
     },
     "duckdb": {
       "file": "nber_my_duckdb.duckdb",

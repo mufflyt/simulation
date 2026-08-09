@@ -100,6 +100,52 @@ message("ABOG roster : ", ABOG)
 message("ABU roster  : ", ABU)
 message("DuckDB      : ", DUCKDB)
 
+# ---- 0. canonical predicates, sourced rather than re-derived -----------------
+#
+# NEITHER of the two predicates below is written here, because both already have
+# a single source of truth in a sibling repository and a second definition is
+# how two analyses end up with different N.
+#
+#   inmodel()        cliff, R/in_model_baseline.R. cliff wrote that file because
+#                    the in_model_baseline predicate had been spelled four
+#                    different ways across ten call sites. An earlier draft of
+#                    this script added a fifth, which also accepted "T"/"YES" --
+#                    the same answer on the current rosters, a different answer
+#                    the moment the column is re-serialised.
+#   luhn_check_npi() isochrones, R/npi_validation_helpers.R. NPIs carry a Luhn
+#                    check digit over the 80840 prefix, so a ten-digit string is
+#                    not necessarily an NPI. An earlier draft used a bare
+#                    ^[0-9]{10}$ regex, which cannot see a transcription error.
+#
+# Both are documented as pure and safe to source. They are sourced by explicit
+# path and hashed into the provenance block, so the artifact records WHICH
+# definition produced its counts.
+
+source_canonical <- function(var, what, symbol) {
+  p <- require_path(var, what)
+  env <- new.env(parent = globalenv())
+  sys.source(p, envir = env)
+  if (!exists(symbol, envir = env, inherits = FALSE)) {
+    stop(basename(p), " does not define ", symbol, "(). The canonical helper ",
+         "moved; find it rather than re-deriving the predicate here.",
+         call. = FALSE)
+  }
+  list(fn = get(symbol, envir = env), path = p,
+       sha256 = digest::digest(p, algo = "sha256", file = TRUE))
+}
+
+CANON_INMODEL <- source_canonical(
+  "URPS_CLIFF_INMODEL",
+  "cliff's R/in_model_baseline.R, the canonical in_model_baseline predicate",
+  "inmodel")
+CANON_LUHN <- source_canonical(
+  "URPS_ISOCHRONES_NPI",
+  "isochrones' R/npi_validation_helpers.R, the canonical NPI Luhn check",
+  "luhn_check_npi")
+
+inmodel        <- CANON_INMODEL$fn
+luhn_check_npi <- CANON_LUHN$fn
+
 # ---- 1. the identity universe ------------------------------------------------
 #
 # Both boards certify into the same subspecialty, so the universe is the union.
@@ -119,8 +165,7 @@ read_roster <- function(path, pathway) {
     npi       = trimws(as.character(d$npi)),
     pathway   = pathway,
     cert_year = suppressWarnings(as.integer(d$cert_year)),
-    retained  = toupper(trimws(as.character(d$in_model_baseline))) %in%
-      c("TRUE", "T", "1", "YES"),
+    retained  = inmodel(d$in_model_baseline),
     stringsAsFactors = FALSE
   )
 }
@@ -136,13 +181,15 @@ n_excluded <- sum(!ids$retained)
 # because they mean different things: blank is an identity the roster never
 # carried, malformed would be an identity we mangled.
 npi_blank     <- !nzchar(ids$npi) | is.na(ids$npi)
-npi_malformed <- !npi_blank & !grepl("^[0-9]{10}$", ids$npi)
+npi_malformed <- !npi_blank & !vapply(ids$npi, luhn_check_npi, logical(1),
+                                      USE.NAMES = FALSE)
 ids$npi_usable <- !npi_blank & !npi_malformed
 
 excl <- ids[!ids$retained, ]
 n_excluded_blank_npi     <- sum(!nzchar(excl$npi) | is.na(excl$npi))
 n_excluded_malformed_npi <- sum(!(!nzchar(excl$npi) | is.na(excl$npi)) &
-                                  !grepl("^[0-9]{10}$", excl$npi))
+                                  !vapply(excl$npi, luhn_check_npi, logical(1),
+                                          USE.NAMES = FALSE))
 n_excluded_no_npi        <- sum(!excl$npi_usable)
 n_linkable               <- sum(excl$npi_usable)
 
@@ -351,6 +398,11 @@ artifact <- list(
     abu = list(file = basename(ABU), sha256 = digest::digest(ABU, algo = "sha256", file = TRUE),
                bytes = as.numeric(file.size(ABU))),
     roster_repository = ROSTER_GIT,
+    canonical_predicates = list(
+      inmodel = list(file = CANON_INMODEL$path, sha256 = CANON_INMODEL$sha256,
+                     source = "cliff R/in_model_baseline.R"),
+      luhn_check_npi = list(file = CANON_LUHN$path, sha256 = CANON_LUHN$sha256,
+                            source = "isochrones R/npi_validation_helpers.R")),
     duckdb = list(file = basename(DUCKDB), bytes = as.numeric(file.size(DUCKDB)),
                   mtime = format(file.mtime(DUCKDB), "%Y-%m-%dT%H:%M:%S%z"),
                   note = paste("too large to checksum; the table fingerprints",
