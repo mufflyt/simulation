@@ -86,6 +86,23 @@ MODEL_IMPLIED_RAW_WRVU_PER_FTE <- 5193.1
 # Expected columns: source, edition, tier, p25, p50, p75
 PRODUCTIVITY_FILE <- file.path("data-raw", "productivity", "augs_mgma_wrvu.csv")
 
+# THE SOURCE REPORT IS HASHED TOO, and it is declared NOW rather than when the
+# report arrives. The CSV is what the analysis consumes; the report hash
+# establishes which licensed source the transcription came from, so a
+# transcription error or a swapped edition is detectable after the fact.
+#
+# Declaring it now is not premature: hash_inputs() records a missing file as NA,
+# and adding the declaration later would force a code edit at the moment the
+# data arrives -- destroying the property that learning the answer cannot change
+# the analysis. Any of the usual extensions is accepted; the first one present
+# is hashed.
+PRODUCTIVITY_REPORT <- {
+  cand <- file.path("data-raw", "productivity",
+                    paste0("augs_mgma_report", c(".pdf", ".xlsx", ".xls", ".csv")))
+  present <- cand[file.exists(cand)]
+  if (length(present)) present[1] else cand[1]
+}
+
 PRODUCTIVITY <- if (file.exists(PRODUCTIVITY_FILE)) {
   z <- utils::read.csv(PRODUCTIVITY_FILE, stringsAsFactors = FALSE)
   stopifnot(nrow(z) == 1L,
@@ -114,7 +131,8 @@ RUN <- begin_validation_run(
   # run is forced exploratory rather than left to the reader's judgement.
   require_clean = SPECIALTY_SPECIFIC,
   exploratory  = !SPECIALTY_SPECIFIC,
-  inputs = c(productivity_benchmark = PRODUCTIVITY_FILE))
+  inputs = c(productivity_benchmark = PRODUCTIVITY_FILE,
+             productivity_source_report = PRODUCTIVITY_REPORT))
 
 if (!SPECIALTY_SPECIFIC) {
   message("\n*** GATED: productivity tier is '", PRODUCTIVITY$tier, "'. ",
