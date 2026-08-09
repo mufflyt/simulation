@@ -44,7 +44,13 @@ MUFFLYACCESS_REQUIRED_EXPORTS <- c(
   "URPS_PROJECTION_CONTRACT_VERSION",
   "urps_provenance", "urps_retired_values", "urps_retirement_status",
   "urps_scenario_ids", "URPS_SCENARIO_REGISTRY_VERSION", "urps_scenarios",
-  "validate_urps_projection"
+  "validate_urps_projection",
+  # Access-surface validation reads geography definitions from the contract
+  # rather than restating them: NON_CONTIGUOUS_CODES instead of a hand-written
+  # CONUS list, tract_vintage_of()/acs_year_of() instead of inferring vintage
+  # from GEOID width, zero_access_share() instead of counting `== 0` (it is
+  # population weighted, which is the statistic that matters).
+  "NON_CONTIGUOUS_CODES", "tract_vintage_of", "acs_year_of", "zero_access_share"
 )
 
 #' Identity of the installed contract build

@@ -19,6 +19,7 @@ Resolve a path beneath the external data root
 }
 \seealso{
 Other paths: 
+\code{\link{artifact_path}()},
 \code{\link{check_external_data}()},
 \code{\link{data_raw_path}()},
 \code{\link{swan_path}()}

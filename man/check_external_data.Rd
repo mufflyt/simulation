@@ -15,6 +15,7 @@ halfway through a long job.
 }
 \seealso{
 Other paths: 
+\code{\link{artifact_path}()},
 \code{\link{data_raw_path}()},
 \code{\link{external_path}()},
 \code{\link{swan_path}()}

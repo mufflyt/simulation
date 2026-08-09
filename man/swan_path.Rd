@@ -20,6 +20,7 @@ is the single entry point.
 }
 \seealso{
 Other paths: 
+\code{\link{artifact_path}()},
 \code{\link{check_external_data}()},
 \code{\link{data_raw_path}()},
 \code{\link{external_path}()}
