@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-08T20:21:36-0600",
+  "generated_by": "scripts/data_acquisition/09_build_survivor_falsification.R",
+  "windows": {
+    "frame": [2013, 2023],
+    "validation": [2016, 2021],
+    "directory": [2018, 2025],
+    "sustained_min_years": 3
+  },
+  "denominators": {
+    "identity_universe": 1500,
+    "retained": 1339,
+    "excluded_total": 161,
+    "excluded_without_npi": 6,
+    "excluded_blank_npi": 6,
+    "excluded_malformed_npi": 0,
+    "linkage_denominator": 155
+  },
+  "partb": {
+    "any_frame": 129,
+    "any_validation": 121,
+    "persistent_validation": 69,
+    "none_frame": 26,
+    "provider_years_persistent": 414
+  },
+  "directory": {
+    "sustained": 9,
+    "isolated": 8,
+    "neither": 9
+  },
+  "annual": [
+    {
+      "year": 2013,
+      "retained_observed": 819,
+      "excluded_observed": 101,
+      "total_observed": 920,
+      "persistent_observed": 57,
+      "eligible_total": 1092
+    },
+    {
+      "year": 2014,
+      "retained_observed": 869,
+      "excluded_observed": 103,
+      "total_observed": 972,
+      "persistent_observed": 59,
+      "eligible_total": 1166
+    },
+    {
+      "year": 2015,
+      "retained_observed": 916,
+      "excluded_observed": 106,
+      "total_observed": 1022,
+      "persistent_observed": 64,
+      "eligible_total": 1221
+    },
+    {
+      "year": 2016,
+      "retained_observed": 945,
+      "excluded_observed": 105,
+      "total_observed": 1050,
+      "persistent_observed": 66,
+      "eligible_total": 1264
+    },
+    {
+      "year": 2017,
+      "retained_observed": 992,
+      "excluded_observed": 103,
+      "total_observed": 1095,
+      "persistent_observed": 68,
+      "eligible_total": 1329
+    },
+    {
+      "year": 2018,
+      "retained_observed": 1031,
+      "excluded_observed": 100,
+      "total_observed": 1131,
+      "persistent_observed": 68,
+      "eligible_total": 1361
+    },
+    {
+      "year": 2019,
+      "retained_observed": 1075,
+      "excluded_observed": 101,
+      "total_observed": 1176,
+      "persistent_observed": 68,
+      "eligible_total": 1414
+    },
+    {
+      "year": 2020,
+      "retained_observed": 1122,
+      "excluded_observed": 88,
+      "total_observed": 1210,
+      "persistent_observed": 68,
+      "eligible_total": 1435
+    },
+    {
+      "year": 2021,
+      "retained_observed": 1174,
+      "excluded_observed": 79,
+      "total_observed": 1253,
+      "persistent_observed": 69,
+      "eligible_total": 1462
+    },
+    {
+      "year": 2022,
+      "retained_observed": 1181,
+      "excluded_observed": 76,
+      "total_observed": 1257,
+      "persistent_observed": 64,
+      "eligible_total": 1474
+    },
+    {
+      "year": 2023,
+      "retained_observed": 1196,
+      "excluded_observed": 75,
+      "total_observed": 1271,
+      "persistent_observed": 63,
+      "eligible_total": 1487
+    }
+  ],
+  "exclusion_reason": "in_model_baseline == FALSE (later active-roster adjudication); the roster records no finer per-provider reason",
+  "provenance": {
+    "abog": {
+      "file": "abog_all_urps_ENRICHED_2026-07-22.csv",
+      "sha256": "96a9be0bfc73ceaac2226fa146d3b2446b6d86535e0729850724344dc650e4c9",
+      "bytes": 555774
+    },
+    "abu": {
+      "file": "abu_all_urps_ENRICHED_2026-07-22.csv",
+      "sha256": "5ad396280f28992ff22f0d500938f2f3425e14fff186120d0d316c262e9165d0",
+      "bytes": 207261
+    },
+    "roster_repository": {
+      "repository": "https://github.com/mufflyt/cliff.git",
+      "commit": "7c05c87223e1c87898003a73e57ce05af2dde553",
+      "committed_at": "2026-08-08T11:37:40-06:00",
+      "dirty": false
+    },
+    "duckdb": {
+      "file": "nber_my_duckdb.duckdb",
+      "bytes": 83556315136,
+      "mtime": "2026-02-28T11:04:50-0700",
+      "note": "too large to checksum; the table fingerprints below identify what was queried",
+      "partb": {
+        "table": "medicare_part_b_unified",
+        "n_rows": 12232194,
+        "min_year": 2013,
+        "max_year": 2023,
+        "n_years": 11
+      },
+      "directory": {
+        "table": "mips_providers",
+        "n_rows": 19441831,
+        "min_year": 2018,
+        "max_year": 2025,
+        "n_years": 8
+      }
+    }
+  }
+}
