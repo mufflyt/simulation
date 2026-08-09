@@ -134,7 +134,7 @@ p <- ggplot(traj, aes(x = year)) +
     subtitle = paste0("Black line is observed (national, ABOG+ABU, board-certified active, contract v3.0.0).\n",
                       "Bands are 80% and 95% prediction intervals over ",
                       format(bt$settings$n_iterations, big.mark = ","),
-                      " iterations. Observed falls outside the 95% interval in every arm."),
+                      " iterations."),
     x = NULL, y = "Providers (headcount)",
     caption = "No 2021-2023 information was used to estimate any model parameter."
   ) +

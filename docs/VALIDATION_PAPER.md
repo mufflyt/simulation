@@ -38,7 +38,8 @@ entrant definitions.
 **RESULTS:** The projected workforce differed from the observed 2023
 count by 99 providers (−7.6%). Fifty-nine percent of this
 discrepancy was attributable to definitional mismatch: the model removed
-physicians as they retired, whereas the certification series removes no one.
+physicians as they retired, whereas the certification series never subtracts
+anyone.
 Forty-one percent reflected faster-than-assumed entry; assumptions about
 physician behavior accounted for essentially none. The forecast with the highest
 containment had the worst interval score: it contained the observation at all
@@ -114,10 +115,11 @@ subspecialty certification year. Automated checks verified geography, board
 pathway, measure, and certification-year basis before any comparison, failing
 rather than warning on mismatch.
 
-This series is a cumulative certification count: the number retired is zero in
-every year and the active count equals the ever-certified count. The workforce
-model estimates a different quantity, the clinically active workforce, from
-which physicians exit. Because the certification benchmark does not decrement
+This series is a cumulative certification count. Retirement status is not
+ascertained by either board, so no physician is ever subtracted and the reported
+count equals the number ever certified. The workforce model estimates a
+different quantity, the clinically active workforce, from which physicians
+exit. Because the certification benchmark does not decrement
 physicians after retirement, paired no-attrition configurations were used to
 quantify the contribution of this definitional mismatch.
 
@@ -227,8 +229,9 @@ quantity matched what the certification series counts.
 **The discrepancy is dominated by definitional mismatch.** The shipped
 configuration differed from the observed count by 99 providers (−7.6%). Table 1
 decomposes that difference. Fifty-nine percent came from applying retirement to a
-cumulative certification count, a series in which the number retired is zero in
-every year and the active count equals the ever-certified count. A further 41%
+cumulative certification count, a series in which retirement status is not
+ascertained, so no physician is ever subtracted and the count equals the number
+ever certified. A further 41%
 reflected faster-than-assumed entry, with realized net entry of approximately 69
 per year against pre-cutoff assumptions of 32.67 to 55. Assumptions about
 physician behavior accounted for essentially none of the difference. Aligning
@@ -334,7 +337,7 @@ practicing physicians and are validated against registries assembled for
 administrative purposes. Certification series are typically cumulative and rarely
 decremented, license files reflect renewal rather than practice, and national
 provider identifiers persist after retirement. A model that simulates exit,
-scored against a series that never removes anyone, is structurally guaranteed to
+scored against a series that never subtracts anyone, is structurally guaranteed to
 under-predict. Because validation is uncommon in this literature,[2] an error
 class that surfaces only during validation will be under-detected, and the
 validation that does occur compares totals: the Dutch general-practitioner
