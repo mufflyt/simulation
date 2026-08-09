@@ -47,8 +47,22 @@ ew_orphans <- function(root) {
                                    full.names = TRUE, recursive = TRUE), rd))
   vig  <- unlist(lapply(list.files(file.path(root, "vignettes"), "[.]Rmd$",
                                    full.names = TRUE), rd))
-  defs <- grepl("^[[:space:]]*[A-Za-z._][A-Za-z0-9._]*[[:space:]]*<-[[:space:]]*function", code)
-  hay <- c(code[!defs], scr, vig)
+  # DEFINITION LINES ARE TRIMMED, NOT DROPPED. Dropping them stops
+  # `foo <- function(...)` counting as a use of `foo`, which is the point. But
+  # it also deletes anything else on that line -- and a default argument lives
+  # there: `verify_canonical_isochrones <- function(dir = isochrone_source_dir()`
+  # is a real call site that the whole-line drop made invisible, reporting
+  # isochrone_source_dir() as an orphan while two exported functions called it.
+  #
+  # This is the same blind spot recorded as entry 3 in docs/HALL_OF_SHAME.md,
+  # where a guard was wired on a definition line and the detector could not see
+  # its own fix. It was worked around then; it is repaired here.
+  #
+  # Removing only the `name <- function` HEAD keeps both properties: the defined
+  # name is gone, so it cannot mark itself used, and the argument list survives,
+  # so a default-argument call is counted.
+  def_re <- "^[[:space:]]*[A-Za-z._][A-Za-z0-9._]*[[:space:]]*<-[[:space:]]*function"
+  hay <- c(sub(def_re, "", code), scr, vig)
   used <- vapply(ex, function(f) any(grepl(
     paste0("(^|[^A-Za-z0-9._])", gsub("([.])", "[.]", f),
            "([[:space:]]*[(]|[^A-Za-z0-9._(]|$)"), hay)), logical(1))
