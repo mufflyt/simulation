@@ -146,7 +146,10 @@ message("population source: ", pop$source)
 stopifnot(!identical(pop$source, "example"))
 
 roster <- urps_provider_roster(load_urps_roster())
-gap <- baseline_gap(1306, capacity_survey_adequacy(example_capacity_survey())$adequacy,
+gap <- baseline_gap(
+  mufflyaccess::urps_count(year = 2023L, measure = "board_certified_active",
+                           geography = "national", include_urology = TRUE),
+  capacity_survey_adequacy(example_capacity_survey())$adequacy,
   method = "capacity_survey", calibration_status = "derived_by_analogy",
   source = "Zarek 2025 PTJ", evidence = "reference model only; NOT used by this estimand")
 ref <- suppressMessages(run_workforce_microsimulation(

@@ -27,7 +27,9 @@ suppressPackageStartupMessages({
 })
 
 N_ITER <- as.integer(Sys.getenv("BACKTEST_ITERATIONS", "1000"))
-OBS <- 1306
+# Canonical 2023 national board-certified-active baseline (was hardcoded 1306).
+OBS <- mufflyaccess::urps_count(year = 2023L, measure = "board_certified_active",
+                                geography = "national", include_urology = TRUE)
 
 primary_path <- "artifacts/backtest_2020_to_2023_summary.csv"
 if (!file.exists(primary_path))
