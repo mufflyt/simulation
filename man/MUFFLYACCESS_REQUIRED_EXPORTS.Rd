@@ -5,7 +5,7 @@
 \alias{MUFFLYACCESS_REQUIRED_EXPORTS}
 \title{Contract functions this package calls}
 \format{
-An object of class \code{character} of length 23.
+An object of class \code{character} of length 24.
 }
 \usage{
 MUFFLYACCESS_REQUIRED_EXPORTS
