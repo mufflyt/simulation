@@ -1,0 +1,38 @@
+cms_specialty_code,cms_label,provider_class
+1,General practice,physician
+2,General surgery,physician
+4,Otolaryngology,physician
+6,Cardiology,physician
+7,Dermatology,physician
+8,Family practice,physician
+9,Interventional Pain Management (IPM) (eff. 4/1/03),physician
+10,Gastroenterology,physician
+11,Internal medicine,physician
+12,Osteopathic manipulative therapy,physician
+13,Neurology,physician
+14,Neurosurgery,physician
+16,Obstetrics/gynecology,physician
+20,Orthopedic surgery,physician
+24,Plastic and reconstructive surgery,physician
+25,Physical medicine and rehabilitation,physician
+26,Psychiatry,physician
+28,Colorectal surgery (formerly,physician
+30,Diagnostic radiology,physician
+34,Urology,physician
+35,Chiropractic,other_nonphysician
+36,Nuclear medicine,physician
+38,Geriatric medicine,physician
+42,Certified nurse midwife,APP
+46,Endocrinology,physician
+50,Nurse practitioner,APP
+65,Physical therapist (private practice added 4/1/03),PT
+70,Multispecialty clinic or group practice,other_nonphysician
+77,Vascular surgery,physician
+84,Preventive medicine,physician
+89,Certified clinical nurse specialist,APP
+90,Medical oncology,physician
+91,Surgical oncology,physician
+93,Emergency medicine,physician
+97,Physician assistant,APP
+98,Gynecologist/oncologist,physician
+99,Unknown physician specialty,physician

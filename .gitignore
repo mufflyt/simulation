@@ -124,6 +124,12 @@ outputs/
 # Vetted workforce sensitivity datasets (carried from cliff; build-ignored).
 !data-raw/sensitivity/
 !data-raw/sensitivity/*.csv
+# Validation mapping tables express SCIENTIFIC CHOICES (is a certified nurse
+# midwife an APP? does Burch map to sling?) and carry no sensitive data, so they
+# are version controlled and reviewable rather than buried in code.
+!scripts/validation/mappings/
+!scripts/validation/mappings/*.csv
+
 data-raw/brfss/*.XPT
 data-raw/brfss/*.xpt
 # Validation run directories: evidence is local and regenerable from the
