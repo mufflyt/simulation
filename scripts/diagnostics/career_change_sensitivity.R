@@ -27,9 +27,9 @@ suppressPackageStartupMessages({
 })
 
 N_ITER <- as.integer(Sys.getenv("BACKTEST_ITERATIONS", "1000"))
-# Canonical 2023 national board-certified-active baseline (was hardcoded 1306).
-OBS <- mufflyaccess::urps_count(year = 2023L, measure = "board_certified_active",
-                                geography = "national", include_urology = TRUE)
+# 2023 national baseline via simulation's SSOT adapter (was hardcoded 1306).
+# $national makes the denominator explicit (never the 1,303 CONUS cell).
+OBS <- urps_baseline_supply()$national
 
 primary_path <- "artifacts/backtest_2020_to_2023_summary.csv"
 if (!file.exists(primary_path))

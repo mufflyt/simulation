@@ -184,8 +184,7 @@ vol_run <- suppressMessages(run_workforce_microsimulation(
   roster = urps_provider_roster(load_urps_roster()), years = 2025:2026,
   subspecialty = "FPMRS", pop_by_band = pop$pop_by_band,
   baseline_gap_estimate = baseline_gap(
-    mufflyaccess::urps_count(year = 2023L, measure = "board_certified_active",
-                             geography = "national", include_urology = TRUE),
+    urps_baseline_supply()$national,   # SSOT adapter; 2023 national baseline
     capacity_survey_adequacy(example_capacity_survey())$adequacy,
     method = "capacity_survey", calibration_status = "derived_by_analogy",
     source = "Zarek 2025 PTJ", evidence = "volume generation only"),

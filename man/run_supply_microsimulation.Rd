@@ -5,8 +5,7 @@
 \title{Run the supply microsimulation with Monte-Carlo replicates}
 \usage{
 run_supply_microsimulation(
-  initial_workforce = mufflyaccess::urps_count(year = 2023L, measure =
-    "board_certified_active", geography = "national", include_urology = TRUE),
+  initial_workforce = urps_baseline_supply()$national,
   years = 2025:2050,
   entrants_per_year = 55,
   subspecialty = "FPMRS",
@@ -97,7 +96,7 @@ resulting \code{effective_fte_lo}/\verb{_hi} are not forecast intervals.}
 
 \item{verbose}{Logical.}
 
-\item{p_active_coef}{Optional logistic coefficients for \code{\link[=urps_p_active]{urps_p_active()}},
+\item{p_active_coef}{Optional logistic coefficients for \code{\link[=supply_p_active]{supply_p_active()}},
 overriding \code{URPS_P_ACTIVE_COEF}. Supplying them switches clinical FTE onto
 the P(active) formulation.}
 

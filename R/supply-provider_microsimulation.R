@@ -281,7 +281,7 @@ initialize_provider_agents <- function(n,
 #' @param entrant_female_share Share of new entrants drawn as female.
 #' @param placement_shares Optional tibble of `geo` and `share` enabling entrant
 #'   placement and mid-career migration.
-#' @param p_active_coef Optional logistic coefficients for [urps_p_active()],
+#' @param p_active_coef Optional logistic coefficients for [supply_p_active()],
 #'   overriding `URPS_P_ACTIVE_COEF`. Supplying them switches clinical FTE onto
 #'   the P(active) formulation.
 #' @param p_active_scenario_id Scenario id whose `retirement_shift_years` shifts
@@ -346,7 +346,7 @@ simulate_provider_career_once <- function(agents,
   apply_late_career <- is.finite(late_career_fte_onset_age) &&
     !isTRUE(all.equal(late_career_fte_factor, 1))
 
-  # `"participation_logistic"` uses urps_p_active() — the HWSM Exhibit 16
+  # `"participation_logistic"` uses supply_p_active() — the HWSM Exhibit 16
   # logistic model — as the per-provider FTE weight.  Years certified is
   # approximated from current age and the known certification-to-entry gap,
   # which avoids adding a new per-agent vector to the simulation state.
@@ -356,7 +356,7 @@ simulate_provider_career_once <- function(agents,
   fte_of <- function(age, sex) {
     if (use_p_active_fte) {
       yrs_cert <- pmax(age - MICROSIM_AGE_AT_CERT, 0)
-      return(urps_p_active(age, sex, yrs_cert,
+      return(supply_p_active(age, sex, yrs_cert,
                            scenario_id = p_active_scenario_id,
                            coef        = p_active_coef) * hours_multiplier)
     }
@@ -651,7 +651,7 @@ simulate_provider_career_once <- function(agents,
 #'   `hours_model`, its coefficients are redrawn per iteration and take
 #'   precedence over the `hours_model` argument; they widen `effective_fte` only
 #'   and leave `headcount` untouched.
-#' @param p_active_coef Optional logistic coefficients for [urps_p_active()],
+#' @param p_active_coef Optional logistic coefficients for [supply_p_active()],
 #'   overriding `URPS_P_ACTIVE_COEF`. Supplying them switches clinical FTE onto
 #'   the P(active) formulation.
 #' @param p_active_scenario_id Scenario id whose `retirement_shift_years` shifts
@@ -688,9 +688,7 @@ simulate_provider_career_once <- function(agents,
 #' )
 #' out$summary
 #' @export
-run_supply_microsimulation <- function(initial_workforce = mufflyaccess::urps_count(
-                                         year = 2023L, measure = "board_certified_active",
-                                         geography = "national", include_urology = TRUE),
+run_supply_microsimulation <- function(initial_workforce = urps_baseline_supply()$national,
                                         years = 2025:2050,
                                         entrants_per_year = 55,
                                         subspecialty = "FPMRS",
@@ -868,7 +866,7 @@ run_supply_microsimulation <- function(initial_workforce = mufflyaccess::urps_co
 
   # Roster thinning: when the input roster contains providers whose activity
   # status is unconfirmed (no retirement_year stamp, "lost to follow-up"),
-  # thin the cohort once using urps_p_active() so that unobserved departures
+  # thin the cohort once using supply_p_active() so that unobserved departures
   # are not all treated as still-active. Each agent is retained with
   # probability P(active | age, sex, years_certified). This is distinct from
   # the within-simulation departure hazard: it adjusts the BASE-YEAR headcount
@@ -881,7 +879,7 @@ run_supply_microsimulation <- function(initial_workforce = mufflyaccess::urps_co
       scenario_id = p_active_scenario_id
     )
     if (verbose) {
-      .msg_info(sprintf("Roster thinned to %d providers by urps_p_active()",
+      .msg_info(sprintf("Roster thinned to %d providers by supply_p_active()",
                         nrow(base_agents)))
     }
   }
