@@ -176,9 +176,35 @@ divergence to preserve.
 
 | function | here | note |
 |---|---|---|
-| `zero_access_share` | `R/geography-spatial_access_e2sfca.R` | Byte-identical, including the `stopifnot`, the `is.finite(sw)` guard and the `NA_real_` return. |
-| `weighted_mean_all` | `R/geography-spatial_access_e2sfca.R` | Byte-identical; six lines. |
-| `calculate_rural_metro_comparison` | `R/reporting-workforce_statistics.R` | Identical but for one private helper's name (see *Equivalent* above). |
+| `zero_access_share` | `R/geography-spatial_access_e2sfca.R` | **DELEGATED 2026-08-09.** Was byte-identical, including the `stopifnot`, the `is.finite(sw)` guard and the `NA_real_` return. |
+| `weighted_mean_all` | `R/geography-spatial_access_e2sfca.R` | **DELEGATED 2026-08-09.** Was byte-identical; six lines. |
+| `calculate_rural_metro_comparison` | `R/reporting-workforce_statistics.R` | **NOT delegated — blocked, see below.** Identical but for one private helper's name (see *Equivalent* above). |
+
+**Two of the three were delegated; the third is blocked on a decision, not on
+effort.** The dividing line is the pin, and it is worth stating precisely
+because it is the difference between a safe change and repeating a revert.
+
+`MUFFLYACCESS_PINNED_SHA` is `a88dba8`. `zero_access_share()` and
+`weighted_mean_all()` **exist at that commit**, so forwarding to them moves no
+pin and changes no dependency. `calculate_rural_metro_comparison()` does not: it
+was added upstream in `b1f33ac` — which is *exactly* the commit `928df62` bumped
+the pin to and `72a7e13` reverted, because `main` went red under
+`R CMD check --as-cran`. Delegating it means bumping the pin across fourteen
+upstream commits and re-running that check. That is a dependency decision with a
+known prior failure, and it is not smuggled in behind a deduplication.
+
+**The fallback is the delegation's own loophole.** `mufflyaccess` is a
+`Suggests` dependency, so both functions keep a local body for installations
+without it — which is a second implementation of the same quantity, exactly what
+the delegation removed, one line lower. `tests/testthat/test-ssot-delegation.R`
+asserts the fallback and the contract agree across nine cases chosen for the
+guards each singles out: an exact zero in the access vector, a zero weight sum,
+a non-finite weight, a length-one input. Same reasoning as the Wilson-pair
+recommendation: where two implementations must coexist, pin their agreement.
+
+Both names are declared in `MUFFLYACCESS_REQUIRED_EXPORTS`, so an installed
+build missing either is rejected as unusable rather than failing later at the
+call site.
 | `fingerprint_object` | `R/core-repro_provenance.R` | Byte-identical. |
 | `fingerprint_files` | `R/core-repro_provenance.R` | Byte-identical. |
 
@@ -348,13 +374,13 @@ The siblings are separate repositories, absent from CI and from
    shapes. Until then, the cheap insurance is a test asserting the two agree on
    a shared grid of `(successes, n)`, so a correction to one cannot silently
    fail to reach the other.
-5. **Delegate the three exact copies** — `zero_access_share`,
-   `weighted_mean_all`, `calculate_rural_metro_comparison`. All byte-identical
-   to installed, pinned `mufflyaccess` exports, with no divergence to preserve.
-   If a first delegation is wanted to re-establish the pattern after `72a7e13`
-   reverted the last attempt, these are the three with nothing to lose. Copy
-   `isochrones`'s `haversine_km` for the house style: delegate, and leave a
-   comment recording what changed and why it does not matter.
+5. **Delegate the exact copies.** `zero_access_share` and `weighted_mean_all`
+   **done 2026-08-09** — both exist at the pinned commit, so no pin moved.
+   `calculate_rural_metro_comparison` remains, and needs the pin bumped to at
+   least `b1f33ac`; that is the decision `72a7e13` reverted, so it wants its own
+   change with a full `--as-cran` run, not a line in a deduplication commit.
+   `fingerprint_object` and `fingerprint_files` are equally eligible on the
+   merits and equally blocked: they arrived in `0c1d5b1`, well past the pin.
 6. ~~**Rename or record `urps_p_active` and `urps_survival_curve`.**~~ **Done
    2026-08-09** — renamed to `supply_p_active()` and `supply_survival_curve()`,
    no wrapper, no SSOT exception. See *Same name, different quantity* above.
