@@ -71,9 +71,9 @@ Proposed for approval, five terms:
 
 | Item | Count |
 |---|---:|
-| Abstract | 299 |
-| Main text (Introduction through Limitations, tables and references excluded) | 1,518 |
+| Abstract | 294 |
+| Main text (Introduction through Limitations, tables and references excluded) | 1,960 |
 | Tables | 2 |
 | Figures | 0 |
 | References | 4 |
-| Supplemental digital content | 1 file, 7 tables |
+| Supplemental digital content | 1 file, 11 appendices |
