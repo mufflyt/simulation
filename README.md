@@ -21,7 +21,34 @@ you reproduce.
 
 ## How the model works
 
-Three flowcharts, because three different things can go wrong.
+### The idea, before the machinery
+
+![Microsimulation: the basic idea](figures/fig_microsimulation_concept.png)
+
+**The numbers on this panel are illustrative, not results.** 50,000 women, 31.6%
+incontinence prevalence, 64% symptom-free — none of those are outputs of this
+model. They are placeholders that make the *shape* of the method legible. The
+model's own numbers live in the figures above and below.
+
+What the panel does describe accurately is how this repository works on **both**
+sides of the ledger, because both are individual-level:
+
+- **Demand** — `R/demand-dynamic_multistate.R` follows each woman year by year
+  through onset, remission and death across UI, POP and AI, so prevalence
+  *emerges* from within-person dynamics rather than being read off a static risk
+  equation.
+- **Supply** — `R/supply-provider_microsimulation.R` does the same for provider
+  careers: each physician ages, works a stochastic number of clinical hours, and
+  retires or leaves on a hazard.
+
+That is the whole reason a microsimulation is worth the cost here. A
+compartmental model can tell you how many women have prolapse; it cannot tell you
+what happens to a 67-year-old with a prior repair, and it cannot let a provider's
+retirement depend on the age she happened to certify at.
+
+### The three flowcharts
+
+Three, because three different things can go wrong.
 
 ### 1. The estimation pipeline
 
