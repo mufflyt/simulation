@@ -44,6 +44,12 @@ utils::write.csv(arrange(by_service, service, year),
 utils::write.csv(arrange(by_specialty, service, year),
                  file.path(out_dir, "urps_part_b_by_specialty.csv"), row.names = FALSE)
 
+# Provenance reuses the canonical fingerprint helpers (R/core-repro_provenance.R:
+# fingerprint_files/make_run_id) rather than hand-rolling; content SHA-256 of each
+# written CSV via digest, matching the package's provenance contract.
+code_paths <- c("R/data-medicare_part_b.R", "R/supply-medicare_capacity.R",
+                "scripts/data_acquisition/07_extract_medicare_part_b.R")
+csvs <- file.path(out_dir, c("urps_part_b_by_service.csv", "urps_part_b_by_specialty.csv"))
 prov <- list(
   source = "Medicare Physician & Other Practitioners - by Provider and Service (CMS PUF)",
   cms_dataset = "CMS Original Medicare FFS Part B; provider x HCPCS x place of service",
@@ -56,6 +62,11 @@ prov <- list(
   payer_scope = unique(by_service$payer_scope),
   unmapped_service_fraction = attr(by_service, "unmapped_service_fraction"),
   caveat = attr(by_service, "caveat"),
+  run_id = make_run_id(tag = "part_b_series"),
+  code_fingerprint = fingerprint_files(code_paths),
+  content_sha256 = stats::setNames(
+    vapply(csvs, function(f) digest::digest(file = f, algo = "sha256"), character(1)),
+    basename(csvs)),
   extraction_date = as.character(Sys.Date()),
   no_extrapolation = TRUE)
 jsonlite::write_json(prov, file.path(out_dir, "urps_part_b_provenance.json"),

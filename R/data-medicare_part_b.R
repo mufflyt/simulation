@@ -17,15 +17,20 @@
 
 #' Default DuckDB path for the CMS Part B PUF
 #'
-#' Resolution order: the `MEDICARE_PARTB_DUCKDB` environment variable, else the
-#' known external-drive location. Returned even if absent so callers can
-#' `file.exists()` it.
-#' @return Character scalar path.
+#' Resolves through the canonical path config (`R/core-paths.R`) rather than a
+#' hardcoded literal: the `MEDICARE_PARTB_DUCKDB` env var, else the
+#' `medicare_part_b_duckdb` key from `config/paths.local.yml`/`paths.yml`. Fails
+#' loudly if neither is set (never a silent hardcoded fallback).
+#' @return Character scalar path (not required to exist; callers `file.exists()`).
 #' @keywords internal
 default_part_b_duckdb <- function() {
   env <- Sys.getenv("MEDICARE_PARTB_DUCKDB", "")
   if (nzchar(env)) return(env)
-  "/Volumes/MufflySamsung/DuckDB/nber_my_duckdb.duckdb"
+  cfg <- .paths_config()$medicare_part_b_duckdb
+  if (!is.null(cfg) && nzchar(cfg)) return(normalizePath(path.expand(cfg), mustWork = FALSE))
+  stop("default_part_b_duckdb(): set MEDICARE_PARTB_DUCKDB or add ",
+       "`medicare_part_b_duckdb:` to config/paths.local.yml or config/paths.yml.",
+       call. = FALSE)
 }
 
 # Case-insensitive column resolver: the actual column name in `have` matching any
