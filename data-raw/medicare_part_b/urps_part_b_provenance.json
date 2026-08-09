@@ -1,0 +1,25 @@
+{
+  "source": "Medicare Physician & Other Practitioners - by Provider and Service (Public Use File)",
+  "cms_dataset": "CMS Original Medicare FFS Part B; provider x HCPCS x place of service",
+  "cms_url": "https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider-and-service",
+  "duckdb_path": "/Volumes/MufflySamsung/DuckDB/nber_my_duckdb.duckdb",
+  "duckdb_table": "medicare_part_b_by_service_all_years",
+  "source_md5": "f43ea44c407641b9ab0fda4e3107a6ac",
+  "years": [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023],
+  "extraction_date": "2026-08-08",
+  "code_group_version": "2026-08-08",
+  "field_dictionary": {
+    "year": "CMS `data_year` (calendar year of the by-Provider-and-Service PUF).",
+    "code_group": "Analyst grouping (urps_part_b_code_groups()); versioned by PART_B_CODE_GROUP_VERSION.",
+    "hcpcs": "CMS `HCPCS_Cd` (HCPCS/CPT code).",
+    "rndrng_prvdr_type": "CMS `Rndrng_Prvdr_Type` (rendering provider specialty); NA when not grouped by provider type.",
+    "place_of_service": "CMS `Plc_Of_Srvc` (F=facility, O=office); NA when column absent or not grouped.",
+    "tot_srvcs": "CMS `Tot_Srvcs`: number of SERVICES. Not patients.",
+    "tot_benes_sum": "SUM of CMS `Tot_Benes` (distinct benes per provider-code row). Double-counts patients seen by multiple providers; NOT a de-duplicated unique-patient count.",
+    "tot_bene_day_srvcs": "CMS `Tot_Bene_Day_Srvcs`: beneficiary-day services (distinct patient-days).",
+    "n_provider_rows": "Count of provider-code(-POS) rows contributing (proxy for provider count when a distinct-NPI count is unavailable).",
+    "n_distinct_npi": "COUNT(DISTINCT rendering NPI) when an NPI column exists; else NA.",
+    "rows_with_na_benes": "Number of contributing rows where Tot_Benes was NULL/NA (CMS small-cell suppression); makes suppression explicit."
+  },
+  "caveat": "Medicare FFS only (excludes MA/Medicaid/commercial; skews 65+). Not a national all-payer count. tot_benes_sum double-counts patients across providers. Do NOT divide by an assumed Medicare share to derive a national total."
+}

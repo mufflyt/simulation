@@ -1,0 +1,337 @@
+"year","code_group","hcpcs","rndrng_prvdr_type","tot_srvcs","tot_benes_sum","tot_bene_day_srvcs","n_provider_rows","n_distinct_npi","rows_with_na_benes"
+2013,"burch","51840","Urology",175,173,173,9,9,0
+2013,"cystoscopy","52000","Urology",872582,719755,872475,8704,7728,0
+2013,"pessary","57160","Urology",6336,3280,6336,147,147,0
+2013,"prolapse_repair","45560","Urology",84,84,84,5,5,0
+2013,"prolapse_repair","57240","Urology",796,793,796,54,54,0
+2013,"prolapse_repair","57250","Urology",161,161,161,9,9,0
+2013,"prolapse_repair","57260","Urology",188,187,187,12,12,0
+2013,"prolapse_repair","57265","Urology",105,105,105,5,5,0
+2013,"prolapse_repair","57282","Urology",811,802,804,47,47,0
+2013,"prolapse_repair","57283","Urology",15,15,15,1,1,0
+2013,"prolapse_repair","57284","Urology",52,52,52,4,4,0
+2013,"prolapse_repair","57285","Urology",108,107,108,7,7,0
+2013,"sling","57288","Urology",5046,5024,5044,292,292,0
+2013,"urodynamics","51728","Urology",58501,55012,57967,1688,1665,0
+2013,"urodynamics","51729","Urology",46701,42942,46205,1229,1215,0
+2013,"urodynamics","51741","Urology",515535,384731,508140,4697,4585,0
+2013,"urodynamics","51784","Urology",119254,102936,117989,2728,2682,0
+2013,"urodynamics","51797","Urology",98574,91730,97359,2552,2514,0
+2014,"burch","51840","Urology",127,127,127,7,7,0
+2014,"cystoscopy","52000","Urology",862928,712625,862878,8722,7702,0
+2014,"pessary","57160","Urology",5619,2999,5619,131,131,0
+2014,"prolapse_repair","45560","Urology",57,57,57,3,3,0
+2014,"prolapse_repair","57240","Urology",676,674,676,43,43,0
+2014,"prolapse_repair","57250","Urology",212,209,210,10,10,0
+2014,"prolapse_repair","57260","Urology",180,180,180,11,11,0
+2014,"prolapse_repair","57265","Urology",102,102,102,5,5,0
+2014,"prolapse_repair","57282","Urology",681,677,681,37,37,0
+2014,"prolapse_repair","57284","Urology",44,44,44,3,3,0
+2014,"prolapse_repair","57285","Urology",95,94,94,6,6,0
+2014,"sling","57288","Urology",3874,3846,3871,217,217,0
+2014,"urodynamics","51728","Urology",55644,52581,55172,1643,1617,0
+2014,"urodynamics","51729","Urology",40615,37862,40353,1097,1081,0
+2014,"urodynamics","51741","Urology",474173,357472,468747,4469,4360,0
+2014,"urodynamics","51784","Urology",107668,94595,106834,2534,2489,0
+2014,"urodynamics","51797","Urology",89738,84527,88971,2401,2360,0
+2015,"burch","51840","Urology",126,126,126,7,7,0
+2015,"burch","51841","Urology",12,12,12,1,1,0
+2015,"cystoscopy","52000","Urology",853133,705643,853122,8728,7743,0
+2015,"pessary","57160","Urology",5654,2939,5654,141,140,0
+2015,"prolapse_repair","45560","Urology",40,40,40,3,3,0
+2015,"prolapse_repair","57240","Urology",534,533,534,38,38,0
+2015,"prolapse_repair","57250","Urology",154,153,153,7,7,0
+2015,"prolapse_repair","57260","Urology",152,152,152,10,10,0
+2015,"prolapse_repair","57265","Urology",102,102,102,3,3,0
+2015,"prolapse_repair","57282","Urology",540,539,539,32,32,0
+2015,"prolapse_repair","57283","Urology",13,13,13,1,1,0
+2015,"prolapse_repair","57284","Urology",26,26,26,2,2,0
+2015,"prolapse_repair","57285","Urology",71,70,71,5,5,0
+2015,"sling","57288","Urology",3329,3306,3327,195,195,0
+2015,"urodynamics","51728","Urology",53405,50509,52961,1593,1570,0
+2015,"urodynamics","51729","Urology",37243,34770,36997,1032,1023,0
+2015,"urodynamics","51741","Urology",445513,338273,441818,4310,4219,0
+2015,"urodynamics","51784","Urology",101333,89866,100549,2418,2387,0
+2015,"urodynamics","51797","Urology",85975,81136,85276,2362,2331,0
+2016,"burch","51840","Urology",97,97,97,6,6,0
+2016,"burch","58152","Obstetrics & Gynecology",11,11,11,1,1,0
+2016,"burch","58267","Obstetrics & Gynecology",39,39,39,2,2,0
+2016,"cystoscopy","52000","Obstetrics & Gynecology",19272,18884,19271,491,442,0
+2016,"cystoscopy","52000","Urology",860265,712212,860256,8755,7728,0
+2016,"pessary","57160","Obstetrics & Gynecology",25334,15938,25333,780,772,0
+2016,"pessary","57160","Urology",6266,3239,6266,156,156,0
+2016,"prolapse_repair","45560","Obstetrics & Gynecology",466,465,466,23,23,0
+2016,"prolapse_repair","45560","Urology",77,77,77,5,5,0
+2016,"prolapse_repair","57240","Obstetrics & Gynecology",1154,1150,1154,70,70,0
+2016,"prolapse_repair","57240","Urology",452,451,452,30,30,0
+2016,"prolapse_repair","57250","Obstetrics & Gynecology",2049,2041,2049,115,115,0
+2016,"prolapse_repair","57250","Urology",255,255,255,12,12,0
+2016,"prolapse_repair","57260","Obstetrics & Gynecology",1868,1864,1868,104,104,0
+2016,"prolapse_repair","57260","Urology",154,154,154,11,11,0
+2016,"prolapse_repair","57265","Obstetrics & Gynecology",2041,2021,2024,89,89,0
+2016,"prolapse_repair","57265","Urology",135,135,135,6,6,0
+2016,"prolapse_repair","57282","Obstetrics & Gynecology",2230,2224,2230,112,112,0
+2016,"prolapse_repair","57282","Urology",378,378,378,24,24,0
+2016,"prolapse_repair","57283","Obstetrics & Gynecology",1682,1681,1682,90,90,0
+2016,"prolapse_repair","57283","Urology",148,148,148,7,7,0
+2016,"prolapse_repair","57284","Obstetrics & Gynecology",52,52,52,4,4,0
+2016,"prolapse_repair","57284","Urology",23,23,23,2,2,0
+2016,"prolapse_repair","57285","Obstetrics & Gynecology",382,382,382,18,18,0
+2016,"prolapse_repair","57285","Urology",70,70,70,5,5,0
+2016,"sling","57288","Obstetrics & Gynecology",9552,9504,9531,412,412,0
+2016,"sling","57288","Urology",3626,3605,3626,201,200,0
+2016,"urodynamics","51728","Obstetrics & Gynecology",3720,3556,3593,101,95,0
+2016,"urodynamics","51728","Urology",54389,51522,53911,1596,1573,0
+2016,"urodynamics","51729","Obstetrics & Gynecology",24873,24201,24718,606,596,0
+2016,"urodynamics","51729","Urology",35000,33219,34859,961,948,0
+2016,"urodynamics","51741","Obstetrics & Gynecology",34498,30814,34085,701,677,0
+2016,"urodynamics","51741","Urology",421327,323925,419330,4146,4053,0
+2016,"urodynamics","51784","Obstetrics & Gynecology",32485,25133,32059,586,574,0
+2016,"urodynamics","51784","Urology",100536,90054,99686,2384,2351,0
+2016,"urodynamics","51797","Obstetrics & Gynecology",25935,25050,25757,623,609,0
+2016,"urodynamics","51797","Urology",84322,80362,83747,2283,2252,0
+2017,"burch","51840","Urology",94,94,94,6,6,0
+2017,"burch","58267","Obstetrics & Gynecology",40,40,40,2,2,0
+2017,"cystoscopy","52000","Obstetrics & Gynecology",19607,19215,19606,501,448,0
+2017,"cystoscopy","52000","Urology",848614,707147,848594,8684,7746,0
+2017,"pessary","57160","Obstetrics & Gynecology",24337,15908,24337,754,743,0
+2017,"pessary","57160","Urology",5942,3227,5942,150,150,0
+2017,"prolapse_repair","45560","Obstetrics & Gynecology",448,447,448,21,21,0
+2017,"prolapse_repair","45560","Urology",100,99,100,6,6,0
+2017,"prolapse_repair","57240","Obstetrics & Gynecology",1085,1078,1083,64,64,0
+2017,"prolapse_repair","57240","Urology",710,704,709,44,44,0
+2017,"prolapse_repair","57250","Obstetrics & Gynecology",2374,2371,2374,130,130,0
+2017,"prolapse_repair","57250","Urology",316,316,316,14,14,0
+2017,"prolapse_repair","57260","Obstetrics & Gynecology",2210,2193,2197,123,123,0
+2017,"prolapse_repair","57260","Urology",331,331,331,20,20,0
+2017,"prolapse_repair","57265","Obstetrics & Gynecology",2118,2094,2096,90,90,0
+2017,"prolapse_repair","57265","Urology",124,124,124,5,5,0
+2017,"prolapse_repair","57282","Obstetrics & Gynecology",2255,2244,2254,121,121,0
+2017,"prolapse_repair","57282","Urology",495,490,494,31,31,0
+2017,"prolapse_repair","57283","Obstetrics & Gynecology",2068,2046,2049,105,105,0
+2017,"prolapse_repair","57283","Urology",197,196,197,10,10,0
+2017,"prolapse_repair","57284","Obstetrics & Gynecology",39,39,39,2,2,0
+2017,"prolapse_repair","57284","Urology",12,12,12,1,1,0
+2017,"prolapse_repair","57285","Obstetrics & Gynecology",367,365,367,17,17,0
+2017,"prolapse_repair","57285","Urology",58,58,58,3,3,0
+2017,"sling","57288","Obstetrics & Gynecology",10172,10129,10151,437,437,0
+2017,"sling","57288","Urology",3839,3818,3836,199,199,0
+2017,"urodynamics","51728","Obstetrics & Gynecology",3683,3507,3554,104,103,0
+2017,"urodynamics","51728","Urology",57707,54455,57360,1621,1602,0
+2017,"urodynamics","51729","Obstetrics & Gynecology",24561,23975,24399,588,581,0
+2017,"urodynamics","51729","Urology",31440,30181,31290,873,862,0
+2017,"urodynamics","51741","Obstetrics & Gynecology",34057,30703,33621,684,663,0
+2017,"urodynamics","51741","Urology",390122,303446,388757,3979,3883,0
+2017,"urodynamics","51784","Obstetrics & Gynecology",31859,25375,31424,582,572,0
+2017,"urodynamics","51784","Urology",89830,81924,89143,2229,2198,0
+2017,"urodynamics","51797","Obstetrics & Gynecology",25568,24822,25399,599,589,0
+2017,"urodynamics","51797","Urology",78717,75828,78266,2201,2174,0
+2018,"burch","51840","Urology",121,121,121,6,6,0
+2018,"burch","58267","Obstetrics & Gynecology",49,49,49,2,2,0
+2018,"cystoscopy","52000","Obstetrics & Gynecology",19021,18615,19020,483,458,0
+2018,"cystoscopy","52000","Urology",835181,697828,835171,8635,7748,0
+2018,"pessary","57160","Obstetrics & Gynecology",22926,15098,22925,714,706,0
+2018,"pessary","57160","Urology",5292,3090,5292,148,147,0
+2018,"prolapse_repair","45560","Obstetrics & Gynecology",497,496,497,23,23,0
+2018,"prolapse_repair","45560","Urology",135,135,135,7,7,0
+2018,"prolapse_repair","57240","Obstetrics & Gynecology",1063,1058,1060,63,63,0
+2018,"prolapse_repair","57240","Urology",670,669,670,42,42,0
+2018,"prolapse_repair","57250","Obstetrics & Gynecology",2592,2578,2581,142,142,0
+2018,"prolapse_repair","57250","Urology",341,340,341,15,15,0
+2018,"prolapse_repair","57260","Obstetrics & Gynecology",2415,2390,2395,133,133,0
+2018,"prolapse_repair","57260","Urology",314,314,314,20,20,0
+2018,"prolapse_repair","57265","Obstetrics & Gynecology",2085,2044,2049,87,87,0
+2018,"prolapse_repair","57265","Urology",114,114,114,6,6,0
+2018,"prolapse_repair","57282","Obstetrics & Gynecology",2261,2244,2252,119,119,0
+2018,"prolapse_repair","57282","Urology",571,568,571,36,36,0
+2018,"prolapse_repair","57283","Obstetrics & Gynecology",2166,2128,2130,104,104,0
+2018,"prolapse_repair","57283","Urology",159,159,159,6,6,0
+2018,"prolapse_repair","57284","Urology",11,11,11,1,1,0
+2018,"prolapse_repair","57285","Obstetrics & Gynecology",449,449,449,20,20,0
+2018,"prolapse_repair","57285","Urology",65,65,65,2,2,0
+2018,"sling","57288","Obstetrics & Gynecology",10716,10644,10683,453,452,0
+2018,"sling","57288","Urology",3715,3696,3714,191,191,0
+2018,"urodynamics","51728","Obstetrics & Gynecology",3825,3673,3714,113,110,0
+2018,"urodynamics","51728","Urology",63800,59742,63509,1687,1670,0
+2018,"urodynamics","51729","Obstetrics & Gynecology",23890,23413,23734,559,552,0
+2018,"urodynamics","51729","Urology",29062,27865,28911,842,835,0
+2018,"urodynamics","51741","Obstetrics & Gynecology",33717,30062,33223,655,641,0
+2018,"urodynamics","51741","Urology",368620,289050,367544,3851,3766,0
+2018,"urodynamics","51784","Obstetrics & Gynecology",29043,25375,28532,586,573,0
+2018,"urodynamics","51784","Urology",86765,79693,86096,2186,2164,0
+2018,"urodynamics","51797","Obstetrics & Gynecology",25531,24940,25341,608,595,0
+2018,"urodynamics","51797","Urology",73542,71014,73144,2111,2087,0
+2019,"burch","51840","Urology",142,142,142,7,7,0
+2019,"burch","58267","Obstetrics & Gynecology",38,38,38,2,2,0
+2019,"cystoscopy","52000","Obstetrics & Gynecology",19680,19303,19680,505,474,0
+2019,"cystoscopy","52000","Urology",835368,701187,835350,8657,7762,0
+2019,"pessary","57160","Obstetrics & Gynecology",23015,15665,23014,738,733,0
+2019,"pessary","57160","Urology",4515,2689,4515,134,134,0
+2019,"prolapse_repair","45560","Obstetrics & Gynecology",514,512,514,19,19,0
+2019,"prolapse_repair","45560","Urology",75,75,75,4,4,0
+2019,"prolapse_repair","57240","Obstetrics & Gynecology",1018,1012,1018,56,56,0
+2019,"prolapse_repair","57240","Urology",424,424,424,27,27,0
+2019,"prolapse_repair","57250","Obstetrics & Gynecology",2721,2703,2710,145,145,0
+2019,"prolapse_repair","57250","Urology",434,434,434,21,21,0
+2019,"prolapse_repair","57260","Obstetrics & Gynecology",2718,2683,2684,155,155,0
+2019,"prolapse_repair","57260","Urology",259,259,259,17,17,0
+2019,"prolapse_repair","57265","Obstetrics & Gynecology",2263,2225,2229,92,92,0
+2019,"prolapse_repair","57265","Urology",84,84,84,5,5,0
+2019,"prolapse_repair","57282","Obstetrics & Gynecology",2162,2149,2153,106,104,0
+2019,"prolapse_repair","57282","Urology",359,358,359,25,25,0
+2019,"prolapse_repair","57283","Obstetrics & Gynecology",2687,2640,2642,142,142,0
+2019,"prolapse_repair","57283","Urology",222,221,222,10,10,0
+2019,"prolapse_repair","57284","Obstetrics & Gynecology",11,11,11,1,1,0
+2019,"prolapse_repair","57285","Obstetrics & Gynecology",331,330,331,12,12,0
+2019,"prolapse_repair","57285","Urology",98,98,98,3,3,0
+2019,"sling","57288","Obstetrics & Gynecology",11055,10984,11017,464,461,0
+2019,"sling","57288","Urology",3153,3142,3153,164,164,0
+2019,"urodynamics","51728","Obstetrics & Gynecology",4250,4154,4189,132,130,0
+2019,"urodynamics","51728","Urology",67071,62632,66801,1737,1716,0
+2019,"urodynamics","51729","Obstetrics & Gynecology",24346,23845,24193,579,574,0
+2019,"urodynamics","51729","Urology",25596,24689,25410,739,734,0
+2019,"urodynamics","51741","Obstetrics & Gynecology",34034,30688,33652,687,676,0
+2019,"urodynamics","51741","Urology",349068,275356,348193,3819,3730,0
+2019,"urodynamics","51784","Obstetrics & Gynecology",28685,26129,28284,612,604,0
+2019,"urodynamics","51784","Urology",85908,79408,85276,2155,2125,0
+2019,"urodynamics","51797","Obstetrics & Gynecology",26347,25817,26219,633,626,0
+2019,"urodynamics","51797","Urology",70201,68147,69829,2024,1994,0
+2020,"burch","51840","Urology",114,114,114,5,5,0
+2020,"burch","51841","Obstetrics & Gynecology",24,24,24,1,1,0
+2020,"cystoscopy","52000","Obstetrics & Gynecology",15142,14830,15142,431,409,0
+2020,"cystoscopy","52000","Urology",711548,599898,711533,8289,7604,0
+2020,"pessary","57160","Obstetrics & Gynecology",17963,12314,17963,607,604,0
+2020,"pessary","57160","Urology",2982,1845,2982,104,104,0
+2020,"prolapse_repair","45560","Obstetrics & Gynecology",417,416,417,16,16,0
+2020,"prolapse_repair","45560","Urology",55,54,55,3,3,0
+2020,"prolapse_repair","57240","Obstetrics & Gynecology",815,810,815,45,45,0
+2020,"prolapse_repair","57240","Urology",257,257,257,18,18,0
+2020,"prolapse_repair","57250","Obstetrics & Gynecology",2089,2087,2089,124,124,0
+2020,"prolapse_repair","57250","Urology",385,382,383,17,17,0
+2020,"prolapse_repair","57260","Obstetrics & Gynecology",1617,1614,1617,99,99,0
+2020,"prolapse_repair","57260","Urology",162,162,162,12,12,0
+2020,"prolapse_repair","57265","Obstetrics & Gynecology",1518,1511,1514,67,67,0
+2020,"prolapse_repair","57265","Urology",76,76,76,4,4,0
+2020,"prolapse_repair","57282","Obstetrics & Gynecology",1531,1520,1531,76,76,0
+2020,"prolapse_repair","57282","Urology",189,189,189,11,11,0
+2020,"prolapse_repair","57283","Obstetrics & Gynecology",1644,1641,1642,87,87,0
+2020,"prolapse_repair","57283","Urology",168,168,168,9,9,0
+2020,"prolapse_repair","57285","Obstetrics & Gynecology",255,255,255,10,10,0
+2020,"prolapse_repair","57285","Urology",117,117,117,4,4,0
+2020,"sling","57288","Obstetrics & Gynecology",7774,7745,7772,363,360,0
+2020,"sling","57288","Urology",2050,2043,2050,120,120,0
+2020,"urodynamics","51728","Obstetrics & Gynecology",3230,3133,3176,112,111,0
+2020,"urodynamics","51728","Urology",51848,48325,51693,1383,1364,0
+2020,"urodynamics","51729","Obstetrics & Gynecology",18209,17834,18086,492,488,0
+2020,"urodynamics","51729","Urology",18322,17793,18237,566,557,0
+2020,"urodynamics","51741","Obstetrics & Gynecology",25782,23151,25390,598,592,0
+2020,"urodynamics","51741","Urology",261391,210109,260781,3260,3202,0
+2020,"urodynamics","51784","Obstetrics & Gynecology",21781,19750,21378,540,534,0
+2020,"urodynamics","51784","Urology",63687,59019,63411,1693,1670,0
+2020,"urodynamics","51797","Obstetrics & Gynecology",19949,19579,19902,555,551,0
+2020,"urodynamics","51797","Urology",50997,49554,50769,1596,1572,0
+2021,"burch","51840","Obstetrics & Gynecology",20,20,20,1,1,0
+2021,"burch","51840","Urology",41,41,41,2,2,0
+2021,"burch","51841","Obstetrics & Gynecology",15,15,15,1,1,0
+2021,"burch","58267","Obstetrics & Gynecology",20,20,20,1,1,0
+2021,"cystoscopy","52000","Obstetrics & Gynecology",17005,16681,17005,457,435,0
+2021,"cystoscopy","52000","Urology",749691,632540,749678,8430,7647,0
+2021,"pessary","57160","Obstetrics & Gynecology",19186,13334,19186,645,638,0
+2021,"pessary","57160","Urology",3400,2169,3400,113,113,0
+2021,"prolapse_repair","45560","Obstetrics & Gynecology",379,379,379,14,14,0
+2021,"prolapse_repair","45560","Urology",35,35,35,2,2,0
+2021,"prolapse_repair","57240","Obstetrics & Gynecology",759,759,759,45,45,0
+2021,"prolapse_repair","57240","Urology",180,179,180,12,12,0
+2021,"prolapse_repair","57250","Obstetrics & Gynecology",2457,2451,2457,131,131,0
+2021,"prolapse_repair","57250","Urology",375,373,373,16,16,0
+2021,"prolapse_repair","57260","Obstetrics & Gynecology",2137,2132,2137,123,123,0
+2021,"prolapse_repair","57260","Urology",200,200,200,14,14,0
+2021,"prolapse_repair","57265","Obstetrics & Gynecology",1568,1562,1568,75,75,0
+2021,"prolapse_repair","57265","Urology",110,110,110,5,5,0
+2021,"prolapse_repair","57282","Obstetrics & Gynecology",1636,1627,1636,79,79,0
+2021,"prolapse_repair","57282","Urology",268,268,268,16,16,0
+2021,"prolapse_repair","57283","Obstetrics & Gynecology",1717,1716,1717,92,92,0
+2021,"prolapse_repair","57283","Urology",150,150,150,6,6,0
+2021,"prolapse_repair","57285","Obstetrics & Gynecology",268,268,268,12,12,0
+2021,"prolapse_repair","57285","Urology",113,113,113,4,4,0
+2021,"sling","57288","Obstetrics & Gynecology",8101,8065,8101,380,379,0
+2021,"sling","57288","Urology",1863,1857,1862,105,105,0
+2021,"urodynamics","51728","Obstetrics & Gynecology",3878,3748,3851,125,120,0
+2021,"urodynamics","51728","Urology",62024,57571,61880,1519,1503,0
+2021,"urodynamics","51729","Obstetrics & Gynecology",20586,20203,20520,518,513,0
+2021,"urodynamics","51729","Urology",19873,19420,19813,593,584,0
+2021,"urodynamics","51741","Obstetrics & Gynecology",29463,26786,29397,635,620,0
+2021,"urodynamics","51741","Urology",284049,224714,283257,3413,3346,0
+2021,"urodynamics","51784","Obstetrics & Gynecology",23974,22327,23879,562,555,0
+2021,"urodynamics","51784","Urology",71533,66584,71297,1780,1761,0
+2021,"urodynamics","51797","Obstetrics & Gynecology",23084,22520,22989,589,578,0
+2021,"urodynamics","51797","Urology",55892,54368,55688,1650,1628,0
+2022,"burch","51840","Obstetrics & Gynecology",23,23,23,1,1,0
+2022,"burch","51840","Urology",15,15,15,1,1,0
+2022,"burch","58267","Obstetrics & Gynecology",16,16,16,1,1,0
+2022,"cystoscopy","52000","Obstetrics & Gynecology",17647,17333,17647,471,451,0
+2022,"cystoscopy","52000","Urology",715758,605261,715717,8436,7616,0
+2022,"pessary","57160","Obstetrics & Gynecology",18156,12844,18156,627,619,0
+2022,"pessary","57160","Urology",3273,2161,3273,107,107,0
+2022,"prolapse_repair","45560","Obstetrics & Gynecology",383,383,383,14,14,0
+2022,"prolapse_repair","45560","Urology",15,15,15,1,1,0
+2022,"prolapse_repair","57240","Obstetrics & Gynecology",911,906,911,51,51,0
+2022,"prolapse_repair","57240","Urology",242,240,242,15,15,0
+2022,"prolapse_repair","57250","Obstetrics & Gynecology",3011,3001,3010,162,162,0
+2022,"prolapse_repair","57250","Urology",434,433,433,19,19,0
+2022,"prolapse_repair","57260","Obstetrics & Gynecology",2557,2551,2556,143,143,0
+2022,"prolapse_repair","57260","Urology",259,259,259,16,16,0
+2022,"prolapse_repair","57265","Obstetrics & Gynecology",1561,1559,1560,68,68,0
+2022,"prolapse_repair","57265","Urology",142,142,142,6,6,0
+2022,"prolapse_repair","57282","Obstetrics & Gynecology",1891,1886,1891,92,92,0
+2022,"prolapse_repair","57282","Urology",346,346,346,22,22,0
+2022,"prolapse_repair","57283","Obstetrics & Gynecology",1873,1872,1873,95,95,0
+2022,"prolapse_repair","57283","Urology",168,168,168,8,8,0
+2022,"prolapse_repair","57285","Obstetrics & Gynecology",283,283,283,13,13,0
+2022,"prolapse_repair","57285","Urology",59,59,59,3,3,0
+2022,"sling","57288","Obstetrics & Gynecology",9024,9003,9023,405,403,0
+2022,"sling","57288","Urology",2382,2380,2382,131,131,0
+2022,"urodynamics","51728","Obstetrics & Gynecology",3543,3484,3528,121,119,0
+2022,"urodynamics","51728","Urology",62544,58001,62387,1458,1445,0
+2022,"urodynamics","51729","Obstetrics & Gynecology",20694,20350,20675,495,487,0
+2022,"urodynamics","51729","Urology",17790,17301,17767,505,498,0
+2022,"urodynamics","51741","Obstetrics & Gynecology",28768,26436,28739,613,600,0
+2022,"urodynamics","51741","Urology",263211,210191,262229,3194,3141,0
+2022,"urodynamics","51784","Obstetrics & Gynecology",23639,22378,23608,554,542,0
+2022,"urodynamics","51784","Urology",71266,66212,71079,1721,1701,0
+2022,"urodynamics","51797","Obstetrics & Gynecology",22900,22405,22858,561,552,0
+2022,"urodynamics","51797","Urology",52100,50692,51938,1545,1524,0
+2023,"burch","51840","Obstetrics & Gynecology",35,35,35,1,1,0
+2023,"burch","58267","Obstetrics & Gynecology",23,23,23,1,1,0
+2023,"cystoscopy","52000","Obstetrics & Gynecology",18101,17783,18101,468,447,0
+2023,"cystoscopy","52000","Urology",703993,596010,703975,8444,7643,0
+2023,"pessary","57160","Obstetrics & Gynecology",17306,12146,17306,587,580,0
+2023,"pessary","57160","Urology",3079,2123,3079,102,102,0
+2023,"prolapse_repair","45560","Obstetrics & Gynecology",396,395,396,14,14,0
+2023,"prolapse_repair","45560","Urology",32,32,32,2,2,0
+2023,"prolapse_repair","57240","Obstetrics & Gynecology",961,960,961,56,56,0
+2023,"prolapse_repair","57240","Urology",330,329,330,23,23,0
+2023,"prolapse_repair","57250","Obstetrics & Gynecology",3512,3499,3507,191,191,0
+2023,"prolapse_repair","57250","Urology",505,505,505,18,18,0
+2023,"prolapse_repair","57260","Obstetrics & Gynecology",2772,2759,2772,149,148,0
+2023,"prolapse_repair","57260","Urology",391,390,390,22,22,0
+2023,"prolapse_repair","57265","Obstetrics & Gynecology",1687,1683,1687,71,71,0
+2023,"prolapse_repair","57265","Urology",108,108,108,4,4,0
+2023,"prolapse_repair","57282","Obstetrics & Gynecology",2165,2158,2165,102,102,0
+2023,"prolapse_repair","57282","Urology",446,444,446,28,28,0
+2023,"prolapse_repair","57283","Obstetrics & Gynecology",1909,1908,1909,95,95,0
+2023,"prolapse_repair","57283","Urology",184,183,183,8,8,0
+2023,"prolapse_repair","57285","Obstetrics & Gynecology",391,390,391,18,18,0
+2023,"prolapse_repair","57285","Urology",72,72,72,3,3,0
+2023,"sling","57288","Obstetrics & Gynecology",9754,9732,9749,434,431,0
+2023,"sling","57288","Urology",2103,2102,2103,110,110,0
+2023,"urodynamics","51728","Obstetrics & Gynecology",4077,3993,4038,146,138,0
+2023,"urodynamics","51728","Urology",59599,56431,59454,1512,1497,0
+2023,"urodynamics","51729","Obstetrics & Gynecology",20834,20493,20824,515,505,0
+2023,"urodynamics","51729","Urology",16137,15687,16119,458,456,0
+2023,"urodynamics","51741","Obstetrics & Gynecology",28600,26542,28560,636,614,0
+2023,"urodynamics","51741","Urology",250662,203152,249698,3129,3080,0
+2023,"urodynamics","51784","Obstetrics & Gynecology",24155,22890,24104,594,576,0
+2023,"urodynamics","51784","Urology",73889,68801,73710,1823,1804,0
+2023,"urodynamics","51797","Obstetrics & Gynecology",23418,22892,23367,596,580,0
+2023,"urodynamics","51797","Urology",50235,48986,50069,1498,1481,0
