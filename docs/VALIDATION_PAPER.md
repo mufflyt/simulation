@@ -23,15 +23,15 @@ determine how differences in the definitions of the projected and observed
 workforces affect apparent forecast performance.
 
 **METHODS:** We built a national stochastic microsimulation of the URPS
-workforce, generated forecasts using only information available through 2020,
-and compared them with the observed 2023 national board-certified count
+workforce, forecast from information available through 2020, and compared the
+result with the observed 2023 national board-certified count
 (n = 1,306). Ten prespecified configurations varied cohort construction, entrant
-assumptions, and whether career attrition was applied. Agreement was summarized
-by percentage difference, interval containment, and the interval score, which
-penalizes interval width and shortfall jointly. Temporal validation used rolling
-origins from 2017 to 2020, admitting a training window only when its outcome was
-observable at the origin, and was compared with leave-one-out validation, which
-does not. Secondary analyses examined five cutoff-target windows and two entrant
+assumptions, and career attrition. Agreement was summarized by percentage
+difference, interval containment, and the interval score, penalizing width and
+shortfall jointly. Temporal validation used rolling origins from 2017 to
+2020, admitting training windows only when their outcomes were observable at the
+origin, and compared with leave-one-out validation, which does not.
+Secondary analyses examined five cutoff-target windows and two entrant
 definitions.
 
 **RESULTS:** The projected active workforce differed from the observed 2023
@@ -45,8 +45,7 @@ observation at all four rolling origins had a mean interval width of 1,466
 providers, including one lower bound of −594.5, whereas the definition-matched
 forecast was approximately 15 times sharper (interval score 137 versus 1,466).
 Leave-one-out validation made the same model appear 2.7 times closer with 3.6
-times tighter intervals. Across historical windows the direction of the
-difference reversed, from +17.6% above the observed count to −8.4% below it.
+times tighter intervals.
 
 **CONCLUSION:** Historical validation can make an appropriate workforce model
 appear inaccurate when the validation target measures a different construct.
