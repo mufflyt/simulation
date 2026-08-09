@@ -14,30 +14,25 @@
 # scenario-specific wait. Calibrating URPS access to a non-URPS audit would have
 # produced a confident answer in the wrong direction.
 #
-# UNITS ARE THE TRAP. Both audits report BUSINESS days. `clear_access()` works
-# in the same unit as `appointment_window`, whose default of 30 is CALENDAR
-# days. A 23.1 business-day wait entered unconverted understates the true wait
-# by about nine days, and nothing in the pipeline would have caught it. The
-# conversion is done once, here, by a named function.
-
-#' Business-to-calendar-day conversion for reported wait times
-#'
-#' Mystery-caller studies report elapsed BUSINESS days; the access-clearing
-#' layer works in calendar days. Five business days span seven calendar days,
-#' so the factor is 7/5. Public holidays would lengthen the calendar span
-#' slightly further, so this conversion is mildly conservative.
-#'
-#' @param business_days Numeric vector of business days.
-#' @return Calendar days.
-#' @family access
-#' @concept validation
-#' @export
-#' @examples
-#' business_days_to_calendar(23.1)
-business_days_to_calendar <- function(business_days) {
-  stopifnot(is.numeric(business_days))
-  business_days * 7 / 5
-}
+# THE MODEL IS BUSINESS-DAY NATIVE, and that is a deliberate choice rather than
+# a convenience. Both URPS audits report elapsed BUSINESS days, because that is
+# what a scheduler quotes. Converting a published mean into calendar days is not
+# possible without the individual call dates: weekends and federal holidays fall
+# where they fall, so 23.1 business days maps to a different calendar span
+# depending on when each wait started. A flat 7/5 factor was used here
+# originally and was wrong for exactly that reason, silently biasing the anchor.
+#
+# mysterycall ships the correct machinery (mysterycall_us_federal_calendar(),
+# mysterycall_count_business_days()), but it converts DATES, and the Rabice
+# individual-level call and appointment dates are not in this project: the
+# submission archive carries summary tables only. So the anchor stays in the
+# unit it was measured in, and the access layer adopts that unit.
+#
+# CONSEQUENCE FOR CALLERS. `clear_access()` is unit-agnostic: `wait_scale`,
+# `wait_time` and `appointment_window` all carry whatever unit the observed wait
+# was fitted in. Fit against this anchor and every one of them is in business
+# days. Passing a calendar-day `appointment_window` alongside it silently
+# compares two different clocks.
 
 #' Observed URPS appointment wait times from mystery-caller audits
 #'
@@ -59,7 +54,7 @@ URPS_WAIT_OBSERVATIONS <- tibble::tribble(
   "Acosta",   2026L,      "incontinence",  "Medicaid",  41,                  150L,       "preliminary", "Acosta L, et al. Draft 2026-07-06."
 )
 
-#' The observed national URPS wait, in calendar days
+#' The observed national URPS wait, in business days
 #'
 #' Returns the single national wait used to fit `wait_scale`. Defaults to the
 #' Rabice 2019 audit: it is peer reviewed, national (427 offices called across
@@ -82,7 +77,8 @@ URPS_WAIT_OBSERVATIONS <- tibble::tribble(
 #' @param scenario Clinical scenario. Default "prolapse".
 #' @param insurance Optional insurance filter; `NULL` averages available rows.
 #' @param observations Observation table; defaults to [URPS_WAIT_OBSERVATIONS].
-#' @return A list with `calendar_days`, `business_days`, `status`, `citation`.
+#' @return A list with `business_days` (the model-scale value), `unit`,
+#'   `status`, `n_rows` and `citation`.
 #' @family access
 #' @concept validation
 #' @export
@@ -103,13 +99,39 @@ urps_observed_wait_days <- function(study = "Rabice",
   }
   bd <- mean(d$wait_business_days)
   list(
-    calendar_days = business_days_to_calendar(bd),
     business_days = bd,
+    unit = URPS_ACCESS_TIME_UNIT,
     status = if (all(d$status == "calibrated")) "calibrated" else "preliminary",
     n_rows = nrow(d),
     citation = paste(unique(d$citation), collapse = " ")
   )
 }
+
+#' Time unit the URPS access layer works in
+#'
+#' Every wait quantity fitted from [URPS_WAIT_OBSERVATIONS] is in business days,
+#' including `wait_scale`, the resulting `wait_time`, and any
+#' `appointment_window` compared against it.
+#' @family access
+#' @concept validation
+#' @export
+URPS_ACCESS_TIME_UNIT <- "business_days"
+
+#' Appointment window for URPS access outcomes, in business days
+#'
+#' @details
+#' A DECLARED BENCHMARK, NOT A CONVERSION. The conventional access measure is an
+#' appointment within one month, and `clear_access()` defaults to 30 in
+#' calendar-day usage. Rescaling 30 calendar days into business days would
+#' reintroduce the flat factor this file exists to remove, so the window is
+#' stated directly instead: four working weeks. It is close to the conventional
+#' benchmark and is defensible on its own terms rather than derived from one.
+#'
+#' @return Numeric, business days.
+#' @family access
+#' @concept validation
+#' @export
+urps_appointment_window <- function() 20
 
 #' Share of URPS capacity that will accept a given insurance
 #'
@@ -159,6 +181,10 @@ URPS_MEDICAID_OUTRIGHT_REFUSAL_SHARE <- 0.23
 #' @noRd
 urps_access_targets <- function(...) {
   w <- urps_observed_wait_days(...)
-  set_access_target(access_validation_targets(), "wait_time",
-                    observed = w$calendar_days, status = w$status)
+  t <- set_access_target(access_validation_targets(), "wait_time",
+                         observed = w$business_days, status = w$status)
+  # Record the unit ON the target. A bare number cannot say which clock it is
+  # on, and the whole defect this file corrects was a unit mismatch.
+  t$unit[t$target == "wait_time"] <- w$unit
+  t
 }
