@@ -5,10 +5,11 @@
 # tested, documented -- and reachable from no pipeline. hours_coef,
 # assert_demand_calibrated(), opportunity_placement_shares(), param_spec in
 # run_backtest() and apply_hrsa_surgical_fte() were each found that way, one at
-# a time, by accident. Fifty-eight exports are in that position today, down from sixty-seven. All ten
+# a time, by accident. Fifty-six exports are in that position today. All eleven
 # `unwired_gate` entries -- assertions and status checks that were implemented,
 # tested, documented and invoked from nothing -- have been wired: six into
-# validation_report(), which the orchestrator runs on every projection, and
+# validation_report(), which the orchestrator runs on every projection,
+# assert_no_coverage_rate_claim() into interval_label(), and
 # check_legacy_canonical() into scripts/ci/check_suite.R, because it is a
 # property of the source tree rather than of a projection.
 #
@@ -19,16 +20,26 @@
 #   api           A user calls it directly. Orphan status is expected.
 #   unwired_gate  An assertion or status check that NOTHING invokes. A guard
 #                 nobody calls does not guard anything. THIS CATEGORY IS NOW
-#                 EMPTY -- all ten were wired -- and it is kept in the schema
+#                 EMPTY -- all eleven were wired -- and it is kept in the schema
 #                 deliberately, so the next one that appears has somewhere
 #                 honest to be recorded rather than being quietly filed as api.
+#                 The eleventh, assert_no_coverage_rate_claim(), arrived with
+#                 the DMDM work and went into interval_label(): the category
+#                 caught it, and wiring beat registering.
 #   dormant       A capability implemented and connected to no pipeline. Either
 #                 wire it or drop it -- it is not doing anything meanwhile.
 # The gate fails when a NEW orphan appears unregistered, and when a registered
 # orphan becomes wired (delete the row) or stops being exported (delete the row).
 # Adding a row is a decision, which is the whole idea -- the previous state was
 # sixty-seven decisions nobody made.
-"demand_dimension_status","api"
+#
+# ROWS GO BELOW THE HEADER. demand_dimension_status was once appended ABOVE
+# `"export","category"`, so read.csv took it as the header line: the frame came
+# back with columns named `demand_dimension_status`/`api`, reg$export was NULL,
+# and all four gates in test-export-wiring.R collapsed at once -- the orphan
+# check compared against nothing and reported all 449 exports as unregistered.
+# A registry that cannot be parsed is worse than no registry, because the
+# failure looks like a mass regression rather than a broken file.
 "export","category"
 "access_weight_sensitivity","api"
 "agent_urbanicity_summary","api"
@@ -37,6 +48,7 @@
 "apply_age_specific_surgery_demand","api"
 "apply_calibration_scalars","api"
 "assign_access_category","api"
+"balance_reversal_threshold","api"
 "baseline_anchor_sensitivity","api"
 "build_hazard_table","api"
 "calculate_replacement_gap","api"
@@ -44,10 +56,13 @@
 "calculate_state_vulnerability","api"
 "career_departure_by_state","api"
 "delegation_capacity_sensitivity","api"
+"demand_dimension_status","api"
+"demand_estimand_table","api"
 "dmdm_population_audit","api"
 "dmdm_prevalence_trajectory","api"
 "e2sfca_bands","api"
 "entrant_trajectory_scenarios","api"
+"fit_prevalence_consistent_psa","api"
 "hazard_shrinkage_summary","api"
 "lifecourse_risk_params_cited","api"
 "load_legacy","api"

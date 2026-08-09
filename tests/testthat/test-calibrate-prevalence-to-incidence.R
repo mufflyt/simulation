@@ -7,7 +7,7 @@
 # (e) expose the onset<->remission joint identifiability so PSA samples the pair.
 
 # NO source() OF PACKAGE CODE. This file used to do
-#   source(here::here("R", "calibrate_prevalence_to_incidence.R"))
+#   source(here::here("R", "calibration-prevalence_to_incidence.R"))
 # which works in a source checkout and fails under R CMD check, where the package
 # is installed and no source R/ directory exists -- the connection cannot be
 # opened and the whole file errors before a single expectation runs. It was the

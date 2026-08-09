@@ -246,6 +246,24 @@ backtest_status <- function(record = BACKTEST_RECORD_2020_2023,
 #' @export
 interval_label <- function(status = backtest_status(), ci = 0.95) {
   pct <- format(round(100 * ci))
+  # THE GUARD IS WIRED HERE, to its own output.
+  #
+  # assert_no_coverage_rate_claim() was written for exactly this text and was
+  # then called by nothing -- the shape this repository keeps rediscovering. The
+  # comment below already names the risk ("smuggle the false claim in through
+  # the one function whose job is to keep language honest"); a comment is not a
+  # check. Every branch now passes through `say()`, so the guard fires wherever
+  # this label reaches -- run_workforce_microsimulation(), the supply engine,
+  # validation_report(), print.backtest_status() -- rather than depending on the
+  # branches staying correct as they are edited.
+  #
+  # Kept on its own line deliberately: the orphan detector drops any line
+  # matching `name <- function`, so folding this into a one-liner hides the
+  # call from the very gate that is meant to notice it is wired.
+  say <- function(x) {
+    assert_no_coverage_rate_claim(x, status)
+    x
+  }
   if (isTRUE(status$validated)) {
     # Even when validated, only say "coverage" if coverage is ESTIMABLE. The
     # 2020->2023 arms all score the same single target, so k/n is a containment
@@ -253,13 +271,13 @@ interval_label <- function(status = backtest_status(), ci = 0.95) {
     # rate here would smuggle the false claim in through the one function whose
     # job is to keep language honest.
     if (isTRUE(status$coverage_is_estimable)) {
-      return(sprintf("%s%% forecast interval (back-test coverage %.0f%% of %d arms)",
-                     pct, 100 * status$coverage_95, status$n_arms))
+      return(say(sprintf("%s%% forecast interval (back-test coverage %.0f%% of %d arms)",
+                         pct, 100 * status$coverage_95, status$n_arms)))
     }
-    return(sprintf(paste("%s%% forecast interval (%d of %d model configurations",
-                         "contained the single observed target; coverage not",
-                         "estimable from one target)"),
-                   pct, round(status$coverage_95 * status$n_arms), status$n_arms))
+    return(say(sprintf(paste("%s%% forecast interval (%d of %d model configurations",
+                             "contained the single observed target; coverage not",
+                             "estimable from one target)"),
+                       pct, round(status$coverage_95 * status$n_arms), status$n_arms)))
   }
   # Coverage can be NaN when every arm's flag is NA -- an unscorable back-test.
   # sprintf("%d", NaN) is an ERROR, not a fallback, so this crashed rather than
@@ -267,13 +285,13 @@ interval_label <- function(status = backtest_status(), ci = 0.95) {
   # called a forecast interval was the thing that failed.
   n_missed <- (1 - status$coverage_95) * status$n_arms
   if (!is.finite(n_missed)) {
-    return(sprintf(paste("%s%% Monte Carlo range -- NOT a validated forecast",
-                         "interval: coverage could not be scored across the %d",
-                         "back-test arm(s)"), pct, status$n_arms))
+    return(say(sprintf(paste("%s%% Monte Carlo range -- NOT a validated forecast",
+                             "interval: coverage could not be scored across the %d",
+                             "back-test arm(s)"), pct, status$n_arms)))
   }
-  sprintf(paste("%s%% Monte Carlo range -- NOT a validated forecast interval:",
-                "the observed value fell outside it in %d of %d back-test arms"),
-          pct, round(n_missed), status$n_arms)
+  say(sprintf(paste("%s%% Monte Carlo range -- NOT a validated forecast interval:",
+                    "the observed value fell outside it in %d of %d back-test arms"),
+              pct, round(n_missed), status$n_arms))
 }
 
 #' Refuse forecast-interval language while coverage fails
