@@ -45,24 +45,62 @@ source(file.path("scripts", "validation", "_provenance.R"))
 YEARS <- 2025:2050
 REPORT_YEARS <- c(2025, 2035, 2050)
 
-# ---- The productivity denominator, and why this script is currently gated ---
+# ---- PRESPECIFICATION, recorded before the AUGS/MGMA values were seen --------
+#
+# Before obtaining the AUGS/MGMA urogynecology productivity benchmarks, we
+# prespecified the comparison between the external productivity distribution and
+# the model-implied productivity calibration. The reference model implies
+# 5,193.1 raw wRVU per clinical FTE before the common indirect-time adjustment.
+# Because the utilisation-based and reference estimates use the same
+# physician-attributed workload numerator, their FTE ratio is determined by the
+# productivity ratio alone. We therefore define the primary comparison as the
+# AUGS/MGMA median wRVU/FTE divided by 5,193.1, with a ratio of 1.00 indicating
+# exact agreement. Ratios greater than 1.00 indicate that the reference model
+# estimates more required FTE than the utilisation-based calculation, whereas
+# ratios below 1.00 indicate the opposite. The AUGS/MGMA 25th and 75th
+# percentile productivity values will define prespecified sensitivity estimates.
+# These comparisons will be interpreted as evidence about the
+# utilisation-to-FTE conversion and NOT as estimates of unmet need or workforce
+# adequacy.
+#
+# No pass/fail threshold is declared. There is no substantive basis for calling
+# some particular deviation "convergent validity", and a binary label would
+# discard the direction and magnitude of disagreement, which are the
+# informative parts.
+MODEL_IMPLIED_RAW_WRVU_PER_FTE <- 5193.1
+
+# ---- The productivity denominator -------------------------------------------
 #
 # A specialty-specific distribution is required, not a family proxy. AUGS/MGMA
 # publish a urogynecology productivity report (2025 edition, 2024 data) giving
-# work RVUs by percentile; that is the correct source. Its values are inside the
-# licensed report rather than public, and this repository does not hold it.
+# work RVUs by percentile.
 #
-# WRVU_PER_FTE_BENCHMARK is an OB/GYN-FAMILY range whose own documentation says
-# "REPLACE with the specific survey edition you have licensed before
-# publishing". Using it would answer the question with the wrong specialty's
-# productivity, and the resulting FTE would look like a measurement.
-PRODUCTIVITY <- list(
-  source = "WRVU_PER_FTE_BENCHMARK (OB/GYN-family proxy)",
-  tier   = "family_proxy",          # required for authoritative: specialty_specific
-  p25    = WRVU_PER_FTE_BENCHMARK[["low"]],
-  p50    = WRVU_PER_FTE_BENCHMARK[["median"]],
-  p75    = WRVU_PER_FTE_BENCHMARK[["high"]]
-)
+# THE VALUES ARE READ FROM A GITIGNORED FILE, NOT HARDCODED. They are licensed
+# report content: committing them would republish purchased benchmark values in
+# a public repository. The file is a declared input, hashed into the manifest
+# and rechecked at completion, so reproducibility does not require the source
+# report to be committed -- only that whoever reproduces the run holds the same
+# licensed extract. This is the mirror image of the mapping tables, which ARE
+# committed precisely because they need review and carry nothing licensed.
+#
+# Expected columns: source, edition, tier, p25, p50, p75
+PRODUCTIVITY_FILE <- file.path("data-raw", "productivity", "augs_mgma_wrvu.csv")
+
+PRODUCTIVITY <- if (file.exists(PRODUCTIVITY_FILE)) {
+  z <- utils::read.csv(PRODUCTIVITY_FILE, stringsAsFactors = FALSE)
+  stopifnot(nrow(z) == 1L,
+            all(c("source", "edition", "tier", "p25", "p50", "p75") %in% names(z)))
+  list(source = paste0(z$source, " (", z$edition, ")"), tier = z$tier,
+       p25 = z$p25, p50 = z$p50, p75 = z$p75)
+} else {
+  # Fallback keeps the script runnable and self-gating before the report lands.
+  list(source = "WRVU_PER_FTE_BENCHMARK (OB/GYN-family proxy)",
+       tier = "family_proxy",
+       p25 = WRVU_PER_FTE_BENCHMARK[["low"]],
+       p50 = WRVU_PER_FTE_BENCHMARK[["median"]],
+       p75 = WRVU_PER_FTE_BENCHMARK[["high"]])
+}
+
 SPECIALTY_SPECIFIC <- identical(PRODUCTIVITY$tier, "specialty_specific")
 
 RUN <- begin_validation_run(
@@ -70,11 +108,13 @@ RUN <- begin_validation_run(
   params = list(years = "2025-2050", productivity_source = PRODUCTIVITY$source,
                 productivity_tier = PRODUCTIVITY$tier,
                 p25 = PRODUCTIVITY$p25, p50 = PRODUCTIVITY$p50, p75 = PRODUCTIVITY$p75,
-                population_source = "census_npp_mid", units = "work RVUs / (wRVU per FTE)"),
+                population_source = "census_npp_mid", units = "work RVUs / (wRVU per FTE)",
+                prespecified_ratio_denominator = MODEL_IMPLIED_RAW_WRVU_PER_FTE),
   # A family-proxy denominator cannot produce a citable specialty estimate. The
   # run is forced exploratory rather than left to the reader's judgement.
   require_clean = SPECIALTY_SPECIFIC,
-  exploratory  = !SPECIALTY_SPECIFIC)
+  exploratory  = !SPECIALTY_SPECIFIC,
+  inputs = c(productivity_benchmark = PRODUCTIVITY_FILE))
 
 if (!SPECIALTY_SPECIFIC) {
   message("\n*** GATED: productivity tier is '", PRODUCTIVITY$tier, "'. ",
@@ -210,7 +250,25 @@ dec <- do.call(rbind, lapply(REPORT_YEARS, function(y) {
 cat("\n=== Decomposition: the difference is entirely the denominator ===\n")
 print(dec, row.names = FALSE, digits = 5)
 
+# ---- The prespecified primary comparison ------------------------------------
+R_ratio <- PRODUCTIVITY$p50 / MODEL_IMPLIED_RAW_WRVU_PER_FTE
+prespec <- data.frame(
+  productivity_source = PRODUCTIVITY$source, tier = PRODUCTIVITY$tier,
+  external_p50 = PRODUCTIVITY$p50,
+  model_implied_raw = MODEL_IMPLIED_RAW_WRVU_PER_FTE,
+  R = R_ratio,
+  direction = if (abs(R_ratio - 1) < 1e-9) "exact agreement"
+              else if (R_ratio > 1) "reference model requires MORE FTE than utilisation-based"
+              else "reference model requires FEWER FTE than utilisation-based",
+  sensitivity_p25 = PRODUCTIVITY$p25 / MODEL_IMPLIED_RAW_WRVU_PER_FTE,
+  sensitivity_p75 = PRODUCTIVITY$p75 / MODEL_IMPLIED_RAW_WRVU_PER_FTE)
+cat("\n=== prespecified primary comparison (R = external p50 / model-implied) ===\n")
+print(prespec, row.names = FALSE, digits = 5)
+cat("Interpreted as evidence about the utilisation-to-FTE conversion only --\n")
+cat("not unmet need, not workforce adequacy.\n")
+
 complete_validation_run(RUN, tables = list(
+  prespecified_comparison = prespec,
   triangulation = tri,
   productivity_decomposition = dec,
   workload_waterfall = waterfall,
