@@ -28,6 +28,7 @@
 # orphan becomes wired (delete the row) or stops being exported (delete the row).
 # Adding a row is a decision, which is the whole idea -- the previous state was
 # sixty-seven decisions nobody made.
+"demand_dimension_status","api"
 "export","category"
 "access_weight_sensitivity","api"
 "agent_urbanicity_summary","api"
