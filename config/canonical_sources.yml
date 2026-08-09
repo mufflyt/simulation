@@ -119,3 +119,22 @@ sources:
   urps_nrmp_entrants:
     path: data-raw/calibration/nrmp_fellowship_entrants.csv
     sha256: "1f9cba14d78922d1910ed5008c2d38639e81ef917ad124c82b2c4ca48030a159"
+  # --- CMS Medicare Physician & Other Practitioners, data year 2024 --------
+  # Public use files, published 2026-05-11; downloaded 2026-08-08 from the
+  # downloadURLs listed in https://data.cms.gov/data.json. Neither file is
+  # committed (data-raw/cms_psps/ is covered by the blanket *.csv ignore), so
+  # both entries resolve only on a machine that has run the fetch in
+  # data-raw/cms_psps/DOWNLOAD.md. Resolution is lazy: an absent file fails at
+  # the call site, not at load.
+  #
+  # THE TWO ARE NOT INTERCHANGEABLE. The provider file suppresses every
+  # NPI x HCPCS x POS cell under 11 beneficiaries, which deletes the low-volume
+  # tail and captures only 40-54% of national volume on the operative URPS
+  # codes. Denominators come from the geography file; the provider file is for
+  # numerators and NPI-level joins only. See DOWNLOAD.md for the capture table.
+  cms_mup_phy_2024_prov_svc:
+    path: data-raw/cms_psps/PHY_R26_P05_V10_D24_Prov_Svc.csv
+    sha256: "509dc7ce4cd02d8dd160d50d33ce5d942cd120ea306ff1eb2b6ece4f59cb2c23"
+  cms_mup_phy_2024_geo:
+    path: data-raw/cms_psps/MUP_PHY_R26_P05_V10_D24_Geo.csv
+    sha256: "c26956788333d03c0080017121c19e8e4d9990e9fa8ff385d7e1a2849c45074a"
