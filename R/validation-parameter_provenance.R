@@ -73,6 +73,10 @@ assert_backtest_parameters_precede_cutoff <- function(
     cutoff_year = BACKTEST_CUTOFF_YEAR,
     provenance = BACKTEST_PARAMETER_PROVENANCE) {
 
+  # `isTRUE()` is not vectorised and this is a column. Subsetting with a bare
+  # logical column would also admit NA rows, silently skipping an unaudited
+  # parameter, which is the exact failure this file exists to prevent.
+  # `isTRUE_vec()` (R/data-swan_dmdm_panel.R) already coerces NA to FALSE.
   used <- provenance[isTRUE_vec(provenance$in_primary_backtest), , drop = FALSE]
   pub <- used[used$basis == "published", , drop = FALSE]
 
@@ -96,9 +100,3 @@ assert_backtest_parameters_precede_cutoff <- function(
   }
   invisible(used)
 }
-
-# `isTRUE()` is not vectorised, and `provenance$in_primary_backtest` is a
-# column. Subsetting with a bare logical column would also admit NA rows, which
-# would silently skip an unaudited parameter -- the exact failure this file
-# exists to prevent.
-isTRUE_vec <- function(x) !is.na(x) & x
