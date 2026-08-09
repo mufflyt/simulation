@@ -95,7 +95,7 @@ previously collided).
 | `supply-entrant_trajectory.R` | Entrant-series trajectory helpers (CAGR between endpoints) |
 | `supply-acgme_fellows.R` | ACGME URPS fellow counts by academic year and parent specialty |
 | `supply-review_followups.R` | Observed NRMP-match → board-certification conversion |
-| `supply-urps_flows.R` | URPS patient-flow functions; `urps_p_active()` logistic coefficients |
+| `supply-urps_flows.R` | URPS patient-flow functions; `supply_p_active()` logistic coefficients |
 | `supply-urps_settings.R` | Default care-delivery setting mix per service; shared `.msg_*` / `resolve_canonical` helpers |
 
 ### `demand-*` — required-FTE from disease burden and utilization (14)

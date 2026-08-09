@@ -66,11 +66,26 @@ test_that("the registry uses only the declared classifications", {
   expect_false(any(is.na(reg$note) | !nzchar(trimws(reg$note))))
 })
 
-test_that("contract collisions stay visible", {
-  # The class the reviewer called the correctness risk, as against the
-  # maintenance debt of an exact copy. Pinned so that resolving one is a
-  # deliberate edit here rather than a silent reclassification.
+test_that("no contract collision is outstanding", {
+  # THE CLASS IS EMPTY, AND THIS ASSERTS THAT IT STAYS EMPTY. A contract
+  # collision -- same public-looking name, different arguments, guards or
+  # return shape -- is a correctness risk rather than the maintenance debt an
+  # exact copy represents, because a reader assumes a parity the code does not
+  # provide. The two that existed (`urps_p_active`, `urps_survival_curve`) were
+  # resolved on 2026-08-09 by renaming to `supply_p_active()` and
+  # `supply_survival_curve()`, not by documenting them.
+  #
+  # A test asserting emptiness is not vacuous here: it is the difference
+  # between the next collision being an explicit decision and being a row
+  # somebody adds while getting a build green.
   reg <- read_overlap_registry(root)
-  collisions <- reg$fn[reg$classification == "contract_collision"]
-  expect_setequal(collisions, c("urps_p_active", "urps_survival_curve"))
+  expect_equal(reg$fn[reg$classification == "contract_collision"], character())
+})
+
+test_that("the renamed supply functions no longer collide with the SSOT", {
+  # The rename is only real if the intersection actually stops containing them.
+  live <- canonical_overlap(root)
+  expect_false(any(live$fn %in% c("urps_p_active", "urps_survival_curve")))
+  expect_true(all(c("supply_p_active", "supply_survival_curve") %in%
+                    top_level_defs(file.path(root, "R"))))
 })

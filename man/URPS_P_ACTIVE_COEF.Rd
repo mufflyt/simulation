@@ -3,7 +3,7 @@
 \docType{data}
 \name{URPS_P_ACTIVE_COEF}
 \alias{URPS_P_ACTIVE_COEF}
-\title{Logistic regression coefficients for urps_p_active()}
+\title{Logistic regression coefficients for supply_p_active()}
 \format{
 An object of class \code{list} of length 5.
 }
@@ -12,7 +12,7 @@ URPS_P_ACTIVE_COEF
 }
 \description{
 A named list of calibrated coefficients. Pass a custom list to
-\code{\link[=urps_p_active]{urps_p_active()}} when ABOG recertification data have been fitted with
+\code{\link[=supply_p_active]{supply_p_active()}} when ABOG recertification data have been fitted with
 \code{\link[=fit_p_active_model]{fit_p_active_model()}}.
 }
 \keyword{internal}

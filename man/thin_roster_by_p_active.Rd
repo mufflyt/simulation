@@ -18,7 +18,7 @@ and optionally \code{sex} (defaults to \code{"female"}) and \code{years_certifie
 
 \item{coef}{Named list of logistic coefficients; see \link{URPS_P_ACTIVE_COEF}.}
 
-\item{scenario_id}{Passed to \code{\link[=urps_p_active]{urps_p_active()}}.}
+\item{scenario_id}{Passed to \code{\link[=supply_p_active]{supply_p_active()}}.}
 
 \item{stochastic}{Logical. When \code{TRUE} (default) each row is retained by a
 Bernoulli draw against P(active). When \code{FALSE} the function returns a
@@ -34,7 +34,7 @@ Converts a "treat every unconfirmed provider as active" starting roster into
 one whose size reflects the estimated fraction of providers who are actually
 practising. Each provider is retained with probability
 P(active | age, sex, years_certified) and dropped otherwise — a Bernoulli
-thinning whose expectation equals the point estimate from \code{\link[=urps_p_active]{urps_p_active()}}.
+thinning whose expectation equals the point estimate from \code{\link[=supply_p_active]{supply_p_active()}}.
 }
 \details{
 Use this BEFORE passing the roster to \code{\link[=run_supply_microsimulation]{run_supply_microsimulation()}} via

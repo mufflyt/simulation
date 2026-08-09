@@ -102,7 +102,7 @@ local_supply_scenario_registry <- function(baseline_entrants = 55) {
       source = "HWSM / Dall 2013 / Dall 2021 / Zarek 2025"
     ),
     # Retirement-shift scenarios use the mufflyaccess SSOT contract ids
-    # (`retire_2yr_later` / `retire_2yr_earlier`) so urps_p_active() and
+    # (`retire_2yr_later` / `retire_2yr_earlier`) so supply_p_active() and
     # p_active_by_age() resolve them identically whether the SSOT registry is
     # installed or this local fallback is in use. The reference scenario stays
     # `status_quo` (the fallback's own reference name; see validate_scenario_registry).
