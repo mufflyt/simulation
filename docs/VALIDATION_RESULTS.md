@@ -368,9 +368,17 @@ inconvenience. **No outcome establishes workforce adequacy or unmet need.**
 
 ## 9. URPS share among physician-delivered care (analyses 05 and 06)
 
-**Computational status: reproduced.** Runs `20260808T213641` / `20260808T213802`
-for analysis 05, and `20260808T213319` / `20260808T213854` for analysis 06, each
-pair identical at zero tolerance across every table.
+**Computational status: reproduced.** Runs `20260808T215524` / `20260808T215644`
+for analysis 05, and `20260808T215440` / `20260808T215444` for analysis 06, each
+pair identical at zero tolerance across every table, at model commit `94e961a`.
+
+An earlier pair reproduced at model commit `946dbe5`, and a concurrent session
+then rescored `BACKTEST_RECORD_2020_2023` — the exact hazard the manifest-first
+provenance exists for. Both analyses were re-run at the new source state rather
+than left attributed to a superseded one, and the `wrvu_aggregates` table is
+byte-identical across the change, confirming the bounds do not depend on the
+back-test module. That is a check, not an assumption: the earlier runs remain
+on disk under their own model SHA.
 
 **Scientific status: input definition now reconciled and frozen; one residual
 ascertainment gap quantified.** The two statuses are reported separately on
