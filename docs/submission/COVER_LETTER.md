@@ -55,7 +55,7 @@ happens when such a benchmark is treated as truth, not as a validated forecast.
 The repeated-target evidence rests on four rolling origins and is diagnostic
 rather than a precise estimate of long-run interval calibration.
 
-The manuscript is 1,960 words of main text with a 294-word structured abstract,
+The manuscript is 2,086 words of main text with a 294-word structured abstract,
 two tables, no figures, and one supplemental digital content file. It has not
 been published elsewhere and is not under consideration by another journal. All
 analyses are reproducible from committed code and artifacts. Every model
