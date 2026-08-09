@@ -102,7 +102,8 @@ hash_inputs <- function(paths = validation_inputs()) {
 
 begin_validation_run <- function(analysis, seeds = NULL, iterations = NULL,
                                  params = list(), root = "artifacts/validation",
-                                 require_clean = TRUE, exploratory = !require_clean) {
+                                 require_clean = TRUE, exploratory = !require_clean,
+                                 inputs = NULL) {
   p <- validation_provenance(seeds = seeds, iterations = iterations, params = params)
   p$analysis <- analysis
   # EXPLORATORY IS UNAVOIDABLE AND STICKY. An exploratory run must never be
@@ -119,7 +120,11 @@ begin_validation_run <- function(analysis, seeds = NULL, iterations = NULL,
          "not be cited.", call. = FALSE)
   }
 
-  h <- hash_inputs()
+  # A script analysing a source outside the standard set must declare it, or the
+  # manifest records the identity of everything EXCEPT the data the analysis
+  # actually used -- which is worse than recording nothing, because it looks
+  # complete.
+  h <- hash_inputs(c(validation_inputs(), inputs %||% character()))
 
   # The validation CODE actually executed, not just the repository SHA. These
   # can coincide while a single commit holds both; they mean different things
@@ -159,14 +164,17 @@ begin_validation_run <- function(analysis, seeds = NULL, iterations = NULL,
 
   cat("run_id:", run_id, "\nrun directory:", dir, "\n")
   print_provenance(p)
-  invisible(list(dir = dir, run_id = run_id, provenance = p, input_hashes = h))
+  invisible(list(dir = dir, run_id = run_id, provenance = p, input_hashes = h,
+                 input_paths = c(validation_inputs(), inputs %||% character())))
 }
 
 # A run that stopped partway must never look like completed evidence. Results
 # are only trustworthy if the inputs they were computed from are the inputs the
 # manifest recorded, so the hashes are rechecked here rather than assumed.
 complete_validation_run <- function(run, tables = list()) {
-  after <- hash_inputs()
+  # Recheck exactly what was hashed at start, including any script-declared
+  # inputs; rechecking the default set would silently skip them.
+  after <- hash_inputs(run$input_paths %||% validation_inputs())
   changed <- names(after)[!identical_hash(run$input_hashes, after)]
   if (length(changed)) {
     writeLines(c("FAILED: inputs changed during the run.",
