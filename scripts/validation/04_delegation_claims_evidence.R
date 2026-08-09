@@ -45,10 +45,14 @@ suppressPackageStartupMessages({
 })
 source(file.path("scripts", "validation", "_provenance.R"))
 
-ARCHIVE_DIR <- Sys.getenv("CADR_DIR", unset = file.path(
-  "/Users/tylermuffly/Library/Caches/claude-code-tmp/claude-501",
-  "-Users-tylermuffly-simulation/27db139d-2f96-4756-94bd-43329a05efe1/scratchpad/apd"))
+# A STABLE PATH, not a session scratchpad. The extract previously lived in a
+# per-session cache directory that can be cleared between runs -- a run identity
+# pointing at a volatile path is not an identity. data-raw/ is gitignored and
+# already holds the NPI-bearing roster, so it is the consistent home for a
+# claims extract that must not be committed.
+ARCHIVE_DIR <- Sys.getenv("CADR_DIR", unset = file.path("data-raw", "cadr"))
 SPEC_FILE <- file.path(ARCHIVE_DIR, "Provider specialty_23JAN2023.csv")
+DICTIONARY <- file.path(ARCHIVE_DIR, "Lowder AUGS data dictionary 1.30.23.xlsx")
 
 # Episode type -> modelled service. Burch is a stress-incontinence
 # colposuspension (n = 68, 0.3%): reported, but NOT folded into sling, because
@@ -96,7 +100,10 @@ RUN <- begin_validation_run(
   # the FTE triangulation in 03 stays non-citable for the separate reason that
   # its parameters are unresolved. Two different evidentiary objects.
   require_clean = FALSE, exploratory = TRUE,
-  inputs = c(cadr_provider_specialty = SPEC_FILE))
+  # The dictionary defines the episode types this script maps to modelled
+  # services. It is an ANALYTIC input: change it and the crosswalk's meaning
+  # changes without the R script changing, so it belongs in the run identity.
+  inputs = c(cadr_provider_specialty = SPEC_FILE, cadr_data_dictionary = DICTIONARY))
 
 stopifnot(file.exists(SPEC_FILE))
 d <- as.data.table(data.table::fread(SPEC_FILE, showProgress = FALSE))
@@ -147,8 +154,28 @@ cmp <- dm[obs, on = "service", nomatch = 0]
 cmp[, claims_physician_share := physician / 100]
 cmp[, difference_pp := 100 * (claims_physician_share - model_physician_share)]
 
-sv <- readRDS("/tmp/sv.rds")[readRDS("/tmp/sv.rds")$year == 2025, c("service", "volume")]
-sv <- as.data.table(sv)[wl, on = "service", nomatch = 0][, raw := volume * work_rvu]
+# SERVICE VOLUMES ARE REGENERATED, NOT READ FROM A TEMP FILE. An earlier version
+# read /tmp/sv.rds -- a leftover from an ad-hoc exploratory run. That file sat
+# outside the run identity, was never hashed, could vanish between runs, and was
+# produced by a script that no longer exists. Any A/B comparison against it would
+# have been meaningless: the inputs could change without the manifest noticing,
+# which is precisely the failure the input-hashing exists to prevent. Volumes now
+# come from the pinned model and the Census population, both already covered by
+# model_sha and the contract.
+pop <- resolve_demand_population(2025L)
+vol_run <- suppressMessages(run_workforce_microsimulation(
+  roster = urps_provider_roster(load_urps_roster()), years = 2025:2026,
+  subspecialty = "FPMRS", pop_by_band = pop$pop_by_band,
+  baseline_gap_estimate = baseline_gap(
+    1306, capacity_survey_adequacy(example_capacity_survey())$adequacy,
+    method = "capacity_survey", calibration_status = "derived_by_analogy",
+    source = "Zarek 2025 PTJ", evidence = "volume generation only"),
+  n_iterations = 2, calibration = "namcs",
+  supply_scenarios = supply_scenario_registry(70)[1],
+  allow_analogy = TRUE, verbose = FALSE))
+sv <- vol_run$service_volumes
+sv <- as.data.table(sv[sv$year == 2025, c("service", "volume")])[wl, on = "service", nomatch = 0][
+  , raw := volume * work_rvu]
 cmp <- cmp[sv[, .(service, raw)], on = "service", nomatch = 0]
 cmp[, wrvu_effect_of_difference := raw * (claims_physician_share - model_physician_share)]
 cat("\n=== model assumption vs claims, and what the gap is worth ===\n")
