@@ -1,0 +1,6 @@
+episode_type,modelled_service,note
+UI Sling,sling_procedure,maps directly
+Pessary,pessary_care,maps directly
+PT,,"pelvic floor physical therapy: delegated care, not a modelled physician service"
+Open burch,,"stress-incontinence colposuspension; distinct from sling, n=36, deliberately NOT merged"
+Laparoscopic burch,,"as above, n=32"

@@ -54,35 +54,17 @@ ARCHIVE_DIR <- Sys.getenv("CADR_DIR", unset = file.path("data-raw", "cadr"))
 SPEC_FILE <- file.path(ARCHIVE_DIR, "Provider specialty_23JAN2023.csv")
 DICTIONARY <- file.path(ARCHIVE_DIR, "Lowder AUGS data dictionary 1.30.23.xlsx")
 
-# Episode type -> modelled service. Burch is a stress-incontinence
-# colposuspension (n = 68, 0.3%): reported, but NOT folded into sling, because
-# silently merging a distinct procedure to boost coverage is how a mapping
-# becomes untraceable.
-EPISODE_TO_SERVICE <- c("UI Sling" = "sling_procedure", "Pessary" = "pessary_care")
-UNMAPPED_EPISODES  <- c("PT", "Open burch", "Laparoscopic burch")
-
-# Explicit classification of every code observed in the data. Anything absent
-# from these vectors falls to "unclassified" rather than being assumed to be a
-# physician -- an unrecognised code must not inflate the physician share.
-APP_CODES   <- c(50L, 97L, 89L, 42L)              # NP, PA, CNS, certified nurse midwife
-PT_CODES    <- c(65L)                             # physical therapist
-OTHER_NONMD <- c(43L, 35L, 70L, 51L, 64L, 67L)    # CRNA, chiropractic, group practice, suppliers
-PHYSICIAN_CODES <- c(1L,2L,4L,6L,7L,8L,9L,10L,11L,12L,13L,14L,16L,20L,24L,25L,26L,28L,29L,
-                     30L,33L,34L,36L,37L,38L,39L,40L,44L,46L,48L,66L,77L,78L,79L,81L,82L,
-                     83L,84L,85L,86L,90L,91L,92L,93L,94L,98L,99L)
-
-classify <- function(code) {
-  ifelse(is.na(code), "missing",
-  ifelse(code %in% APP_CODES, "APP",
-  ifelse(code %in% PT_CODES, "PT",
-  ifelse(code %in% OTHER_NONMD, "other_nonphysician",
-  ifelse(code %in% PHYSICIAN_CODES, "physician", "unclassified")))))
-}
+# MAPPINGS ARE EXTERNAL, VERSION CONTROLLED AND HASHED. They express scientific
+# choices -- is a certified nurse midwife an APP? does a Burch colposuspension
+# map to sling? -- and a choice buried in code is a choice nobody reviews. They
+# carry no sensitive data, so unlike the claims extract they are committed.
+SPECIALTY_MAP <- file.path("scripts", "validation", "mappings", "cms_specialty_class.csv")
+EPISODE_MAP   <- file.path("scripts", "validation", "mappings", "cadr_episode_service.csv")
 
 RUN <- begin_validation_run(
   "delegation_claims_evidence",
   params = list(source = "CADR_2023 Provider specialty_23JAN2023.csv",
-                episodes_mapped = paste(names(EPISODE_TO_SERVICE), collapse = "/"),
+                episodes_mapped = "UI Sling -> sling_procedure; Pessary -> pessary_care",
                 coverage_of_withheld_wrvu = "22.5%",
                 interpretation = "UPPER BOUND on physician attribution (incident-to)",
                 urps_vs_generalist = "NOT identifiable: no provider identifier in archive"),
@@ -103,12 +85,44 @@ RUN <- begin_validation_run(
   # The dictionary defines the episode types this script maps to modelled
   # services. It is an ANALYTIC input: change it and the crosswalk's meaning
   # changes without the R script changing, so it belongs in the run identity.
-  inputs = c(cadr_provider_specialty = SPEC_FILE, cadr_data_dictionary = DICTIONARY))
+  inputs = c(cadr_provider_specialty = SPEC_FILE, cadr_data_dictionary = DICTIONARY,
+             specialty_class_map = SPECIALTY_MAP, episode_service_map = EPISODE_MAP))
 
-stopifnot(file.exists(SPEC_FILE))
+stopifnot(file.exists(SPEC_FILE), file.exists(SPECIALTY_MAP), file.exists(EPISODE_MAP))
+smap <- utils::read.csv(SPECIALTY_MAP, stringsAsFactors = FALSE)
+emap <- utils::read.csv(EPISODE_MAP, stringsAsFactors = FALSE)
 d <- as.data.table(data.table::fread(SPEC_FILE, showProgress = FALSE))
-d[, provider := classify(as.integer(index_car_trt_prvdr_spclty1))]
-d[, service := EPISODE_TO_SERVICE[episode_type]]
+
+# ---- Unmapped-code audit: unknown codes FAIL, never swept into "other" -------
+#
+# A CADR refresh could introduce a specialty code this mapping has never seen.
+# Routing it silently to "other" would change the scientific meaning while every
+# provenance check passed -- the manifest would be perfectly accurate about
+# inputs that were being misclassified. Unknown codes stop the run and are named.
+trt_cols <- grep("^index_car_trt_prvdr_spclty", names(d), value = TRUE)
+seen <- sort(unique(stats::na.omit(as.integer(unlist(d[, ..trt_cols])))))
+unmapped <- setdiff(seen, smap$cms_specialty_code)
+code_audit <- data.frame(observed_codes = length(seen),
+                         mapped = length(seen) - length(unmapped),
+                         unmapped = length(unmapped),
+                         unmapped_codes = paste(unmapped, collapse = ", "))
+cat("\n=== unmapped-code audit ===\n"); print(code_audit, row.names = FALSE)
+if (length(unmapped)) {
+  stop("unmapped CMS specialty code(s): ", paste(unmapped, collapse = ", "),
+       ". Classify them in ", SPECIALTY_MAP, " -- letting them fall to 'other' ",
+       "would change the provider mix while every provenance check passed.",
+       call. = FALSE)
+}
+unmapped_ep <- setdiff(unique(d$episode_type), emap$episode_type)
+if (length(unmapped_ep))
+  stop("unmapped episode type(s): ", paste(unmapped_ep, collapse = ", "),
+       ". Declare them in ", EPISODE_MAP, call. = FALSE)
+
+cls <- stats::setNames(smap$provider_class, as.character(smap$cms_specialty_code))
+c1 <- as.integer(d$index_car_trt_prvdr_spclty1)
+d[, provider := ifelse(is.na(c1), "missing", unname(cls[as.character(c1)]))]
+svc <- stats::setNames(emap$modelled_service, emap$episode_type)
+d[, service := unname(svc[episode_type])]
 
 cat("\n=== episode coverage ===\n")
 print(d[, .N, by = .(episode_type, mapped_service = fifelse(is.na(service), "-- not modelled --", service))][order(-N)])
@@ -183,6 +197,7 @@ print(cmp[, .(service, model_physician_share, claims_physician_share, difference
               raw_wrvu = raw, wrvu_effect_of_difference)], digits = 4)
 
 complete_validation_run(RUN, tables = list(
+  unmapped_code_audit     = code_audit,
   provider_mix_by_service = by_svc,
   pooled_weighting        = pooled,
   trend_by_period         = trend,
