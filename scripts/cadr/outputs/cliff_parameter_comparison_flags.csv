@@ -1,0 +1,12 @@
+cliff_file,parameter,cadr_flag,cadr_evidence
+care_pathway.csv,treatment_mix POP conservative share = 0.50 (low confidence),replaceable_by_CADR,"CADR gives realized conservative(pessary/PT) vs surgical(sling) index mix in an aged-Medicare SUI/POP cohort; can replace the setting-dependent 0.50 for >=65 (but it is a treated-cohort mix, not population)."
+urps_service_workload_rvu.csv,new_consultation work_rvu,partially_informed,"CADR counts pre-index new+consult E&M (initial specialist eval) per treated pt; level mix supports a wRVU but eval intensity, not the 2.535 value itself."
+urps_service_workload_rvu.csv,return_visit work_rvu,replaceable_by_CADR,"CADR counts POST-index return E&M visits per treated pt by level -> downstream return-visit VOLUME per treated pt, the missing multiplier on the 1.396 wRVU."
+urps_service_workload_rvu.csv,pessary_care work_rvu / visits,replaceable_by_CADR,CADR counts subsequent pessary visits per treated pt (pessary maintenance workload) -> visits-per-pt to multiply pessary_care wRVU.
+urps_service_workload_rvu.csv,urodynamics + cystoscopy work_rvu / rate,replaceable_by_CADR,CADR counts post-index cystoscopy + urodynamics per treated pt -> downstream diagnostic procedure VOLUME per treated pt.
+urps_service_workload_rvu.csv,sling_procedure work_rvu,supported,CADR confirms sling as index surgical procedure; wRVU value itself is the CMS PFS anchor (unchanged).
+urps_service_workload_rvu.csv,postoperative_care (bundled 090-global = 0 wRVU),partially_informed,CADR shows postop return E&M + reoperations OUTSIDE the 090-global window -> the true postop workload is NOT zero; global-period assumption understates it.
+staffing_conversion.csv,services->FTE (work_rvu volumes),partially_informed,"CADR supplies the per-treated-patient service VOLUMES (visits, procedures, reoperations) that feed sum(volume*wRVU); it does not supply the wrvu_per_fte denominator."
+staffing_conversion.csv,wrvu_per_fte benchmark,not_informed_by_CADR,wRVU-per-FTE productivity benchmark is a workforce parameter; CADR (claims utilization) cannot inform it.
+care_pathway.csv,prevalence / lifetime surgery risk,not_informed_by_CADR,prevalence & lifetime surgery risk are population epidemiology; CADR is a treated cohort -> out of scope by design.
+care_pathway.csv,care_seeking fraction,not_informed_by_CADR,care-seeking is upstream of treatment entry; CADR observes only already-treated patients -> cannot inform.

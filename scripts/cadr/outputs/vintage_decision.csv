@@ -1,0 +1,3 @@
+dataset,index_year_min,index_year_max,n_episodes,pathways,granularity,role
+"CADR (base, visit-level)",2008,2016,22677,PT; Pessary; UI Sling; Open burch; Laparoscopic burch,visit/claim-level long (COUNTS derivable),PRIMARY utilization vintage (counts + wRVU)
+CADR_2023 (march_2 analytic),2008,2015,16937,Pelvic floor physical therapy; Pessary; Urinary Incontinence Sling,per-patient cost-aggregated buckets (COSTS only),"COST companion (2023 re-analysis, 3 pathways)"

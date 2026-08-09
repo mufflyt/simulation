@@ -1,0 +1,39 @@
+episode_type,trt_label,n
+Laparoscopic burch,OB/GYN,32
+Laparoscopic burch,Urology,9
+Laparoscopic burch,missing,5
+Laparoscopic burch,Gyn/Oncology-Other,3
+Laparoscopic burch,Family Practice,1
+Open burch,OB/GYN,31
+Open burch,Urology,24
+Open burch,General Surgery,5
+Open burch,Gyn/Oncology-Other,3
+Open burch,other,1
+PT,missing,3300
+PT,Physical Therapist,1696
+PT,Urology,941
+PT,OB/GYN,784
+PT,Nurse Practitioner,273
+PT,other,182
+PT,Internal Medicine,70
+PT,Gyn/Oncology-Other,43
+PT,Physician Assistant,39
+PT,Family Practice,36
+PT,General Surgery,17
+Pessary,OB/GYN,6733
+Pessary,Urology,1184
+Pessary,Nurse Practitioner,1004
+Pessary,missing,219
+Pessary,Physician Assistant,148
+Pessary,other,126
+Pessary,Family Practice,88
+Pessary,Gyn/Oncology-Other,77
+Pessary,Internal Medicine,28
+Pessary,General Surgery,9
+UI Sling,Urology,2972
+UI Sling,OB/GYN,2298
+UI Sling,missing,213
+UI Sling,Gyn/Oncology-Other,40
+UI Sling,other,23
+UI Sling,General Surgery,12
+UI Sling,Family Practice,8
