@@ -18,7 +18,7 @@ assert_survivor_falsification(
 \item{rec}{A \code{\link[=survivor_falsification_record]{survivor_falsification_record()}}.}
 }
 \value{
-(Invisibly) TRUE.
+\code{TRUE}, invisibly. Called for the error it raises on failure.
 }
 \description{
 The counts are a published claim, so this checks every identity that has to
@@ -31,8 +31,46 @@ here rather than in a manuscript.
 These are relationships, not expected values. The expected values are frozen
 separately in the package tests, so that this function stays honest about a
 rebuilt artifact instead of rejecting it for being new.
+
+Enforced, in order:
+
+\enumerate{
+\item the identity universe splits into retained plus excluded;
+\item the excluded denominator closes into NPI-linkable plus unlinkable;
+\item every count in the table equals its counterpart in the record --
+without this the guard would validate only the record's internal
+arithmetic, and an edit to the table alone would pass silently, which a
+tampering test caught on the first draft;
+\item the no-Part-B residual partitions into the three directory classes;
+\item the windows nest: all-six <= validation <= frame <= denominator;
+\item Part B present plus absent equals the linkage denominator;
+\item provider-years equal persistent billers times validation years;
+\item the annual panel partitions into retained plus excluded, and the
+persistent subgroup never exceeds the excluded group in any year;
+\item tier-2 rows are never described in tier-1 language, and no directory
+row is labelled tier 1.
+}
+
+The last check is textual on purpose. Merging enrolment into billing is a
+wording error before it is an arithmetic one, and by the time it is
+arithmetic it is already in a manuscript.
+
+What this deliberately does NOT check is the VALUES. Those are frozen in
+\code{tests/testthat/test-validation-survivor.R}, so a legitimately rebuilt
+artifact is not rejected merely for being new, while a changed count still
+fails the suite.
+}
+\examples{
+assert_survivor_falsification()
+
+# A table edited to disagree with the record fails, which is the point.
+tampered <- survivor_falsification_table()
+tampered$n[tampered$evidence == "No Part B billing anywhere"] <- 30L
+try(assert_survivor_falsification(tbl = tampered))
 }
 \seealso{
+\code{\link[=survivor_falsification_table]{survivor_falsification_table()}}, \code{\link[=survivor_falsification_record]{survivor_falsification_record()}}.
+
 Other survivor conditioning: 
 \code{\link{survivor_falsification_artifact}()},
 \code{\link{survivor_falsification_markdown}()},

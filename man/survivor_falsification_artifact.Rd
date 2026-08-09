@@ -7,15 +7,54 @@
 survivor_falsification_artifact()
 }
 \value{
-A list with \code{denominators}, \code{partb}, \code{directory}, \code{annual},
-\code{windows} and \code{provenance}.
+A named list with \code{schema_version}, \code{windows}, \code{denominators},
+\code{partb}, \code{directory}, \code{annual}, \code{exclusion_reason} and \code{provenance}.
 }
 \description{
 Reads the aggregate artifact produced from the enriched ABOG/ABU rosters and
 the Medicare sources. Holds counts and provenance only: no physician
 identifiers, because the underlying linkage is identifiable.
 }
+\details{
+The artifact is deliberately small and aggregate. It carries NO NPIs, no
+names and no per-physician rows, because the linkage behind it is
+identifiable and this file is public. What it does carry:
+
+\describe{
+\item{\code{windows}}{\code{frame} (Part B panel coverage), \code{validation} (the
+back-test window), \code{directory} (clinician-directory coverage) and
+\code{sustained_min_years}. Every count is meaningless without its window,
+which is why they travel together.}
+\item{\code{denominators}}{the identity universe, and how it splits into
+retained, excluded, and excluded-without-a-usable-NPI.}
+\item{\code{partb}}{tier-1 evidence: physicians observed billing, per window,
+plus the persistent subgroup and its provider-years.}
+\item{\code{directory}}{tier-2 evidence, partitioning the no-Part-B residual.
+Enrolment, not billed care -- never add these to \code{partb}.}
+\item{\code{annual}}{a year-by-year panel for the figure, split into retained
+and excluded observed counts on one denominator.}
+\item{\code{provenance}}{roster SHA-256s, the cliff repository and commit, the
+canonical predicates used (with their hashes), and fingerprints of the
+two Medicare tables, which are too large to checksum.}
+}
+
+Rebuild it with \verb{scripts/data_acquisition/09_build_survivor_falsification.R},
+which requires the source paths as environment variables and fails loudly
+rather than falling back to a prepared file.
+}
+\examples{
+a <- survivor_falsification_artifact()
+a$denominators$linkage_denominator   # the denominator every rate uses
+a$partb$persistent_validation        # billed in EVERY validation year
+
+# Provenance records which definition produced the counts, not merely that
+# some definition did.
+names(a$provenance$canonical_predicates)
+}
 \seealso{
+\code{\link[=survivor_falsification_table]{survivor_falsification_table()}} for the reportable view,
+\code{\link[=assert_survivor_falsification]{assert_survivor_falsification()}} for the invariants it must satisfy.
+
 Other survivor conditioning: 
 \code{\link{assert_survivor_falsification}()},
 \code{\link{survivor_falsification_markdown}()},

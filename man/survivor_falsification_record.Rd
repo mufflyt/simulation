@@ -10,13 +10,42 @@ survivor_falsification_record(a = survivor_falsification_artifact())
 \item{a}{A \code{\link[=survivor_falsification_artifact]{survivor_falsification_artifact()}}.}
 }
 \value{
-List with the counts and their provenance.
+A named list: \code{n_persistent_billers}, \code{validation_years},
+\code{provider_years_erased}, \code{linkage_denominator}, \code{identity_universe},
+\code{excluded_total}, \code{excluded_without_npi}, \code{any_partb_window},
+\code{any_partb_frame}, \code{no_partb_frame}, \code{directory_only_sustained},
+\code{exclusion_reason}, \code{directory_coverage} and \code{source}.
 }
 \description{
 Three facts, no model: URPS-identified, excluded from the later roster, and
 observed billing Medicare Part B in every year of the validation window.
 }
+\details{
+This is the view to cite. It flattens the artifact to the quantities a
+manuscript actually reports, and adds two fields that exist to stop an
+over-claim being made from them:
+
+\describe{
+\item{\code{exclusion_reason}}{every one of the excluded is dropped by the same
+flag, so no finer per-provider reason can be reported. The roster does
+not record one.}
+\item{\code{directory_coverage}}{the clinician directory begins after the
+validation window does, so it is silent on the early years and cannot
+rescue them.}
+}
+}
+\examples{
+rec <- survivor_falsification_record()
+rec$n_persistent_billers
+rec$provider_years_erased   # n_persistent_billers x length(validation_years)
+
+# The roster records no finer reason than the flag itself.
+rec$exclusion_reason
+}
 \seealso{
+\code{\link[=survivor_falsification_statement]{survivor_falsification_statement()}}, which renders these counts as
+a sentence so prose cannot drift from them.
+
 Other survivor conditioning: 
 \code{\link{assert_survivor_falsification}()},
 \code{\link{survivor_falsification_artifact}()},

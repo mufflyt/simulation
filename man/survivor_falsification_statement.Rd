@@ -16,7 +16,18 @@ A length-one character string.
 Generated from the artifact so that prose, table and figure cannot disagree
 about a number. Use this rather than retyping counts into documentation.
 }
+\details{
+Every number in the sentence is computed from the artifact at call time. The
+alternative -- typing the counts into a manuscript, a figure caption and a
+README -- creates three places for them to disagree, and the disagreement is
+invisible until a reader adds them up.
+}
+\examples{
+survivor_falsification_statement()
+}
 \seealso{
+\code{\link[=survivor_falsification_record]{survivor_falsification_record()}} for the same counts as data.
+
 Other survivor conditioning: 
 \code{\link{assert_survivor_falsification}()},
 \code{\link{survivor_falsification_artifact}()},

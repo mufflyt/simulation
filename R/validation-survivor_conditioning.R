@@ -58,10 +58,47 @@
 #' the Medicare sources. Holds counts and provenance only: no physician
 #' identifiers, because the underlying linkage is identifiable.
 #'
-#' @return A list with `denominators`, `partb`, `directory`, `annual`,
-#'   `windows` and `provenance`.
+#' @details
+#' The artifact is deliberately small and aggregate. It carries NO NPIs, no
+#' names and no per-physician rows, because the linkage behind it is
+#' identifiable and this file is public. What it does carry:
+#'
+#' \describe{
+#'   \item{`windows`}{`frame` (Part B panel coverage), `validation` (the
+#'     back-test window), `directory` (clinician-directory coverage) and
+#'     `sustained_min_years`. Every count is meaningless without its window,
+#'     which is why they travel together.}
+#'   \item{`denominators`}{the identity universe, and how it splits into
+#'     retained, excluded, and excluded-without-a-usable-NPI.}
+#'   \item{`partb`}{tier-1 evidence: physicians observed billing, per window,
+#'     plus the persistent subgroup and its provider-years.}
+#'   \item{`directory`}{tier-2 evidence, partitioning the no-Part-B residual.
+#'     Enrolment, not billed care -- never add these to `partb`.}
+#'   \item{`annual`}{a year-by-year panel for the figure, split into retained
+#'     and excluded observed counts on one denominator.}
+#'   \item{`provenance`}{roster SHA-256s, the cliff repository and commit, the
+#'     canonical predicates used (with their hashes), and fingerprints of the
+#'     two Medicare tables, which are too large to checksum.}
+#' }
+#'
+#' Rebuild it with `scripts/data_acquisition/09_build_survivor_falsification.R`,
+#' which requires the source paths as environment variables and fails loudly
+#' rather than falling back to a prepared file.
+#'
+#' @return A named list with `schema_version`, `windows`, `denominators`,
+#'   `partb`, `directory`, `annual`, `exclusion_reason` and `provenance`.
+#' @seealso [survivor_falsification_table()] for the reportable view,
+#'   [assert_survivor_falsification()] for the invariants it must satisfy.
 #' @family survivor conditioning
 #' @concept validation
+#' @examples
+#' a <- survivor_falsification_artifact()
+#' a$denominators$linkage_denominator   # the denominator every rate uses
+#' a$partb$persistent_validation        # billed in EVERY validation year
+#'
+#' # Provenance records which definition produced the counts, not merely that
+#' # some definition did.
+#' names(a$provenance$canonical_predicates)
 #' @export
 survivor_falsification_artifact <- function() {
   a <- jsonlite::read_json(.survivor_artifact_path(), simplifyVector = TRUE)
@@ -86,11 +123,42 @@ survivor_falsification_artifact <- function() {
 #' and is labelled so; the two are never summed into a single active flag. All
 #' counts come from [survivor_falsification_artifact()].
 #'
+#' @details
+#' THE DENOMINATOR CHANGES BETWEEN ROWS, and that is the point rather than an
+#' inconsistency. The first three rows are shares of the 161 excluded
+#' physicians; the Part B rows are shares of the NPI-linked subset that can
+#' reach a federal source at all; the directory rows are shares of the
+#' no-Part-B residual. Reading any `pct` without its `denominator` column will
+#' misstate the result, which is why both are always returned.
+#'
+#' `tier` encodes how strong the evidence is and must not be flattened:
+#'
+#' \describe{
+#'   \item{1}{Medicare Part B billing -- care actually delivered and billed.}
+#'   \item{2}{Medicare clinician directory -- enrolment or practice listing
+#'     only, covering later years, and NOT proof of patient-care volume.}
+#'   \item{3}{no federal observation in the sources examined. Note that this is
+#'     a statement about the sources, not a finding of inactivity.}
+#'   \item{`NA`}{a denominator or residual row, which carries no evidence of
+#'     its own.}
+#' }
+#'
 #' @param a A [survivor_falsification_artifact()].
-#' @return Tibble of `evidence`, `window`, `n`, `denominator`, `pct`,
-#'   `tier`, `strength`.
+#' @return A tibble with one row per evidence definition and columns
+#'   `evidence`, `window`, `n`, `denominator`, `pct`, `tier` and `strength`.
+#' @seealso [survivor_falsification_markdown()] to render it,
+#'   [survivor_falsification_statement()] for the headline in prose.
 #' @family survivor conditioning
 #' @concept validation
+#' @examples
+#' tbl <- survivor_falsification_table()
+#'
+#' # Tier-1 rows are billed care. These are the reportable falsification counts.
+#' tbl[!is.na(tbl$tier) & tbl$tier == 1L, c("evidence", "window", "n", "pct")]
+#'
+#' # Never sum across tiers: the directory rows have a different denominator
+#' # AND a weaker meaning.
+#' unique(tbl$denominator)
 #' @export
 survivor_falsification_table <- function(a = survivor_falsification_artifact()) {
   w <- function(x) paste(a$windows[[x]], collapse = "-")
@@ -144,10 +212,37 @@ survivor_falsification_table <- function(a = survivor_falsification_artifact()) 
 #' Three facts, no model: URPS-identified, excluded from the later roster, and
 #' observed billing Medicare Part B in every year of the validation window.
 #'
+#' @details
+#' This is the view to cite. It flattens the artifact to the quantities a
+#' manuscript actually reports, and adds two fields that exist to stop an
+#' over-claim being made from them:
+#'
+#' \describe{
+#'   \item{`exclusion_reason`}{every one of the excluded is dropped by the same
+#'     flag, so no finer per-provider reason can be reported. The roster does
+#'     not record one.}
+#'   \item{`directory_coverage`}{the clinician directory begins after the
+#'     validation window does, so it is silent on the early years and cannot
+#'     rescue them.}
+#' }
+#'
 #' @param a A [survivor_falsification_artifact()].
-#' @return List with the counts and their provenance.
+#' @return A named list: `n_persistent_billers`, `validation_years`,
+#'   `provider_years_erased`, `linkage_denominator`, `identity_universe`,
+#'   `excluded_total`, `excluded_without_npi`, `any_partb_window`,
+#'   `any_partb_frame`, `no_partb_frame`, `directory_only_sustained`,
+#'   `exclusion_reason`, `directory_coverage` and `source`.
+#' @seealso [survivor_falsification_statement()], which renders these counts as
+#'   a sentence so prose cannot drift from them.
 #' @family survivor conditioning
 #' @concept validation
+#' @examples
+#' rec <- survivor_falsification_record()
+#' rec$n_persistent_billers
+#' rec$provider_years_erased   # n_persistent_billers x length(validation_years)
+#'
+#' # The roster records no finer reason than the flag itself.
+#' rec$exclusion_reason
 #' @export
 survivor_falsification_record <- function(a = survivor_falsification_artifact()) {
   v <- a$windows$validation
@@ -177,10 +272,19 @@ survivor_falsification_record <- function(a = survivor_falsification_artifact())
 #' Generated from the artifact so that prose, table and figure cannot disagree
 #' about a number. Use this rather than retyping counts into documentation.
 #'
+#' @details
+#' Every number in the sentence is computed from the artifact at call time. The
+#' alternative -- typing the counts into a manuscript, a figure caption and a
+#' README -- creates three places for them to disagree, and the disagreement is
+#' invisible until a reader adds them up.
+#'
 #' @param a A [survivor_falsification_artifact()].
 #' @return A length-one character string.
+#' @seealso [survivor_falsification_record()] for the same counts as data.
 #' @family survivor conditioning
 #' @concept validation
+#' @examples
+#' survivor_falsification_statement()
 #' @export
 survivor_falsification_statement <- function(a = survivor_falsification_artifact()) {
   r <- survivor_falsification_record(a)
@@ -203,10 +307,19 @@ survivor_falsification_statement <- function(a = survivor_falsification_artifact
 #' the supplemental table can be tested against its source. A table checked into
 #' the repository is the easiest place for a number to go stale.
 #'
+#' @details
+#' Indentation in the `evidence` column marks a subdivision of the row above it
+#' and is converted to non-breaking spaces, because markdown collapses leading
+#' whitespace and the nesting is what tells a reader which denominator applies.
+#'
 #' @param a A [survivor_falsification_artifact()].
-#' @return A character vector of markdown lines.
+#' @return A character vector of markdown lines: a header, an alignment row,
+#'   then one row per evidence definition.
+#' @seealso [survivor_falsification_table()] for the same content as a tibble.
 #' @family survivor conditioning
 #' @concept validation
+#' @examples
+#' writeLines(head(survivor_falsification_markdown(), 4))
 #' @export
 survivor_falsification_markdown <- function(a = survivor_falsification_artifact()) {
   tbl <- survivor_falsification_table(a)
@@ -230,12 +343,49 @@ survivor_falsification_markdown <- function(a = survivor_falsification_artifact(
 #' separately in the package tests, so that this function stays honest about a
 #' rebuilt artifact instead of rejecting it for being new.
 #'
+#' @details
+#' Enforced, in order:
+#'
+#' \enumerate{
+#'   \item the identity universe splits into retained plus excluded;
+#'   \item the excluded denominator closes into NPI-linkable plus unlinkable;
+#'   \item every count in the table equals its counterpart in the record --
+#'     without this the guard would validate only the record's internal
+#'     arithmetic, and an edit to the table alone would pass silently, which a
+#'     tampering test caught on the first draft;
+#'   \item the no-Part-B residual partitions into the three directory classes;
+#'   \item the windows nest: all-six <= validation <= frame <= denominator;
+#'   \item Part B present plus absent equals the linkage denominator;
+#'   \item provider-years equal persistent billers times validation years;
+#'   \item the annual panel partitions into retained plus excluded, and the
+#'     persistent subgroup never exceeds the excluded group in any year;
+#'   \item tier-2 rows are never described in tier-1 language, and no directory
+#'     row is labelled tier 1.
+#' }
+#'
+#' The last check is textual on purpose. Merging enrolment into billing is a
+#' wording error before it is an arithmetic one, and by the time it is
+#' arithmetic it is already in a manuscript.
+#'
+#' What this deliberately does NOT check is the VALUES. Those are frozen in
+#' `tests/testthat/test-validation-survivor.R`, so a legitimately rebuilt
+#' artifact is not rejected merely for being new, while a changed count still
+#' fails the suite.
+#'
 #' @param tbl A [survivor_falsification_table()].
 #' @param rec A [survivor_falsification_record()].
 #' @param artifact A [survivor_falsification_artifact()].
-#' @return (Invisibly) TRUE.
+#' @return `TRUE`, invisibly. Called for the error it raises on failure.
+#' @seealso [survivor_falsification_table()], [survivor_falsification_record()].
 #' @family survivor conditioning
 #' @concept validation
+#' @examples
+#' assert_survivor_falsification()
+#'
+#' # A table edited to disagree with the record fails, which is the point.
+#' tampered <- survivor_falsification_table()
+#' tampered$n[tampered$evidence == "No Part B billing anywhere"] <- 30L
+#' try(assert_survivor_falsification(tbl = tampered))
 #' @export
 assert_survivor_falsification <- function(artifact = survivor_falsification_artifact(),
                                           tbl = survivor_falsification_table(artifact),

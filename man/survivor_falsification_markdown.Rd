@@ -10,14 +10,25 @@ survivor_falsification_markdown(a = survivor_falsification_artifact())
 \item{a}{A \code{\link[=survivor_falsification_artifact]{survivor_falsification_artifact()}}.}
 }
 \value{
-A character vector of markdown lines.
+A character vector of markdown lines: a header, an alignment row,
+then one row per evidence definition.
 }
 \description{
 Rendered here rather than in the plotting script so that a committed copy of
 the supplemental table can be tested against its source. A table checked into
 the repository is the easiest place for a number to go stale.
 }
+\details{
+Indentation in the \code{evidence} column marks a subdivision of the row above it
+and is converted to non-breaking spaces, because markdown collapses leading
+whitespace and the nesting is what tells a reader which denominator applies.
+}
+\examples{
+writeLines(head(survivor_falsification_markdown(), 4))
+}
 \seealso{
+\code{\link[=survivor_falsification_table]{survivor_falsification_table()}} for the same content as a tibble.
+
 Other survivor conditioning: 
 \code{\link{assert_survivor_falsification}()},
 \code{\link{survivor_falsification_artifact}()},

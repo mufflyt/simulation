@@ -10,8 +10,8 @@ survivor_falsification_table(a = survivor_falsification_artifact())
 \item{a}{A \code{\link[=survivor_falsification_artifact]{survivor_falsification_artifact()}}.}
 }
 \value{
-Tibble of \code{evidence}, \code{window}, \code{n}, \code{denominator}, \code{pct},
-\code{tier}, \code{strength}.
+A tibble with one row per evidence definition and columns
+\code{evidence}, \code{window}, \code{n}, \code{denominator}, \code{pct}, \code{tier} and \code{strength}.
 }
 \description{
 One row per evidence definition, each with its own denominator, window, and an
@@ -19,7 +19,40 @@ explicit strength label. Directory evidence is weaker than billing evidence
 and is labelled so; the two are never summed into a single active flag. All
 counts come from \code{\link[=survivor_falsification_artifact]{survivor_falsification_artifact()}}.
 }
+\details{
+THE DENOMINATOR CHANGES BETWEEN ROWS, and that is the point rather than an
+inconsistency. The first three rows are shares of the 161 excluded
+physicians; the Part B rows are shares of the NPI-linked subset that can
+reach a federal source at all; the directory rows are shares of the
+no-Part-B residual. Reading any \code{pct} without its \code{denominator} column will
+misstate the result, which is why both are always returned.
+
+\code{tier} encodes how strong the evidence is and must not be flattened:
+
+\describe{
+\item{1}{Medicare Part B billing -- care actually delivered and billed.}
+\item{2}{Medicare clinician directory -- enrolment or practice listing
+only, covering later years, and NOT proof of patient-care volume.}
+\item{3}{no federal observation in the sources examined. Note that this is
+a statement about the sources, not a finding of inactivity.}
+\item{\code{NA}}{a denominator or residual row, which carries no evidence of
+its own.}
+}
+}
+\examples{
+tbl <- survivor_falsification_table()
+
+# Tier-1 rows are billed care. These are the reportable falsification counts.
+tbl[!is.na(tbl$tier) & tbl$tier == 1L, c("evidence", "window", "n", "pct")]
+
+# Never sum across tiers: the directory rows have a different denominator
+# AND a weaker meaning.
+unique(tbl$denominator)
+}
 \seealso{
+\code{\link[=survivor_falsification_markdown]{survivor_falsification_markdown()}} to render it,
+\code{\link[=survivor_falsification_statement]{survivor_falsification_statement()}} for the headline in prose.
+
 Other survivor conditioning: 
 \code{\link{assert_survivor_falsification}()},
 \code{\link{survivor_falsification_artifact}()},
