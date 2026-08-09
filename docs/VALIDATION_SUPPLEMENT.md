@@ -30,22 +30,28 @@ ranges instead.
 
 ## S2. All ten configurations
 
+Primary specification: the permanent under-50 career-change process is omitted
+because its only estimate postdates the 2020 origin (Appendix S9).
+
 | Arm | Cohort | Entrants/yr | Attrition | % difference | Contained | Width |
 |---|---|---:|:--:|---:|:--:|---:|
-| 1 | derived | 55 | yes | −9.72 | no | 135.0 |
+| 1 | derived | 55 | yes | −7.58 | no | 129.1 |
 | 1 | derived | 55 | no | **−3.14** | **yes** | 145.0 |
-| 2 | derived | 32.67 | yes | −14.97 | no | 132.0 |
+| 2 | derived | 32.67 | yes | −12.63 | no | 143.0 |
 | 2 | derived | 32.67 | no | −8.27 | no | 129.0 |
-| 3 | synthetic | 55 | yes | −12.63 | no | 133.1 |
+| 3 | synthetic | 55 | yes | −11.18 | no | 142.1 |
 | 3 | synthetic | 55 | no | **−3.18** | **yes** | 138.0 |
-| 4 | synthetic | 32.67 | yes | −17.61 | no | 148.0 |
+| 4 | synthetic | 32.67 | yes | −16.23 | no | 139.0 |
 | 4 | synthetic | 32.67 | no | −8.27 | no | 139.1 |
-| 5 | derived | NRMP-derived | yes | −11.03 | no | 34.0 |
-| 5 | derived | NRMP-derived | no | −4.36 | no | 34.0 |
+| 5 | derived | 49.73 | yes | −8.81 | no | 46.0 |
+| 5 | derived | 49.73 | no | −4.36 | no | 34.0 |
+
+Arms 1 to 4 are the prespecified specifications. Arm 5 was added after the
+original four and is scored alongside them, not in place of them.
 
 Both arms containing the observation are definition-matched. Every paired arm
-improves by approximately six percentage points when the simulated quantity is
-made comparable to what the target counts.
+improves by four to eight percentage points when the simulated quantity is made
+comparable to what the target counts.
 
 "Definition-matched" means attrition was suspended **for the comparison only**.
 It does not mean the projection is better without retirement. Retirement is
@@ -88,17 +94,33 @@ property of the validation design.
 
 | Cutoff to target | Certification predictor | NRMP predictor |
 |---|---:|---:|
-| 2016 to 2019 | +17.63% | n/a |
-| 2017 to 2020 | +6.64% | +7.19% |
-| 2018 to 2021 | −2.54% | +3.22% |
-| 2019 to 2022 | −1.94% | +2.51% |
-| 2020 to 2023 | −8.35% | −2.53% |
+| 2016 to 2019 | +17.63% | +1.29% |
+| 2017 to 2020 | +6.64% | +3.84% |
+| 2018 to 2021 | −2.54% | +0.45% |
+| 2019 to 2022 | −1.94% | +0.19% |
+| 2020 to 2023 | −8.35% | −4.43% |
 
 The model moves from substantial over-prediction to under-prediction purely as a
-function of the historical window chosen. The NRMP-based predictor is more
-accurate throughout despite the certification-based one drawing on the same
-series the target is taken from, a second instance of definitional choice
-driving apparent performance.
+function of the historical window chosen. The NRMP-based predictor is closer in
+every window despite the certification-based one drawing on the same series the
+target is taken from, a second instance of definitional choice driving apparent
+performance.
+
+PROVENANCE NOTE. The NRMP column differs from earlier drafts of this table. That
+change has nothing to do with the career-change correction in Appendix S9. The
+NRMP entrant series was extended backwards from 2017-2020 to 2010-2020, and this
+table had not been regenerated since. The predictor is a mean over all reports
+published by the cutoff, so eleven years spanning the establishment ramp (30
+positions filled in 2010, against a plateau near 57 from 2015) give a lower rate
+than four years of the plateau alone: 49.73/yr rather than 58.0/yr at the 2020
+cutoff. The certification column is unchanged, and rolling-origin and
+leave-one-out results are unaffected because those artifacts were already
+regenerated against the extended series.
+
+More pre-cutoff evidence made this predictor's 2020 window worse, from −2.53% to
+−4.43%, and made the four earlier windows better. Restricting the series to the
+2015 plateau would score better and would be a window chosen with the answer in
+hand.
 
 ## S6. Entrant-model ablation
 
@@ -127,7 +149,9 @@ versions.
 
 | Claim | Artifact |
 |---|---|
-| target 1,306; ten arms; per-arm difference, containment, width | `artifacts/diagnostics/backtest_arm_table.csv` |
+| target 1,306; ten arms; per-arm difference, containment, width | `artifacts/backtest_2020_to_2023_summary.csv` |
+| parameter availability audit | `R/validation-parameter_provenance.R` |
+| career-change sensitivity | `artifacts/diagnostics/career_change_sensitivity.csv` |
 | 68% / 32% decomposition; +28.7 and +13.7 per year | `artifacts/diagnostics/entrant_regime_bias_decomposition.csv` * |
 | interval score, width, MAPE by forecast | `artifacts/diagnostics/interval_honesty_scorecard.csv` * |
 | leaky versus honest validation comparison | `artifacts/diagnostics/validation_comparison_summary.csv` * |
@@ -139,7 +163,8 @@ versions.
 | containment versus coverage rule | `R/validation-coverage_language.R` |
 
 Run configuration: 1,000 Monte Carlo iterations per arm, cutoff 2020, target
-2023, URPS contract v3.0.0, certifications through 2020 only.
+2023, URPS contract v3.0.0, certifications through 2020 only, permanent under-50
+career-change process omitted (Appendix S9).
 
 ## S8. Baseline cohort construction
 
@@ -170,7 +195,82 @@ after the cutoff can enter the fit. NRMP counts fellows at appointment while the
 certification series counts them several years later at certification; the two
 are offset in time by construction.
 
-## S9. What the evidence does not support
+## S9. Parameter provenance and the 2020 cutoff
+
+A forecast origin binds parameters, not only data. Every parameter reaching the
+back-test was audited against the 2020 cutoff.
+
+| Parameter | Basis | Source | Available by | In primary analysis |
+|---|---|---|---:|:--:|
+| Retirement hazard by age | published | HWSM Exhibit 17 (Florida physician survey 2012-2013), doc v5.19.20, May 2020; FutureDocs 2017 | 2020 | yes |
+| Retirement sex multiplier | published | HWSM Exhibit 17 | 2020 | yes |
+| Terminal age (90) | published | HWSM: 90 for physicians and dentists | 2020 | yes |
+| Career change under 50 (1.42%/yr) | published | Zarek et al, *Phys Ther* 2025;105:pzaf014 (CPS ASEC, Wolf and Lockard method) | 2025 | **no** |
+| Age at entry (34) | assumption | cliff `WC_ENTRY_AGE` | n/a | yes |
+| Backlog age at certification | assumption | practice-pathway cohort certified <= 2013 | n/a | yes |
+| Female share (0.55) | assumption | cohort construction | n/a | yes |
+
+The career-change hazard is the one parameter that fails the audit. It was in the
+back-test until this audit, and the existing leakage guard did not catch it: that
+guard audits contract series **reads**, and a hard-coded parameter never
+performs one. `assert_backtest_parameters_precede_cutoff()` now runs alongside
+`assert_no_leakage()` inside `run_backtest()` and fails closed on any published
+parameter in the primary path whose source postdates the cutoff.
+
+Omitting the parameter is not a claim that the hazard is zero. HWSM represents
+under-50 exit as temporary labour-force participation with re-entry, a different
+process this model does not implement, so no 2020-vintage value was available to
+substitute for a permanent separation hazard. Re-estimating one from pre-2020 CPS
+ASEC data would be a legitimate future refinement.
+
+Two clarifications on scope. The validation outcome is headcount, computed
+independently of the FTE columns, so the post-2020 FTE parameters in the same
+source (Dall 2021, 37.2 patient-care hours/week; Zarek 2025, 40 hours/week) do
+not enter this comparison. Separately, `backtest_entrant_estimate()` reports
+"modelled departures" using the 1.42% constant; that figure is documented as
+recorded for reporting only, does not enter the entrant estimate or the parameter
+draw, and was verified inert (every no-attrition arm is bit-identical whether the
+hazard is applied or not).
+
+## S10. Sensitivity: applying the post-cutoff career-change hazard
+
+The primary analysis omits the permanent under-50 career-change process. This
+appendix applies the 2025 estimate of 1.42%/yr to show what it would have done.
+It is reported as a sensitivity analysis and not as the primary result, because
+leakage is a property of the primary analysis: showing the effect is modest does
+not make a post-cutoff parameter admissible in a forecast claiming a 2020 origin.
+
+| Arm | Attrition | % difference, primary | % difference, 1.42% applied |
+|---|:--:|---:|---:|
+| 1 derived, 55 | yes | −7.58 | −9.72 |
+| 2 derived, 32.67 | yes | −12.63 | −14.97 |
+| 3 synthetic, 55 | yes | −11.18 | −12.63 |
+| 4 synthetic, 32.67 | yes | −16.23 | −17.61 |
+| 5 derived, 49.73 | yes | −8.81 | −11.03 |
+| all no-attrition arms | no | unchanged | unchanged |
+
+Every no-attrition arm is identical under both specifications, because both exit
+hazards are already zero there. That is what makes the contrast interpretable:
+the difference is attributable to the career-change process alone.
+
+| Quantity | Primary | 1.42% applied |
+|---|---:|---:|
+| Arm 1 projected 2023 | 1,207 | 1,179 |
+| Total discrepancy | 99 | 127 |
+| Definitional component | 58 (59%) | 86 (68%) |
+| Entrant-regime component | 41 (41%) | 41 (32%) |
+| Containment | 2/10 | 2/10 |
+| Interval score, attrition applied | 1,086.4 | 1,732.0 |
+| Interval score, definition-matched | 137.0 | 137.0 |
+
+Direction, ranking, and every qualitative conclusion are unchanged. Two
+quantities move: the definitional share of the discrepancy (59% versus 68%) and
+the interval score of the mismatch forecast, which under the post-cutoff
+specification is worse than the wide rolling-origin forecast rather than better.
+Rolling-origin, leave-one-out, and window analyses are unaffected in both
+specifications because they do not call the career microsimulation.
+
+## S11. What the evidence does not support
 
 - Not a validated forecast. No configuration is offered as calibrated.
 - Not a claim that behavioral parameters are well specified. They account for

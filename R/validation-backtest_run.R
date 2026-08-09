@@ -22,6 +22,40 @@
 # is three years, so the 2017-2020 appointment cohorts are precisely the people
 # who certify across the validation window -- and every one of those reports was
 # in print before the cutoff. No parameter is re-tuned after seeing 2023.
+
+# TEMPORAL PROVENANCE OF THE TWO EXIT PARAMETERS.
+#
+# "Forecast from a 2020 origin" binds PARAMETERS, not just data. Both exit
+# processes were audited against that claim and they do not have the same
+# standing:
+#
+#   * RETIREMENT_HAZARD_BY_AGE is anchored to HWSM Exhibit 17 (Florida physician
+#     survey 2012-2013, documentation v5.19.20, MAY 2020) and the FutureDocs
+#     curve (2017). Both precede the cutoff, so retirement runs UNCHANGED.
+#   * CAREER_CHANGE_HAZARD_UNDER_50 (1.42%/yr) is a CPS ASEC occupational-
+#     separation estimate published in Zarek et al., Phys Ther 2025;105:pzaf014.
+#     It did not exist in 2020. A 2020 analyst could not have used it, so it
+#     cannot appear in a forecast that claims that origin.
+#
+# ZERO HERE IS AN OMISSION, NOT AN ESTIMATE. It does not assert that no
+# urogynecologist under 50 left the specialty between 2021 and 2023. It records
+# that no contemporaneous estimate of a PERMANENT under-50 separation process
+# was available to parameterise one. HWSM represented under-50 exit as temporary
+# labour-force participation WITH re-entry -- a different process this model
+# does not implement -- so there was no 2020-vintage value to substitute. If a
+# pre-2020 CPS ASEC re-estimation is ever done, it belongs here.
+#
+# A sensitivity analysis is not a cure for this. Leakage is a property of the
+# primary analysis, so the primary analysis omits the parameter and the 2025
+# value is scored separately:
+#
+#   run_backtest(career_change_hazard = CAREER_CHANGE_HAZARD_UNDER_50)
+#
+# The PRODUCTION model is untouched: `run_supply_microsimulation()` still
+# applies CAREER_CHANGE_HAZARD_UNDER_50, because a forward projection made today
+# may legitimately use evidence published in 2025.
+BACKTEST_CAREER_CHANGE_HAZARD <- 0
+
 BACKTEST_ARMS <- tibble::tribble(
   ~arm, ~cohort,      ~entrants,   ~label,
   1L,   "derived",    "assumed",   "Derived cohort, entrants = 55 (shipped assumption)",
@@ -38,8 +72,13 @@ BACKTEST_ARMS <- tibble::tribble(
 #' @param cutoff_year Last year the model may see.
 #' @param target_year Final projection year.
 #' @param n_iterations Monte Carlo replicates.
-#' @param apply_attrition Apply retirement hazards. FALSE gives the
+#' @param apply_attrition Apply the exit processes. FALSE gives the
 #'   definition-matched comparison against a series that applies none.
+#' @param career_change_hazard Annual permanent separation hazard under age 50.
+#'   Defaults to [BACKTEST_CAREER_CHANGE_HAZARD], which is 0: the 1.42% estimate
+#'   postdates the 2020 origin, so the historical forecast OMITS the process
+#'   rather than asserting the hazard is zero. Pass
+#'   `CAREER_CHANGE_HAZARD_UNDER_50` for the sensitivity analysis.
 #' @param param_spec Optional [supply_parameter_spec()] built from PRE-CUTOFF
 #'   data only. Supplying it redraws the entrant rate each iteration so the
 #'   intervals carry forecast uncertainty. It does NOT move the point estimate.
@@ -54,6 +93,7 @@ run_backtest_arm <- function(cohort = c("derived", "synthetic"),
                              target_year = BACKTEST_TARGET_YEAR,
                              n_iterations = 1000L,
                              apply_attrition = TRUE,
+                             career_change_hazard = BACKTEST_CAREER_CHANGE_HAZARD,
                              param_spec = NULL,
                              seed = 20260802L) {
   cohort <- match.arg(cohort)
@@ -70,7 +110,7 @@ run_backtest_arm <- function(cohort = c("derived", "synthetic"),
   } else {
     RETIREMENT_HAZARD_BY_AGE * 0
   }
-  career_change <- if (isTRUE(apply_attrition)) CAREER_CHANGE_HAZARD_UNDER_50 else 0
+  career_change <- if (isTRUE(apply_attrition)) career_change_hazard else 0
 
   iters <- vector("list", n_iterations)
   for (it in seq_len(n_iterations)) {
@@ -116,6 +156,7 @@ run_backtest_arm <- function(cohort = c("derived", "synthetic"),
     settings = list(cohort = cohort, entrants_per_year = entrants_per_year,
                     cutoff_year = cutoff_year, target_year = target_year,
                     n_iterations = n_iterations, apply_attrition = apply_attrition,
+                    career_change_hazard = career_change,
                     n0 = n0, seed = seed,
                     parameter_uncertainty = !is.null(param_spec))
   )
@@ -158,6 +199,7 @@ score_backtest_arm <- function(arm, observed, label = "") {
     entrants_per_year = st$entrants_per_year,
     parameter_uncertainty = isTRUE(st$parameter_uncertainty),
     apply_attrition = st$apply_attrition,
+    career_change_hazard = st$career_change_hazard %||% NA_real_,
     n_iterations = st$n_iterations,
     baseline_year = cy,
     baseline_count = obs0,
@@ -184,6 +226,9 @@ score_backtest_arm <- function(arm, observed, label = "") {
 #' @param target_year Final projection year.
 #' @param n_iterations Monte Carlo replicates per arm.
 #' @param assumed_entrants The model's shipped entrant assumption.
+#' @param career_change_hazard Passed to [run_backtest_arm()]. Defaults to
+#'   [BACKTEST_CAREER_CHANGE_HAZARD] (0) so the primary historical back-test
+#'   uses no post-cutoff parameter.
 #' @param seed RNG seed.
 #' @param acknowledge_no_attrition Proceed despite the observed series applying
 #'   no attrition (recorded in every output).
@@ -197,6 +242,7 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
                          target_year = BACKTEST_TARGET_YEAR,
                          n_iterations = 1000L,
                          assumed_entrants = 55,
+                         career_change_hazard = BACKTEST_CAREER_CHANGE_HAZARD,
                          seed = 20260802L,
                          acknowledge_no_attrition = TRUE,
                          expected_target = 1306L) {
@@ -220,8 +266,11 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
           "already gross)."),
     est$gross_entrants, est$window[1], est$window[2], est$departures))
 
-  # 3. Assert no read touched the validation window.
+  # 3. Assert no read touched the validation window, and no PARAMETER postdates
+  #    it either. The second check exists because the first one passed for
+  #    months while a 2025 career-change estimate sat in the 2020 forecast.
   assert_no_leakage(cutoff_year)
+  assert_backtest_parameters_precede_cutoff(cutoff_year)
 
   # 4. Observed series for scoring -- read AFTER the leakage assertion, and
   #    never fed back into any parameter.
@@ -297,6 +346,7 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
         cohort = a$cohort, entrants_per_year = entrant_of(a$entrants),
         cutoff_year = cutoff_year, target_year = target_year,
         n_iterations = n_iterations, apply_attrition = att,
+        career_change_hazard = career_change_hazard,
         param_spec = arm_spec(entrant_of(a$entrants), series_of(a$entrants)),
         seed = seed + i
       )

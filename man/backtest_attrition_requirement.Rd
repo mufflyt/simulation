@@ -28,7 +28,9 @@ actually test.
 \seealso{
 Other backtest: 
 \code{\link{.series_through}()},
+\code{\link{BACKTEST_PARAMETER_PROVENANCE}},
 \code{\link{BACKTEST_TARGET_YEAR}},
+\code{\link{assert_backtest_parameters_precede_cutoff}()},
 \code{\link{assert_no_leakage}()},
 \code{\link{backtest_cohort_at}()},
 \code{\link{backtest_cohorts_through}()},

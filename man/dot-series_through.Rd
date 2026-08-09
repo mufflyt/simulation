@@ -28,7 +28,9 @@ the back-test functions call nothing else.
 }
 \seealso{
 Other backtest: 
+\code{\link{BACKTEST_PARAMETER_PROVENANCE}},
 \code{\link{BACKTEST_TARGET_YEAR}},
+\code{\link{assert_backtest_parameters_precede_cutoff}()},
 \code{\link{assert_no_leakage}()},
 \code{\link{backtest_attrition_requirement}()},
 \code{\link{backtest_cohort_at}()},

@@ -1,4 +1,4 @@
 "step","level_2023","delta","pct_of_total_miss","annualized_per_year"
-"shipped forecast (attrition ON, entrants=55)",1179,NA,NA,NA
-"+ fix definition error (attrition OFF on a cumulative stock)",1265,86,67.7165354330709,28.6666666666667
-"+ close entrant-regime residual (realized net entry > 55/yr)",1306,41,32.2834645669291,13.6666666666667
+"shipped forecast (attrition ON, entrants=55)",1207,NA,NA,NA
+"+ fix definition error (attrition OFF on a cumulative stock)",1265,58,58.5858585858586,19.3333333333333
+"+ close entrant-regime residual (realized net entry > 55/yr)",1306,41,41.4141414141414,13.6666666666667
