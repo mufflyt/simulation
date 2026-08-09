@@ -4,3 +4,8 @@
 external_data_root: "~/Dropbox (Personal)"
 swan_subdir: "workforce/Dall_model/data/SWAN"
 data_raw_subdir: "tyler/data-raw"
+
+# Shared CMS Medicare Part B by-Provider-and-Service DuckDB (the isochrones
+# external DB; a different root than external_data_root above). Machine override:
+# config/paths.local.yml or the MEDICARE_PARTB_DUCKDB env var.
+medicare_part_b_duckdb: "/Volumes/MufflySamsung/DuckDB/nber_my_duckdb.duckdb"

@@ -58,6 +58,18 @@ test_that("reader fails loudly on missing file and missing table", {
   expect_error(read_part_b_claims("57288", duckdb_path = path), "absent", ignore.case = TRUE)
 })
 
+test_that("default_part_b_duckdb resolves via env / canonical config, never a hardcode", {
+  withr::local_envvar(MEDICARE_PARTB_DUCKDB = "/tmp/override.duckdb")
+  expect_equal(default_part_b_duckdb(), "/tmp/override.duckdb")   # env wins
+  # honours the canonical config key when set (no dependence on cwd config files)
+  withr::local_envvar(MEDICARE_PARTB_DUCKDB = "")
+  local_mocked_bindings(.paths_config = function() list(medicare_part_b_duckdb = "/data/x.duckdb"))
+  expect_match(default_part_b_duckdb(), "x\\.duckdb$")
+  # and fails loudly (no silent hardcoded /Volumes fallback) when neither is set
+  local_mocked_bindings(.paths_config = function() list())
+  expect_error(default_part_b_duckdb(), "MEDICARE_PARTB_DUCKDB|paths", ignore.case = TRUE)
+})
+
 test_that("reader + canonical aggregator produce per-service utilization with all three measures", {
   path <- .pb_fixture(.full_rows()); on.exit(unlink(path), add = TRUE)
   xwalk  <- urps_medicare_service_crosswalk()
