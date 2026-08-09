@@ -1,0 +1,6 @@
+"stage","n","rate","OR.Estimate","lo.Estimate","hi.Estimate","p.Pr...z.."
+"H0_reached",842,0.77,1.01,0.83,1.23,0.908
+"H1_appropriate_g_reached",645,0.94,0.73,0.46,1.15,0.173
+"H2_eligible_g_appropriate",609,0.87,0.62,0.47,0.81,0
+"H3_obtainable_g_eligible",382,0.71,0.92,0.72,1.16,0.473
+"ALLCAUSE_appt_obtained",645,0.44,0.76,0.63,0.92,0.005
