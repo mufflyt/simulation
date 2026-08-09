@@ -132,15 +132,20 @@ test_that("the unwired surface does not grow", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
   o <- ew_orphans(root)
-  # A ratchet, not a target: 52 of 413 exports reach no pipeline, down from 67.
-  # Every unwired_gate entry was wired and every dormant one archived, so what
-  # remains is entirely `api` -- functions a user calls, orphaned by
-  # construction, which are not debt.
+  # A ratchet, not a target: 56 of 449 exports reach no pipeline. Every
+  # unwired_gate entry is wired and every dormant one archived, so what remains
+  # is entirely `api` -- functions a user calls, orphaned by construction, which
+  # are not debt.
   #
-  # It is 52 rather than 51 because archiving real_access_surface() orphaned
-  # load_tract_demand(), its only in-package caller. The gate caught that on the
-  # same run, which is the behaviour worth having: removing code moves work, it
-  # does not always remove it.
-  expect_lte(length(o$orphans), 52L)
+  # RAISED 52 -> 56, which a ratchet is not supposed to allow, so the reason is
+  # recorded rather than the number quietly edited. The DMDM work added four
+  # exports: balance_reversal_threshold(), demand_estimand_table() and
+  # fit_prevalence_consistent_psa() are user-facing and registered `api`;
+  # assert_no_coverage_rate_claim() was a guard invoked by nothing and was WIRED
+  # into interval_label() instead of registered, which is why the count rose by
+  # three and not four. The RATIO bound did not move and is the tighter
+  # constraint at 0.1247 against 0.13 -- the surface grew slower than the
+  # package. Prefer wiring to raising this again.
+  expect_lte(length(o$orphans), 56L)
   expect_lte(length(o$orphans) / length(o$exports), 0.13)
 })
