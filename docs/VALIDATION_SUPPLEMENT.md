@@ -141,7 +141,36 @@ versions.
 Run configuration: 1,000 Monte Carlo iterations per arm, cutoff 2020, target
 2023, URPS contract v3.0.0, certifications through 2020 only.
 
-## S8. What the evidence does not support
+## S8. Baseline cohort construction
+
+The derived cohort reconstructs individual physicians from the observed count of
+certifications in each certification year through the cutoff, so the resulting
+age structure inherits the actual shape of the certification record. Age at
+certification is drawn from one of two distributions:
+
+| Cohort | Definition | Age at certification |
+|---|---|---|
+| Backlog | certification year <= 2013, the first URPS certification year | Normal(45, 8) |
+| Fellowship | certification year > 2013 | Normal(34, 2.5) |
+
+The split exists because the first certification year admitted established
+practitioners through a practice pathway rather than fellowship graduates, so
+treating them as 34-year-old entrants would understate the age of roughly the
+first third of the workforce and delay their modeled retirements by a decade.
+Current age is the drawn age at certification plus elapsed years, clamped to
+[34, 89]. Sex is assigned with a 0.55 female share.
+
+The synthetic cohort draws every physician's age from a single Normal(52, 9)
+distribution and matches only the aggregate headcount. It carries no
+certification-year structure, so it cannot represent the backlog at all.
+
+NRMP entrant series are filtered by report publication date rather than
+appointment year (`available_by = cutoff_year`), so no match report published
+after the cutoff can enter the fit. NRMP counts fellows at appointment while the
+certification series counts them several years later at certification; the two
+are offset in time by construction.
+
+## S9. What the evidence does not support
 
 - Not a validated forecast. No configuration is offered as calibrated.
 - Not a claim that behavioral parameters are well specified. They account for
