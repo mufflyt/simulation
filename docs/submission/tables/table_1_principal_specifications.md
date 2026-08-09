@@ -2,18 +2,18 @@
 
 Each specification forecasts the 2023 URPS physician count from information available at the 2020 cutoff. Attrition = Yes removes physicians as they retire; the comparison series is a cumulative certification count that removes no one.
 
-| Specification                                                                             | Entrants per year | Attrition | Predicted median | 95% prediction interval | Observed | Difference | Difference (%) | Interval contains |
-| --- | ---: | --- | ---: | --- | ---: | ---: | ---: | --- |
-| 1. Derived cohort, entrants = 55 (shipped assumption)                                     |              55.0 | Yes       |            1,207 | 1,142 to 1,271          |    1,306 |        -99 |           -7.6 | No                |
-| 1. Derived cohort, entrants = 55 (shipped assumption) [no-attrition, definition-matched]  |              55.0 | No        |            1,265 | 1,186 to 1,331          |    1,306 |        -41 |           -3.1 | Yes               |
-| 2. Derived cohort, entrants from pre-2021 data                                            |              32.7 | Yes       |            1,141 | 1,071 to 1,214          |    1,306 |       -165 |          -12.6 | No                |
-| 2. Derived cohort, entrants from pre-2021 data [no-attrition, definition-matched]         |              32.7 | No        |            1,198 | 1,135 to 1,264          |    1,306 |       -108 |           -8.3 | No                |
-| 3. Synthetic rnorm(52, 9), entrants = 55                                                  |              55.0 | Yes       |            1,160 | 1,088 to 1,230          |    1,306 |       -146 |          -11.2 | No                |
-| 3. Synthetic rnorm(52, 9), entrants = 55 [no-attrition, definition-matched]               |              55.0 | No        |            1,264 | 1,196 to 1,334          |    1,306 |        -42 |           -3.2 | Yes               |
-| 4. Synthetic rnorm(52, 9), entrants from pre-2021 data                                    |              32.7 | Yes       |            1,094 | 1,026 to 1,165          |    1,306 |       -212 |          -16.2 | No                |
-| 4. Synthetic rnorm(52, 9), entrants from pre-2021 data [no-attrition, definition-matched] |              32.7 | No        |            1,198 | 1,124 to 1,263          |    1,306 |       -108 |           -8.3 | No                |
-| 5. Derived cohort, entrants from pre-cutoff NRMP match                                    |              49.7 | Yes       |            1,191 | 1,168 to 1,214          |    1,306 |       -115 |           -8.8 | No                |
-| 5. Derived cohort, entrants from pre-cutoff NRMP match [no-attrition, definition-matched] |              49.7 | No        |            1,249 | 1,231 to 1,265          |    1,306 |        -57 |           -4.4 | No                |
+|Specification                                                                             | Entrants per year|Attrition | Predicted median|95% prediction interval | Observed| Difference| Difference (%)|Interval contains |
+|:-----------------------------------------------------------------------------------------|-----------------:|:---------|----------------:|:-----------------------|--------:|----------:|--------------:|:-----------------|
+|1. Derived cohort, entrants = 55 (shipped assumption)                                     |              55.0|Yes       |            1,207|1,142 to 1,271          |    1,306|        -99|           -7.6|No                |
+|1. Derived cohort, entrants = 55 (shipped assumption) [no-attrition, definition-matched]  |              55.0|No        |            1,265|1,186 to 1,331          |    1,306|        -41|           -3.1|Yes               |
+|2. Derived cohort, entrants from pre-2021 data                                            |              32.7|Yes       |            1,141|1,071 to 1,214          |    1,306|       -165|          -12.6|No                |
+|2. Derived cohort, entrants from pre-2021 data [no-attrition, definition-matched]         |              32.7|No        |            1,198|1,135 to 1,264          |    1,306|       -108|           -8.3|No                |
+|3. Synthetic rnorm(52, 9), entrants = 55                                                  |              55.0|Yes       |            1,160|1,088 to 1,230          |    1,306|       -146|          -11.2|No                |
+|3. Synthetic rnorm(52, 9), entrants = 55 [no-attrition, definition-matched]               |              55.0|No        |            1,264|1,196 to 1,334          |    1,306|        -42|           -3.2|Yes               |
+|4. Synthetic rnorm(52, 9), entrants from pre-2021 data                                    |              32.7|Yes       |            1,094|1,026 to 1,165          |    1,306|       -212|          -16.2|No                |
+|4. Synthetic rnorm(52, 9), entrants from pre-2021 data [no-attrition, definition-matched] |              32.7|No        |            1,198|1,124 to 1,263          |    1,306|       -108|           -8.3|No                |
+|5. Derived cohort, entrants from pre-cutoff NRMP match                                    |              49.7|Yes       |            1,191|1,168 to 1,214          |    1,306|       -115|           -8.8|No                |
+|5. Derived cohort, entrants from pre-cutoff NRMP match [no-attrition, definition-matched] |              49.7|No        |            1,249|1,231 to 1,265          |    1,306|        -57|           -4.4|No                |
 
 ---
 

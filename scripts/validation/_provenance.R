@@ -223,6 +223,18 @@ compare_validation_runs <- function(dir_a, dir_b, tolerance = 0) {
   invisible(ok)
 }
 
+# THE READER LIVES BESIDE THE WRITER. begin_validation_run() emits MANIFEST.txt
+# as `key<2+ spaces>value` above; this parses it back. They are in one file on
+# purpose -- the format had briefly acquired two readers, this general one and
+# an ad-hoc `sub("^run_id\\s+", ...)` inside read_validation_run(), so a change
+# to the emitted layout would have had to be found in two places by whoever
+# made it.
+parse_manifest <- function(lines) {
+  kv <- regmatches(lines, regexec("^([A-Za-z_0-9]+)\\s{2,}(.*)$", lines))
+  kv <- Filter(function(m) length(m) == 3L, kv)
+  stats::setNames(vapply(kv, `[`, character(1), 3L), vapply(kv, `[`, character(1), 2L))
+}
+
 # ---- Enforcement, not documentation ----------------------------------------
 #
 # A manuscript-reporting path must be unable to read a run that did not complete
@@ -244,6 +256,8 @@ read_validation_run <- function(dir, allow_exploratory = FALSE) {
   out <- lapply(tabs, utils::read.csv)
   names(out) <- sub("[.]csv$", "", basename(tabs))
   attr(out, "manifest") <- man
-  attr(out, "run_id") <- sub("^run_id\\s+", "", grep("^run_id", man, value = TRUE)[1])
+  # Single-bracket: a manifest with no run_id line yields NA rather than an
+  # out-of-bounds error, matching what the old regex did on no match.
+  attr(out, "run_id") <- unname(parse_manifest(man)["run_id"])
   out
 }

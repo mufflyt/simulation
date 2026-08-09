@@ -45,14 +45,16 @@ scan_disqualifying <- function(text, where) {
 # read a declaration of eligibility as evidence of ineligibility. The fix is
 # not a narrower regex. A structured field must be read as structure: parse the
 # manifest, assert `exploratory` is present and FALSE, and scan only the values.
-parse_manifest <- function(lines) {
-  kv <- regmatches(lines, regexec("^([A-Za-z_0-9]+)\\s{2,}(.*)$", lines))
-  kv <- Filter(function(m) length(m) == 3L, kv)
-  stats::setNames(vapply(kv, `[`, character(1), 3L), vapply(kv, `[`, character(1), 2L))
-}
+#
+# parse_manifest() itself lives in scripts/validation/_provenance.R, beside the
+# code that WRITES the format. It was defined here first, which briefly gave one
+# file format two readers.
 
-manuscript_sha256 <- function(f) tryCatch(digest::digest(file = f, algo = "sha256"),
-                                          error = function(e) NA_character_)
+# Per-file SHA-256 comes from hash_inputs() in scripts/validation/_provenance.R.
+# It already takes a named vector of paths, returns a named vector of digests,
+# and records a missing file as NA rather than failing -- which is exactly this
+# need. A second local hasher would be a second place for "what counts as the
+# identity of an input" to drift from the manifests it has to agree with.
 
 # ---- Two kinds of source, two gates ----------------------------------------
 #
@@ -92,8 +94,7 @@ gate_run <- function(run_dir) {
   files <- list.files(run_dir, "[.]csv$", full.names = TRUE)
   list(ok = length(problems) == 0, problems = problems, tables = tabs,
        run_id = attr(tabs, "run_id"),
-       hashes = stats::setNames(vapply(files, manuscript_sha256, character(1)),
-                                basename(files)))
+       hashes = hash_inputs(stats::setNames(files, basename(files))))
 }
 
 # A PINNED FLAT ARTIFACT is a CSV outside the run-directory scheme that carries
@@ -129,6 +130,6 @@ gate_pinned <- function(csv, manifest_json) {
   list(ok = length(problems) == 0, problems = problems,
        tables = list(summary = d),
        run_id = sprintf("pinned:%s seed=%s n=%s", man$generated_by, man$seed, man$n_iterations),
-       hashes = stats::setNames(c(manuscript_sha256(csv), manuscript_sha256(manifest_json)),
-                                c(basename(csv), basename(manifest_json))))
+       hashes = hash_inputs(stats::setNames(c(csv, manifest_json),
+                                            c(basename(csv), basename(manifest_json)))))
 }

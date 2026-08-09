@@ -4,24 +4,24 @@ Panel A: episodes by rendering provider category and service. Panel B: pooled ac
 
 **Panel A.** by service
 
-| Service         | Provider category  | Episodes | Share (%) |
-| --- | --- | ---: | ---: |
-| pessary_care    | physician          |    8,163 |     84.93 |
-| pessary_care    | APP                |    1,225 |     12.75 |
-| pessary_care    | missing            |      217 |      2.26 |
-| pessary_care    | other_nonphysician |        6 |      0.06 |
-| sling_procedure | physician          |    4,426 |     96.05 |
-| sling_procedure | missing            |      180 |      3.91 |
-| sling_procedure | other_nonphysician |        2 |      0.04 |
+|Service         |Provider category  | Episodes| Share (%)|
+|:---------------|:------------------|--------:|---------:|
+|pessary_care    |physician          |    8,163|     84.93|
+|pessary_care    |APP                |    1,225|     12.75|
+|pessary_care    |missing            |      217|      2.26|
+|pessary_care    |other_nonphysician |        6|      0.06|
+|sling_procedure |physician          |    4,426|     96.05|
+|sling_procedure |missing            |      180|      3.91|
+|sling_procedure |other_nonphysician |        2|      0.04|
 
 **Panel B.** pooled
 
-| Provider category  | Episodes | Work RVU | Episode-weighted (%) | Work-RVU-weighted (%) |
-| --- | ---: | ---: | ---: | ---: |
-| physician          |   12,589 | 61,644.7 |                88.54 |                 94.59 |
-| APP                |    1,225 |  1,090.2 |                 8.62 |                  1.67 |
-| missing            |      397 |  2,404.7 |                 2.79 |                  3.69 |
-| other_nonphysician |        8 |     29.9 |                 0.06 |                  0.05 |
+|Provider category  | Episodes| Work RVU| Episode-weighted (%)| Work-RVU-weighted (%)|
+|:------------------|--------:|--------:|--------------------:|---------------------:|
+|physician          |   12,589| 61,644.7|                88.54|                 94.59|
+|APP                |    1,225|  1,090.2|                 8.62|                  1.67|
+|missing            |      397|  2,404.7|                 2.79|                  3.69|
+|other_nonphysician |        8|     29.9|                 0.06|                  0.05|
 
 ---
 

@@ -4,20 +4,20 @@ Panel A: stability of the median, interval bounds and interval width across inde
 
 **Panel A.** convergence
 
-| Iterations | Median across seeds | Median range (%) | Lower bound range (%) | Upper bound range (%) | Mean interval width | Width range (%) | Criterion |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-|        250 |             2,074.7 |             0.16 |                  0.62 |                  1.36 |               227.4 |           14.91 | FAIL      |
-|        500 |             2,076.0 |             0.16 |                  0.52 |                  1.01 |               228.9 |            8.82 | FAIL      |
-|      1,000 |             2,074.8 |             0.14 |                  0.36 |                  0.72 |               226.6 |            3.80 | PASS      |
-|      2,000 |             2,072.1 |             0.12 |                  0.14 |                  0.30 |               227.8 |            2.54 | PASS      |
+| Iterations| Median across seeds| Median range (%)| Lower bound range (%)| Upper bound range (%)| Mean interval width| Width range (%)|Criterion |
+|----------:|-------------------:|----------------:|---------------------:|---------------------:|-------------------:|---------------:|:---------|
+|        250|             2,074.7|             0.16|                  0.62|                  1.36|               227.4|           14.91|FAIL      |
+|        500|             2,076.0|             0.16|                  0.52|                  1.01|               228.9|            8.82|FAIL      |
+|      1,000|             2,074.8|             0.14|                  0.36|                  0.72|               226.6|            3.80|PASS      |
+|      2,000|             2,072.1|             0.12|                  0.14|                  0.30|               227.8|            2.54|PASS      |
 
 **Panel B.** retirement sensitivity
 
-| Hazard uncertainty | Coefficient of variation |  Median | 95% interval   | Width | Width inflation (%) | Median shift (%) |
-| --- | ---: | ---: | --- | ---: | ---: | ---: |
-| fixed              |                     0.00 | 2,073.1 | 1,964 to 2,193 | 229.4 |                 0.0 |             0.00 |
-| moderate           |                     0.15 | 2,075.9 | 1,932 to 2,213 | 281.3 |                22.7 |             0.13 |
-| high               |                     0.30 | 2,084.0 | 1,880 to 2,253 | 372.1 |                62.3 |             0.52 |
+|Hazard uncertainty | Coefficient of variation|  Median|95% interval   | Width| Width inflation (%)| Median shift (%)|
+|:------------------|------------------------:|-------:|:--------------|-----:|-------------------:|----------------:|
+|fixed              |                     0.00| 2,073.1|1,964 to 2,193 | 229.4|                 0.0|             0.00|
+|moderate           |                     0.15| 2,075.9|1,932 to 2,213 | 281.3|                22.7|             0.13|
+|high               |                     0.30| 2,084.0|1,880 to 2,253 | 372.1|                62.3|             0.52|
 
 ---
 

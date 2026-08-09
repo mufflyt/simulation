@@ -4,23 +4,23 @@
 
 **Panel A.** service bounds
 
-| Service              | Capture (%) | Lower bound (%) | Upper bound (%) | Observed-cell share (%) | Tier          |
-| --- | ---: | ---: | ---: | ---: | --- |
-| bladder_instillation |        71.3 |            10.0 |            46.3 |                    15.7 | B (secondary) |
-| botox_bladder        |        68.4 |            31.4 |            67.4 |                    49.1 | B (secondary) |
-| cystoscopy           |        96.8 |             5.3 |             9.0 |                     5.5 | B (secondary) |
-| pessary_care         |        49.4 |            18.3 |            82.6 |                    51.2 | A (primary)   |
-| prolapse_procedure   |        40.2 |            26.9 |            91.1 |                    75.1 | A (primary)   |
-| ptns                 |        61.8 |            14.3 |            65.4 |                    29.3 | B (secondary) |
-| sling_procedure      |        54.3 |            36.0 |            86.5 |                    72.7 | A (primary)   |
-| urodynamics          |        89.7 |            19.3 |            30.5 |                    21.8 | B (secondary) |
+|Service              | Capture (%)| Lower bound (%)| Upper bound (%)| Observed-cell share (%)|Tier          |
+|:--------------------|-----------:|---------------:|---------------:|-----------------------:|:-------------|
+|bladder_instillation |        71.3|            10.0|            46.3|                    15.7|B (secondary) |
+|botox_bladder        |        68.4|            31.4|            67.4|                    49.1|B (secondary) |
+|cystoscopy           |        96.8|             5.3|             9.0|                     5.5|B (secondary) |
+|pessary_care         |        49.4|            18.3|            82.6|                    51.2|A (primary)   |
+|prolapse_procedure   |        40.2|            26.9|            91.1|                    75.1|A (primary)   |
+|ptns                 |        61.8|            14.3|            65.4|                    29.3|B (secondary) |
+|sling_procedure      |        54.3|            36.0|            86.5|                    72.7|A (primary)   |
+|urodynamics          |        89.7|            19.3|            30.5|                    21.8|B (secondary) |
 
 **Panel B.** wrvu aggregates
 
-| Aggregate                         | Services | Capture (%) | Lower bound (%) | Upper bound (%) | Observed-cell share (%) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Tier A (primary, female-specific) |        3 |        44.3 |            28.8 |            89.5 |                    73.4 |
-| Tier B (secondary, + sex-neutral) |        8 |        75.2 |            18.6 |            46.1 |                    25.6 |
+|Aggregate                         | Services| Capture (%)| Lower bound (%)| Upper bound (%)| Observed-cell share (%)|
+|:---------------------------------|--------:|-----------:|---------------:|---------------:|-----------------------:|
+|Tier A (primary, female-specific) |        3|        44.3|            28.8|            89.5|                    73.4|
+|Tier B (secondary, + sex-neutral) |        8|        75.2|            18.6|            46.1|                    25.6|
 
 ---
 
