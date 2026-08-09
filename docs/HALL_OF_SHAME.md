@@ -81,6 +81,29 @@ line made the wiring invisible to the detector that motivated the wiring.
 **Caught by:** the gate, on the first attempt. The one entry in this file where
 the machinery worked exactly as designed against its own author.
 
+**Sequel, 2026-08-09 — the workaround was the wrong fix.** Moving the call to
+its own line satisfied the detector without addressing why the detector was
+blind, and the blind spot bit a different session within the day. A concurrent
+commit exported `isochrone_source_dir()` and called it twice — as the default
+argument of `verify_canonical_isochrones()` and `assert_canonical_isochrones()`.
+Both call sites sit **on those functions' definition lines**, so the whole-line
+drop deleted them, and the gate reported an orphan that two exported functions
+were calling. `main` went red on a false positive.
+
+The detector now **trims the `name <- function` head instead of dropping the
+line**, which keeps both properties: the defined name is gone so it cannot mark
+itself used, and the argument list survives so a default-argument call counts.
+Orphans fell 57 → 56 with no unregistered entries and no registry row becoming
+stale, so `isochrone_source_dir` was the only function the bug had been hiding.
+
+The lesson is not about R parsing. **A guard that produces a false positive
+teaches people to edit around it**, and each accommodation makes the underlying
+defect harder to see — the first workaround is what let the second failure look
+like ordinary bookkeeping. The obvious repair here was to register the function
+as an orphan and bump the ratchet; that would have been two lines, would have
+gone green, and would have written a false statement into the registry while
+leaving the blind spot for the next caller.
+
 ### 4. A gitignore rule that swallowed source, silently — for the second time
 
 **2026-08-08, mine.** `*/manuscript/`, written for simulation *output* folders,
@@ -248,11 +271,15 @@ Counting the entries by what caught them:
 
 | caught by | n |
 |---|---:|
-| a guard doing its job | 2 |
+| a guard doing its job | 3 |
 | running the thing and reading the output | 5 |
 | a human reviewing | 4 |
 | accident — noticed a number that looked off | 3 |
 | still open | 2 |
+
+One of those three is the orphan detector catching a false positive of its own
+making (#3's sequel), which counts as the machinery working only in the sense
+that it failed loudly enough to be investigated rather than accommodated.
 
 Only two were caught by automation. The single most productive habit in this
 repository is not a gate: it is **rendering the number next to its source and
