@@ -68,20 +68,23 @@ RUN <- begin_validation_run(
                 coverage_of_withheld_wrvu = "22.5%",
                 interpretation = "UPPER BOUND on physician attribution (incident-to)",
                 urps_vs_generalist = "NOT identifiable: no provider identifier in archive"),
-  # WHY THIS IS EXPLORATORY, stated precisely, because an earlier version of
-  # this comment got it wrong. It is NOT exploratory because it fails to resolve
-  # the URPS/generalist split -- it never claimed to, and an analysis is not
-  # disqualified for being narrower than an adjacent question. The provider-mix
-  # result is a legitimate empirical object in its own right.
+  # PROMOTED TO AUTHORITATIVE. This was exploratory while its provenance was not
+  # reproducible: the source lived in a session scratchpad, the specialty and
+  # episode mappings were constants inside this script, an undeclared /tmp
+  # intermediate fed the matrix comparison, and the derivation had never been
+  # through A/B. All four are fixed, and an exploratory A/B pair
+  # (20260808T192755 / 20260808T192802) reproduced all six tables at zero
+  # tolerance, which is the evidence that promotion is warranted.
   #
-  # It is exploratory because its PROVENANCE is not yet reproducible: the source
-  # archive lives outside the repository, its episode definitions are documented
-  # only in a data dictionary that is not version-controlled here, and the
-  # derivation has not been through the A/B evidence chain. Fix those three and
-  # this becomes citable as a claims-attributed provider-mix analysis -- while
-  # the FTE triangulation in 03 stays non-citable for the separate reason that
-  # its parameters are unresolved. Two different evidentiary objects.
-  require_clean = FALSE, exploratory = TRUE,
+  # SCOPE IS UNCHANGED BY PROMOTION. This remains claims-attributed provider mix
+  # for sling and pessary episodes, 2008-2016. It does not establish
+  # URPS-versus-generalist attribution, actual hands-on APP delivery for
+  # incident-to-billable services, or the delegation matrix as a whole. Being
+  # narrower than an adjacent question was never what made it exploratory.
+  #
+  # The FTE triangulation in 03 stays non-citable for a different reason: its
+  # parameters are unresolved, not its provenance.
+  require_clean = TRUE, exploratory = FALSE,
   # The dictionary defines the episode types this script maps to modelled
   # services. It is an ANALYTIC input: change it and the crosswalk's meaning
   # changes without the R script changing, so it belongs in the run identity.
