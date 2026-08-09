@@ -1,0 +1,8 @@
+"Step","n"
+"Raw canonical roster rows","1,500"
+"  less rows with no NPI","-6"
+"  less rows failing the NPI check digit","0"
+"  less duplicate NPI rows","0"
+"  less rows with no certification year","0"
+"  less certified after 2024","-2"
+"Final 2024 linkage roster (distinct NPIs)","1,492"

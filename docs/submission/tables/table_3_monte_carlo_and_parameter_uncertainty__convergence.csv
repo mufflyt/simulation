@@ -1,0 +1,5 @@
+"Iterations","Median across seeds","Median range (%)","Lower bound range (%)","Upper bound range (%)","Mean interval width","Width range (%)","Criterion"
+"250","2,074.7","0.16","0.62","1.36","227.4","14.91","FAIL"
+"500","2,076.0","0.16","0.52","1.01","228.9","8.82","FAIL"
+"1,000","2,074.8","0.14","0.36","0.72","226.6","3.80","PASS"
+"2,000","2,072.1","0.12","0.14","0.30","227.8","2.54","PASS"

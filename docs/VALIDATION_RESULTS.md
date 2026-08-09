@@ -59,6 +59,8 @@ it does **not** retroactively confer provenance on them.
 | `01_temporal_validation.R` | **Reproduced** | `20260808T154509_temporal_validation_1e24ac8` | `20260808T154514_…` |
 | `02_monte_carlo_convergence.R` | **Reproduced** | `20260808T133320_mc_convergence_1e24ac8` | `20260808T140238_…` |
 | `04_delegation_claims_evidence.R` | **Reproduced** | `20260808T193315_delegation_claims_evidence_c471388` | `20260808T193322_…` |
+| `05_urps_share_partial_identification.R` | **Reproduced** | `20260808T215524_urps_share_partial_identification_94e961a` | `20260808T215644_…` |
+| `06_roster_reconciliation.R` | **Reproduced** | `20260808T215440_roster_reconciliation_94e961a` | `20260808T215444_…` |
 | `03_utilization_fte_triangulation.R` | **Exploratory** | — | — |
 
 All reproduced pairs matched every table at **zero tolerance**, from independent
@@ -67,6 +69,13 @@ worktrees pinned to a single commit, each run passing `read_validation_run()`.
 `03` is exploratory for a different reason from the others: not provenance, but
 **unresolved parameters** — FPMRS-specific productivity and the URPS share among
 physician-delivered care. Provenance work cannot fix that.
+
+Analysis `05` has since **bounded** the second of those without identifying it.
+That does not promote `03`. A `[28.8%, 89.5%]` interval is a real answer to a
+real question and still an unusable point input, so the reason `03` cannot be
+cited is unchanged — only better characterised. Propagating an interval that
+wide through `03` would produce a triangulation whose width is an artifact of
+CMS suppression rather than a statement about physician workload.
 
 Sections 5–6 below record what the earlier provisional analysis produced; the
 authoritative runs reproduce those values.
@@ -380,11 +389,33 @@ byte-identical across the change, confirming the bounds do not depend on the
 back-test module. That is a check, not an assumption: the earlier runs remain
 on disk under their own model SHA.
 
-**Scientific status: input definition now reconciled and frozen; one residual
-ascertainment gap quantified.** The two statuses are reported separately on
+**Scientific status: manuscript-citable, as partial-identification evidence.**
+Promoted on 2026-08-08. The two statuses are still reported separately on
 purpose. "Reproduced at zero tolerance" says the same arithmetic ran twice; it
 says nothing about whether the right population entered the numerator, and
-those must not be allowed to read as one claim.
+those must not be allowed to read as one claim — the promotion below rests on
+the second question having been answered, not on the first.
+
+The precise label, and it is narrower than "citable":
+
+> **Manuscript-citable partial-identification evidence for the 2024 Medicare
+> fee-for-service URPS share among physician-attributed workload, computed from
+> a frozen and reconciled linkage roster.**
+
+**What changed to earn it.** The blocker was never the width of the bounds; it
+was that `U`, the numerator of every bound, was drawn from a roster whose own
+size was contested three ways (1,500 / 1,100 / 1,552). Analysis `06` resolved
+that by comparing identifiers rather than adjudicating counts, assigned every
+row of both data files exactly one mutually exclusive disposition, and froze
+the result at a pinned hash that `05` now asserts on every run. The scientific
+input is defined; the computation over it was already reproduced.
+
+**What the promotion does not license.** It does not convert
+`[28.8%, 89.5%]` into a point estimate, and it does not make the sling result a
+statement about the all-payer national parameter. The value of this analysis is
+constraint and falsification, not estimation. The permitted sentence in
+*What may be said, exactly* below is unchanged by the promotion and remains the
+only form in which the sling finding may be stated.
 
 Specification frozen in `docs/PRESPEC_URPS_SHARE.md` at `faf72dc`, before any
 roster-linked quantity was computed. Implementation at `82de574`, roster
@@ -426,7 +457,7 @@ physician work RVU.
 | `sling_procedure` | 54.3% | **36.0%** | 86.5% | 72.7% | 30.5% |
 | `prolapse_procedure` | 40.2% | 26.9% | 91.1% | 75.1% | 30.5% |
 | `pessary_care` | 49.4% | 18.3% | 82.6% | 51.2% | 37.3% |
-| **wRVU-weighted** | 44.3% | **28.8%** | **89.6%** | 73.4% | — |
+| **wRVU-weighted** | 44.3% | **28.8%** | **89.5%** | 73.4% | — |
 
 ### What may be said, exactly
 
@@ -446,7 +477,7 @@ and are not constrained by this evidence.
 
 ### What the width teaches
 
-`[28.8%, 89.6%]` is the answer to a real question and a useless model input.
+`[28.8%, 89.5%]` is the answer to a real question and a useless model input.
 CMS suppression prevents this dataset from identifying
 $P_{\mathrm{URPS}\mid\mathrm{phys}}$ tightly enough to plug a point estimate
 into `03`; 44.3% capture on the primary codes leaves most volume unattributed.
@@ -477,6 +508,21 @@ The E/M component — 45.6% of physician work RVU — remains unidentified. The 
 carries no diagnosis field, so `99213` cannot be restricted to urogynaecologic
 care, and no share was computed against a 179.8M-service all-specialty
 denominator.
+
+### Manuscript placement
+
+Fixed at promotion, so the result cannot migrate to a more prominent claim than
+the evidence supports simply because someone later finds the table:
+
+| location | content |
+|---|---|
+| Results | one sentence: claims-based partial identification constrained the assumed URPS share for selected services, sling in particular |
+| Limitations / sensitivity | the service-specific bounds and the Tier A `[28.8%, 89.5%]` aggregate, **with the 44.3% capture stated beside them** |
+| Supplement | the full service-level table (all eight codes, both tiers) and the 1,500 → 1,492 reconciliation waterfall |
+
+Capture travels with the interval everywhere it appears. An interval quoted
+without it reads as an estimate of a national quantity; quoted with it, it reads
+as what it is — a constraint derived from 44.3% of the relevant volume.
 
 ## What none of this establishes
 

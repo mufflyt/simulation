@@ -58,6 +58,15 @@ processed_data/
 */dppm_25_year_test/
 */manuscript/
 */swan_validation/
+
+# ...but scripts/manuscript/ is SOURCE, not a simulation output folder, and
+# `*/manuscript/` swallowed it silently -- `git status` simply did not mention
+# the two new files. Same failure as the `*_projections*` case documented
+# above: a pattern written for output directories reaching a path that had not
+# been invented yet. Whitelisted narrowly rather than by narrowing the rule,
+# because whatever `*/manuscript/` was written to exclude still exists.
+!scripts/manuscript/
+!scripts/manuscript/*.R
 */workforce_analysis_results*/
 */workforce*_fixed/
 
@@ -100,6 +109,17 @@ outputs/
 !artifacts/frozen_*/*.parquet
 !artifacts/diagnostics/
 !artifacts/diagnostics/*.csv
+
+# Generated manuscript tables. These ARE the paper's numbers, so they are the
+# last files in the repository that should be untracked: a reviewer question
+# ("where did Table 5 come from?") is answered by TABLE_INDEX.csv naming the
+# run and the input hashes, and that answer only survives if the index is in
+# version control. They are build products of scripts/manuscript/build_tables.R
+# and must never be hand-edited -- the diff on a rebuild is the check.
+!docs/submission/tables/
+!docs/submission/tables/*.csv
+!docs/submission/tables/*.md
+
 !figures/backtest_*.png
 !figures/medicare_sling_workload_index.png
 !figures/readme_supply_demand_trajectory.png
