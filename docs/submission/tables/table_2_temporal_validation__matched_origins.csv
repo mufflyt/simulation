@@ -1,0 +1,5 @@
+"Origin","Observed","RO absolute error (%)","RO interval width","RO contains","RO interval score","LOO absolute error (%)","LOO interval width","LOO contains","LOO interval score","Post-origin windows used by LOO"
+2017,"1,099","9.20","3,185","Yes","3,185","0.06","438","Yes","438",5
+2018,"1,180","7.25","1,172","Yes","1,172","2.72","478","Yes","478",4
+2019,"1,234","5.25","818","Yes","818","2.94","499","Yes","499",3
+2020,"1,306","7.84","687","Yes","687","6.78","508","Yes","508",2
