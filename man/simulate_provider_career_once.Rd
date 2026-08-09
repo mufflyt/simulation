@@ -68,7 +68,7 @@ applies; NA disables it.}
 \item{placement_shares}{Optional tibble of \code{geo} and \code{share} enabling entrant
 placement and mid-career migration.}
 
-\item{p_active_coef}{Optional logistic coefficients for \code{\link[=urps_p_active]{urps_p_active()}},
+\item{p_active_coef}{Optional logistic coefficients for \code{\link[=supply_p_active]{supply_p_active()}},
 overriding \code{URPS_P_ACTIVE_COEF}. Supplying them switches clinical FTE onto
 the P(active) formulation.}
 

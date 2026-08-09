@@ -179,26 +179,59 @@ divergence to preserve.
 | `zero_access_share` | `R/geography-spatial_access_e2sfca.R` | Byte-identical, including the `stopifnot`, the `is.finite(sw)` guard and the `NA_real_` return. |
 | `weighted_mean_all` | `R/geography-spatial_access_e2sfca.R` | Byte-identical; six lines. |
 | `calculate_rural_metro_comparison` | `R/reporting-workforce_statistics.R` | Identical but for one private helper's name (see *Equivalent* above). |
+| `fingerprint_object` | `R/core-repro_provenance.R` | Byte-identical. |
+| `fingerprint_files` | `R/core-repro_provenance.R` | Byte-identical. |
+
+**The last two arrived while this document was being written.** `mufflyaccess`
+promoted both in `0c1d5b1` ("promote standardize_state_name + fingerprint
+hashers") on 2026-08-09, *after* the third pass had enumerated the intersection
+— and the gate caught them on its first run, by name, within the hour. A
+same-day upstream promotion turning a local helper into a duplicate is the
+precise case a one-off audit cannot cover and this registry can.
+
+Worth watching from the same upstream batch: `222ac4c` promoted `canon_npi()`.
+It canonicalises NPI *format* and does **not** perform the Luhn check over the
+`80840` prefix that `scripts/validation/06_roster_reconciliation.R` implements,
+so the two are complementary rather than duplicates today. If a check digit is
+ever added upstream, the local validator becomes a duplicate — and being in a
+script rather than `R/`, it would be invisible to this sweep.
 
 Both spatial ones sit in the file already annotated as a `twostep` port, and
 both are `twostep` exports as well as `mufflyaccess` ones — so the likely history
 is a port from `twostep` before `mufflyaccess` re-exported them, which nobody
 revisited.
 
-### Same name, different quantity — the dangerous class
+### Same name, different quantity — RESOLVED 2026-08-09
 
-The sweep matches on name, and these matched. They are **not** copies, and that
-is the problem: a reader who sees a `mufflyaccess` name here will reasonably
-assume contract parity, and there is none.
+The sweep matches on name, and these matched. They were **not** copies, which
+was the problem: a reader seeing a `mufflyaccess` name here would reasonably
+assume contract parity, and there was none.
 
-| function | `mufflyaccess` | here |
-|---|---|---|
-| `urps_p_active` | `(age, sex)`; logistic on age from the LFP parameter table. | `(age, sex, years_certified, scenario_id, coef, registry)`; coerces and recycles all inputs to a common length, validates `sex`, and admits a scenario registry. A **superset**, and `years_certified` means it is not the same function of the same arguments. |
-| `urps_survival_curve` | 13 lines. | 27 lines: adds `pathway` (ABOG/ABU), sex-keyed coefficient selection, `scale_shift` and `entry_age`. |
+| was | `mufflyaccess` | here | now |
+|---|---|---|---|
+| `urps_p_active` | `(age, sex)`; logistic on age from the LFP parameter table. | `(age, sex, years_certified, scenario_id, coef, registry)`; coerces and recycles all inputs to a common length, validates `sex`, admits a scenario registry. A **superset**, and `years_certified` means it is not the same function of the same arguments. | **`supply_p_active()`** |
+| `urps_survival_curve` | 13 lines. | 27 lines: adds `pathway` (ABOG/ABU), sex-keyed coefficient selection, `scale_shift` and `entry_age`; returns a tibble. | **`supply_survival_curve()`** |
 
-Neither should be deleted. Both need what `ssot_coverage_report()` already does
-for other quantities — a recorded row saying local-or-SSOT **and why** — plus,
-ideally, a name that does not promise contract parity it does not deliver.
+**Renamed, not documented.** Adding a `ssot_coverage_report()` row under the old
+names would have recorded the collision while leaving the misleading API promise
+in place — permission for the defect to persist rather than a fix. The
+`supply_` prefix is this module's own family convention (`R/supply-*.R`) and
+drops the `urps_` prefix that belongs to the SSOT contract, so the collision
+disappears from the intersection rather than being annotated inside it.
+
+Both were renamed together. Renaming one would have preserved exactly the
+ambiguity the audit found.
+
+**No compatibility wrapper.** `urps_p_active()` was exported but every caller is
+inside this package; `urps_survival_curve()` was neither exported nor called
+anywhere; and no sibling repository calls either. A deprecation shim would have
+kept the misleading cross-package name alive for the length of its own
+deprecation window, buying nothing.
+
+Each carries a `@section Relationship to ...` block stating that it is related
+to the contract function and **intentionally not contract-compatible** — the
+`haversine_km_vec()` pattern: different name, explicit provenance, documented
+intentional differences, and no claim that either implements the other.
 
 ### Shared with `isochrones`
 
@@ -322,9 +355,9 @@ The siblings are separate repositories, absent from CI and from
    reverted the last attempt, these are the three with nothing to lose. Copy
    `isochrones`'s `haversine_km` for the house style: delegate, and leave a
    comment recording what changed and why it does not matter.
-6. **Rename or record `urps_p_active` and `urps_survival_curve`.** Carrying a
-   `mufflyaccess` name for a function with a different signature is worse than
-   carrying a different name, because it promises a parity that does not exist.
+6. ~~**Rename or record `urps_p_active` and `urps_survival_curve`.**~~ **Done
+   2026-08-09** — renamed to `supply_p_active()` and `supply_survival_curve()`,
+   no wrapper, no SSOT exception. See *Same name, different quantity* above.
 7. **Open the four obstetric-exposure collisions** and classify them, so the
    *Matched but not yet compared* section can be emptied.
 8. **Compare `calibration-parameter_uncertainty.R` against

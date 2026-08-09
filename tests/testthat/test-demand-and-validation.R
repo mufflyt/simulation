@@ -172,7 +172,7 @@ test_that("the local fallback still rejects scalar hazard multipliers", {
 })
 
 test_that("the local fallback carries the SSOT retirement-shift contract ids", {
-  # Regression guard for the scenario-id drift: urps_p_active()/p_active_by_age()
+  # Regression guard for the scenario-id drift: supply_p_active()/p_active_by_age()
   # fall back to this registry when mufflyaccess is absent (e.g. on CI), so it
   # must answer the SSOT ids `retire_2yr_later`/`retire_2yr_earlier` — not older
   # local names — or the age-axis shift silently resolves to 0.

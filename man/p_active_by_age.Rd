@@ -18,17 +18,17 @@ p_active_by_age(
 \item{years_certified_fn}{A function of \code{age} returning years certified.
 Default assumes entry at age 33 (\code{function(a) pmax(a - 33, 0)}).}
 
-\item{scenario_id}{Passed to \code{\link[=urps_p_active]{urps_p_active()}}.}
+\item{scenario_id}{Passed to \code{\link[=supply_p_active]{supply_p_active()}}.}
 
-\item{coef}{Passed to \code{\link[=urps_p_active]{urps_p_active()}}.}
+\item{coef}{Passed to \code{\link[=supply_p_active]{supply_p_active()}}.}
 
-\item{registry}{Passed to \code{\link[=urps_p_active]{urps_p_active()}}.}
+\item{registry}{Passed to \code{\link[=supply_p_active]{supply_p_active()}}.}
 }
 \value{
 A tibble with columns \code{age}, \code{sex}, \code{years_certified}, \code{p_active}.
 }
 \description{
-Convenience wrapper that calls \code{\link[=urps_p_active]{urps_p_active()}} over a grid of ages and
+Convenience wrapper that calls \code{\link[=supply_p_active]{supply_p_active()}} over a grid of ages and
 returns a tibble ready for plotting or tabular reporting.
 }
 \examples{
@@ -36,7 +36,7 @@ p_active_by_age(ages = 40:45)
 }
 \seealso{
 Other urps flows: 
-\code{\link{urps_p_active}()}
+\code{\link{supply_p_active}()}
 }
 \concept{supply}
 \concept{urps flows}

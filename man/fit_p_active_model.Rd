@@ -28,13 +28,13 @@ than using the pre-calibrated \link{URPS_P_ACTIVE_COEF} defaults.
 }
 \details{
 The fitted coefficient list is compatible with the \code{coef} argument of
-\code{\link[=urps_p_active]{urps_p_active()}}.
+\code{\link[=supply_p_active]{supply_p_active()}}.
 }
 \examples{
 \dontrun{
 abog_df <- read.csv("data-raw/abog_recert_longitudinal.csv")
 fitted  <- fit_p_active_model(abog_df)
-urps_p_active(65, "female", 32, coef = fitted)
+supply_p_active(65, "female", 32, coef = fitted)
 }
 }
 \keyword{internal}

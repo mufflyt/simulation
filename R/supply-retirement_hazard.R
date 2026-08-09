@@ -90,8 +90,16 @@ urps_weibull_exit_probs <- function(ages, sex, pathway = "ABOG",
 #' @param entry_age Age at which to condition (default 30).
 #' @return Tibble with columns `age`, `sex`, `pathway`, `scale_shift`,
 #'   `p_active`.
+#'
+#' @section Relationship to `mufflyaccess::urps_survival_curve()`:
+#' Related, and **intentionally not contract-compatible**. The contract version
+#' is thirteen lines; this one adds `pathway` (ABOG/ABU), sex-keyed
+#' coefficients, `scale_shift` and `entry_age`, and returns a tibble rather than
+#' a vector. Renamed from `urps_survival_curve()` on 2026-08-09 for that reason
+#' — see the corresponding note on [supply_p_active()].
+#'
 #' @keywords internal
-urps_survival_curve <- function(ages = 30:85, sex = "Female",
+supply_survival_curve <- function(ages = 30:85, sex = "Female",
                                  pathway = "ABOG", scale_shift = 0,
                                  entry_age = 30L) {
   key <- if (identical(pathway, "ABU")) {

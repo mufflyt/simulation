@@ -54,10 +54,10 @@
 
 # ---- Constants ---------------------------------------------------------------
 
-#' Logistic regression coefficients for urps_p_active()
+#' Logistic regression coefficients for supply_p_active()
 #'
 #' A named list of calibrated coefficients. Pass a custom list to
-#' [urps_p_active()] when ABOG recertification data have been fitted with
+#' [supply_p_active()] when ABOG recertification data have been fitted with
 #' [fit_p_active_model()].
 #'
 #' @keywords internal
@@ -85,7 +85,7 @@ URPS_P_ACTIVE_COEF <- list(
 
   scen <- registry[[scenario_id]]
   if (is.null(scen)) {
-    warning("urps_p_active: unknown scenario_id '", scenario_id,
+    warning("supply_p_active: unknown scenario_id '", scenario_id,
             "'; retirement_shift_years treated as 0.", call. = FALSE)
     return(0L)
   }
@@ -127,6 +127,20 @@ URPS_P_ACTIVE_COEF <- list(
 #'   (default) the function calls [supply_scenario_registry()] once per call.
 #' @return Numeric vector of probabilities in \[0, 1\], one per provider.
 #'   Returns 0 for ages ≥ `MICROSIM_TERMINAL_AGE` and for ages < 18.
+#' @section Relationship to `mufflyaccess::urps_p_active()`:
+#' Related, and **intentionally not contract-compatible**. The contract version
+#' takes `(age, sex)` and evaluates the LFP logistic on age alone. This one
+#' additionally conditions on `years_certified` and on a scenario registry, so
+#' it is not the same function of the same arguments and neither implements the
+#' other's contract.
+#'
+#' It was called `urps_p_active()` until 2026-08-09, which made the two look
+#' interchangeable across packages when they never were. The name now carries
+#' the `supply_` family prefix used by the rest of this module rather than the
+#' `urps_` prefix that belongs to the SSOT contract. Recorded here rather than
+#' in `ssot_coverage_report()`: documenting a collision under the misleading
+#' name would have preserved the API promise it was the problem.
+#'
 #' @seealso [departure_hazard()], [shift_retirement_schedule()],
 #'   [participation_fte()], [URPS_P_ACTIVE_COEF], [fit_p_active_model()]
 #' @family urps flows
@@ -135,14 +149,14 @@ URPS_P_ACTIVE_COEF <- list(
 #'
 #' @examples
 #' # Single provider: male, age 45, 12 years certified, status quo
-#' urps_p_active(45, "male", 12)
+#' supply_p_active(45, "male", 12)
 #'
 #' # Vectorised: compare female providers at key career stages
-#' urps_p_active(c(35, 50, 65, 75), "female", c(2, 17, 32, 42))
+#' supply_p_active(c(35, 50, 65, 75), "female", c(2, 17, 32, 42))
 #'
 #' # Scenario: retiring 2 years later raises P(active) at age 65
-#' urps_p_active(65, "male", 32, scenario_id = "retire_2yr_later")
-urps_p_active <- function(age,
+#' supply_p_active(65, "male", 32, scenario_id = "retire_2yr_later")
+supply_p_active <- function(age,
                            sex             = "female",
                            years_certified = 10,
                            scenario_id     = NULL,
@@ -162,14 +176,14 @@ urps_p_active <- function(age,
   # ---- Input validation -----------------------------------------------------
   bad_sex <- !sex %in% c("male", "female")
   if (any(bad_sex)) {
-    stop("urps_p_active: sex must be 'male' or 'female'. Found: ",
+    stop("supply_p_active: sex must be 'male' or 'female'. Found: ",
          paste(unique(sex[bad_sex]), collapse = ", "), call. = FALSE)
   }
   if (any(!is.na(years_certified) & years_certified < 0)) {
-    stop("urps_p_active: years_certified must be non-negative.", call. = FALSE)
+    stop("supply_p_active: years_certified must be non-negative.", call. = FALSE)
   }
   if (any(!is.na(age) & (age < 18 | age > 100))) {
-    warning("urps_p_active: age(s) outside [18, 100] detected; returning 0.",
+    warning("supply_p_active: age(s) outside [18, 100] detected; returning 0.",
             call. = FALSE)
   }
 
@@ -204,7 +218,7 @@ urps_p_active <- function(age,
 #' one whose size reflects the estimated fraction of providers who are actually
 #' practising. Each provider is retained with probability
 #' P(active | age, sex, years_certified) and dropped otherwise — a Bernoulli
-#' thinning whose expectation equals the point estimate from [urps_p_active()].
+#' thinning whose expectation equals the point estimate from [supply_p_active()].
 #'
 #' Use this BEFORE passing the roster to [run_supply_microsimulation()] via
 #' `thin_by_p_active = TRUE`, or call it directly when you want a deterministic
@@ -214,7 +228,7 @@ urps_p_active <- function(age,
 #'   and optionally `sex` (defaults to `"female"`) and `years_certified`
 #'   (defaults to `pmax(age - MICROSIM_AGE_AT_CERT, 0)` when absent).
 #' @param coef Named list of logistic coefficients; see [URPS_P_ACTIVE_COEF].
-#' @param scenario_id Passed to [urps_p_active()].
+#' @param scenario_id Passed to [supply_p_active()].
 #' @param stochastic Logical. When `TRUE` (default) each row is retained by a
 #'   Bernoulli draw against P(active). When `FALSE` the function returns a
 #'   weighted version of `agents` with a new column `p_active` and does NOT
@@ -234,7 +248,7 @@ thin_roster_by_p_active <- function(agents,
   yrs <- if ("years_certified" %in% names(agents)) as.numeric(agents$years_certified) else
     pmax(age - MICROSIM_AGE_AT_CERT, 0)
 
-  p <- urps_p_active(age, sex, yrs,
+  p <- supply_p_active(age, sex, yrs,
                      scenario_id = scenario_id,
                      coef        = coef)
 
@@ -259,7 +273,7 @@ thin_roster_by_p_active <- function(agents,
 #' than using the pre-calibrated [URPS_P_ACTIVE_COEF] defaults.
 #'
 #' The fitted coefficient list is compatible with the `coef` argument of
-#' [urps_p_active()].
+#' [supply_p_active()].
 #'
 #' @param data A data frame with at least:
 #'   \describe{
@@ -276,7 +290,7 @@ thin_roster_by_p_active <- function(agents,
 #' \dontrun{
 #' abog_df <- read.csv("data-raw/abog_recert_longitudinal.csv")
 #' fitted  <- fit_p_active_model(abog_df)
-#' urps_p_active(65, "female", 32, coef = fitted)
+#' supply_p_active(65, "female", 32, coef = fitted)
 #' }
 #' @keywords internal
 fit_p_active_model <- function(data, weights = NULL) {
@@ -316,15 +330,15 @@ fit_p_active_model <- function(data, weights = NULL) {
 
 #' Active-probability table by age and sex for a given scenario
 #'
-#' Convenience wrapper that calls [urps_p_active()] over a grid of ages and
+#' Convenience wrapper that calls [supply_p_active()] over a grid of ages and
 #' returns a tibble ready for plotting or tabular reporting.
 #'
 #' @param ages Integer or numeric vector of ages to evaluate. Default: 30–85.
 #' @param years_certified_fn A function of `age` returning years certified.
 #'   Default assumes entry at age 33 (`function(a) pmax(a - 33, 0)`).
-#' @param scenario_id Passed to [urps_p_active()].
-#' @param coef Passed to [urps_p_active()].
-#' @param registry Passed to [urps_p_active()].
+#' @param scenario_id Passed to [supply_p_active()].
+#' @param coef Passed to [supply_p_active()].
+#' @param registry Passed to [supply_p_active()].
 #' @return A tibble with columns `age`, `sex`, `years_certified`, `p_active`.
 #' @examples
 #' p_active_by_age(ages = 40:45)
@@ -339,7 +353,7 @@ p_active_by_age <- function(ages              = 30:85,
   grid <- expand.grid(age = ages, sex = c("male", "female"),
                       stringsAsFactors = FALSE)
   grid$years_certified <- years_certified_fn(grid$age)
-  grid$p_active <- urps_p_active(
+  grid$p_active <- supply_p_active(
     age             = grid$age,
     sex             = grid$sex,
     years_certified = grid$years_certified,
