@@ -25,7 +25,7 @@ run_backtest(
 \item{assumed_entrants}{The model's shipped entrant assumption.}
 
 \item{career_change_hazard}{Passed to \code{\link[=run_backtest_arm]{run_backtest_arm()}}. Defaults to
-\link{BACKTEST_CAREER_CHANGE_HAZARD} (0) so the primary historical back-test
+\code{BACKTEST_CAREER_CHANGE_HAZARD} (0) so the primary historical back-test
 uses no post-cutoff parameter.}
 
 \item{seed}{RNG seed.}
