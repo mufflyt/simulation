@@ -135,3 +135,6 @@ data-raw/brfss/*.xpt
 # Validation run directories: evidence is local and regenerable from the
 # manifest; committing generated CSVs would create a second thing to drift.
 artifacts/validation/
+# Archived bundles are durable local evidence, self-verifying via SHA256SUMS.
+# The tarball is the object to preserve off-repo; it does not belong on main.
+artifacts/validation_archive/
