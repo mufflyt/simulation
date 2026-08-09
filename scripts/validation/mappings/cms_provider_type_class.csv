@@ -1,0 +1,54 @@
+# Rndrng_Prvdr_Type -> provider class, for the CMS Medicare Physician & Other
+# Practitioners by-Provider-and-Service file (data year 2024).
+#
+# WHY THIS IS A FILE AND NOT A REGEX. "Is a certified nurse midwife an APP?" and
+# "is an Ambulatory Surgical Center a rendering clinician?" are scientific
+# choices that move the denominator of the URPS share. A choice buried in code
+# is a choice nobody reviews. Same reasoning as cms_specialty_class.csv.
+#
+# CLASSES
+#   physician      An individual physician of any specialty. CMS has NO
+#                  urogynecology / FPMRS type, so URPS subspecialists appear
+#                  here pooled with generalists -- exactly as they are pooled
+#                  under carrier specialty code 16 in the CADR archive. The
+#                  URPS split therefore comes from the roster NPI join, never
+#                  from this column.
+#   APP            Advanced practice clinician billing under their own NPI.
+#   facility       A non-individual entity. Not a rendering clinician at all.
+#
+# "Undefined Physician type" is CMS's bucket for an enrolled physician whose
+# specialty is unclassified. It is a physician by the label's own terms and is
+# classified as one; a roster-matched NPI landing here is still counted URPS,
+# because the roster is the authority on the individual.
+#
+# The domain is the provider types observed on the 22 procedural basket codes
+# in the 2024 release. An unseen type must STOP the run rather than fall
+# through to a default -- a refresh introducing "Female Pelvic Medicine and
+# Reconstructive Surgery" would otherwise be silently swept into `physician`
+# and the whole design point missed.
+cms_provider_type,provider_class
+Urology,physician
+Obstetrics & Gynecology,physician
+Ambulatory Surgical Center,facility
+Nurse Practitioner,APP
+Physician Assistant,APP
+Undefined Physician type,physician
+General Surgery,physician
+Internal Medicine,physician
+Gynecological Oncology,physician
+Colorectal Surgery (Proctology),physician
+Certified Nurse Midwife,APP
+Family Practice,physician
+Certified Clinical Nurse Specialist,APP
+Osteopathic Manipulative Medicine,physician
+Surgical Oncology,physician
+Pediatric Medicine,physician
+Gastroenterology,physician
+Physical Medicine and Rehabilitation,physician
+Endocrinology,physician
+Radiation Oncology,physician
+Geriatric Medicine,physician
+Neurology,physician
+Thoracic Surgery,physician
+Cardiology,physician
+General Practice,physician
