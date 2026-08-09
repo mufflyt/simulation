@@ -39,4 +39,9 @@ backtest:
   compare:
     - urps_headcount
     - urps_state_distribution
-    - sling_procedure_volume
+    # Primary historical PROCEDURE comparator. POP (not sling): a national
+    # all-payer HCUP 2016-2018 estimate exists and 2017 aligns with the fit
+    # window, whereas the national sling comparator is dated and the sling data
+    # we own directly are Medicare-FFS (population-limited). Sling stays a
+    # calibration anchor and a secondary back-test diagnostic.
+    - prolapse_procedure_volume

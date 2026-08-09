@@ -85,14 +85,23 @@ calibrate_lifecourse_demand <- function(service_volumes, observed, base_year = 2
 #' @param observed_target Tibble `category`, `observed` at `target_year`.
 #' @param fit_through_year,target_year Back-test window.
 #' @param map Service-to-anchor-category map.
+#' @param compare_categories Optional character vector naming the categories that
+#'   define the PRIMARY back-test score. When `NULL` (default) every comparable
+#'   category is primary (unchanged behaviour). When supplied, the summary MAPE
+#'   is computed only over these categories; the others are retained in
+#'   `by_category` as secondary diagnostics (`primary_backtest = FALSE`). Errors
+#'   if none of the requested categories are comparable, so an empty configured
+#'   set fails loudly rather than silently scoring against everything.
 #' @return List: `by_category` (`category`, `predicted`, `observed`, `ratio`,
-#'   `abs_pct_error`) and `summary` (`mape`, `n`, `target_year`).
+#'   `abs_pct_error`, `primary_backtest`) and `summary` (`mape`, `n`,
+#'   `target_year`, `primary_categories`). The MAPE is over the primary set only.
 #' @family demand lifecourse
 #' @concept calibration
 #' @export
 backtest_lifecourse <- function(service_volumes, observed_fit, observed_target,
                                 fit_through_year = 2017L, target_year = 2023L,
-                                map = LIFECOURSE_ANCHOR_MAP) {
+                                map = LIFECOURSE_ANCHOR_MAP,
+                                compare_categories = NULL) {
   fit_pred <- lifecourse_anchor_predictions(service_volumes, fit_through_year, map)
   scalars  <- fit_calibration_scalars(fit_pred, observed_fit)
 
@@ -111,15 +120,34 @@ backtest_lifecourse <- function(service_volumes, observed_fit, observed_target,
     ) %>%
     dplyr::select("category", "predicted", "observed", "ratio", "abs_pct_error")
 
+  # Primary vs secondary. NULL => every comparable category is primary (the
+  # historical behaviour). A configured set that intersects nothing comparable is
+  # an error, never a silent all-category score.
+  if (is.null(compare_categories)) {
+    by_cat$primary_backtest <- TRUE
+  } else {
+    by_cat$primary_backtest <- by_cat$category %in% compare_categories
+    if (!any(by_cat$primary_backtest)) {
+      stop(sprintf(paste(
+        "backtest_lifecourse(): none of the configured back-test categories (%s)",
+        "are comparable here (available: %s). Refusing to score against an empty",
+        "set."),
+        paste(compare_categories, collapse = ", "),
+        paste(by_cat$category, collapse = ", ")), call. = FALSE)
+    }
+  }
+
+  prim <- by_cat[by_cat$primary_backtest, , drop = FALSE]
   list(
     by_category = by_cat,
     summary = tibble::tibble(
       target_year = target_year,
-      n = nrow(by_cat),
-      # NA (not a NaN "score") when no category is comparable, so an empty
-      # back-test does not read as a normal result.
-      mape = if (any(is.finite(by_cat$abs_pct_error)))
-        mean(by_cat$abs_pct_error, na.rm = TRUE) else NA_real_
+      n = nrow(prim),
+      # NA (not a NaN "score") when no primary category is comparable, so an
+      # empty back-test does not read as a normal result.
+      mape = if (any(is.finite(prim$abs_pct_error)))
+        mean(prim$abs_pct_error, na.rm = TRUE) else NA_real_,
+      primary_categories = paste(prim$category, collapse = ",")
     )
   )
 }

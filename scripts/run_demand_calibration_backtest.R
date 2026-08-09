@@ -21,8 +21,14 @@
 #
 # Writes:
 #   artifacts/demand_calibration_scalars.csv       (category, predicted, observed, scalar)
-#   artifacts/demand_backtest_by_category.csv      (per-category predicted vs observed)
-#   artifacts/demand_backtest_summary.csv          (target_year, n, mape, anchors_source)
+#   artifacts/demand_backtest_by_category.csv      (per-category predicted vs observed,
+#                                                   with primary_backtest = TRUE/FALSE)
+#   artifacts/demand_backtest_summary.csv          (target_year, n, mape, primary_categories,
+#                                                   anchors_source) -- MAPE is over the
+#                                                   PRIMARY set only (config backtest$compare)
+#
+# CALIBRATION uses every available demand anchor; the PRIMARY historical back-test
+# score is driven only by config$backtest$compare (currently POP, not sling).
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -56,6 +62,22 @@ ILLUSTRATIVE_ANCHORS <- data.frame(
   category = ANCHOR_CATEGORIES,
   observed = c(3.6e6, 1.0e5, 1.0e5),
   stringsAsFactors = FALSE)
+
+# Calibration and the primary historical back-test are DISTINCT concepts.
+# Calibration fits scalars against every available demand anchor; the primary
+# back-test score is driven only by config$backtest$compare. That list may also
+# name supply-side metrics (headcount, state distribution) scored by a separate
+# back-test, so take the intersection with the demand anchors rather than
+# erroring on unrelated entries -- and fail loudly if the intersection is empty
+# instead of silently scoring against everything.
+CALIBRATION_CATEGORIES <- ANCHOR_CATEGORIES
+.compare_cfg <- cfg$backtest$compare %||% ANCHOR_CATEGORIES
+BACKTEST_CATEGORIES <- intersect(as.character(.compare_cfg), ANCHOR_CATEGORIES)
+if (!length(BACKTEST_CATEGORIES)) {
+  stop("run_demand_calibration_backtest: config backtest$compare names no demand ",
+       "anchor category (got: ", paste(.compare_cfg, collapse = ", "),
+       "). Refusing to back-test against an empty demand set.", call. = FALSE)
+}
 
 # Read every data/anchors/*.csv (category, observed[, year]); optionally filter
 # to `year`; keep the latest year per category. Returns list(anchors, source).
@@ -117,7 +139,8 @@ cat("  scalar = observed / predicted; a value far from 1 signals a structural",
 obs_fit <- load_demand_anchors(year = FIT_YEAR)
 obs_tgt <- load_demand_anchors(year = TGT_YEAR)
 bt <- backtest_lifecourse(sv, obs_fit$anchors, obs_tgt$anchors,
-                          fit_through_year = FIT_YEAR, target_year = TGT_YEAR)
+                          fit_through_year = FIT_YEAR, target_year = TGT_YEAR,
+                          compare_categories = BACKTEST_CATEGORIES)
 bt$summary$anchors_source <- paste(obs_fit$source, obs_tgt$source, sep = "/")
 utils::write.csv(bt$by_category, "artifacts/demand_backtest_by_category.csv", row.names = FALSE)
 utils::write.csv(bt$summary, "artifacts/demand_backtest_summary.csv", row.names = FALSE)
@@ -125,9 +148,12 @@ utils::write.csv(bt$summary, "artifacts/demand_backtest_summary.csv", row.names 
 cat("\n== Back-test: fit through ", FIT_YEAR, ", project to ", TGT_YEAR,
     " (anchors: ", bt$summary$anchors_source, ") ==\n", sep = "")
 print(bt$by_category)
-cat(sprintf("MAPE at %d: %.1f%% over %d anchor categor%s\n",
+cat(sprintf("PRIMARY MAPE at %d: %.1f%% over %d categor%s [%s]\n",
             TGT_YEAR, bt$summary$mape, bt$summary$n,
-            if (bt$summary$n == 1) "y" else "ies"))
+            if (bt$summary$n == 1) "y" else "ies", bt$summary$primary_categories))
+sec <- bt$by_category$category[!bt$by_category$primary_backtest]
+if (length(sec))
+  cat("  secondary diagnostics (not in primary MAPE):", paste(sec, collapse = ", "), "\n")
 if (!identical(obs_fit$source, "anchors") || !identical(obs_tgt$source, "anchors"))
   cat("  NOTE: back-test used illustrative anchors for at least one year; the",
       "MAPE is structure, not a validated credibility number. Supply historical",

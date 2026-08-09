@@ -10,7 +10,8 @@ backtest_lifecourse(
   observed_target,
   fit_through_year = 2017L,
   target_year = 2023L,
-  map = LIFECOURSE_ANCHOR_MAP
+  map = LIFECOURSE_ANCHOR_MAP,
+  compare_categories = NULL
 )
 }
 \arguments{
@@ -23,10 +24,19 @@ backtest_lifecourse(
 \item{fit_through_year, target_year}{Back-test window.}
 
 \item{map}{Service-to-anchor-category map.}
+
+\item{compare_categories}{Optional character vector naming the categories that
+define the PRIMARY back-test score. When \code{NULL} (default) every comparable
+category is primary (unchanged behaviour). When supplied, the summary MAPE is
+computed only over these categories; the others are retained in
+\code{by_category} as secondary diagnostics (\code{primary_backtest = FALSE}).
+Errors if none of the requested categories are comparable, so an empty
+configured set fails loudly rather than silently scoring against everything.}
 }
 \value{
 List: \code{by_category} (\code{category}, \code{predicted}, \code{observed}, \code{ratio},
-\code{abs_pct_error}) and \code{summary} (\code{mape}, \code{n}, \code{target_year}).
+\code{abs_pct_error}, \code{primary_backtest}) and \code{summary} (\code{mape}, \code{n},
+\code{target_year}, \code{primary_categories}). The MAPE is over the primary set only.
 }
 \description{
 Fits calibration scalars on \code{fit_through_year}, carries them forward, and
