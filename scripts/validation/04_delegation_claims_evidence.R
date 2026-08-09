@@ -10,8 +10,8 @@
 #   (2) among PHYSICIAN workload, what share is URPS rather than general
 #       gynaecology or urology?
 #
-# This script addresses (1) only. It CANNOT address (2): the archive carries no
-# provider identifier of any kind -- 127 distinct columns, zero NPI/UPIN/TIN,
+# This script addresses (1) only, and that is a SCOPE statement, not a defect.
+# It CANNOT address (2): the archive carries no provider identifier of any kind -- 127 distinct columns, zero NPI/UPIN/TIN,
 # and the data dictionary's only identifier entry is "Unique person
 # identifier" (the patient). CMS specialty code 16 pools FPMRS with general
 # OB/GYN, so the URPS/generalist split is not observable here at all.
@@ -82,9 +82,21 @@ RUN <- begin_validation_run(
                 coverage_of_withheld_wrvu = "22.5%",
                 interpretation = "UPPER BOUND on physician attribution (incident-to)",
                 urps_vs_generalist = "NOT identifiable: no provider identifier in archive"),
-  # No provider identifier and 2/11 service coverage: this cannot be a matrix
-  # replacement, so it is not allowed to look like citable evidence.
-  require_clean = FALSE, exploratory = TRUE)
+  # WHY THIS IS EXPLORATORY, stated precisely, because an earlier version of
+  # this comment got it wrong. It is NOT exploratory because it fails to resolve
+  # the URPS/generalist split -- it never claimed to, and an analysis is not
+  # disqualified for being narrower than an adjacent question. The provider-mix
+  # result is a legitimate empirical object in its own right.
+  #
+  # It is exploratory because its PROVENANCE is not yet reproducible: the source
+  # archive lives outside the repository, its episode definitions are documented
+  # only in a data dictionary that is not version-controlled here, and the
+  # derivation has not been through the A/B evidence chain. Fix those three and
+  # this becomes citable as a claims-attributed provider-mix analysis -- while
+  # the FTE triangulation in 03 stays non-citable for the separate reason that
+  # its parameters are unresolved. Two different evidentiary objects.
+  require_clean = FALSE, exploratory = TRUE,
+  inputs = c(cadr_provider_specialty = SPEC_FILE))
 
 stopifnot(file.exists(SPEC_FILE))
 d <- as.data.table(data.table::fread(SPEC_FILE, showProgress = FALSE))
@@ -118,7 +130,10 @@ mapped[, period := fifelse(year_episode_start <= 2011, "2008-2011", "2012-2016")
 trend <- mapped[, .(physician_pct = 100 * sum(provider == "physician") / .N,
                     APP_pct = 100 * sum(provider == "APP") / .N, n = .N),
                 by = .(service, period)][order(service, period)]
-cat("\n=== early vs late (does 2008-2016 transport to 2025?) ===\n")
+# A flat series here means no material temporal trend in CLAIMS-ATTRIBUTED
+# physician share. It does not establish that actual APP delivery was stable:
+# rising incident-to billing would present as exactly this flatness.
+cat("\n=== early vs late: claims-attributed physician share ===\n")
 print(trend, digits = 4)
 yearly <- mapped[, .(physician_pct = 100 * sum(provider == "physician") / .N, n = .N),
                  by = .(service, year_episode_start)][order(service, year_episode_start)]
