@@ -299,8 +299,34 @@ adequacy_conclusion_sentence <- function(tab, flip_multiplier = NA_real_,
 #' @family baseline gap reporting
 #' @concept reporting
 #' @export
+# THE TIER BETWEEN ANALOGY AND FITTED, and why it has to exist.
+#
+# `measured_input_unvalidated_response` names a state the other five could not:
+# the INPUT MEASUREMENT is verified while the RESPONSE FUNCTION that turns it
+# into an effect is not.
+#
+# Geographic access is the case that forced it. The drive-time isochrones are a
+# genuinely measured surface -- canonical run, registry-matched, SHA-256 verified
+# per band (R/geography-isochrone_import.R). Calling that `derived_by_analogy`
+# would be false; nothing about it is borrowed from another specialty. But
+# calling it `calibrated` was ALSO false, and false in the direction that
+# matters: what converts travel minutes into a barrier is
+# E2SFCA_DEFAULT_WEIGHTS (1.00/0.68/0.22/0.09), a decay function nothing here
+# validates against URPS care-seeking behaviour.
+#
+# That distinction is not pedantic. `reduced_barrier` asks what care would occur
+# if barriers were relaxed -- a counterfactual that depends entirely on the
+# response function, not on the accuracy of the travel-time surface. A verified
+# surface under an unvalidated decay curve can produce a precise number for a
+# relationship nobody has established.
+#
+# Ranked BELOW `fitted` deliberately, so it does not confer reportability. The
+# measurement is real; the claim built on it is not yet.
+
 CALIBRATION_STATUS_RANK <- c(placeholder_uncalibrated = 1L, uncalibrated_illustrative = 1L,
-                             derived_by_analogy = 2L, fitted = 3L, calibrated = 4L)
+                             derived_by_analogy = 2L,
+                             measured_input_unvalidated_response = 3L,
+                             fitted = 4L, calibrated = 5L)
 
 #' Minimum calibration status for a reportable threshold
 #'

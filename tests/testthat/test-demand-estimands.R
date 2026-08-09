@@ -222,3 +222,56 @@ test_that("no estimand is reportable under the current evidence state", {
   # ...and does NOT rescue the two that need access.
   expect_false(any(tab2$reportable[tab2$estimand != "realized_care"]))
 })
+
+# ---- The tier between analogy and fitted ------------------------------------
+
+test_that("measured_input_unvalidated_response sits below the reportability floor", {
+  r <- CALIBRATION_STATUS_RANK
+  # Strictly above analogy: a verified travel-time surface is NOT borrowed from
+  # another specialty, so calling it derived_by_analogy would be false.
+  expect_gt(r[["measured_input_unvalidated_response"]], r[["derived_by_analogy"]])
+  # Strictly below fitted, which is the floor: the measurement is real, the
+  # response function built on it is not yet, so it must not confer reportability.
+  expect_lt(r[["measured_input_unvalidated_response"]], r[["fitted"]])
+  expect_lt(r[["measured_input_unvalidated_response"]],
+            r[[REPORTABLE_MIN_CALIBRATION]])
+})
+
+test_that("a verified travel-time surface does not make the counterfactuals reportable", {
+  # THE DISTINCTION THIS PINS. Resolving the access layer means the isochrone
+  # SURFACE is measured and checksum-verified. It does not mean the decay
+  # function converting minutes into a barrier -- E2SFCA_DEFAULT_WEIGHTS -- has
+  # been validated against URPS care-seeking. reduced_barrier asks what care
+  # would occur if barriers were relaxed, which depends on that response
+  # function, so a verified surface alone must not unlock it.
+  st <- c(disease_burden = "fitted", care_seeking = "calibrated",
+          access_barriers = "measured_input_unvalidated_response",
+          baseline_adequacy = "calibrated")
+  tab <- demand_estimand_table(st)
+
+  # realized_care needs no access term, so it clears.
+  expect_true(tab$reportable[tab$estimand == "realized_care"])
+  # Both counterfactuals are blocked, and blocked ON access specifically.
+  for (e in c("reduced_barrier", "adequate_need")) {
+    expect_false(tab$reportable[tab$estimand == e])
+    expect_identical(tab$weakest_dimension[tab$estimand == e], "access_barriers")
+  }
+
+  # And the tier is what does it: swapping only access to `fitted` unlocks both,
+  # which proves the block is the tier and not some other missing dimension.
+  st2 <- st; st2["access_barriers"] <- "fitted"
+  tab2 <- demand_estimand_table(st2)
+  expect_true(all(tab2$reportable))
+})
+
+test_that("access_barriers derives to the new tier, never to calibrated", {
+  st <- demand_dimension_status()
+  resolved <- isTRUE(geographic_access_status()$resolved)
+  expect_identical(
+    unname(st["access_barriers"]),
+    if (resolved) "measured_input_unvalidated_response" else "uncalibrated_illustrative")
+  # The regression this guards: `calibrated` was the previous mapping, and it
+  # would have let a verified surface carry an unvalidated decay curve into a
+  # reportable counterfactual.
+  expect_false(identical(unname(st["access_barriers"]), "calibrated"))
+})
