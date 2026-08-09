@@ -280,8 +280,12 @@ should not be reported.
 Two caveats bound the interpretation in opposite directions, and neither is
 resolvable with the current contract:
 
-1. The observed series applies **no attrition**, so the primary comparison is
-   biased against the model by roughly the departure rate (~3%/yr).
+1. The observed series does **not** apply "no attrition", as an earlier version
+   of this section claimed. It applies attrition **retroactively and uniformly
+   at 2025**: it is a 2025 roster back-projected by certification year, so a
+   physician the 2025 adjudication drops is absent from every earlier year. The
+   bias therefore runs the *other* way for the growth the model is scored on.
+   This is not a hypothesis — see section 7.
 2. The validation window contains a **structural break** — a COVID trough
    immediately followed by backlog clearance — that no short-window
    extrapolation could anticipate.
@@ -289,6 +293,42 @@ resolvable with the current contract:
 A cleaner test needs a contract artifact that tracks retirement (`n_retired` is
 currently 0 throughout), and a longer pre-cutoff steady state than three years,
 one of which is 2020.
+
+---
+
+## 7. The target is survivor-conditioned, and this is now observed
+
+**Evidence hierarchy.** The temporal validation evidence is ranked, and the
+ranking changed once the excluded physicians were linked to Medicare:
+
+| Rank | Evidence | Status |
+|---|---|---|
+| **Primary** | Longitudinal Medicare Part B observation of the excluded physicians | **Direct, per-physician, no model** |
+| Secondary | Medicare clinician-directory listing | Enrolment only; 2018+ only; never merged with Part B |
+| Sensitivity | Constant-hazard departure correction | Retained, demoted — it assumes what the linkage observes |
+| Training-flow | ACGME / NRMP / certification series | Separate question, unchanged |
+
+**The finding.** Of the 161 physicians the 2025 roster adjudication excludes,
+155 carry a usable NPI. 121 of those 155 (78.1%) were observed billing Medicare
+Part B during 2016–2021, and **69 (44.5%) billed in every one of the six years
+— 414 directly observed provider-years the target records as zero.**
+
+**What this does to the back-test.** The 2020 initialisation and the 2023 target
+are both survivor-conditioned, and unequally so: the 2020 side carries five
+years of filtering, the 2023 side two. The back-test therefore validates
+**reproduction of the roster-construction process**, not reconstruction of the
+historical active workforce. Both are legitimate things to score a model
+against. They are not the same thing, and this document previously conflated
+them.
+
+**What is unchanged.** The target (1,306), every entrant rate, every
+certification conversion, and the verdict in section 6. Nothing was recalibrated
+on the basis of this finding, and no arm was selected. The demotion is to the
+*interpretation*, not the numbers.
+
+See `docs/HISTORICAL_SERIES_FEASIBILITY.md` section 9, the figure at
+`figures/survivor_conditioning.png`, and the frozen counts in
+`tests/testthat/test-validation-survivor.R`.
 
 ---
 

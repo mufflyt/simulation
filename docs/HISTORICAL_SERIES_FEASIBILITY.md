@@ -8,6 +8,13 @@ The survivor-filter bias is nonetheless quantifiable from this repo's own vetted
 tables, and it is large enough to change how the back-test should be read. That
 quantification is section 3; nothing was recalibrated and no target moved.
 
+> **UPDATE — survivor conditioning is now DIRECTLY OBSERVED, not inferred.**
+> Section 3's constant-hazard calculation was the best available evidence when
+> this document was written. It has since been superseded: linking the excluded
+> physicians to Medicare Part B shows them billing, by name and year, with no
+> hazard assumed. See section 9. Section 3 is retained as a sensitivity
+> analysis and should no longer be cited as the primary evidence.
+
 ---
 
 ## 1. Source inventory — what actually exists here
@@ -179,24 +186,52 @@ Both need correcting: the series applies attrition **retroactively and
 uniformly at 2025**, and the resulting bias runs the other way for the growth
 the model is scored on.
 
-## 6. Does Arm 5 remain the best arm?
+## 6. Does Arm 5 remain the best arm? — demonstrated, not asserted
 
-**Yes for ranking, no for its absolute error.**
+**No. Arm 5 was never the best arm, and the ranking is not robust.**
 
-The correction applies the same target shift to every arm, so it cannot reorder
-them. Arm 5's advantage over Arms 1–4 is a statement about relative ordering and
-survives intact.
+Two corrections, both of which reverse an earlier claim in this document.
 
-What does not survive is the number. Every arm under-predicted growth, and the
-growth target is 7–22% too high, so **every arm's reported error is overstated
-by roughly that fraction** — Arm 5's −4.36% included. Reporting −4.36% against a
-survivor-filtered target overstates the miss.
+**Arm 5 does not hold the accuracy crown.** `b0a3d61` had already established
+that and this document repeated the stale claim without checking the frozen
+record. **Arm 1 (no-attrition) is the most accurate at −3.14%**; Arm 5 is third
+at −4.36%.
 
-The prior conclusion also stands for an additional reason now: `b0a3d61` already
-found Arm 5's apparent accuracy sensitive to its estimation window (−2.53% on
-2017–2020, −4.36% on 2010–2020). An arm whose error moves 1.8 points on a window
-choice, against a target biased 7–22%, should not be described as accurate at
-all — only as better ordered than the alternatives.
+**Scenario A — correct the target only.** Ranking by absolute error across the
+no-attrition family:
+
+| `d` | 2023 target | Ordering |
+|---|---:|---|
+| 0 (observed) | 1306.0 | 1 < 3 < 5 < 2 = 4 |
+| 0.0050 | 1319.2 | 1 < 3 < 5 < 2 = 4 |
+| 0.0110 | 1335.2 | 1 < 3 < 5 < 2 = 4 |
+| 0.0151 | 1346.4 | 1 < 3 < 5 < 2 = 4 |
+
+Stable — **but only because every prediction stays below every corrected
+target**, a condition that is now asserted in a test rather than assumed. Note
+also that the correction *raises* the target, so every arm's error gets
+**worse**, not better. The earlier claim that "every arm's reported error is
+overstated" had the sign backwards, conflating a growth bias with a level bias.
+
+**Scenario B — correct both endpoints.** The model is initialised on the 2020
+stock, which carries five years of filtering against the target's two (+87 vs
++40 at high `d`), so correcting only the target is not the honest comparison:
+
+| `d` | Ordering (signed error) |
+|---|---|
+| 0 | 1(−41) 3(−42) 5(−57) 2(−108) 4(−108) |
+| 0.0050 | 1(−26) 3(−27) 5(−42) 2(−93) 4(−93) |
+| 0.0151 | **3(+5) 1(+6)** 5(−10) 2(−61) 4(−61) |
+
+**The ranking crosses.** At the high hazard the signs flip positive —
+predictions cross the target — and Arms 1 and 3 swap. So the ordering is robust
+under target-only correction and **not** robust once both endpoints are
+corrected. Arm 5 is third throughout and never best.
+
+Arm 5's apparent accuracy is also window-sensitive: `b0a3d61` found −2.53% on
+2017–2020 versus −4.36% on 2010–2020. An arm whose error moves 1.8 points on a
+window choice, scored against a target whose correction can reorder the field,
+should not be described as accurate at all.
 
 ---
 
@@ -275,3 +310,47 @@ difference <- function(obs, y, d) adjusted_S(obs, y, d) - obs
 `adjusted_S(1306, 2023, 0.0151) = 1346`; difference = 40.
 
 Both are implied values under the stated hazard, not observations.
+
+---
+
+## 9. Direct falsification supersedes the hazard sensitivity
+
+Section 3 asks what the historical stock *would have been* under an assumed
+departure hazard. That question is no longer necessary for establishing that
+survivor conditioning is present, because the conditioning can be observed
+directly.
+
+The 2025 roster adjudication excludes 161 of the 1,500 identified
+urogynecologists. 155 of them carry a usable NPI and can be linked to Medicare
+Part B. They were not gone:
+
+| Evidence | Window | n | of 155 |
+|---|---|---:|---:|
+| Any Part B billing | 2013–2023 | 129 | 83.2% |
+| Any Part B billing | 2016–2021 | 121 | 78.1% |
+| **Part B billing in ALL SIX validation years** | 2016–2021 | **69** | **44.5%** |
+| No Part B billing anywhere | 2013–2023 | 26 | 16.8% |
+
+**69 physicians billed Medicare in every year of the validation window — 414
+directly observed provider-years that the retrospective series records as
+zero.** No hazard, no back-projection, no modelling assumption: three facts per
+physician (URPS-identified, excluded from the later roster, observed billing).
+
+Of the 26 with no Part B billing, 9 nonetheless hold a sustained Medicare
+clinician-directory listing. That is enrolment, not billed care, and it is
+reported as a separate weaker tier — it is never added to the Part B counts, and
+the directory covers only 2018 onward, so it is silent on 2016–2017.
+
+**What this changes for the methodological conclusion.** The 2013–2023
+`board_certified_active` series must no longer be described as an independently
+observed historical workforce series. It is a 2025 roster back-projected by
+certification year, and at least 69 physicians it reports as absent were
+demonstrably practising. It remains a legitimate target for *reproducing the
+roster-construction process*; it is not a measurement of the historical active
+workforce, and the two must not be swapped in a sentence.
+
+Counts are generated from `inst/extdata/survivor_falsification.json` (built by
+`scripts/data_acquisition/09_build_survivor_falsification.R`), frozen by
+`tests/testthat/test-validation-survivor.R`, and rendered by
+`scripts/plot_survivor_conditioning.R`. They appear as literals in the test file
+and nowhere else.
