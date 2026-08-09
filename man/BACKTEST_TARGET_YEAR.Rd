@@ -16,6 +16,8 @@ Default \code{target_year} for \code{\link[=validate_backtest_target]{validate_b
 \seealso{
 Other backtest: 
 \code{\link{.series_through}()},
+\code{\link{BACKTEST_PARAMETER_PROVENANCE}},
+\code{\link{assert_backtest_parameters_precede_cutoff}()},
 \code{\link{assert_no_leakage}()},
 \code{\link{backtest_attrition_requirement}()},
 \code{\link{backtest_cohort_at}()},

@@ -63,15 +63,15 @@
 #' @export
 BACKTEST_RECORD_2020_2023 <- tibble::tribble(
   ~arm,                                          ~percent_error,  ~within_80,  ~within_95,
-  "1. Derived cohort, assumed entrants",              -9.724349,       FALSE,       FALSE,
+  "1. Derived cohort, assumed entrants",              -7.580398,       FALSE,       FALSE,
   "1. Derived cohort [no-attrition]",                 -3.139357,        TRUE,        TRUE,
-  "2. Derived cohort, pre-cutoff entrants",          -14.969372,       FALSE,       FALSE,
+  "2. Derived cohort, pre-cutoff entrants",          -12.633997,       FALSE,       FALSE,
   "2. Derived cohort [no-attrition]",                 -8.269525,       FALSE,       FALSE,
-  "3. Synthetic cohort, assumed entrants",           -12.633997,       FALSE,       FALSE,
+  "3. Synthetic cohort, assumed entrants",           -11.179173,       FALSE,       FALSE,
   "3. Synthetic cohort [no-attrition]",               -3.177642,        TRUE,        TRUE,
-  "4. Synthetic cohort, pre-cutoff entrants",        -17.611026,       FALSE,       FALSE,
+  "4. Synthetic cohort, pre-cutoff entrants",        -16.232772,       FALSE,       FALSE,
   "4. Synthetic cohort [no-attrition]",               -8.269525,       FALSE,       FALSE,
-  "5. Derived cohort, pre-cutoff NRMP entrants",     -11.026034,       FALSE,       FALSE,
+  "5. Derived cohort, pre-cutoff NRMP entrants",       -8.805513,       FALSE,       FALSE,
   "5. Derived cohort [no-attrition]",                 -4.364472,       FALSE,       FALSE
 )
 
@@ -401,7 +401,7 @@ print.urps_backtest_status <- function(x, ...) {
 #' @family backtest status
 #' @concept validation
 #' @export
-BACKTEST_RECORD_SHA256 <- "d9a895446d24d6debdb8ff6f634f652123003de0918e428f9c99cf1346b01d8d"
+BACKTEST_RECORD_SHA256 <- "ee8498518d2df5c9460f667c378f6c5e9ee8ce86f1c8a735e0f0b484676073cc"
 
 # Tolerance on the transcribed percentage errors. The record carries six decimal
 # places, so anything looser would let a genuine re-score pass as a rounding

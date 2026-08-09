@@ -11,6 +11,7 @@ run_backtest_arm(
   target_year = BACKTEST_TARGET_YEAR,
   n_iterations = 1000L,
   apply_attrition = TRUE,
+  career_change_hazard = BACKTEST_CAREER_CHANGE_HAZARD,
   param_spec = NULL,
   seed = 20260802L
 )
@@ -26,8 +27,14 @@ run_backtest_arm(
 
 \item{n_iterations}{Monte Carlo replicates.}
 
-\item{apply_attrition}{Apply retirement hazards. FALSE gives the
+\item{apply_attrition}{Apply the exit processes. FALSE gives the
 definition-matched comparison against a series that applies none.}
+
+\item{career_change_hazard}{Annual permanent separation hazard under age 50.
+Defaults to \link{BACKTEST_CAREER_CHANGE_HAZARD}, which is 0: the 1.42\% estimate
+postdates the 2020 origin, so the historical forecast OMITS the process
+rather than asserting the hazard is zero. Pass
+\code{CAREER_CHANGE_HAZARD_UNDER_50} for the sensitivity analysis.}
 
 \item{param_spec}{Optional \code{\link[=supply_parameter_spec]{supply_parameter_spec()}} built from PRE-CUTOFF
 data only. Supplying it redraws the entrant rate each iteration so the

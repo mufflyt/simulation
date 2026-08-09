@@ -30,7 +30,9 @@ would make the guard silently vacuous, which is worse than absent.
 \seealso{
 Other backtest: 
 \code{\link{.series_through}()},
+\code{\link{BACKTEST_PARAMETER_PROVENANCE}},
 \code{\link{BACKTEST_TARGET_YEAR}},
+\code{\link{assert_backtest_parameters_precede_cutoff}()},
 \code{\link{backtest_attrition_requirement}()},
 \code{\link{backtest_cohort_at}()},
 \code{\link{backtest_cohorts_through}()},
