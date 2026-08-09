@@ -6,6 +6,175 @@ States, built to the methodology documented in the IHS Markit / Dall **Health
 Workforce Microsimulation Model** (HWMM v5.19.20) and its published applications
 in physiatry, neurology and physical therapy.
 
+![The uncertainty that decides the answer](figures/fig_uncertainty_hierarchy.png)
+
+**The one-sentence version.** Under status-quo assumptions this model projects a
+2050 *surplus* of urogynecologists — but among the empirical uncertainties
+evaluated to date, productivity and case mix are the only ones spanning a range
+wide enough to reverse that. Everything else, including the much-discussed
+base-year adequacy anchor, moves the number without moving the sign.
+
+That is the finding the rest of this README exists to justify, qualify, and let
+you reproduce.
+
+---
+
+## How the model works
+
+Three flowcharts, because three different things can go wrong.
+
+### 1. The estimation pipeline
+
+Population and epidemiology set demand; a provider cohort sets supply; both are
+expressed in clinical FTE so the comparison is dimensionally meaningful.
+
+```mermaid
+flowchart TD
+  A["Census NPP<br/>female population by age band"] --> B["PFD prevalence<br/>UI / POP / AI"]
+  B --> C["Demand estimands<br/>D1 prevalent · D2 consults · D3 surgery"]
+  C --> D["Service volumes<br/>CPT basket"]
+  D --> E["Work RVUs<br/>CMS PFS"]
+  E --> F{{"wRVU per clinical FTE"}}
+  F --> G["REQUIRED FTE"]
+
+  H["mufflyaccess contract<br/>1,306 certified, 2023"] --> I["Base cohort"]
+  I -->|"roster absent"| I2["Reconstructed from<br/>certification cohorts"]
+  I2 --> J["Agent microsimulation<br/>ageing · retirement · entry"]
+  J --> K["Hours curve<br/>by age and sex"]
+  K --> L["SUPPLIED FTE"]
+
+  M["Base-year adequacy<br/>supply / adequacy"] --> F
+  G --> N{{"GAP = supplied − required"}}
+  L --> N
+
+  style F fill:#fde8d7,stroke:#b3591a
+  style M fill:#fde8d7,stroke:#b3591a
+  style N fill:#dbeafe,stroke:#1f6f8b
+```
+
+The orange nodes are the ones to watch. `wRVU per clinical FTE` is **solved**
+against the base-year anchor rather than measured, which is why productivity
+uncertainty is invisible in the anchored configuration and dominant the moment
+you ask for an unanchored demand level.
+
+### 2. The evidence gate
+
+A number is not reportable because it exists. Each demand estimand rests on
+several evidence dimensions, and the *weakest* one governs.
+
+```mermaid
+flowchart LR
+  subgraph DIM["evidence dimensions (current tier)"]
+    D1["disease_burden<br/><i>derived_by_analogy</i>"]
+    D2["care_seeking<br/><i>calibrated</i>"]
+    D3["access_barriers<br/><i>measured_input_<br/>unvalidated_response</i>"]
+    D4["baseline_adequacy<br/><i>derived_by_analogy</i>"]
+  end
+
+  D1 --> E1["realized_care"]
+  D2 --> E1
+  D1 --> E2["reduced_barrier"]
+  D2 --> E2
+  D3 --> E2
+  D1 --> E3["adequate_need"]
+  D2 --> E3
+  D3 --> E3
+  D4 --> E3
+
+  E1 --> G{{"weakest dimension<br/>>= 'fitted'?"}}
+  E2 --> G
+  E3 --> G
+  G -->|no| X["NOT reportable"]
+  G -->|yes| Y["reportable"]
+
+  style X fill:#fbe4e0,stroke:#c1543a
+  style Y fill:#e2efe7,stroke:#2f6b4f
+```
+
+All three are currently **not reportable**. `realized_care` is one onset fit
+short; the two counterfactuals additionally require validating the decay
+function that turns travel time into a barrier — which a verified isochrone
+surface does *not* supply. Run `demand_estimand_table(demand_dimension_status())`
+to see the live answer rather than this snapshot.
+
+### 3. The provenance gate
+
+The isochrone import is the worked example of how an artifact earns its way in.
+The source tree contained a quarantined "contaminated" cache, an
+`archived_unusable/` directory, a file named `..._backup_may8_broken.rds`, and a
+newer run whose `PIPELINE_SUCCESS.json` contradicted its own manifest.
+
+```mermaid
+flowchart TD
+  A["candidate artifact"] --> B{{"registry declares it<br/>active_run_id?"}}
+  B -->|no| R1["REFUSE<br/><i>recency is not provenance</i>"]
+  B -->|yes| C{{"all four bands present?"}}
+  C -->|no| R2["REFUSE<br/><i>a 3-band set is not a 4-band set</i>"]
+  C -->|yes| D{{"SHA-256 matches<br/>the pin, per band?"}}
+  D -->|no| R3["REFUSE<br/><i>right name, wrong bytes</i>"]
+  D -->|yes| E["ACCEPT<br/>referenced in place"]
+
+  style R1 fill:#fbe4e0,stroke:#c1543a
+  style R2 fill:#fbe4e0,stroke:#c1543a
+  style R3 fill:#fbe4e0,stroke:#c1543a
+  style E fill:#e2efe7,stroke:#2f6b4f
+```
+
+Sorted by filename or by date, the wrong artifact wins. Sorted by recorded
+provenance, the right one does. `ISOCHRONE_REFUSED_ARTIFACTS` records every
+rejected candidate *with its reason*, so a refusal is a decision on the record
+rather than an omission someone later "fixes".
+
+---
+
+## Where the supply is, and where the demand is
+
+![Board-certified urogynecologists per 100,000 women](figures/map_providers_per_100k.png)
+
+![Women aged 65+ by census tract](figures/map_demand_women65_tracts.png)
+
+![Supply share minus demand share](figures/map_supply_demand_mismatch.png)
+
+**Read these as descriptives, not as access.** They use administrative geography
+and population counts — no travel time, no care-seeking behaviour, no capacity.
+A state can look well supplied here and still have women three hours from a
+urogynecologist. Genuine access requires the E2SFCA layer, whose travel-time
+surface is now imported and verified but whose *barrier function* is not yet
+validated (see flowchart 2).
+
+---
+
+## The two results worth reading
+
+### Supply and demand over the horizon
+
+![Status-quo supply and required FTE](figures/fig_supply_demand_trajectory.png)
+
+**What this figure does not show.** The band is a Monte Carlo range, not a
+forecast interval — the 2020→2023 back-test missed the observation in 8 of 10
+arms. And the required-FTE *level* is anchored to supply ÷ adequacy, so it is an
+input rather than an independent estimate; only its *growth* comes from the
+demand model.
+
+### The entrant pipeline reconciles
+
+![Entry and certification reconcile](figures/fig_entrant_reconciliation.png)
+
+The apparent conflict between 70 NRMP-filled fellowship positions per year and
+~51 board certifications per year is not a contradiction. Lag the entry cohorts
+by the three-year fellowship and apply the observed conversion — **0.857 from
+ACGME, 0.850 from NRMP, independently** — and the discrepancy closes with no
+residual. Every empirically defensible entrant basis leaves a 2050 surplus; the
+breakeven of 49.1/yr sits below all of them.
+
+Reproduce all six panels with:
+
+```bash
+Rscript scripts/plot_readme_figures.R
+```
+
+---
+
 ## Orientation (start here)
 
 **What question does this software answer?** Will the US supply of urogynecology /
@@ -272,7 +441,10 @@ Set `MEDICARE_SLING_CACHE` to use another `provider_volume.rds` location and
 
 ## Medicare realized-care trajectories
 
-![Observed Medicare FFS URPS procedures, 2013–2016](figures/medicare_realized_care_2013_2016.png)
+> **Figure generated locally.** This panel is not committed: it requires the
+> ~2.7 GB/year raw Medicare provider-service files, which are licensed and stay
+> out of the repository. Build it with the command below, then
+> `figures/medicare_realized_care_2013_2016.png` appears here.
 
 This is a separate **realized-care** validation series: annual Medicare
 fee-for-service procedure counts in the URPS CPT basket. It is not a prevalence
