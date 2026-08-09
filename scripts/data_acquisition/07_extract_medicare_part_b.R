@@ -1,16 +1,17 @@
 #!/usr/bin/env Rscript
-# Extract the Medicare Part B (by Provider and Service) urogynecology utilization
-# series and write it as a Medicare-FFS VALIDATION series. This is data
-# infrastructure, NOT a calibrated anchor: output goes to data-raw/medicare_part_b/,
-# never to data/anchors/. Reproducible replacement for ad-hoc SQL.
+# Build the Medicare-FFS Part B urogyn utilization VALIDATION series using the
+# CANONICAL pipeline (no bespoke code set or aggregator):
+#   urps_medicare_service_crosswalk()  -> codes from URPS_CPT_BASKET
+#   read_part_b_claims()               -> thin DuckDB reader (this package)
+#   aggregate_medicare_realized_care() -> services + benes + bene-day, labeled
+# Output is a Medicare-FFS validation series in data-raw/medicare_part_b/, never
+# a calibrated anchor and never data/anchors/.
 #
-# Usage:
 #   Rscript scripts/data_acquisition/07_extract_medicare_part_b.R [duckdb_path]
-# DuckDB path resolves from arg 1, else $MEDICARE_PARTB_DUCKDB, else the drive.
 
 suppressWarnings(suppressMessages({
   if (!requireNamespace("urpssim", quietly = TRUE) ||
-      !exists("extract_part_b_utilization", mode = "function")) {
+      !exists("aggregate_medicare_realized_care", mode = "function")) {
     pkgload::load_all(".", quiet = TRUE, export_all = TRUE)
   }
   library(dplyr)
@@ -20,39 +21,47 @@ args <- commandArgs(trailingOnly = TRUE)
 duckdb_path <- if (length(args) >= 1) args[1] else default_part_b_duckdb()
 out_dir <- file.path("data-raw", "medicare_part_b")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-
 if (!file.exists(duckdb_path)) {
   stop(sprintf("DuckDB not found at '%s'. Mount the drive or set MEDICARE_PARTB_DUCKDB.", duckdb_path))
 }
 
-message("Extracting HCPCS-level series (all years, all URPS groups)...")
-detail <- extract_part_b_utilization(duckdb_path = duckdb_path)      # year x hcpcs
-prov <- attr(detail, "provenance")
+xwalk  <- urps_medicare_service_crosswalk()                     # canonical codes
+message("Reading Part B claims for ", nrow(xwalk), " canonical HCPCS codes ...")
+claims <- read_part_b_claims(hcpcs = xwalk$hcpcs, duckdb_path = duckdb_path)
 
-# Roll HCPCS up to code groups (services / bene-day-services summable; benes_sum
-# stays a labeled sum, never a unique-patient count).
-group_series <- detail %>%
-  group_by(year, code_group) %>%
-  summarise(tot_srvcs = sum(tot_srvcs, na.rm = TRUE),
-            tot_benes_sum = sum(tot_benes_sum, na.rm = TRUE),
-            tot_bene_day_srvcs = sum(tot_bene_day_srvcs, na.rm = TRUE),
-            n_distinct_npi = sum(n_distinct_npi, na.rm = TRUE),
-            rows_with_na_benes = sum(rows_with_na_benes, na.rm = TRUE),
-            .groups = "drop") %>%
-  arrange(code_group, year)
+# Headline: year x service (all three CMS measures + distinct billing NPIs).
+by_service <- aggregate_medicare_realized_care(
+  claims, crosswalk = xwalk, year = "year",
+  state = NULL, provider_type = NULL, place_of_service = NULL, npi = "Rndrng_NPI")
 
-message("Extracting specialty split for the headline codes...")
-by_spec <- extract_part_b_utilization(
+# Specialty split: year x service x provider type.
+by_specialty <- aggregate_medicare_realized_care(
+  claims, crosswalk = xwalk, year = "year",
+  state = NULL, provider_type = "Rndrng_Prvdr_Type", place_of_service = NULL, npi = "Rndrng_NPI")
+
+utils::write.csv(arrange(by_service, service, year),
+                 file.path(out_dir, "urps_part_b_by_service.csv"), row.names = FALSE)
+utils::write.csv(arrange(by_specialty, service, year),
+                 file.path(out_dir, "urps_part_b_by_specialty.csv"), row.names = FALSE)
+
+prov <- list(
+  source = "Medicare Physician & Other Practitioners - by Provider and Service (CMS PUF)",
+  cms_dataset = "CMS Original Medicare FFS Part B; provider x HCPCS x place of service",
   duckdb_path = duckdb_path,
-  provider_type = c("Obstetrics & Gynecology", "Urology"))
-
-utils::write.csv(detail, file.path(out_dir, "urps_part_b_by_hcpcs.csv"), row.names = FALSE)
-utils::write.csv(group_series, file.path(out_dir, "urps_part_b_by_group.csv"), row.names = FALSE)
-utils::write.csv(by_spec, file.path(out_dir, "urps_part_b_by_specialty.csv"), row.names = FALSE)
+  source_md5 = attr(claims, "source_md5"),
+  years = sort(unique(by_service$year)),
+  codes_from = "urps_medicare_service_crosswalk() / URPS_CPT_BASKET (canonical SSOT)",
+  aggregator = "aggregate_medicare_realized_care() (canonical)",
+  estimand = unique(by_service$estimand),
+  payer_scope = unique(by_service$payer_scope),
+  unmapped_service_fraction = attr(by_service, "unmapped_service_fraction"),
+  caveat = attr(by_service, "caveat"),
+  extraction_date = as.character(Sys.Date()),
+  no_extrapolation = TRUE)
 jsonlite::write_json(prov, file.path(out_dir, "urps_part_b_provenance.json"),
                      auto_unbox = TRUE, pretty = TRUE)
 
-message("Wrote: ", out_dir, "/{urps_part_b_by_hcpcs,urps_part_b_by_group,urps_part_b_by_specialty}.csv + provenance.json")
-cat("\n=== code-group series (services) ===\n")
-print(tidyr::pivot_wider(group_series[, c("year", "code_group", "tot_srvcs")],
-                         names_from = code_group, values_from = tot_srvcs), n = 50)
+message("Wrote ", out_dir, "/urps_part_b_by_service.csv + urps_part_b_by_specialty.csv + provenance.json")
+cat("\n=== billed_services by service x year ===\n")
+print(tidyr::pivot_wider(by_service[, c("year", "service", "billed_services")],
+                         names_from = service, values_from = billed_services), n = 50)

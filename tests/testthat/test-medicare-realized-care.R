@@ -24,6 +24,39 @@ test_that("Medicare realized-care aggregation keeps its FFS estimand distinct", 
   expect_true(all(c("state", "provider_type", "place_of_service", "billing_npis") %in% names(out)))
 })
 
+test_that("aggregation carries the beneficiary measures when present, distinct from services", {
+  skip_if_not(.have_urpssim_fn("aggregate_medicare_realized_care"),
+              "aggregate_medicare_realized_care() not implemented yet (orphaned test)")
+  claims <- tibble::tibble(
+    year = c(2022L, 2022L, 2023L),
+    HCPCS_Cd = c("57288", "57288", "52000"),
+    Tot_Srvcs = c(100, 50, 500),
+    Tot_Benes = c(95, 48, NA_real_),
+    Tot_Bene_Day_Srvcs = c(99, 50, 500))
+  out <- urpssim:::aggregate_medicare_realized_care(
+    claims, state = NULL, provider_type = NULL, place_of_service = NULL, npi = NULL)
+  expect_true(all(c("billed_beneficiaries_sum", "billed_bene_day_services", "rows_with_na_benes")
+                  %in% names(out)))
+  sling <- out[out$service == "sling_procedure" & out$year == 2022L, ]
+  expect_equal(sling$billed_services, 150)
+  expect_equal(sling$billed_beneficiaries_sum, 143)      # 95 + 48, distinct from services
+  expect_equal(sling$billed_bene_day_services, 149)
+  # a suppressed (NA) beneficiary cell is flagged, never summed as zero silently
+  cysto <- out[out$service == "cystoscopy", ]
+  expect_equal(cysto$rows_with_na_benes, 1)
+  expect_equal(cysto$billed_services, 500)
+})
+
+test_that("aggregation omits beneficiary columns when they are absent (backward compatible)", {
+  skip_if_not(.have_urpssim_fn("aggregate_medicare_realized_care"),
+              "aggregate_medicare_realized_care() not implemented yet (orphaned test)")
+  claims <- tibble::tibble(year = 2022L, HCPCS_Cd = "57288", Tot_Srvcs = 10)
+  out <- urpssim:::aggregate_medicare_realized_care(
+    claims, state = NULL, provider_type = NULL, place_of_service = NULL, npi = NULL)
+  expect_false(any(c("billed_beneficiaries_sum", "billed_bene_day_services") %in% names(out)))
+  expect_equal(out$billed_services, 10)
+})
+
 test_that("default Medicare crosswalk excludes generic E/M visit codes", {
   skip_if_not(.have_urpssim_fn("urps_medicare_service_crosswalk"),
               "urps_medicare_service_crosswalk() not implemented yet (orphaned test)")

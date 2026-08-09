@@ -13,7 +13,9 @@ aggregate_medicare_realized_care(
   state = "Rndrng_Prvdr_State_Abrvtn",
   provider_type = "Rndrng_Prvdr_Type",
   place_of_service = "Place_Of_Srvc",
-  npi = "Rndrng_NPI"
+  npi = "Rndrng_NPI",
+  beneficiaries = "Tot_Benes",
+  bene_day_services = "Tot_Bene_Day_Srvcs"
 )
 }
 \arguments{
@@ -27,11 +29,22 @@ validated URPS roster or diagnosis definition.}
 
 \item{state, provider_type, place_of_service, npi}{Optional claims columns to
 retain as dimensions when present. Set any to NULL to omit it.}
+
+\item{beneficiaries, bene_day_services}{Optional claim columns carrying the two
+OTHER CMS utilization measures, kept distinct from \code{services}:
+\code{Tot_Benes} (distinct beneficiaries PER provider-code row) and
+\code{Tot_Bene_Day_Srvcs} (beneficiary-day services). Summed only when the
+column is present. The summed beneficiary count double-counts a patient seen by
+several providers, so it is NOT a de-duplicated unique-patient count. Set to
+NULL to omit.}
 }
 \value{
 Tibble of annual service totals with explicit \code{estimand} and
-\code{payer_scope} labels. The \code{unmapped_service_fraction} attribute records
-claims excluded because their HCPCS code is outside the study basket.
+\code{payer_scope} labels. When the beneficiary columns are present it also
+carries \code{billed_beneficiaries_sum}, \code{billed_bene_day_services}, and
+\code{rows_with_na_benes} (suppressed-cell count; suppression is flagged, never
+summed as zero). The \code{unmapped_service_fraction} attribute records claims
+excluded because their HCPCS code is outside the study basket.
 }
 \description{
 This is deliberately an \emph{observed-use} estimand. It measures billed Medicare
