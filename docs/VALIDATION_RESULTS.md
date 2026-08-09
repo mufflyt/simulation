@@ -316,6 +316,56 @@ exploratory gate and is the evidence that promotion was warranted. Keeping them
 documents the transition from an analysis with assumptions hidden in code and
 temp files to a fully declared specification.
 
+## 8. The productivity comparison is specified in advance (analysis 03)
+
+`03` is exploratory and will stay so until the AUGS/MGMA urogynecology
+productivity report arrives. What is unusual is that its **interpretation was
+fixed before the external values were known**, at commit `33a9759` on
+**2026-08-08**. That commit is the evidence of timing; preserve it.
+
+Frozen in advance:
+
+| element | value |
+|---|---|
+| primary comparison | R = AUGS/MGMA median wRVU/FTE ÷ **5,193.1** |
+| denominator | model-implied raw wRVU/FTE on 2026-08-08, guarded against drift |
+| R = 1.00 | exact agreement in the utilisation-to-FTE conversion |
+| R > 1.00 | reference model requires MORE FTE for the same physician-attributed workload |
+| R < 1.00 | reference model requires FEWER FTE |
+| sensitivity | AUGS/MGMA p25 and p75 |
+| pass/fail threshold | **none declared** — direction and magnitude are the information |
+| future inputs | licensed report and extracted percentile CSV, both already declared and hashed |
+
+### Wording for the manuscript
+
+This was **not** registered in a formal public registry. Do **not** describe it
+as a *preregistered* analysis. The defensible phrasing is:
+
+> prospectively specified before obtaining the external productivity benchmark
+
+with the commit SHA and date available as evidence if challenged.
+
+### Two ratios, kept separate on purpose
+
+If the model legitimately evolves before the report arrives, `03` refuses
+authoritative status rather than silently recomputing against a new denominator,
+and reports both:
+
+* **R_prespecified** = AUGS/MGMA ÷ 5,193.1 — tests the frozen model state
+* **R_current** = AUGS/MGMA ÷ current implied — describes the current model
+
+Keeping them separate means later model development cannot erase an unfavourable
+prospective result.
+
+### What the test can and cannot show
+
+It tests one link in the chain — **physician-attributed workload → FPMRS FTE**.
+A close result gives independent support for the model's absolute
+utilisation-to-FTE conversion; a divergent one localises the disagreement to the
+productivity denominator; a p25–p75 range spanning the model calibration makes
+real-world productivity heterogeneity part of the explanation rather than an
+inconvenience. **No outcome establishes workforce adequacy or unmet need.**
+
 ## What none of this establishes
 
 Every result above validates the **calculation**. None validates the
