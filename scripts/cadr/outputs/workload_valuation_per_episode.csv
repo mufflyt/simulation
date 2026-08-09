@@ -1,0 +1,6 @@
+pathway,estimand,rvu_reference_year,rvu_source,episodes,unique_women,index_fpmrs_wrvu,post_index_em_wrvu,office_procedure_wrvu,complication_reop_wrvu,total_fpmrs_wrvu,PT_sessions_count_SEPARATE,anesthesia_prof_cost_2016usd_SEPARATE,facility_cost_2016usd_SEPARATE
+UI Sling,per_episode_per_pathway,2025,"CMS PFS Relative Value File RVU25A (PPRRVU25_JAN, 2025), mix-weighted",5566,5468,12.2864,0.271,0.1186,0.7373,13.4133,0,233.31,3277.92
+Pessary,per_episode_per_pathway,2025,"CMS PFS Relative Value File RVU25A (PPRRVU25_JAN, 2025), mix-weighted",9616,8031,0.89,1.5152,0.542,0,2.9472,0,0,12.35
+PT,per_episode_per_pathway,2025,"CMS PFS Relative Value File RVU25A (PPRRVU25_JAN, 2025), mix-weighted",7381,6878,0,0.8013,0.5789,0,1.3802,4.7143,0,25.15
+Open burch,per_episode_per_pathway,2025,"CMS PFS Relative Value File RVU25A (PPRRVU25_JAN, 2025), mix-weighted",64,64,12.44,0.3425,0.1486,0,12.9311,0,316.78,6974.4
+Laparoscopic burch,per_episode_per_pathway,2025,"CMS PFS Relative Value File RVU25A (PPRRVU25_JAN, 2025), mix-weighted",50,50,11.65,0.2408,0.0806,0.466,12.4374,0,234.02,2954.55

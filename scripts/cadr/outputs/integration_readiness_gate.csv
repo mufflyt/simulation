@@ -1,0 +1,8 @@
+criterion,verdict,evidence
+routine global-period work not double-counted,PASS,0 bundled all-zero E&M rows; 156 facility-only rows excluded; index wRVU carries 90d postop
+FPMRS vs non-FPMRS (PT/anesth/facility/ED) separated,PASS,"PT/anesthesia/facility reported in SEPARATE columns, never summed into FPMRS wRVU"
+utilization vs RVU valuation separable (two artifacts),PASS,utilization_counts_per_episode.csv (counts) + workload_valuation_per_episode.csv (counts x RVU25A)
+repeat beneficiaries handled (woman-cluster bootstrap),PASS,woman-cluster bootstrap B=2000; 2538 women have >1 episode
+pathway estimates reproduce directly from raw archive,PASS,single deterministic script rebuilds all tables from the zip (unzip -p per member)
+provenance complete (SHA-256 + population/vintage/role),PASS,16 inputs SHA-256'd; population/vintage/role stamped
+OVERALL,PASS,all criteria must pass for integration readiness
