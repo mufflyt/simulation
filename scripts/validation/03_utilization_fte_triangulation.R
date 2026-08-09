@@ -268,6 +268,40 @@ dec <- do.call(rbind, lapply(REPORT_YEARS, function(y) {
 cat("\n=== Decomposition: the difference is entirely the denominator ===\n")
 print(dec, row.names = FALSE, digits = 5)
 
+# ---- Has the model drifted away from the prespecified denominator? ----------
+#
+# The prespecification targets 5,193.1 raw wRVU/FTE, the model-implied value on
+# 2026-08-08. If upstream development changes that to, say, 5,400 while the
+# header still names 5,193.1, the analysis must NOT silently compute against the
+# new number: that would let model development conducted before the external
+# answer was known quietly move the target.
+#
+# So the prespecified comparison is preserved unconditionally, and a second
+# comparison against the current calibration is reported ONLY when the model has
+# actually moved. The former tests the hypothesis frozen on 2026-08-08; the
+# latter describes the current model. Authoritative status requires the two to
+# coincide -- otherwise this is a new analysis version, not the frozen one.
+current_implied <- unique(round(dec$implied_productivity_reference, 1))
+drifted <- length(current_implied) != 1L ||
+  abs(current_implied[1] - MODEL_IMPLIED_RAW_WRVU_PER_FTE) > 0.5
+
+if (drifted && SPECIALTY_SPECIFIC) {
+  stop(sprintf(paste(
+    "prespecified estimand no longer matches the model state: the frozen",
+    "comparison targets %.1f raw wRVU/FTE, the current model implies %s.",
+    "Authoritative status is refused. Revalidate the new model, report the",
+    "prespecified R against %.1f REGARDLESS, and treat any comparison against",
+    "the new denominator as a new analysis version."),
+    MODEL_IMPLIED_RAW_WRVU_PER_FTE, paste(current_implied, collapse = "/"),
+    MODEL_IMPLIED_RAW_WRVU_PER_FTE), call. = FALSE)
+}
+if (drifted) {
+  cat(sprintf(paste0("\n*** MODEL DRIFT: prespecified denominator %.1f, current %s.",
+                     " The prespecified R is preserved; R_current is reported",
+                     " alongside it.\n"),
+              MODEL_IMPLIED_RAW_WRVU_PER_FTE, paste(current_implied, collapse = "/")))
+}
+
 # ---- The prespecified primary comparison ------------------------------------
 R_ratio <- PRODUCTIVITY$p50 / MODEL_IMPLIED_RAW_WRVU_PER_FTE
 prespec <- data.frame(
@@ -279,7 +313,12 @@ prespec <- data.frame(
               else if (R_ratio > 1) "reference model requires MORE FTE than utilisation-based"
               else "reference model requires FEWER FTE than utilisation-based",
   sensitivity_p25 = PRODUCTIVITY$p25 / MODEL_IMPLIED_RAW_WRVU_PER_FTE,
-  sensitivity_p75 = PRODUCTIVITY$p75 / MODEL_IMPLIED_RAW_WRVU_PER_FTE)
+  sensitivity_p75 = PRODUCTIVITY$p75 / MODEL_IMPLIED_RAW_WRVU_PER_FTE,
+  # Reported for transparency; equal to the prespecified denominator unless the
+  # model has moved, in which case authoritative status is refused above.
+  current_model_implied = current_implied[1],
+  model_drifted = drifted,
+  R_current = PRODUCTIVITY$p50 / current_implied[1])
 cat("\n=== prespecified primary comparison (R = external p50 / model-implied) ===\n")
 print(prespec, row.names = FALSE, digits = 5)
 cat("Interpreted as evidence about the utilisation-to-FTE conversion only --\n")
