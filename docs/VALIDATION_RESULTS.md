@@ -366,6 +366,79 @@ productivity denominator; a p25–p75 range spanning the model calibration makes
 real-world productivity heterogeneity part of the explanation rather than an
 inconvenience. **No outcome establishes workforce adequacy or unmet need.**
 
+## 9. URPS share among physician-delivered care (analysis 05)
+
+**Reproduced.** Runs `20260808T211711` / `20260808T211844`, identical at zero
+tolerance across all six tables. Specification frozen in
+`docs/PRESPEC_URPS_SHARE.md` at commit `faf72dc`, before any roster-linked
+quantity was computed; implementation at `82de574`.
+
+Analysis `04` established the physician-versus-nonphysician split and could not
+address URPS-versus-other-physician, because the CADR archive carries no
+provider identifier. The 2024 Medicare Physician & Other Practitioners file
+does, so the split is reachable by joining `Rndrng_NPI` to the frozen roster
+(1,492 NPIs, `cert_year <= 2024`). CMS itself has no FPMRS provider type — it
+pools subspecialists with generalists exactly as carrier specialty code 16
+does — so the roster join is the only route, not a convenience.
+
+### Partial identification, not a point estimate
+
+CMS suppresses every NPI × HCPCS × POS cell under 11 beneficiaries, which
+deletes the low-volume tail specifically. Rather than rescale by `1/capture` —
+which would assume the suppressed volume resembles the retained volume, the one
+thing the suppression mechanism rules out — the unidentified remainder `M` is
+carried as unidentified and the result is an interval.
+
+Primary tier: the 13 anatomically female-specific codes, covering 36.0% of the
+model's physician work RVU.
+
+| service | capture | L | H | observed-cell | model |
+|---|---:|---:|---:|---:|---:|
+| `sling_procedure` | 54.3% | **36.0%** | 86.5% | 72.7% | 30.5% |
+| `prolapse_procedure` | 40.2% | 26.9% | 91.1% | 75.1% | 30.5% |
+| `pessary_care` | 49.4% | 18.3% | 82.6% | 51.2% | 37.3% |
+| **wRVU-weighted** | 44.3% | **28.8%** | **89.6%** | 73.4% | — |
+
+### The interval is too wide to propagate; the lower bound is not
+
+`[28.8%, 89.6%]` does not resolve `P(URPS | physician)`. Propagating it through
+`03` would produce an FTE range spanning most of the plausible space, which is
+the correct answer to the question asked and not a useful input.
+
+The **lower bound is informative on its own**, and it bites once. On
+`sling_procedure` the model assumes 30.5% of physician-delivered work is URPS,
+while at least **36.0%** of Medicare sling services demonstrably were —
+in the configuration *least* favourable to URPS, assigning every suppressed
+service to some other physician. The model under-attributes sling work to
+subspecialists on the highest-work-RVU service in the basket. `prolapse` and
+`pessary` assumptions sit inside their intervals and are not contradicted.
+
+### What this does not license
+
+The bound is a valid lower bound **for Medicare FFS 2024**. Transporting it to
+the model's all-payer estimand requires an assumption that is probably false in
+a known direction: Medicare sling patients are older, and older patients
+plausibly reach subspecialists more often, so the Medicare URPS share is likely
+*above* the all-payer share. The finding is therefore that the model's sling
+assumption is below a Medicare-specific floor, not that it is wrong nationally.
+
+Unmatched NPIs are **non-roster physicians**, never "generalists" — non-match
+is equally consistent with a roster miss. Roster ascertainment for 2024 is
+**undocumented**: the CSV holds 1,500 rows and 1,495 NPIs, its provenance
+sidecar states 1,100 and 1,092, and the companion coordinate extract holds
+1,552. Three artifacts, three counts. No completeness figure may be quoted
+until that is reconciled, and any roster incompleteness biases `L` downward,
+which makes the sling finding conservative rather than fragile.
+
+The observed-cell share (73.4% weighted) is **not** a national share. It is the
+size of the selection: it exceeds the lower bound by 45 points because
+suppression removes low-volume providers and retains high-volume ones.
+
+The E/M component — 45.6% of physician work RVU — remains unidentified. The PUF
+carries no diagnosis field, so `99213` cannot be restricted to urogynaecologic
+care, and no share was computed against a 179.8M-service all-specialty
+denominator.
+
 ## What none of this establishes
 
 Every result above validates the **calculation**. None validates the
