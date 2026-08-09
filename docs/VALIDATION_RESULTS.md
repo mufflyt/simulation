@@ -54,10 +54,22 @@ more dangerous than a merge conflict precisely because nothing looks wrong.
 If a pinned run reproduces these values exactly, that demonstrates robustness —
 it does **not** retroactively confer provenance on them.
 
-| script | status |
-|---|---|
-| `01_temporal_validation.R` | **Provisional historical.** Regenerates every figure in sections 1–4 on rerun, and the rerun caught a reporting discrepancy (the median is 7.545%, not 7.55%), which is why section 1 reports 7.5%. Still provisional: the model was moving. |
-| `02_monte_carlo_convergence.R` | **Provisional historical.** Sections 5–6 record what this computation produced. A pinned run at `b9757fe` is in progress. |
+| analysis | status | authoritative run_id | reproduction run_id |
+|---|---|---|---|
+| `01_temporal_validation.R` | **Reproduced** | `20260808T154509_temporal_validation_1e24ac8` | `20260808T154514_…` |
+| `02_monte_carlo_convergence.R` | **Reproduced** | `20260808T133320_mc_convergence_1e24ac8` | `20260808T140238_…` |
+| `04_delegation_claims_evidence.R` | **Reproduced** | `20260808T193315_delegation_claims_evidence_c471388` | `20260808T193322_…` |
+| `03_utilization_fte_triangulation.R` | **Exploratory** | — | — |
+
+All reproduced pairs matched every table at **zero tolerance**, from independent
+worktrees pinned to a single commit, each run passing `read_validation_run()`.
+
+`03` is exploratory for a different reason from the others: not provenance, but
+**unresolved parameters** — FPMRS-specific productivity and the URPS share among
+physician-delivered care. Provenance work cannot fix that.
+
+Sections 5–6 below record what the earlier provisional analysis produced; the
+authoritative runs reproduce those values.
 
 ### Run identity is established before computation
 
@@ -242,6 +254,67 @@ Seed-to-seed width noise at n = 2,000 is ±2.5%, an order of magnitude below bot
 inflation effects, so the comparison is not seed-driven.
 
 ---
+
+## 7. Claims-attributed provider mix (analysis 04)
+
+**Status: REPRODUCED.** Independent authoritative runs from clean pinned
+worktrees produced identical six-table outputs at zero tolerance. The analysis
+estimates claims-attributed physician versus non-physician provider mix for
+sling and pessary episodes, 2008–2016. It does **not** identify URPS versus
+other physicians, nor actual hands-on provider type where incident-to billing
+obscures delivery.
+
+Four external objects are hashed into the manifest and rechecked at completion:
+the CADR provider-specialty extract, its data dictionary, and the two
+version-controlled mapping tables (`scripts/validation/mappings/`).
+
+| Service | Model physician share | Claims-attributed | Difference | wRVU effect |
+|---|---:|---:|---:|---:|
+| `sling_procedure` | 0.979 | 0.961 | **−1.9 pp** | −55,896 |
+| `pessary_care` | 0.653 | 0.849 | **+19.6 pp** | +201,520 |
+
+**Sling** — the claims estimate **closely agreed with** the modelled physician
+share. That is strong external support where claims attribution resists
+incident-to misclassification; it is not validation in isolation, because the
+claims source carries its own attribution limitations. Zero APP-attributed
+slings across 4,608 episodes.
+
+**Pessary** — claims attribution is substantially more physician-heavy than the
+model. Treat as an **upper-bound sensitivity arm**, not a corrected value: this
+is exactly where nurse-delivered care billed under a supervising physician is
+indistinguishable in claims.
+
+**Weighting** — pooled physician share is **94.6% wRVU-weighted against 88.5%
+episode-weighted** (APP 1.7% vs 8.6%). A sling carries 12.29 wRVU and a pessary
+fitting 0.89, so episode weighting silently up-weights the cheaper service. This
+empirically demonstrates why **workload-weighted delegation is the relevant
+quantity for an FTE model**, rather than asserting the choice.
+
+**Trend** — pessary 85.4% → 84.5%, sling 96.2% → 95.7% across 2008–2011 vs
+2012–2016: no material temporal trend in *claims-attributed* physician share.
+This does not establish that actual APP delivery was stable, since rising
+incident-to billing would present as exactly this flatness.
+
+**Unmapped-code audit** — 37 observed CMS specialty codes, 37 mapped, 0
+unmapped. Unknown codes stop the run rather than falling to "other", verified
+by deleting code 16 and confirming the failure.
+
+### What deterministic A/B does and does not prove
+
+Reproduction here demonstrates **computational reproducibility and
+declared-input completeness** — it is what caught an undeclared `/tmp/sv.rds`
+intermediate feeding the matrix comparison. It is **not** statistical
+replication, and it does not show the claims attribution is unbiased. The
+incident-to bound is a property of the data source; no amount of reproduction
+touches it.
+
+### Preserved audit trail
+
+The earlier exploratory runs are retained, not relabelled or deleted. The pair
+`20260808T192755` / `20260808T192802` reproduced all six tables under the
+exploratory gate and is the evidence that promotion was warranted. Keeping them
+documents the transition from an analysis with assumptions hidden in code and
+temp files to a fully declared specification.
 
 ## What none of this establishes
 
