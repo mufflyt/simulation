@@ -174,9 +174,19 @@ urps_medicare_service_crosswalk <- function(basket = URPS_CPT_BASKET,
 #' @param year,hcpcs,services Column names in `claims`.
 #' @param state,provider_type,place_of_service,npi Optional claims columns to
 #'   retain as dimensions when present. Set any to NULL to omit it.
+#' @param beneficiaries,bene_day_services Optional claim columns carrying the
+#'   two OTHER CMS utilization measures, kept distinct from `services`:
+#'   `Tot_Benes` (distinct beneficiaries PER provider-code row) and
+#'   `Tot_Bene_Day_Srvcs` (beneficiary-day services). Summed only when the column
+#'   is present. The summed beneficiary count double-counts a patient seen by
+#'   several providers, so it is NOT a de-duplicated unique-patient count. Set to
+#'   NULL to omit.
 #' @return Tibble of annual service totals with explicit `estimand` and
-#'   `payer_scope` labels. The `unmapped_service_fraction` attribute records
-#'   claims excluded because their HCPCS code is outside the study basket.
+#'   `payer_scope` labels. When the beneficiary columns are present it also
+#'   carries `billed_beneficiaries_sum`, `billed_bene_day_services`, and
+#'   `rows_with_na_benes` (suppressed-cell count; suppression is flagged, never
+#'   summed as zero). The `unmapped_service_fraction` attribute records claims
+#'   excluded because their HCPCS code is outside the study basket.
 #' @family medicare capacity
 #' @concept supply
 #' @export
@@ -185,7 +195,8 @@ aggregate_medicare_realized_care <- function(
     crosswalk = urps_medicare_service_crosswalk(),
     year = "year", hcpcs = "HCPCS_Cd", services = "Tot_Srvcs",
     state = "Rndrng_Prvdr_State_Abrvtn", provider_type = "Rndrng_Prvdr_Type",
-    place_of_service = "Place_Of_Srvc", npi = "Rndrng_NPI") {
+    place_of_service = "Place_Of_Srvc", npi = "Rndrng_NPI",
+    beneficiaries = "Tot_Benes", bene_day_services = "Tot_Bene_Day_Srvcs") {
   required <- c(year, hcpcs, services)
   missing <- setdiff(required, names(claims))
   if (length(missing)) {
@@ -204,6 +215,10 @@ aggregate_medicare_realized_care <- function(
     stop("aggregate_medicare_realized_care: services must be finite and non-negative", call. = FALSE)
   }
   c$.services <- raw_services
+  has_ben <- !is.null(beneficiaries) && beneficiaries %in% names(c)
+  has_bds <- !is.null(bene_day_services) && bene_day_services %in% names(c)
+  if (has_ben) c$.benes   <- suppressWarnings(as.numeric(c[[beneficiaries]]))
+  if (has_bds) c$.beneday <- suppressWarnings(as.numeric(c[[bene_day_services]]))
   names(c)[names(c) == hcpcs] <- ".hcpcs"
   c <- dplyr::left_join(c, crosswalk, by = c(".hcpcs" = "hcpcs"))
   unmapped <- is.na(c$service)
@@ -221,10 +236,27 @@ aggregate_medicare_realized_care <- function(
     billed_services = sum(.data$.services), claim_lines = dplyr::n(),
     billing_npis = if (!is.null(npi) && npi %in% names(c)) dplyr::n_distinct(.data[[npi]]) else NA_integer_,
     .groups = "drop")
+  # The two OTHER CMS measures, kept distinct and only when supplied. SUM ignores
+  # NA (never counts a suppressed cell as zero); rows_with_na_benes surfaces it.
+  if (has_ben) {
+    b <- dplyr::summarise(dplyr::group_by(c, dplyr::across(dplyr::all_of(group_cols))),
+      billed_beneficiaries_sum = sum(.data$.benes, na.rm = TRUE),
+      rows_with_na_benes = sum(is.na(.data$.benes)), .groups = "drop")
+    out <- dplyr::left_join(out, b, by = group_cols)
+  }
+  if (has_bds) {
+    d <- dplyr::summarise(dplyr::group_by(c, dplyr::across(dplyr::all_of(group_cols))),
+      billed_bene_day_services = sum(.data$.beneday, na.rm = TRUE), .groups = "drop")
+    out <- dplyr::left_join(out, d, by = group_cols)
+  }
   out$estimand <- "realized Medicare FFS URPS services; not latent all-payer demand"
   out$payer_scope <- "Medicare fee-for-service"
   attr(out, "unmapped_service_fraction") <- if (total > 0) excluded / total else NA_real_
-  attr(out, "caveat") <- "Provider-and-Service PUF suppresses low-volume lines and does not identify beneficiary age; use for older-population realized-use validation, not prevalence or all-payer demand."
+  attr(out, "caveat") <- paste(
+    "Provider-and-Service PUF suppresses low-volume lines and does not identify",
+    "beneficiary age; use for older-population realized-use validation, not",
+    "prevalence or all-payer demand.",
+    if (has_ben) "billed_beneficiaries_sum double-counts patients across providers." else "")
   dplyr::as_tibble(out)
 }
 
