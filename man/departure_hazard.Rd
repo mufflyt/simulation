@@ -16,7 +16,7 @@ departure_hazard(
 \arguments{
 \item{age}{Numeric age(s).}
 
-\item{sex}{Character sex ("male"/"female"), recycled to length of \code{age}.
+\item{sex}{Character sex ("male"/"female"), recycled to length of \code{age}. A partial vector (length strictly between 1 and \code{length(age)}) is refused rather than misaligned.
 Female physicians retire slightly earlier (HWSM Exhibit 17).}
 
 \item{retirement_schedule}{Named numeric vector of hazards keyed by single

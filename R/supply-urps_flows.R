@@ -71,8 +71,14 @@ URPS_P_ACTIVE_COEF <- list(
 
 # ---- Internal helpers --------------------------------------------------------
 
-# Resolve scenario_id → retirement_shift_years (integer years).
+# Resolve scenario_id → retirement_shift_years (years, not necessarily whole).
 # Returns 0 when scenario_id is NULL, NA, or unknown.
+#
+# NOT as.integer(): that truncates toward zero, so a registry declaring a
+# half-year shift (0.5, or -1.5) would silently reach the model as 0 / -1 and
+# the scenario would be quieter than the registry says it is. The shift is used
+# as a continuous offset on the age axis (and as the Weibull scale_shift), both
+# of which accept fractions, so there is nothing to round to.
 .resolve_retirement_shift <- function(scenario_id, registry) {
   if (is.null(scenario_id) || isTRUE(is.na(scenario_id))) return(0L)
 
@@ -89,7 +95,7 @@ URPS_P_ACTIVE_COEF <- list(
             "'; retirement_shift_years treated as 0.", call. = FALSE)
     return(0L)
   }
-  as.integer(scen$retirement_shift_years %||% 0L)
+  as.numeric(scen$retirement_shift_years %||% 0)
 }
 
 # ---- Main function -----------------------------------------------------------
@@ -99,7 +105,8 @@ URPS_P_ACTIVE_COEF <- list(
 #' Logistic regression estimate of P(clinician is actively practising) given
 #' current age, sex, and years since initial board certification. The function
 #' is vectorised; all arguments except `scenario_id`, `coef`, and `registry`
-#' are recycled to the longest input.
+#' are recycled to the longest input. Recycling is from length 1 only: a partial
+#' vector is refused rather than silently misaligned.
 #'
 #' The model is calibrated to three HWSM Exhibit 17 survival anchors for a
 #' male physician at the reference entry age (33):
@@ -169,9 +176,9 @@ supply_p_active <- function(age,
   sex             <- tolower(as.character(sex))
 
   n               <- max(length(age), length(sex), length(years_certified))
-  age             <- rep_len(age, n)
-  sex             <- rep_len(sex, n)
-  years_certified <- rep_len(years_certified, n)
+  age             <- .recycle_aligned(age, n, "age")
+  sex             <- .recycle_aligned(sex, n, "sex")
+  years_certified <- .recycle_aligned(years_certified, n, "years_certified")
 
   # ---- Input validation -----------------------------------------------------
   bad_sex <- !sex %in% c("male", "female")

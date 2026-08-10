@@ -14,7 +14,7 @@ predict_clinical_hours(
 \arguments{
 \item{age}{Numeric age(s).}
 
-\item{sex}{Character sex ("male"/"female"); recycled to length of \code{age}.}
+\item{sex}{Character sex ("male"/"female"); recycled to length of \code{age}. A partial vector (length strictly between 1 and \code{length(age)}) is refused rather than misaligned.}
 
 \item{model}{Optional model from \code{\link[=fit_clinical_hours_model]{fit_clinical_hours_model()}}.}
 

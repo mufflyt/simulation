@@ -82,9 +82,37 @@ fit_calibration_scalars <- function(predicted, observed, max_scalar = 3) {
 #' @export
 apply_calibration_scalars <- function(values, scalars, value_col = "predicted") {
   assertthat::assert_that(value_col %in% names(values), "category" %in% names(values))
+
+  # Applying to an already-calibrated table used to do NOTHING, in silence: the
+  # join suffixed the columns to calibration_scalar.x / .y, `out$calibration_scalar`
+  # resolved to NULL, and coalesce(NULL, 1) rescaled every value by 1. The result
+  # still carried calibration columns, so uncalibrated output reported itself as
+  # calibrated -- the same failure the workforce runner documents for the
+  # accepted-but-never-applied scalars.
+  if ("calibration_scalar" %in% names(values)) {
+    stop("apply_calibration_scalars: `values` already carries a `calibration_scalar` ",
+         "column and has therefore been calibrated once. Re-applying would silently ",
+         "no-op. Drop that column first if a second stage is genuinely intended.",
+         call. = FALSE)
+  }
+
   s <- dplyr::select(scalars, "category", calibration_scalar = "scalar")
   out <- safe_left_join(values, s, by = "category", min_match_rate = 1.0)
-  out[[value_col]] <- out[[value_col]] * dplyr::coalesce(out$calibration_scalar, 1)
+
+  # A category with no usable scalar is UNCALIBRATED. Defaulting it to 1 returned
+  # the model's own number in a column labelled calibrated, which is the claim
+  # this function exists to support and must not fabricate. `min_match_rate`
+  # catches an unmatched key; this catches a matched key whose scalar is NA,
+  # which is what fit_calibration_scalars() emits when predicted == 0.
+  if (anyNA(out$calibration_scalar)) {
+    stop(sprintf(paste(
+      "apply_calibration_scalars: no calibration scalar for category %s.",
+      "Returning those rows unscaled would report uncalibrated values as calibrated."),
+      paste(unique(out$category[is.na(out$calibration_scalar)]), collapse = ", ")),
+      call. = FALSE)
+  }
+
+  out[[value_col]] <- out[[value_col]] * out$calibration_scalar
   out
 }
 

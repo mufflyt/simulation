@@ -41,7 +41,8 @@ Returns 0 for ages ≥ \code{MICROSIM_TERMINAL_AGE} and for ages < 18.
 Logistic regression estimate of P(clinician is actively practising) given
 current age, sex, and years since initial board certification. The function
 is vectorised; all arguments except \code{scenario_id}, \code{coef}, and \code{registry}
-are recycled to the longest input.
+are recycled to the longest input. Recycling is from length 1 only: a partial
+vector is refused rather than silently misaligned.
 }
 \details{
 The model is calibrated to three HWSM Exhibit 17 survival anchors for a
