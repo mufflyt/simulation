@@ -684,6 +684,25 @@ participation_p_no_patient_care <- function(age, sex = "female",
 #' @concept supply
 #' @export
 validate_participation_table <- function(table = FUTUREDOCS_PARTICIPATION) {
+  # Column presence FIRST, because `table$p_full + table$p_part + table$p_none`
+  # with any one column absent is `x + y + NULL`, which is numeric(0) -- and
+  # any(logical(0)) is FALSE, so BOTH checks below passed vacuously and the
+  # function returned a table missing a required column as valid. The four
+  # sibling validators (cpt basket, setting mix, delegation matrix, migration
+  # matrix) all check presence first; this one did not.
+  need <- c("p_full", "p_part", "p_none")
+  missing <- setdiff(need, names(table))
+  if (length(missing)) {
+    stop(sprintf(paste("validate_participation_table: missing column(s): %s.",
+                       "Without them the sum-to-1 and non-negativity checks below",
+                       "reduce to any(logical(0)), which is FALSE -- the table would",
+                       "be reported valid because nothing was checked."),
+                 paste(missing, collapse = ", ")), call. = FALSE)
+  }
+  if (nrow(table) == 0L) {
+    stop("validate_participation_table: the table has no rows, so every check ",
+         "below is vacuously satisfied.", call. = FALSE)
+  }
   s <- table$p_full + table$p_part + table$p_none
   if (any(abs(s - 1) > 1e-6)) {
     stop("validate_participation_table: probabilities must sum to 1 in every row",

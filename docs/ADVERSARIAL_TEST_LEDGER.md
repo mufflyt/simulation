@@ -1967,3 +1967,99 @@ shape.
   was never looked at.
 * That a mutation I chose is the only way to break a fix. Each mutation reverts
   the guard as written; a subtler regression might survive.
+
+---
+
+## Cycle 23 — 2026-08-10
+
+**Mix:** 3 BVA · 4 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle23.R`
+
+**Targets and why.** Cycle 22 carried forward *a message right about the what and
+silent about the why*. The audit that followed suggested a sharper question, so
+this cycle asked both — over guards **this ledger did not write**.
+
+### The sweep
+
+```
+422  stop() guards in R/, across 243 functions
+167  (40%) interpolate the offending value into the message
+ 62  in functions no test names directly (mostly internals reached via a caller)
+```
+
+Then the audit's method, turned on sixteen pre-existing guards: each reverted in
+an isolated worktree, its test file run, the file restored.
+
+> **14 of 16 killed. 2 survived.**
+
+And the survivors were confirmed against the **whole suite**, not one file:
+with both reverted, `test_dir()` reported **3 failures — exactly the 3 known
+pre-existing ones**. Neither guard was pinned anywhere.
+
+### Survivor 1 — the precedent that was never tested
+
+`weighted_interval_score()`'s length guard:
+
+> *"length(y) must be 1 or nrow(quantiles) … rep_len would silently
+> partial-recycle and score the wrong cases."*
+
+**This is the guard cycle 02 cited as THE in-repo precedent** when generalising
+the no-partial-recycling rule into `.recycle_aligned()` — nine sites, D1, the
+first defect in this ledger. The precedent was correct, load-bearing, and
+exercised by no test. Now pinned at both admissible lengths and on each side of
+them, and test 10 asserts the precedent and the rule drawn from it still agree.
+
+### Survivor 2 — a defect, not just a gap
+
+**D32 · a validator satisfied by absence.** `validate_participation_table()`
+computes `table$p_full + table$p_part + table$p_none`. With any one column
+absent that is `x + y + NULL`, which is **`numeric(0)`** — and
+`any(logical(0))` is **FALSE**, so *both* the sum-to-1 check and the
+non-negativity check passed vacuously. The function **returned a table missing a
+required column as valid**. Reverting the guard was not even necessary; it was
+already doing nothing.
+
+The vacuity class the ledger recorded in cycles 07–08, found there in tests and
+here in production code.
+
+*Swept:* the four sibling validators — `validate_cpt_basket()`,
+`validate_setting_mix()`, `validate_delegation_matrix()`,
+`validate_migration_matrix()` — **all check column presence before arithmetic**
+and refuse the same input. `validate_participation_table()` was the only one of
+five that did not. Test 6 pins the siblings so a later "simplification" cannot
+bring them into line with the broken one.
+
+*Fix:* presence first, then rows, then the arithmetic — and the message names
+**why**, not just what: *"the checks below reduce to `any(logical(0))`, which is
+FALSE — the table would be reported valid because nothing was checked."* That is
+the carried-forward class discharged in the same change.
+
+**Why it went unnoticed:** `participation_fte()` reads `p_full` and `p_part` and
+never touches `p_none`, so a table missing `p_none` *worked*. Test 9 pins that
+the validator's claim and the consumer's requirement now describe the same table.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `weighted_interval_score` | exactly length 1 or `nrow`, nothing between |
+| 2 | BVA | a single-row matrix | where "1" and "nrow" coincide, so a wrong comparison hides |
+| 3 | BVA | the participation table | refused when empty, accepted at one row |
+| 4 | semantic | a missing column | refused, and the message says why |
+| 5 | semantic | the real checks | still fire once every column is present |
+| 6 | semantic | four sibling validators | already refuse it; pinned so they stay that way |
+| 7 | semantic | the interval score | a proper score, not just the right shape |
+| 8 | adversarial | absence | no check satisfiable by a missing column OR zero rows |
+| 9 | adversarial | `participation_fte` | validator's claim matches the consumer's requirement |
+| 10 | adversarial | the precedent | `weighted_interval_score` and `.recycle_aligned` refuse the same thing |
+
+**Result:** 51 assertions, all passing, 0 skips. **1 defect found, 1 fixed, 1
+untested pre-existing guard pinned.**
+
+**Related files rerun:** `test-provider-lifecycle.R` (56),
+`test-forecast-scorecard.R` (20), `test-workforce-microsimulation.R` (58),
+`test-urps-settings.R` (43), `test-workload-to-fte.R` (76),
+`test-scientific-benchmarks.R` (21), and cycles 02/04/15/16 (247) — 521
+assertions, 0 problems.
+
+**Note for the final audit:** 40% of `stop()` messages interpolate the offending
+value; 60% do not. That is the carried-forward class at scale, and it is a
+documentation-quality finding rather than a defect — worth stating in the final
+audit rather than fixing blind in one cycle.
