@@ -1630,3 +1630,89 @@ must satisfy a joint constraint — numerator/denominator, lower/upper bound,
 start/end year, observed/expected. Enumerate the column PAIRS that carry a
 relation and check whether the relation is tested, or only each column
 separately.
+
+---
+
+## Cycle 20 — 2026-08-10
+
+**Mix:** 3 BVA · 4 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle20.R`
+
+**Targets and why.** Cycle 19 carried forward *the guarded half of a pair*: `py`
+was validated and `ev` was not, and the same asymmetry is available wherever two
+columns carry a joint constraint. The richest instance in this package is an
+**interval**.
+
+### The sweep
+
+**Seventeen files in `R/` produce a lower/upper pair** — `*_lo`/`*_hi`,
+`lower_95`/`upper_95`, `pi95_lower`/`pi95_upper`, `conf_low`/`conf_high`,
+`ci_low`/`ci_high`. Grepping every ordering comparison in `R/` returned
+**exactly one match, and it was a read rather than a check**
+(`validation-forecast_scorecard.R:129` assigns `lo` and `hi`, then uses them).
+
+Nothing in the package asserted that a lower bound is below its upper bound.
+
+### Defect found and fixed — 1, at both ends of the chain
+
+**D29 · an inverted interval validated clean and then scored.** The gap
+projection contract carries **ten** bound pairs in `OPTIONAL_COLS`.
+`validate_urps_gap_projection()` checks required columns, cohort basis,
+non-finite values *in the six required numeric columns*, and the gap arithmetic
+— and checks the bound columns for nothing. Measured:
+
+```
+validate_urps_gap_projection(lower_95 = 1400, upper_95 = 1000, mode = "strict")
+  -> PASSED CLEAN
+
+forecast_scorecard() on that interval
+  -> coverage 0, mean_width -400
+```
+
+A **negative interval width** reported as a forecast diagnostic, and a coverage
+of 0 that reads as "the model never covers the truth" when the bounds are simply
+swapped. An NA bound passed equally: the completeness guard added in cycle 03
+covers only the six **required** numeric columns, and every bound column is
+optional.
+
+*Fix:* one shared `.interval_bound_problems()` in
+`R/core-canonical_and_joins.R` beside `.recycle_aligned()` and
+`.assert_in_range()`, called from the projection validator (strict errors,
+relaxed warns, matching every other guard in that file) and from
+`forecast_scorecard()` (stops — scoring an interval you cannot interpret is not
+a diagnostic). Pairs are **derived from the naming conventions**, not listed, so
+a bound column added later is covered without editing the validator — test 4
+asserts that by feeding it a `something_new_lo`/`_hi` pair it has never seen.
+
+**The realistic failure is not a garbage value.** Test 9 makes that explicit:
+two correct numbers in the wrong columns, both finite, both plausible workforce
+counts, carrying the *same six values* as the well-formed frame. Nothing about
+the values distinguishes them — only the relation does.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `lo == hi` | a point interval is legal; one unit inverted is not |
+| 2 | BVA | non-finite bounds | malformed, not wide — the required-column guard never covered these |
+| 3 | BVA | no interval at all | still valid; half a pair is not a pair |
+| 4 | semantic | pair discovery | derived from naming, so an unseen pair is covered |
+| 5 | semantic | all ten pairs | one rule, not just the headline band |
+| 6 | semantic | strict vs relaxed | matches the file's other guards |
+| 7 | semantic | `forecast_scorecard` | refuses to score an interval it cannot interpret |
+| 8 | adversarial | one bad row in six | caught elementwise — the frame's MEAN width is positive |
+| 9 | adversarial | a plausible swap | same six numbers, only the relation differs |
+| 10 | adversarial | well-formed output | unaffected: no bands, one band, all six pairs, degenerate bands |
+
+**Result:** 38 assertions, all passing, 0 skips. **1 defect found, 2 sites
+fixed.**
+
+**Related files rerun:** `test-forecast-scorecard.R` (20),
+`test-orchestrator-wiring.R` (56), `test-monte-carlo.R` (32),
+`test-interval-coverage.R` (20), `test-backtest.R` (106),
+`test-demand-lifecourse-uncertainty.R` (16), `test-export-wiring.R` (10),
+`test-adequacy-evidence.R` (81), `test-demand-and-validation.R` (150), and
+cycles 03/18/19 (190) — 681 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** a guard whose scope is a hardcoded
+column list. The cycle-03 completeness guard listed six required columns and
+therefore could not see the ten optional ones; this cycle's guard derives its
+scope from naming instead. Enumerate the validators that name their columns
+literally and check what each cannot see.
