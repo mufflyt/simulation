@@ -606,6 +606,10 @@ project_urps_demand <- function(cells,
                                                       "income_equity", "full_equity"),
                                 verbose           = TRUE) {
   access_scenario <- match.arg(access_scenario)
+  # Both are documented as proportions and both scale the headline demand
+  # directly; see compute_brfss_demand_estimand() for the same pair.
+  .assert_in_range(care_seeking_rate, "care_seeking_rate", fn = "project_urps_demand")
+  .assert_in_range(referral_rate, "referral_rate", fn = "project_urps_demand")
   total_wt <- sum(cells$pop_weight, na.rm = TRUE)
   if (total_wt <= 0) stop("population cell table has zero total weight")
 

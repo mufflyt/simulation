@@ -357,3 +357,95 @@ in three separate modules (counts, shares, probabilities). Next sweep should be
 systematic rather than opportunistic — enumerate every exported argument
 documented as a probability, share, rate or count and check each has a range
 guard, instead of waiting to trip over the next one.
+
+---
+
+## Cycle 06 — 2026-08-10
+
+**Mix:** 3 BVA · 3 semantic · 4 adversarial → `tests/testthat/test-adversarial-cycle06.R`
+
+**Targets and why.** Discharged the class cycle 05 carried forward, and did it
+the way that cycle asked for: **systematically rather than opportunistically.**
+Cycles 03, 04 and 05 each found the same class in a different module by tripping
+over it. This cycle enumerated the surface first.
+
+### The sweep
+
+Parsed every roxygen `@param` in `R/` whose text names a probability, share,
+fraction, rate, proportion, percent or hazard, restricted to exported
+functions, and checked each for a range guard — then **probed the
+high-consequence ones directly**, because the static heuristic has false
+positives in both directions (it missed guards written as a local `chk()`
+closure or a multi-line `assert_that`, and flagged parameters that are not
+really rates).
+
+**The sweep's main finding is that most of this surface is already guarded.**
+`conservative_management_multipliers()`, `urps_migration_matrix()`,
+`telemedicine_reach()`, `clear_access_trajectory()` and
+`compute_namcs_demand_estimand()` all refuse out-of-range input. Test 8 pins
+that group as a set, so a refactor that drops any of them fails in one place.
+
+Three did not, and all three are multipliers that scale the headline demand
+estimate directly.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `project_urps_demand` | care-seeking and referral fractions closed on [0, 1] |
+| 2 | BVA | `compute_demand_denominators` | a consultation rate is bounded below only; a per-1,000 rate is bounded by 1,000 |
+| 3 | BVA | `.assert_in_range` | inclusive at both ends, names its caller and the offending value |
+| 4 | semantic | `project_urps_demand` | demand scales with the exact PRODUCT of the two fractions; swapping them cannot move it |
+| 5 | semantic | D1/D2/D3 | distinct estimands, linear in population, strictly ordered |
+| 6 | semantic | `compute_demand_denominators` | an unknown age band stops; a legitimately absent band reduces demand |
+| 7 | adversarial | the referral cascade | every stage removes women, so referrals never exceed the prevalent pool |
+| 8 | adversarial | five already-guarded functions | the existing guards cannot be lost |
+| 9 | adversarial | all three new guards | out of range is refused, never clamped |
+| 10 | adversarial | `compute_demand_denominators` | a negative rate can no longer produce a negative case count |
+
+### Defects found and fixed — 3
+
+**D11 · negative demand cases.** `compute_demand_denominators()` validated the
+age bands but not the rates. Measured: `consult_rate = -0.3` over a 5,000,000
+woman population returned **D2 = −1,500,000 demand cases**, silently — a
+negative number of consultations, carried into any downstream total that sums
+the estimands without checking their sign. *Fix:* `consult_rate` finite and
+≥ 0 (a woman may consult more than once a year, so there is no upper bound);
+`surgery_rate_per_1000` finite and in [0, 1000], above which the model operates
+on more women than exist.
+
+**D12 · `compute_brfss_demand_estimand(care_seeking_rate, referral_rate)`** —
+both documented as fractions, both multiplying the population directly, neither
+checked. Above 1, more women reach a urogynaecologist than have the condition.
+
+**D13 · `project_urps_demand(care_seeking_rate, referral_rate)`** — the same
+pair on the other estimand, equally unguarded.
+
+*Shared fix:* `.assert_in_range()` in `R/core-canonical_and_joins.R`, beside
+`.recycle_aligned()`, so the fifth module inherits the rule instead of
+rediscovering it. **Refused, never clamped:** a referral rate of 1.4 silently
+becoming 1.0 would produce a plausible number from an impossible assumption and
+report no problem. Test 9 exists to pin that distinction.
+
+**Worth recording:** every insurance and income care-seeking multiplier is ≤ 1
+(`Insured 1.00 / Uninsured 0.58 / Unknown 0.80`; `LT25k 0.72 … GT100k 1.00`),
+which is what makes the cascade a genuine filter. A multiplier above 1 would let
+the *effective* care-seeking rate exceed the rate the caller asked for, and the
+new upper bound on the caller's argument would not catch it. Test 7 asserts the
+filter property on the output, not on the constants, so it holds either way.
+
+**Result:** 73 assertions, all passing. **3 defects found, 3 fixed.**
+**Bug class closed** — this was the systematic pass the previous three cycles
+kept deferring.
+
+**Related files rerun:** `test-urps-population.R` (41), `test-access-clearing.R`
+(37), `test-access-clearing-trajectory.R` (17), `test-telemedicine-reach.R` (14),
+`test-namcs-demand-calibration.R` (27), `test-urps-prevention.R` (50),
+`test-demand-and-validation.R` (150), `test-adversarial-cycle03.R` (59),
+`test-adversarial-cycle05.R` (92) — 487 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** the fixture-shape assumption. Four of
+this cycle's ten tests initially failed because I invented a helper that does
+not exist (`example_population_cells()`) and a column that is not returned
+(`total_visits`). None was a defect — but a test written against a
+mis-remembered interface can also PASS for the wrong reason. Next cycle should
+check whether any existing test asserts on a column the function does not
+actually populate.

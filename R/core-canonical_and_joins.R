@@ -141,6 +141,28 @@ if (!exists("%||%", envir = baseenv())) {
     fun, arg, k, n, k + 1L, k), call. = FALSE)
 }
 
+# A parameter documented as a proportion, fraction, probability or rate has a
+# range, and the range is part of the estimand rather than a nicety. Four cycles
+# of this ledger have now found the same class in four modules -- negative
+# provider counts, sum-to-one validators without a range check, probability
+# arguments to the aging recurrence, and the demand-side care-seeking
+# multipliers. Shared here so the fifth module inherits it instead of
+# rediscovering it.
+.assert_in_range <- function(x, name, lo = 0, hi = 1, fn = NULL, why = NULL) {
+  if (is.null(fn)) {
+    cl <- sys.call(-1L)
+    fn <- if (is.null(cl)) "assert_in_range" else deparse(cl[[1L]])[1L]
+  }
+  bad <- !is.numeric(x) || any(!is.finite(x)) || any(x < lo) || any(x > hi)
+  if (bad) {
+    stop(sprintf("%s: `%s` must be finite and in [%s, %s]; got %s.%s",
+                 fn, name, format(lo), format(hi),
+                 paste(utils::head(format(x), 5L), collapse = ", "),
+                 if (is.null(why)) "" else paste0(" ", why)), call. = FALSE)
+  }
+  invisible(x)
+}
+
 # ---- Join safety ----------------------------------------------------------
 
 .assert_join_keys_present <- function(x, y, by) {

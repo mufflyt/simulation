@@ -377,6 +377,15 @@ compute_demand_denominators <- function(pop_by_band,
   assertthat::assert_that(is.data.frame(pop_by_band))
   assertthat::assert_that(all(c("year", "age_band", "female_pop") %in% names(pop_by_band)))
 
+  # A consultation rate may legitimately exceed 1 (repeat visits in a year), so
+  # only the lower bound is a hard error there. A surgery rate per 1,000 cannot
+  # exceed 1,000 without operating on more women than exist. Measured before the
+  # guard: consult_rate = -0.3 returned D2 = -1,500,000 demand cases, silently.
+  .assert_in_range(consult_rate, "consult_rate", lo = 0, hi = Inf,
+                   fn = "compute_demand_denominators")
+  .assert_in_range(surgery_rate_per_1000, "surgery_rate_per_1000", lo = 0, hi = 1000,
+                   fn = "compute_demand_denominators")
+
   unknown <- setdiff(unique(pop_by_band$age_band), DEMAND_AGE_BANDS)
   if (length(unknown) > 0) {
     stop(sprintf("compute_demand_denominators: unknown age band(s): %s. Expected: %s",
@@ -703,6 +712,13 @@ compute_brfss_demand_estimand <- function(pop_by_band,
                                            condition = "ui",
                                            care_seeking_rate = 0.25,
                                            referral_rate = 0.50) {
+  # Both are documented as fractions and both multiply the population directly,
+  # so a value outside [0, 1] is a demand estimate that is wrong by construction:
+  # above 1, more women reach a urogynaecologist than have the condition; below
+  # 0, the estimand is a negative case count.
+  .assert_in_range(care_seeking_rate, "care_seeking_rate",
+                   fn = "compute_brfss_demand_estimand")
+  .assert_in_range(referral_rate, "referral_rate", fn = "compute_brfss_demand_estimand")
   prev <- brfss_pfd_prevalence_for_demand_bands(brfss_cells, condition = condition)
   rate <- prev * care_seeking_rate * referral_rate
 
