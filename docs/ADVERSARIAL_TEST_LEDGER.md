@@ -2063,3 +2063,102 @@ assertions, 0 problems.
 value; 60% do not. That is the carried-forward class at scale, and it is a
 documentation-quality finding rather than a defect — worth stating in the final
 audit rather than fixing blind in one cycle.
+
+---
+
+## Cycle 24 — 2026-08-10 (final cycle)
+
+**Mix:** 3 BVA · 3 semantic · 4 adversarial → `tests/testthat/test-adversarial-cycle24.R`
+
+**Targets and why.** Across the previous twenty-three cycles, **scenario
+parameter propagation** was the thinnest of the ten named priorities: touched
+once, in cycle 02, and only for `retirement_shift_years` and an unknown scenario
+id.
+
+It is also where this repository has already been bitten, and the comment is
+still in the orchestrator:
+
+> *"sharing one spec across scenarios silently overrode every scenario's entrant
+> value: 'Fellowship output +10%' and '-10%' returned results identical to
+> Baseline to the last digit."*
+
+The only reason that was caught is that someone compared the numbers.
+
+### First: does every lever work?
+
+Measured end to end, one lever at a time, on an 11-year projection:
+
+| lever | headcount | FTE | moved |
+|---|---|---|---|
+| baseline | 226.00 | 219.16 | — |
+| `entrants_per_year` 20→30 | **323.00** | 314.05 | yes |
+| `conversion_floor` 0.6 | **152.00** | 148.43 | yes |
+| `retirement_schedule` 0.20 | **204.00** | 200.16 | yes |
+| `career_change_hazard` 0.05 | **197.00** | 189.56 | yes |
+| `hours_multiplier` 0.8 | 226.00 | **175.33** | yes |
+| `late_career_fte_factor` 0.5 | 226.00 | **212.13** | yes |
+| `late_career_fte_onset_age` 45 | 226.00 | **201.39** | yes |
+
+All seven are live, and each moves the **right** quantity: the three hours
+levers change FTE and leave headcount exactly where it was. That is the
+FTE-versus-headcount distinction showing up as a propagation property, and
+test 4 pins it.
+
+### Defect found and fixed — 1
+
+**D33 · a lever that is declared and does nothing.** The orchestrator reads
+every optional lever as `params$<name> %||% <neutral>`, and
+`validate_scenario_registry()` checked only that the **required four** fields
+are present. A field outside that set was never examined.
+
+So a scenario could declare a lever the orchestrator does not recognise and run
+as baseline. Measured — a scenario **labelled "Hours down 20%"** carrying
+`hours_multipler = 0.8` (one letter short):
+
+```
+validate_scenario_registry(reg, "supply")  ->  PASSED CLEAN
+what the orchestrator reads for hours_multiplier  ->  1  (the neutral default)
+```
+
+The scenario declares an hours lever, applies none, and says nothing. Identical
+in kind to the entrant-spec failure the file already records — and that one was
+found by eye, after the fact.
+
+*Fix:* `SUPPLY_SCENARIO_KNOWN_FIELDS` — the required four, the six levers the
+orchestrator actually reads, and the two metadata fields the SSOT registry
+ships. Anything else is refused, **with the near match named**, because the
+whole failure mode is a typo:
+
+```
+scenario 'hours_down' declares unknown field(s): hours_multipler.
+Did you mean 'hours_multipler' -> 'hours_multiplier'? Every lever is read as
+`params$<name> %||% <neutral>`, so a field the orchestrator does not recognise
+applies NOTHING -- the scenario would run as baseline while its label says
+otherwise.
+```
+
+Both registries validate unchanged: the local fallback (7 fields) and the
+mufflyaccess SSOT (12 fields, including `entrant_multiplier`, `family` and
+`requires_fte_model`). Test 1 pins that the vocabulary covers both **exactly** —
+too narrow and the SSOT stops validating, too wide and a typo passes as known.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | the field vocabulary | covers both registries exactly, neither wider nor narrower |
+| 2 | BVA | neutral levers | a multiplier of 1 leaves the answer exactly where it was |
+| 3 | BVA | unknown fields | refused singly and in combination; the required four alone still validate |
+| 4 | semantic | every lever | moves the answer, and moves the right quantity |
+| 5 | semantic | the onset age | a lever in its own right, not a switch |
+| 6 | semantic | composition | levers compose rather than overriding one another |
+| 7 | adversarial | a misspelled lever | refused, with the near match named |
+| 8 | adversarial | every lever name | a near miss on each is caught, not just the one tested today |
+| 9 | adversarial | the scenario grid | distinct answers, not relabelled ones |
+| 10 | adversarial | the guard's placement | a registry that cannot validate cannot be run from; demand rules stay separate |
+
+**Result:** 46 assertions, all passing, 0 skips. **1 defect found, 1 fixed.**
+
+**Related files rerun:** `test-scenario-registry.R` (18),
+`test-orchestrator-wiring.R` (56), `test-workforce-microsimulation.R` (58),
+`test-supply-burnout-scenario.R` (12), `test-entrant-trajectory.R` (33),
+`test-hours-uncertainty-propagation.R` (27), `test-export-wiring.R` (10), and
+cycles 02/23 (97) — 311 assertions, 0 problems.
