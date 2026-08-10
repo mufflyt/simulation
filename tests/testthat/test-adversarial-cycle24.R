@@ -34,6 +34,9 @@ cyc24_run <- function(over = list()) {
   c(hc = s$summary$headcount_median[11], fte = s$summary$effective_fte_median[11])
 }
 
+cyc24_err <- function(reg) tryCatch(validate_scenario_registry(reg, "supply"),
+                                    error = function(e) conditionMessage(e))
+
 # ---- BVA 1 ------------------------------------------------------------------
 
 test_that("BVA: the known-field vocabulary covers both registries exactly", {
@@ -211,6 +214,32 @@ test_that("ADVERSARIAL: the scenario grid produces distinct answers, not relabel
 })
 
 # ---- ADVERSARIAL 4 ----------------------------------------------------------
+
+test_that("ADVERSARIAL: a recognised-but-forbidden field keeps its own diagnosis", {
+  # CAUGHT BY THE FULL SUITE, and it is the class cycle 22 named. `hazard_mult`
+  # is refused by a dedicated guard with a scientific rationale -- a scalar
+  # multiplier distorts the shape of the retirement curve and is used by no
+  # published Dall-family study. The unknown-field guard added in THIS cycle
+  # initially claimed it was unrecognised and masked that reasoning.
+  #
+  # A forbidden field is KNOWN. The two sets are declared separately so they
+  # cannot be confused for one another.
+  expect_true(all(SUPPLY_SCENARIO_FORBIDDEN_FIELDS %in% SUPPLY_SCENARIO_KNOWN_FIELDS))
+  expect_true("hazard_mult" %in% SUPPLY_SCENARIO_FORBIDDEN_FIELDS)
+
+  reg <- local_supply_scenario_registry()
+  reg$bad <- reg$status_quo; reg$bad$hazard_mult <- 1.2
+  err <- tryCatch(validate_scenario_registry(reg, "supply"), error = function(e) conditionMessage(e))
+  expect_match(err, "scalar hazard multiplier")
+  expect_match(err, "distorts the shape")
+  expect_false(grepl("unknown field", err))
+
+  # A genuinely unknown field still gets the typo diagnosis, so the split has
+  # not blunted the new guard.
+  reg2 <- local_supply_scenario_registry()
+  reg2$bad <- reg2$status_quo; reg2$bad$hours_multipler <- 0.8
+  expect_match(cyc24_err(reg2), "unknown field")
+})
 
 test_that("ADVERSARIAL: a registry that cannot be validated cannot be run from", {
   # The guard has to sit where a run passes through it, or a caller reaches the
