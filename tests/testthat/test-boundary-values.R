@@ -181,3 +181,103 @@ test_that("the coordinate coverage floor is a real boundary", {
   expect_gt(COORD_COVERAGE_MIN, 0.5)
   expect_lt(COORD_COVERAGE_MIN, 1)
 })
+
+# ---- Retirement age window --------------------------------------------------
+
+test_that("the hazard switches regime exactly at the retirement and terminal ages", {
+  h <- function(a) implied_annual_departure_rate(a, "female")
+  # Below RETIREMENT_MIN_AGE only the career-change hazard applies; at it, the
+  # retirement schedule takes over. An off-by-one here silently ages the whole
+  # workforce out a year early or late, compounded over a 25-year horizon.
+  expect_lt(h(RETIREMENT_MIN_AGE - 1L), h(RETIREMENT_MIN_AGE))
+  expect_equal(h(RETIREMENT_MIN_AGE), h(RETIREMENT_MIN_AGE + 1L))
+
+  # The terminal age is an absorbing boundary: everyone leaves, and nothing
+  # beyond it can be less than certain.
+  expect_lt(h(MICROSIM_TERMINAL_AGE - 1L), 1)
+  expect_equal(h(MICROSIM_TERMINAL_AGE), 1)
+  expect_equal(h(MICROSIM_TERMINAL_AGE + 5L), 1)
+})
+
+# ---- Entry-to-certification conversion --------------------------------------
+
+test_that("a conversion above 1 is refused, at the tolerance and not before", {
+  # More people cannot reach an outcome than entered, so ratio > 1 is
+  # misalignment rather than a high estimate. The guard carries a 1e-8 tolerance
+  # so exact-1 arithmetic survives floating point.
+  expect_silent(invisible(.assert_possible_conversion(0.857, "x")))
+  expect_silent(invisible(.assert_possible_conversion(1, "x")))
+  expect_silent(invisible(.assert_possible_conversion(1 + 1e-8, "x")))
+  expect_error(.assert_possible_conversion(1 + 2e-8, "x"))
+  expect_error(.assert_possible_conversion(1.05, "x"))
+
+  # The message must send the reader to the LAG first: a uniform lag against
+  # pathway-specific fellowship lengths produced exactly 1.050.
+  expect_error(.assert_possible_conversion(1.05, "x"), "lag")
+  # The escape hatch exists but must be explicit.
+  expect_silent(invisible(.assert_possible_conversion(1.05, "x", allow_implausible = TRUE)))
+})
+
+test_that("the observed conversions sit strictly inside the possible region", {
+  skip_if_not_installed("mufflyaccess")
+  for (src in c("acgme", "nrmp")) {
+    r <- entrant_to_cert_ratio(source = src)$ratio
+    expect_gt(r, 0)
+    expect_lte(r, 1 + 1e-8)   # would have thrown otherwise; asserted for the record
+  }
+})
+
+# ---- FTE restatement --------------------------------------------------------
+
+test_that("restating FTE refuses a zero hours basis but not a tiny one", {
+  expect_error(restate_fte(1000, 0, 37.2))
+  expect_equal(restate_fte(1000, 37.2, 37.2), 1000)
+
+  # BOUNDARY HOLE, recorded rather than fixed here. A vanishingly small but
+  # positive `from_hours` passes the positivity check and silently collapses the
+  # count to zero. Same shape as adequacy = 1e-9 yielding a required FTE in the
+  # trillions: `> 0` is a weaker precondition than "physically possible", and
+  # neither function carries a plausibility band on its result.
+  tiny <- restate_fte(1000, 1e-9, 37.2)
+  expect_gt(tiny, 0)          # strictly positive, so no guard fires
+  expect_lt(tiny, 1e-6)       # and physically meaningless: 1,000 FTE -> 2.7e-8
+})
+
+# ---- Monte Carlo degenerate bands -------------------------------------------
+
+test_that("a degenerate band reports NA rather than Inf or a false zero", {
+  # Every draw identical: no spread, so noise_share is undefined, not infinite.
+  flat <- monte_carlo_diagnostics(rep(100, 50), ci = 0.95)
+  expect_equal(flat$half_width, 0)
+  expect_true(is.na(flat$noise_share))
+
+  # NEARLY degenerate is the sharper case: 49 identical values and one outlier
+  # still gives a zero-width 95% band, because both outer quantiles land on the
+  # mode. A ratio guarded only against exact zero would divide by it here.
+  near <- monte_carlo_diagnostics(c(rep(100, 49), 101), ci = 0.95)
+  expect_equal(near$half_width, 0)
+  expect_true(is.na(near$noise_share))
+
+  # With genuine spread the ratio is finite and positive.
+  set.seed(1)
+  real <- monte_carlo_diagnostics(stats::rnorm(200, 100, 10), ci = 0.95)
+  expect_gt(real$half_width, 0)
+  expect_true(is.finite(real$noise_share))
+})
+
+# ---- Hours-curve gradient scale --------------------------------------------
+
+test_that("a zero gradient scale is exactly flat, and any positive scale is not", {
+  ag <- data.frame(age = c(40, 50, 60), sex = "female")
+  flat <- fte_curve_gradient_leverage(ag, 25L, gradient_scale = 0)$drift_pct
+  expect_equal(flat, 0, tolerance = 1e-9)
+
+  # The published gradient must move it materially, or the leverage claim in the
+  # README is empty.
+  published <- fte_curve_gradient_leverage(ag, 25L, gradient_scale = 1)$drift_pct
+  expect_lt(published, -5)
+
+  # Monotone in the scale: more gradient, more drift, no crossing.
+  d <- fte_curve_gradient_leverage(ag, 25L, gradient_scale = c(0, 0.5, 1, 1.5))$drift_pct
+  expect_true(all(diff(d) < 0))
+})
