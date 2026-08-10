@@ -734,3 +734,102 @@ entry points. `project_supply_deterministic()` carried the identical unguarded
 line as the stochastic engine, and a guard on one of two doors is not a guard.
 Look for other pairs — deterministic/stochastic twins, `*_once` vs `*_many`,
 scenario vs baseline paths — where one has a check the other lacks.
+
+---
+
+## Cycle 10 — 2026-08-10
+
+**Mix:** 4 BVA · 3 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle10.R`
+
+### Full suite (launched at the close of cycle 09)
+
+**3,943 passed · 5 failed · 0 errors · 31 skipped · 121 files.** Three failures
+are the known pre-existing ones (`test-canonical-overlap.R` stale `isochrones`
+rows; two `test-practice-survey.R` `access_ascertainment` failures). Two were
+mine, and both are resolved here.
+
+**Mine, trivial (fixed in `ef9679a`).** `test-export-wiring.R`: passing
+`"project_supply_deterministic"` as a literal to cycle 09's new guard made the
+orphan detector count the function as *wired*, the blind spot documented in the
+registry header in cycle 03. Switched to the `sys.call(-1)` idiom already used
+by `.recycle_aligned()` and `.assert_in_range()`.
+
+**Mine, substantive — and I got the first diagnosis wrong.**
+`test-adversarial-guards.R:140` ("effective FTE never exceeds headcount")
+failed at HEAD, passed at pre-cycle-01. Bisected to cycle 03 — which touched no
+FTE code at all. The test has **no `set.seed()`**, so cycle 03's new guards
+shifted RNG consumption in an earlier test in the same file, and the new stream
+surfaced something always reachable: 8 of 40 seeds exceed 1.0, worst ratio
+1.00607.
+
+I first reported this as "a real defect: supply in FTE can exceed supply in
+heads". Reading the contract properly says otherwise. Two places in the repo
+disagree:
+
+* `supply-provider_microsimulation.R`: *"More FTE than people ... is
+  dimensionally impossible under an hours-threshold FTE definition, so strict
+  mode refuses it outright."*
+* `calibrate_hours_intercept()`: *"...so base-year FTE tracks headcount and
+  **all subsequent movement comes from the changing age and sex composition**."*
+
+The second is what the model does. FTE is `hours / threshold` with no cap;
+calibration solves the intercept so the **base cohort** averages exactly 1.0,
+and entrants arriving at `MICROSIM_ENTRY_AGE` sit above that mean. Drift is the
+intended output. And the measured 1.00607 is **inside the engine's own 1.02
+tolerance**. So the assertion was stricter than the contract: a **wrong test**,
+passing on luck of the ambient RNG stream.
+
+Corrected in both places it appears — `test-adversarial-guards.R` and my own
+cycle 01 test 6, which made the identical over-strong claim. Both now seed
+explicitly and assert what is true: base year tracks headcount to 1e-6, drift
+stays within `FTE_PER_HEAD_TOLERANCE`.
+
+### Defect found and fixed — 1
+
+**D21 · the dimensional guard ran on the base cohort only.** It computed mean
+FTE over `base_agents`. Because `calibrate_hours_intercept()` makes that mean
+exactly 1.0 *by construction*, the guard passed every time and never looked at
+the projection. Measured with an older base cohort (ages 60–75, 25 entrants/yr):
+
+```
+base-year ratio 1.0000   ->   1.0783 by 2041
+```
+
+A 7.8% breach of the guard's own tolerance, in a **strict-mode** run, with
+nothing firing. Exactly the class cycle 09 carried forward: a guard on one of
+two doors. *Fix:* the same check applied to the projected panel, with the
+tolerance hoisted to one shared `FTE_PER_HEAD_TOLERANCE` so the two cannot
+drift apart.
+
+**My first version of that fix was over-broad, and an existing test caught it.**
+Written without a scope condition, it errored on
+`test-hours-uncertainty-propagation.R` at a ratio of 1.156 — a run using a
+**fitted** hours model, where the level comes from the fit rather than from an
+intercept solved against the FTE threshold, so there is no calibration contract
+to breach. The base-cohort guard already excludes that path
+(`is.null(hours_model)`); the panel guard now does too.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | base-year ratio | exactly 1.0 for any cohort shape |
+| 2 | BVA | `FTE_PER_HEAD_TOLERANCE` | one shared constant, above 1 and below 1.1 |
+| 3 | BVA | single-provider cohort | the degenerate case is still exactly 1.0 |
+| 4 | BVA | hours → FTE | exactly `hours / threshold`, no other scaling |
+| 5 | semantic | composition drift | direction follows the base cohort's age |
+| 6 | semantic | headcount vs FTE | one is a count, the other is not, neither derived from the other |
+| 7 | semantic | `calibrate_hours_intercept` | it is a property of the cohort it was solved on |
+| 8 | adversarial | the guard | covers the projection, not just the base cohort |
+| 9 | adversarial | the guard | stays silent on a well-composed run (specificity) |
+| 10 | adversarial | the ratio | holds under 25 independent seeds, not one lucky stream |
+
+**Result:** 44 assertions, all passing. **1 defect found, 1 fixed; 2 over-strong
+assertions corrected; 1 over-broad fix of my own caught by an existing test.**
+
+**Related files rerun:** ten files, 423 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** unseeded stochastic tests. This whole
+episode existed because `test-adversarial-guards.R:140` had no `set.seed()`, so
+its verdict depended on which tests ran before it — it was neither reliably
+passing nor reliably failing. Enumerate every test that calls a
+`simulate_*`/`draw_*`/`run_*` function without seeding first, and decide each:
+seed it, or assert a property that holds under every stream.
