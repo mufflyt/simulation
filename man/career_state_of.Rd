@@ -9,9 +9,9 @@ career_state_of(age, entered = TRUE, retired = FALSE)
 \arguments{
 \item{age}{Numeric age(s).}
 
-\item{entered}{Logical; has the provider entered practice (recycled).}
+\item{entered}{Logical; has the provider entered practice. Length 1 or \code{length(age)}.}
 
-\item{retired}{Logical; has the provider retired (recycled). Takes precedence.}
+\item{retired}{Logical; has the provider retired. Length 1 or \code{length(age)}. Takes precedence.}
 }
 \value{
 An ordered factor with levels \code{CAREER_STATES}.

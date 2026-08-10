@@ -9,7 +9,7 @@ career_departure_by_state(age, sex = "female", ...)
 \arguments{
 \item{age}{Numeric age(s) of the active cohort.}
 
-\item{sex}{Character sex(es), recycled.}
+\item{sex}{Character sex(es). Length 1 or \code{length(age)}.}
 
 \item{...}{Passed to \code{\link[=departure_hazard]{departure_hazard()}}.}
 }

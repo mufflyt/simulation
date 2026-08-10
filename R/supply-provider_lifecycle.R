@@ -192,7 +192,7 @@ PROFESSIONAL_MORTALITY_MULTIPLIER <- c(male = 0.75, female = 0.85)
 #' supply because providers who return are never counted back in. Both
 #' components are represented here, with re-entry handled separately.
 #' @param age Numeric age(s).
-#' @param sex Character sex ("male"/"female"), recycled to length of `age`.
+#' @param sex Character sex ("male"/"female"), recycled to length of `age`. A partial vector (length strictly between 1 and `length(age)`) is refused rather than misaligned.
 #'   Female physicians retire slightly earlier (HWSM Exhibit 17).
 #' @param retirement_schedule Named numeric vector of hazards keyed by single
 #'   year of age (see `RETIREMENT_HAZARD_PHYSICIAN`).
@@ -213,7 +213,7 @@ departure_hazard <- function(age,
                              terminal_age = MICROSIM_TERMINAL_AGE,
                              sex_multiplier = RETIREMENT_SEX_HAZARD_MULTIPLIER) {
   age_i <- floor(as.numeric(age))
-  sex <- tolower(as.character(rep_len(sex, length(age_i))))
+  sex <- tolower(as.character(.recycle_aligned(sex, length(age_i), "sex")))
   mult <- unname(sex_multiplier[sex])
   mult[is.na(mult)] <- 1
 
@@ -432,7 +432,7 @@ hwsm_reference_hours <- function(age, sex = "female", intercept = HWSM_HOURS_INT
 # return mostly zeros through pmax() and silently mis-solve the intercept.
 .hwsm_hours_offset <- function(age, sex = "female") {
   age <- as.numeric(age)
-  sex <- tolower(as.character(rep_len(sex, length(age))))
+  sex <- tolower(as.character(.recycle_aligned(sex, length(age), "sex")))
   band <- as.character(cut(age, breaks = HWSM_HOURS_AGE_BANDS,
                            labels = HWSM_HOURS_AGE_LABELS,
                            right = FALSE, include.lowest = TRUE))
@@ -493,7 +493,7 @@ fit_clinical_hours_model <- function(survey, df = 4L, extra_terms = character(0)
 #' is supplied.
 #'
 #' @param age Numeric age(s).
-#' @param sex Character sex ("male"/"female"); recycled to length of `age`.
+#' @param sex Character sex ("male"/"female"); recycled to length of `age`. A partial vector (length strictly between 1 and `length(age)`) is refused rather than misaligned.
 #' @param model Optional model from [fit_clinical_hours_model()].
 #' @param intercept Reference-group hours for the fallback specification.
 #' @return Numeric weekly clinical hours.
@@ -503,7 +503,7 @@ fit_clinical_hours_model <- function(survey, df = 4L, extra_terms = character(0)
 predict_clinical_hours <- function(age, sex = "female", model = NULL,
                                    intercept = HWSM_HOURS_INTERCEPT) {
   age <- as.numeric(age)
-  sex <- tolower(as.character(rep_len(sex, length(age))))
+  sex <- tolower(as.character(.recycle_aligned(sex, length(age), "sex")))
   sex[!sex %in% c("male", "female")] <- "female"
 
   if (!is.null(model)) {
@@ -616,7 +616,7 @@ FUTUREDOCS_PARTICIPATION_SOURCE <- paste(
 #' @export
 participation_fte <- function(age, sex = "female", table = FUTUREDOCS_PARTICIPATION) {
   age <- as.numeric(age)
-  sex <- tolower(as.character(rep_len(sex, length(age))))
+  sex <- tolower(as.character(.recycle_aligned(sex, length(age), "sex")))
   sex[!sex %in% c("male", "female")] <- "female"
 
   lo <- min(table$age); hi <- max(table$age)
@@ -645,7 +645,7 @@ participation_fte <- function(age, sex = "female", table = FUTUREDOCS_PARTICIPAT
 participation_p_no_patient_care <- function(age, sex = "female",
                                             table = FUTUREDOCS_PARTICIPATION) {
   age <- as.numeric(age)
-  sex <- tolower(as.character(rep_len(sex, length(age))))
+  sex <- tolower(as.character(.recycle_aligned(sex, length(age), "sex")))
   sex[!sex %in% c("male", "female")] <- "female"
   key_age <- pmin(pmax(round(age), min(table$age)), max(table$age))
   idx <- match(paste(sex, key_age), paste(table$sex, table$age))

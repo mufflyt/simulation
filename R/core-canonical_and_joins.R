@@ -113,6 +113,34 @@ if (!exists("%||%", envir = baseenv())) {
   `%||%` <- function(x, y) if (is.null(x)) y else x
 }
 
+# ---- Recycling safety -----------------------------------------------------
+
+# Partial vector recycling is the scalar analogue of a join fan-out. A length-k
+# covariate spread over n cases lines the WRONG value up with every case after
+# the k-th -- one clinician's sex, or another's certification year -- and
+# rep_len() does it in silence, where base arithmetic recycling would at least
+# warn about a non-multiple length.
+#
+# The published contract for the vectorised lifecycle functions is "recycled",
+# and it means recycled FROM LENGTH 1. A partial vector (1 < k < n) is a caller
+# error, not a shorthand, so it is refused here rather than turned into a
+# confident wrong number. weighted_interval_score() already refuses the same
+# thing for the same reason; this generalises that rule.
+.recycle_aligned <- function(x, n, arg, fun = NULL) {
+  k <- length(x)
+  if (k == n) return(x)
+  if (k == 1L) return(rep_len(x, n))
+  if (is.null(fun)) {
+    cl <- sys.call(-1L)
+    fun <- if (is.null(cl)) "recycle_aligned" else deparse(cl[[1L]])[1L]
+  }
+  stop(sprintf(paste(
+    "%s: `%s` has length %d but must be length 1 or %d.",
+    "Recycling a partial vector would silently pair element 1 with case %d",
+    "and misalign every case after the first %d."),
+    fun, arg, k, n, k + 1L, k), call. = FALSE)
+}
+
 # ---- Join safety ----------------------------------------------------------
 
 .assert_join_keys_present <- function(x, y, by) {

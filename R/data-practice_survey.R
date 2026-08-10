@@ -309,7 +309,7 @@ geographic_access_status <- function() {
 # defect than the one it measures.
 .hours_offset_scaled <- function(age, sex, gradient_scale) {
   age <- as.numeric(age)
-  sex <- tolower(as.character(rep_len(sex, length(age))))
+  sex <- tolower(as.character(.recycle_aligned(sex, length(age), "sex")))
   band <- as.character(cut(age, breaks = HWSM_HOURS_AGE_BANDS,
                            labels = HWSM_HOURS_AGE_LABELS,
                            right = FALSE, include.lowest = TRUE))

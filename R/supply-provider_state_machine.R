@@ -67,8 +67,8 @@ CAREER_STATE_LATE_ONSET_AGE <- 60L
 #' a labelling VIEW over the existing agent table: it never alters departures.
 #'
 #' @param age Numeric age(s).
-#' @param entered Logical; has the provider entered practice (recycled).
-#' @param retired Logical; has the provider retired (recycled). Takes precedence.
+#' @param entered Logical; has the provider entered practice. Length 1 or `length(age)`.
+#' @param retired Logical; has the provider retired. Length 1 or `length(age)`. Takes precedence.
 #' @return An ordered factor with levels `CAREER_STATES`.
 #' @family provider state machine
 #' @concept supply
@@ -81,8 +81,8 @@ CAREER_STATE_LATE_ONSET_AGE <- 60L
 career_state_of <- function(age, entered = TRUE, retired = FALSE) {
   age <- as.numeric(age)
   n <- length(age)
-  entered <- rep_len(as.logical(entered), n)
-  retired <- rep_len(as.logical(retired), n)
+  entered <- .recycle_aligned(as.logical(entered), n, "entered")
+  retired <- .recycle_aligned(as.logical(retired), n, "retired")
 
   out <- rep(NA_character_, n)
   out[!entered] <- "fellow"                       # pipeline (pre-practice)
@@ -265,7 +265,7 @@ state_departure_hazard <- function(age, sex = "female", ...) {
 #' without implying a single per-state constant drives the engine.
 #'
 #' @param age Numeric age(s) of the active cohort.
-#' @param sex Character sex(es), recycled.
+#' @param sex Character sex(es). Length 1 or `length(age)`.
 #' @param ... Passed to [departure_hazard()].
 #' @return A tibble of `career_state`, `n`, `mean_hazard`.
 #' @family provider state machine
@@ -273,7 +273,7 @@ state_departure_hazard <- function(age, sex = "female", ...) {
 #' @export
 career_departure_by_state <- function(age, sex = "female", ...) {
   age <- as.numeric(age)
-  sex <- rep_len(as.character(sex), length(age))
+  sex <- .recycle_aligned(as.character(sex), length(age), "sex")
   hz <- departure_hazard(age, sex = sex, ...)
   st <- career_state_of(age, entered = TRUE, retired = FALSE)
   keep <- !is.na(st)
