@@ -211,6 +211,42 @@ provider_active_in_year <- function(agents, year) {
   entered & not_retired
 }
 
+#' STRICT "practising in the US in year Y" predicate
+#'
+#' [provider_active_in_year()] answers the CERTIFICATION question: has this
+#' provider entered practice and not retired. That is the quantity the observed
+#' contract series measures -- `n_active` equals `n_ever_certified` in every row,
+#' so the series counts people who hold certification whether or not they
+#' practise here. A provider who emigrates is still certified, and removing them
+#' from that count would break the definition match the back-test depends on.
+#'
+#' This answers the SUPPLY question instead: can this provider see a patient in
+#' the United States. An emigrant cannot, so they leave this count -- and they
+#' have already left every state total, because
+#' [apply_provider_migration_matrix()] sets their `state` to NA.
+#'
+#' The two differ by exactly the emigrant stock, which is why both exist. The
+#' supply/demand gap must use THIS one: comparing a certification count against
+#' US demand inflates supply by every provider who left.
+#'
+#' @param agents Agent tibble; `left_country` is optional and absent means nobody
+#'   has emigrated, which is the state of every run that does not apply the
+#'   migration matrix.
+#' @param year Integer year.
+#' @return Logical vector, TRUE where the agent is active AND in the country.
+#' @family provider microsimulation
+#' @concept supply
+#' @export
+provider_us_practising_in_year <- function(agents, year) {
+  active <- provider_active_in_year(agents, year)
+  left <- if ("left_country" %in% names(agents)) {
+    l <- as.logical(agents$left_country); l[is.na(l)] <- FALSE; l
+  } else {
+    rep(FALSE, length(active))
+  }
+  active & !left
+}
+
 # ---- Cohort initialisation ------------------------------------------------
 
 #' Initialise a starting cohort of provider agents
@@ -469,6 +505,14 @@ simulate_provider_career_once <- function(agents,
   v_state <- if ("state" %in% names(agents)) {
     c(as.character(agents$state), rep(NA_character_, capacity - n0))
   } else NULL
+  # Emigration state travels with the cohort. The engine never SETS it -- only
+  # apply_provider_migration_matrix() does -- but a roster that has been through
+  # migration carries it in, and the two national series below differ by exactly
+  # these agents.
+  v_left <- c(if ("left_country" %in% names(agents)) {
+                l <- as.logical(agents$left_country); l[is.na(l)] <- FALSE; l
+              } else rep(FALSE, n0),
+              rep(FALSE, capacity - n0))
   v_id <- c(as.character(agents$provider_id), rep(NA_character_, capacity - n0))
   v_origin <- c(as.character(agents$origin_cohort %||% "baseline"),
                 rep(NA_character_, capacity - n0))
@@ -478,6 +522,10 @@ simulate_provider_career_once <- function(agents,
   p_head <- integer(n_years)
   p_fte <- numeric(n_years)
   p_age <- numeric(n_years)
+  # US-practising counterparts of headcount / effective_fte. Identical to them
+  # in any run where nobody has emigrated, which is every run today.
+  p_head_us <- integer(n_years)
+  p_fte_us <- numeric(n_years)
   # Career-state counts (only populated when tracking; deterministic, no RNG).
   p_early <- integer(n_years)
   p_mid <- integer(n_years)
@@ -513,6 +561,14 @@ simulate_provider_career_once <- function(agents,
     p_head[i] <- length(active)
     p_fte[i] <- if (length(active)) sum(fte_of(v_age[active], v_sex[active])) else 0
     p_age[i] <- if (length(active)) mean(v_age[active]) else NA_real_
+    # The same rule as provider_us_practising_in_year(), which is the DEFINITION
+    # of record; this is its flat-vector form, because the engine works on
+    # preallocated vectors rather than an agent tibble. Cycle 13 established that
+    # logic written twice drifts, so a test asserts the two agree rather than
+    # trusting that they do.
+    us_active <- active[!v_left[active]]
+    p_head_us[i] <- length(us_active)
+    p_fte_us[i] <- if (length(us_active)) sum(fte_of(v_age[us_active], v_sex[us_active])) else 0
 
     # --- Explicit career-state counts (deterministic; consumes no RNG) ---
     # Uses the SAME ages already used for FTE and mean_age, so the state bands
@@ -559,6 +615,7 @@ simulate_provider_career_once <- function(agents,
         if (!is.null(v_state)) v_state <- c(v_state, rep(NA_character_, grow))
         capacity <- capacity + grow
       }
+      if (length(v_left) < capacity) v_left <- c(v_left, rep(FALSE, capacity - length(v_left)))
       # HWSM: entrant sex is a uniform draw against the recent-entrant share.
       v_sex[slot] <- ifelse(stats::runif(n_new) < entrant_female_share, "female", "male")
       v_age[slot] <- MICROSIM_ENTRY_AGE
@@ -598,6 +655,7 @@ simulate_provider_career_once <- function(agents,
     origin_cohort = v_origin[keep]
   )
   if (!is.null(v_state)) final_agents$state <- v_state[keep]
+  if (any(v_left[keep])) final_agents$left_country <- v_left[keep]
 
   # Explicit career-state label as of the last simulated year. Agents are aged
   # once AFTER the final record, so age at max(years) is v_age - 1. Additive: the
@@ -618,6 +676,13 @@ simulate_provider_career_once <- function(agents,
     effective_fte = p_fte,
     mean_age = p_age
   )
+  # The US-practising series, appended after the published columns for the same
+  # reason the career-state columns are: the existing panel keeps its shape and
+  # its values. Always present, because a consumer computing a gap needs to know
+  # which quantity it is holding even when the two coincide.
+  panel$headcount_us_practising <- p_head_us
+  panel$effective_fte_us_practising <- p_fte_us
+
   # Additive state-stratified columns, appended after the published columns so
   # the existing panel is byte-identical whether or not tracking is on.
   if (track_career_states) {
@@ -1087,6 +1152,10 @@ run_supply_microsimulation <- function(initial_workforce = urps_baseline_supply(
       effective_fte_noise_share =
         monte_carlo_diagnostics(.data$effective_fte, ci = ci)$noise_share,
       mean_age_median = stats::median(.data$mean_age, na.rm = TRUE),
+      # The gap-comparable supply. Equal to the medians above in any run where
+      # nobody has emigrated; below them by exactly the emigrant stock otherwise.
+      headcount_us_practising_median = stats::median(.data$headcount_us_practising),
+      effective_fte_us_practising_median = stats::median(.data$effective_fte_us_practising),
       .groups = "drop"
     )
   summary$n_iterations <- n_iterations
