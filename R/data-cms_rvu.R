@@ -152,6 +152,13 @@ URPS_SERVICE_SETTING <- c(
 #' @concept data
 #' @export
 validate_cpt_basket <- function(basket = URPS_CPT_BASKET, tol = 1e-8) {
+  # Checked before the per-service sums, for the reason validate_migration_matrix()
+  # records: -0.1 and 1.1 sum to exactly 1.0, so a sum test alone accepts weights
+  # that are not a mix. A negative weight subtracts that CPT's work RVUs from the
+  # service, understating the workload the service represents.
+  if (any(!is.finite(basket$mix)) || any(basket$mix < 0) || any(basket$mix > 1)) {
+    stop("validate_cpt_basket: mix weights must be finite and in [0, 1].", call. = FALSE)
+  }
   s <- stats::aggregate(basket$mix, by = list(service = basket$service), FUN = sum)
   bad <- s$service[abs(s$x - 1) > tol]
   if (length(bad)) {

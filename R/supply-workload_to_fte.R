@@ -558,6 +558,17 @@ convert_workload_to_fte <- function(volumes,
 #' @export
 allocate_fte_by_setting <- function(total_fte,
                                     time_shares = c(ambulatory = 0.82, operative = 0.15, inpatient = 0.03)) {
+  # Range BEFORE the sum, for the reason validate_migration_matrix() records:
+  # -0.5 and 1.5 sum to exactly 1.0, so a sum test alone accepts a partition
+  # that is not one. It used to, and emitted required_fte = -50 for a setting --
+  # negative clinical FTE, which subtracts from any total it is summed into.
+  if (any(!is.finite(time_shares)) || any(time_shares < 0) || any(time_shares > 1)) {
+    stop(sprintf(paste("allocate_fte_by_setting: every time share must be in [0, 1];",
+                       "got %s. A share outside the unit interval allocates negative",
+                       "or more-than-total FTE to a setting."),
+                 paste(sprintf("%s=%s", names(time_shares), format(time_shares)),
+                       collapse = ", ")), call. = FALSE)
+  }
   s <- sum(time_shares)
   if (abs(s - 1) > 1e-8) {
     stop(sprintf("allocate_fte_by_setting: time shares sum to %.4f, not 1", s), call. = FALSE)
