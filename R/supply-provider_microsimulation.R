@@ -250,6 +250,47 @@ initialize_provider_agents <- function(n,
 
 # ---- Single stochastic trajectory -----------------------------------------
 
+# The projection horizon. Every step of the engine advances age by exactly one
+# year (v_age[live] <- v_age[live] + 1), so `years` is not a set of labels to
+# report against -- it is the number of one-year steps to take, and its values
+# have to line up with them.
+#
+# `sort(unique(as.integer(years)))` alone was silently permissive in a way that
+# produced a wrong answer with a confident label. simulate_provider_career_once(
+# agents, c(2025, 2030), ...) returned a two-row panel whose second row is
+# labelled 2030 and has had ONE year of aging, retirement and entry applied --
+# measured: mean age 50.0 -> 48.6 and headcount 30 -> 35, which is one year of
+# entrants, not five. Five years of dynamics silently did not happen.
+#
+# Every caller in the package already builds this as `a:b`. The invariant was
+# real and unstated; it is stated now.
+.check_projection_years <- function(years, fn) {
+  y <- suppressWarnings(as.numeric(years))
+  if (length(y) == 0L || anyNA(y))
+    stop(sprintf(paste("%s: `years` must be a non-empty vector of whole years;",
+                       "got %s. A non-numeric year coerces to NA and the run",
+                       "returns an empty panel rather than failing."),
+                 fn, paste(utils::head(format(years), 5L), collapse = ", ")),
+         call. = FALSE)
+  if (any(y != trunc(y)))
+    stop(sprintf("%s: `years` must be whole years; got %s.",
+                 fn, paste(utils::head(format(y[y != trunc(y)]), 5L), collapse = ", ")),
+         call. = FALSE)
+  y <- sort(unique(as.integer(y)))
+  if (length(y) > 1L && any(diff(y) != 1L))
+    stop(sprintf(paste("%s: `years` must be CONSECUTIVE; got %s (gap%s at %s).",
+                       "Each element is one one-year step of aging, entry and",
+                       "retirement, so a gap would label a single step with a",
+                       "year several steps later and silently skip the ones",
+                       "between. Pass %d:%d."),
+                 fn, paste(y, collapse = ", "),
+                 if (sum(diff(y) != 1L) > 1L) "s" else "",
+                 paste(y[which(diff(y) != 1L)], collapse = ", "),
+                 min(y), max(y)),
+         call. = FALSE)
+  y
+}
+
 #' Simulate one stochastic provider-career trajectory
 #'
 #' Each year: draw Bernoulli retirement per active agent using the age-band
@@ -324,7 +365,7 @@ simulate_provider_career_once <- function(agents,
                                           p_active_coef = NULL,
                                           p_active_scenario_id = NULL,
                                           track_career_states = FALSE) {
-  years <- sort(unique(as.integer(years)))
+  years <- .check_projection_years(years, "simulate_provider_career_once")
   base_year <- min(years)
 
   if (!"sex" %in% names(agents)) agents$sex <- "female"
@@ -1114,7 +1155,7 @@ project_supply_deterministic <- function(agents, years, entrants_per_year,
                                          hours_model = NULL,
                                          hours_intercept = HWSM_HOURS_INTERCEPT,
                                          sex = "female") {
-  years <- sort(unique(as.integer(years)))
+  years <- .check_projection_years(years, "project_supply_deterministic")
   base_year <- min(years)
 
   # Represent the cohort as (age -> expected count) so departures are fractional.
