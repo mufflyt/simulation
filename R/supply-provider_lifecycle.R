@@ -299,11 +299,34 @@ shift_retirement_schedule <- function(delta_years, schedule = RETIREMENT_HAZARD_
 retirement_survival <- function(from_age = 50, to_ages = c(60, 65, 70, 75, 80),
                                 sex = "male", ...) {
   max_age <- max(to_ages)
-  ages <- seq(from_age, max_age - 1L)
+  # seq(from_age, max_age - 1L) COUNTS DOWN when max_age <= from_age, so
+  # retirement_survival(50, 50) built ages c(50, 49), multiplied two one-year
+  # survival probabilities over a zero-length interval, and returned 0.964.
+  # Third occurrence of this trap in the ledger: live in prevalence_from_incidence
+  # (cycle 05), latent in e2sfca_incremental_weights (cycle 07), live here.
+  #
+  # If no requested age is after the start, no interval has elapsed and every
+  # answer is 1.
+  if (max_age <= from_age) {
+    return(stats::setNames(rep(1, length(to_ages)), as.character(to_ages)))
+  }
+  ages <- seq.int(from_age, max_age - 1L)
   h <- departure_hazard(ages, sex = sex, ...)
   surv <- cumprod(1 - h)
   names(surv) <- as.character(ages + 1L)
   out <- surv[as.character(to_ages)]
+  # `out[is.na(out)] <- 0` was right for ONE of the two ways a lookup can miss
+  # and wrong for the other -- the carried-forward class from cycle 14.
+  #
+  # `surv` is named for ages from_age+1 upward, so a to_age at or BELOW from_age
+  # is absent and used to come back as 0: "nobody survives from 50 to 50". S(t)
+  # for an interval that has not elapsed is 1 by definition, and the 0 made the
+  # returned curve NON-MONOTONE -- measured 0, 0, 0.8947, 0.7965, 0.5452 for
+  # to_ages 45, 50, 55, 60, 65. A survival function that rises is not one.
+  #
+  # A to_age above the horizon genuinely is 0 and is left alone.
+  missing_low <- is.na(out) & to_ages <= from_age
+  out[missing_low] <- 1
   out[is.na(out)] <- 0
   stats::setNames(out, as.character(to_ages))
 }
