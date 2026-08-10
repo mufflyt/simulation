@@ -52,12 +52,31 @@ CONUS_LON_RANGE <- c(-125.0, -66.5)
 #' @return The weights sorted by ascending band.
 #' @keywords internal
 e2sfca_band_weights <- function(weights = E2SFCA_DEFAULT_WEIGHTS) {
-  assertthat::assert_that(is.numeric(weights), length(weights) >= 1)
-  ord <- order(as.numeric(names(weights)))
+  # Brought back to the canonical twostep::e2sfca_band_weights() contract. The
+  # port had kept the shape and dropped three guards, and each one is the
+  # difference between a wrong number and an error:
+  #
+  #   * NON-MONOTONE weights only warned. c("30"=0.5, "60"=1.0) yields an
+  #     incremental weight of -0.5 for the 30-minute band -- a NEGATIVE demand
+  #     weight, which subtracts population from a provider's catchment. And the
+  #     warning was a .msg_warn() message, so it does not even reach warnings().
+  #   * NEGATIVE weights were accepted outright.
+  #   * NON-NUMERIC band names coerced to NA, so order() returned an arbitrary
+  #     order and the weights were silently attached to the wrong bands.
+  if (!is.numeric(weights) || length(weights) < 1L || is.null(names(weights)))
+    stop("e2sfca_band_weights: `weights` must be a named numeric vector.", call. = FALSE)
+  if (any(!is.finite(weights)) || any(weights < 0))
+    stop("e2sfca_band_weights: weights must be finite and non-negative.", call. = FALSE)
+  bands <- suppressWarnings(as.numeric(names(weights)))
+  if (anyNA(bands))
+    stop("e2sfca_band_weights: weight names must be band-in-minutes (e.g. '30', '60'); got ",
+         paste(names(weights), collapse = ", "), ".", call. = FALSE)
+  ord <- order(bands)
   w <- weights[ord]
-  if (is.unsorted(rev(w))) {
-    .msg_warn("E2SFCA weights are not monotonically non-increasing by band")
-  }
+  if (any(diff(w) > 1e-9))
+    stop("e2sfca_band_weights: weights must be monotone non-increasing in band ",
+         "(else a farther band would count MORE than a nearer one, and an ",
+         "incremental weight would be negative).", call. = FALSE)
   w
 }
 
@@ -75,12 +94,27 @@ e2sfca_band_weights <- function(weights = E2SFCA_DEFAULT_WEIGHTS) {
 #' @concept geography
 #' @export
 e2sfca_incremental_weights <- function(weights = E2SFCA_DEFAULT_WEIGHTS, step2_power = 1) {
+  # step2_power < 1 makes the incremental weights NON-MONOTONE -- at 0.5 the
+  # 60-minute band receives more incremental weight (0.356) than the 30-minute
+  # band (0.175), which inverts the distance decay the method exists to encode.
+  if (!is.numeric(step2_power) || length(step2_power) != 1L ||
+      !is.finite(step2_power) || step2_power < 1)
+    stop("e2sfca_incremental_weights: `step2_power` must be a single number >= 1 ",
+         "(1 = E2SFCA, 2 = M2SFCA).", call. = FALSE)
   w <- e2sfca_band_weights(weights)
+  # The M2SFCA guard canonical twostep carries and this port dropped. Squaring a
+  # cumulative weight above 1 INCREASES it, so the "penalty" becomes a bonus:
+  # c("30" = 1.5, "60" = 0.6) at power 2 gave an incremental weight of 1.89.
+  if (step2_power != 1 && any(w > 1 + 1e-12))
+    stop("e2sfca_incremental_weights: step2_power > 1 (M2SFCA) requires cumulative ",
+         "weights <= 1; squaring a weight > 1 would INCREASE access.", call. = FALSE)
+
   wp <- w^step2_power
-  n <- length(wp)
-  incr <- numeric(n)
-  incr[seq_len(n - 1)] <- wp[seq_len(n - 1)] - wp[2:n]
-  incr[n] <- wp[n]
+  # c(wp[-1], 0) rather than wp[2:n]: at n = 1 the latter is the descending
+  # range c(2, 1). It is masked here because the assignment index is empty, but
+  # it is the same trap cycle 05 found live in the aging recurrence.
+  incr <- wp - c(wp[-1L], 0)
+  incr[incr < 0 & incr > -1e-9] <- 0            # clamp float error, as canonical does
   names(incr) <- names(w)
   incr
 }
