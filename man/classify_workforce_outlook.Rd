@@ -24,6 +24,7 @@ Other provider microsimulation:
 \code{\link{project_supply_deterministic}()},
 \code{\link{provider_active_in_year}()},
 \code{\link{provider_clinical_fte}()},
+\code{\link{provider_us_practising_in_year}()},
 \code{\link{retirement_hazard}()},
 \code{\link{run_supply_microsimulation}()},
 \code{\link{simulate_provider_career_once}()}

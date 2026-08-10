@@ -112,7 +112,7 @@ test_that("the unresolved register separates provenance problems from results pr
 test_that("geographic access is registered as absent, not as miscalibrated", {
   g <- geographic_access_status()
   expect_false(g$resolved)
-  expect_equal(nrow(g$components), 7L)
+  expect_equal(nrow(g$components), 8L)   # 7 inputs + the wait_time_anchor
   # PARTIAL counts as neither present nor missing, so the two need not sum to
   # the row count -- an input can be underway.
   expect_lte(g$n_present + g$n_missing, nrow(g$components))
@@ -223,8 +223,14 @@ test_that("every file path the register names actually exists", {
                                                        "components")]),
              unlist(geographic_access_status()$components))
   texts <- texts[!is.na(texts)]
+  # SOURCE-TREE paths only. This guards against a status message pointing a
+  # reader to a renamed/removed module, which is a property of the tracked
+  # source. data-raw/ (NPI roster, downloaded survey extracts) and artifacts/
+  # (generated isochrone registries) are deliberately not in git -- see
+  # tests/skip-budget.csv -- so a status detail that cites one for provenance is
+  # legitimately absent in CI and is not a broken reference.
   paths <- unique(unlist(regmatches(
-    texts, gregexpr("(R|tests|scripts|data-raw|artifacts|docs)/[A-Za-z0-9_./-]+", texts))))
+    texts, gregexpr("(R|tests|scripts|docs)/[A-Za-z0-9_./-]+", texts))))
   paths <- sub("[.,;:]+$", "", paths)
   skip_if(length(paths) == 0, "repository root not reachable (source tree absent under R CMD check)")
 

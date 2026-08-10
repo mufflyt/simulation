@@ -2319,3 +2319,74 @@ Recorded because they bear on how much to trust the rest.
 * **The three pre-existing failures remain.** Two are environmental
   (`~/isochrones` state); one is an `access_ascertainment` register whose paths
   do not exist. None was in scope.
+
+---
+
+## Follow-up — `left_country` resolved (post-audit)
+
+The final audit listed `left_country` as **deliberately not fixed**: an emigrant
+left every state total while remaining in the national one, and which total is
+right was a modelling decision rather than an implementation bug. Resolved here
+on the evidence.
+
+### The decision
+
+**Both totals are right, and they are different quantities.** `left_country`
+sits on the seam between them:
+
+* **Certification count** — what the observed contract series measures. The
+  back-test module documents that `n_active == n_ever_certified` in **every
+  row**, so the series counts people who *hold certification* whether or not
+  they practise here. An emigrant is still certified. Removing them would make
+  the model diverge from the only series it is scored against — and would look
+  like an improvement while breaking the definition match
+  `validate_backtest_target()` exists to enforce.
+* **US-practising count** — the numerator of a gap against **US** demand. An
+  emigrant cannot see a US patient, so they must leave it, and they have already
+  left every state total.
+
+The two differ by exactly the emigrant stock. Reporting one number was the
+error, not choosing the wrong one.
+
+### What changed
+
+| | |
+|---|---|
+| `provider_us_practising_in_year()` | new exported predicate; the definition of record |
+| engine panel | `headcount_us_practising`, `effective_fte_us_practising`, appended after the published columns |
+| MC summary | `headcount_us_practising_median`, `effective_fte_us_practising_median` |
+| the gap | both `compute_fte_gap()` call sites now use the US-practising column when present |
+| `left_country` | carried through the engine and returned on the agent table; **never set by it** — only `apply_provider_migration_matrix()` does that |
+
+**No published number moves.** Migration is not wired into the engine or the
+orchestrator, so `left_country` is absent from every run today and the two
+series are identical. A test asserts exactly that, because the compatibility
+claim is the one most worth pinning.
+
+### The identity that replaced the discrepancy
+
+Cycle 14's test pinned `national − by_state == sum(left_country)` as a **gap
+between two numbers**. It is now an **identity**: `sum(state)` equals the
+US-practising national total, and the certification total exceeds it by the
+emigrants. That the decomposition turns a discrepancy into an identity is the
+evidence it is the right one.
+
+### Two things the gate caught
+
+* The new export is called by **nothing in `R/`** — the engine computes the same
+  rule on flat vectors for speed. `test-export-wiring.R` failed, correctly.
+  Registered as an `api` orphan rather than worked around, and the engine now
+  carries a comment naming the predicate as the definition of record.
+* That is cycle 13's *logic written twice* class, and it cannot be removed here
+  without materialising an agent tibble per year. So a test asserts the two
+  forms **agree** at 0, 1, 7 and 20 emigrants rather than trusting that they do.
+
+**Tests:** `tests/testthat/test-emigration-estimand.R` — 11 tests, 51
+assertions, 0 skips. Thirteen related files rerun: 637 assertions, 0 problems.
+
+**Still a decision, not a proof.** That the certification series is the
+back-test-comparable one follows from what the contract measures; that the gap
+wants the US-practising one follows from what the gap compares. Both are
+readable from the code and the documentation, but neither is externally
+validated, and the emigration rate itself (`out_of_country_rate = 0.003`)
+remains an assumption.
