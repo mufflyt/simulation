@@ -1429,3 +1429,105 @@ required_fte` in `compute_fte_gap()`, `effective_fte / headcount` in the FTE
 guard — the inputs are validated and the denominators are not, because they are
 computed. Enumerate every division in `R/` whose denominator is produced by the
 model itself and check each has a zero/degenerate guard.
+
+---
+
+## Cycle 18 — 2026-08-10
+
+**Mix:** 3 BVA · 3 semantic · 4 adversarial → `tests/testthat/test-adversarial-cycle18.R`
+
+*Rotation correction: the mix sequence drifted at cycle 15 (4/3/3 was run where
+the rotation called for 3/3/4, and stayed one behind through 17). This cycle
+restores the canonical 4/3/3 → 3/4/3 → 3/3/4 sequence from cycle 01.*
+
+### The surface, enumerated
+
+Cycle 17 carried forward: *a ratio whose denominator is a modelled quantity
+rather than a validated input.* Enumerated all of it before touching anything.
+
+| | count |
+|---|---|
+| division sites in `R/` | **275** in 63 files |
+| with a non-literal denominator | **174** |
+| unguarded in surrounding context (raw scan) | 66 |
+| genuinely computed denominator with zero reachable, after hand classification | **5** |
+
+Most of the 66 are false positives — literals, `dplyr::n()`, roxygen prose, or
+parameters with their own range guard. The hand-classified survivors all share
+one shape, and it is the one cycles 12 and 13 named: **the guard exists and the
+copy does not use it.**
+
+### Defect found and fixed — 1, in five places
+
+**D27 · an undefined ratio reported as a favourable finding.**
+`replacement_ratio = entrants / departures` in the orchestrator's outlook block.
+`departures <- baseline_supply * rate`, and `rate` is modelled — verified
+reachable: `implied_annual_departure_rate()` returns **exactly 0** under a zero
+retirement schedule with no career change. So a "nobody leaves" scenario gave
+
+```
+rr = 55 / 0 = Inf   ->   classify_workforce_outlook(Inf) = "Adequate"
+```
+
+An infinite replacement ratio presented as a workforce finding, in a reported
+table. `-Inf` classified as `"Insufficient"` by the same route; `NaN` already
+fell through to NA only because `is.na(NaN)` is TRUE.
+
+Five sites changed, each the smallest defensible fix:
+
+| site | before | after |
+|---|---|---|
+| `core-run…:696` | `entrants / departures` | `ssot_safe_divide(...)` |
+| `core-run…:853` | `100 * gap_fte / demand_clinical_fte` | `ssot_safe_divide(...)` |
+| `core-run…:670` | `scen_fte / sq_demand_fte` | `ssot_safe_divide(..., default = 1)` |
+| `reporting-baseline_gap.R:529` | `100 * (required - base) / required` | `ssot_safe_divide(...)` |
+| `classify_workforce_outlook()` | only `is.na()` checked | `!is.finite()` → NA |
+
+The middle three are the duplicated-guard pattern precisely:
+`compute_fte_gap()` has computed `gap_pct` with `ssot_safe_divide()` since it
+was written, and two other places compute the same quantity by hand and divide
+raw — so one run could report `NA` and `Inf` for the same degenerate input
+depending on which path produced it. Test 9 asserts all three now agree.
+
+`demand_lift` takes `default = 1` rather than NA: it is a **multiplier**, and
+"we cannot tell" has to mean "no lift" for a multiplier or the downstream
+product becomes NA for a reason unrelated to demand.
+
+### Already guarded — left alone
+
+`medicare_workload_index` (explicit `stop()` on a non-positive reference mean),
+`calibrate_wrvu_per_fte` (asserts the solved denominator > 0), `rebase_to_year`
+(refuses a zero base), `supply_per_capita`, `capacity_category_adequacy`,
+`compute_fte_gap`. Test 6 pins that group.
+
+### Deliberately not fixed
+
+* **`care_seeking_multipliers()` at `base = 0`** — left as a visible `Inf`, as
+  instructed and as cycle 17 recorded. Inventing a finite value would replace a
+  loud wrong answer with a quiet one, and the state is not reachable from the
+  fitted model.
+* **`left_country`** — untouched. Establishing the intended estimand is a
+  modelling decision, not an implementation fix.
+* **`percent_error = 100 * (pred - obs) / obs`** (4 sites in the back-test
+  modules) — the denominator is an **observed** contract count, not a modelled
+  quantity, so it is out of this cycle's scope by definition. A zero observed
+  active-provider count is also not a state the contract can be in. Recorded
+  rather than changed.
+* **`ev / py`** in `supply-partial_pooling_hazard.R` — zero person-years gives
+  NaN, but `py` comes from the canonical pooled-hazard artifact and is an input
+  to this module rather than something it computes. Same reasoning; noted for a
+  future input-validation cycle.
+
+**Result:** 47 assertions, all passing, 0 skips. **1 defect found, 5 sites
+fixed.** No scientific assumption changed: every non-degenerate input produces
+the identical number it did before (test 9 asserts that explicitly).
+
+**Related files rerun:** `test-orchestrator-wiring.R` (56),
+`test-workforce-microsimulation.R` (58), `test-workload-to-fte.R` (76),
+`test-numeric-guards.R` (20), `test-baseline-gap.R` (47), and cycles
+03/04/10/17 (221) — 478 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** denominators that arrive as *inputs*
+to a module but are computed by a different one — `py` in the pooled hazard,
+`obs` in the back-test percent errors. Between-module boundaries are where "the
+caller validated it" and "the callee validated it" can both be false.

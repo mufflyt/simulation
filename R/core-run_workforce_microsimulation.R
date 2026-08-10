@@ -667,7 +667,9 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                             verbose = FALSE)$demand_fte,
         na.rm = TRUE
       )
-      demand_lift <- scen_fte / sq_demand_fte
+      # sq_demand_fte is modelled status-quo demand; a scenario with no
+      # status-quo demand would lift by Inf rather than by an unknown amount.
+      demand_lift <- ssot_safe_divide(scen_fte, sq_demand_fte, default = 1)
       required_s  <- dplyr::mutate(required,
                                    required_fte = .data$required_fte * demand_lift)
       gap_s <- compute_fte_gap(status_quo, required_s,
@@ -693,7 +695,13 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
     sched <- scenario_retirement_schedule(params, base_retirement_schedule)
     rate <- implied_annual_departure_rate(agents$age, agents$sex, retirement_schedule = sched)
     departures <- baseline_supply * rate
-    rr <- (params$entrants * (params$conversion %||% 1.0)) / departures
+    # A modelled denominator, and zero is reachable: implied_annual_departure_rate()
+    # returns exactly 0 under a zero retirement schedule with no career change, so
+    # a "nobody leaves" scenario gave rr = Inf, which classify_workforce_outlook()
+    # then reported as "Adequate" -- an infinite replacement ratio presented as a
+    # finding. NA is the honest answer: with no departures the ratio is undefined,
+    # not favourable.
+    rr <- ssot_safe_divide(params$entrants * (params$conversion %||% 1.0), departures)
     tibble::tibble(
       scenario = scenario_name,
       scenario_label = params$label,
@@ -849,8 +857,11 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
         fin$supply_headcount, fin$supply_clinical_fte,
         fin$demand_headcount,  fin$demand_clinical_fte,
         fin$gap_fte,
+        # compute_fte_gap() produces gap_pct with ssot_safe_divide(); this
+        # fallback recomputed the same quantity raw, so a zero demand FTE gave
+        # Inf here and NA there for one run. Same guard, one quantity.
         if (!is.null(fin$gap_pct) && !is.na(fin$gap_pct)) fin$gap_pct else
-          100 * fin$gap_fte / fin$demand_clinical_fte
+          ssot_safe_divide(100 * fin$gap_fte, fin$demand_clinical_fte)
       ))
     } else {
       fin <- dplyr::filter(fte_gap, .data$year == final_year)

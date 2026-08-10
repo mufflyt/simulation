@@ -526,7 +526,10 @@ baseline_gap <- function(base_supply_fte, adequacy,
       required_fte_ci = req_ci,
       shortfall_fte = required - base_supply_fte,
       shortfall_fte_ci = shortfall_ci,
-      shortfall_pct = 100 * (required - base_supply_fte) / required,
+      # Same shape as compute_fte_gap()'s gap_pct, which uses ssot_safe_divide();
+      # this copy divided raw. A zero required-FTE anchor is degenerate, not a
+      # shortfall of infinite percent.
+      shortfall_pct = ssot_safe_divide(100 * (required - base_supply_fte), required),
       adequacy = adequacy,
       adequacy_ci = if (is.null(adequacy_ci)) NULL else sort(adequacy_ci),
       method = method,
