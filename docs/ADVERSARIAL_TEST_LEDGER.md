@@ -1184,3 +1184,87 @@ the same shape is `""` for a character that is really a factor level, `FALSE`
 for a logical that is really tri-state, and `1` for a multiplier that is really
 a count. Enumerate every place a value is filled in for an unset column or a
 missing lookup, and ask what that column MEANS rather than what type it is.
+
+---
+
+## Cycle 15 — 2026-08-10
+
+**Mix:** 4 BVA · 3 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle15.R`
+
+**Targets and why.** Cycle 14 carried forward *the default value that is only
+right for one column type*. Enumerated every NA-fill in `R/` —
+`x[is.na(x)] <- v`, `coalesce(x, v)`, `%||% v` — and asked what each column
+**means** rather than what type it is.
+
+Most are correct and documented: a missing retirement hazard takes the **highest**
+tabulated one (conservative in the direction that matters), a missing band
+population is deliberately zero with the reason in a comment, an unrecognised
+calibration status ranks 0 so it cannot be a promotion. Test 7 pins that group
+so a future tidy-up has to argue with a test. **One was not.**
+
+### Defect found and fixed — 1, with two distinct causes
+
+**D26 · a survival function that rises.** `retirement_survival()` filled every
+missing lookup with `0`. But a lookup can miss in **two directions**, and only
+one of them means zero:
+
+* a `to_age` beyond the horizon really is 0 — everyone has left;
+* a `to_age` at or below `from_age` is an interval that **has not elapsed**, and
+  `S(t)` for that is **1**.
+
+Measured before the fix, for `to_ages = 45, 50, 55, 60, 65` from age 50:
+
+```
+0.0000  0.0000  0.8947  0.7965  0.5452     <- a survival curve that RISES
+```
+
+Anything downstream reading that as a retention rate or a cumulative
+probability was reading a curve that cannot exist.
+
+**My first fix was incomplete and these tests caught it.** Setting the
+`to_age <= from_age` cases to 1 left `retirement_survival(50, 50)` returning
+**0.964** — because `seq(from_age, max_age - 1L)` **counts down** when
+`max_age <= from_age`, producing `ages = c(50, 49)` and multiplying two
+one-year survival probabilities over a zero-length interval. The value was never
+`NA`, so the NA-fill never saw it.
+
+That is the **third occurrence of the descending-range trap** in this ledger:
+live in `prevalence_from_incidence()` (cycle 05), latent in
+`e2sfca_incremental_weights()` (cycle 07), live here. *Swept:* the only other
+`a:(b-1)` construction in `R/` is at `supply-provider_lifecycle.R:274`, and it
+already carries an explicit guard naming this exact hazard.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | zero-length interval | `S(50 → 50) = 1` |
+| 2 | BVA | the two miss-directions | before the start is 1, beyond the horizon is 0 |
+| 3 | BVA | bounds | survival in [0, 1] at every requested age, three start ages |
+| 4 | BVA | naming/order | the requested ages come back keyed as asked |
+| 5 | semantic | monotonicity | non-increasing on a coarse grid and on 40:90 |
+| 6 | semantic | construction | it IS `cumprod(1 - h)`, and it composes: `S(55→65) = S(55→60)·S(60→65)` |
+| 7 | semantic | the correct NA-fills | stay correct |
+| 8 | adversarial | fuzzed straddles | no `from`/`to` arrangement produces a rising curve |
+| 9 | adversarial | `participation_fte` | the table has no gap for its `0.5` fallback to hide behind |
+| 10 | adversarial | survival vs hazard | zero hazard ⇒ survival 1; certain departure ⇒ 0 |
+
+**Result:** 80 assertions, all passing. **1 defect found, 2 causes fixed.**
+
+**Recorded, not changed:** `participation_fte()` ends in
+`out[is.na(out)] <- 0.5` — an invented half-time provider for any `(sex, age)`
+the table does not cover. With the shipped `FUTUREDOCS_PARTICIPATION` (112 rows,
+56 ages × 2 sexes, no gaps) that branch is **unreachable**, so it is a latent
+trap rather than a live defect. Test 9 keeps it unreachable by pinning the
+table's completeness — which is the thing that would actually change.
+
+**Related files rerun:** `test-provider-lifecycle.R` (56),
+`test-workforce-microsimulation.R` (58), `test-provider-state-machine.R` (25),
+`test-scientific-benchmarks.R` (21), `test-urps-prevention.R` (50),
+`test-supply-microsim-adversarial.R` (20), `test-boundary-values.R` (81), and
+cycles 02/05/07/14 (234) — 545 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** an identity that is asserted at one
+point but never across the range. `S(t)` was checked at individual ages and
+never for monotonicity; the same shape is any function documented as
+non-decreasing, bounded, or conserved that is only ever tested pointwise.
+Enumerate the functions whose docs claim a shape (monotone, bounded, sums to a
+total, telescopes) and test the shape, not a point on it.
