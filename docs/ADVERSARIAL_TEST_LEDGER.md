@@ -646,3 +646,91 @@ vacuous assertions repaired.
 `as.numeric` and `match.arg`-free string dispatch applied to anything arriving
 from an environment variable, a file, or a user-supplied column, where a
 truncation or an NA changes a value rather than rejecting it.
+
+---
+
+## Cycle 09 — 2026-08-10
+
+**Mix:** 3 BVA · 3 semantic · 4 adversarial → `tests/testthat/test-adversarial-cycle09.R`
+
+**Targets and why.** Cycle 08 carried forward silent coercion at a trust
+boundary — `as.integer()`/`as.numeric()` on anything arriving from an
+environment variable, a file or a user column, where a truncation or an NA
+changes a value rather than rejecting it. The sweep found the sharpest instance
+at the engine's own front door: `years`.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `simulate_provider_career_once` | one year legal, a two-year gap refused, message names the horizon meant |
+| 2 | BVA | `years` coercion | whole years only; empty/NA/unparseable stop |
+| 3 | BVA | `project_supply_deterministic` | the same guard on the second entry point |
+| 4 | semantic | panel year vs cohort age | they advance in lockstep over the whole horizon |
+| 5 | semantic | horizon length | a longer horizon extends the panel, it does not rescale the dynamics |
+| 6 | semantic | duplicated / unsorted years | normalised, because neither changes the number of steps |
+| 7 | adversarial | a gapped horizon | can no longer report one step as five years |
+| 8 | adversarial | any horizon shape | rows never outnumber steps |
+| 9 | adversarial | `resolve_reproducibility_mode` | the permissive fallback is documented, pinned, and its exposure recorded |
+| 10 | adversarial | the guard itself | not satisfiable by a horizon that merely looks contiguous |
+
+### Defect found and fixed — 1, and it is the worst kind
+
+**D20 · a horizon with a gap silently skipped four years of dynamics.**
+Every step of the engine advances age by exactly one year
+(`v_age[live] <- v_age[live] + 1`), so `years` is not a set of labels to report
+against — it is *the number of one-year steps to take*. The front door was
+`years <- sort(unique(as.integer(years)))`, which accepted anything.
+
+Measured, before the fix:
+
+```
+simulate_provider_career_once(agents, c(2025, 2030), entrants = 5)
+  year headcount mean_age
+  2025        30     50.0
+  2030        35     48.6     <- ONE year of aging, ONE year of entrants
+```
+
+Row 2 is labelled **2030** and has had a single step applied. Five entrants
+instead of twenty-five; one year of aging instead of five. No error, no
+warning, and every column individually plausible. This is the failure mode the
+whole loop is looking for: a confident wrong number with a correct-looking
+label.
+
+*Fix:* `.check_projection_years()` on both engine entry points
+(`simulate_provider_career_once` and its expected-value twin
+`project_supply_deterministic`, which carried the identical line). It refuses
+non-consecutive years, fractional years (`as.integer(2025.7)` was silently
+`2025`), and empty/NA horizons — the last of which previously produced
+`min() -> Inf` with a base R warning and an **empty panel** rather than a
+failure. Deduplication and re-sorting are kept, because neither changes the
+number of steps; test 6 pins that so the new guard cannot over-reach.
+
+Every caller in the package already builds `years` as `a:b`. The invariant was
+real and unstated; it is stated now.
+
+### Recorded, not changed
+
+`resolve_reproducibility_mode()` documents that an unrecognised value "warns and
+falls back rather than failing, so a typo degrades to the permissive mode". That
+is a deliberate, documented decision and test 9 pins it rather than overriding
+it. Worth stating plainly, though: `REPRODUCIBILITY_MODE=strct` on a
+publication run silently yields **relaxed**, and the only signal is a
+`.msg_warn()` message — which never reaches `warnings()` and cannot be promoted
+with `options(warn = 2)`. The exposure is now visible in a test rather than
+implicit in a doc paragraph.
+
+**Result:** 53 assertions, all passing. **1 defect found, 1 fixed.**
+
+**Related files rerun:** `test-workforce-microsimulation.R` (58),
+`test-supply-microsim-adversarial.R` (20), `test-orchestrator-wiring.R` (56),
+`test-provider-state-machine.R` (25), `test-backtest.R` (106),
+`test-entrant-trajectory.R` (33), and cycles 01/04/08 (139) — 437 assertions,
+0 problems.
+
+**Full suite:** launched at the close of this cycle; result reported in cycle 10
+rather than summarised early.
+
+**Bug class to sweep in a later cycle:** unstated invariants shared by two
+entry points. `project_supply_deterministic()` carried the identical unguarded
+line as the stochastic engine, and a guard on one of two doors is not a guard.
+Look for other pairs — deterministic/stochastic twins, `*_once` vs `*_many`,
+scenario vs baseline paths — where one has a check the other lacks.
