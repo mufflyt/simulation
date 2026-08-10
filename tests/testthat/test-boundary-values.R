@@ -10,8 +10,9 @@
 # not by reading the comparison operators, because the point is to catch the
 # case where the operator does not say what the author meant.
 #
-# Two genuine defects were found this way and are documented in place rather than
-# quietly asserted: search this file for DEFECT.
+# Two genuine defects were found this way and have since been FIXED in
+# capacity_category_adequacy(); the blocks below now pin the corrected boundaries
+# so a regression re-opens them loudly.
 
 # ---- Monte Carlo iteration floor -------------------------------------------
 
@@ -105,45 +106,52 @@ test_that("vanishing denominators stop rather than returning Inf", {
   # Each category divides by a DIFFERENT quantity, so each has its own zero.
   expect_error(capacity_category_adequacy("shortage_unmet", seen = 0, additional = 5))
   expect_error(capacity_category_adequacy("shortage_hours", seen = 5, additional = 5))
-  # One step away from the zero denominator is finite and must be allowed.
-  expect_true(is.finite(capacity_category_adequacy("shortage_hours", seen = 5, additional = 4)))
+  # Comfortably inside the valid region is finite and allowed.
+  expect_true(is.finite(capacity_category_adequacy("shortage_hours", seen = 5, additional = 2)))
 })
 
-test_that("DEFECT: shortage_hours can return a NEGATIVE adequacy, and it survives", {
-  # 1 - additional / (seen - additional) diverges to -Inf as additional -> seen.
-  # At seen = 5, additional = 4 the denominator is 1 and the result is -3: a
-  # provider cannot have negative adequacy, since adequacy is supply / demand.
-  expect_equal(capacity_category_adequacy("shortage_hours", seen = 5, additional = 4), -3)
+test_that("shortage_hours refuses the whole negative-adequacy window, not just a >= seen", {
+  # adequacy = 1 - a/(s - a) is zero at a = s/2 and negative beyond it, while a
+  # denominator-only guard fires at a >= s. The window s/2 < a < s once produced
+  # a NEGATIVE adequacy -- at s = 5, a = 4 it returned -3 -- so the guard is on
+  # the RESULT now. Boundary swept rather than reasoned about:
+  s_seen <- 5
+  expect_equal(capacity_category_adequacy("shortage_hours", s_seen, 2.0), 1 - 2 / 3)
+  expect_equal(capacity_category_adequacy("shortage_hours", s_seen, 2.4),
+               1 - 2.4 / 2.6, tolerance = 1e-9)
+  expect_error(capacity_category_adequacy("shortage_hours", s_seen, 2.5))   # exactly 0
+  expect_error(capacity_category_adequacy("shortage_hours", s_seen, 2.6))   # first negative
+  expect_error(capacity_category_adequacy("shortage_hours", s_seen, 4.0))   # was -3
+  expect_error(capacity_category_adequacy("shortage_hours", s_seen, 5.0))   # denominator 0
 
-  # required_fte_base_year() does fail closed on a non-positive adequacy, so a
-  # single pathological group alone is caught.
-  expect_error(required_fte_base_year(1306, -3))
-  expect_error(required_fte_base_year(1306, 0))
+  # The message must name the condition, because a survey analyst reading it
+  # needs to know which response to re-check, not merely that something failed.
+  expect_error(capacity_category_adequacy("shortage_hours", s_seen, 4.0),
+               "seen / 2", fixed = TRUE)
+})
 
-  # THE HOLE. Dilution hides it. Ninety-five ordinary respondents plus five
-  # pathological ones average to 0.80 -- an entirely plausible 20% shortfall --
-  # which passes every guard and yields a concrete required-FTE number.
+test_that("a pathological response can no longer be diluted into a plausible mean", {
+  # THE FAILURE THIS CLOSES. 95 ordinary respondents plus 5 pathological ones
+  # used to average to 0.80 -- an ordinary-looking 20% shortfall -- and pass
+  # every remaining guard, yielding required FTE 1,632.5 from an input holding a
+  # -3. The weighted mean cannot launder the group any more, because the group
+  # never produces a number to average.
   resp <- data.frame(category = c("equilibrium", "shortage_hours"), n = c(95, 5),
                      seen = c(NA, 5), additional = c(NA, 4))
-  ad <- capacity_survey_adequacy(resp)$adequacy
-  expect_equal(ad, 0.80, tolerance = 1e-9)
-  expect_true(ad > 0)                              # passes the only guard there is
-  expect_gt(required_fte_base_year(1306, ad), 1600)
-
-  # The exact uncovered window, established by sweeping `additional`:
-  # adequacy = 1 - a/(s - a) is zero at a = s/2 and NEGATIVE for a > s/2, while
-  # the existing denominator guard only fires at a >= s. So the hole is
-  #     s/2 < additional < s
-  # and the fix is to require a POSITIVE RESULT, not merely a positive
-  # denominator. Asserting the defect here keeps it visible and makes this test
-  # fail loudly when someone repairs it.
+  expect_error(capacity_survey_adequacy(resp))
 })
 
-test_that("DEFECT: a surplus respondent seeing zero patients scores 200% adequacy", {
-  # denom = seen + additional = 5 > 0, so the zero guard does not fire, and
-  # 1 + 5/5 = 2. Someone who saw nobody is not twice as adequate as someone at
-  # equilibrium; `seen` should have its own positivity requirement.
-  expect_equal(capacity_category_adequacy("surplus", seen = 0, additional = 5), 2)
+test_that("every non-equilibrium category needs a positive `seen`", {
+  # surplus divides by seen + additional, so seen = 0 passed the denominator
+  # check and returned 1 + 5/5 = 2 -- someone who saw nobody scoring twice the
+  # adequacy of someone at equilibrium.
+  expect_error(capacity_category_adequacy("surplus", seen = 0, additional = 5))
+  expect_error(capacity_category_adequacy("shortage_unmet", seen = 0, additional = 5))
+  expect_error(capacity_category_adequacy("shortage_hours", seen = 0, additional = 5))
+  # equilibrium takes no seen at all and must stay unaffected.
+  expect_equal(capacity_category_adequacy("equilibrium"), 1.0)
+  # One patient is enough; the requirement is positivity, not a magnitude.
+  expect_true(is.finite(capacity_category_adequacy("surplus", seen = 1, additional = 1)))
 })
 
 # ---- Base-year equilibrium --------------------------------------------------

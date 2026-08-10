@@ -129,13 +129,45 @@ capacity_category_adequacy <- function(category, seen = NA_real_, additional = N
            call. = FALSE)
     }
   }
-  switch(
+  # `seen` MUST BE POSITIVE for every non-equilibrium form. The surplus
+  # denominator is seen + additional, so a respondent who saw NOBODY still
+  # passes the check above -- seen = 0, additional = 5 gives 1 + 5/5 = 2, scoring
+  # someone with no patients at twice the adequacy of someone at equilibrium.
+  if (category != "equilibrium" && (!is.finite(seen) || seen <= 0)) {
+    stop(sprintf(paste("capacity_category_adequacy: '%s' needs a positive `seen`;",
+                       "got %s. A respondent who delivered no appointments has no",
+                       "denominator of delivered care to express spare or missing",
+                       "capacity against."), category, format(seen)), call. = FALSE)
+  }
+
+  adequacy <- switch(
     category,
     equilibrium    = 1.0,
     surplus        = 1 + additional / (seen + additional),
     shortage_hours = 1 - additional / (seen - additional),
     shortage_unmet = 1 - additional / seen
   )
+
+  # GUARD THE RESULT, NOT ONLY THE DENOMINATOR. For shortage_hours,
+  # 1 - a/(s - a) is zero at a = s/2 and NEGATIVE beyond it, while the
+  # denominator check only fires at a >= s. The uncovered window s/2 < a < s
+  # yields a negative adequacy -- at s = 5, a = 4 it returns -3 -- and adequacy
+  # is supply divided by demand, which cannot be negative.
+  #
+  # This matters because a single bad group does not have to be caught
+  # downstream to do damage: capacity_survey_adequacy() takes a WEIGHTED MEAN,
+  # so 95 ordinary respondents plus 5 of these average to 0.80, an entirely
+  # ordinary-looking 20% shortfall that passes every remaining guard.
+  if (!is.finite(adequacy) || adequacy <= 0) {
+    stop(sprintf(paste("capacity_category_adequacy: '%s' with seen = %s and",
+                       "additional = %s yields an adequacy of %s. Adequacy is",
+                       "supply divided by demand and must be positive; for",
+                       "'shortage_hours' this happens whenever additional exceeds",
+                       "seen / 2. Check the response rather than averaging it in."),
+                 category, format(seen), format(additional), format(adequacy)),
+         call. = FALSE)
+  }
+  adequacy
 }
 
 #' Base-year adequacy from a provider capacity survey
