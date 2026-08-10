@@ -778,7 +778,11 @@ brfss_pfd_prevalence_for_demand_bands <- function(cells,
     prev_col <- "any_pfd_prevalence"
   }
 
-  DEMAND_AGE_BANDS <- c("20-39", "40-59", "60-64", "65-79", "80+")
+  # Uses the package constant rather than a local copy of the same five labels.
+  # The copy shadowed DEMAND_AGE_BANDS (R/demand-urps.R) and would have gone
+  # stale silently the moment the real one changed -- and this function feeds
+  # compute_brfss_demand_estimand(), whose "unknown age band" guard would then
+  # have been comparing against bands nobody else uses.
   out <- setNames(numeric(length(DEMAND_AGE_BANDS)), DEMAND_AGE_BANDS)
 
   for (dband in DEMAND_AGE_BANDS) {

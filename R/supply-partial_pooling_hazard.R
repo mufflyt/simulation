@@ -137,7 +137,10 @@ urps_partial_pooled_hazards <- function(band_levels = NULL,
   wide <- utils::read.csv(path, stringsAsFactors = FALSE)
   agg <- hazard_pooled_long(wide)
   if (is.null(band_levels)) {
-    band_levels <- c("<45", "45-49", "50-54", "55-59", "60-64", "65-69", "70+")
+    # MICROSIM_AGE_BAND_LABELS, not a second copy of the same seven labels: the
+    # pooled hazard has to key to the SAME bands the microsimulation ages
+    # through, and a copy is how those two quietly stop meaning the same thing.
+    band_levels <- MICROSIM_AGE_BAND_LABELS
     band_levels <- band_levels[band_levels %in% agg$band]
   }
   fit_partial_pooled_hazards(agg, band_levels = band_levels)

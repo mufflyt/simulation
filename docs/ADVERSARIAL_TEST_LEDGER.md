@@ -1006,3 +1006,91 @@ restoration existed in two hand-rolled copies and one shared helper, and the
 copies were the ones with the hole. Look for other logic that appears in more
 than one place — range checks, tolerance comparisons, contract-column lists —
 and check whether the copies agree with each other and with the shared version.
+
+---
+
+## Cycle 13 — 2026-08-10
+
+**Mix:** 4 BVA · 3 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle13.R`
+
+**Targets and why.** Cycle 12 carried forward *guards written twice*:
+`.Random.seed` restoration existed as two hand-rolled copies plus a shared
+helper, and the copies were the ones with the hole. That is a shape, not an
+incident, so this cycle went looking for the rest of it.
+
+### The sweep
+
+Searched `R/` for character vectors written verbatim in more than one file.
+Nine came back. Most are harmless coincidences of vocabulary (`c("ui","pop","ai")`
+appears in five files because those are the three conditions). **Three were the
+same list, or the same rule, maintained in two places:**
+
+| duplicate | where |
+|---|---|
+| the five demand age bands | `DEMAND_AGE_BANDS` **and a local shadow of the same name** inside `brfss_pfd_prevalence_for_demand_bands()` |
+| the seven microsim band labels | `MICROSIM_AGE_BAND_LABELS` **and seven hardcoded labels** in `urps_partial_pooled_hazards()` |
+| the gap identity tolerance | `0.01` written into `validate_urps_gap_projection()` **and** into `validation_report()` |
+
+### Defect found and fixed — 1, in three places
+
+**D24 · a constant with a private copy.** None of the three had diverged yet,
+which is precisely when to fix them — a test pinning two copies as equal is
+weaker than having one copy.
+
+The demand-bands one is the sharpest. `brfss_pfd_prevalence_for_demand_bands()`
+declared a **local variable with the same name as the package constant**, so it
+shadowed it. The moment `DEMAND_AGE_BANDS` changed, that function would keep the
+old five labels — and it feeds `compute_brfss_demand_estimand()`, whose "unknown
+age band" guard would then have been comparing against bands nobody else used.
+A guard checking a stale vocabulary reports clean.
+
+*Fix:* all three consumers read the shared definition; the tolerance is hoisted
+to `GAP_IDENTITY_TOLERANCE_FTE`. Test 8 is a standing gate — it asserts each
+constant is defined exactly once in `R/` and that the seven microsim labels
+appear as a literal exactly once, so a future copy-paste re-introduces the drift
+loudly.
+
+**Deliberately NOT merged.** `DEMAND_AGE_BANDS` and `URPS_POP_AGE_BANDS` are
+both five labels long and neither is the other — they are the demand-side and
+population-side vocabularies, with a crosswalk between them. Deduplicating by
+"these are both five bands" would have merged two different things. Test 10
+pins them as disjoint and checks that a population band passed where a demand
+band is expected is refused rather than silently contributing zero.
+
+**Already guarded, left alone.** `CALIBRATION_STATUS_RANK` has a deliberate
+second copy (a local `status_rank` in the export contract) with an existing test
+that greps both sources. Test 4 adds the properties the ranking itself must
+have rather than duplicating that check.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `GAP_IDENTITY_TOLERANCE_FTE` | one constant; closed at it; symmetric in sign |
+| 2 | BVA | `DEMAND_AGE_BANDS` | five labels that tile the lifespan with no gap |
+| 3 | BVA | `MICROSIM_AGE_BANDS` | one label short of the breaks; right-open at every boundary |
+| 4 | BVA | `CALIBRATION_STATUS_RANK` | closed, ordered, and NA for an unknown tier |
+| 5 | semantic | the BRFSS crosswalk | uses the package bands, not a private copy |
+| 6 | semantic | the pooled hazard | keys to the bands the microsimulation ages through |
+| 7 | semantic | both copies of the gap check | same verdict on the same frame |
+| 8 | adversarial | `R/` | no duplicated definition of a shared vocabulary survives |
+| 9 | adversarial | every consumer | reads the shared constant (asserted by identity of output) |
+| 10 | adversarial | the two band vocabularies | deliberately different and not swappable |
+
+**Four of my own test defects, corrected in the tests:** `r[["missing"]]` errors
+where `r["missing"]` gives NA; the `validation_report()` column is `passed`, not
+`pass`; and an adversarial test that tried to rebind a package constant could
+not run at all (bindings are locked) — a test that can only skip proves nothing,
+so it was replaced with one asserting each consumer's *output* is keyed to the
+shared object.
+
+**Result:** 50 assertions, all passing. **1 defect found, 3 sites fixed.**
+
+**Related files rerun:** `test-urps-population.R` (41), `test-adequacy-evidence.R`
+(81), `test-demand-and-validation.R` (150), `test-workforce-microsimulation.R`
+(58), `test-partial-pooling-hazards.R` (9), `test-demand-estimands.R` (67), and
+cycles 03/06/12 (171) — 577 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** a local variable that shadows a package
+constant. The BRFSS one was found by looking for duplicated *literals*; a
+shadow that assigns a computed value would not have been. Enumerate every
+assignment inside a function whose name matches an existing package-level
+binding.
