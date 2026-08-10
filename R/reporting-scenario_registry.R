@@ -262,6 +262,25 @@ demand_scenario_registry <- function() {
 # ---- Contract validation --------------------------------------------------
 
 SUPPLY_SCENARIO_REQUIRED <- c("label", "entrants", "retirement_shift_years", "source")
+
+# Every field a supply scenario may carry: the required four, the optional levers
+# the orchestrator actually reads, and the metadata the SSOT registry ships.
+#
+# A field OUTSIDE this set is refused, because the orchestrator reads each lever
+# as `params$<name> %||% <neutral>`. A misspelling therefore resolves to the
+# neutral default in silence: a scenario labelled "Hours down 20%" carrying
+# `hours_multipler = 0.8` validated clean and applied no lever at all. That is
+# the same failure this file already records for the entrant level -- "Fellowship
+# output +10% and -10% returned results identical to Baseline to the last digit"
+# -- and the only reason it was caught then is that someone compared the numbers.
+SUPPLY_SCENARIO_KNOWN_FIELDS <- c(
+  SUPPLY_SCENARIO_REQUIRED,
+  # levers the orchestrator reads
+  "conversion", "hours_multiplier", "career_change_multiplier",
+  "late_career_fte_factor", "late_career_fte_onset_age", "entrant_multiplier",
+  # metadata carried by the mufflyaccess SSOT registry
+  "family", "requires_fte_model"
+)
 DEMAND_SCENARIO_REQUIRED <- c("label", "access_components", "source")
 
 #' Validate a scenario registry against its contract
@@ -285,6 +304,29 @@ validate_scenario_registry <- function(registry, kind = c("supply", "demand")) {
     stop("validate_scenario_registry: every registry needs a reference scenario ",
          "named 'baseline' (mufflyaccess) or 'status_quo' (local fallback)",
          call. = FALSE)
+  }
+  if (kind == "supply") {
+    for (nm in names(registry)) {
+      unknown <- setdiff(names(registry[[nm]]), SUPPLY_SCENARIO_KNOWN_FIELDS)
+      if (length(unknown)) {
+        near <- vapply(unknown, function(u) {
+          d <- utils::adist(u, SUPPLY_SCENARIO_KNOWN_FIELDS)[1, ]
+          if (min(d) <= 3L) SUPPLY_SCENARIO_KNOWN_FIELDS[which.min(d)] else NA_character_
+        }, character(1))
+        stop(sprintf(paste("validate_scenario_registry: scenario '%s' declares unknown",
+                           "field(s): %s.%s Every lever is read as `params$<name> %%||%%",
+                           "<neutral>`, so a field the orchestrator does not recognise",
+                           "applies NOTHING -- the scenario would run as baseline while",
+                           "its label says otherwise."),
+                     nm, paste(unknown, collapse = ", "),
+                     if (any(!is.na(near)))
+                       sprintf(" Did you mean %s?",
+                               paste(sprintf("'%s' -> '%s'", unknown[!is.na(near)],
+                                             near[!is.na(near)]), collapse = ", "))
+                     else ""),
+             call. = FALSE)
+      }
+    }
   }
   for (nm in names(registry)) {
     missing <- setdiff(required, names(registry[[nm]]))
