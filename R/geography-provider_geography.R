@@ -483,9 +483,36 @@ add_returning_providers <- function(agents, returners, year, age = 45) {
     entry_year = year,
     age = age
   )
+
+  # Filling every unset NUMERIC column with 0 made this function add providers
+  # who can never be counted. `retirement_year` is numeric, and the microsim's
+  # active predicate is `is.na(retirement_year) | retirement_year > year` -- so a
+  # returner filled with 0 is retired before the projection starts. Measured:
+  # ten active providers, add three returners, still ten active. A function
+  # whose whole purpose is to put providers back in the workforce was adding
+  # rows that were never in it.
+  #
+  # 0 is only the right absent-value for a COUNTER. Everything else takes a
+  # typed NA, which is what "not applicable / never happened" means here.
+  counters <- c("n_moves")
   for (col in setdiff(names(agents), names(new_agents))) {
-    new_agents[[col]] <- if (is.numeric(agents[[col]])) 0 else
-      if (is.logical(agents[[col]])) FALSE else NA
+    proto <- agents[[col]]
+    new_agents[[col]] <- if (col %in% counters && is.numeric(proto)) {
+      0
+    } else if (is.logical(proto)) {
+      FALSE                      # e.g. left_country: a returner is back
+    } else {
+      proto[NA_integer_][1]      # typed NA, matching the column's own type
+    }
   }
+
+  # A returner with no id cannot be joined to, deduplicated, or followed across
+  # years. Ids are generated rather than left NA, and namespaced so they cannot
+  # collide with the base cohort's.
+  if ("provider_id" %in% names(agents)) {
+    n_new <- nrow(new_agents)
+    new_agents$provider_id <- sprintf("R%d_%06d", as.integer(year), seq_len(n_new))
+  }
+
   dplyr::bind_rows(agents, new_agents[names(agents)])
 }

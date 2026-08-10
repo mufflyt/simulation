@@ -1094,3 +1094,93 @@ constant. The BRFSS one was found by looking for duplicated *literals*; a
 shadow that assigns a computed value would not have been. Enumerate every
 assignment inside a function whose name matches an existing package-level
 binding.
+
+---
+
+## Cycle 14 — 2026-08-10
+
+**Mix:** 3 BVA · 4 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle14.R`
+
+### Cycle 13's carried-forward class — swept, clean
+
+Parsed every function body in `R/` and matched every assignment target against
+the package-level **constants** (top-level bindings whose value is not a
+function).
+
+> **In-function assignments shadowing a package constant: 0.**
+
+The `DEMAND_AGE_BANDS` shadow fixed in cycle 13 was the only one. Class closed on
+evidence.
+
+### Defect found and fixed — 1
+
+**D25 · a function that adds providers to the workforce added providers who were
+never in it.** `add_returning_providers()` builds rows for clinicians coming back
+into practice, then fills every column it did not set explicitly:
+
+```r
+new_agents[[col]] <- if (is.numeric(agents[[col]])) 0 else
+  if (is.logical(agents[[col]])) FALSE else NA
+```
+
+`retirement_year` is numeric. The microsimulation's active predicate is
+`is.na(retirement_year) | retirement_year > year`, so a returner filled with `0`
+is **retired before the projection starts**. Measured:
+
+```
+active before: 10   add 3 returners   active after: 10
+```
+
+The rows exist, the headcount does not move, and nothing reports a problem.
+
+*Fix:* `0` is the right absent-value for a **counter** and for nothing else.
+`n_moves` gets `0`; logicals get `FALSE` (a returner is, by definition, back);
+everything else gets a **typed NA**, which is what "not applicable / never
+happened" means here. Returners also now get generated, namespaced ids —
+`NA` ids cannot be joined to, deduplicated, or followed across years, and cycle
+01 established that duplicate ids are treated as distinct clinicians.
+
+Swept the class: this generic fill appears **once** in `R/`, and it is the only
+place rows are appended to an agent table.
+
+### Recorded as a test, not silently changed
+
+`apply_provider_migration_matrix()` marks an out-of-country mover with
+`left_country = TRUE` and `state = NA`. **Nothing in `R/` reads `left_country`.**
+So an emigrated provider is absent from every state total while the national
+active count still includes them — state FTE no longer sums to national FTE.
+
+Which total is *right* is a modelling decision, not a bug to patch on my own
+authority: an emigrant may legitimately remain in a national certification
+count, which is what the observed series measures. Test 10 pins the arithmetic
+instead — the gap between the two totals is exactly `sum(left_country)`, so a
+consumer that wants either can compute it, and the discrepancy is visible rather
+than latent.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `add_returning_providers` | zero is a no-op; negative and NA counts are refused; fractional counts round |
+| 2 | BVA | return year | active in the year of return, not before |
+| 3 | BVA | multi-geography counts | zero means zero, not one |
+| 4 | semantic | the active workforce | a returner counts toward it |
+| 5 | semantic | absent values | `0` for counters, `FALSE` for logicals, typed NA for everything else |
+| 6 | semantic | returner ids | present, unique, and cannot collide across return years |
+| 7 | semantic | the agent schema | survives the append, columns and classes unchanged |
+| 8 | adversarial | a projection | returners survive it instead of vanishing from it |
+| 9 | adversarial | a returner's sex | unknown, and not invented by the append |
+| 10 | adversarial | emigration | the national/state discrepancy is exactly recoverable |
+
+**Result:** 42 assertions, all passing. **1 defect found, 1 fixed.**
+
+**Related files rerun:** `test-origin-dependent-migration.R` (27),
+`test-urps-migration.R` (46), `test-geographic-demand.R` (26),
+`test-workforce-microsimulation.R` (58), `test-orchestrator-wiring.R` (56),
+`test-hardening-batch-de.R` (6), `test-numeric-guards.R` (20), and cycles 01/13
+(76) — 315 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** the default value that is only right
+for one column type. `0` for a numeric was wrong for a *date-like* numeric;
+the same shape is `""` for a character that is really a factor level, `FALSE`
+for a logical that is really tri-state, and `1` for a multiplier that is really
+a count. Enumerate every place a value is filled in for an unset column or a
+missing lookup, and ask what that column MEANS rather than what type it is.
