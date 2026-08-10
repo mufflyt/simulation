@@ -132,6 +132,30 @@ validate_urps_gap_projection <- function(x,
     }
   }
 
+  # Completeness guard, and it has to come BEFORE the arithmetic guard, which
+  # uses na.rm = TRUE and therefore cannot see this.
+  #
+  # The demand series is joined to the supply years at min_match_rate = 0.5, so
+  # a projection whose demand covers exactly half the horizon joins without even
+  # a warning (0.5 is not below 0.5) and exports NA demand and NA gap for the
+  # other half. Those rows validated clean in STRICT mode: the arithmetic held
+  # vacuously, no other check looked at NA, and the contract went out with a
+  # missing gap for half its years.
+  na_cols <- intersect(c("supply_headcount", "supply_clinical_fte",
+                         "demand_headcount", "demand_clinical_fte",
+                         "gap_fte", "gap_headcount"), names(x))
+  n_na <- vapply(na_cols, function(cl) sum(!is.finite(x[[cl]])), integer(1))
+  if (any(n_na > 0L)) {
+    hit <- n_na[n_na > 0L]
+    msg <- sprintf(paste(
+      "Gap projection has non-finite values in %s (of %d row(s)). A missing gap",
+      "is not a gap of zero and must not export as one; the usual cause is a",
+      "demand series that does not cover every projection year."),
+      paste(sprintf("%s (%d)", names(hit), hit), collapse = ", "), nrow(x))
+    if (identical(mode, "strict")) stop(msg, call. = FALSE)
+    .msg_warn(msg)
+  }
+
   # Arithmetic guard: gap = supply - demand on both sides.
   if (all(c("supply_clinical_fte", "demand_clinical_fte", "gap_fte") %in% names(x))) {
     residual <- abs(x$gap_fte - (x$supply_clinical_fte - x$demand_clinical_fte))

@@ -11,6 +11,28 @@
 # Ported from cliff/R/workforce_concentration_metrics.R (unit-tested there).
 # Dependency-light (base R + tibble); no individual roster required.
 
+# A negative provider count is a data error, not a small one. Only
+# workforce_gini() refused it; the other three returned numbers outside their
+# own documented ranges -- top-k share 1.2, a Lorenz curve running to -1 -- and
+# said nothing. The whole family shares one guard now.
+#
+# DELIBERATE DIVERGENCE FROM CANONICAL. cliff::herfindahl_index() documents
+# "zero/negative entries are dropped (they contribute no share)" and this port
+# inherited it. Dropping is defensible for HHI alone, but not beside a sibling
+# that stops on the same input: a caller who ran both got an error from one and
+# a confident number from the other on identical data. Recorded here rather
+# than silently reconciled.
+.assert_nonneg_counts <- function(x, fn) {
+  bad <- is.finite(x) & x < 0
+  if (any(bad)) {
+    stop(sprintf(paste("%s(): negative counts are not allowed; found %s.",
+                       "A negative provider count is a data error, and every",
+                       "share it enters is outside [0, 1]."),
+                 fn, paste(utils::head(x[bad], 5L), collapse = ", ")), call. = FALSE)
+  }
+  invisible(x)
+}
+
 #' Gini coefficient of a non-negative count/weight vector
 #'
 #' A vector with all mass in one unit tends to (n-1)/n; an even split gives 0.
@@ -30,13 +52,16 @@ workforce_gini <- function(x) {
 }
 
 #' Herfindahl-Hirschman Index of provider share
-#' @param counts Numeric counts per unit (zero/negative dropped).
+#' @param counts Numeric counts per unit; zero entries contribute no share.
+#'   Negative counts are refused (see `.assert_nonneg_counts`), which is a
+#'   deliberate divergence from `cliff::herfindahl_index()`.
 #' @param normalized If TRUE, size-corrected HHI* = (H - 1/n)/(1 - 1/n).
 #' @return HHI in `[0, 1]`; `NA_real_` if the total is 0.
 #' @family workforce concentration
 #' @concept reporting
 #' @export
 workforce_hhi <- function(counts, normalized = FALSE) {
+  .assert_nonneg_counts(counts, "workforce_hhi")
   counts <- counts[is.finite(counts) & counts > 0]
   total <- sum(counts)
   if (total == 0) return(NA_real_)
@@ -56,6 +81,7 @@ workforce_hhi <- function(counts, normalized = FALSE) {
 #' @concept reporting
 #' @export
 workforce_lorenz <- function(x) {
+  .assert_nonneg_counts(x, "workforce_lorenz")
   x <- sort(x[is.finite(x)])
   n <- length(x); total <- sum(x)
   if (n == 0L || total == 0)
@@ -74,6 +100,9 @@ workforce_lorenz <- function(x) {
 #' @concept reporting
 #' @export
 workforce_top_k_share <- function(counts, k = 5L) {
+  .assert_nonneg_counts(counts, "workforce_top_k_share")
+  if (!is.numeric(k) || length(k) != 1L || is.na(k) || k < 0)
+    stop("workforce_top_k_share(): k must be a single non-negative number.", call. = FALSE)
   counts <- counts[is.finite(counts)]
   total <- sum(counts)
   if (total == 0) return(NA_real_)
@@ -100,7 +129,22 @@ workforce_top_k_share <- function(counts, k = 5L) {
 provider_concentration <- function(counts, n_units_total = length(counts),
                                    label = NA_character_) {
   counts <- as.numeric(counts)
+  # Checked here, not left to workforce_gini() deeper in the tibble() call: the
+  # denominator arithmetic below runs first otherwise, and the caller gets a
+  # message about Gini for what is really a bad input to this function.
+  .assert_nonneg_counts(counts, "provider_concentration")
   n_occupied <- sum(counts > 0, na.rm = TRUE)
+  # Restores the guard cliff::concentration_summary() carries and this port
+  # dropped. Without it a too-small universe reported pct_units_zero = -100 --
+  # a negative share of empty units -- while Gini and HHI were computed over
+  # MORE units than n_units claimed. Every number in the row disagreed with its
+  # own denominator, in silence.
+  if (n_units_total < n_occupied) {
+    stop(sprintf(paste("provider_concentration(): n_units_total (%s) is smaller than the",
+                       "number of occupied units (%s); the unit universe cannot be smaller",
+                       "than the units that already contain providers."),
+                 n_units_total, n_occupied), call. = FALSE)
+  }
   full <- c(counts, rep(0, max(0L, n_units_total - length(counts))))
   tibble::tibble(
     geography      = label,

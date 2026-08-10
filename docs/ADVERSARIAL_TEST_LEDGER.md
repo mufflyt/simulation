@@ -138,3 +138,91 @@ stale registry rows (`e2sfca_band_weights`, `e2sfca_incremental_weights`,
 Stale means the collision is gone on the SIBLING side; this cycle exported no
 new names and removed none, so the cause is the state of the `~/isochrones`
 clone on this machine.
+
+---
+
+## Cycle 03 — 2026-08-09
+
+**Mix:** 3 BVA · 3 semantic · 4 adversarial → `tests/testthat/test-adversarial-cycle03.R`
+
+**Targets and why.** Discharged the class cycle 02 carried forward (guards that
+only warn in relaxed mode while the caller has no fallback), then denominators,
+joins and uncertainty propagation.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `provider_concentration` | the unit universe may equal but never fall below the occupied units |
+| 2 | BVA | `workforce_top_k_share` | closed at `k = 0`, saturates at `k >= n`, monotone in `k` |
+| 3 | BVA | `monte_carlo_se`, `series_mean_se` | MCSE falls as 1/√n; undefined below 2 draws; median/mean ratio is exactly √(π/2) |
+| 4 | semantic | concentration family | no metric accepts a negative count |
+| 5 | semantic | `supply_per_capita` | density is linear in `per`, undefined (not Inf) at zero population |
+| 6 | semantic | 4 concentration metrics | they order two distributions the same way; padding zeros cannot lower Gini and cannot move HHI |
+| 7 | adversarial | `as_urps_gap_projection` | a half-covered demand series is refused |
+| 8 | adversarial | `validate_urps_gap_projection` | a missing gap is never a gap of zero |
+| 9 | adversarial | `safe_left_join` denominators | a duplicated population row is refused, and the guard is not vacuous |
+| 10 | adversarial | `monte_carlo_diagnostics` | a degenerate band is not reported as precision |
+
+### Defects found and fixed — 3 (plus one blind spot recorded)
+
+**D5 · the NA gap that validated clean.** `as_urps_gap_projection()` joins the
+demand series to the supply years at `min_match_rate = 0.5`. A demand series
+covering exactly half the horizon matches at 0.5, which is *not below* 0.5, so
+the join emitted **no diagnostic at all** — and the other half of the projection
+exported `NA` demand and `NA` gap. `validate_urps_gap_projection(mode="strict")`
+passed it: the arithmetic guard uses `na.rm = TRUE`, so `NA - NA` held
+vacuously, and nothing else looked at NA. Verified end to end before the fix:
+3 of 6 years NA, validator returned clean. *Fix:* a completeness guard ahead of
+the arithmetic guard — non-finite values in any of the six contract numeric
+columns stop in strict mode and warn in relaxed. This is the class cycle 02
+carried forward, in its sharpest form.
+
+**D6 · denominator smaller than its numerator.** `provider_concentration()`
+accepted `n_units_total < n_occupied`, returning `pct_units_zero = -100` — a
+negative share of empty units — while computing Gini and HHI over *more* units
+than `n_units` reported. **This is a port regression:** the canonical
+`cliff::concentration_summary()` carries exactly this guard and the port dropped
+it. Found by comparing against the canonical source rather than reasoning from
+scratch. *Fix:* guard restored, message matched to canonical.
+
+**D7 · negative counts refused in one of four siblings.** `workforce_gini()`
+stopped on a negative count; `workforce_hhi()`, `workforce_lorenz()` and
+`workforce_top_k_share()` did not, and returned values outside their own
+documented `[0, 1]` ranges — a top-k share of **1.2** and a Lorenz curve running
+to **-1**. A caller running two of them on the same data got an error from one
+and a confident number from the other. *Fix:* one shared
+`.assert_nonneg_counts()` across the family, plus a `k >= 0` check.
+**Deliberate divergence from canonical**, documented in the source: cliff's
+`herfindahl_index()` documents dropping negatives, and this port inherited it.
+
+### Blind spot recorded, not repaired
+
+`test-export-wiring.R` defines "wired" as a bare textual mention outside the
+definition line — and a **string literal counts**. Giving three previously
+silent functions a self-naming input guard therefore made them read as wired,
+which turned their `tests/export-registry.csv` rows stale and failed the gate.
+Measured the alternative before acting: stripping string literals from the
+haystack takes the orphan list from 53 to **106**, i.e. 53 exports are currently
+counted as wired on the strength of their own error messages alone. Triaging
+53 exports into api/unwired_gate/dormant is the work, not a side effect of a
+test cycle. The three rows were removed (the gate's own contract calls them
+stale) and the blind spot is recorded in the registry header so the file's
+shrinking is not misread as debt repaid.
+
+**Wrong tests, corrected in the test:** `expect_warning` for `safe_left_join`'s
+match-rate guard — it emits a `.msg_warn()` *message*, not an R warning, so it
+never reaches `warnings()` and cannot be promoted with `options(warn = 2)`.
+Pinned as `expect_message` with that noted. Also `expect_lt(info=)`, which
+`testthat` does not accept.
+
+**Result:** 59 assertions, all passing. **3 defects found, 3 fixed.**
+
+**Related files rerun:** `test-workforce-concentration.R` (20),
+`test-monte-carlo.R` (32), `test-geographic-demand.R` (26),
+`test-export-wiring.R` (10), `test-orchestrator-wiring.R` (56),
+`test-demand-and-validation.R` (150), `test-adversarial-cycle01.R` (25),
+`test-adversarial-cycle02.R` (46), `test-boundary-values.R` (81) — all green.
+
+**Bug class to sweep in a later cycle:** thresholds written as strict
+inequalities where the boundary case is the dangerous one — `min_match_rate`
+compared with `<` meant an exactly-50% match passed in silence. Look for other
+`<` / `>` guards whose equality case is the failure.
