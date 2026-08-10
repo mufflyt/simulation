@@ -2157,8 +2157,27 @@ too narrow and the SSOT stops validating, too wide and a typo passes as known.
 
 **Result:** 46 assertions, all passing, 0 skips. **1 defect found, 1 fixed.**
 
+### A regression I introduced, caught by the full suite
+
+The first version of this guard broke `test-demand-and-validation.R` — *"the
+local fallback still rejects scalar hazard multipliers"*. `hazard_mult` is a
+**recognised but forbidden** field: the registry refuses it with its own
+scientific rationale (a scalar multiplier distorts the shape of the retirement
+curve and is used by no published Dall-family study). My unknown-field guard ran
+first and claimed it was *unrecognised*, masking that reasoning.
+
+That is precisely the class **cycle 22** named — an earlier guard swallowing a
+later, more specific diagnosis — committed by the guard added two cycles later.
+
+*Fix:* `SUPPLY_SCENARIO_FORBIDDEN_FIELDS`, declared separately and included in
+the known vocabulary. A forbidden field is **known**; the two sets are kept
+apart so "known" and "permitted" cannot be confused. Test 11 pins both
+diagnoses: `hazard_mult` keeps its scientific message, and a genuine typo still
+gets the near-match one.
+
 **Related files rerun:** `test-scenario-registry.R` (18),
 `test-orchestrator-wiring.R` (56), `test-workforce-microsimulation.R` (58),
 `test-supply-burnout-scenario.R` (12), `test-entrant-trajectory.R` (33),
-`test-hours-uncertainty-propagation.R` (27), `test-export-wiring.R` (10), and
-cycles 02/23 (97) — 311 assertions, 0 problems.
+`test-hours-uncertainty-propagation.R` (27), `test-export-wiring.R` (10),
+`test-demand-and-validation.R` (150), and cycles 02/23 (97) — 461 assertions,
+0 problems.

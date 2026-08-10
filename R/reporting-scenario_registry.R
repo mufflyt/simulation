@@ -263,6 +263,11 @@ demand_scenario_registry <- function() {
 
 SUPPLY_SCENARIO_REQUIRED <- c("label", "entrants", "retirement_shift_years", "source")
 
+# Fields the registry knows about and refuses on purpose, each with a dedicated
+# guard that explains why. Listed separately so "known" and "permitted" cannot
+# be confused for one another.
+SUPPLY_SCENARIO_FORBIDDEN_FIELDS <- c("hazard_mult")
+
 # Every field a supply scenario may carry: the required four, the optional levers
 # the orchestrator actually reads, and the metadata the SSOT registry ships.
 #
@@ -279,8 +284,16 @@ SUPPLY_SCENARIO_KNOWN_FIELDS <- c(
   "conversion", "hours_multiplier", "career_change_multiplier",
   "late_career_fte_factor", "late_career_fte_onset_age", "entrant_multiplier",
   # metadata carried by the mufflyaccess SSOT registry
-  "family", "requires_fte_model"
+  "family", "requires_fte_model",
+  # RECOGNISED BUT FORBIDDEN. `hazard_mult` has its own guard below, with its
+  # own scientific rationale (a scalar multiplier distorts the shape of the
+  # retirement curve and is not used by any published Dall-family study). It
+  # belongs in this vocabulary so the unknown-field guard does not claim it is
+  # unrecognised and mask that reasoning -- the guard-ordering rule cycle 22
+  # established, applied to the guard cycle 24 added.
+  SUPPLY_SCENARIO_FORBIDDEN_FIELDS
 )
+
 DEMAND_SCENARIO_REQUIRED <- c("label", "access_components", "source")
 
 #' Validate a scenario registry against its contract
