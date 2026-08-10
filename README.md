@@ -74,10 +74,6 @@ Three specific divergences worth knowing before quoting this panel:
   (Sandvik), costs partly. There are no QALYs, utilities or functioning
   outcomes anywhere in the package.
 
-One naming note: the panel is titled DMDD; the code and every document here call
-it **DMDM** — dynamic multistate disease model. Same object, and `DMDM` is the
-name that will match a grep.
-
 ### The three flowcharts
 
 Three, because three different things can go wrong.
