@@ -263,3 +263,24 @@ test_that("the contract still does not ascertain retirement", {
   measures <- unique(as.data.frame(mufflyaccess::urps_counts_long())$measure)
   expect_false(any(grepl("retire", measures, ignore.case = TRUE)))
 })
+
+test_that("a zero denominator cannot publish a non-finite rate", {
+  skip_if_no_artifact()
+
+  # The partition check is satisfied by 0 + 0 + 0 == 0, so an artifact in which
+  # no excluded physician lacks Part B passes every structural test while making
+  # each directory rate undefined. Before this guard the table, the markdown and
+  # the figure all carried "NaN" and nothing objected.
+  a <- survivor_falsification_artifact()
+  a$partb$none_frame <- 0L
+  a$partb$any_frame <- a$denominators$linkage_denominator
+  a$directory$sustained <- 0L
+  a$directory$isolated <- 0L
+  a$directory$neither <- 0L
+
+  expect_true(all(is.na(survivor_falsification_table(a)$pct[8:10])))
+  expect_error(assert_survivor_falsification(a), "non-finite percentage")
+
+  # The shipped artifact has no undefined rate.
+  expect_true(all(is.finite(survivor_falsification_table()$pct)))
+})

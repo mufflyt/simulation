@@ -202,7 +202,13 @@ survivor_falsification_table <- function(a = survivor_falsification_artifact()) 
       "weak: listing only",
       "no federal observation")
   ) |>
-    dplyr::mutate(pct = round(100 * .data$n / .data$denominator, 1)) |>
+    # A zero denominator makes the rate undefined, not zero and not NaN. NaN
+    # would render as "NaN" in a table and as a gap in a figure, both of which
+    # read as a formatting glitch rather than as a quantity that does not exist.
+    # assert_survivor_falsification() then refuses the non-finite value outright.
+    dplyr::mutate(pct = ifelse(.data$denominator > 0,
+                               round(100 * .data$n / .data$denominator, 1),
+                               NA_real_)) |>
     dplyr::select("evidence", "window", "n", "denominator", "pct", "tier",
                   "strength")
 }
@@ -469,6 +475,20 @@ assert_survivor_falsification <- function(artifact = survivor_falsification_arti
     stop("assert_survivor_falsification(): more persistent billers than ",
          "excluded observed physicians in a year; the persistent subgroup must ",
          "be a subset of the excluded group.", call. = FALSE)
+  }
+
+  # No rate may be non-finite. A zero denominator satisfies the partition check
+  # above (0 + 0 + 0 == 0) while making every rate on that denominator
+  # undefined, so without this a vacuous rebuild would publish "NaN%" through
+  # the table, the markdown and the figure with every other check green.
+  bad <- is.na(tbl$pct) | !is.finite(tbl$pct)
+  if (any(bad)) {
+    stop("assert_survivor_falsification(): non-finite percentage on row(s): ",
+         paste(sprintf("'%s' (%s), n=%d of %d", tbl$evidence[bad],
+                       tbl$window[bad], tbl$n[bad], tbl$denominator[bad]),
+               collapse = "; "),
+         ". A zero denominator makes the rate undefined; investigate the ",
+         "artifact rather than reporting the row.", call. = FALSE)
   }
 
   # Tier 2 must never be described with the language reserved for billing.
