@@ -1337,3 +1337,95 @@ is recorded in a source comment, and the only reason it is now checked is that
 someone read the comment. Enumerate the "THE DEFECT THIS EXISTS FOR" and
 "used to" narratives in `R/` comments and check each has a test that would fail
 if the fix were reverted.
+
+---
+
+## Cycle 17 — 2026-08-10
+
+**Mix:** 4 BVA · 3 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle17.R`
+
+### Cycle 16's carried-forward class — swept, clean
+
+Enumerated the "THE DEFECT THIS EXISTS FOR" / "used to" / "Measured before"
+narratives in `R/` comments, resolved each to its enclosing function, and
+checked whether any test names that function.
+
+> **narrative-bearing functions: 33 · with no test naming them: 4**
+
+All four are false positives — three are ordinary `@param x ... used to select`
+prose rather than defect narratives, and the fourth is a module header whose
+functions *are* covered (`test-meps-care-seeking.R`) under a call spelling the
+scan missed. **The repository's defect narratives are tested.** Two spot-checks
+confirmed it by hand: `safe_rbind()`'s type-coercion story (five geocoding runs,
+364 of 1,540 rows silently NA'd) and the coordinate address screen (Glen Dale,
+WV geocoded 131 km into Ohio) each have a test that would fail if the fix were
+reverted.
+
+### The finding the sweep surfaced
+
+`care_seeking_multipliers()` carries the module's central scientific guard —
+*"an estimate the data cannot distinguish from 1.0 cannot be quietly adopted as
+if it were measured"* — implemented as
+
+```r
+identified = !(lo <= 1 && hi >= 1)      # over the ratio est / base
+```
+
+The flag is sound, and tests 1, 2 and 7 pin its boundary behaviour: an interval
+that merely **touches** 1 is unidentified (closed on both sides, conservative in
+the only safe direction), the `lo` clamp at 0 is cosmetic and cannot change a
+verdict, and identification is a property of the **interval**, not of the
+estimate's size — a huge multiplier with a useless interval is unidentified, a
+tiny one cleanly resolved is identified.
+
+**`base` is a predicted probability and nothing checks it.** At `base = 0` the
+ratio is `Inf`, and the flag evaluates
+
+```
+!(Inf <= 1 && Inf >= 1)  ->  !(FALSE && TRUE)  ->  TRUE
+```
+
+so an **infinite multiplier is reported as IDENTIFIED** — the strongest claim
+the function can make, produced by a division by zero. Test 8 states that
+arithmetic explicitly and pins the property any caller needs (a non-finite
+multiplier is never evidence); test 9 checks the live path across all three
+factor terms and confirms every multiplier the fitted model produces is finite.
+Not patched: forcing a value here would replace a visible `Inf` with an invented
+finite one, and the reference-row-predicts-zero case is not reachable from the
+fitted model — it is a contract gap, recorded rather than papered over.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | the flag's boundary | an interval touching 1 is unidentified |
+| 2 | BVA | the `lo` clamp | cosmetic; cannot change a verdict |
+| 3 | BVA | the reference level | its own multiplier is exactly 1, and never "identified" |
+| 4 | BVA | the confidence level | widening loses identification, never gains it |
+| 5 | semantic | the interval | brackets the point estimate |
+| 6 | semantic | identification vs effect size | different questions |
+| 7 | semantic | a non-factor term | refused, not an empty frame |
+| 8 | adversarial | `base = 0` | an infinite multiplier reported as identified |
+| 9 | adversarial | the live path | every multiplier finite across all three terms |
+| 10 | adversarial | constants vs estimates | still distinguishable; the constants stay ≤ 1 so the cycle-06 cascade holds |
+
+**Result:** 59 assertions, all passing, **0 skips**. **0 defects fixed; 1
+contract gap recorded.**
+
+**My own slip, and it is the third of its kind:** the first run had **6 of 10
+tests skipping** because I called `build_meps_care_seeking_panel(year = 23)`
+where the argument is `2023L` — `substr("23", 3, 4)` is `""`, so it looked for a
+column named `PERWTF`. Six skips is a cycle that proves nothing (the cycle 13
+lesson), so it was fixed rather than accepted. The ledger has now recorded this
+fixture-shape class in cycles 06, 11 and 17.
+
+**Related files rerun:** `test-meps-care-seeking.R` (25),
+`test-provider-coordinates.R` (36), `test-backtest.R` (106),
+`test-urps-population.R` (41), `test-demand-and-validation.R` (150),
+`test-data-artifact-classification.R` (15), and cycles 06/16 (135) — 508
+assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** a ratio whose denominator is a
+*modelled* quantity rather than an input. `est / base` here, `gap_fte /
+required_fte` in `compute_fte_gap()`, `effective_fte / headcount` in the FTE
+guard — the inputs are validated and the denominators are not, because they are
+computed. Enumerate every division in `R/` whose denominator is produced by the
+model itself and check each has a zero/degenerate guard.
