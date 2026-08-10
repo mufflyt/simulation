@@ -40,13 +40,26 @@
 # check compared against nothing and reported all 449 exports as unregistered.
 # A registry that cannot be parsed is worse than no registry, because the
 # failure looks like a mass regression rather than a broken file.
+# DETECTOR BLIND SPOT, measured 2026-08-09 (adversarial cycle 03).
+# "Wired" here means a bare textual MENTION outside the definition line, and a
+# STRING LITERAL counts. So a function that merely names itself in its own
+# stop() message -- the idiom used throughout this package -- reads as wired.
+# Measured: of 106 exports that nothing actually calls, 53 are currently
+# counted as wired on that basis alone. apply_calibration_scalars,
+# provider_concentration and workforce_lorenz left this file for that reason
+# and no other: cycle 03 gave each one an input guard that names itself. They
+# are still called by no pipeline.
+#
+# Not repaired here. Stripping string literals from the haystack doubles the
+# orphan list to 106 and would need every one of the 53 triaged into
+# api/unwired_gate/dormant -- which is the work, not a side effect of a test
+# cycle. Recorded so the shrinking of this file is not read as debt repaid.
 "export","category"
 "access_weight_sensitivity","api"
 "agent_urbanicity_summary","api"
 "anchor_index","api"
 "annual_trend","api"
 "apply_age_specific_surgery_demand","api"
-"apply_calibration_scalars","api"
 "assign_access_category","api"
 "balance_reversal_threshold","api"
 "baseline_anchor_sensitivity","api"
@@ -75,7 +88,6 @@
 "pfd_prevalence_ownership","api"
 "prevention_volume_summary","api"
 "project_supply_deterministic","api"
-"provider_concentration","api"
 "psa_normal","api"
 "psa_triangular","api"
 "publish_access_outcomes","api"
@@ -96,4 +108,3 @@
 "urps_age_productivity_curve","api"
 "urps_hazard_exposure","api"
 "wilson_ci","api"
-"workforce_lorenz","api"

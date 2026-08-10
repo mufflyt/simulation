@@ -7,7 +7,9 @@
 workforce_hhi(counts, normalized = FALSE)
 }
 \arguments{
-\item{counts}{Numeric counts per unit (zero/negative dropped).}
+\item{counts}{Numeric counts per unit; zero entries contribute no share.
+Negative counts are refused (see \code{.assert_nonneg_counts}), which is a
+deliberate divergence from \code{cliff::herfindahl_index()}.}
 
 \item{normalized}{If TRUE, size-corrected HHI* = (H - 1/n)/(1 - 1/n).}
 }
