@@ -125,8 +125,10 @@ psa_discrete <- function(name, values, probs = NULL) {
 #' @concept calibration
 #' @export
 psa_sample <- function(inputs, n, seed = 20260801L) {
-  old <- if (exists(".Random.seed", envir = .GlobalEnv)) get(".Random.seed", envir = .GlobalEnv) else NULL
-  on.exit(if (!is.null(old)) assign(".Random.seed", old, envir = .GlobalEnv))
+  # The in-repo original of this idiom, now routed through the shared helper:
+  # `if (!is.null(old))` leaves a FRESH session seeded, because there is nothing
+  # to restore and the seeded state is simply kept.
+  .preserve_rng_scope()
   set.seed(seed)
 
   cols <- list()
