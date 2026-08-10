@@ -264,7 +264,11 @@ initialize_provider_agents <- function(n,
 #
 # Every caller in the package already builds this as `a:b`. The invariant was
 # real and unstated; it is stated now.
-.check_projection_years <- function(years, fn) {
+.check_projection_years <- function(years, fn = NULL) {
+  if (is.null(fn)) {
+    cl <- sys.call(-1L)
+    fn <- if (is.null(cl)) "check_projection_years" else deparse(cl[[1L]])[1L]
+  }
   y <- suppressWarnings(as.numeric(years))
   if (length(y) == 0L || anyNA(y))
     stop(sprintf(paste("%s: `years` must be a non-empty vector of whole years;",
@@ -365,7 +369,7 @@ simulate_provider_career_once <- function(agents,
                                           p_active_coef = NULL,
                                           p_active_scenario_id = NULL,
                                           track_career_states = FALSE) {
-  years <- .check_projection_years(years, "simulate_provider_career_once")
+  years <- .check_projection_years(years)
   base_year <- min(years)
 
   if (!"sex" %in% names(agents)) agents$sex <- "female"
@@ -1155,7 +1159,7 @@ project_supply_deterministic <- function(agents, years, entrants_per_year,
                                          hours_model = NULL,
                                          hours_intercept = HWSM_HOURS_INTERCEPT,
                                          sex = "female") {
-  years <- .check_projection_years(years, "project_supply_deterministic")
+  years <- .check_projection_years(years)
   base_year <- min(years)
 
   # Represent the cohort as (age -> expected count) so departures are fractional.
