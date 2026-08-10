@@ -1902,3 +1902,68 @@ why; the opposite failure is a guard whose message names neither the offending
 value nor how to fix it, so a reader knows only that something is wrong.
 Enumerate the `stop()` messages in `R/` and check each names the value it
 rejected.
+
+---
+
+## Audit of every fix (after cycle 22)
+
+Not a cycle. A verification pass over all 31 defects fixed in cycles 01–22,
+asking the only question that matters about a fix: **would anything catch its
+removal?**
+
+### Method
+
+1. **Presence.** Each fix mapped to a code marker and grepped at HEAD.
+2. **Mutation.** Each fix reverted individually in an isolated `git worktree`,
+   its pinning test run, the file restored. A fix whose test still passes is a
+   fix with no evidence behind it.
+
+### Result
+
+| | |
+|---|---|
+| Fixes verified present at HEAD | **31 / 31** |
+| Mutations successfully applied | **31 / 31** |
+| **Killed by the pinning test** | **30** |
+| **Survived — fix not pinned** | **1 (D12)** |
+
+Mutation kill counts ranged from 1 to 33 failing assertions, so most fixes are
+pinned several times over rather than by a single expectation.
+
+### The survivor
+
+**D12 · `compute_brfss_demand_estimand(care_seeking_rate, referral_rate)`.**
+The guard was present and correct the whole time. Reverting it caused **zero
+failures across `test-urps-population.R`, `test-demand-urps.R`,
+`test-demand-estimands.R`, `test-adversarial-cycle06.R` and
+`test-demand-and-validation.R`** — five files that exercise the function.
+
+The function *is* tested: return shape, D4 format, monotonicity in population.
+Its **guard** never was. Cycle 06 fixed three call sites (D11, D12, D13) and
+tested two of them; testing one of two call sites is not testing the guard.
+
+*Remediation:* a pinning test appended to `test-adversarial-cycle06.R` covering
+both fractions, both bounds, the non-finite case, the legal endpoints, and the
+exact-product property. Its fixture is built **inline** rather than borrowed
+from `test-urps-population.R` — the first version skipped because the helper was
+out of scope, and a skip is precisely the failure this audit exists to catch.
+
+Re-mutated after adding it: **KILLED (3 failing assertions).**
+
+### What the audit says about the other 30
+
+Each was reverted and each broke its test. Notable kill counts: D26
+(`retirement_survival` monotonicity) **33**, D31 (guard ordering) **13**, D28
+(event-count numerator) **12**, D1/D23/D25 **9** each. The fixes with the widest
+blast radius are the ones the suite notices most loudly, which is the right
+shape.
+
+### What this audit does NOT establish
+
+* That the fixes are **scientifically** right — only that they are pinned. The
+  estimand judgements (FTE drift, `left_country`, the `base = 0` multiplier) are
+  recorded as decisions, not verified as correct.
+* That **unfixed** surface is safe. The audit covers what was changed, not what
+  was never looked at.
+* That a mutation I chose is the only way to break a fix. Each mutation reverts
+  the guard as written; a subtler regression might survive.
