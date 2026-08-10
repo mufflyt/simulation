@@ -33,7 +33,9 @@ Returns the probability of still being active at each age, given active at
 the baseline vs scenario curves visually.
 }
 \section{Relationship to the mufflyaccess contract}{
-Related to \code{mufflyaccess::urps_survival_curve()}, and \strong{intentionally not contract-compatible}. The contract version
+(Concerns \code{mufflyaccess::urps_survival_curve()}.)
+
+Related, and \strong{intentionally not contract-compatible}. The contract version
 is thirteen lines; this one adds \code{pathway} (ABOG/ABU), sex-keyed
 coefficients, \code{scale_shift} and \code{entry_age}, and returns a tibble rather than
 a vector. Renamed from \code{urps_survival_curve()} on 2026-08-09 for that reason
