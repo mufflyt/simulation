@@ -1716,3 +1716,104 @@ column list. The cycle-03 completeness guard listed six required columns and
 therefore could not see the ten optional ones; this cycle's guard derives its
 scope from naming instead. Enumerate the validators that name their columns
 literally and check what each cannot see.
+
+---
+
+## Cycle 21 — 2026-08-10
+
+**Mix:** 3 BVA · 3 semantic · 4 adversarial → `tests/testthat/test-adversarial-cycle21.R`
+
+**Targets and why.** Cycle 20 carried forward *a guard whose scope is a
+hardcoded column list*, and it pointed at my own earlier work. The completeness
+guard added in cycle 03 opens with six literal names:
+
+```r
+na_cols <- intersect(c("supply_headcount", "supply_clinical_fte",
+                       "demand_headcount", "demand_clinical_fte",
+                       "gap_fte", "gap_headcount"), names(x))
+```
+
+Cycle 20 found the ten **optional bound** columns it could not see. This cycle
+asks what is left after that: the columns that are neither required nor half of
+a pair.
+
+### Defect found and fixed — 1
+
+**D30 · an impossible provenance claim, printed.** `supply_observed_share` is a
+share of the base cohort with an observed certification year. It is optional, it
+is not half of a pair, and **nothing checked it**. Measured:
+
+```
+supply_observed_share = 1.7   ->  validate_urps_gap_projection(strict)  PASSED CLEAN
+supply_observed_share = -0.5  ->  PASSED CLEAN
+supply_observed_share = NaN   ->  PASSED CLEAN
+gap_pct = Inf                 ->  PASSED CLEAN
+```
+
+and `print.urps_gap_projection()` then rendered
+
+```
+             170.0% of the base cohort has an observed certification year
+```
+
+That line is the **provenance caveat the whole `supply_cohort_basis` machinery
+exists to carry** — the one that tells a reader how much of the cohort is
+reconstructed rather than observed. It was stating something the data cannot
+support.
+
+*Fix, and the shape of it matters:* the answer to a hardcoded list is not a
+longer hardcoded list. Two guards, both with a **derived** scope:
+
+* **Ranges** come from `GAP_PROJECTION_COLUMN_RANGES`, a declared table beside
+  the other contract constants. Adding a bounded column means adding a row, not
+  remembering to extend a condition inside the validator. Test 4 asserts every
+  declared range is itself a well-formed interval — cycle 20's rule applied to
+  the table that now declares ranges.
+* **Inf/NaN** is checked across **every numeric column present**, including ones
+  the contract has never heard of (test 5 proves that with a
+  `some_future_metric`). The distinction it rests on: **NA is allowed and
+  Inf/NaN is not.** Cycle 18 made NA the honest answer for `gap_pct` when demand
+  is zero — "undefined, and we said so". Inf and NaN mean a division or a
+  product escaped, and they export as numbers.
+
+### A cycle-20 test failed, and it was neither a defect nor a weakening
+
+Adding the Inf/NaN guard changed **which guard speaks first** for a bound of
+`Inf` or `NaN`: the escape guard now names the cause before the interval guard
+reports a "non-finite bound". Cycle 20's BVA 2 looped over `NA`, `Inf`, `NaN`
+and asserted one message for all three.
+
+Both messages are correct and the frame is refused either way, so the test was
+asserting *which guard owns the case* rather than *that the case is refused*.
+Corrected by making that ownership explicit: NA belongs to the interval guard
+(an interval with an unknown end is not an interval), Inf/NaN to the escape
+guard. That is **stronger** than the original, not looser — it now pins a
+division of labour that previously nothing recorded.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `supply_observed_share` | closed at 0 and 1; the real ~0.498 passes |
+| 2 | BVA | NA vs Inf/NaN | NA allowed, Inf/NaN not, in every numeric column |
+| 3 | BVA | no optional columns | still valid |
+| 4 | semantic | the range table | declared, not remembered; every range is a well-formed interval |
+| 5 | semantic | the Inf/NaN scope | derived from the frame, covers an unknown numeric column |
+| 6 | semantic | strict vs relaxed | both new guards match the file's pattern |
+| 7 | adversarial | the printed caveat | an impossible share can no longer reach it |
+| 8 | adversarial | one bad row in two | caught elementwise — the MEAN share is in range |
+| 9 | adversarial | four guards | disjoint failures, each named, none masking another |
+| 10 | adversarial | the limit of a range guard | 0.2 is in range and may still be wrong; the arithmetic guard is what catches a wrong RELATION |
+
+**Result:** 42 assertions, all passing, 0 skips. **1 defect found, 1 fixed, 1
+earlier test strengthened.**
+
+**Related files rerun:** `test-orchestrator-wiring.R` (56),
+`test-demand-and-validation.R` (150), `test-adequacy-evidence.R` (81),
+`test-export-wiring.R` (10), `test-backtest.R` (106), `test-monte-carlo.R` (32),
+and cycles 03/13/18/20 (197) — 632 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** guard ordering. Four guards now run in
+sequence on this contract, and which one speaks first decides what a reader is
+told to fix. Cycle 20's test failure was exactly that, caught only because a
+test asserted a message. Enumerate the validators that run several checks in
+sequence and ask, for each pair, whether the earlier one can mask a more
+specific diagnosis from the later one.

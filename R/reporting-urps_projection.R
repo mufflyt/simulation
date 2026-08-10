@@ -77,6 +77,13 @@ OPTIONAL_COLS <- c(
   "certification_pathway"
 )
 
+# Columns whose contract states a RANGE, and what it is. A table rather than a
+# check woven into the validator, so adding a bounded column means adding a row
+# here instead of remembering to extend a condition.
+GAP_PROJECTION_COLUMN_RANGES <- list(
+  supply_observed_share = c(0, 1)
+)
+
 # Tolerance on the gap identity, in FTE. ONE constant because the same check is
 # made in two places -- here and in validation_report() -- and two copies of a
 # tolerance is how one of them starts accepting what the other rejects.
@@ -157,6 +164,48 @@ validate_urps_gap_projection <- function(x,
       "is not a gap of zero and must not export as one; the usual cause is a",
       "demand series that does not cover every projection year."),
       paste(sprintf("%s (%d)", names(hit), hit), collapse = ", "), nrow(x))
+    if (identical(mode, "strict")) stop(msg, call. = FALSE)
+    .msg_warn(msg)
+  }
+
+  # Range guard on the columns whose CONTRACT states a range. Derived from a
+  # declared table rather than woven into the completeness check above, because
+  # that check's scope is a hardcoded list of the six required numerics and
+  # therefore cannot see an optional column at all -- which is how
+  # supply_observed_share, a share, reached print.urps_gap_projection() at 1.7
+  # and printed "170.0% of the base cohort has an observed certification year".
+  # That line is the provenance caveat the whole supply_cohort_basis machinery
+  # exists to carry.
+  for (nm in names(GAP_PROJECTION_COLUMN_RANGES)) {
+    if (!nm %in% names(x)) next
+    rng <- GAP_PROJECTION_COLUMN_RANGES[[nm]]
+    v <- suppressWarnings(as.numeric(x[[nm]]))
+    bad <- !is.finite(v) | v < rng[1] | v > rng[2]
+    if (any(bad)) {
+      msg <- sprintf(paste("Gap projection column `%s` must be finite and in [%s, %s];",
+                           "%d row(s) are not (e.g. %s). It is reported to a reader as",
+                           "a share, so a value outside its range is a claim the data",
+                           "cannot support."),
+                     nm, format(rng[1]), format(rng[2]), sum(bad),
+                     format(v[which(bad)[1]]))
+      if (identical(mode, "strict")) stop(msg, call. = FALSE)
+      .msg_warn(msg)
+    }
+  }
+
+  # Non-finite guard over EVERY numeric column, derived rather than listed.
+  # NA is a legitimate value in this contract -- gap_pct is NA when demand is
+  # zero, which cycle 18 made the honest answer -- but Inf and NaN never are:
+  # they mean arithmetic escaped rather than that a quantity is undefined.
+  num_cols <- names(x)[vapply(x, is.numeric, logical(1))]
+  esc <- vapply(num_cols, function(cl) sum(is.nan(x[[cl]]) | is.infinite(x[[cl]])),
+                integer(1))
+  if (any(esc > 0L)) {
+    hit <- esc[esc > 0L]
+    msg <- sprintf(paste("Gap projection has Inf/NaN in %s. NA means a quantity is",
+                         "undefined and is allowed; Inf or NaN means a division or a",
+                         "product escaped, and it exports as a number."),
+                   paste(sprintf("%s (%d)", names(hit), hit), collapse = ", "))
     if (identical(mode, "strict")) stop(msg, call. = FALSE)
     .msg_warn(msg)
   }

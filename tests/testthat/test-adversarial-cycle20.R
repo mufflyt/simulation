@@ -58,9 +58,15 @@ test_that("BVA: a non-finite bound is a malformed interval, not a wide one", {
   # NA on one side used to pass because the required-column completeness guard
   # (cycle 03) only covers the six REQUIRED numeric columns; every bound column
   # is OPTIONAL and was checked by nothing.
+  # All three are refused. WHICH guard owns each is itself a contract, added in
+  # cycle 21: NA means "undefined, and we said so" and only the interval guard
+  # rejects it (an interval with an unknown end is not an interval); Inf and NaN
+  # mean arithmetic escaped, and the Inf/NaN guard names that cause first.
   for (bad in list(c(NA_real_, 1010), c(Inf, 1010), c(NaN, 1010))) {
     p <- cyc20_projection(lower_95 = bad, upper_95 = c(1100, 1110))
-    expect_match(cyc20_validates(p), "non-finite bound",
+    err <- cyc20_validates(p)
+    expect_type(err, "character")          # refused in strict mode, whichever guard
+    expect_match(err, if (is.na(bad[1]) && !is.nan(bad[1])) "non-finite bound" else "Inf/NaN",
                  info = paste("lower_95 =", format(bad[1])))
   }
   # And a fully finite pair passes, so the guard is about the bound and not
