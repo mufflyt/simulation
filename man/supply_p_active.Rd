@@ -56,9 +56,8 @@ registry and applies an age-axis shift—the same mechanism as
 \code{\link[=shift_retirement_schedule]{shift_retirement_schedule()}}—rather than a multiplicative hazard knob:
 "Retire 2 years later" treats a 65-year-old as age 63 in the predictor.
 }
-\section{Relationship to \code{mufflyaccess}{
-:urps_p_active()}:
-Related, and \strong{intentionally not contract-compatible}. The contract version
+\section{Relationship to the mufflyaccess contract}{
+Related to \code{mufflyaccess::urps_p_active()}, and \strong{intentionally not contract-compatible}. The contract version
 takes \verb{(age, sex)} and evaluates the LFP logistic on age alone. This one
 additionally conditions on \code{years_certified} and on a scenario registry, so
 it is not the same function of the same arguments and neither implements the

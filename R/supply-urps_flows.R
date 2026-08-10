@@ -134,8 +134,9 @@ URPS_P_ACTIVE_COEF <- list(
 #'   (default) the function calls [supply_scenario_registry()] once per call.
 #' @return Numeric vector of probabilities in \[0, 1\], one per provider.
 #'   Returns 0 for ages ≥ `MICROSIM_TERMINAL_AGE` and for ages < 18.
-#' @section Relationship to `mufflyaccess::urps_p_active()`:
-#' Related, and **intentionally not contract-compatible**. The contract version
+#' @section Relationship to the mufflyaccess contract:
+#' Related to `mufflyaccess::urps_p_active()`, and **intentionally not
+#' contract-compatible**. The contract version
 #' takes `(age, sex)` and evaluates the LFP logistic on age alone. This one
 #' additionally conditions on `years_certified` and on a scenario registry, so
 #' it is not the same function of the same arguments and neither implements the
