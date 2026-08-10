@@ -156,7 +156,17 @@ validate_urps_gap_projection <- function(x,
   na_cols <- intersect(c("supply_headcount", "supply_clinical_fte",
                          "demand_headcount", "demand_clinical_fte",
                          "gap_fte", "gap_headcount"), names(x))
-  n_na <- vapply(na_cols, function(cl) sum(!is.finite(x[[cl]])), integer(1))
+  # `!is.finite()` is TRUE for NA, NaN AND Inf, so this guard used to answer for
+  # all three -- and its message makes a CAUSAL claim ("the usual cause is a
+  # demand series that does not cover every projection year") that is only right
+  # for a genuine NA. A reader with gap_fte = Inf was sent to check their demand
+  # coverage when a division had escaped. The Inf/NaN guard below carries the
+  # correct diagnosis and could never be reached for a required column, because
+  # this one ran first and swallowed them.
+  #
+  # Each cause now answers for itself: true NA here, Inf/NaN below.
+  n_na <- vapply(na_cols, function(cl) sum(is.na(x[[cl]]) & !is.nan(x[[cl]])),
+                 integer(1))
   if (any(n_na > 0L)) {
     hit <- n_na[n_na > 0L]
     msg <- sprintf(paste(

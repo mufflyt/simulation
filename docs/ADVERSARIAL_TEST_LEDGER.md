@@ -1817,3 +1817,88 @@ told to fix. Cycle 20's test failure was exactly that, caught only because a
 test asserted a message. Enumerate the validators that run several checks in
 sequence and ask, for each pair, whether the earlier one can mask a more
 specific diagnosis from the later one.
+
+---
+
+## Cycle 22 — 2026-08-10
+
+**Mix:** 4 BVA · 3 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle22.R`
+
+**Targets and why.** Cycle 21 carried forward: *which of several sequential
+checks speaks first decides what a reader is told to fix.* Six guards now run in
+sequence on the gap-projection contract — five of them added by this ledger —
+and nothing had ever asked whether an earlier one can swallow a later, more
+specific one.
+
+It could, and the case was mine.
+
+### Defect found and fixed — 1
+
+**D31 · a guard that named a cause it could not support.** `!is.finite()` is
+TRUE for `NA`, `NaN` **and** `Inf`, so the cycle-03 completeness guard answered
+for all three — while its message makes a causal claim right for only one:
+
+> "A **missing** gap is not a gap of zero … the usual cause is a **demand series
+> that does not cover every projection year**."
+
+Measured: `gap_fte = NA`, `= Inf` and `= NaN` all produced that identical
+message. For the last two it is simply false — the demand series covers every
+year; a division escaped. Cycle 21's Inf/NaN guard carries the correct
+diagnosis ("a division or a product escaped") and **could never be reached for
+a required column**, because the broader guard ran first.
+
+A reader with an infinite gap was sent to check their demand coverage.
+
+*Fix:* one word of scope. The completeness guard now matches
+`is.na(x) & !is.nan(x)` — genuine NA only — and Inf/NaN falls through to the
+guard that explains it. `is.na(NaN)` is TRUE in R, so that spelling is the only
+one that separates them; test 2 pins the four base-R predicates the distinction
+rests on.
+
+The rule this encodes, stated in test 8: **a message may say WHAT is wrong
+unconditionally; it may only say WHY when the guard has established the why.**
+
+### Two earlier tests strengthened
+
+Cycles 03 and 20 each asserted the *message* for an `Inf` bound or gap, so both
+failed when the diagnosis became more specific. Neither was a defect and neither
+was weakened — both now assert that the frame is **refused** and additionally
+pin **which guard owns which cause**, which nothing previously recorded. That is
+the third time this refinement has surfaced a test asserting the wrong guard;
+the tests were doing their job.
+
+### Guard ordering, now a tested property
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | NA / NaN / Inf in a required column | three causes, three diagnoses |
+| 2 | BVA | `is.na` vs `is.nan` | the four predicates the split rests on |
+| 3 | BVA | a clean frame | reaches the end of every guard |
+| 4 | BVA | optional vs required NA | allowed in `gap_pct`, refused in `gap_fte`; Inf refused in both |
+| 5 | semantic | **every guard is reachable** | six frames, each tripping exactly one — a guard no input reaches is dead code that reads as protection |
+| 6 | semantic | ordering as judgement | structural before derived, and the deferred finding is not lost |
+| 7 | semantic | relaxed mode | reports every problem, not just the first |
+| 8 | adversarial | causal claims | no message claims a cause it cannot support |
+| 9 | adversarial | row order | an early row's broad problem cannot hide a late row's narrow one |
+| 10 | adversarial | **iterative convergence** | fix what you are told, re-run, make progress — four distinct diagnoses, never repeated, then clean |
+
+**Result:** 55 assertions, all passing, 0 skips. **1 defect found, 1 fixed, 2
+earlier tests strengthened.**
+
+**Swept the class elsewhere:** `validate_backtest_target()` runs six sequential
+`fail()` guards (pathway, measure, contract version, retired value, expected
+value, basis). Each checks a genuinely different dimension and none subsumes
+another, so a frame failing several gets a message that is still correct for
+what it names. Not a masking case; left alone.
+
+**Related files rerun:** `test-orchestrator-wiring.R` (56),
+`test-demand-and-validation.R` (150), `test-adequacy-evidence.R` (81),
+`test-export-wiring.R` (10), `test-backtest.R` (106), and cycles
+03/13/18/20/21 (238) — 641 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** a message that is right about the
+what and silent about the why. This cycle fixed one that was wrong about the
+why; the opposite failure is a guard whose message names neither the offending
+value nor how to fix it, so a reader knows only that something is wrong.
+Enumerate the `stop()` messages in `R/` and check each names the value it
+rejected.

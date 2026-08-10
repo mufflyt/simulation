@@ -188,11 +188,18 @@ test_that("ADVERSARIAL: a missing gap is never treated as a gap of zero", {
   expect_error(suppressMessages(validate_urps_gap_projection(holed, mode = "strict")),
                "not a gap of zero")
 
-  # An Inf gap is equally unexportable and equally invisible to na.rm.
+  # An Inf gap is equally unexportable and equally invisible to na.rm -- but it
+  # is a DIFFERENT problem from a missing one, and cycle 22 gave it its own
+  # diagnosis. This guard's message names a cause ("a demand series that does
+  # not cover every projection year") that only explains an NA; an Inf means a
+  # division escaped, and saying otherwise sends a reader to the wrong place.
   infinite <- ok
   infinite$gap_fte[3] <- Inf
-  expect_error(suppressMessages(validate_urps_gap_projection(infinite, mode = "strict")),
-               "non-finite values")
+  err <- tryCatch(suppressMessages(validate_urps_gap_projection(infinite, mode = "strict")),
+                  error = function(e) conditionMessage(e))
+  expect_type(err, "character")                 # refused, as before
+  expect_match(err, "Inf/NaN")
+  expect_false(grepl("demand series", err))
 })
 
 # ---- ADVERSARIAL 3 ----------------------------------------------------------
