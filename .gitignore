@@ -137,6 +137,7 @@ outputs/
 !figures/map_demand_women65_tracts.png
 !figures/map_supply_demand_mismatch.png
 !figures/fig_microsimulation_concept.png
+!figures/fig_demand_side_dmdm.png
 
 # Canonical Census NPP inputs (vetted reference data; build-ignored so the
 # package build stays small -- see .Rbuildignore ^data-raw$).
