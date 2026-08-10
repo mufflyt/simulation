@@ -104,7 +104,7 @@ as an orphan and bump the ratchet; that would have been two lines, would have
 gone green, and would have written a false statement into the registry while
 leaving the blind spot for the next caller.
 
-### 4. A gitignore rule that swallowed source, silently — for the second time
+### 4. A gitignore rule that swallowed source, silently — three times now
 
 **2026-08-08, mine.** `*/manuscript/`, written for simulation *output* folders,
 matched `scripts/manuscript/`. `git status` simply did not mention the two new
@@ -122,6 +122,48 @@ undocumented no matter how often the docs were regenerated.
 original pattern — whatever `*/manuscript/` was written to exclude still
 exists. And a broad ignore pattern is a silent-failure generator: prefer
 anchored paths.
+
+**Third instance, 2026-08-09, and the sharpest.** `98ad3f8` rewrote the README
+to lead with three flowcharts, three figures and three maps. The blanket `*.png`
+meant `git add -A` **skipped all six new figures and reported success**, so the
+README went live with six broken images.
+
+What makes it the best example in this file: *that same commit was fixing this
+exact defect for a different image* — a README embedding a file the repository
+does not contain — and reintroduced it sixfold in the act of fixing it. The
+follow-up `c30b03e` states the lesson better than a rule could:
+
+> `git add -A` succeeding says nothing about whether a file was added when an
+> ignore rule excludes it; only `git ls-files` does.
+
+Which is precisely how the second instance was caught — by listing what
+`git add` *would* stage rather than trusting `git status` to mention it. The
+technique existed, in this file, and did not travel to the next person.
+
+### 4b. One broken documentation link blocked every push, for days
+
+**2026-08-09, the concurrent session's find.** Two roxygen blocks referenced
+`[BACKTEST_CAREER_CHANGE_HAZARD]`, a constant defined at
+`R/validation-backtest_run.R:57` and **not exported**. A link to an unexported
+object cannot resolve, so `R CMD check` reported *"Missing link or links"* —
+and because the pre-push gate runs `error_on = "warning"`, that single square
+bracket blocked **every push in the repository**, across sessions, since
+`8597b8f`.
+
+The pairing with entry 1 is the point. That was a gate that refused everything
+and therefore delivered nothing; this is a gate that refused everything and
+therefore *delivered nothing*, from the opposite cause — one correct, strict
+rule meeting one trivial typo. Strictness is not free, and the cost is paid at
+the moment of least patience.
+
+**The tempting wrong fix was export.** Adding the constant to the NAMESPACE
+resolves the link in one line. It would also have enlarged the public API to
+accommodate a typo, and created a new unregistered orphan for the gate in entry
+3 to catch. The repository's own convention decided it instead:
+`E2SFCA_DEFAULT_WEIGHTS`, `MICROSIM_ENTRY_AGE`,
+`WORKFORCE_OUTLOOK_ADEQUATE_MIN` and `URPS_FELLOWSHIP_YEARS` are all unexported
+signature-default constants, and none is referenced with `[...]`. These two were
+the anomaly, so they were de-linked to backticks.
 
 ---
 
@@ -265,29 +307,137 @@ deciding *which columns are magnitudes* — not the rendering.
 
 ---
 
+---
+
+## VI. A guardrail described as a proof
+
+### 17. A "classification invariant" that was a grep
+
+**2026-08-09, mine.** `1c9bb0c` shipped
+`test-data-artifact-classification.R` and its commit message said it *enforces*
+that no validation script reads a non-canonical artifact. It did no such thing.
+It scanned comment-stripped source for seven hard-coded file names. This passes:
+
+```r
+readRDS(file.path(cache_dir, stem))
+```
+
+so does anything routed through a helper, and so does any cache invented after
+the list was written.
+
+**Caught by:** the maintainer, reading the description and asking whether the
+check worked from a declared registry or from text patterns. Not by me, and not
+by any test — a name scan cannot fail in the direction that reveals it is a name
+scan.
+
+**Why it belongs here rather than in a changelog.** The defect was not the grep;
+a grep is a reasonable backstop. The defect was **describing a guardrail as an
+invariant**, which is worse than having no check, because a documented invariant
+stops people looking. Everything else in this repository is careful to say what
+a green build does *not* establish; this commit forgot to.
+
+**Rule, now implemented in `ef561ec`:** the primary check parses, resolves each
+reader's path argument through the script's own constants, and requires every
+resolved path to be declared — inverting the burden from "is this forbidden file
+mentioned?" to "is everything you open declared?". Where a path cannot be
+resolved statically it is **counted**, and a third test fails if that count
+grows. The name scan survives as an explicitly labelled backstop, and the
+inventory states plainly what the pair does and does not prove.
+
+---
+
+## VII. Two sessions, one repository
+
+### 18. The same red build fixed twice, in opposite directions
+
+**2026-08-09.** Entry 3's sequel produced a race. `main` was red on the
+`isochrone_source_dir` false positive, and two sessions fixed it independently:
+
+| | fix | cost | what it asserts |
+|---|---|---|---|
+| concurrent session | register the export as `api`, ratchet 56 → 57 | 2 lines | the function is unwired — **false** |
+| this session | repair the detector to trim, not drop, definition lines | ~10 lines | the function is wired — true |
+
+Both go green. They are mutually exclusive: with the detector repaired, the
+registry row becomes provably stale and the gate fails on it, so the second fix
+had to *remove* the first. That is an override of another session's committed
+decision, and it is recorded here rather than left in a diff.
+
+**The general shape.** When a gate misfires, the cheapest green is almost always
+to feed the gate a declaration that satisfies it. That declaration is a
+statement about the code, and if the gate was wrong the statement is false — so
+the repository ends up holding a lie in the exact file that exists to prevent
+one. The register in entry 2 is only useful while every row in it is true.
+
+**Rule:** before satisfying a gate, establish whether the gate is right. If the
+finding is a false positive, fixing the detector is not gold-plating; it is the
+only fix that does not add a falsehood.
+
+### 19. Regenerating documentation in a tree somebody else is editing
+
+**2026-08-09, mine.** Running `roxygen2::roxygenise()` regenerates the *whole*
+`man/` tree and `NAMESPACE` from whatever sources are on disk. With a concurrent
+session mid-edit, that meant one command modified 19 of their `man/` pages,
+deleted `man/business_days_to_calendar.Rd`, and produced a `NAMESPACE`
+containing four of their pending export changes alongside my two.
+
+Nothing was lost, because I noticed before staging and rebuilt `NAMESPACE` from
+`HEAD` with only my two lines. But the near-miss is the entry: had I run
+`git commit -am`, I would have committed another session's half-finished API
+under my message, and the commit would have looked entirely ordinary.
+
+**Rule:** a generated file in a shared tree is not yours just because you ran
+the generator. Diff every generated file before staging, stage by path and never
+`-a`, and if a generated file is entangled, reconstruct your slice from `HEAD`
+rather than committing the union.
+
+---
+
 ## What the pattern says
 
 Counting the entries by what caught them:
 
 | caught by | n |
 |---|---:|
-| a guard doing its job | 3 |
-| running the thing and reading the output | 5 |
-| a human reviewing | 4 |
+| running the thing and reading the output | 6 |
+| a human reviewing | 5 |
+| a guard doing its job | 4 |
 | accident — noticed a number that looked off | 3 |
 | still open | 2 |
 
-One of those three is the orphan detector catching a false positive of its own
-making (#3's sequel), which counts as the machinery working only in the sense
-that it failed loudly enough to be investigated rather than accommodated.
+Two of those four guard catches deserve an asterisk. The orphan detector caught
+a false positive of its own making (#3's sequel) — the machinery working only in
+the sense that it failed loudly enough to be investigated rather than
+accommodated. And #4b was a correct gate blocking every push in the repository
+over one square bracket, which is a catch and a cost at the same time.
 
-Only two were caught by automation. The single most productive habit in this
-repository is not a gate: it is **rendering the number next to its source and
-looking at both**. Every gate here was written after a human did that and found
-something.
+Four of nineteen were caught by automation, and two of those four were the
+automation reacting to itself. The single most productive habit in this
+repository is still not a gate: it is **rendering the number next to its source
+and looking at both**. Every gate here was written after a human did that and
+found something.
 
-The second pattern: **the same defect shape recurs across unrelated layers**. A
-predicate applied to a sample and generalised (#6, #8). A broad pattern reaching
-a path invented later (#2, #4). A claim about impossibility asserted without the
-attempt (#9, #12). Recognising the shape is faster than rediscovering each
-instance.
+**The same defect shape recurs across unrelated layers**, which is the argument
+for reading this file rather than each entry's fix:
+
+| shape | instances |
+|---|---|
+| a predicate applied to a sample and generalised to a column | #6, #8 |
+| a broad pattern reaching a path invented later | #2, #4 (×3) |
+| a claim of impossibility asserted without the attempt | #9, #12 |
+| a check whose own output is indistinguishable from its subject | #1, #3 |
+| a guardrail mistaken for a proof | #14, #17 |
+
+**And the newest pattern, which the first sixteen entries did not have: a fix
+that satisfies a gate by telling it something false.** #3's sequel and #18 are
+the same move — register the orphan, bump the ratchet, go green — reached
+independently by two sessions within a day. It is always the cheapest option and
+it always costs the register its meaning. When a gate misfires, decide whether
+the gate is right *before* deciding what to tell it.
+
+**A note on what recurrence means here.** Entry 4 is now three instances of one
+pattern, and the third arrived inside a commit fixing the second. The technique
+that caught instance two — list what `git add` *would* stage — was written down
+in this file and still did not reach the person who hit instance three. Writing
+the lesson down is necessary and demonstrably not sufficient; the ones that stop
+recurring are the ones that became a test.
