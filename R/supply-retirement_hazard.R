@@ -91,7 +91,8 @@ urps_weibull_exit_probs <- function(ages, sex, pathway = "ABOG",
 #' @return Tibble with columns `age`, `sex`, `pathway`, `scale_shift`,
 #'   `p_active`.
 #'
-#' @section Relationship to `mufflyaccess::urps_survival_curve()`:
+#' @section Relationship to the mufflyaccess contract version:
+#' The contract function is `mufflyaccess::urps_survival_curve()`.
 #' Related, and **intentionally not contract-compatible**. The contract version
 #' is thirteen lines; this one adds `pathway` (ABOG/ABU), sex-keyed
 #' coefficients, `scale_shift` and `entry_age`, and returns a tibble rather than

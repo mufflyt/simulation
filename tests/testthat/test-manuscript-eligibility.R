@@ -16,7 +16,16 @@
 # Fixtures are synthesised in tempdir() rather than read from
 # artifacts/validation/, which is untracked and absent from a fresh clone.
 
-root <- rprojroot::find_root(rprojroot::has_file("DESCRIPTION"))
+# find_root() ERRORS when no DESCRIPTION is above the working directory, which is
+# exactly the case under R CMD check: tests run in <pkg>.Rcheck/tests/ and the
+# source tree is gone. It ran BEFORE the skip meant to guard it, so the file
+# errored out before a single expectation. The three sibling gates that reach for
+# the repository root (canonical-overlap, data-artifact-classification,
+# intermediate-regenerability) all wrap it and degrade to a skip; this one did
+# not. scripts/ is .Rbuildignore'd, so there is nothing here to run under check.
+root <- tryCatch(rprojroot::find_root(rprojroot::has_file("DESCRIPTION")),
+                 error = function(e) NA_character_)
+skip_if(is.na(root), "repository root not reachable (source tree absent under R CMD check)")
 skip_if_not(file.exists(file.path(root, "scripts", "manuscript", "_eligibility.R")))
 source(file.path(root, "scripts", "validation", "_provenance.R"), local = TRUE)
 source(file.path(root, "scripts", "manuscript", "_eligibility.R"), local = TRUE)

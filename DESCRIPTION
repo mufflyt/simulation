@@ -19,7 +19,6 @@ Description: A stochastic, individual-level microsimulation of the supply of and
     published applications in physiatry, neurology and physical therapy.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.1)
@@ -50,12 +49,14 @@ Suggests:
     flexsurv,
     lme4,
     ggplot2,
+    here,
     knitr,
     MASS,
     mufflyaccess,
     pkgload,
     rcmdcheck,
     rmarkdown,
+    rprojroot,
     sf,
     survey,
     testthat (>= 3.0.0),

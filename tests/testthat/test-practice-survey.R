@@ -112,7 +112,10 @@ test_that("the unresolved register separates provenance problems from results pr
 test_that("geographic access is registered as absent, not as miscalibrated", {
   g <- geographic_access_status()
   expect_false(g$resolved)
-  expect_equal(nrow(g$components), 7L)
+  # Tracks the register, which grew to 8 when the access layer was wired into
+  # the orchestrator. The count is pinned so a component cannot be dropped
+  # silently, which means it has to be updated when one is added.
+  expect_equal(nrow(g$components), 8L)
   # PARTIAL counts as neither present nor missing, so the two need not sum to
   # the row count -- an input can be underway.
   expect_lte(g$n_present + g$n_missing, nrow(g$components))

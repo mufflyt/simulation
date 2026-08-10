@@ -32,8 +32,9 @@ Returns the probability of still being active at each age, given active at
 \code{entry_age}.  Useful for plotting retirement trajectories and for comparing
 the baseline vs scenario curves visually.
 }
-\section{Relationship to \code{mufflyaccess}{
-:urps_survival_curve()}:
+\section{Relationship to the mufflyaccess contract version}{
+
+The contract function is \code{mufflyaccess::urps_survival_curve()}.
 Related, and \strong{intentionally not contract-compatible}. The contract version
 is thirteen lines; this one adds \code{pathway} (ABOG/ABU), sex-keyed
 coefficients, \code{scale_shift} and \code{entry_age}, and returns a tibble rather than
