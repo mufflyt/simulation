@@ -116,8 +116,35 @@ prevalence_observation <- function(band, age_start, age_end, prevalence,
 #' @family prevalence-calibration
 #' @export
 prevalence_from_incidence <- function(incidence, remission, p0 = 0) {
-  p <- numeric(length(incidence)); p[1] <- p0
-  for (i in 2:length(incidence)) p[i] <- p[i - 1] * (1 - remission) + (1 - p[i - 1]) * incidence[i - 1]
+  # Every argument is a PROBABILITY, and the recurrence has no restoring force:
+  # a remission above 1 drives prevalence negative (0.40 -> -0.20 -> 0.10 ...)
+  # and an incidence above 1 drives it past 1, both in silence, and a negative
+  # prevalence becomes a negative case count in every downstream demand total.
+  # Same class as the negative provider counts (cycle 03) and the sum-to-one
+  # validators missing a range check (cycle 04).
+  chk <- function(v, nm) {
+    if (!is.numeric(v) || any(!is.finite(v)) || any(v < 0) || any(v > 1)) {
+      stop(sprintf(paste("prevalence_from_incidence: `%s` must be finite and in [0, 1];",
+                         "it is a probability. The aging recurrence has no bound of its",
+                         "own, so a value outside the unit interval yields prevalence",
+                         "outside it too."), nm), call. = FALSE)
+    }
+  }
+  chk(incidence, "incidence")
+  chk(remission, "remission")
+  chk(p0, "p0")
+  if (length(remission) != 1L)
+    stop("prevalence_from_incidence: `remission` must be a single probability.", call. = FALSE)
+  n <- length(incidence)
+  if (n == 0L) return(numeric(0))
+
+  p <- numeric(n); p[1] <- p0
+  # seq_len(n)[-1], not 2:n. At n = 1 the latter counts DOWN (2, 1), which grew
+  # `p` to length 2 and then failed inside R with "replacement has length zero"
+  # -- a legitimate single-age grid crashing on an index, not on its inputs.
+  for (i in seq_len(n)[-1]) {
+    p[i] <- p[i - 1] * (1 - remission) + (1 - p[i - 1]) * incidence[i - 1]
+  }
   p
 }
 #' @rdname prevalence_from_incidence
