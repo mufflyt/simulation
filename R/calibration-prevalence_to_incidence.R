@@ -254,6 +254,7 @@ fit_prevalence_consistent_psa <- function(observations, remission_prior, n_draws
                                           ages = 18:100, knots = c(60, 70), p0 = 0,
                                           age_weights = NULL, smooth_sd = 1.0,
                                           report_age = 65, seed = 1L) {
+  .preserve_rng_scope()
   set.seed(seed)
   rs <- remission_prior(n_draws)
   inc <- matrix(NA_real_, length(ages), n_draws, dimnames = list(ages, NULL))

@@ -68,6 +68,10 @@ initialize_urps_agents <- function(roster_source  = "mufflyaccess",
         )
       )
   } else {
+    # A synthetic fallback must not reseed the SESSION. Unconditionally
+    # set.seed(42L) here overrode the run's declared seed mid-run, so every
+    # later draw was a function of 42 rather than of seed_microsimulation().
+    .preserve_rng_scope()
     set.seed(42L)
     n_recent <- 651L
     n_legacy <- 655L

@@ -91,6 +91,7 @@ lifecourse_service_map <- function() {
 # marginals are transparent and swappable.
 .lifecourse_population <- function(pop_by_age, year, n, cesarean_rate = NULL,
                                    barrier_prevalence = 0.35, seed = NULL) {
+  .preserve_rng_scope()
   if (!is.null(seed)) set.seed(seed)
   stopifnot(all(c("age", "population") %in% names(pop_by_age)))
   idx <- sample(seq_len(nrow(pop_by_age)), size = n, replace = TRUE,

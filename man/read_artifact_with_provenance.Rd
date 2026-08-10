@@ -43,6 +43,7 @@ inputs you hold is stale, even if its own content hash is intact.
 Other repro provenance: 
 \code{\link{resolve_reproducibility_mode}()},
 \code{\link{seed_microsimulation}()},
+\code{\link{with_preserved_rng}()},
 \code{\link{write_artifact_with_provenance}()}
 }
 \concept{core}

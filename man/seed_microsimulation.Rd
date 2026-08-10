@@ -32,6 +32,7 @@ reproducibility to a claim in a method section.
 Other repro provenance: 
 \code{\link{read_artifact_with_provenance}()},
 \code{\link{resolve_reproducibility_mode}()},
+\code{\link{with_preserved_rng}()},
 \code{\link{write_artifact_with_provenance}()}
 }
 \concept{core}

@@ -549,6 +549,7 @@ access_moe_ci <- function(access, est, se, stat = c("mean", "zero"),
   f <- if (stat == "mean") weighted_mean_all else zero_access_share
   point <- f(access, est)
 
+  .preserve_rng_scope()
   set.seed(seed)
   n <- length(est)
   draws <- vapply(seq_len(B), function(b) f(access, stats::rnorm(n, est, se)), numeric(1))

@@ -833,3 +833,99 @@ its verdict depended on which tests ran before it — it was neither reliably
 passing nor reliably failing. Enumerate every test that calls a
 `simulate_*`/`draw_*`/`run_*` function without seeding first, and decide each:
 seed it, or assert a property that holds under every stream.
+
+---
+
+## Cycle 11 — 2026-08-10
+
+**Mix:** 3 BVA · 4 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle11.R`
+
+### Cycle 10's carried-forward class — measured, and closed
+
+Parsing every test file (not grepping) found **79 `test_that` blocks that call a
+stochastic function with no `set.seed()`**. Seeding all 79 blindly would be
+busywork, so the question asked instead was the one that matters: *which
+verdicts actually depend on the stream?*
+
+Ran all 30 affected files under four different ambient seeds (1, 7, 101,
+20260810) and compared pass/fail per test:
+
+> **275 unique tests · verdicts that changed with the ambient seed: 0.**
+
+(Measured against the tree as of cycle 10 — the sweep loaded the package before
+this cycle's edits.) So after cycle 10 seeded the one genuinely stream-dependent
+test, the suite is stream-stable. The 79 unseeded blocks assert properties that
+hold under every stream, which is the second of the two acceptable answers the
+class asked for. **Class closed, on evidence rather than on effort.**
+
+But answering it pointed at the other end of the same problem.
+
+### Defect found and fixed — 1, in six places
+
+**D22 · functions that reseed the session as a side effect.** Eight functions in
+`R/` call `set.seed()` internally, and `set.seed()` mutates **global** state. A
+function that seeds for its own reproducibility silently reseeds the caller's
+session: the run stays deterministic, it just stops being deterministic from the
+seed anybody chose.
+
+Measured: `geographic_holdout_cv(seed = 42)` changed the next three `runif()`
+draws in the calling scope.
+
+Worst of them: `supply-fraher_agent_supply.R` called **`set.seed(42L)`
+unconditionally** in its synthetic-roster fallback. Any run that fell back to
+synthetic data silently overrode the seed `seed_microsimulation()` had just
+established, so every later draw in that run was a function of 42 rather than of
+the run's declared seed — while the provenance record still reported the
+declared one.
+
+`calibration-psa.R` already saved and restored `.Random.seed` around its own
+seeding, so the idiom was established in-repo and **six siblings had not adopted
+it**: `validation-geographic_holdout.R`, `supply-fraher_agent_supply.R`,
+`calibration-prevalence_to_incidence.R`, `geography-spatial_access_e2sfca.R`,
+`demand-dynamic_multistate.R`, `demand-lifecourse.R`,
+`demand-lifecourse_uncertainty.R`.
+
+*Fix:* `with_preserved_rng(seed, expr)` for the one site whose seeded region is
+a self-contained block, and `.preserve_rng_scope()` — which installs the restore
+as an `on.exit()` in the caller's frame, with the saved stream substituted into
+the expression — for the sites whose seeded region is the whole body and would
+otherwise need re-indenting. `seed_microsimulation()` is left alone and test 6
+pins it as the **deliberate** exception, so "nothing reseeds the session" is not
+a rule with a silent hole.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `with_preserved_rng` | an ABSENT `.Random.seed` is restored as absent |
+| 2 | BVA | a NULL seed | leaves the stream alone; the scope still restores |
+| 3 | BVA | the scope | returns the expression's value; the seed takes effect inside |
+| 4 | semantic | `geographic_holdout_cv` | reproducible folds without reseeding the caller |
+| 5 | semantic | `loo` / `region` schemes | deterministic partitions consume no randomness at all |
+| 6 | semantic | `seed_microsimulation` | the one function allowed to reseed the session |
+| 7 | semantic | a run's declared seed | survives the functions called inside the run |
+| 8 | adversarial | every seeded helper | none leaks its stream |
+| 9 | adversarial | the scope | survives an error inside it (`on.exit`, not the success path) |
+| 10 | adversarial | nested scopes | the outer stream is restored, not the inner one |
+
+**Result:** 31 assertions, all passing. **1 defect found, 6 sites fixed.**
+
+**Wrong test, corrected in the test:** I called `run_psa(n_draws = ...)`; the
+argument is `n`. Same fixture-shape slip the ledger noted in cycle 06.
+
+**Related files rerun:** `test-geographic-holdout.R` (17), `test-psa.R` (28),
+`test-psa-adversarial.R` (31), `test-calibrate-prevalence-to-incidence.R` (15),
+`test-demand-lifecourse.R` (12), `test-demand-lifecourse-uncertainty.R` (16),
+`test-access-inference.R` (28), `test-38-fraher-agent-supply.R` (12),
+`test-adversarial-cycle08.R` (55), `test-adversarial-cycle10.R` (44) — 258
+assertions, 0 problems.
+
+**Recorded, not changed:** with a mis-set intercept the base-cohort guard and
+cycle 10's new panel guard now both report the same condition in the same run
+(seen in the sweep logs as "Mean clinical FTE ... 1.104" followed by "Projected
+FTE ... 1.104 in 2025"). Two true diagnostics for one real problem is noise, not
+error; left as-is rather than adding suppression logic that could hide the
+panel-only case the panel guard exists for.
+
+**Bug class to sweep in a later cycle:** other *global* state mutated as a side
+effect. `.Random.seed` was one; the same shape applies to `options()`,
+`Sys.setenv()`, `par()`, working directory, and locale. Enumerate every write to
+session-global state in `R/` and check each restores.
