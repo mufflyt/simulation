@@ -261,3 +261,53 @@ test_that("ADVERSARIAL: a negative rate can no longer produce a negative case co
   expect_true(cyc06_visits(project_urps_demand(cells, care_seeking_rate = 0.25,
                                                verbose = FALSE)) > 0)
 })
+
+# ---- AUDIT REMEDIATION (added after the cycle-22 mutation audit) -------------
+#
+# The audit reverted each of the 31 fixes in an isolated worktree and checked
+# that its pinning test failed. Thirty were killed. D12 SURVIVED: the range
+# guard on compute_brfss_demand_estimand() could be deleted and not one test in
+# tests/testthat failed -- the function is exercised (return shape, monotonicity)
+# but its guard never was.
+#
+# The fix was real and present the whole time. Nothing would have caught its
+# removal, which makes it a fix with no evidence behind it. This is that
+# evidence.
+
+test_that("AUDIT: both access fractions are guarded on the BRFSS estimand too", {
+  # Same pair, same reasoning as project_urps_demand() above -- and the reason
+  # this test exists separately is that testing one of the two call sites is
+  # not testing the guard.
+  # Fixture built inline rather than borrowed from another test file: a helper
+  # that is not in scope turns this into a skip, and a skip is what the audit
+  # was correcting in the first place.
+  cells <- data.frame(
+    age_group = rep(URPS_POP_AGE_BANDS, each = 2),
+    pop_weight = rep(c(6e6, 2e6), times = length(URPS_POP_AGE_BANDS)),
+    ui_prevalence = rep(c(0.12, 0.24, 0.35, 0.44, 0.51), each = 2),
+    pop_prevalence = 0.10, fi_prevalence = 0.05, stringsAsFactors = FALSE)
+  pop <- data.frame(year = rep(2025:2027, each = length(DEMAND_AGE_BANDS)),
+                    age_band = rep(DEMAND_AGE_BANDS, times = 3),
+                    female_pop = 1e6, stringsAsFactors = FALSE)
+
+  expect_error(compute_brfss_demand_estimand(pop, cells, care_seeking_rate = 1.4),
+               "care_seeking_rate")
+  expect_error(compute_brfss_demand_estimand(pop, cells, care_seeking_rate = -0.1),
+               "care_seeking_rate")
+  expect_error(compute_brfss_demand_estimand(pop, cells, referral_rate = 1.4),
+               "referral_rate")
+  expect_error(compute_brfss_demand_estimand(pop, cells, referral_rate = -0.1),
+               "referral_rate")
+  expect_error(compute_brfss_demand_estimand(pop, cells, care_seeking_rate = NA_real_),
+               "finite")
+
+  # The endpoints are legal, and the estimand is the exact product of the two.
+  expect_silent(compute_brfss_demand_estimand(pop, cells, care_seeking_rate = 0,
+                                              referral_rate = 0))
+  full <- compute_brfss_demand_estimand(pop, cells, care_seeking_rate = 1,
+                                        referral_rate = 1)
+  quarter <- compute_brfss_demand_estimand(pop, cells, care_seeking_rate = 0.5,
+                                           referral_rate = 0.5)
+  expect_equal(quarter$demand_cases, full$demand_cases * 0.25)
+  expect_true(all(full$demand_cases > 0))
+})
