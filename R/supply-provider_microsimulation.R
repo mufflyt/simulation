@@ -1276,6 +1276,11 @@ project_supply_deterministic <- function(agents, years, entrants_per_year,
 #' @export
 classify_workforce_outlook <- function(ratio) {
   dplyr::case_when(
+    # Inf classified as "Adequate" and -Inf as "Insufficient": a ratio produced
+    # by a division by zero was being reported as a workforce finding. NaN
+    # already fell through to NA via is.na(); Inf did not, because it is a
+    # number. An undefined ratio is undefined however it arose.
+    !is.finite(ratio) ~ NA_character_,
     is.na(ratio) ~ NA_character_,
     ratio >= WORKFORCE_OUTLOOK_ADEQUATE_MIN ~ "Adequate",
     ratio >= WORKFORCE_OUTLOOK_MARGINAL_MIN ~ "Marginal",
