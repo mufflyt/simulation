@@ -66,6 +66,12 @@ microsim_baseline_rate <- function(subspecialty) {
   }
 }
 
+# Tolerance on FTE per provider before the dimensional guards fire. ONE shared
+# constant so the base-cohort check and the projected-panel check cannot drift
+# apart -- 2% of slack for age/sex composition, beyond which "more FTE than
+# people" stops being rounding.
+FTE_PER_HEAD_TOLERANCE <- 1.02
+
 # Replacement-ratio outlook cutpoints (cliff workforce_constants.R).
 WORKFORCE_OUTLOOK_ADEQUATE_MIN <- 1.2
 WORKFORCE_OUTLOOK_MARGINAL_MIN <- 0.8
@@ -733,6 +739,8 @@ simulate_provider_career_once <- function(agents,
 #' )
 #' out$summary
 #' @export
+
+
 run_supply_microsimulation <- function(initial_workforce = urps_baseline_supply()$national,
                                         years = 2025:2050,
                                         entrants_per_year = 55,
@@ -988,7 +996,7 @@ run_supply_microsimulation <- function(initial_workforce = urps_baseline_supply(
     sexes <- if ("sex" %in% names(base_agents)) base_agents$sex else "female"
     mean_fte <- mean(provider_clinical_fte(ages, sexes, method = "hours",
                                            hours_intercept = hours_intercept))
-    if (mean_fte > 1.02) {
+    if (mean_fte > FTE_PER_HEAD_TOLERANCE) {
       msg <- sprintf(paste(
         "Mean clinical FTE per provider is %.3f, so FTE supply will exceed",
         "headcount. The hours intercept (%.2f) is not consistent with the %.1f",
@@ -1083,6 +1091,47 @@ run_supply_microsimulation <- function(initial_workforce = urps_baseline_supply(
     )
   summary$n_iterations <- n_iterations
   summary$bounds_are_quantiles <- n_iterations >= mc_min_iterations(ci)
+
+  # THE SAME dimensional check as the base-cohort one above, applied to the
+  # PROJECTED panel -- because the base-cohort version cannot see the case that
+  # actually occurs.
+  #
+  # calibrate_hours_intercept() solves the intercept so the BASE cohort averages
+  # exactly 1.0 FTE, and its documentation is explicit that "all subsequent
+  # movement comes from the changing age and sex composition". Entrants arrive at
+  # MICROSIM_ENTRY_AGE, where the hours schedule sits above the cohort mean, so
+  # the ratio drifts upward as they accumulate. The base-year guard passes by
+  # construction and never looks again.
+  #
+  # Measured with an older base cohort (ages 60-75, 25 entrants/yr): base-year
+  # ratio 1.0000, and 1.0783 by 2041 -- a 7.8% breach of this function's own
+  # 1.02 tolerance, in a strict-mode run, with nothing firing.
+  # Scoped exactly as the base-cohort guard is: `hours` method with NO fitted
+  # model. With a fitted hours model the level comes from the fit, not from an
+  # intercept solved against the FTE threshold, so there is no calibration
+  # contract to breach and a 1.02 tolerance is not the model's to apply. Written
+  # first without this condition, which made an existing exploratory-run test
+  # error at a ratio of 1.156 -- a legitimate value on that path.
+  fte_ratio <- if (identical(fte_method, "hours") && is.null(hours_model)) {
+    summary$effective_fte_median / summary$headcount_median
+  } else {
+    numeric(0)
+  }
+  worst <- suppressWarnings(max(fte_ratio[is.finite(fte_ratio)], na.rm = TRUE))
+  if (is.finite(worst) && worst > FTE_PER_HEAD_TOLERANCE) {
+    bad_year <- summary$year[which.max(replace(fte_ratio, !is.finite(fte_ratio), -Inf))]
+    msg <- sprintf(paste(
+      "Projected FTE per provider reaches %.3f in %d (tolerance %.2f), so FTE",
+      "supply exceeds headcount in the projection even though the base year is",
+      "calibrated. This is composition drift: entrants join at age %d, where the",
+      "hours schedule is above the base-cohort mean. Report headcount and FTE",
+      "with this stated, or recalibrate the intercept over the cohort the",
+      "projection actually contains."),
+      worst, as.integer(bad_year), FTE_PER_HEAD_TOLERANCE,
+      as.integer(MICROSIM_ENTRY_AGE))
+    if (identical(resolve_reproducibility_mode(), "strict")) stop(msg, call. = FALSE)
+    .msg_warn(msg)
+  }
 
   list(
     summary = summary,

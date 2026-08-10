@@ -91,16 +91,21 @@ test_that("SEMANTIC: entrants land in the year they are indexed to, not shifted"
 
 # ---- SEMANTIC 2 -------------------------------------------------------------
 
-test_that("SEMANTIC: clinical FTE never exceeds headcount", {
-  # An FTE is a fraction of one person's clinical time, so supply in FTE cannot
-  # exceed supply in heads. If it does, the hours intercept and the FTE
-  # definition disagree -- the exact inconsistency the engine warns about.
+test_that("SEMANTIC: clinical FTE tracks headcount at the base year and drifts only within tolerance", {
+  # CORRECTED IN CYCLE 10. This asserted `effective_fte <= headcount`, which is
+  # stricter than the model's contract and was true here only for this seed.
+  # calibrate_hours_intercept() solves the intercept so the BASE cohort averages
+  # exactly 1.0 FTE and documents that "all subsequent movement comes from the
+  # changing age and sex composition"; entrants arrive at MICROSIM_ENTRY_AGE,
+  # where the hours schedule sits above that mean, so the ratio drifts UP. The
+  # engine allows FTE_PER_HEAD_TOLERANCE of slack for exactly this.
   ag <- cyc01_agents(); yrs <- 2025:2035
   set.seed(3)
   p <- cyc01_run(ag, yrs, 4)$panel
-  expect_true(all(p$effective_fte <= p$headcount + 1e-9),
-              info = sprintf("max FTE/head ratio was %.4f",
-                             max(p$effective_fte / p$headcount)))
+  ratio <- p$effective_fte / p$headcount
+  expect_equal(ratio[1], 1, tolerance = 1e-6)
+  expect_true(all(ratio <= FTE_PER_HEAD_TOLERANCE),
+              info = sprintf("max FTE/head ratio was %.5f", max(ratio)))
   expect_true(all(p$effective_fte >= 0))
 })
 
