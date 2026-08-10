@@ -449,3 +449,88 @@ not exist (`example_population_cells()`) and a column that is not returned
 mis-remembered interface can also PASS for the wrong reason. Next cycle should
 check whether any existing test asserts on a column the function does not
 actually populate.
+
+---
+
+## Cycle 07 — 2026-08-10
+
+**Mix:** 4 BVA · 3 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle07.R`
+
+**Targets and why.** `R/geography-spatial_access_e2sfca.R` is a port of
+`twostep`'s floating-catchment module and had never been tested against its
+canonical source. Cycle 03 found a port regression that way (cliff's
+concentration guard); the same diff against `~/twostep` found **four** dropped
+guards here. Two of them produce a negative or inflated access surface rather
+than an error.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `e2sfca_band_weights` | monotone non-increasing, with equality legal and a 1e-9 tolerance |
+| 2 | BVA | weights / `step2_power` | weights closed at 0; the power closed at 1 |
+| 3 | BVA | `e2sfca_incremental_weights` | a single band does not trip the descending range |
+| 4 | BVA | M2SFCA | closed at a cumulative weight of exactly 1 |
+| 5 | semantic | incremental weights | they telescope: `sum(incr[b:n]) == W_b`, and M2SFCA telescopes to `W_b^2` |
+| 6 | semantic | M2SFCA vs E2SFCA | squaring shifts share toward the nearest band and away from the outermost |
+| 7 | semantic | `compute_e2sfca_access` | zero weighted demand is an UNDEFINED ratio, not zero access |
+| 8 | adversarial | non-monotone weights | can no longer produce a negative demand weight |
+| 9 | adversarial | band labels | names that are not minutes are refused, not arbitrarily reordered |
+| 10 | adversarial | membership bands | a band outside the weight table stops the run, on both the E2SFCA and M2SFCA paths |
+
+### Defects found and fixed — 4, all port regressions
+
+**D14 · negative demand weight.** `c("30" = 0.5, "60" = 1.0)` produced an
+incremental weight of **−0.5** for the 30-minute band. A negative demand weight
+*subtracts* population from a provider's catchment, inflating its
+supply-to-demand ratio and its access contribution. The port only warned — and
+warned through `.msg_warn()`, a **message**, so it never reached `warnings()`
+and could not be promoted with `options(warn = 2)`. Canonical `twostep` stops.
+
+**D15 · M2SFCA bonus instead of penalty.** `c("30" = 1.5, "60" = 0.6)` at
+`step2_power = 2` gave an incremental weight of **1.89**: squaring a cumulative
+weight above 1 *increases* it, so the Delamater penalty becomes a bonus.
+Canonical carries this exact guard with this exact rationale. Previously
+recorded in `tests/canonical-overlap-registry.csv` as "Follow-up 1" and never
+actioned.
+
+**D16 · negative and non-finite weights** accepted outright; canonical uses
+`checkmate::assert_numeric(lower = 0, any.missing = FALSE)`.
+
+**D17 · band labels that are not minutes.** `order(as.numeric(c("near","far")))`
+is `order(c(NA, NA))` — an arbitrary order — so weights were attached to
+whichever band came out first. The only signal was R's own "NAs introduced by
+coercion", which says nothing about access. Canonical stops.
+
+**Also brought across:** `step2_power >= 1` (at 0.5 the incremental weights are
+non-monotone — the 60-minute band gets 0.356 against the 30-minute band's
+0.175, inverting the decay the method exists to encode), and canonical's
+float-error clamp. The `wp[2:n]` indexing was replaced with `c(wp[-1], 0)`:
+at `n = 1` the former is the descending range `c(2, 1)`, the same trap cycle 05
+found live in the aging recurrence, masked here only by an empty assignment
+index.
+
+**Registry corrected.** `tests/canonical-overlap-registry.csv` rows 69 and 71
+described both functions as `ported_weaker` with the exact text "here it only
+warns" and "Follow-up 1". Those descriptions became false the moment the gap
+closed, so both are reclassified `equivalent` with the change recorded. Leaving
+them would have made the registry lie in the safe-looking direction.
+
+**Result:** 54 assertions, all passing. **4 defects found, 4 fixed.**
+
+**Related files rerun:** the eight `test-access-*` files (193),
+`test-real-spatial-access.R` (15), `test-urps-access-anchors.R` (30),
+`test-geographic-demand.R` (26), `test-geographic-holdout.R` (17),
+`test-workforce-microsimulation.R` (58), `test-adversarial-cycle06.R` (73) —
+0 problems.
+
+**Pre-existing failure, unchanged:** `test-canonical-overlap.R:49`, the same
+five stale rows against `isochrones` recorded in cycle 03. Not this cycle's,
+and not affected by the two rows corrected above (those are `twostep` rows).
+
+**Carried-forward class — sweep IN PROGRESS, not yet reported.** Cycle 06
+carried forward test *vacuity*: an expectation that passes because its subject
+is empty. `expect_true(all(x)))` is TRUE when `x` has length zero, so a test
+asserting on a column the function never populates passes for the wrong reason.
+Rather than guess statically, this cycle instrumented `all()` and `any()` and
+re-ran **every** test file under a shadowing environment that records
+zero-length invocations. The run was still going when the cycle closed; its
+result is reported in cycle 08 rather than summarised early.
