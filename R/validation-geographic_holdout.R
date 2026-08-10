@@ -43,10 +43,15 @@
     return(unname(lapply(unique(grp), function(g) which(grp == g))))
   }
   # k-fold: partition rows into k contiguous groups of a reproducible shuffle.
-  if (!is.null(seed)) set.seed(seed)
+  # Seeded INSIDE a preserved scope: `seed` exists so the folds are reproducible,
+  # not so that a validation call silently reseeds the caller's session. Measured
+  # before the fix: geographic_holdout_cv(seed = 42) changed the next three
+  # runif() draws in the calling scope.
   k <- min(k, n)
-  ord <- sample.int(n)
-  split(ord, cut(seq_len(n), breaks = k, labels = FALSE))
+  with_preserved_rng(seed, {
+    ord <- sample.int(n)
+    split(ord, cut(seq_len(n), breaks = k, labels = FALSE))
+  })
 }
 
 #' Geographic held-out (spatial) cross-validation of predicted vs observed stock

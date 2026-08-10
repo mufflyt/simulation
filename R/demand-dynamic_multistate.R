@@ -143,6 +143,7 @@ simulate_dmdm <- function(cohort0, start_year, end_year,
                           allow_uncalibrated = FALSE) {
   assert_calibrated_transitions(transitions, allow_uncalibrated,
                                 what = "DMDM closed-cohort transitions")
+  .preserve_rng_scope()
   if (!is.null(seed)) set.seed(seed)
   req <- c("age", "cumulative_vaginal_deliveries", "years_since_last_vaginal_birth",
            "bmi", "hysterectomy", "menopause_status", "comorbidity")

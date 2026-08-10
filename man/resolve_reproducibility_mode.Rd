@@ -37,6 +37,7 @@ resolve_reproducibility_mode()
 Other repro provenance: 
 \code{\link{read_artifact_with_provenance}()},
 \code{\link{seed_microsimulation}()},
+\code{\link{with_preserved_rng}()},
 \code{\link{write_artifact_with_provenance}()}
 }
 \concept{core}

@@ -32,6 +32,62 @@
   invisible(NULL)
 }
 
+# ---- Local RNG scopes ------------------------------------------------------
+
+#' Evaluate an expression under a local seed, leaving the caller's stream intact
+#'
+#' `set.seed()` mutates GLOBAL state. A function that seeds internally for its
+#' own reproducibility -- fold assignment, a PSA draw, a synthetic fallback --
+#' silently reseeds the whole session as a side effect, so every draw after it
+#' becomes a function of that seed rather than of the run's declared one. That
+#' is the opposite of reproducibility: the run is deterministic, but not from
+#' the seed anybody chose.
+#'
+#' [seed_microsimulation()] is the deliberate exception -- seeding the session
+#' IS its purpose.
+#'
+#' @param seed Integer seed, or NULL to leave the stream alone.
+#' @param expr Expression evaluated inside the scope (a promise, forced after
+#'   the seed is set and before the stream is restored).
+#' @return The value of `expr`.
+#' @family repro provenance
+#' @concept core
+#' @keywords internal
+with_preserved_rng <- function(seed, expr) {
+  had <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+  old <- if (had) get(".Random.seed", envir = globalenv()) else NULL
+  on.exit({
+    if (is.null(old)) {
+      if (exists(".Random.seed", envir = globalenv(), inherits = FALSE))
+        suppressWarnings(rm(".Random.seed", envir = globalenv()))
+    } else {
+      assign(".Random.seed", old, envir = globalenv())
+    }
+  }, add = TRUE)
+  if (!is.null(seed)) set.seed(seed)
+  expr
+}
+
+# One-line form of the same scope, for functions whose seeded region is the
+# whole body and would need re-indenting to wrap. Installs the restore as an
+# on.exit() in the CALLER's frame, with the saved stream substituted into the
+# expression so it needs no bindings from here. Same idiom calibration-psa.R
+# already used; this just stops every site from re-deriving it.
+.preserve_rng_scope <- function(envir = parent.frame()) {
+  had <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+  old <- if (had) get(".Random.seed", envir = globalenv()) else NULL
+  restore <- substitute({
+    if (is.null(OLD)) {
+      if (exists(".Random.seed", envir = globalenv(), inherits = FALSE))
+        suppressWarnings(rm(".Random.seed", envir = globalenv()))
+    } else {
+      assign(".Random.seed", OLD, envir = globalenv())
+    }
+  }, list(OLD = old))
+  do.call(base::on.exit, list(restore, add = TRUE, after = FALSE), envir = envir)
+  invisible(NULL)
+}
+
 # ---- Reproducibility mode -------------------------------------------------
 
 #' Resolve the active reproducibility mode

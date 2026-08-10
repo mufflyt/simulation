@@ -52,7 +52,8 @@ mid-write leaves no sidecar -> the artifact is treated as absent on load.
 Other repro provenance: 
 \code{\link{read_artifact_with_provenance}()},
 \code{\link{resolve_reproducibility_mode}()},
-\code{\link{seed_microsimulation}()}
+\code{\link{seed_microsimulation}()},
+\code{\link{with_preserved_rng}()}
 }
 \concept{core}
 \concept{repro provenance}

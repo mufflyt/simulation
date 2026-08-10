@@ -67,6 +67,7 @@ lifecourse_demand_trajectory_ci <- function(pop_by_age_year,
                                             risk_params = lifecourse_risk_params(),
                                             pathway_params = lifecourse_pathway_params(), ...) {
   stopifnot(length(probs) == 3L)
+  .preserve_rng_scope()
   if (!is.null(seed)) set.seed(seed)
   draws <- purrr::map(seq_len(n_draws), function(i) {
     dp <- .draw_lifecourse_params(risk_params, pathway_params, param_uncertainty)
