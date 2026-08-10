@@ -1902,3 +1902,37 @@ why; the opposite failure is a guard whose message names neither the offending
 value nor how to fix it, so a reader knows only that something is wrong.
 Enumerate the `stop()` messages in `R/` and check each names the value it
 rejected.
+## Parallel track — `test-adversarial-cycle01-lifecycle.R`
+
+A second session ran a cycle 01 concurrently against a different subsystem set,
+so the two do not overlap. Recorded here so a later cycle does not re-derive
+these ten.
+
+**Covered (do not repeat):** `restate_fte` non-positive hours denominator ·
+`restate_fte` direction, round-trip and exact ratio · `departure_hazard`
+probability bounds at twelve age boundaries · `departure_hazard` monotone
+non-decreasing 30–90 · `retirement_survival` zero-length and inverted horizon ·
+`fte_definition` label states its own hours basis · `denominator_estimands`
+ever-certified vs active kept distinct · RNG stream not consumed by a pure
+accessor · `agents_from_roster` duplicated `provider_id` · `agents_from_roster`
+row-order invariance.
+
+**Same defect, found independently:** `retirement_survival()` returning 0.906
+for a zero-length horizon. Both sessions reached it from opposite directions;
+**this file's fix was kept** on the rebase because it is the more complete one —
+it separates a `to_age` below the start (survival 1) from one beyond the horizon
+(0), where the parallel fix errored on the whole vector, and it caught that the
+returned curve had been non-monotone. The parallel track's tests pass unchanged
+against it.
+
+**Correction to that track's sweep:** it reported the descending-`seq()` trap as
+a single instance. This ledger already had three — live in
+`prevalence_from_incidence`, latent in `e2sfca_incremental_weights`, live in
+`retirement_survival`. Grepping for the literal `seq(a, b - 1)` shape is too
+narrow; the class needs enumerating by what the endpoint can evaluate to, not by
+spelling.
+
+**Repaired for a clean baseline:** five stale `isochrones` rows in
+`canonical-overlap-registry.csv` (verified defined in urpssim and absent from
+isochrones before deleting; live `twostep` rows kept), and `isochrone_source_dir`
+registered as `api` with the ratchet moved 56 → 57, cause named.
