@@ -77,7 +77,12 @@ psa_triangular <- function(name, min, mode, max) {
 #' @export
 psa_discrete <- function(name, values, probs = NULL) {
   if (is.null(probs)) probs <- rep(1 / length(values), length(values))
+  # Range before the sum: -0.1 and 1.1 sum to exactly 1.0 and would give the
+  # inverse-CDF a non-monotone cumulative, so a category could be drawn with
+  # negative probability mass and the PSA would sample it never or always
+  # depending on where the fold landed.
   assertthat::assert_that(length(values) == length(probs),
+                          all(is.finite(probs)), all(probs >= 0), all(probs <= 1),
                           abs(sum(probs) - 1) < 1e-8)
   structure(list(name = name, type = "discrete", values = values, probs = probs),
             class = "psa_input")

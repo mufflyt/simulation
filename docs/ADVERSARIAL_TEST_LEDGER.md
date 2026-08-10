@@ -226,3 +226,69 @@ Pinned as `expect_message` with that noted. Also `expect_lt(info=)`, which
 inequalities where the boundary case is the dangerous one — `min_match_rate`
 compared with `<` meant an exactly-50% match passed in silence. Look for other
 `<` / `>` guards whose equality case is the failure.
+
+---
+
+## Cycle 04 — 2026-08-09
+
+**Mix:** 4 BVA · 3 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle04.R`
+
+**Targets and why.** Discharged the class cycle 03 carried forward (thresholds
+written as strict inequalities where the boundary is the dangerous case) by
+walking the cutpoints of every classification and range guard on the FTE path,
+then FTE-vs-headcount semantics and entrant/departure accounting.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `classify_workforce_outlook` | cutpoints closed from below; a ratio of exactly 1 is Marginal, not Adequate |
+| 2 | BVA | `check_productivity_plausible` | benchmark range closed at both ends; relaxed mode returns FALSE and says so |
+| 3 | BVA | `calibrate_wrvu_per_fte` | indirect time closed at 0, open at 1; a zero anchor is refused, not divided by |
+| 4 | BVA | `allocate_fte_by_setting` | unit-interval check and the 1e-8 sum tolerance |
+| 5 | semantic | five sum-to-one validators | a distribution summing to 1 with a negative part is not a distribution |
+| 6 | semantic | `convert_workload_to_fte` | required FTE linear in volume, inverse in productivity, grossed up by exactly 1/(1−indirect) |
+| 7 | semantic | `compute_fte_gap` | the gap is an identity; sign of the percentage agrees with the level; a year with no demand is refused |
+| 8 | adversarial | `calibrate_wrvu_per_fte` → `convert_workload_to_fte` | the solved denominator round-trips to its own anchor at any indirect share |
+| 9 | adversarial | `simulate_provider_career_once` | headcount moves by exactly entrants minus departures; retirement is absorbing |
+| 10 | adversarial | `allocate_fte_by_setting` | a partition neither creates nor destroys FTE |
+
+### Defects found and fixed — 3, one family
+
+**D8 · sum-to-one without non-negativity (3 of 6 validators).** The codebase
+already records the reasoning, in `validate_migration_matrix()`: *"-0.1 and 1.1
+sum to exactly 1.0, so a row-sum test alone accepts a matrix that is not a
+probability distribution."* Three siblings had not adopted it.
+
+* `allocate_fte_by_setting()` — the live one. Shares of `1.5 / -0.5` passed the
+  sum check and emitted `required_fte = -50` for a setting. Negative clinical
+  FTE subtracts from any total it is summed into, so a by-setting demand table
+  and a national one would disagree.
+* `validate_cpt_basket()` — a negative mix weight subtracts that CPT's work
+  RVUs from its service, understating the workload the service represents.
+* `psa_discrete()` — a negative probability mass makes the inverse-CDF
+  cumulative non-monotone, so a category is drawn never or always depending on
+  where the fold lands.
+
+*Fix:* range check before the sum check in all three, each carrying a pointer
+to the migration-matrix precedent. `validate_delegation_matrix()`,
+`validate_setting_mix()` and `validate_participation_table()` already had it and
+are now pinned so they cannot lose it.
+
+**Nothing else found.** The boundary sweep this cycle was otherwise clean: the
+outlook cutpoints, the productivity benchmark range, the indirect-time interval
+and the sum tolerance all behave exactly as documented, and the conservation
+identity (`Δheadcount = entrants − departures`) holds per year with retirement
+absorbing. The productivity denominator round-trips to its anchor to 1e-8 at
+both a 0% and a 25% indirect share.
+
+**Result:** 59 assertions, all passing. **3 defects found, 3 fixed.**
+
+**Related files rerun:** `test-workload-to-fte.R` (76), `test-psa.R` (28),
+`test-psa-adversarial.R` (31), `test-psa-reporting.R` (8),
+`test-urps-settings.R` (43), `test-provider-lifecycle.R` (56),
+`test-workforce-microsimulation.R` (58), `test-supply-microsim-adversarial.R` (20),
+`test-urps-migration.R` (46), plus cycles 01-03 — 496 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** cumulative counters read as if they
+were per-period rates (`n_retired` is cumulative and only its `diff()` is a
+departure count) — look for any place a running total is compared with, divided
+by, or summed alongside a flow.
