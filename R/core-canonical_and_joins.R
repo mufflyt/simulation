@@ -163,6 +163,58 @@ if (!exists("%||%", envir = baseenv())) {
   invisible(x)
 }
 
+# ---- Interval bounds -------------------------------------------------------
+
+# A lower and an upper bound are a PAIR, and the relation between them is the
+# content. Each column can be individually finite and individually plausible
+# while the interval they describe is inverted -- which is the shape cycle 19
+# named ("the guarded half of a pair") and which nothing in this package checked.
+#
+# Measured: a gap projection carrying lower_95 = 1400 with upper_95 = 1000
+# validated CLEAN in strict mode, and forecast_scorecard() then reported
+# coverage 0 and mean_width -400 for it. A negative interval width is not a
+# diagnostic; and the coverage reads as "the model never covers the truth" when
+# the real problem is that the bounds are swapped.
+#
+# Pairs are derived from the naming conventions the package already uses, so a
+# bound column added later is covered without editing this list.
+.INTERVAL_SUFFIXES <- list(c("_lo", "_hi"), c("_low", "_high"),
+                           c("_lower", "_upper"), c("_p25", "_p75"))
+.INTERVAL_EXPLICIT <- list(c("lower_95", "upper_95"), c("pi95_lower", "pi95_upper"),
+                           c("pi80_lower", "pi80_upper"), c("pi_lo", "pi_hi"),
+                           c("conf_low", "conf_high"), c("ci_low", "ci_high"))
+
+.interval_pairs_in <- function(nm) {
+  out <- Filter(function(p) all(p %in% nm), .INTERVAL_EXPLICIT)
+  for (sfx in .INTERVAL_SUFFIXES) {
+    lows <- grep(paste0(sfx[1], "$"), nm, value = TRUE)
+    for (lo in lows) {
+      hi <- paste0(sub(paste0(sfx[1], "$"), "", lo), sfx[2])
+      if (hi %in% nm) out[[length(out) + 1L]] <- c(lo, hi)
+    }
+  }
+  out[!duplicated(vapply(out, paste, character(1), collapse = "|"))]
+}
+
+# Returns a character vector of problems, empty when every pair is well formed.
+.interval_bound_problems <- function(d, pairs = .interval_pairs_in(names(d))) {
+  msgs <- character(0)
+  for (p in pairs) {
+    lo <- suppressWarnings(as.numeric(d[[p[1]]]))
+    hi <- suppressWarnings(as.numeric(d[[p[2]]]))
+    n_na <- sum(!is.finite(lo) | !is.finite(hi))
+    if (n_na > 0L)
+      msgs <- c(msgs, sprintf("%s/%s: %d row(s) with a non-finite bound",
+                              p[1], p[2], n_na))
+    inv <- is.finite(lo) & is.finite(hi) & lo > hi
+    if (any(inv))
+      msgs <- c(msgs, sprintf("%s/%s: %d row(s) inverted (e.g. %s > %s)",
+                              p[1], p[2], sum(inv),
+                              format(lo[which(inv)[1]]), format(hi[which(inv)[1]])))
+  }
+  msgs
+}
+
 # ---- Join safety ----------------------------------------------------------
 
 .assert_join_keys_present <- function(x, y, by) {

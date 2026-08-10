@@ -127,6 +127,17 @@ forecast_scorecard <- function(data, observed = "observed", point = "predicted",
     all(c(lower, upper) %in% names(data))
   if (has_int) {
     lo <- as.numeric(data[[lower]]); hi <- as.numeric(data[[upper]])
+    # Same guard as the projection contract, same reason. Unchecked, an inverted
+    # interval gave coverage 0 and mean_width -400: a negative width is not a
+    # diagnostic, and the zero coverage reads as "the model never covers the
+    # truth" when the bounds are simply swapped.
+    bad <- is.finite(lo) & is.finite(hi) & lo > hi
+    if (any(bad))
+      stop(sprintf(paste("forecast_scorecard(): %d row(s) have %s > %s (e.g. %s > %s).",
+                         "Coverage and width computed from an inverted interval are",
+                         "not the model's; fix the bounds rather than scoring them."),
+                   sum(bad), lower, upper,
+                   format(lo[which(bad)[1]]), format(hi[which(bad)[1]])), call. = FALSE)
     alpha <- 1 - interval_level
     out$coverage <- mean(y >= lo & y <= hi)
     out$mean_width <- mean(hi - lo)

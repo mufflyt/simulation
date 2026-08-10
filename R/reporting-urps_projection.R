@@ -161,6 +161,22 @@ validate_urps_gap_projection <- function(x,
     .msg_warn(msg)
   }
 
+  # Interval guard. The ten optional bound pairs in OPTIONAL_COLS were checked
+  # for nothing: each column is individually finite, and the RELATION between
+  # them -- which is the whole content of an interval -- went unexamined. An
+  # inverted lower_95/upper_95 validated clean in strict mode.
+  bound_problems <- .interval_bound_problems(x)
+  if (length(bound_problems)) {
+    msg <- sprintf(paste("Gap projection has malformed interval bound(s): %s.",
+                         "A lower bound above its upper bound is not a wide",
+                         "interval, it is a swapped one, and every coverage and",
+                         "width computed from it is wrong in a way no summary",
+                         "statistic flags."),
+                   paste(bound_problems, collapse = "; "))
+    if (identical(mode, "strict")) stop(msg, call. = FALSE)
+    .msg_warn(msg)
+  }
+
   # Arithmetic guard: gap = supply - demand on both sides.
   if (all(c("supply_clinical_fte", "demand_clinical_fte", "gap_fte") %in% names(x))) {
     residual <- abs(x$gap_fte - (x$supply_clinical_fte - x$demand_clinical_fte))
