@@ -12,12 +12,25 @@
   numeric(0)
 }
 
-.finite_or_error <- function(expr) {
+# Returns "guarded" (failed closed -- acceptable), "finite" (numbers, all of
+# them finite or NA), "nonfinite" (an Inf/NaN escaped), or "no_numbers".
+#
+# The last of those is why this returns a LABEL rather than a logical. It used
+# to end in all(is.na(v) | is.finite(v)), and all() of a zero-length vector is
+# TRUE -- so a case whose result carried no numeric leaf at all passed the
+# "no public numeric path emits Inf or NaN" guard having inspected nothing.
+# Found by instrumenting all()/any() across the whole suite in adversarial
+# cycle 07; case 4 below (assign_entrant_geography with 0 entrants) was the one
+# hitting it. A caller must now say which outcome it expects.
+.finite_status <- function(expr) {
   r <- tryCatch(eval(expr), error = function(e) structure(list(), class = "guarded"))
-  if (inherits(r, "guarded")) return(TRUE)          # failing closed is acceptable
+  if (inherits(r, "guarded")) return("guarded")
   v <- .numeric_leaves(r)
-  all(is.na(v) | is.finite(v))                      # NA is a value; Inf/NaN is not
+  if (length(v) == 0L) return("no_numbers")
+  if (all(is.na(v) | is.finite(v))) "finite" else "nonfinite"   # NA is a value; Inf/NaN is not
 }
+
+.finite_or_error <- function(expr) .finite_status(expr) %in% c("guarded", "finite")
 
 test_that("a zero required-FTE denominator does not produce Inf", {
   g <- compute_fte_gap(tibble::tibble(year = 2025, effective_fte_median = 100),
@@ -82,8 +95,15 @@ test_that("no public summary path emits Inf or NaN on degenerate input", {
     quote(assign_entrant_geography(0, tibble::tibble(geo = "A", share = 1))),
     quote(series_mean_se(numeric(0)))
   )
+  # Each case declares the outcome it is evidence FOR. "no_numbers" is a real
+  # outcome (zero entrants produce an empty assignment) but it is not evidence
+  # that a numeric path is finite, so it cannot be spelled the same way.
+  expected <- c("finite", "finite", "finite", "no_numbers", "finite")
   for (i in seq_along(cases)) {
-    expect_true(.finite_or_error(cases[[i]]),
-                info = paste("case", i, deparse(cases[[i]])[1]))
+    expect_equal(.finite_status(cases[[i]]), expected[i],
+                 info = paste("case", i, deparse(cases[[i]])[1]))
   }
+  # And at least one case must actually have inspected numbers, or the whole
+  # block could pass on empties.
+  expect_true(sum(vapply(cases, .finite_status, character(1)) == "finite") >= 4L)
 })

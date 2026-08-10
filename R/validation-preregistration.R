@@ -38,8 +38,59 @@
   }
 }
 
-.prereg_spec_hash <- function(spec) {
-  digest::digest(.canonicalize_spec(spec), algo = "sha256")
+# v1 (above) collapses TYPE. Measured in adversarial cycle 08, all four of these
+# hash identically under it:
+#
+#   list(a = list(b = 1))  and  list(a = "{b=1}")     nested vs its own rendering
+#   list(a = c(1, 2))      and  list(a = "1,2")       vector vs its own rendering
+#   list(a = TRUE)         and  list(a = "TRUE")
+#   list(a = 1/3)          and  list(a = 0.333333333333333)
+#
+# That matters here more than it would elsewhere. The module's whole claim is
+# that assert_spec_matches_prereg() cannot be satisfied by a spec other than the
+# one frozen -- "changing the specification after preregistration is model
+# selection on the held-out data". A collision is precisely a way to satisfy it
+# with a different spec.
+#
+# v2 tags each leaf with its type and each list with its length, so a rendering
+# can no longer impersonate the thing it renders.
+.canonicalize_spec_v2 <- function(x) {
+  if (is.list(x)) {
+    if (!is.null(names(x))) x <- x[order(names(x))]
+    keys <- names(x); if (is.null(keys)) keys <- as.character(seq_along(x))
+    parts <- vapply(seq_along(x), function(i)
+      paste0(keys[i], "=", .canonicalize_spec_v2(x[[i]])), character(1))
+    return(sprintf("<list:%d>{%s}", length(x), paste(parts, collapse = ";")))
+  }
+  ty <- if (is.character(x)) "chr" else if (is.logical(x)) "lgl" else
+        if (is.integer(x)) "int" else if (is.numeric(x)) "dbl" else class(x)[1L]
+  body <- if (is.double(x)) {
+    # 17 significant digits round-trips a double exactly, so two specs that
+    # differ at all differ in the hash. v1 used 15 and collapsed 1/3 onto its
+    # own 15-digit rendering.
+    paste(vapply(x, function(e) format(e, digits = 17, trim = TRUE), character(1)),
+          collapse = ",")
+  } else {
+    paste(format(unlist(x), digits = 17, trim = TRUE), collapse = ",")
+  }
+  sprintf("<%s:%d>%s", ty, length(x), body)
+}
+
+# The record declares which canonicalisation produced its hash, so the FROZEN
+# v1 record in inst/extdata stays verifiable forever. A hash function that
+# silently changed under a preregistration would be the same offence the module
+# exists to prevent, committed by the guard itself.
+PREREG_CURRENT_VERSION <- "2"
+
+.prereg_canonicalize <- function(spec, version = PREREG_CURRENT_VERSION) {
+  switch(as.character(version),
+         "1" = .canonicalize_spec(spec),
+         "2" = .canonicalize_spec_v2(spec),
+         stop("unknown prereg_version: ", version, call. = FALSE))
+}
+
+.prereg_spec_hash <- function(spec, version = PREREG_CURRENT_VERSION) {
+  digest::digest(.prereg_canonicalize(spec, version), algo = "sha256")
 }
 
 # Accept a preregistration as a path (read it) or an already-read record list.
@@ -103,6 +154,9 @@ preregister_spec <- function(spec, path, frozen_at, notes = "", force = FALSE) {
   hash <- .prereg_spec_hash(spec)
   if (file.exists(path) && !isTRUE(force)) {
     prev <- .read_preregistration(path)
+    # Compare under the EXISTING record's version, not the current one, or
+    # re-registering an unchanged v1 spec would look like a spec change.
+    hash <- .prereg_spec_hash(spec, prev$prereg_version %||% "1")
     if (!identical(prev$spec_hash, hash))
       stop("preregister_spec(): a DIFFERENT spec is already registered at ", path,
            " (", substr(prev$spec_hash, 1, 12), " != ", substr(hash, 1, 12), "). ",
@@ -111,10 +165,10 @@ preregister_spec <- function(spec, path, frozen_at, notes = "", force = FALSE) {
            "only to correct a pre-data mistake.", call. = FALSE)
   }
   dir.create(dirname(path), showWarnings = FALSE, recursive = TRUE)
-  rec <- list(prereg_version = "1", spec_hash = hash,
+  rec <- list(prereg_version = PREREG_CURRENT_VERSION, spec_hash = hash,
               frozen_at = as.character(frozen_at),
               notes = gsub("[\r\n]+", " ", as.character(notes)),
-              canonical_spec = .canonicalize_spec(spec))
+              canonical_spec = .prereg_canonicalize(spec))
   writeLines(c("# URPS preregistration record (immutable once data are observed)",
                paste0(names(rec), ": ", unlist(rec))), path)
   invisible(rec)
@@ -136,7 +190,13 @@ preregister_spec <- function(spec, path, frozen_at, notes = "", force = FALSE) {
 #' @export
 assert_spec_matches_prereg <- function(spec, prereg) {
   pr <- .as_prereg(prereg)
-  h <- .prereg_spec_hash(spec)
+  ver <- pr$prereg_version %||% "1"
+  if (identical(as.character(ver), "1")) {
+    .msg_info(paste("Preregistration is canonicalisation v1, which collapses type:",
+                    "list(a = 1) and list(a = \"1\") hash the same. Verified under v1",
+                    "because that is what was frozen; new records use v2."))
+  }
+  h <- .prereg_spec_hash(spec, ver)
   if (!identical(h, pr$spec_hash))
     stop("spec does not match the preregistration (", substr(h, 1, 12), " != ",
          substr(pr$spec_hash, 1, 12), "). Changing the specification after ",
