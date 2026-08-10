@@ -46,6 +46,38 @@ compartmental model can tell you how many women have prolapse; it cannot tell yo
 what happens to a 67-year-old with a prior repair, and it cannot let a provider's
 retirement depend on the age she happened to certify at.
 
+### The demand side in detail
+
+![The demand side of microsimulation](figures/fig_demand_side_dmdm.png)
+
+Five stages, from a synthetic cohort of women to outcomes that feed back into
+the next year. **Not all five are built.** The panel is a design, and the
+honest reading is a roadmap with status:
+
+| stage | in this repository | where |
+|---|---|---|
+| 1. Synthetic cohort of women | **built** | `demand-lifecourse.R`, BRFSS population cells |
+| 2. Health needs over time | **built, different states** | `demand-dynamic_multistate.R` |
+| 3. Demand / care-seeking decision | **built, partially** | `data-meps_care_seeking.R` |
+| 4. Care pathways | **partial** | `demand-condition_service_pathway.R`, `urps_prevention.R` |
+| 5. Outcomes | **partial** | mortality and severity yes; quality of life no |
+
+Three specific divergences worth knowing before quoting this panel:
+
+- **The states differ.** The panel shows UUI, SUI and POP. This model carries
+  **UI, POP and AI** — it does not split urinary incontinence into urge and
+  stress, and it *does* carry anal incontinence, which the panel omits.
+- **Care-seeking is narrower than drawn.** `fit_care_seeking_model()` estimates
+  from MEPS on insurance, income and comorbidity. Symptom bother, perceived
+  need, cultural norms and stigma are on the panel and are **not** in the model.
+- **Quality of life is not modelled at all.** Mortality is, severity is
+  (Sandvik), costs partly. There are no QALYs, utilities or functioning
+  outcomes anywhere in the package.
+
+One naming note: the panel is titled DMDD; the code and every document here call
+it **DMDM** — dynamic multistate disease model. Same object, and `DMDM` is the
+name that will match a grep.
+
 ### The three flowcharts
 
 Three, because three different things can go wrong.
