@@ -77,6 +77,7 @@
 "entrant_trajectory_scenarios","api"
 "fit_prevalence_consistent_psa","api"
 "hazard_shrinkage_summary","api"
+"isochrone_source_dir","api"
 "lifecourse_risk_params_cited","api"
 "load_legacy","api"
 "load_sensitivity_table","api"
