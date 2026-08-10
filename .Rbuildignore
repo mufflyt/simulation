@@ -14,6 +14,7 @@
 ^LICENSE\.md$
 ^\.gitignore$
 ^data-raw$
+^data$
 ^CONTRIBUTING\.md$
 ^Makefile$
 ^\.githooks$
