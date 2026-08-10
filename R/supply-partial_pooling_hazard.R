@@ -17,6 +17,29 @@
 # positive and the pool is genuine. blme + lme4 are in Suggests (optional): the
 # fit function requires them at call time, everything else works without them.
 
+# Event counts are the NUMERATOR of every hazard in this module, and a hazard is
+# a probability: 0 <= ev <= py. Validated in one place because both the reshape
+# and the fit need it, and cycle 13 established that two copies of a guard is how
+# one of them starts accepting what the other rejects.
+.assert_event_counts <- function(d, fn) {
+  if (!all(c("py", "ev") %in% names(d))) return(invisible(d))
+  bad <- !is.finite(d$ev) | d$ev < 0 | (is.finite(d$py) & d$ev > d$py)
+  if (any(bad)) {
+    i <- which(bad)[seq_len(min(3L, sum(bad)))]
+    stop(sprintf(paste("%s: `ev` (events) must be finite and in [0, py] -- a hazard is",
+                       "a probability. Offending cell(s): %s. ev > py gives a hazard",
+                       "above 1 and a negative binomial denominator; ev < 0 gives a",
+                       "negative hazard."),
+                 fn,
+                 paste(sprintf("%s/%s ev=%s py=%s",
+                               if ("subspecialty" %in% names(d)) d$subspecialty[i] else "?",
+                               if ("band" %in% names(d)) d$band[i] else "?",
+                               format(d$ev[i]), format(d$py[i])), collapse = "; ")),
+         call. = FALSE)
+  }
+  invisible(d)
+}
+
 #' Reshape the wide pooled-hazard file into long (subspecialty, band, py, ev)
 #'
 #' Accepts the `hazard_by_band_pooled_vs_unpooled.csv` layout (columns
@@ -39,6 +62,11 @@ hazard_pooled_long <- function(wide, subspecialties = c("go", "urps", "migs")) {
                    py = as.numeric(wide[[py_col]]), ev = as.numeric(wide[[ev_col]]))
   })
   out <- dplyr::bind_rows(rows)
+  # `py` was filtered here and `ev` was not, so a cell could cross this module
+  # boundary with more events than person-years (hazard 2.5) or a negative event
+  # count (hazard -0.5). Both are numerator problems and the denominator guard
+  # cannot see them.
+  .assert_event_counts(out, "hazard_pooled_long")
   dplyr::filter(out, .data$py > 0)
 }
 
@@ -59,6 +87,11 @@ fit_partial_pooled_hazards <- function(agg, band_levels = NULL,
   if (any(!is.finite(agg$py)) || any(agg$py <= 0))
     stop("fit_partial_pooled_hazards(): every `py` (person-years) must be finite and > 0; ",
          "a zero/negative cell makes the unpooled hazard ev/py non-finite.", call. = FALSE)
+  # The numerator needs the same treatment as the denominator. Without it,
+  # ev = 25 over py = 10 reached blme as cbind(25, -15) and failed there with
+  # "Value 2.31818 out of range (0, 1)" -- a message naming neither the column,
+  # the band, nor this package.
+  .assert_event_counts(agg, "fit_partial_pooled_hazards")
   for (pkg in c("blme", "lme4")) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
       stop(sprintf("fit_partial_pooled_hazards() needs the '%s' package (Suggests). Install it to fit.", pkg),
