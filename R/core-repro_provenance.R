@@ -95,7 +95,30 @@ resolve_reproducibility_mode <- function(default = "relaxed") {
 seed_microsimulation <- function(seed = NULL, mode = resolve_reproducibility_mode()) {
   if (is.null(seed)) {
     env_seed <- Sys.getenv("MICROSIM_SEED", unset = "")
-    seed <- if (nzchar(env_seed)) suppressWarnings(as.integer(env_seed)) else 20260801L
+    if (nzchar(env_seed)) {
+      # A malformed MICROSIM_SEED used to coerce to NA with the warning
+      # suppressed, and the two modes then diverged in opposite unhelpful
+      # directions: strict silently substituted the DEFAULT seed (so the run was
+      # reproducible, but not the run that was asked for), and relaxed left the
+      # RNG entirely UNSEEDED (so the run was not reproducible at all). Either
+      # way the caller set a seed and did not get it, with no diagnostic.
+      # Parsed as a DOUBLE first and checked for integrality, because
+      # as.integer() truncates: as.integer("3.7") is 3, silently, which is the
+      # same substitution this guard exists to stop. (as.integer also accepts
+      # "0x1F" and "1e3", which are unambiguous integers and are fine.)
+      num <- suppressWarnings(as.numeric(env_seed))
+      if (is.na(num) || !is.finite(num) || num != trunc(num) ||
+          abs(num) > .Machine$integer.max)
+        stop(sprintf(paste("seed_microsimulation: MICROSIM_SEED is set to '%s',",
+                           "which is not a whole number in integer range. Refusing",
+                           "to substitute a different seed: the run would be",
+                           "labelled reproducible under a seed nobody chose.",
+                           "Unset it or give an integer."),
+                     env_seed), call. = FALSE)
+      seed <- as.integer(num)
+    } else {
+      seed <- 20260801L
+    }
   }
 
   if (mode == "relaxed" && is.na(seed)) {

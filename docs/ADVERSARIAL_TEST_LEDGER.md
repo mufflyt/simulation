@@ -534,3 +534,115 @@ Rather than guess statically, this cycle instrumented `all()` and `any()` and
 re-ran **every** test file under a shadowing environment that records
 zero-length invocations. The run was still going when the cycle closed; its
 result is reported in cycle 08 rather than summarised early.
+
+---
+
+## Cycle 08 — 2026-08-10
+
+**Mix:** 3 BVA · 4 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle08.R`
+
+**Targets and why.** The two thinnest priorities in this ledger: RNG state had
+one test (cycle 01) and validation leakage two (cycle 02). Both are places where
+a run can be wrong while every number in it looks ordinary — an irreproducible
+run labelled reproducible, or a spec that passes a preregistration gate it does
+not match.
+
+### Cycle 07's carried-forward sweep — result
+
+Instrumented `all()` and `any()` and re-ran **every** test file under a
+shadowing environment recording zero-length invocations. Across the whole suite:
+**2 vacuous assertions.** The worry was largely unfounded, which is the useful
+part of the answer. Both survivors were real and are repaired in their own
+files, not here.
+
+* `test-numeric-guards.R` — the helper ended in `all(is.na(v) | is.finite(v))`
+  over every numeric leaf of the result. For `assign_entrant_geography(0, ...)`
+  there are **no** numeric leaves, so the "no public numeric path emits Inf or
+  NaN" guard returned TRUE having inspected nothing. Replaced with
+  `.finite_status()`, which returns `guarded` / `finite` / `nonfinite` /
+  `no_numbers`; each case now declares which outcome it is evidence for, and a
+  further assertion requires that at least four cases actually inspected numbers.
+* `test-demand-dynamic-open.R:171` — `expect_false(any(grepl("Population
+  conservation", msgs)))` ran on an **empty** `msgs`. The test's own comment
+  justified the design by saying "the run also emits the exploratory-transitions
+  declaration" — but the file's `sim_open()` helper *muffles* exactly that
+  message, so nothing was captured and the assertion passed for the reason the
+  comment says it must not. Now calls `simulate_dmdm_open()` directly and
+  asserts the declaration IS present before asserting the conservation message
+  is not.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `seed_microsimulation` | an explicit seed always beats the environment; 0, 1, −1, INT_MAX are legal |
+| 2 | BVA | `seed_microsimulation` | unset vs empty vs whitespace-padded |
+| 3 | BVA | `.canonicalize_spec_v2` | a value and its own rendering hash differently; key order still irrelevant |
+| 4 | semantic | `seed_microsimulation` | the RNG **kind** is pinned with the seed, not just the seed |
+| 5 | semantic | relaxed mode | the unseeded path requires an explicit NA and announces itself |
+| 6 | semantic | `make_run_id` | deterministic in strict, time-stamped in relaxed, and never mislabels |
+| 7 | semantic | the frozen v1 record | still verifies under its own declared version |
+| 8 | adversarial | `MICROSIM_SEED` | malformed is refused, not silently replaced |
+| 9 | adversarial | `assert_spec_matches_prereg` | a spec cannot pass by impersonating the registered one |
+| 10 | adversarial | version dispatch | re-registering an unchanged v1 spec is not mistaken for a change |
+
+### Defects found and fixed — 2
+
+**D18 · a seed nobody chose.** `MICROSIM_SEED` was parsed with
+`suppressWarnings(as.integer(...))`, and the two modes then failed in opposite
+unhelpful directions. Measured: `MICROSIM_SEED=twenty` in **strict** mode
+returned **20260801** — the default — so the run was reproducible, but not the
+run anyone asked for; in **relaxed** mode it returned **NA** and left the RNG
+entirely unseeded, so the run was not reproducible at all. Either way a caller
+set a seed and did not get it, with no diagnostic.
+
+*The first fix was incomplete, and the test caught it.* Refusing only `NA`
+still admitted `MICROSIM_SEED=3.7`, because `as.integer("3.7")` is `3` —
+silent truncation to a *different valid seed*, the very substitution the guard
+exists to stop. Now parsed as a double and checked for integrality and integer
+range. `0x1F` and `1e3` are unambiguous integer spellings R accepts and are
+explicitly still allowed (that expectation of mine was wrong and was corrected
+in the test).
+
+**D19 · preregistration hash collisions.** `.canonicalize_spec()` collapses
+type. Measured, all four hashing identically:
+
+```
+list(a = list(b = 1))  ==  list(a = "{b=1}")        nested vs its own rendering
+list(a = c(1, 2))      ==  list(a = "1,2")          vector vs its own rendering
+list(a = TRUE)         ==  list(a = "TRUE")
+list(a = 1/3)          ==  list(a = 0.333333333333333)   (format digits = 15)
+```
+
+The module's entire claim is that `assert_spec_matches_prereg()` cannot be
+satisfied by anything other than the frozen spec, because "changing the
+specification after preregistration is model selection on the held-out data".
+A collision is exactly a way to satisfy it with a different spec.
+
+*Fix, and the constraint on it:* `inst/extdata/preregistration/urps_pipeline_forecast_2024_2026.txt`
+is a **real frozen record**, dated 2026-08-07, made while `board_certified_active`
+still ended at 2023. Silently changing the hash function under it would be the
+same offence the module exists to prevent, committed by the guard itself. So the
+canonicalisation is **versioned**: records declare `prereg_version`, v1 records
+are verified with v1 (and say so out loud when they are), and new records are
+written under v2, which tags every leaf with its type and length. Test 10 exists
+because the dispatch has its own failure mode — verifying a v1 record with the
+v2 hash would make an *unchanged* spec look changed, and a guard that cries wolf
+gets switched off.
+
+**Ruled out.** Whether a `notes` field could forge `spec_hash` by injecting a
+second `spec_hash:` line: `preregister_spec()` already strips newlines from
+`notes`, and `$` on a duplicated key returns the first (real) one. Not a defect.
+
+**Result:** 55 assertions, all passing. **2 defects found, 2 fixed**, plus 2
+vacuous assertions repaired.
+
+**Related files rerun:** `test-numeric-guards.R` (20),
+`test-demand-dynamic-open.R` (32), `test-preregistration.R` (21),
+`test-orchestrator-wiring.R` (56), `test-workforce-microsimulation.R` (58),
+`test-backtest.R` (106), `test-adversarial-cycle01.R` (25),
+`test-adversarial-cycle07.R` (54) — 372 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** silent coercion at a trust boundary.
+`as.integer()` on a string was the instance here; look for `as.integer`,
+`as.numeric` and `match.arg`-free string dispatch applied to anything arriving
+from an environment variable, a file, or a user-supplied column, where a
+truncation or an NA changes a value rather than rejecting it.

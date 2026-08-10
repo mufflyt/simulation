@@ -165,9 +165,18 @@ test_that("strict mode refuses a leaking reweight, and the tolerance is a knob",
   # conservation message specifically rather than on total silence: the run also
   # emits the exploratory-transitions declaration, which expect_silent would
   # catch without saying anything about conservation.
+  #
+  # Called through simulate_dmdm_open() directly, NOT through sim_open(): the
+  # helper muffles the EXPLORATORY declaration, so capturing through it returned
+  # ZERO messages and expect_false(any(...)) passed on an empty vector -- for
+  # exactly the reason the comment above says it should not. Found by
+  # instrumenting all()/any() across the suite in adversarial cycle 07.
   msgs <- capture_messages(
-    sim_open(init, NULL, 2025, 2032, pop_by_age_year = pop,
-             conservation_tolerance = 0.9))
+    simulate_dmdm_open(init, NULL, 2025, 2032, pop_by_age_year = pop,
+                       conservation_tolerance = 0.9, allow_uncalibrated = TRUE))
+  # The capture must have seen SOMETHING, or the absence below proves nothing.
+  expect_true(length(msgs) > 0L)
+  expect_true(any(grepl("EXPLORATORY", msgs)))
   expect_false(any(grepl("Population conservation", msgs)))
 })
 
