@@ -1518,6 +1518,12 @@ product becomes NA for a reason unrelated to demand.
   to this module rather than something it computes. Same reasoning; noted for a
   future input-validation cycle.
 
+  > **Corrected in cycle 19.** This note was wrong. `py` is guarded on **both**
+  > sides — `hazard_pooled_long()` filters `py > 0` and
+  > `fit_partial_pooled_hazards()` stops on a non-positive cell with a message
+  > naming the quantity. The unvalidated quantity there was `ev`, the
+  > **numerator**. See cycle 19.
+
 **Result:** 47 assertions, all passing, 0 skips. **1 defect found, 5 sites
 fixed.** No scientific assumption changed: every non-degenerate input produces
 the identical number it did before (test 9 asserts that explicitly).
@@ -1531,3 +1537,96 @@ the identical number it did before (test 9 asserts that explicitly).
 to a module but are computed by a different one — `py` in the pooled hazard,
 `obs` in the back-test percent errors. Between-module boundaries are where "the
 caller validated it" and "the callee validated it" can both be false.
+
+---
+
+## Cycle 19 — 2026-08-10
+
+**Mix:** 4 BVA · 3 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle19.R`
+
+**Targets and why.** Cycle 18 carried forward: *denominators that arrive as
+inputs to one module but are computed by another* — the boundary where "the
+caller validated it" and "the callee validated it" can both be false. It named
+two suspects.
+
+**One of them was wrong, and correcting it is where this cycle started.** `py`
+(person-years) in the pooled-hazard module is guarded on **both** sides:
+`hazard_pooled_long()` filters `py > 0`, and `fit_partial_pooled_hazards()`
+stops on a non-positive cell with a message naming the quantity. Cycle 18's
+ledger entry is annotated in place rather than rewritten.
+
+Looking at the guarded denominator is what showed up the thing it cannot see.
+
+### Defect found and fixed — 1
+
+**D28 · the numerator nobody validated.** `ev` — the event count, the numerator
+of every hazard in the module — was checked by neither side of the boundary. A
+hazard is a probability, so `0 ≤ ev ≤ py`, and **both** bounds were unenforced.
+Measured:
+
+| input | `ev/py` | what happened |
+|---|---|---|
+| `ev = 25`, `py = 10` | **2.5** | passed `hazard_pooled_long()`; reached `blme` as `cbind(25, -15)` |
+| `ev = -3`, `py = 10` | **−0.5** | passed both, returned in the table |
+
+`d$unpooled <- d$ev / d$py` is written into the returned tibble **before** any
+model is fitted, so those are reported quantities in their own right, not just
+inputs to a fit.
+
+**Where the failure surfaced matters as much as whether it did.** Unguarded,
+`ev = 25` over `py = 10` died inside a third-party package with
+
+```
+Error: Value 2.31818 out of range (0, 1)
+```
+
+naming neither the column, the band, the subspecialty, nor this package. Test 6
+asserts the new message carries all five. *Fix:* one shared
+`.assert_event_counts()` called from both the reshape and the fit — cycle 13
+established that two copies of a guard is how one starts accepting what the
+other rejects.
+
+**The zero-event cell still passes**, and test 3 exists to keep it that way: the
+module header records "the 70+ cell is 0 events / 16 person-years" as the
+motivating data, and a guard that refused `ev = 0` would break exactly the case
+the module was built to pool.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `ev` | closed at 0 and at `py`; refused just outside either |
+| 2 | BVA | non-finite `ev` | NA/NaN/±Inf refused; the `py` guard still fires on its own terms |
+| 3 | BVA | the 0-event cell | the motivating sparse cell still passes |
+| 4 | BVA | `py = 0` | dropped, not divided by — and a 0-py cell carrying events is still refused |
+| 5 | semantic | the unpooled hazard | a probability for every admissible input (fuzzed) |
+| 6 | semantic | the error | names function, column, subspecialty, band and both values |
+| 7 | semantic | both doors | same input, same verdict, one shared guard |
+| 8 | adversarial | the denominator guard | cannot see a numerator problem — `py` is fine in all four cases |
+| 9 | adversarial | the whole table | judged, not just row 1; several bad cells reported together |
+| 10 | adversarial | multi-subspecialty | a bad cell in one is not hidden by good ones, and the pooled sum stays a probability |
+
+**Result:** 84 assertions, all passing, 0 skips. **1 defect found, 2 sites
+fixed, 1 earlier ledger entry corrected.**
+
+**Related files rerun:** `test-partial-pooling-hazards.R` (9),
+`test-calibration-sources.R` (24), `test-provider-lifecycle.R` (56),
+`test-workforce-microsimulation.R` (58), `test-scientific-benchmarks.R` (21),
+and cycles 13/16/18 (159) — 327 assertions, 0 problems.
+
+### Full suite (launched at the close of cycle 18)
+
+**4,403 passed · 3 failed · 0 errors · 31 skipped · 130 files.**
+
+The three failures are exactly the known pre-existing ones —
+`test-canonical-overlap.R` (stale `isochrones` rows) and the two
+`test-practice-survey.R` `access_ascertainment` failures. Both of the failures
+that were mine (cycles 09 and 10) are resolved and stayed resolved.
+
+Against the cycle-09 baseline of 3,943 passed / 5 failed / 121 files: **+460
+assertions, −2 failures, +9 files.**
+
+**Bug class to sweep in a later cycle:** the guarded half of a pair. `py` was
+validated and `ev` was not; the same asymmetry is available wherever two columns
+must satisfy a joint constraint — numerator/denominator, lower/upper bound,
+start/end year, observed/expected. Enumerate the column PAIRS that carry a
+relation and check whether the relation is tested, or only each column
+separately.
