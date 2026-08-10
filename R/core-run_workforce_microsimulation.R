@@ -633,12 +633,26 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
 
   # --- Absolute gap, status quo -------------------------------------------
   reference_id <- if ("baseline" %in% names(supply_scenarios)) "baseline" else "status_quo"
+  # WHICH supply the gap is computed on. `effective_fte_median` is the
+  # CERTIFICATION count -- the quantity the observed contract series measures
+  # (n_active == n_ever_certified in every row), and the one the back-test must
+  # keep scoring against. But an emigrant is still certified and cannot see a US
+  # patient, so comparing that count against US demand inflates supply by the
+  # emigrant stock. The gap uses the US-practising series; the back-test keeps
+  # the certification one. They coincide in every run that does not apply the
+  # migration matrix.
+  gap_supply_col <- if ("effective_fte_us_practising_median" %in% names(supply_by_scenario)) {
+    "effective_fte_us_practising_median"
+  } else {
+    "effective_fte_median"
+  }
+
   status_quo <- dplyr::filter(supply_by_scenario, .data$scenario == reference_id)
   if (nrow(status_quo) == 0L)
     stop("reference scenario '", reference_id, "' is not among the supply scenarios (",
          paste(unique(supply_by_scenario$scenario), collapse = ", "),
          "); the headline gap would otherwise be computed on an empty panel.", call. = FALSE)
-  fte_gap <- compute_fte_gap(status_quo, required, supply_col = "effective_fte_median")
+  fte_gap <- compute_fte_gap(status_quo, required, supply_col = gap_supply_col)
 
   # --- Relative growth adequacy (explicitly labelled) ---------------------
   growth <- compute_growth_adequacy(status_quo, demand_long, base_year = base_year)
@@ -673,7 +687,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       required_s  <- dplyr::mutate(required,
                                    required_fte = .data$required_fte * demand_lift)
       gap_s <- compute_fte_gap(status_quo, required_s,
-                               supply_col = "effective_fte_median")
+                               supply_col = gap_supply_col)
       gap_s$demand_scenario       <- nm
       gap_s$demand_scenario_label <- s$label
       gap_s$demand_lift           <- demand_lift

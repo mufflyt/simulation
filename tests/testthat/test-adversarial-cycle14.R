@@ -190,12 +190,18 @@ test_that("ADVERSARIAL: a returner's sex is unknown, and the engine does not inv
 # ---- ADVERSARIAL 3 ----------------------------------------------------------
 
 test_that("ADVERSARIAL: an emigrated provider leaves every state total, and that is visible", {
-  # apply_provider_migration_matrix() marks an out-of-country mover with
-  # left_country = TRUE and state = NA. NOTHING in R/ reads left_country, so
-  # such a provider is absent from every state total while the national active
-  # count still includes them. Recorded as a test rather than silently
-  # "fixed", because which total is right is a modelling decision: an emigrant
-  # may legitimately remain in a national certification count.
+  # RESOLVED. This was recorded as a DISCREPANCY: apply_provider_migration_matrix()
+  # marks an out-of-country mover with left_country = TRUE and state = NA, nothing
+  # read left_country, and such a provider was absent from every state total while
+  # the national count still included them.
+  #
+  # The resolution was that both totals are right and they are different
+  # quantities. The certification count keeps the emigrant, because the observed
+  # contract series counts people who HOLD certification (n_active ==
+  # n_ever_certified in every row) and the back-test must keep matching it. The
+  # US-practising count drops them, because they cannot see a US patient, and the
+  # gap uses that one. See test-emigration-estimand.R, where the arithmetic below
+  # is now an IDENTITY rather than a gap between two numbers.
   a <- cyc14_agents(n = 20)
   a$left_country <- FALSE
   a$n_moves <- 0L
@@ -206,7 +212,12 @@ test_that("ADVERSARIAL: an emigrated provider leaves every state total, and that
   national <- sum(provider_active_in_year(a, 2026L))
   expect_equal(by_state, 17L)
   expect_equal(national, 20L)
-  # The gap IS the emigrants, and it is exactly recoverable from left_country --
-  # so any consumer that wants either total can compute it.
+  # The gap IS the emigrants, and it is exactly recoverable from left_country.
   expect_equal(national - by_state, sum(a$left_country))
+  # And it is no longer only recoverable: the US-practising predicate reports it
+  # directly, and equals the state total.
+  expect_equal(sum(provider_us_practising_in_year(a, 2026L)), by_state)
+  expect_equal(sum(provider_active_in_year(a, 2026L)) -
+                 sum(provider_us_practising_in_year(a, 2026L)),
+               sum(a$left_country))
 })
