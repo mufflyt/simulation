@@ -1268,3 +1268,72 @@ never for monotonicity; the same shape is any function documented as
 non-decreasing, bounded, or conserved that is only ever tested pointwise.
 Enumerate the functions whose docs claim a shape (monotone, bounded, sums to a
 total, telescopes) and test the shape, not a point on it.
+
+---
+
+## Cycle 16 — 2026-08-10
+
+**Mix:** 3 BVA · 4 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle16.R`
+
+**Targets and why.** Cycle 15 carried forward: *an identity asserted at a point
+but never across the range.* `retirement_survival()` had been checked at
+individual ages and never for monotonicity — which is exactly how a survival
+curve that RISES went undetected. So this cycle enumerated the roxygen in `R/`
+for claims about **shape** — monotone, non-decreasing, cumulative, telescopes,
+conserved, sums to a total, bounded — and tested the shape rather than a point
+on it.
+
+### Result: no defect. The documented shapes hold.
+
+That is the finding, and it is worth stating plainly rather than dressing up.
+Ten tests, 62 assertions, and every documented shape survived — including the
+ones that are only true over **part** of a range, which are the ones a
+whole-range test gets wrong.
+
+**Two claims that a naive shape test would have mis-flagged:**
+
+* `WU2011_SURGERY_RATE_COMPONENTS$pop` is **not** monotone across the five
+  bands: `0.500, 1.645, 2.719, 2.719, 1.069`. The doc says POP "rises
+  monotonically **to ~71-73**" — the 65-79 band contains that peak, so the fall
+  at 80+ is the source's shape, not a violation. Test 8 asserts rise-to-peak
+  and fall-after, which is the actual claim.
+* The empirical hazard is monotone **from the 60-64 band onward**, not
+  throughout. The guard is a `cummax` anchored at exactly one band: anchored a
+  band earlier it would flatten real mid-career non-monotonicity; a band later
+  and the 70+ cell it exists for is uncovered. Test 1 pins the anchor from both
+  sides.
+
+**The guard is load-bearing, and test 10 proves it rather than assuming it.**
+With `floor_sparse = FALSE` the raw series really does violate the shape —
+`70+` is the observed 0/16 cell and comes back as **0.0000**, which would read
+as "nobody retires after 70". Guarded, it inherits the 65-69 hazard. A test that
+only checked the guarded series would pass even if the guard had become a no-op.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | the sparse-cell guard | applies from 60-64 onward and nowhere earlier |
+| 2 | BVA | the single-year schedule | observed/literature splice lands exactly at 70 |
+| 3 | BVA | Wu components | non-negative, and the component sum IS the combined table |
+| 4 | semantic | hazard shape | non-decreasing from 60-64 under **every** pooling choice, not just the default |
+| 5 | semantic | the single-year schedule | non-decreasing across its whole range, every consecutive pair |
+| 6 | semantic | age-specific D3 | linear in population, and by-condition sums to combined |
+| 7 | semantic | SUI vs POP | genuinely different curves, not proportional rescalings |
+| 8 | adversarial | band-label mismatch | `"80plus"` vs `"80+"` refused, and the loss it would cause is material |
+| 9 | adversarial | a shape battery | survival, telescoping weights, prevalence bounds — all across their ranges |
+| 10 | adversarial | the guard itself | turning it off changes the shape, so it is not decoration |
+
+**Result:** 62 assertions, all passing. **0 defects found.** Four cycles in
+(05, 07, 15) established the descending-range and pointwise-identity classes;
+this cycle is the one that found the rest of the surface clean.
+
+**Related files rerun:** `test-calibration-sources.R` (24),
+`test-provider-lifecycle.R` (56), `test-workforce-microsimulation.R` (58),
+`test-demand-estimands.R` (67), `test-scientific-benchmarks.R` (21), and cycles
+05/07/13/15 (276) — 502 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** a claim in prose that no test reads.
+Test 8's premise — that a `"80plus"`/`"80+"` mismatch once lost 15% of cases —
+is recorded in a source comment, and the only reason it is now checked is that
+someone read the comment. Enumerate the "THE DEFECT THIS EXISTS FOR" and
+"used to" narratives in `R/` comments and check each has a test that would fail
+if the fix were reverted.
