@@ -8,8 +8,6 @@
 # longer hand-type the current national baseline. This is NOT a global ban on the
 # literal 1306 -- historical fixtures / frozen artifacts may legitimately carry it.
 
-suppressPackageStartupMessages(library(here))
-
 test_that("adapter is pinned to the upstream contract (national, not CONUS)", {
   skip_if_not(requireNamespace("mufflyaccess", quietly = TRUE), "mufflyaccess not installed")
   b <- suppressMessages(urps_baseline_supply())
@@ -22,6 +20,15 @@ test_that("adapter is pinned to the upstream contract (national, not CONUS)", {
 })
 
 test_that("affected scripts consume the adapter, not a hand-typed national baseline", {
+  # Resolve the repository root the way the rest of the suite does, rather than
+  # library(here): here is not a declared dependency, and a top-level
+  # library(here) errored the whole file when it was absent in CI. Under R CMD
+  # check the source tree is not present, so this skips; under check_suite it
+  # runs from the root.
+  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
+                 c(".", "..", file.path("..", "..")))
+  skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
+
   affected <- c(
     "scripts/diagnostics/career_change_sensitivity.R",
     "scripts/validation/02_monte_carlo_convergence.R",
@@ -31,7 +38,7 @@ test_that("affected scripts consume the adapter, not a hand-typed national basel
   )
   offenders <- character(0)
   for (rel in affected) {
-    p <- here::here(rel)
+    p <- file.path(root[1], rel)
     if (!file.exists(p)) next
     lines <- readLines(p, warn = FALSE)
     for (i in seq_along(lines)) {
