@@ -77,6 +77,11 @@ OPTIONAL_COLS <- c(
   "certification_pathway"
 )
 
+# Tolerance on the gap identity, in FTE. ONE constant because the same check is
+# made in two places -- here and in validation_report() -- and two copies of a
+# tolerance is how one of them starts accepting what the other rejects.
+GAP_IDENTITY_TOLERANCE_FTE <- 0.01
+
 #' Validate a gap projection data frame against the extended contract
 #'
 #' @param x Data frame produced by [as_urps_gap_projection()].
@@ -159,7 +164,7 @@ validate_urps_gap_projection <- function(x,
   # Arithmetic guard: gap = supply - demand on both sides.
   if (all(c("supply_clinical_fte", "demand_clinical_fte", "gap_fte") %in% names(x))) {
     residual <- abs(x$gap_fte - (x$supply_clinical_fte - x$demand_clinical_fte))
-    if (any(residual > 0.01, na.rm = TRUE)) {
+    if (any(residual > GAP_IDENTITY_TOLERANCE_FTE, na.rm = TRUE)) {
       msg <- "gap_fte does not equal supply_clinical_fte - demand_clinical_fte (tolerance 0.01 FTE)."
       if (identical(mode, "strict")) stop(msg, call. = FALSE)
       .msg_warn(msg)
@@ -167,7 +172,7 @@ validate_urps_gap_projection <- function(x,
   }
   if (all(c("supply_headcount", "demand_headcount", "gap_headcount") %in% names(x))) {
     residual_hc <- abs(x$gap_headcount - (x$supply_headcount - x$demand_headcount))
-    if (any(residual_hc > 0.01, na.rm = TRUE)) {
+    if (any(residual_hc > GAP_IDENTITY_TOLERANCE_FTE, na.rm = TRUE)) {
       msg <- "gap_headcount does not equal supply_headcount - demand_headcount (tolerance 0.01)."
       if (identical(mode, "strict")) stop(msg, call. = FALSE)
       .msg_warn(msg)

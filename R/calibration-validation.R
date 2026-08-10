@@ -406,10 +406,13 @@ validation_report <- function(supply, required = NULL, gap = NULL,
     if (all(c("supply_clinical_fte", "demand_clinical_fte", "gap_fte") %in% names(gap_projection))) {
       residual <- abs(gap_projection$gap_fte -
                         (gap_projection$supply_clinical_fte - gap_projection$demand_clinical_fte))
-      ok <- all(residual <= 0.01, na.rm = TRUE)
+      # Same tolerance constant validate_urps_gap_projection() uses; this check
+      # is the second copy of that guard and must not drift from it.
+      ok <- all(residual <= GAP_IDENTITY_TOLERANCE_FTE, na.rm = TRUE)
       add("gap_projection_arithmetic", "internal", ok,
           if (ok) "ok"
-          else sprintf("max residual %.4f FTE (tolerance 0.01)", max(residual, na.rm = TRUE)))
+          else sprintf("max residual %.4f FTE (tolerance %s)", max(residual, na.rm = TRUE),
+                  format(GAP_IDENTITY_TOLERANCE_FTE)))
     }
   }
 
