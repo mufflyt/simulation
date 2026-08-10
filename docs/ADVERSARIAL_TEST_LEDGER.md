@@ -879,11 +879,16 @@ the run's declared seed — while the provenance record still reported the
 declared one.
 
 `calibration-psa.R` already saved and restored `.Random.seed` around its own
-seeding, so the idiom was established in-repo and **six siblings had not adopted
-it**: `validation-geographic_holdout.R`, `supply-fraher_agent_supply.R`,
-`calibration-prevalence_to_incidence.R`, `geography-spatial_access_e2sfca.R`,
-`demand-dynamic_multistate.R`, `demand-lifecourse.R`,
-`demand-lifecourse_uncertainty.R`.
+seeding, so the idiom was established in-repo.
+
+> **Corrected in cycle 12.** This entry originally said "six siblings had not
+> adopted it" and listed `geography-spatial_access_e2sfca.R` among them.
+> `access_moe_ci()` in that file DID already carry a save/restore. The accurate
+> count is **five** sites with no protection at all
+> (`validation-geographic_holdout.R`, `supply-fraher_agent_supply.R`,
+> `calibration-prevalence_to_incidence.R`, `demand-dynamic_multistate.R`,
+> `demand-lifecourse.R`, `demand-lifecourse_uncertainty.R` — six functions
+> across five files), plus **two** that carried a weaker form. See cycle 12.
 
 *Fix:* `with_preserved_rng(seed, expr)` for the one site whose seeded region is
 a self-contained block, and `.preserve_rng_scope()` — which installs the restore
@@ -929,3 +934,75 @@ panel-only case the panel guard exists for.
 effect. `.Random.seed` was one; the same shape applies to `options()`,
 `Sys.setenv()`, `par()`, working directory, and locale. Enumerate every write to
 session-global state in `R/` and check each restores.
+
+---
+
+## Cycle 12 — 2026-08-10
+
+**Mix:** 3 BVA · 3 semantic · 4 adversarial → `tests/testthat/test-adversarial-cycle12.R`
+
+### Cycle 11's carried-forward class — swept, and it comes up clean
+
+Searched `R/` for every write to session-global state: `options()`,
+`Sys.setenv()`, `Sys.unsetenv()`, `setwd()`, `par()`, `Sys.setlocale()`, and
+assignment into `globalenv()`.
+
+> **The only session-global state this package writes is `.Random.seed`.**
+
+No option, environment variable, working directory or locale is set anywhere in
+`R/`. The `<<-` occurrences are closures accumulating into a local list, not
+global writes. That is a genuinely good result, and test 4 pins it — "we do not
+touch global options" is worth nothing unless something checks.
+
+### Defect found and fixed — 1, and it corrects cycle 11's own record
+
+**D23 · the established idiom could not restore an absent stream.** Two
+functions already carried a hand-rolled save/restore:
+
+```r
+old <- if (exists(".Random.seed", ...)) get(...) else NULL
+on.exit(if (!is.null(old)) assign(".Random.seed", old, ...))
+```
+
+In a **fresh session** there is nothing to restore, so `if (!is.null(old))` does
+nothing and the seeded state is simply left behind. The function claims to be
+RNG-neutral and is not: every later draw in that session becomes a function of
+its internal seed. Measured — old form leaves `.Random.seed` present, the helper
+removes it.
+
+*Fix:* both consolidated onto `.preserve_rng_scope()`, which handles the absent
+case. That removes the duplicated hand-rolled logic as well.
+
+**This also corrects cycle 11.** That entry said six siblings "had not adopted"
+the idiom and listed `geography-spatial_access_e2sfca.R` among them —
+`access_moe_ci()` had adopted it, in the weaker form. Cycle 11's entry above is
+annotated rather than rewritten. The accurate picture: **six functions with no
+protection at all, and two with a form that had a hole in it.**
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | three seeded entry points | a FRESH session is left unseeded |
+| 2 | BVA | the restore | byte-exact, mid-stream, not merely "a plausible stream" |
+| 3 | BVA | `RNGkind` | part of the state; only `seed_microsimulation()` may pin it |
+| 4 | semantic | the whole package | writes no session-global state except the RNG |
+| 5 | semantic | `resolve_reproducibility_mode` | reads the environment, never writes it |
+| 6 | semantic | `psa_sample` | a pure function of (arguments, seed) |
+| 7 | adversarial | the fresh-session hole | closed in both places that had it |
+| 8 | adversarial | ten repeated calls | no accumulated drift |
+| 9 | adversarial | the error path | an interrupted call still restores, fresh session included |
+| 10 | adversarial | composition | two RNG-neutral calls nest without either seeing the other |
+
+**Result:** 39 assertions, all passing. **1 defect found, 2 sites fixed, 1
+earlier ledger entry corrected.**
+
+**Related files rerun:** `test-adversarial-cycle11.R` (31), `test-psa.R` (28),
+`test-psa-adversarial.R` (31), `test-psa-reporting.R` (8),
+`test-access-inference.R` (28), `test-geographic-holdout.R` (17),
+`test-real-spatial-access.R` (15), `test-adversarial-cycle07.R` (54),
+`test-38-fraher-agent-supply.R` (12) — 224 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** guards written twice. `.Random.seed`
+restoration existed in two hand-rolled copies and one shared helper, and the
+copies were the ones with the hole. Look for other logic that appears in more
+than one place — range checks, tolerance comparisons, contract-column lists —
+and check whether the copies agree with each other and with the shared version.

@@ -538,10 +538,11 @@ zero_access_share <- function(access, w) {
 access_moe_ci <- function(access, est, se, stat = c("mean", "zero"),
                           B = 2000L, probs = c(0.025, 0.975), seed = 1L) {
   # Save/restore the caller's RNG stream FIRST, so the whole call is RNG-neutral.
-  old <- if (exists(".Random.seed", envir = .GlobalEnv)) {
-    get(".Random.seed", envir = .GlobalEnv)
-  } else NULL
-  on.exit(if (!is.null(old)) assign(".Random.seed", old, envir = .GlobalEnv))
+  # Via .preserve_rng_scope() rather than the hand-rolled save/restore this
+  # function used to carry: `if (!is.null(old))` cannot restore the ABSENT case,
+  # so in a fresh session -- where there is no .Random.seed yet -- the old form
+  # left the session seeded behind it. Measured in cycle 12.
+  .preserve_rng_scope()
 
   stat <- match.arg(stat)
   stopifnot(length(access) == length(est), length(est) == length(se))
@@ -549,7 +550,6 @@ access_moe_ci <- function(access, est, se, stat = c("mean", "zero"),
   f <- if (stat == "mean") weighted_mean_all else zero_access_share
   point <- f(access, est)
 
-  .preserve_rng_scope()
   set.seed(seed)
   n <- length(est)
   draws <- vapply(seq_len(B), function(b) f(access, stats::rnorm(n, est, se)), numeric(1))
