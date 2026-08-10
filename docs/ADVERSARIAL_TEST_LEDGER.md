@@ -2181,3 +2181,141 @@ gets the near-match one.
 `test-hours-uncertainty-propagation.R` (27), `test-export-wiring.R` (10),
 `test-demand-and-validation.R` (150), and cycles 02/23 (97) — 461 assertions,
 0 problems.
+
+---
+
+# FINAL AUDIT — 24 cycles
+
+## 1. What was run
+
+24 cycles, 30-minute cadence, rotating 4/3/3 · 3/4/3 · 3/3/4 across
+boundary-value, semantic/contract and adversarial tests, plus one mutation
+audit of every fix after cycle 22.
+
+| | |
+|---|---|
+| Cycles completed | **24 / 24** |
+| Test files added | 24 |
+| `test_that` blocks | **242** |
+| `expect_*` assertions | **1,013** |
+| Commits | 27 |
+| `R/` changed | 29 files, **+899 / −64** |
+| **Defects found and fixed** | **33** |
+
+**Final suite: 4,738 passed · 3 failed · 0 errors · 31 skipped · 136 files.**
+
+The three failures are the known pre-existing ones, unrelated to this work and
+untouched by it: `test-canonical-overlap.R` (five registry rows stale because
+the sibling `~/isochrones` clone changed on disk) and two
+`test-practice-survey.R` `access_ascertainment` failures.
+
+Baseline at cycle 09 was 3,943 passed / 5 failed / 121 files. Net: **+795
+assertions, −2 failures, +15 files.**
+
+## 2. The defects, by what they had in common
+
+Thirty-three defects, but only a handful of *shapes*. The shapes are the
+finding.
+
+**A guard that could not see the case it existed for (10).** D5 (NA gap
+validated clean because the arithmetic used `na.rm = TRUE`), D21 (the FTE
+guard ran on the base cohort, where calibration makes it pass *by
+construction*), D29 (ten optional bound columns outside a hardcoded scope), D30
+(`supply_observed_share` in neither the required list nor a pair), D31 (a
+message naming a cause it could not support), D32 (`any(logical(0))` is FALSE,
+so a validator was satisfied by absence), D3/D4, D12, D33.
+
+**A value outside its range, accepted (8).** Negative provider counts giving a
+top-k share of 1.2 and a Lorenz curve to −1 (D7); sum-to-one validators with no
+non-negativity check emitting −50 FTE (D8); negative prevalence from an
+unguarded remission (D9); −1,500,000 demand cases (D11); care-seeking and
+referral fractions above 1 (D12/D13); negative E2SFCA demand weights (D14/D16).
+
+**Silent recycling and index arithmetic (5).** D1 (nine sites where `rep_len`
+paired one clinician's covariate with another), D10/D26 (`2:n` and
+`seq(a, b-1)` counting *down*), D20 (a gapped horizon reporting one year of
+dynamics as five), D25.
+
+**Global state mutated as a side effect (3).** D18 (a malformed
+`MICROSIM_SEED` silently substituting a different seed), D22 (eight functions
+reseeding the session; one unconditionally to 42), D23 (the established
+save/restore idiom could not restore an *absent* stream).
+
+**A port that kept the shape and dropped the guard (5).** D6 from `cliff`;
+D14–D17 from `twostep` — four guards the canonical source carries.
+
+**Two of one thing (2).** D24 (a constant with a private copy, three sites),
+D27 (`ssot_safe_divide` used in one place and not in two others computing the
+same quantity).
+
+## 3. What the tests are worth
+
+After cycle 22, every fix was **reverted individually in an isolated worktree**
+and its test re-run. Presence is not evidence; the question is whether anything
+would catch a removal.
+
+> **31 fixes · 31 mutations applied · 30 killed · 1 survived.**
+
+The survivor was **D12** — `compute_brfss_demand_estimand`'s range guard, which
+could be deleted with **zero failures across five files**. Cycle 06 fixed three
+call sites and tested two. Now pinned and re-mutated: killed.
+
+Kill counts ran 1–33 assertions. The narrowest (D3, D8, D10, D15, D18) are
+pinned by a single expectation each and have the least margin.
+
+Cycle 23 then turned the same method on **sixteen guards this ledger did not
+write**: 14 killed, **2 survived** — one of them
+`weighted_interval_score()`'s length guard, *the precedent cycle 02 cited* when
+generalising the recycling rule. The precedent itself was untested.
+
+## 4. Corrections I made to my own work
+
+Recorded because they bear on how much to trust the rest.
+
+* **Cycle 10** — I reported the FTE/headcount failure as a model defect. It was
+  a **wrong test**: `calibrate_hours_intercept()` documents that only the base
+  year tracks headcount and that all later movement is composition. Corrected
+  in both places the over-strong claim appeared, including my own cycle-01 test.
+* **Cycle 12** — I claimed six functions lacked the RNG save/restore idiom. Two
+  had it, in a weaker form. Annotated in place.
+* **Cycle 19** — I named `py` as an unguarded denominator. It is guarded on both
+  sides; the unvalidated quantity was `ev`.
+* **Cycles 8, 15, 24** — three of my own fixes were incomplete or over-broad and
+  the new tests caught them before they landed.
+* **Cycle 15** — the mix rotation had drifted since then; corrected at cycle 18.
+* **Cycles 6, 11, 17** — fixture-shape slips of mine (a helper that does not
+  exist, a wrong argument name, `year = 23` for `2023L`). Cycle 17's produced
+  **6 of 10 tests skipping**, which is a cycle proving nothing; fixed rather
+  than accepted.
+
+## 5. Deliberately not fixed
+
+* **`care_seeking_multipliers()` at `base = 0`** returns an infinite multiplier
+  flagged as *identified*. Left visibly `Inf`: inventing a finite value would
+  replace a loud wrong answer with a quiet one, and the state is unreachable
+  from the fitted model.
+* **`left_country`** is set by the migration matrix and read by nothing, so an
+  emigrant leaves every state total while remaining in the national one. Which
+  total is correct is a **modelling decision** — an emigrant may legitimately
+  stay in a national certification count, which is what the observed series
+  measures. A test pins the discrepancy as exactly `sum(left_country)`.
+* **`percent_error` over an observed contract count** and **`ev/py` over
+  artifact person-years** — inputs to their module rather than quantities it
+  computes.
+* **60% of `stop()` messages do not name the value they rejected** (167 of 422
+  do). A documentation-quality finding at scale, not a defect, and not
+  something to fix blind in one cycle.
+
+## 6. What this work does not establish
+
+* **Nothing here validates the science.** Every defect fixed was an
+  implementation failure — a guard that did not fire, a range unchecked, an
+  index counting down. The estimand judgements are recorded as decisions, not
+  verified as correct.
+* **Coverage is not uniform.** The ten named priorities got between one and four
+  cycles each. Scenario propagation had one until cycle 24; RNG state had four.
+* **Mutation testing proves a test notices *a* revert**, not that it notices
+  every way a fix could regress.
+* **The three pre-existing failures remain.** Two are environmental
+  (`~/isochrones` state); one is an `access_ascertainment` register whose paths
+  do not exist. None was in scope.
