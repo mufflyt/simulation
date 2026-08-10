@@ -292,3 +292,68 @@ both a 0% and a 25% indirect share.
 were per-period rates (`n_retired` is cumulative and only its `diff()` is a
 departure count) — look for any place a running total is compared with, divided
 by, or summed alongside a flow.
+
+---
+
+## Cycle 05 — 2026-08-09
+
+**Mix:** 3 BVA · 4 semantic · 3 adversarial → `tests/testthat/test-adversarial-cycle05.R`
+
+**Targets and why.** Discharged the class cycle 04 carried forward (cumulative
+counters read as per-period rates) on the one function that takes a stock and a
+flow as separate arguments, then the aging recurrence and forecast probabilities.
+
+| # | cat | target | assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `prevalence_from_incidence` | one-age and zero-age grids |
+| 2 | BVA | `prevalence_from_incidence` | every argument closed on [0, 1] |
+| 3 | BVA | `forecast_probabilities` | interval mass open at 0 and 1; exceedance is strict, so ties belong to neither tail |
+| 4 | semantic | the DisMod recurrence | geometric decay with no onset; non-decreasing with no remission; the full-remission fixed point p\* = i/(1+i) |
+| 5 | semantic | `prevalence_from_onset` | the alias is the same object, and inherits the guards |
+| 6 | semantic | `forecast_probabilities` | exceedance monotone in the threshold; `n` counts what was summarised, `n_na` what was dropped |
+| 7 | semantic | `forecast_probabilities` | the interval brackets the median and widens with its mass |
+| 8 | adversarial | `entrant_regime_rolling_validation` | a cumulative stock and an annual flow are not interchangeable |
+| 9 | adversarial | `entrant_regime_rolling_validation` | a duplicated year is skipped, not recycled into the quantiles |
+| 10 | adversarial | `prevalence_from_incidence` | no admissible input escapes [0, 1] (fuzzed over the corner of the space) |
+
+### Defects found and fixed — 2, in one function
+
+**D9 · negative prevalence.** `prevalence_from_incidence()` validated nothing.
+The recurrence `p[i] = p[i-1](1-r) + (1-p[i-1])i[i-1]` has no restoring force,
+so a remission above 1 drives prevalence **negative** — measured
+`0.40 → -0.20 → 0.10 → -0.05` — and an incidence above 1 drives it past 1
+(`1.5`, `1.125`). Every argument is a probability and none was checked. A
+negative prevalence becomes a negative case count in every downstream demand
+total. **This is the third module with the same class:** cycle 03 found it as
+negative provider counts, cycle 04 as sum-to-one validators without a range
+check. *Fix:* all three arguments checked finite and in [0, 1], refused rather
+than clamped — clamping would hide a mis-specified remission behind a
+plausible-looking curve.
+
+**D10 · the descending loop.** `for (i in 2:length(incidence))` counts **down**
+at length 1, so a single-age grid ran the body at `i = 2` (growing `p` to
+length 2), then at `i = 1` where `p[0]` is `numeric(0)`, and died with R's
+"replacement has length zero". A legitimate degenerate input crashing on an
+index, wearing the costume of an input error. *Fix:* `seq_len(n)[-1]`, plus an
+explicit `numeric(0)` return at length 0. Swept the class: this was the **only**
+`2:length()` / `1:length()` construction in `R/`.
+
+**Wrong test, corrected in the test.** I asserted that full remission makes
+prevalence equal last year's incidence. It does not — only the `(1 - P)`
+susceptible fraction can acquire, so one step of history survives. The
+expectation now pins the exact recurrence and its fixed point `p* = i/(1+i)`,
+which is a stronger claim than the one I got wrong.
+
+**Result:** 92 assertions, all passing. **2 defects found, 2 fixed.**
+
+**Related files rerun:** `test-calibrate-prevalence-to-incidence.R` (15),
+`test-forecast-probabilities.R` (18), `test-forecast-scorecard.R` (20),
+`test-entrant-regime.R` (69), `test-entrant-precedence.R` (17),
+`test-entrant-trajectory.R` (33), the four `test-demand-lifecourse*` files (48),
+`test-adversarial-cycle04.R` (59) — 279 assertions, 0 problems.
+
+**Bug class to sweep in a later cycle:** the range-check class has now appeared
+in three separate modules (counts, shares, probabilities). Next sweep should be
+systematic rather than opportunistic — enumerate every exported argument
+documented as a probability, share, rate or count and check each has a range
+guard, instead of waiting to trip over the next one.
