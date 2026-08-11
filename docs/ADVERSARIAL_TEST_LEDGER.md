@@ -2545,3 +2545,49 @@ picked up by a rebase.
 The remaining failure is unchanged and environmental:
 `test-canonical-overlap.R` — five registry rows stale because the sibling
 `~/isochrones` clone moved underneath them.
+
+---
+
+## Measurement development: provider-year activity (post-hardening, 2026-08-10)
+
+Not a hardening cycle. No test was written and no model number was changed. This
+entry records a MEASUREMENT study, its artifacts, and two defects found in my own
+first-pass measurement code.
+
+### Sources
+Inventory and exclusion reasons: `inst/extdata/provider_year/PROVENANCE.md`.
+Used: URPS roster (1,092 NPI); Medicare Part B by Provider & Service 2013–2024
+(160,891 roster HCPCS lines); Open Payments general payments 2015–2023 (62 GB
+scanned, 7,589 roster provider-years); URPS contract series v3.0.0.
+
+Excluded with reason — the two that matter:
+* `credentials.temporal_nppes_*` is **circular**: its `activity_validated` flag
+  carries `activity_source = "Medicare Part B 2023"`. Using it as a second source
+  would count Part B twice. Coverage is also only 436/1,092.
+* Open Payments **2013–2014 carry no NPI**, so D4 is *not estimable* in those
+  years and D3 is a lower bound. Recorded as NA, never as FALSE.
+
+### Two defects in my own measurement code, both found before publication
+* **Drug units summed as services.** `HCPCS_Drug_Ind == "Y"` lines report units,
+  not procedures; J0585 (onabotulinumtoxinA) is per-unit at ~100–200 units per
+  bladder injection. Raw `Tot_Srvcs` made "bladder botox" 41.7% of all 2023
+  services at a median 2,017 per provider. Excluding drug lines gives the actual
+  procedure (52287): 356 providers, median 29. Drug lines were 58% of raw
+  services from 0.3% of lines. Only 3 providers' D2 status flipped, so the
+  definitions were robust — the case-mix table was not.
+* **A claimed non-identifiable service that is identifiable.** I documented
+  pessary supplies (A4561/A4562) as DMEPOS and absent. A4562 is present: 4,997
+  services, 161 providers in 2023. Corrected; the surviving caveat is narrower —
+  ongoing pessary *maintenance* is bundled into E&M and remains uncounted.
+
+### Result that changes an existing conclusion
+Scoring the identical forecast (same arms, seeds, draws; `run_backtest()` never
+sees the definitions) against five targets **reorders the supply-model arms**.
+Arm 1, the shipped assumption, is the best arm under D0 and the *worst* under all
+four activity-based definitions. Error sign flips too: under D0 every arm
+under-predicts; under D1–D4 every arm over-predicts. Best-arm selection is
+therefore an artifact of the target definition, not a property of the model.
+
+Coverage remains below nominal everywhere (best: 0.67 under D3, vs 0.95 required).
+**No definition is treated as truth and the production target is unchanged.**
+D3 fits best; that is not evidence D3 is correct, and it was not selected.
