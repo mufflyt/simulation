@@ -199,7 +199,7 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   }
 
   if (!requireNamespace("flexsurv", quietly = TRUE)) {
-    warning("flexsurv not installed. Using Weibull fallback.")
+    warning("flexsurv not installed. Using Weibull fallback.", call. = FALSE)
     return(.weibull_return("hwsm_weibull_analogy_flexsurv_missing"))
   }
 
@@ -217,7 +217,7 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   )[1]
 
   if (is.na(ret_table)) {
-    warning("No retirement table found in cliff DuckDB. Using fallback.")
+    warning("No retirement table found in cliff DuckDB. Using fallback.", call. = FALSE)
     return(list(
       exit_probs = weibull_fallback(),
       source        = "hwsm_weibull_analogy_no_table",
@@ -243,7 +243,7 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   if (nrow(cliff_data) < 30) {
     warning(sprintf(
       "Only %d cliff records. Using fallback.", nrow(cliff_data)
-    ))
+    ), call. = FALSE)
     return(list(
       exit_probs = weibull_fallback(),
       source        = "hwsm_weibull_analogy_insufficient_cliff",

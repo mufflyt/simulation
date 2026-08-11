@@ -161,7 +161,8 @@ load_meps_care_seeking_multipliers <- function(year    = 2022L,
   if (!file.exists(inc_rds) || !file.exists(ins_rds)) {
     stop(
       "MEPS ", year, " multiplier RDS not found.\n",
-      "  Run: Rscript scripts/data_acquisition/05_download_meps_2022.R"
+      "  Run: Rscript scripts/data_acquisition/05_download_meps_2022.R",
+      call. = FALSE
     )
   }
 
@@ -268,7 +269,8 @@ load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
   if (!file.exists(brfss_rds)) {
     stop(
       "BRFSS women RDS not found: ", brfss_rds,
-      "\nRun: Rscript scripts/data_acquisition/01_download_brfss.R"
+      "\nRun: Rscript scripts/data_acquisition/01_download_brfss.R",
+      call. = FALSE
     )
   }
   raw <- readRDS(brfss_rds)
@@ -611,7 +613,7 @@ project_urps_demand <- function(cells,
   .assert_in_range(care_seeking_rate, "care_seeking_rate", fn = "project_urps_demand")
   .assert_in_range(referral_rate, "referral_rate", fn = "project_urps_demand")
   total_wt <- sum(cells$pop_weight, na.rm = TRUE)
-  if (total_wt <= 0) stop("population cell table has zero total weight")
+  if (total_wt <= 0) stop("population cell table has zero total weight", call. = FALSE)
 
   cells$pop_women <- cells$pop_weight / total_wt * us_female_pop
 
@@ -845,7 +847,8 @@ load_mcbs_women65 <- function(mcbs_rds = NULL, verbose = TRUE) {
   if (!file.exists(mcbs_rds)) {
     stop(
       "MCBS women 65+ RDS not found: ", mcbs_rds,
-      "\nRun: Rscript scripts/data_acquisition/03_download_mcbs.R"
+      "\nRun: Rscript scripts/data_acquisition/03_download_mcbs.R",
+      call. = FALSE
     )
   }
   raw <- readRDS(mcbs_rds)

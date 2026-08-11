@@ -136,7 +136,8 @@ load_namcs_2019 <- function(path = "data-raw/namcs/namcs2019_clean.rds") {
   if (!file.exists(path)) {
     stop(
       "NAMCS 2019 cleaned file not found at '", path, "'.\n",
-      "Run data-raw/namcs/01-namcs_acquire.R to create it."
+      "Run data-raw/namcs/01-namcs_acquire.R to create it.",
+      call. = FALSE
     )
   }
   readRDS(path)
