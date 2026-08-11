@@ -2390,3 +2390,96 @@ wants the US-practising one follows from what the gap compares. Both are
 readable from the code and the documentation, but neither is externally
 validated, and the emigration rate itself (`out_of_country_rate = 0.003`)
 remains an assumption.
+
+---
+
+## Follow-up — diagnostic specificity (post-cycle-24)
+
+Cycle 23 measured this class and deliberately deferred acting on it: *"a
+documentation-quality finding at scale, not a defect, and not something to fix
+blind in one cycle."* This is that work, done against explicit criteria. It is
+**not** a re-run of cycle 23 — cycles 23 and 24 are complete and pushed.
+
+Cycle 22 fixed the opposite failure: a guard whose message asserted a **cause**
+it could not support. This is the mirror — a guard right about the rejection
+that leaves the reader without the offending value.
+
+### The sweep
+
+Every `stop()` in `R/`, with each message **resolved back through its
+`msg <- sprintf(...)` assembly** rather than read off the `stop()` line.
+
+| criterion | count |
+|---|---|
+| guards examined | **425** across 84 files |
+| (1) says what failed | 425 (100%) |
+| (2) names the offending value | **413 (97%)** |
+| (3) distinguishes NA / NaN / Inf | 46 (11%) |
+| (4) offers a concrete correction | 153 (36%) |
+| **fails both (2) and (4)** | **8** |
+
+**The first scan was wrong and would have caused ~100 needless edits.** It read
+only the `stop(` line, missing messages assembled above it, and reported 47% on
+criterion (2) with a 110-guard shortlist. Sampling six of that shortlist found
+five already excellent — `assert_scenarios_registered()` names the unknown ids
+*and* the registered set; `blend_nhanes_ui_prevalence()` names the missing path
+*and* the script that produces it. Rebuilding the scanner moved (2) from 47% to
+**97%**. A measurement that looks precise and measures the wrong text is the
+same class this ledger has been finding all along, this time in my own tooling.
+
+**The 11% on criterion (3) is not a deficiency.** Most guards do not KNOW which
+of NA / NaN / Inf they were handed, and cycle 22's rule forbids claiming a cause
+the guard has not established. The guards that DO know — the projection
+validator's completeness and escape pair — already distinguish them.
+
+### Defect found and fixed — 1, in two places
+
+**D34 · a guard that computes the evidence and reports none of it.** Both
+gap-identity guards in `validate_urps_gap_projection()` compute `residual` and
+emitted a fixed string:
+
+```
+gap_fte does not equal supply_clinical_fte - demand_clinical_fte (tolerance 0.01 FTE).
+```
+
+On a 26-year, multi-scenario frame that says the arithmetic is wrong somewhere
+and nothing more. The guard has the offending row, its year, its scenario and
+the magnitude in hand.
+
+**And its sibling already did it right.** `validation_report()` checks the same
+identity and has always reported `"max residual %.4f FTE"` — one rule, two
+implementations, differing in diagnostic quality. Cycle 13's class, in the
+message rather than the tolerance.
+
+*Fix:* one shared `.gap_identity_message()` used by both guards:
+
+```
+gap_fte does not equal supply_clinical_fte - demand_clinical_fte: 1 of 6 row(s)
+breach the 0.01 tolerance, worst at year 2028, scenario 'baseline' by 3.7000.
+```
+
+It states **what** unconditionally and locates it. It does **not** say why — a
+residual can come from rounding, a partial join, or a column assembled from the
+wrong scenario, and this guard cannot tell which. Test 5 asserts the message
+contains none of "usual cause", "demand series", "rounding", "because",
+"probably", "likely", so a later helpful-sounding addition fails.
+
+### Deliberately left unchanged — 6 of the 8
+
+| guard | why |
+|---|---|
+| `assert_mufflyaccess_contract` | `stop(b$detail)` — message delegated to `mufflyaccess_build()`, which builds it |
+| `assert_baseline_gap_estimated` | scanner artefact: a `refuse(msg)` closure whose messages are built at each call site |
+| `psa_workforce_gap` | policy statement about a missing package; there is no offending value |
+| `legacy_dir` | already names where it looked and why `inst/legacy` is excluded |
+| `project_urps_demand` zero weight | the diagnosis IS that the total is zero; nothing further is knowable |
+| `validate_urps_gap_projection` "undeclared" | already actionable — it names `cohort_basis = cohort_provenance(agents)$source` |
+
+No model assumption, calibration, productivity, case-mix, demand or workforce
+quantity was touched.
+
+**Tests:** `tests/testthat/test-diagnostic-specificity.R` — 10 tests, 45
+assertions, 0 skips. Including cycle 22's two properties re-asserted, because
+this edited one of the six guards: **every guard reachable by an input that
+trips it alone**, and **iterative correction still converging** in four distinct
+non-repeating diagnoses.
