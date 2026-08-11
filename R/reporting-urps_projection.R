@@ -89,6 +89,30 @@ GAP_PROJECTION_COLUMN_RANGES <- list(
 # tolerance is how one of them starts accepting what the other rejects.
 GAP_IDENTITY_TOLERANCE_FTE <- 0.01
 
+# Diagnostic for the gap-identity guards. States WHAT failed unconditionally,
+# and locates it -- worst row, its year and scenario, the residual, and how many
+# rows breach -- because the guard has all of that in hand.
+#
+# It does NOT say why. A residual can come from a rounding difference, a partial
+# join, or a column assembled from the wrong scenario, and this guard cannot tell
+# which. Cycle 22's rule: a message may state what is wrong unconditionally, and
+# may state why only when the guard has established the cause.
+.gap_identity_message <- function(col, expr, residual, x) {
+  bad <- which(is.finite(residual) & residual > GAP_IDENTITY_TOLERANCE_FTE)
+  worst <- bad[which.max(residual[bad])]
+  where <- character(0)
+  if ("year" %in% names(x)) where <- c(where, sprintf("year %s", format(x$year[worst])))
+  if ("scenario_id" %in% names(x)) where <- c(where, sprintf("scenario '%s'",
+                                                             x$scenario_id[worst]))
+  sprintf(paste("%s does not equal %s: %d of %d row(s) breach the %s tolerance,",
+                "worst %s by %.4f%s."),
+          col, expr, length(bad), nrow(x), format(GAP_IDENTITY_TOLERANCE_FTE),
+          if (length(where)) paste("at", paste(where, collapse = ", ")) else
+            sprintf("at row %d", worst),
+          residual[worst],
+          if ("gap_pct" %in% names(x)) "" else "")
+}
+
 #' Validate a gap projection data frame against the extended contract
 #'
 #' @param x Data frame produced by [as_urps_gap_projection()].
@@ -240,7 +264,13 @@ validate_urps_gap_projection <- function(x,
   if (all(c("supply_clinical_fte", "demand_clinical_fte", "gap_fte") %in% names(x))) {
     residual <- abs(x$gap_fte - (x$supply_clinical_fte - x$demand_clinical_fte))
     if (any(residual > GAP_IDENTITY_TOLERANCE_FTE, na.rm = TRUE)) {
-      msg <- "gap_fte does not equal supply_clinical_fte - demand_clinical_fte (tolerance 0.01 FTE)."
+      # The guard COMPUTES the residual and used to report none of it, so a
+      # 26-year, 5-scenario frame produced "the arithmetic is wrong" and nothing
+      # locating it. validation_report() checks the same identity and has always
+      # reported "max residual %.4f FTE" -- one rule, two implementations, and
+      # only one of them told a reader where to look.
+      msg <- .gap_identity_message("gap_fte", "supply_clinical_fte - demand_clinical_fte",
+                                   residual, x)
       if (identical(mode, "strict")) stop(msg, call. = FALSE)
       .msg_warn(msg)
     }
@@ -248,7 +278,8 @@ validate_urps_gap_projection <- function(x,
   if (all(c("supply_headcount", "demand_headcount", "gap_headcount") %in% names(x))) {
     residual_hc <- abs(x$gap_headcount - (x$supply_headcount - x$demand_headcount))
     if (any(residual_hc > GAP_IDENTITY_TOLERANCE_FTE, na.rm = TRUE)) {
-      msg <- "gap_headcount does not equal supply_headcount - demand_headcount (tolerance 0.01)."
+      msg <- .gap_identity_message("gap_headcount", "supply_headcount - demand_headcount",
+                                   residual_hc, x)
       if (identical(mode, "strict")) stop(msg, call. = FALSE)
       .msg_warn(msg)
     }
