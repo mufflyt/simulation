@@ -2483,3 +2483,65 @@ assertions, 0 skips. Including cycle 22's two properties re-asserted, because
 this edited one of the six guards: **every guard reachable by an input that
 trips it alone**, and **iterative correction still converging** in four distinct
 non-repeating diagnoses.
+
+---
+
+# CROSS-MODEL INVARIANT AUDIT (post-24)
+
+Not a cycle. The 24 cycles worked module by module; this asks whether the model
+hangs together **across** module boundaries — the properties no single module
+owns, and which therefore no single cycle tested.
+
+`tests/testthat/test-cross-model-invariants.R` — 10 invariants, 73 assertions,
+0 skips.
+
+| # | invariant | how it is made falsifiable |
+|---|---|---|
+| 1 | population accounting | unique ids; cohort = base + every entrant; nobody active before entry or after retirement, checked in three years |
+| 2 | annual timing | mean age rises exactly 1 per panel row; elapsed label time == elapsed cohort time; hazards are annual probabilities in [0,1] |
+| 3 | **board-certified attendings only** | age **at entry** equals `MICROSIM_ENTRY_AGE`; pipeline states disjoint from active states; an under-age/unentered clinician contributes nothing until their entry year |
+| 4 | both sexes modelled | an all-male and an all-female cohort give equal headcount and **different** FTE; entrants are a mix (0.6 < female share < 0.95) |
+| 5 | stock-flow identity | `Δstock == entrants − exits` across four lever configurations, with retirement absorbing |
+| 6 | headcount / FTE separation | headcount integral, FTE not; an hours lever moves FTE and leaves headcount identical |
+| 7 | demand/supply identity | `gap_fte` exact; a frame contaminated from another scenario is refused **and located** |
+| 8 | scenario isolation | a three-scenario grid run forwards and backwards gives identical answers; solo matches in-company |
+| 9 | reproducibility | same seed identical, different seed differs, and a seeded helper in between cannot disturb it |
+| 10 | boundary years | one-year horizon, first/last row, gapped horizon refused, and the three zero-length windows that previously reversed |
+
+## The audit found a defect in its own test — INV-3, the one that matters most
+
+All ten passed on the first run, which is a reason for suspicion rather than
+satisfaction. Mutation-testing seven of them by breaking the invariant in `R/`:
+
+> **6 killed. INV-3 SURVIVED.**
+
+Injecting entrants at **age 28** — a fellow's age, pre-certification — did not
+fail the test that claimed to enforce *"only board-certified attendings are in
+the practising supply."*
+
+The reason is precise: the test asserted via `career_state_of()`, which maps
+**age bands**. `career_state_of(28)` returns `early_career`; the pipeline states
+`resident`/`fellow` are reachable only through `entered = FALSE`. A fellow-aged
+entrant therefore looked like a young attending, and the invariant was enforced
+by nothing.
+
+*Corrected* to assert the **age at entry** directly, which is the quantity
+certification fixes. Re-mutated: **KILLED (4 failing).**
+
+This is the audit's most useful result. The invariant the brief singled out as
+scientifically load-bearing was the one whose test was vacuous, and only
+mutation exposed it.
+
+## Suite status — and a correction to the reported baseline
+
+**4,921 passed · 1 failed · 0 errors · 31 skipped · 140 files.**
+
+The brief stated three known pre-existing failures. **There are now one.** Not
+because anything was hidden or skipped — `test-practice-survey.R` now passes
+**70/70 with 0 skips**. Both `access_ascertainment` failures were fixed on main
+by `f384d64` ("fix(ci): restore main's CI"), authored outside this session and
+picked up by a rebase.
+
+The remaining failure is unchanged and environmental:
+`test-canonical-overlap.R` — five registry rows stale because the sibling
+`~/isochrones` clone moved underneath them.
