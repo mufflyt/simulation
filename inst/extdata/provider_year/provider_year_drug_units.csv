@@ -1,0 +1,601 @@
+"year","hcpcs","hcpcs_desc","n_providers","total_units"
+2013,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",26,103320
+2013,"J1644","Injection, heparin sodium, per 1000 units",25,75129
+2013,"J0585","Injection, onabotulinumtoxina, 1 unit",18,63054
+2013,"J0881","Injection, darbepoetin alfa, 1 microgram (non-esrd use)",1,13040
+2013,"J9155","Injection, degarelix, 1 mg",2,12800
+2013,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",3,6857
+2013,"J0897","Injection, denosumab, 1 mg",2,6240
+2013,"J1100","Injection, dexamethasone sodium phosphate, 1mg",3,6122
+2013,"Q9965","Low osmolar contrast material, 100-199 mg/ml iodine concentration, per ml",2,5700
+2013,"J1580","Injection, garamycin, gentamicin, up to 80 mg",30,3756.5
+2013,"J3301","Injection, triamcinolone  acetonide, not otherwise specified, 10 mg",11,3528
+2013,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",4,3288
+2013,"J9217","Leuprolide acetate (for depot suspension), 7. 5 mg",17,3229
+2013,"Q9966","Low osmolar contrast material, 200-299 mg/ml iodine concentration, per ml",1,2200
+2013,"J1561","Injection, immune globulin, (gamunex-c/gammaked), non-lyophilized (e. g. liquid), 500 mg",1,1630
+2013,"J0696","Injection, ceftriaxone sodium, per 250 mg",10,1206
+2013,"J1750","Injection, iron dextran, 50 mg",1,1204
+2013,"J3480","Injection, potassium chloride, per 2 meq",2,1085
+2013,"J3260","Injection, tobramycin sulfate, up to 80 mg",1,920
+2013,"J2469","Injection, palonosetron hcl, 25 mcg",1,880
+2013,"J2405","Injection, ondansetron hydrochloride, per 1 mg",1,568
+2013,"J1070","Injection, testosterone cypionate, up to 100 mg",3,528
+2013,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",3,479
+2013,"J9031","Bcg (intravesical) per instillation",13,433
+2013,"J3420","Injection, vitamin b-12 cyanocobalamin, up  to 1000 mcg",3,373
+2013,"J9045","Injection, carboplatin, 50 mg",1,370
+2013,"J7030","Infusion, normal saline solution , 1000 cc",5,348
+2013,"J1080","Injection, testosterone cypionate, 1 cc, 200 mg",8,256
+2013,"J3315","Injection, triptorelin pamoate, 3. 75 mg",3,251
+2013,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",2,210
+2013,"Q2037","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (fluvirin)",2,190
+2013,"J2785","Injection, regadenoson, 0. 1 mg",1,184
+2013,"J1885","Injection, ketorolac tromethamine, per 15 mg",3,177
+2013,"J0690","Injection, cefazolin sodium, 500 mg",4,166
+2013,"90656","Vaccine for influenza injection into muscle, patient 3 years and older",3,142
+2013,"J1200","Injection, diphenhydramine hcl, up to 50 mg",1,125
+2013,"Q2038","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (fluzone)",2,120
+2013,"J7040","Infusion, normal saline solution, sterile (500 ml=1 unit)",1,116
+2013,"J2250","Injection, midazolam hydrochloride, per 1 mg",2,96
+2013,"J2780","Injection, ranitidine hydrochloride, 25 mg",1,94
+2013,"J0152","Injection, adenosine for diagnostic use, 30 mg (not to be used to report any adenosine phosphate compounds; instead use a9270)",1,85
+2013,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",2,77
+2013,"J3010","Injection, fentanyl citrate, 0. 1 mg",2,71
+2013,"J1020","Injection, methylprednisolone acetate, 20 mg",1,65
+2013,"Q2051","Zoldedronic acid 1mg",1,65
+2013,"90732","Vaccine for pneumococcal polysaccharide for injection into muscle, patient 2 years or older",4,63
+2013,"Q2035","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (afluria)",2,62
+2013,"Q9961","High osmolar contrast material, 250-299 mg/ml iodine concentration, per ml",1,60
+2013,"J1030","Injection, methylprednisolone acetate, 40 mg",1,55
+2013,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",1,53
+2013,"J2505","Injection, pegfilgrastim, 6 mg",1,36
+2013,"J2920","Injection, methylprednisolone sodium succinate, up to 40 mg",1,26
+2013,"J1040","Injection, methylprednisolone acetate, 80 mg",1,12
+2014,"J0585","Injection, onabotulinumtoxina, 1 unit",38,125985
+2014,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",25,123600
+2014,"J1644","Injection, heparin sodium, per 1000 units",24,93930
+2014,"Q0138","Injection, ferumoxytol, for treatment of iron deficiency anemia, 1 mg (non-esrd use)",1,34170
+2014,"J9155","Injection, degarelix, 1 mg",2,11920
+2014,"J0897","Injection, denosumab, 1 mg",4,10500
+2014,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",2,10020
+2014,"J1050","Injection, medroxyprogesterone acetate, 1 mg",1,6600
+2014,"J1580","Injection, garamycin, gentamicin, up to 80 mg",32,5090
+2014,"J1100","Injection, dexamethasone sodium phosphate, 1mg",4,4993
+2014,"J0278","Injection, amikacin sulfate, 100 mg",1,4561
+2014,"Q9965","Low osmolar contrast material, 100-199 mg/ml iodine concentration, per ml",2,3900
+2014,"J3301","Injection, triamcinolone  acetonide, not otherwise specified, 10 mg",12,3632
+2014,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",5,3234
+2014,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",17,3069
+2014,"J0151","Injection, adenosine for diagnostic use, 1 mg (not to be used to report any adenosine phosphate compounds, instead use a9270)",1,2168.4
+2014,"J0696","Injection, ceftriaxone sodium, per 250 mg",15,1993
+2014,"J2405","Injection, ondansetron hydrochloride, per 1 mg",2,1297
+2014,"J3260","Injection, tobramycin sulfate, up to 80 mg",3,1221
+2014,"Q9960","High osmolar contrast material, 200-249 mg/ml iodine concentration, per ml",1,1200
+2014,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",3,1170
+2014,"J3480","Injection, potassium chloride, per 2 meq",1,940
+2014,"J3370","Injection, vancomycin hcl, 500 mg",1,916
+2014,"J2469","Injection, palonosetron hcl, 25 mcg",1,800
+2014,"J9045","Injection, carboplatin, 50 mg",2,535
+2014,"J2785","Injection, regadenoson, 0.1 mg",1,408
+2014,"J9031","Bcg (intravesical) per instillation",10,403
+2014,"J9280","Injection, mitomycin, 5 mg",1,364
+2014,"J7030","Infusion, normal saline solution , 1000 cc",4,319
+2014,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",3,296
+2014,"Q2037","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (fluvirin)",4,291
+2014,"J1080","Injection, testosterone cypionate, 1 cc, 200 mg",6,290
+2014,"J3420","Injection, vitamin b-12 cyanocobalamin, up  to 1000 mcg",3,219
+2014,"J3489","Injection, zoledronic acid, 1 mg",2,169
+2014,"J7050","Infusion, normal saline solution , 250 cc",2,157
+2014,"J1070","Injection, testosterone cypionate, up to 100 mg",2,153
+2014,"J1200","Injection, diphenhydramine hcl, up to 50 mg",2,138
+2014,"J7040","Infusion, normal saline solution, sterile (500 ml=1 unit)",1,133
+2014,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",2,132
+2014,"J1335","Injection, ertapenem sodium, 500 mg",1,100
+2014,"Q9961","High osmolar contrast material, 250-299 mg/ml iodine concentration, per ml",1,92
+2014,"J0690","Injection, cefazolin sodium, 500 mg",2,82
+2014,"J2250","Injection, midazolam hydrochloride, per 1 mg",2,80
+2014,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",1,79
+2014,"J0692","Injection, cefepime hydrochloride, 500 mg",1,67
+2014,"J3010","Injection, fentanyl citrate, 0.1 mg",2,66
+2014,"J1030","Injection, methylprednisolone acetate, 40 mg",2,58
+2014,"J1885","Injection, ketorolac tromethamine, per 15 mg",1,58
+2014,"90656","Vaccine for influenza for injection into muscle, patient 3 years and older",3,57
+2014,"Q2035","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (afluria)",1,51
+2014,"90732","Vaccine for pneumococcal polysaccharide for injection beneath the skin or into muscle, patient 2 years or older",3,48
+2014,"J3315","Injection, triptorelin pamoate, 3.75 mg",1,46
+2014,"J1020","Injection, methylprednisolone acetate, 20 mg",1,44
+2014,"Q2038","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (fluzone)",2,40
+2014,"J1380","Injection, estradiol valerate, up to 10 mg",1,39
+2014,"J9035","Injection, bevacizumab, 10 mg",1,36
+2014,"J2505","Injection, pegfilgrastim, 6 mg",1,32
+2014,"90662","Vaccine for influenza for injection into muscle",1,17
+2014,"J3360","Injection, diazepam, up to 5 mg",1,16
+2015,"J0585","Injection, onabotulinumtoxina, 1 unit",57,203890
+2015,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",26,135849
+2015,"J1644","Injection, heparin sodium, per 1000 units",25,119224
+2015,"J1071","Injection, testosterone cypionate, 1mg",9,74018
+2015,"Q0138","Injection, ferumoxytol, for treatment of iron deficiency anemia, 1 mg (non-esrd use)",1,45390
+2015,"J0897","Injection, denosumab, 1 mg",9,26221
+2015,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",3,12561
+2015,"J1050","Injection, medroxyprogesterone acetate, 1 mg",3,12151
+2015,"J9267","Injection, paclitaxel, 1 mg",1,12066
+2015,"J9155","Injection, degarelix, 1 mg",3,11760
+2015,"J0881","Injection, darbepoetin alfa, 1 microgram (non-esrd use)",1,10500
+2015,"Q9965","Low osmolar contrast material, 100-199 mg/ml iodine concentration, per ml",3,7250
+2015,"J1580","Injection, garamycin, gentamicin, up to 80 mg",34,5628
+2015,"J0278","Injection, amikacin sulfate, 100 mg",1,5030
+2015,"J3301","Injection, triamcinolone  acetonide, not otherwise specified, 10 mg",14,4120
+2015,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",19,3445
+2015,"J1100","Injection, dexamethasone sodium phosphate, 1mg",2,3107
+2015,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",5,2917
+2015,"J9041","Injection, bortezomib, 0.1 mg",1,2038
+2015,"J3370","Injection, vancomycin hcl, 500 mg",1,2006
+2015,"J0696","Injection, ceftriaxone sodium, per 250 mg",14,1999
+2015,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",4,1682
+2015,"J1750","Injection, iron dextran, 50 mg",1,1278
+2015,"J3260","Injection, tobramycin sulfate, up to 80 mg",4,1182
+2015,"J2469","Injection, palonosetron hcl, 25 mcg",1,1110
+2015,"J0885","Injection, epoetin alfa, (for non-esrd use), 1000 units",1,980
+2015,"J2405","Injection, ondansetron hydrochloride, per 1 mg",1,948
+2015,"J2785","Injection, regadenoson, 0.1 mg",2,688
+2015,"J9045","Injection, carboplatin, 50 mg",1,499
+2015,"J9201","Injection, gemcitabine hydrochloride, 200 mg",1,375
+2015,"J9031","Bcg (intravesical) per instillation",10,370
+2015,"J2704","Injection, propofol, 10 mg",1,364
+2015,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",3,342
+2015,"J3489","Injection, zoledronic acid, 1 mg",2,335
+2015,"Q2037","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (fluvirin)",4,314
+2015,"J3480","Injection, potassium chloride, per 2 meq",1,300
+2015,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",2,292
+2015,"J7030","Infusion, normal saline solution , 1000 cc",3,243
+2015,"J3420","Injection, vitamin b-12 cyanocobalamin, up  to 1000 mcg",2,224
+2015,"J1200","Injection, diphenhydramine hcl, up to 50 mg",1,215
+2015,"J1245","Injection, dipyridamole, per 10 mg",1,197
+2015,"J3010","Injection, fentanyl citrate, 0.1 mg",3,175.5
+2015,"J3315","Injection, triptorelin pamoate, 3.75 mg",2,156
+2015,"J7040","Infusion, normal saline solution, sterile (500 ml=1 unit)",2,147
+2015,"J7050","Infusion, normal saline solution , 250 cc",1,136
+2015,"Q9961","High osmolar contrast material, 250-299 mg/ml iodine concentration, per ml",1,119
+2015,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",1,97
+2015,"J0690","Injection, cefazolin sodium, 500 mg",3,94
+2015,"J1885","Injection, ketorolac tromethamine, per 15 mg",2,93
+2015,"J1335","Injection, ertapenem sodium, 500 mg",1,74
+2015,"J2250","Injection, midazolam hydrochloride, per 1 mg",2,67
+2015,"J1030","Injection, methylprednisolone acetate, 40 mg",1,53
+2015,"J0692","Injection, cefepime hydrochloride, 500 mg",1,50
+2015,"J1040","Injection, methylprednisolone acetate, 80 mg",1,41
+2015,"J1020","Injection, methylprednisolone acetate, 20 mg",1,40
+2015,"Q2038","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (fluzone)",2,36
+2015,"90662","Vaccine for influenza for injection into muscle",1,35
+2015,"J2505","Injection, pegfilgrastim, 6 mg",1,32
+2015,"90670","Pneumococcal vaccine for injection into muscle",2,31
+2015,"J9035","Injection, bevacizumab, 10 mg",1,30
+2015,"J1940","Injection, furosemide, up to 20 mg",1,29
+2015,"90686","Vaccine for influenza administered into muscle to individuals 3 years of age and older",2,28
+2015,"Q9957","Injection, perflutren lipid microspheres, per ml",1,22
+2015,"90656","Vaccine for influenza for injection into muscle, patient 3 years and older",1,19
+2015,"Q2035","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (afluria)",1,13
+2016,"J0585","Injection, onabotulinumtoxina, 1 unit",80,303137
+2016,"J1644","Injection, heparin sodium, per 1000 units",30,134059
+2016,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",31,131150
+2016,"J1071","Injection, testosterone cypionate, 1 mg",11,130570
+2016,"J1439","Injection, ferric carboxymaltose, 1 mg",1,45750
+2016,"Q0138","Injection, ferumoxytol, for treatment of iron deficiency anemia, 1 mg (non-esrd use)",1,27540
+2016,"J0897","Injection, denosumab, 1 mg",7,25501
+2016,"J0881","Injection, darbepoetin alfa, 1 microgram (non-esrd use)",1,13700
+2016,"J9267","Injection, paclitaxel, 1 mg",1,10560
+2016,"J1050","Injection, medroxyprogesterone acetate, 1 mg",2,9300
+2016,"Q9965","Low osmolar contrast material, 100-199 mg/ml iodine concentration, per ml",3,8400
+2016,"Q9966","Low osmolar contrast material, 200-299 mg/ml iodine concentration, per ml",1,7550
+2016,"J9155","Injection, degarelix, 1 mg",1,5920
+2016,"J1580","Injection, garamycin, gentamicin, up to 80 mg",34,4943
+2016,"J1100","Injection, dexamethasone sodium phosphate, 1 mg",2,4576
+2016,"J0278","Injection, amikacin sulfate, 100 mg",1,4550
+2016,"J3301","Injection, triamcinolone acetonide, not otherwise specified, 10 mg",12,4490
+2016,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",1,3440
+2016,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",23,3315
+2016,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",4,2860
+2016,"J9041","Injection, bortezomib, 0.1 mg",1,2838
+2016,"J1453","Injection, fosaprepitant, 1 mg",1,2404
+2016,"J0696","Injection, ceftriaxone sodium, per 250 mg",19,2254
+2016,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",4,1819
+2016,"J3370","Injection, vancomycin hcl, 500 mg",1,1796
+2016,"J0588","Injection, incobotulinumtoxin a, 1 unit",1,1700
+2016,"J2469","Injection, palonosetron hcl, 25 mcg",1,1450
+2016,"J0885","Injection, epoetin alfa, (for non-esrd use), 1000 units",1,1290
+2016,"J3260","Injection, tobramycin sulfate, up to 80 mg",3,960
+2016,"J2405","Injection, ondansetron hydrochloride, per 1 mg",1,840
+2016,"J9031","Bcg (intravesical) per instillation",17,766
+2016,"J0743","Injection, cilastatin sodium; imipenem, per 250 mg",1,748
+2016,"J9045","Injection, carboplatin, 50 mg",1,618
+2016,"J2785","Injection, regadenoson, 0.1 mg",2,482
+2016,"J9190","Injection, fluorouracil, 500 mg",1,315
+2016,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",2,272
+2016,"J1245","Injection, dipyridamole, per 10 mg",1,268
+2016,"J3420","Injection, vitamin b-12 cyanocobalamin, up  to 1000 mcg",3,263
+2016,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",3,257
+2016,"J3489","Injection, zoledronic acid, 1 mg",1,253
+2016,"J7030","Infusion, normal saline solution , 1000 cc",3,213
+2016,"90656","Vaccine for influenza for injection into muscle, patient 3 years and older",3,185
+2016,"J2250","Injection, midazolam hydrochloride, per 1 mg",4,179
+2016,"J1200","Injection, diphenhydramine hcl, up to 50 mg",1,176
+2016,"J1335","Injection, ertapenem sodium, 500 mg",1,166
+2016,"J3315","Injection, triptorelin pamoate, 3.75 mg",1,138
+2016,"J1885","Injection, ketorolac tromethamine, per 15 mg",2,124
+2016,"J0690","Injection, cefazolin sodium, 500 mg",2,103
+2016,"J2704","Injection, propofol, 10 mg",1,100
+2016,"Q9961","High osmolar contrast material, 250-299 mg/ml iodine concentration, per ml",1,97
+2016,"J7040","Infusion, normal saline solution, sterile (500 ml=1 unit)",1,94
+2016,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",1,93
+2016,"J2780","Injection, ranitidine hydrochloride, 25 mg",1,84
+2016,"Q9957","Injection, perflutren lipid microspheres, per ml",1,74
+2016,"J1380","Injection, estradiol valerate, up to 10 mg",1,72
+2016,"Q2037","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (fluvirin)",3,72
+2016,"J3010","Injection, fentanyl citrate, 0.1 mg",3,71
+2016,"90662","Vaccine for influenza for injection into muscle",2,69
+2016,"J1940","Injection, furosemide, up to 20 mg",2,67
+2016,"J9035","Injection, bevacizumab, 10 mg",1,62
+2016,"J7050","Infusion, normal saline solution , 250 cc",1,54
+2016,"J1030","Injection, methylprednisolone acetate, 40 mg",1,45
+2016,"J1020","Injection, methylprednisolone acetate, 20 mg",1,43
+2016,"90686","Vaccine for influenza administered into muscle to individuals 3 years of age and older",2,34
+2016,"J0702","Injection, betamethasone acetate 3 mg and betamethasone sodium phosphate 3 mg",1,33
+2016,"J1040","Injection, methylprednisolone acetate, 80 mg",1,32
+2016,"J2505","Injection, pegfilgrastim, 6 mg",1,28
+2016,"90670","Pneumococcal vaccine for injection into muscle",1,17
+2016,"J2550","Injection, promethazine hcl, up to 50 mg",1,16
+2016,"J0280","Injection, aminophyllin, up to 250 mg",1,12
+2016,"J1250","Injection, dobutamine hydrochloride, per 250 mg",1,11
+2017,"J0585","Injection, onabotulinumtoxina, 1 unit",82,376234
+2017,"J1071","Injection, testosterone cypionate, 1 mg",9,144880
+2017,"J1644","Injection, heparin sodium, per 1000 units",35,123623
+2017,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",27,119903
+2017,"J0897","Injection, denosumab, 1 mg",5,21660
+2017,"Q0138","Injection, ferumoxytol, for treatment of iron deficiency anemia, 1 mg (non-esrd use)",1,14280
+2017,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",3,12516
+2017,"Q9965","Low osmolar contrast material, 100-199 mg/ml iodine concentration, per ml",3,7800
+2017,"J3301","Injection, triamcinolone acetonide, not otherwise specified, 10 mg",15,5505
+2017,"J1050","Injection, medroxyprogesterone acetate, 1 mg",1,4802
+2017,"J1580","Injection, garamycin, gentamicin, up to 80 mg",33,4104
+2017,"Q9966","Low osmolar contrast material, 200-299 mg/ml iodine concentration, per ml",1,3550
+2017,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",22,3235
+2017,"J0696","Injection, ceftriaxone sodium, per 250 mg",19,2741
+2017,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",4,2600
+2017,"J0588","Injection, incobotulinumtoxin a, 1 unit",1,2300
+2017,"J9041","Injection, bortezomib, 0.1 mg",1,2120
+2017,"J1100","Injection, dexamethasone sodium phosphate, 1 mg",1,1562
+2017,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",4,1554
+2017,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",3,1140
+2017,"J9031","Bcg (intravesical) per instillation",17,727
+2017,"J2469","Injection, palonosetron hcl, 25 mcg",1,570
+2017,"J2785","Injection, regadenoson, 0.1 mg",2,525
+2017,"J2704","Injection, propofol, 10 mg",1,510
+2017,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",4,463
+2017,"J3315","Injection, triptorelin pamoate, 3.75 mg",2,232
+2017,"J1245","Injection, dipyridamole, per 10 mg",1,197
+2017,"J7030","Infusion, normal saline solution , 1000 cc",3,168
+2017,"J3489","Injection, zoledronic acid, 1 mg",1,146
+2017,"J7040","Infusion, normal saline solution, sterile (500 ml = 1 unit)",1,143
+2017,"J0690","Injection, cefazolin sodium, 500 mg",2,137
+2017,"J3420","Injection, vitamin b-12 cyanocobalamin, up to 1000 mcg",2,132
+2017,"Q9957","Injection, perflutren lipid microspheres, per ml",1,132
+2017,"Q9961","High osmolar contrast material, 250-299 mg/ml iodine concentration, per ml",2,107
+2017,"90674","Vaccine for influenza for administration into muscle, 0.5 ml dosage",1,96
+2017,"J2250","Injection, midazolam hydrochloride, per 1 mg",2,94
+2017,"J1380","Injection, estradiol valerate, up to 10 mg",1,86
+2017,"90662","Vaccine for influenza for injection into muscle",2,76
+2017,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",1,76
+2017,"J1040","Injection, methylprednisolone acetate, 80 mg",2,69
+2017,"J0178","Injection, aflibercept, 1 mg",1,60
+2017,"J0280","Injection, aminophyllin, up to 250 mg",2,59
+2017,"J1200","Injection, diphenhydramine hcl, up to 50 mg",1,59
+2017,"90670","Pneumococcal vaccine for injection into muscle",3,58
+2017,"90686","Vaccine for influenza for administration into muscle, 0.5 ml dosage",2,55
+2017,"J1885","Injection, ketorolac tromethamine, per 15 mg",1,53
+2017,"J2916","Injection, sodium ferric gluconate complex in sucrose injection, 12.5 mg",1,52
+2017,"J0702","Injection, betamethasone acetate 3 mg and betamethasone sodium phosphate 3 mg",1,43
+2017,"J3010","Injection, fentanyl citrate, 0.1 mg",2,43
+2017,"J1030","Injection, methylprednisolone acetate, 40 mg",1,40
+2017,"J9035","Injection, bevacizumab, 10 mg",1,40
+2017,"Q2037","Influenza virus vaccine, split virus, when administered to individuals 3 years of age and older, for intramuscular use (fluvirin)",1,38
+2017,"J3260","Injection, tobramycin sulfate, up to 80 mg",1,32
+2017,"J3360","Injection, diazepam, up to 5 mg",1,32
+2017,"J1940","Injection, furosemide, up to 20 mg",1,17
+2017,"J1250","Injection, dobutamine hydrochloride, per 250 mg",1,16
+2017,"90653","Vaccine for influenza for injection into muscle",1,13
+2018,"J0585","Injection, onabotulinumtoxina, 1 unit",111,515082
+2018,"J1071","Injection, testosterone cypionate, 1 mg",11,144453
+2018,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",27,131533
+2018,"J1644","Injection, heparin sodium, per 1000 units",35,122828
+2018,"J3145","Injection, testosterone undecanoate, 1 mg",1,52500
+2018,"J0897","Injection, denosumab, 1 mg",5,18060
+2018,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",2,8566
+2018,"J3301","Injection, triamcinolone acetonide, not otherwise specified, 10 mg",15,6229
+2018,"J1580","Injection, garamycin, gentamicin, up to 80 mg",37,4024
+2018,"J1050","Injection, medroxyprogesterone acetate, 1 mg",1,3910
+2018,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",23,3359
+2018,"J0696","Injection, ceftriaxone sodium, per 250 mg",22,3204
+2018,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",5,2565
+2018,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",3,1212
+2018,"J9031","Bcg (intravesical) per instillation",19,775
+2018,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",4,741
+2018,"J2785","Injection, regadenoson, 0.1 mg",3,711
+2018,"J2704","Injection, propofol, 10 mg",1,668
+2018,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",4,470
+2018,"J1020","Injection, methylprednisolone acetate, 20 mg",1,350
+2018,"J3315","Injection, triptorelin pamoate, 3.75 mg",3,276
+2018,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",2,155
+2018,"90670","Pneumococcal vaccine for injection into muscle",2,151
+2018,"J1885","Injection, ketorolac tromethamine, per 15 mg",3,134
+2018,"J0690","Injection, cefazolin sodium, 500 mg",2,125
+2018,"J7030","Infusion, normal saline solution , 1000 cc",3,121
+2018,"J1335","Injection, ertapenem sodium, 500 mg",1,119
+2018,"90674","Vaccine for influenza for administration into muscle, 0.5 ml dosage",1,116
+2018,"90686","Vaccine for influenza for administration into muscle, 0.5 ml dosage",3,112
+2018,"Q9957","Injection, perflutren lipid microspheres, per ml",1,101
+2018,"J1380","Injection, estradiol valerate, up to 10 mg",1,89
+2018,"J0178","Injection, aflibercept, 1 mg",1,86
+2018,"J2250","Injection, midazolam hydrochloride, per 1 mg",3,86
+2018,"90662","Vaccine for influenza for injection into muscle",2,75
+2018,"Q9961","High osmolar contrast material, 250-299 mg/ml iodine concentration, per ml",1,66
+2018,"J2916","Injection, sodium ferric gluconate complex in sucrose injection, 12.5 mg",1,64
+2018,"J3010","Injection, fentanyl citrate, 0.1 mg",2,56
+2018,"J7040","Infusion, normal saline solution, sterile (500 ml = 1 unit)",1,42
+2018,"J9035","Injection, bevacizumab, 10 mg",1,42
+2018,"90732","Vaccine for pneumococcal polysaccharide for injection beneath the skin or into muscle, patient 2 years or older",2,40
+2018,"J1100","Injection, dexamethasone sodium phosphate, 1 mg",1,34
+2018,"J2550","Injection, promethazine hcl, up to 50 mg",2,34
+2018,"J1030","Injection, methylprednisolone acetate, 40 mg",1,32
+2018,"90653","Vaccine for influenza for injection into muscle",1,28
+2018,"90756","Vaccine for influenza for injection into muscle",1,17
+2018,"J1940","Injection, furosemide, up to 20 mg",1,14
+2019,"J0585","Injection, onabotulinumtoxina, 1 unit",137,650768
+2019,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",31,137446
+2019,"J1644","Injection, heparin sodium, per 1000 units",32,113507
+2019,"J1071","Injection, testosterone cypionate, 1 mg",11,107230
+2019,"J3145","Injection, testosterone undecanoate, 1 mg",1,92250
+2019,"J0897","Injection, denosumab, 1 mg",6,24720
+2019,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",1,7250
+2019,"J3301","Injection, triamcinolone acetonide, not otherwise specified, 10 mg",18,6016
+2019,"J9030","Bcg live intravesical instillation, 1 mg",4,5612
+2019,"Q9966","Low osmolar contrast material, 200-299 mg/ml iodine concentration, per ml",2,4820
+2019,"J1050","Injection, medroxyprogesterone acetate, 1 mg",1,4371
+2019,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",28,3860
+2019,"J1580","Injection, garamycin, gentamicin, up to 80 mg",33,3602
+2019,"J0696","Injection, ceftriaxone sodium, per 250 mg",21,2741
+2019,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",5,2462
+2019,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",3,1243
+2019,"J2785","Injection, regadenoson, 0.1 mg",3,877
+2019,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",4,666
+2019,"J1020","Injection, methylprednisolone acetate, 20 mg",1,648
+2019,"J9280","Injection, mitomycin, 5 mg",2,592
+2019,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",4,546
+2019,"J2704","Injection, propofol, 10 mg",2,464
+2019,"J3010","Injection, fentanyl citrate, 0.1 mg",4,405
+2019,"J9201","Injection, gemcitabine hydrochloride, 200 mg",1,405
+2019,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",2,225
+2019,"J0690","Injection, cefazolin sodium, 500 mg",3,180
+2019,"J7030","Infusion, normal saline solution , 1000 cc",2,163
+2019,"J0178","Injection, aflibercept, 1 mg",1,160
+2019,"J2920","Injection, methylprednisolone sodium succinate, up to 40 mg",1,151
+2019,"90670","Pneumococcal vaccine for injection into muscle",3,139
+2019,"J2250","Injection, midazolam hydrochloride, per 1 mg",3,131
+2019,"J1885","Injection, ketorolac tromethamine, per 15 mg",3,122
+2019,"90674","Vaccine for influenza for administration into muscle, 0.5 ml dosage",2,117
+2019,"90686","Vaccine for influenza for administration into muscle, 0.5 ml dosage",2,109
+2019,"J3260","Injection, tobramycin sulfate, up to 80 mg",2,104
+2019,"J3315","Injection, triptorelin pamoate, 3.75 mg",1,102
+2019,"Q9957","Injection, perflutren lipid microspheres, per ml",1,102
+2019,"J2550","Injection, promethazine hcl, up to 50 mg",3,100
+2019,"90732","Vaccine for pneumococcal polysaccharide for injection beneath the skin or into muscle, patient 2 years or older",2,85
+2019,"J1245","Injection, dipyridamole, per 10 mg",1,85
+2019,"J9035","Injection, bevacizumab, 10 mg",1,85
+2019,"J9031","Bcg (intravesical) per instillation",2,77
+2019,"J1335","Injection, ertapenem sodium, 500 mg",1,69
+2019,"J1380","Injection, estradiol valerate, up to 10 mg",1,69
+2019,"J3420","Injection, vitamin b-12 cyanocobalamin, up to 1000 mcg",1,66
+2019,"J7050","Infusion, normal saline solution, 250 cc",1,62
+2019,"90662","Vaccine for influenza for injection into muscle",1,42
+2019,"90653","Vaccine for influenza for injection into muscle",1,41
+2019,"90682","Vaccine for influenza for injection into muscle",1,34
+2019,"Q9961","High osmolar contrast material, 250-299 mg/ml iodine concentration, per ml",1,31
+2019,"J1030","Injection, methylprednisolone acetate, 40 mg",1,29
+2019,"J1040","Injection, methylprednisolone acetate, 80 mg",1,27
+2019,"J1100","Injection, dexamethasone sodium phosphate, 1 mg",1,20
+2019,"J1250","Injection, dobutamine hydrochloride, per 250 mg",1,16
+2019,"J1940","Injection, furosemide, up to 20 mg",1,14
+2019,"J2916","Injection, sodium ferric gluconate complex in sucrose injection, 12.5 mg",1,14
+2020,"J0585","Injection, onabotulinumtoxina, 1 unit",145,628053
+2020,"J3145","Injection, testosterone undecanoate, 1 mg",3,189000
+2020,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",27,126502
+2020,"J1071","Injection, testosterone cypionate, 1 mg",9,109886
+2020,"J1644","Injection, heparin sodium, per 1000 units",33,86422
+2020,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",2,24561
+2020,"J0897","Injection, denosumab, 1 mg",7,22800
+2020,"J9030","Bcg live intravesical instillation, 1 mg",14,21112
+2020,"J3301","Injection, triamcinolone acetonide, not otherwise specified, 10 mg",16,5520
+2020,"J9155","Injection, degarelix, 1 mg",1,5200
+2020,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",28,3876
+2020,"J1580","Injection, garamycin, gentamicin, up to 80 mg",31,3557
+2020,"J0696","Injection, ceftriaxone sodium, per 250 mg",18,2427
+2020,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",5,2104
+2020,"Q9966","Low osmolar contrast material, 200-299 mg/ml iodine concentration, per ml",1,1800
+2020,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",3,833
+2020,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",5,823
+2020,"J1050","Injection, medroxyprogesterone acetate, 1 mg",1,775
+2020,"J2785","Injection, regadenoson, 0.1 mg",3,633
+2020,"J1020","Injection, methylprednisolone acetate, 20 mg",1,473
+2020,"J2704","Injection, propofol, 10 mg",1,400
+2020,"J0178","Injection, aflibercept, 1 mg",1,256
+2020,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",2,202
+2020,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",2,187
+2020,"J3260","Injection, tobramycin sulfate, up to 80 mg",4,168
+2020,"J1040","Injection, methylprednisolone acetate, 80 mg",1,160
+2020,"J9201","Injection, gemcitabine hydrochloride, not otherwise specified, 200 mg",1,155
+2020,"J0690","Injection, cefazolin sodium, 500 mg",2,143
+2020,"J2920","Injection, methylprednisolone sodium succinate, up to 40 mg",1,130
+2020,"J7030","Infusion, normal saline solution , 1000 cc",2,125
+2020,"J1030","Injection, methylprednisolone acetate, 40 mg",2,110
+2020,"J3315","Injection, triptorelin pamoate, 3.75 mg",1,105
+2020,"J2250","Injection, midazolam hydrochloride, per 1 mg",2,104
+2020,"J3010","Injection, fentanyl citrate, 0.1 mg",2,99
+2020,"90674","Vaccine for influenza for administration into muscle, 0.5 ml dosage",2,98
+2020,"J9035","Injection, bevacizumab, 10 mg",1,92
+2020,"J1335","Injection, ertapenem sodium, 500 mg",1,86
+2020,"J2550","Injection, promethazine hcl, up to 50 mg",2,83
+2020,"J1885","Injection, ketorolac tromethamine, per 15 mg",2,77
+2020,"90662","Vaccine for influenza for injection into muscle",2,71
+2020,"J1380","Injection, estradiol valerate, up to 10 mg",1,61
+2020,"J1245","Injection, dipyridamole, per 10 mg",1,60
+2020,"90732","Vaccine for pneumococcal polysaccharide for injection beneath the skin or into muscle, patient 2 years or older",2,54
+2020,"J7050","Infusion, normal saline solution, 250 cc",1,54
+2020,"90686","Vaccine for influenza for administration into muscle, 0.5 ml dosage",2,53
+2020,"90670","Pneumococcal vaccine for injection into muscle",1,52
+2020,"90682","Vaccine for influenza for injection into muscle",1,33
+2020,"90694","Influenza virus vaccine, quadrivalent (aiiv4), inactivated, adjuvanted, preservative free, for injection into muscle, 0.5 ml dosage",1,24
+2020,"J2916","Injection, sodium ferric gluconate complex in sucrose injection, 12.5 mg",1,17
+2020,"J1100","Injection, dexamethasone sodium phosphate, 1 mg",1,15
+2020,"J0280","Injection, aminophyllin, up to 250 mg",1,11
+2021,"J0585","Injection, onabotulinumtoxina, 1 unit",169,801841.3
+2021,"J3145","Injection, testosterone undecanoate, 1 mg",2,173100
+2021,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",30,123659
+2021,"J1071","Injection, testosterone cypionate, 1 mg",8,96145
+2021,"J1644","Injection, heparin sodium, per 1000 units",39,88621
+2021,"J9030","Bcg live intravesical instillation, 1 mg",18,37046
+2021,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",2,26055
+2021,"J0897","Injection, denosumab, 1 mg",6,21660
+2021,"Q9966","Low osmolar contrast material, 200-299 mg/ml iodine concentration, per ml",2,15016
+2021,"J3301","Injection, triamcinolone acetonide, not otherwise specified, 10 mg",16,4190
+2021,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",24,3460
+2021,"J1580","Injection, garamycin, gentamicin, up to 80 mg",32,3287
+2021,"J9155","Injection, degarelix, 1 mg",1,2960
+2021,"J0696","Injection, ceftriaxone sodium, per 250 mg",15,2454
+2021,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",6,2131
+2021,"J2785","Injection, regadenoson, 0.1 mg",3,1101
+2021,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",4,953
+2021,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",2,845
+2021,"J1030","Injection, methylprednisolone acetate, 40 mg",1,489
+2021,"J2704","Injection, propofol, 10 mg",2,480
+2021,"J1020","Injection, methylprednisolone acetate, 20 mg",1,431
+2021,"J9201","Injection, gemcitabine hydrochloride, not otherwise specified, 200 mg",1,300
+2021,"J1040","Injection, methylprednisolone acetate, 80 mg",2,273
+2021,"J0178","Injection, aflibercept, 1 mg",1,232
+2021,"J0690","Injection, cefazolin sodium, 500 mg",3,187
+2021,"J2920","Injection, methylprednisolone sodium succinate, up to 40 mg",2,177
+2021,"J2250","Injection, midazolam hydrochloride, per 1 mg",4,160
+2021,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",2,159
+2021,"J3010","Injection, fentanyl citrate, 0.1 mg",4,153
+2021,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",1,138
+2021,"J0702","Injection, betamethasone acetate 3 mg and betamethasone sodium phosphate 3 mg",1,136
+2021,"J1380","Injection, estradiol valerate, up to 10 mg",1,136
+2021,"J3315","Injection, triptorelin pamoate, 3.75 mg",2,129
+2021,"J9035","Injection, bevacizumab, 10 mg",1,117
+2021,"90662","Vaccine for influenza for injection into muscle, split virus, preservation free",3,112
+2021,"J1885","Injection, ketorolac tromethamine, per 15 mg",3,112
+2021,"J7030","Infusion, normal saline solution , 1000 cc",2,103
+2021,"J2550","Injection, promethazine hcl, up to 50 mg",3,99
+2021,"J1245","Injection, dipyridamole, per 10 mg",1,82
+2021,"J2405","Injection, ondansetron hydrochloride, per 1 mg",1,69
+2021,"90682","Vaccine for influenza derived from dna for injection into muscle, quadrivalent, preservative and antibiotic free",1,57
+2021,"90674","Vaccine for influenza derived from cell cultures for administration into muscle, 0.5 ml dosage, quadrivalent, , preservative and antibiotic free",1,55
+2021,"90732","Vaccine for pneumococcal polysaccharide for injection beneath the skin or into muscle, patient 2 years or older",2,53
+2021,"J3260","Injection, tobramycin sulfate, up to 80 mg",1,51
+2021,"90686","Vaccine for influenza for administration into muscle, 0.5 ml dosage, quadrivalent, preservation free",2,42
+2021,"90694","Influenza virus vaccine, quadrivalent (aiiv4), inactivated, adjuvanted, preservative free, for injection into muscle, 0.5 ml dosage",1,42
+2021,"J1335","Injection, ertapenem sodium, 500 mg",1,38
+2021,"90670","Pneumococcal vaccine for injection into muscle",2,31
+2021,"J0280","Injection, aminophyllin, up to 250 mg",1,17
+2022,"J0585","Injection, onabotulinumtoxina, 1 unit",201,966142
+2022,"J3145","Injection, testosterone undecanoate, 1 mg",2,155250
+2022,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",29,96126
+2022,"J1644","Injection, heparin sodium, per 1000 units",32,88621
+2022,"J1071","Injection, testosterone cypionate, 1 mg",8,84134
+2022,"J9030","Bcg live intravesical instillation, 1 mg",18,32191
+2022,"J0897","Injection, denosumab, 1 mg",6,22260
+2022,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",2,19050
+2022,"J9155","Injection, degarelix, 1 mg",2,5840
+2022,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",1,3361
+2022,"J3301","Injection, triamcinolone acetonide, not otherwise specified, 10 mg",10,3289
+2022,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",20,2884
+2022,"J0696","Injection, ceftriaxone sodium, per 250 mg",15,2644
+2022,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",6,2532
+2022,"J1580","Injection, garamycin, gentamicin, up to 80 mg",21,2303
+2022,"J2785","Injection, regadenoson, 0.1 mg",3,1052
+2022,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",2,853
+2022,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",3,849
+2022,"J2704","Injection, propofol, 10 mg",1,725
+2022,"J1030","Injection, methylprednisolone acetate, 40 mg",1,649
+2022,"J9201","Injection, gemcitabine hydrochloride, not otherwise specified, 200 mg",2,430
+2022,"J0702","Injection, betamethasone acetate 3 mg and betamethasone sodium phosphate 3 mg",2,425
+2022,"J1040","Injection, methylprednisolone acetate, 80 mg",1,352
+2022,"J1020","Injection, methylprednisolone acetate, 20 mg",1,222
+2022,"J3260","Injection, tobramycin sulfate, up to 80 mg",4,171
+2022,"J0690","Injection, cefazolin sodium, 500 mg",3,152
+2022,"J1885","Injection, ketorolac tromethamine, per 15 mg",2,128
+2022,"90662","Influenza vaccine split virus, preservative free",3,124
+2022,"J3010","Injection, fentanyl citrate, 0.1 mg",4,122
+2022,"J2250","Injection, midazolam hydrochloride, per 1 mg",3,112
+2022,"J2920","Injection, methylprednisolone sodium succinate, up to 40 mg",1,110
+2022,"J3315","Injection, triptorelin pamoate, 3.75 mg",1,97
+2022,"J0178","Injection, aflibercept, 1 mg",1,96
+2022,"J1380","Injection, estradiol valerate, up to 10 mg",1,94
+2022,"J2550","Injection, promethazine hcl, up to 50 mg",3,84
+2022,"J7030","Infusion, normal saline solution , 1000 cc",2,83
+2022,"J3370","Injection, vancomycin hcl, 500 mg",1,69
+2022,"90677","Pneumococcal conjugate vaccine, 20 valent (pcv20), for intramuscular use",2,67
+2022,"J1000","Injection, depo-estradiol cypionate, up to 5 mg",1,55
+2022,"J1335","Injection, ertapenem sodium, 500 mg",1,46
+2022,"J9035","Injection, bevacizumab, 10 mg",1,43
+2022,"90686","Influenza vaccine, quadrivalent, preservative free, 0.5 ml dosage",2,39
+2022,"90674","Influenza vaccine, quadrivalent derived from cell cultures, preservative and antibiotic free",1,32
+2022,"90732","Pneumococcal vaccine, 23-valent",2,29
+2022,"90694","Influenza vaccine, quadrivalent inactivated, 0.5 ml dosage",1,15
+2022,"90715","Diphtheria, tetanus, and acellular pertussis vaccine (7 years or older)",1,14
+2022,"J1100","Injection, dexamethasone sodium phosphate, 1 mg",1,11
+2023,"J0585","Injection, onabotulinumtoxina, 1 unit",228,1106662
+2023,"J3145","Injection, testosterone undecanoate, 1 mg",2,110250
+2023,"Q9967","Low osmolar contrast material, 300-399 mg/ml iodine concentration, per ml",30,109006
+2023,"J1644","Injection, heparin sodium, per 1000 units",27,84505
+2023,"J1071","Injection, testosterone cypionate, 1 mg",8,65345
+2023,"J9030","Bcg live intravesical instillation, 1 mg",14,26734
+2023,"Q9958","High osmolar contrast material, up to 149 mg/ml iodine concentration, per ml",2,11830
+2023,"J0897","Injection, denosumab, 1 mg",4,7860
+2023,"J3301","Injection, triamcinolone acetonide, not otherwise specified, 10 mg",12,6649
+2023,"J9155","Injection, degarelix, 1 mg",1,3360
+2023,"J0696","Injection, ceftriaxone sodium, per 250 mg",17,2669
+2023,"J9171","Injection, docetaxel, 1 mg",2,2281
+2023,"J2930","Injection, methylprednisolone sodium succinate, up to 125 mg",6,2127
+2023,"J9217","Leuprolide acetate (for depot suspension), 7.5 mg",17,2030
+2023,"J1580","Injection, garamycin, gentamicin, up to 80 mg",19,1817
+2023,"J2001","Injection, lidocaine hcl for intravenous infusion, 10 mg",4,1400
+2023,"J2785","Injection, regadenoson, 0.1 mg",3,1212
+2023,"J1212","Injection, dmso, dimethyl sulfoxide, 50%, 50 ml",2,836
+2023,"J1040","Injection, methylprednisolone acetate, 80 mg",2,765
+2023,"J1030","Injection, methylprednisolone acetate, 40 mg",1,743
+2023,"J2704","Injection, propofol, 10 mg",2,733
+2023,"J7332","Hyaluronan or derivative, triluron, for intra-articular injection, 1 mg",1,621
+2023,"J1952","Leuprolide injectable, camcevi, 1 mg",1,504
+2023,"J9201","Injection, gemcitabine hydrochloride, not otherwise specified, 200 mg",3,375
+2023,"J3260","Injection, tobramycin sulfate, up to 80 mg",4,333
+2023,"J1720","Injection, hydrocortisone sodium succinate, up to 100 mg",3,283
+2023,"J0702","Injection, betamethasone acetate 3 mg and betamethasone sodium phosphate 3 mg",1,198
+2023,"J2920","Injection, methylprednisolone sodium succinate, up to 40 mg",3,195
+2023,"90662","Influenza vaccine split virus, preservative free",4,173
+2023,"J1885","Injection, ketorolac tromethamine, per 15 mg",3,170
+2023,"J1100","Injection, dexamethasone sodium phosphate, 1 mg",1,160
+2023,"J0690","Injection, cefazolin sodium, 500 mg",3,138
+2023,"J1380","Injection, estradiol valerate, up to 10 mg",1,119
+2023,"J2250","Injection, midazolam hydrochloride, per 1 mg",3,104
+2023,"J3010","Injection, fentanyl citrate, 0.1 mg",3,103
+2023,"J2550","Injection, promethazine hcl, up to 50 mg",3,94
+2023,"J1335","Injection, ertapenem sodium, 500 mg",2,88
+2023,"J7030","Infusion, normal saline solution , 1000 cc",2,78
+2023,"J7120","Ringers lactate infusion, up to 1000 cc",2,64
+2023,"J2405","Injection, ondansetron hydrochloride, per 1 mg",1,60
+2023,"90677","Pneumococcal conjugate vaccine, 20 valent (pcv20), for intramuscular use",2,55
+2023,"J1020","Injection, methylprednisolone acetate, 20 mg",1,44
+2023,"90674","Influenza vaccine, quadrivalent derived from cell cultures, preservative and antibiotic free",1,21
+2023,"90694","Influenza vaccine, quadrivalent inactivated, 0.5 ml dosage",1,17
+2023,"90715","Diphtheria, tetanus, and acellular pertussis vaccine (7 years or older)",1,15
+2023,"J0280","Injection, aminophyllin, up to 250 mg",1,12
