@@ -33,6 +33,7 @@ Returns the probability of still being active at each age, given active at
 the baseline vs scenario curves visually.
 }
 \section{Relationship to the mufflyaccess contract}{
+
 (Concerns \code{mufflyaccess::urps_survival_curve()}.)
 
 Related, and \strong{intentionally not contract-compatible}. The contract version

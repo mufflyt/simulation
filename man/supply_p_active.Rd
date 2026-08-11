@@ -57,6 +57,7 @@ registry and applies an age-axis shift—the same mechanism as
 "Retire 2 years later" treats a 65-year-old as age 63 in the predictor.
 }
 \section{Relationship to the mufflyaccess contract}{
+
 (Concerns \code{mufflyaccess::urps_p_active()}.)
 
 Related, and \strong{intentionally not contract-compatible}. The contract version
