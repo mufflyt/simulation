@@ -67,7 +67,7 @@ read_part_b_claims <- function(hcpcs,
                                year_col = "data_year") {
   assertthat::assert_that(is.character(hcpcs), length(hcpcs) > 0)
   if (!file.exists(duckdb_path)) {
-    stop(sprintf("read_part_b_claims(): DuckDB not found at '%s'. Set MEDICARE_PARTB_DUCKDB or mount the drive.", duckdb_path))
+    stop(sprintf("read_part_b_claims(): DuckDB not found at '%s'. Set MEDICARE_PARTB_DUCKDB or mount the drive.", duckdb_path), call. = FALSE)
   }
   conn <- DBI::dbConnect(duckdb::duckdb(), duckdb_path, read_only = TRUE)
   on.exit(DBI::dbDisconnect(conn, shutdown = TRUE), add = TRUE)
@@ -76,7 +76,7 @@ read_part_b_claims <- function(hcpcs,
     "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'")$table_name
   if (!table %in% have_tbl) {
     stop(sprintf("read_part_b_claims(): table '%s' absent. Present: %s",
-                 table, paste(utils::head(have_tbl, 20), collapse = ", ")))
+                 table, paste(utils::head(have_tbl, 20), collapse = ", ")), call. = FALSE)
   }
   cols <- DBI::dbGetQuery(conn, sprintf(
     "SELECT column_name FROM information_schema.columns WHERE table_name = '%s'", table))$column_name
@@ -97,7 +97,7 @@ read_part_b_claims <- function(hcpcs,
   for (w in want) {
     hit <- .pb_col(w$cands, cols)
     if (is.na(hit)) {
-      if (isTRUE(w$required)) stop(sprintf("read_part_b_claims(): required column (%s) not found in '%s'.", w$out, table))
+      if (isTRUE(w$required)) stop(sprintf("read_part_b_claims(): required column (%s) not found in '%s'.", w$out, table), call. = FALSE)
       next
     }
     sel <- c(sel, sprintf("%s AS %s", hit, w$out))

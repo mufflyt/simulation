@@ -109,7 +109,7 @@ fit_visit_model <- function(data,
     if (!is.null(weights_col)) {
       d$.hdmm_w <- data[[weights_col]]
       fit <- MASS::glm.nb(formula, data = d, weights = .hdmm_w)
-      warning("fit_visit_model(): negbin uses weights but not strata/PSU; SEs are not design-based.")
+      warning("fit_visit_model(): negbin uses weights but not strata/PSU; SEs are not design-based.", call. = FALSE)
     } else {
       fit <- MASS::glm.nb(formula, data = d)
     }
@@ -128,7 +128,7 @@ fit_visit_model <- function(data,
   if (!have_survey || is.null(weights_col)) {
     warning("fit_visit_model(): fell back to weighted quasipoisson; standard errors ",
             "do NOT reflect the survey design. Install 'survey' and pass ",
-            "weights_col/strata_col/psu_col for design-based inference.")
+            "weights_col/strata_col/psu_col for design-based inference.", call. = FALSE)
   }
   fit
 }
