@@ -61,6 +61,21 @@ test_that("advancing one year removes and adds providers without leaking a draw 
   expect_true(any(adv$age == 35))
 })
 
+test_that("providers below the retirement-model floor never depart (age not floored to 50)", {
+  cal <- suppressMessages(calibrate_urps_supply_dynamics(
+    sd_entrant_fixture(), sd_departure_fixture(),
+    forecast_years = 2021:2025, n_draws = 100L, seed = 42L))
+  # Everyone is 40 -> 41 after aging, below the age-50 departure model. The bug
+  # floored the hazard-lookup age to 50, charging sub-floor providers the age-50
+  # retirement probability; the fix leaves them unmatched (probability 0), so no
+  # original provider may be dropped by departure. Deterministic under the fix:
+  # departure_probability is exactly 0, so runif() < 0 is always FALSE.
+  pop <- tibble::tibble(provider_id = paste0("Y", 1:300), age = rep(40, 300))
+  adv <- suppressMessages(advance_urps_supply_one_year(
+    pop, simulation_year = 2023L, draw = 4L, calibration = cal))
+  expect_true(all(pop$provider_id %in% adv$provider_id))
+})
+
 test_that("advance actually filters to the requested draw (data-mask collision)", {
   cal <- suppressMessages(calibrate_urps_supply_dynamics(
     sd_entrant_fixture(), sd_departure_fixture(),
