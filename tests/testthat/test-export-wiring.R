@@ -161,15 +161,21 @@ test_that("the unwired surface does not grow", {
   # constraint at 0.1247 against 0.13 -- the surface grew slower than the
   # package. Prefer wiring to raising this again.
   #
-  # RAISED 56 -> 60, reason recorded per the rule above. The fellowship-
-  # conversion work added fellowship_certification_series(),
-  # fellowship_first_billing_series() and fit_fellowship_conversion() as api
-  # exports, putting main at 57 against its own 56 bound. This change adds two
-  # registered, opt-in HWSM parameter exports -- add_hwsm_supply_parameters() and
-  # hwsm_retirement_hazard_table(), not yet wired into the default orchestrator --
-  # for 59 today, with one slot of headroom (60) against concurrent main churn.
-  # The RATIO bound is unchanged at 0.122 against 0.13; the surface still grew
-  # slower than the package.
+  # RAISED 56 -> 57. The fellowship-conversion work exported three user-facing
+  # helpers -- fellowship_certification_series(), fellowship_first_billing_series()
+  # and fit_fellowship_conversion() -- that landed unregistered; all three are
+  # analysis accessors/fitters a user calls, registered `api`. The ratio is
+  # 57/482 = 0.118, still under 0.13.
+  #
+  # RAISED 57 -> 58. The entry-panel work exported summarise_entry_panel() (one
+  # row per NPI with the entry determination) unregistered; it is a user-facing
+  # summariser, registered `api`. Ratio 58/486 = 0.119, still under 0.13.
+  #
+  # RAISED 58 -> 60. The HRSA HWSM work exported two opt-in supply-parameter
+  # accessors a user calls directly -- add_hwsm_supply_parameters() and
+  # hwsm_retirement_hazard_table() -- both registered `api`, not yet wired into
+  # the default orchestrator (that is the deferred 40h-basis recalibration).
+  # Ratio 60/489 = 0.123, still under 0.13.
   expect_lte(length(o$orphans), 60L)
   expect_lte(length(o$orphans) / length(o$exports), 0.13)
 })
