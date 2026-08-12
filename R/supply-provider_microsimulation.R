@@ -1082,15 +1082,22 @@ run_supply_microsimulation <- function(initial_workforce = urps_baseline_supply(
     it_schedule <- retirement_schedule
     it_hours_model <- hours_model
     if (!is.null(param_spec)) {
-      d <- draw_supply_parameters(param_spec, retirement_schedule)
+      d <- draw_supply_parameters(param_spec, retirement_schedule, years = years)
       # Take the draw ONLY when it is a usable number. `d$entrants` is
       # `spec$entrant_mean` verbatim when the entrant rate is not quantified, so
       # for a spec that quantifies nothing it is NULL -- and assigning that here
       # is what produced `numeric(0)` capacity and the crash. `entrants_used` is
       # already the resolved precedence, so falling through to it is correct in
       # every case rather than merely safe.
-      if (is.numeric(d$entrants) && length(d$entrants) == 1L &&
-          is.finite(d$entrants)) {
+      #
+      # A spec carrying an entrant regime model returns a PATH -- one value per
+      # transition -- rather than a scalar, and simulate_provider_career_once()
+      # accepts either (length 1 or length(years); rep_len broadcasts). The test
+      # is therefore "non-empty and finite throughout", not "length one":
+      # requiring a scalar here silently discarded the regime structure, which is
+      # why `years =` was also not being passed. This now matches run_backtest_arm().
+      if (is.numeric(d$entrants) && length(d$entrants) >= 1L &&
+          all(is.finite(d$entrants))) {
         it_entrants <- d$entrants
       }
       it_schedule <- d$retirement_schedule
