@@ -45,6 +45,20 @@
 * `entrant_trajectory()` supports a per-year entrant path; the naive filled
   variant is labelled NAIVE in its own scenario name.
 
+## Calibration
+
+* **Fielded URPS access anchor (Lizeth).** `build_lizeth_access_anchor()` reads
+  the Lizeth national mystery-caller REDCap export and reports realized
+  base-year access — appointment obtainment, the wait-time distribution, and
+  insurance and clinical-scenario strata — so current URPS access can be
+  described from fielded observation rather than borrowed evidence. It
+  deliberately does **not** invert wait time into an adequacy ratio:
+  `capacity_status_with_lizeth()` records that access is now measured while
+  leaving `capacity_status()$resolved` FALSE, because identifying latent
+  productive capacity from access needs a separately validated response
+  function. `lizeth_adequacy_evidence()` registers the observation as a
+  calibration *target*, not a calibrated level.
+
 ## Demand
 
 * NAMCS demand calibration (`namcs_demand_calibration()`), scaling only the
