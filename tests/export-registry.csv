@@ -5,7 +5,7 @@
 # tested, documented -- and reachable from no pipeline. hours_coef,
 # assert_demand_calibrated(), opportunity_placement_shares(), param_spec in
 # run_backtest() and apply_hrsa_surgical_fte() were each found that way, one at
-# a time, by accident. Fifty-seven exports are in that position today. All eleven
+# a time, by accident. Fifty-eight exports are in that position today. All eleven
 # `unwired_gate` entries -- assertions and status checks that were implemented,
 # tested, documented and invoked from nothing -- have been wired: six into
 # validation_report(), which the orchestrator runs on every projection,
@@ -104,6 +104,7 @@
 "ssot_safe_percent","api"
 "stamped_backtest_status","api"
 "state_departure_hazard","api"
+"summarise_entry_panel","api"
 "summarise_stratum_coverage","api"
 "supply_per_capita","api"
 "supply_uncertainty_drivers","api"
