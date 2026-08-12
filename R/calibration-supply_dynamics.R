@@ -126,28 +126,24 @@ calibrate_urps_supply_dynamics <- function(entrant_tbl, departure_tbl, forecast_
         post_break = base::as.integer(.data$year >= break_year),
         time_after_break = base::pmax(0, .data$year - break_year))
   }
+  # All candidate models share the same structure and degrees of freedom, so
+  # they are ranked directly by residual squared error. A quasi-Poisson GLM has
+  # no likelihood, so stats::AIC() returns NA for this family -- it cannot select
+  # the break, and an AIC-based criterion is not available here.
   entrant_break_models <- purrr::map(candidate_breaks, function(break_year) {
     fitted_model <- stats::glm(
       entrants ~ time + post_break + time_after_break,
       family = stats::quasipoisson(link = "log"),
       data = add_break_terms(entrant_clean, break_year))
-    tibble::tibble(break_year = break_year, model = list(fitted_model),
-                   aic = stats::AIC(fitted_model))
+    tibble::tibble(
+      break_year = break_year, model = list(fitted_model),
+      prediction_error = base::sum((entrant_clean$entrants - stats::fitted(fitted_model))^2))
   }) |>
     dplyr::bind_rows()
 
-  if (base::all(!base::is.finite(entrant_break_models$aic))) {
-    base::message("Quasi-Poisson AIC unavailable; selecting break by squared prediction error.")
-    entrant_break_models <- entrant_break_models |>
-      dplyr::mutate(prediction_error = purrr::map_dbl(.data$model, function(m) {
-        base::sum((entrant_clean$entrants - stats::fitted(m))^2)
-      }))
-    selected_break_row <- entrant_break_models |>
-      dplyr::slice_min(order_by = .data$prediction_error, n = 1L, with_ties = FALSE)
-  } else {
-    selected_break_row <- entrant_break_models |>
-      dplyr::slice_min(order_by = .data$aic, n = 1L, with_ties = FALSE)
-  }
+  base::message("Selecting entrant regime break by residual squared error.")
+  selected_break_row <- entrant_break_models |>
+    dplyr::slice_min(order_by = .data$prediction_error, n = 1L, with_ties = FALSE)
   selected_break <- selected_break_row |> dplyr::pull(.data$break_year)
   selected_entrant_model <- selected_break_row |> dplyr::pull(.data$model) |> purrr::pluck(1L)
   base::message("Selected entrant regime break: ", selected_break, ".")
@@ -327,8 +323,15 @@ advance_urps_supply_one_year <- function(provider_tbl, simulation_year, draw, ca
     dplyr::select("age", "departure_probability")
   current_providers <- provider_tbl |>
     dplyr::mutate(age = .data$age + 1) |>
-    dplyr::mutate(age_integer = base::pmin(90L, base::pmax(50L,
-                                    base::as.integer(base::round(.data$age))))) |>
+    # Look the departure hazard up by rounded age. Providers below the hazard
+    # table's minimum age (the calibration's min_retirement_age) do not match and
+    # get probability 0 via the coalesce below -- they are outside the retirement
+    # model and must NOT be charged a retirement probability. The previous
+    # pmax(50L) floor mapped every sub-floor provider (entrants enter at 35) onto
+    # the age-50 hazard, spuriously biasing supply downward. The pmin(90L) ceiling
+    # keeps the oldest providers on the top modelled age.
+    dplyr::mutate(age_integer = base::pmin(90L,
+                                    base::as.integer(base::round(.data$age)))) |>
     dplyr::left_join(hazard_tbl, by = c("age_integer" = "age")) |>
     dplyr::mutate(
       departure_probability = dplyr::coalesce(.data$departure_probability, 0),
