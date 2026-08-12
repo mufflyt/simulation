@@ -170,6 +170,12 @@ test_that("the unwired surface does not grow", {
   # RAISED 57 -> 58. The entry-panel work exported summarise_entry_panel() (one
   # row per NPI with the entry determination) unregistered; it is a user-facing
   # summariser, registered `api`. Ratio 58/486 = 0.119, still under 0.13.
-  expect_lte(length(o$orphans), 58L)
+  #
+  # RAISED 58 -> 60. The HRSA HWSM work exported two opt-in supply-parameter
+  # accessors a user calls directly -- add_hwsm_supply_parameters() and
+  # hwsm_retirement_hazard_table() -- both registered `api`, not yet wired into
+  # the default orchestrator (that is the deferred 40h-basis recalibration).
+  # Ratio 60/489 = 0.123, still under 0.13.
+  expect_lte(length(o$orphans), 60L)
   expect_lte(length(o$orphans) / length(o$exports), 0.13)
 })
