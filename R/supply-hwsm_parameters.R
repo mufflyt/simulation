@@ -9,8 +9,9 @@
 #     STILL-ACTIVE physicians and MUST NOT be multiplied by p_active -- retirement
 #     is a separate stochastic event, not a haircut on hours.
 #   * retirement -> a one-year conditional retirement probability derived from the
-#     HRSA age/sex workforce-survival curve by 1 - S(a+1)/S(a), the same
-#     discrete-hazard form as build_urps_exit_hazard().
+#     HRSA age/sex workforce-survival curve by 1 - S(a+1)/S(a), returned in the
+#     same (age, sex, prob_exit) shape as build_urps_exit_hazard() so it is a
+#     drop-in HRSA-Surgery alternative to the Weibull / cliff exit hazard.
 #
 # PROVENANCE. Weekly hours: pooled 2019 + 2022 AAMC National Sample Survey of
 # Physicians, HRSA Health Workforce Simulation Model, Surgery category. Survival:
@@ -133,8 +134,9 @@ hwsm_provenance <- function() {
 #' HRSA HWSM retirement hazard table (Surgery proxy)
 #'
 #' The HRSA Surgery workforce-survival curve as a per-age, per-sex one-year exit
-#' probability, in the shape [advance_urps_agents()] consumes (`age`, `sex`,
-#' `prob_exit`). Ages below `min_age` carry `prob_exit = 0` because HRSA models
+#' probability, in the same shape [build_urps_exit_hazard()] returns (`age`,
+#' `sex`, `prob_exit`) -- an HRSA-Surgery alternative to the Weibull / cliff exit
+#' hazard. Ages below `min_age` carry `prob_exit = 0` because HRSA models
 #' permanent retirement only for ages 50+, and pre-50 attrition is a separate
 #' career-change process here.
 #'
@@ -147,8 +149,7 @@ hwsm_provenance <- function() {
 #' @examples
 #' \dontrun{
 #' hz <- hwsm_retirement_hazard_table()
-#' # Feed straight into the agent engine's annual advance:
-#' advance_urps_agents(agents, exit_hazard = hz)
+#' head(hz)   # (age, sex, prob_exit): the shape build_urps_exit_hazard() returns
 #' }
 #' @export
 hwsm_retirement_hazard_table <- function(min_age = 50L, max_age = 90L) {

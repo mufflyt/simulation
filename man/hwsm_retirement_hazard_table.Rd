@@ -17,16 +17,16 @@ Data frame with \code{age}, \code{sex} ("Female"/"Male"), \code{prob_exit},
 }
 \description{
 The HRSA Surgery workforce-survival curve as a per-age, per-sex one-year exit
-probability, in the shape \code{\link[=advance_urps_agents]{advance_urps_agents()}} consumes (\code{age}, \code{sex},
-\code{prob_exit}). Ages below \code{min_age} carry \code{prob_exit = 0} because HRSA models
+probability, in the same shape \code{\link[=build_urps_exit_hazard]{build_urps_exit_hazard()}} returns (\code{age},
+\code{sex}, \code{prob_exit}) -- an HRSA-Surgery alternative to the Weibull / cliff exit
+hazard. Ages below \code{min_age} carry \code{prob_exit = 0} because HRSA models
 permanent retirement only for ages 50+, and pre-50 attrition is a separate
 career-change process here.
 }
 \examples{
 \dontrun{
 hz <- hwsm_retirement_hazard_table()
-# Feed straight into the agent engine's annual advance:
-advance_urps_agents(agents, exit_hazard = hz)
+head(hz)   # (age, sex, prob_exit): the shape build_urps_exit_hazard() returns
 }
 }
 \seealso{

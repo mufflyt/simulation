@@ -160,6 +160,16 @@ test_that("the unwired surface does not grow", {
   # three and not four. The RATIO bound did not move and is the tighter
   # constraint at 0.1247 against 0.13 -- the surface grew slower than the
   # package. Prefer wiring to raising this again.
-  expect_lte(length(o$orphans), 56L)
+  #
+  # RAISED 56 -> 60, reason recorded per the rule above. The fellowship-
+  # conversion work added fellowship_certification_series(),
+  # fellowship_first_billing_series() and fit_fellowship_conversion() as api
+  # exports (main already stood at 58 against the 56 bound). This change adds two
+  # registered, opt-in HWSM parameter exports -- add_hwsm_supply_parameters() and
+  # hwsm_retirement_hazard_table(), not yet wired into the default orchestrator --
+  # and registers the pre-existing isochrone_source_dir false orphan (reachable
+  # only as a default-arg value the detector strips). The RATIO bound is unchanged
+  # at 0.124 against 0.13; the surface still grew slower than the package.
+  expect_lte(length(o$orphans), 60L)
   expect_lte(length(o$orphans) / length(o$exports), 0.13)
 })
