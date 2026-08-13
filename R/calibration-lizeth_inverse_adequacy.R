@@ -106,7 +106,7 @@ urps_weighted_quantile <- function(
 #' @export
 lizeth_wait_targets <- function(
     lizeth_calls,
-    wait_col = "wait_days",
+    wait_col = "wait_business_days",
     obtained_col = "appointment_obtained") {
   base::message("Extracting Lizeth wait-time calibration targets.")
   required_names <- c(
@@ -156,7 +156,7 @@ lizeth_wait_targets <- function(
     base::format(targets[["p50"]], digits = 4),
     ", p75=",
     base::format(targets[["p75"]], digits = 4),
-    " days."
+    " business days."
   )
   targets
 }

@@ -6,7 +6,7 @@
 \usage{
 lizeth_wait_targets(
   lizeth_calls,
-  wait_col = "wait_days",
+  wait_col = "wait_business_days",
   obtained_col = "appointment_obtained"
 )
 }

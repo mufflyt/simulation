@@ -49,9 +49,14 @@
 
 * **Fielded URPS access anchor (Lizeth).** `build_lizeth_access_anchor()` reads
   the Lizeth national mystery-caller REDCap export and reports realized
-  base-year access — appointment obtainment, the wait-time distribution, and
-  insurance and clinical-scenario strata — so current URPS access can be
-  described from fielded observation rather than borrowed evidence. It
+  base-year access — appointment obtainment, the wait-time distribution **in
+  federal-holiday-adjusted business days** (via `mysterycall`, matching the
+  study's own primary outcome), and insurance and clinical-scenario strata — so
+  current URPS access can be described from fielded observation rather than
+  borrowed evidence. Wait time is business-day native, consistent with
+  `URPS_ACCESS_TIME_UNIT` and the Rabice anchor; a raw calendar-day subtraction
+  overstates the median wait by roughly 40% on the fielded data and would
+  compare two different clocks against `clear_access()`. It
   deliberately does **not** invert wait time into an adequacy ratio:
   `capacity_status_with_lizeth()` records that access is now measured while
   leaving `capacity_status()$resolved` FALSE, because identifying latent
@@ -76,8 +81,10 @@
 * **Inverse calibration of adequacy to observed wait times.** With the forward
   map now tested, `fit_lizeth_inverse_adequacy()` inverts it: it fits a
   lognormal catchment adequacy distribution (national mean + between-catchment
-  heterogeneity) to Lizeth's observed wait p25/median/p75 by matching simulated
-  quantiles, and `bootstrap_lizeth_inverse_adequacy()` puts a physician-cluster
+  heterogeneity) to Lizeth's observed wait p25/median/p75 (in federal business
+  days) by matching simulated quantiles, so `wait_scale`, `wait_time` and the
+  fitted target all share one unit; `bootstrap_lizeth_inverse_adequacy()` puts a
+  physician-cluster
   bootstrap interval on the fitted mean and reports the probability it lies
   below the 0.948 reference. `wait_scale` is held **fixed** in the primary fit —
   estimating it jointly with adequacy is not identified from three wait

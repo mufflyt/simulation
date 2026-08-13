@@ -148,5 +148,5 @@ utils::globalVariables(c(
   "status",
   "subspecialty_name",
   "synthetic_id",
-  "wait_days"
+  "wait_business_days"
 ))

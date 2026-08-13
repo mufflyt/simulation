@@ -41,6 +41,29 @@
   base::as.Date(base::as.character(x), format = "%Y-%m-%d")
 }
 
+# Federal-holiday-adjusted business days between call and appointment, matching
+# the Lizeth study's PRIMARY wait outcome exactly: mc_business_days(..., "federal")
+# in mystery_common.R delegates to mysterycall_count_business_days() over the US
+# federal calendar (Mon-Fri minus the 11 federal holidays). A URPS mystery-caller
+# wait is quoted in business days, not calendar days -- a raw date subtraction is
+# the "two different clocks" error the access layer (URPS_ACCESS_TIME_UNIT) warns
+# against. Same-day appointments are 0; an appointment before the call is NA.
+.lizeth_business_days <- function(call_date, appointment_date) {
+  if (!base::requireNamespace("mysterycall", quietly = TRUE)) {
+    base::stop(
+      "Package 'mysterycall' is required to count federal business days for ",
+      "Lizeth wait times (the study's primary outcome unit). Install it with ",
+      "remotes::install_github('mufflyt/mysterycall').",
+      call. = FALSE
+    )
+  }
+  base::as.numeric(mysterycall::mysterycall_count_business_days(
+    base::as.Date(call_date),
+    base::as.Date(appointment_date),
+    mysterycall::mysterycall_us_federal_calendar()
+  ))
+}
+
 #' Find the most recent Lizeth labeled REDCap export
 #'
 #' @param lizeth_dir Local path to the Lizeth repository.
@@ -341,18 +364,12 @@ prepare_lizeth_access <- function(lizeth_records) {
       appointment_obtained = !base::is.na(
         appointment_date
       ),
-      wait_days = base::as.numeric(
-        appointment_date - call_date
+      wait_business_days = .lizeth_business_days(
+        call_date,
+        appointment_date
       ),
       call_year = base::as.integer(
         base::format(call_date, "%Y")
-      )
-    ) |>
-    dplyr::mutate(
-      wait_days = dplyr::if_else(
-        wait_days >= 0,
-        wait_days,
-        NA_real_
       )
     )
   base::message(
@@ -423,25 +440,25 @@ estimate_lizeth_access_anchor <- function(
         na.rm = TRUE
       ),
       wait_mean = base::mean(
-        wait_days,
+        wait_business_days,
         na.rm = TRUE
       ),
       wait_sd = stats::sd(
-        wait_days,
+        wait_business_days,
         na.rm = TRUE
       ),
       wait_median = stats::median(
-        wait_days,
+        wait_business_days,
         na.rm = TRUE
       ),
       wait_p25 = stats::quantile(
-        wait_days,
+        wait_business_days,
         probs = 0.25,
         na.rm = TRUE,
         names = FALSE
       ),
       wait_p75 = stats::quantile(
-        wait_days,
+        wait_business_days,
         probs = 0.75,
         na.rm = TRUE,
         names = FALSE
@@ -465,25 +482,25 @@ estimate_lizeth_access_anchor <- function(
         na.rm = TRUE
       ),
       wait_mean = base::mean(
-        wait_days,
+        wait_business_days,
         na.rm = TRUE
       ),
       wait_sd = stats::sd(
-        wait_days,
+        wait_business_days,
         na.rm = TRUE
       ),
       wait_median = stats::median(
-        wait_days,
+        wait_business_days,
         na.rm = TRUE
       ),
       wait_p25 = stats::quantile(
-        wait_days,
+        wait_business_days,
         probs = 0.25,
         na.rm = TRUE,
         names = FALSE
       ),
       wait_p75 = stats::quantile(
-        wait_days,
+        wait_business_days,
         probs = 0.75,
         na.rm = TRUE,
         names = FALSE
@@ -508,17 +525,17 @@ estimate_lizeth_access_anchor <- function(
         na.rm = TRUE
       ),
       wait_median = stats::median(
-        wait_days,
+        wait_business_days,
         na.rm = TRUE
       ),
       wait_p25 = stats::quantile(
-        wait_days,
+        wait_business_days,
         probs = 0.25,
         na.rm = TRUE,
         names = FALSE
       ),
       wait_p75 = stats::quantile(
-        wait_days,
+        wait_business_days,
         probs = 0.75,
         na.rm = TRUE,
         names = FALSE
@@ -597,7 +614,7 @@ estimate_lizeth_access_anchor <- function(
   summary_sentence <- base::sprintf(
     base::paste(
       "In the %s fielded URPS mystery-caller study, %s of %s eligible calls",
-      "obtained an appointment; median wait was %.1f days",
+      "obtained an appointment; median wait was %.1f business days",
       "(p25 %.1f, p75 %.1f). By insurance, %s (p=%s)."
     ),
     year_text,
@@ -613,6 +630,7 @@ estimate_lizeth_access_anchor <- function(
   anchor <- base::list(
     anchor_type = "fielded_urps_access",
     identifies_capacity_adequacy = FALSE,
+    wait_time_unit = "business_days",
     calibration_status =
       "measured_input_unvalidated_response",
     overall = overall_anchor,
@@ -648,7 +666,7 @@ lizeth_adequacy_evidence <- function(lizeth_anchor) {
   observed_text <- base::sprintf(
     base::paste(
       "%s/%s eligible mystery calls obtained an appointment;",
-      "median wait %.1f days (p25 %.1f, p75 %.1f)."
+      "median wait %.1f business days (p25 %.1f, p75 %.1f)."
     ),
     .lizeth_comma(anchor$appointment_n),
     .lizeth_comma(anchor$n_calls),

@@ -62,7 +62,7 @@ test_that("urps_catchment_scores are standardized and rank-preserving", {
 
 test_that("lizeth_wait_targets extracts ordered quantiles and filters", {
   calls <- tibble::tibble(
-    wait_days = c(1:60, -5, NA_real_, 10),
+    wait_business_days = c(1:60, -5, NA_real_, 10),
     appointment_obtained = c(rep(TRUE, 60), TRUE, TRUE, FALSE)
   )
   targets <- suppressMessages(lizeth_wait_targets(calls))
@@ -74,7 +74,7 @@ test_that("lizeth_wait_targets extracts ordered quantiles and filters", {
   expect_equal(targets[["p50"]], stats::median(1:60))
   expect_error(
     suppressMessages(lizeth_wait_targets(tibble::tibble(
-      wait_days = 1:10, appointment_obtained = rep(TRUE, 10)))),
+      wait_business_days = 1:10, appointment_obtained = rep(TRUE, 10)))),
     "Fewer than 20"
   )
   expect_error(
@@ -115,7 +115,7 @@ test_that("lizeth_adequacy_loss is ~0 at the generating parameters", {
 test_that("fit_lizeth_inverse_adequacy runs, stays in bounds, and labels itself", {
   ct <- tibble::tibble(demand_workload = rep(100, 40))
   calls <- tibble::tibble(
-    wait_days = rep(1:60, 2),
+    wait_business_days = rep(1:60, 2),
     appointment_obtained = TRUE,
     npi = rep(sprintf("n%02d", 1:24), 5)
   )
@@ -132,7 +132,7 @@ test_that("fit_lizeth_inverse_adequacy runs, stays in bounds, and labels itself"
 test_that("bootstrap_lizeth_inverse_adequacy returns an interval and needs npi", {
   ct <- tibble::tibble(demand_workload = rep(100, 40))
   calls <- tibble::tibble(
-    wait_days = rep(1:60, 2),
+    wait_business_days = rep(1:60, 2),
     appointment_obtained = TRUE,
     npi = rep(sprintf("n%02d", 1:24), 5)
   )
