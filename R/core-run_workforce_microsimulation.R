@@ -567,7 +567,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
     if (verbose) .msg_info(sprintf("  prevention scenario: %s", prevention_scenario))
     prevention_demand_trajectory(demand_long, scenario_id = prevention_scenario)
   } else {
-    example_service_volumes(demand_long)
+    resolve_service_volumes(demand_long, mode = mode)
   }
 
   # --- Demand calibration against an independent national anchor -----------
