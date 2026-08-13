@@ -62,3 +62,29 @@ test_that("with no fallback the claims pass through unchanged", {
   expect_equal(attr(out, "overall_status"), "calibrated")
   expect_equal(nrow(out), nrow(csv_fallback()))
 })
+
+test_that("resolve_service_volumes falls back to the illustrative basket with no CSV", {
+  demand_long <- tibble::tibble(
+    estimand = rep(c("D1", "D2", "D3"), each = 2), year = rep(2020:2021, 3),
+    demand_cases = c(1000, 1050, 500, 520, 200, 210))
+  got <- suppressMessages(urpssim:::resolve_service_volumes(
+    demand_long, path = file.path(tempdir(), "does-not-exist-xyz.csv")))
+  expect_setequal(names(got), c("year", "service", "volume"))
+  expect_equal(dplyr::arrange(got, .data$service, .data$year),
+               dplyr::arrange(example_service_volumes(demand_long), .data$service, .data$year))
+})
+
+test_that("resolve_service_volumes prefers the calibrated CSV, overriding covered cells only", {
+  demand_long <- tibble::tibble(
+    estimand = rep(c("D1", "D2", "D3"), each = 2), year = rep(2020:2021, 3),
+    demand_cases = c(1000, 1050, 500, 520, 200, 210))
+  csv <- tempfile(fileext = ".csv")
+  readr::write_csv(tibble::tibble(year = 2020L, service = "sling_procedure", volume = 999), csv)
+  got <- suppressMessages(urpssim:::resolve_service_volumes(demand_long, path = csv))
+  fb <- example_service_volumes(demand_long)
+  expect_equal(got$volume[got$service == "sling_procedure" & got$year == 2020], 999)
+  # a (service, year) the CSV did not cover stays illustrative
+  expect_equal(got$volume[got$service == "sling_procedure" & got$year == 2021],
+               fb$volume[fb$service == "sling_procedure" & fb$year == 2021])
+  expect_true(any(got$service == "new_consultation"))
+})

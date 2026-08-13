@@ -156,3 +156,33 @@ claims_service_volumes <- function(claims,
   attr(out, "overall_status") <- overall
   out
 }
+
+# Resolve the service-volume basket for a run: prefer the claims-calibrated
+# basket that scripts/calibration/build_claims_service_volumes.R writes to the
+# repo-local data-raw/demand/, falling back to the illustrative
+# example_service_volumes() when it is absent or malformed. The default path is
+# repo-relative (matching where the builder writes) rather than data_raw_path(),
+# which resolves to the EXTERNAL data root. Absent file -> unchanged behaviour,
+# so every run and test without the CSV keeps the illustrative basket.
+resolve_service_volumes <- function(demand_long,
+                                    path = Sys.getenv(
+                                      "SIMULATION_SERVICE_VOLUMES",
+                                      file.path("data-raw", "demand", "urps_service_volumes.csv")),
+                                    mode = resolve_reproducibility_mode()) {
+  fallback <- example_service_volumes(demand_long)
+  if (!nzchar(path) || !file.exists(path)) return(fallback)
+  claimed <- readr::read_csv(path, show_col_types = FALSE, progress = FALSE)
+  if (!all(c("year", "service", "volume") %in% names(claimed))) {
+    msg <- sprintf(paste0("resolve_service_volumes(): %s lacks year/service/volume; ",
+                          "using the illustrative basket."), path)
+    if (identical(mode, "strict")) stop(msg, call. = FALSE)
+    .msg_warn(msg)
+    return(fallback)
+  }
+  # claims override the illustrative fallback per (service, year); uncovered
+  # cells stay illustrative, so a partial basket is honestly the weakest tier.
+  out <- claims_service_volumes(claims = claimed, fallback = fallback, mode = mode)
+  .msg_info(sprintf("Service volumes: calibrated basket from %s (overall tier '%s').",
+                    path, attr(out, "overall_status")))
+  dplyr::select(out, "year", "service", "volume")
+}
