@@ -59,6 +59,20 @@
   function. `lizeth_adequacy_evidence()` registers the observation as a
   calibration *target*, not a calibrated level.
 
+* **Adequacy → access response bridge.** `adequacy_access_load()` and
+  `simulate_access_for_adequacy()` connect two engines that never touched: the
+  FTE-denominated base-year gap (`required = base_supply_fte / adequacy`) and
+  the demand-vs-capacity access queue (`clear_access()`). Because the queue
+  depends on demand and capacity only through their ratio, the map is exact in
+  FTE units — `rho = 1 / adequacy` — and is the faithful composition of shipped
+  functions, not a new assumption. This is the forward "adequacy → simulated
+  appointment wait" path the model previously lacked. It surfaces, rather than
+  hides, that a single national adequacy below 1 saturates the steady-state
+  queue (infinite wait), so the finite observed wait implies catchment
+  heterogeneity — the tension a later fit against Rabice/Lizeth would resolve.
+  It stays `assumed_illustrative`, is not wired into
+  `run_workforce_microsimulation()`, and does not resolve `capacity_status()`.
+
 ## Demand
 
 * NAMCS demand calibration (`namcs_demand_calibration()`), scaling only the
