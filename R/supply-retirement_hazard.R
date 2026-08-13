@@ -129,24 +129,160 @@ supply_survival_curve <- function(ages = 30:85, sex = "Female",
   )
 }
 
+# ---- cliff age-band empirical hazard (calibrated) ---------------------------
+#
+# The cliff pipeline computes a proper exposure-based departure hazard: for each
+# age band it observes person-years at risk and departure events, so
+# annual_hazard = events / person_years is a real age-conditional hazard with a
+# risk set -- not the age-at-retirement distribution among leavers that an
+# events-only parametric fit would give. This ingests that finished table
+# (vendored under inst/extdata/provider_year) and expands it to a per-age curve
+# with exposure-based uncertainty, at the `calibrated` tier.
+
+# Parse the age-band label column ("<45", "45-49", ..., "70+") to numeric
+# [lo, hi] bounds, clamped to the requested age window.
+.parse_urps_ageband_bounds <- function(raw, min_age, max_age) {
+  parse_one <- function(lbl) {
+    lbl <- trimws(as.character(lbl))
+    if (grepl("^<", lbl)) {
+      return(c(min_age, as.integer(sub("^<", "", lbl)) - 1L))
+    }
+    if (grepl("\\+$", lbl)) {
+      return(c(as.integer(sub("\\+$", "", lbl)), max_age))
+    }
+    parts <- as.integer(strsplit(lbl, "-", fixed = TRUE)[[1]])
+    c(parts[1L], parts[2L])
+  }
+  b <- vapply(raw$age_band, parse_one, integer(2))
+  data.frame(
+    age_band      = as.character(raw$age_band),
+    age_lo        = b[1L, ],
+    age_hi        = b[2L, ],
+    person_years  = as.numeric(raw$person_years),
+    events        = as.integer(raw$events),
+    annual_hazard = as.numeric(raw$annual_hazard),
+    stringsAsFactors = FALSE
+  )
+}
+
+# Expand the age-band table to one exit probability per integer age, for one
+# sex. A positive `scale_shift` delays retirement: the hazard at age a is read
+# from age (a - scale_shift), matching the Weibull path's "+2 = later" lever.
+# Bands with zero observed events (the sparse 70+ band: 0 events / 16 py) carry
+# no information that a hazard is zero, so those ages fall back to the Weibull
+# analogy, floored at the highest observed-band hazard so an old-age hazard is
+# never below a younger observed one (retirement risk does not fall with age).
+.urps_ageband_exit_probs <- function(ageband_tbl, ages, sex, scale_shift = 0,
+                                     observed_floor = 0) {
+  lookup_age <- ages - scale_shift
+  band_index <- function(a) {
+    idx <- which(a >= ageband_tbl$age_lo & a <= ageband_tbl$age_hi)
+    if (length(idx) == 0L) {
+      idx <- if (a < min(ageband_tbl$age_lo)) which.min(ageband_tbl$age_lo)
+             else which.max(ageband_tbl$age_hi)
+    }
+    idx[1L]
+  }
+  prob <- numeric(length(ages))
+  se   <- numeric(length(ages))
+  tier <- character(length(ages))
+  for (i in seq_along(ages)) {
+    b  <- band_index(lookup_age[i])
+    ev <- ageband_tbl$events[b]
+    if (ev > 0L) {
+      h <- ageband_tbl$annual_hazard[b]
+      prob[i] <- h
+      # Poisson relative SE of an events/exposure rate is 1/sqrt(events).
+      se[i]   <- h / sqrt(ev)
+      tier[i] <- "calibrated"
+    } else {
+      wp <- as.numeric(urps_weibull_exit_probs(ages[i], sex, "ABOG", scale_shift))
+      prob[i] <- max(wp, observed_floor)
+      se[i]   <- prob[i] * 0.15
+      tier[i] <- "derived_by_analogy"
+    }
+  }
+  data.frame(age = ages, sex = sex, prob_exit = prob,
+             se_prob_exit = se, calibration_tier = tier,
+             stringsAsFactors = FALSE)
+}
+
+# Build the full exit-hazard contract from the cliff age-band CSV. Returns NULL
+# (so the caller can fall back) if the file lacks the required columns.
+.cliff_ageband_exit_hazard <- function(csv_path, ages, scale_shift, smooth, verbose) {
+  raw <- utils::read.csv(csv_path, stringsAsFactors = FALSE,
+                         check.names = FALSE)
+  required <- c("age_band", "person_years", "events", "annual_hazard")
+  if (!all(required %in% names(raw))) {
+    return(NULL)
+  }
+  ageband_tbl <- .parse_urps_ageband_bounds(raw, min(ages), max(ages))
+  # Floor for zero-event (extrapolated) ages: the highest hazard we actually
+  # observed, so retirement risk never falls with age across the boundary.
+  observed_floor <- if (any(ageband_tbl$events > 0L)) {
+    max(ageband_tbl$annual_hazard[ageband_tbl$events > 0L])
+  } else 0
+  probs <- dplyr::bind_rows(lapply(c("Female", "Male"), function(s) {
+    .urps_ageband_exit_probs(ageband_tbl, ages, s, scale_shift, observed_floor)
+  }))
+  if (isTRUE(smooth) && length(ages) > 10L) {
+    probs <- dplyr::bind_rows(lapply(split(probs, probs$sex), function(d) {
+      d <- d[order(d$age), ]
+      sf <- tryCatch(stats::loess(prob_exit ~ age, data = d, span = 0.5),
+                     error = function(e) NULL)
+      if (!is.null(sf)) {
+        d$prob_exit <- pmax(0, pmin(0.99, as.numeric(stats::predict(sf))))
+      }
+      d
+    }))
+    rownames(probs) <- NULL
+  }
+  total_events <- sum(ageband_tbl$events)
+  # Overall relative uncertainty of the pooled rate is 1/sqrt(total events):
+  # a real, data-driven hazard_cv (contrast the old fixed 0.15 / the assumed 0).
+  hazard_cv <- if (total_events > 0L) 1 / sqrt(total_events) else 0
+  if (isTRUE(verbose)) {
+    message(sprintf(
+      paste0("build_urps_exit_hazard(): cliff age-band empirical (calibrated) | ",
+             "n_events=%d | hazard_cv=%.3f | scale_shift=%.1f"),
+      total_events, hazard_cv, scale_shift))
+  }
+  list(exit_probs = probs, source = "cliff_ageband_empirical",
+       n_events = as.integer(total_events), hazard_cv = hazard_cv,
+       weibull_params = list(scale_shift = scale_shift))
+}
+
 #' Build URPS Age-Specific Retirement Hazard
 #'
 #' Returns a per-age exit probability table. Its consumer,
 #' `advance_urps_agents()`, is archived in inst/archive/supply.R.
-#' The default fallback uses the Weibull survival curves from
-#' [urps_weibull_exit_probs()] (derived-by-analogy from HWSM Exhibits 17–18),
-#' replacing the previous coarse step function.  When a cliff DuckDB is
-#' available, a Gompertz model is fitted to observed departure events and
-#' returned at the `calibrated` tier.
+#' By default the calibrated source is the cliff pipeline's exposure-based
+#' age-band hazard (person-years at risk and departure events per age band,
+#' vendored under `inst/extdata/provider_year`), expanded to a per-age curve at
+#' the `calibrated` tier with Poisson exposure-based uncertainty. This is a real
+#' age-conditional hazard (a risk set), preferred over both the events-only
+#' DuckDB Gompertz fit and the Weibull analogy. Sparse zero-event bands (the
+#' 70+ band has 0 events in 16 person-years) fall back to the Weibull analogy
+#' for those ages rather than asserting no retirement. When the age-band file is
+#' absent and a cliff DuckDB is supplied, a Gompertz model is fitted to observed
+#' departure events; otherwise the Weibull survival curves from
+#' [urps_weibull_exit_probs()] (derived-by-analogy from HWSM Exhibits 17–18) are
+#' used.
 #'
-#' @param cliff_duckdb_path Character path to the cliff DuckDB, or NULL.
+#' @param cliff_duckdb_path Character path to the cliff DuckDB, or NULL. Used
+#'   only when `cliff_ageband_csv` is unavailable.
+#' @param cliff_ageband_csv Character path to the cliff exposure-based age-band
+#'   hazard CSV (columns `age_band`, `person_years`, `events`, `annual_hazard`).
+#'   Defaults to the vendored copy under `inst/extdata/provider_year`; set to
+#'   `NULL` to force the DuckDB/Weibull path.
 #' @param min_confidence Minimum cliff confidence score to include. Default 0.60.
-#' @param smooth Logical; loess-smooth the Gompertz predictions. Default TRUE.
-#' @param scale_shift Numeric scale shift applied to the Weibull fallback only
-#'   (cliff Gompertz uses its own fitted parameters). Default 0.
+#' @param smooth Logical; loess-smooth the per-age predictions. Default TRUE.
+#' @param scale_shift Numeric years to shift the hazard curve along age
+#'   (`+2` = later/delayed retirement). Applied to the cliff age-band and
+#'   Weibull paths alike.
 #' @param verbose Logical.
 #' @return Named list: `exit_probs` (data frame), `source`, `n_events`,
-#'   `hazard_cv`, `weibull_params` (the parameters used in the fallback).
+#'   `hazard_cv`, and `weibull_params` (present when a Weibull path is used).
 #' @importFrom assertthat assert_that
 #' @importFrom dplyr mutate filter case_when select bind_rows if_else
 #' @importFrom purrr map_dfr
@@ -154,6 +290,10 @@ supply_survival_curve <- function(ages = 30:85, sex = "Female",
 #' @concept supply
 #' @export
 build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
+                                   cliff_ageband_csv = system.file(
+                                     "extdata", "provider_year",
+                                     "retirement_hazard_by_ageband.csv",
+                                     package = "urpssim"),
                                    min_confidence   = 0.60,
                                    smooth           = TRUE,
                                    scale_shift      = 0,
@@ -186,6 +326,21 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
         scale_shift  = scale_shift
       )
     )
+  }
+
+  # Preferred calibrated source: cliff's exposure-based age-band hazard. It is
+  # the correct empirical construction (events over person-years at risk), so it
+  # takes precedence over the events-only DuckDB Gompertz fit and the analogy.
+  if (!is.null(cliff_ageband_csv) && nzchar(cliff_ageband_csv) &&
+      file.exists(cliff_ageband_csv)) {
+    ab <- .cliff_ageband_exit_hazard(cliff_ageband_csv, ages, scale_shift,
+                                     smooth, verbose)
+    if (!is.null(ab)) {
+      return(ab)
+    }
+    if (verbose) {
+      message("build_urps_exit_hazard(): cliff age-band CSV lacks required columns; continuing to DuckDB/Weibull.")
+    }
   }
 
   if (is.null(cliff_duckdb_path) || !file.exists(cliff_duckdb_path)) {

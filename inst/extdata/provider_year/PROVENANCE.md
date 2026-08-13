@@ -4,6 +4,22 @@ Built by `data-raw/provider_year_activity/build_provider_year_activity.R` and
 `build_comparison_and_casemix.R`. Nothing was downloaded for this work; every
 source below was already present locally.
 
+## `retirement_hazard_by_ageband.csv` — empirical departure hazard
+
+Vendored from the `mufflyt/cliff` pipeline
+(`cliff:data/retirement_hazard_by_ageband.csv`). One row per age band with
+`person_years` at risk, observed departure `events`, and
+`annual_hazard = events / person_years`. Departures are the anchored,
+multi-source definition (Medicare Part B/D, NPPES deactivation, or ABMS
+certification lapse — not Open-Payments-only cessation; see
+`cliff:scripts/departure_anchor.R`) over the ABOG+ABU URPS cohort. This is an
+**exposure-based** hazard (a genuine risk set), which is why
+`build_urps_exit_hazard()` prefers it over an events-only parametric fit and
+over the HWSM Weibull analogy. Aggregate counts only — the smallest band cell is
+5 events. The 70+ band (0 events / 16 person-years) is too sparse to assert a
+hazard and is extrapolated from the analogy, floored at the highest observed
+band. Calibration tier: `calibrated` for bands with observed events.
+
 ## Sources actually used
 
 | # | Source | Local path | Coverage | Granularity | Role |

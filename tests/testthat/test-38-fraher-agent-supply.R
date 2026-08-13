@@ -32,14 +32,19 @@ test_that("initialize_urps_agents: required columns present", {
 
 
 
+# cliff_ageband_csv = NULL forces the Weibull analogy path (the calibrated
+# age-band CSV is the default source; these two pin the fallback specifically).
 test_that("build_urps_exit_hazard fallback: prob_exit in [0,1]", {
-  h <- build_urps_exit_hazard(cliff_duckdb_path = NULL, verbose = FALSE)
+  h <- build_urps_exit_hazard(cliff_duckdb_path = NULL, cliff_ageband_csv = NULL,
+                              verbose = FALSE)
+  expect_identical(h$source, "hwsm_weibull_analogy")
   expect_true(all(h$exit_probs$prob_exit >= 0))
   expect_true(all(h$exit_probs$prob_exit <= 1))
 })
 
 test_that("build_urps_exit_hazard fallback: hazard_cv is positive (Weibull spread)", {
-  h <- build_urps_exit_hazard(cliff_duckdb_path = NULL, verbose = FALSE)
+  h <- build_urps_exit_hazard(cliff_duckdb_path = NULL, cliff_ageband_csv = NULL,
+                              verbose = FALSE)
   expect_gt(h$hazard_cv, 0)
   expect_lte(h$hazard_cv, 1)
 })

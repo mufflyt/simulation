@@ -6,6 +6,8 @@
 \usage{
 build_urps_exit_hazard(
   cliff_duckdb_path = NULL,
+  cliff_ageband_csv = system.file("extdata", "provider_year",
+    "retirement_hazard_by_ageband.csv", package = "urpssim"),
   min_confidence = 0.6,
   smooth = TRUE,
   scale_shift = 0,
@@ -13,20 +15,28 @@ build_urps_exit_hazard(
 )
 }
 \arguments{
-\item{cliff_duckdb_path}{Character path to the cliff DuckDB, or NULL.}
+\item{cliff_duckdb_path}{Character path to the cliff DuckDB, or NULL. Used
+only when \code{cliff_ageband_csv} is unavailable.}
+
+\item{cliff_ageband_csv}{Character path to the cliff exposure-based age-band
+hazard CSV (columns \code{age_band}, \code{person_years}, \code{events},
+\code{annual_hazard}). Defaults to the vendored copy under
+\code{inst/extdata/provider_year}; set to \code{NULL} to force the
+DuckDB/Weibull path.}
 
 \item{min_confidence}{Minimum cliff confidence score to include. Default 0.60.}
 
-\item{smooth}{Logical; loess-smooth the Gompertz predictions. Default TRUE.}
+\item{smooth}{Logical; loess-smooth the per-age predictions. Default TRUE.}
 
-\item{scale_shift}{Numeric scale shift applied to the Weibull fallback only
-(cliff Gompertz uses its own fitted parameters). Default 0.}
+\item{scale_shift}{Numeric years to shift the hazard curve along age
+(\code{+2} = later/delayed retirement). Applied to the cliff age-band and
+Weibull paths alike.}
 
 \item{verbose}{Logical.}
 }
 \value{
 Named list: \code{exit_probs} (data frame), \code{source}, \code{n_events},
-\code{hazard_cv}, \code{weibull_params} (the parameters used in the fallback).
+\code{hazard_cv}, and \code{weibull_params} (present when a Weibull path is used).
 }
 \description{
 Returns a per-age exit probability table. Its consumer,
@@ -36,6 +46,19 @@ The default fallback uses the Weibull survival curves from
 replacing the previous coarse step function.  When a cliff DuckDB is
 available, a Gompertz model is fitted to observed departure events and
 returned at the \code{calibrated} tier.
+}
+\details{
+By default the calibrated source is the cliff pipeline's exposure-based
+age-band hazard (person-years at risk and departure events per age band,
+vendored under \code{inst/extdata/provider_year}), expanded to a per-age curve at
+the \code{calibrated} tier with Poisson exposure-based uncertainty. This is a real
+age-conditional hazard (a risk set), preferred over both the events-only
+DuckDB Gompertz fit and the Weibull analogy. Sparse zero-event bands (the
+70+ band has 0 events in 16 person-years) fall back to the Weibull analogy
+for those ages, floored at the highest observed-band hazard so retirement risk
+never falls with age. When the age-band file is absent and a cliff DuckDB is
+supplied, a Gompertz model is fitted to observed departure events; otherwise
+the Weibull survival curves are used.
 }
 \concept{retirement hazard}
 \concept{supply}
