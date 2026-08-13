@@ -249,6 +249,61 @@ test_that("no package module exceeds the code-line ceiling", {
   )
 })
 
+# Guard: CI workflow drift that only bites at dependency-resolution time.
+#
+# setup-r-dependencies@v2 runs an internal "does this package need pandoc?" step
+# that resolves pak::pkg_deps(".", dependencies = "all") -- Suggests INCLUDED.
+# mysterycall is a GitHub-only Suggests deliberately kept out of Remotes (its
+# GLMM dependency graph conflicts with the pinned lme4/blme), so that resolution
+# cannot succeed and the whole job dies before a single check runs. The r-lib
+# template's own remedy is to install pandoc first: with pandoc on PATH the check
+# short-circuits (Sys.which("pandoc") != "") and never resolves Suggests at all.
+#
+# This was latent for as long as every Suggests happened to be resolvable, cost
+# hours to diagnose once it wasn't (hidden behind a self-inflicted API rate
+# limit), and would NOT reproduce locally -- pandoc is installed on a developer
+# box, so the bad code path never runs there. A structural guard is the only
+# thing that catches the next reordering or deletion the instant it lands.
+.workflow_files <- function() {
+  root <- .repo_root()
+  d <- file.path(root, ".github", "workflows")
+  if (!dir.exists(d)) skip(".github/workflows not present")
+  list.files(d, pattern = "[.]ya?ml$", full.names = TRUE)
+}
+
+test_that("every setup-r-dependencies step is preceded by setup-pandoc in its job", {
+  offenders <- character(0)
+  for (f in .workflow_files()) {
+    wf <- tryCatch(yaml::read_yaml(f), error = function(e) NULL)
+    if (is.null(wf) || is.null(wf$jobs)) next
+    for (job_name in names(wf$jobs)) {
+      steps <- wf$jobs[[job_name]]$steps
+      if (!length(steps)) next
+      uses <- vapply(steps, function(s) {
+        u <- s[["uses"]]
+        if (is.null(u)) NA_character_ else as.character(u)[1]
+      }, character(1))
+      dep_idx <- grep("r-lib/actions/setup-r-dependencies", uses)
+      if (!length(dep_idx)) next
+      pandoc_idx <- grep("r-lib/actions/setup-pandoc", uses)
+      # Every setup-r-dependencies needs a setup-pandoc at an EARLIER index in
+      # the same job; the first setup-r-dependencies is the one that matters.
+      if (!any(pandoc_idx < min(dep_idx))) {
+        offenders <- c(offenders, sprintf("%s [job: %s]", basename(f), job_name))
+      }
+    }
+  }
+  expect_equal(
+    unique(offenders), character(0),
+    info = paste0(
+      "setup-r-dependencies@v2 resolves Suggests (including the unreachable ",
+      "GitHub-only mysterycall) in its pandoc-needs check unless pandoc is ",
+      "already on PATH. Add `- uses: r-lib/actions/setup-pandoc@v2` before ",
+      "setup-r-dependencies in: ", paste(unique(offenders), collapse = ", ")
+    )
+  )
+})
+
 test_that("the package does not redefine operators that base or rlang provide", {
   # Defining `%||%` locally shadows base R (>= 4.4) and rlang, so behaviour would
   # depend on attach order.
