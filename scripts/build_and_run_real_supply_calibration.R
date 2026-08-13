@@ -130,15 +130,21 @@ build_real_abog_entrants <- function(
   entrant_series
 }
 build_real_abog_stock <- function(
-    geography = "national") {
+    geography = "national",
+    board_pathway = "ABOG_PLUS_ABU") {
   base::message("Reading observed ABOG workforce stock.")
-  stock_source <- mufflyaccess::urps_counts(
-    measure = "board_certified_active",
-    geography = geography
-  )
+  # urps_counts_long() is the pinned long-format count series
+  # (year x measure x geography x board_pathway); urps_counts() is NOT in the
+  # mufflyaccess contract. The active stock is the n_active column, and the
+  # national ABOG_PLUS_ABU board_certified_active row is the 1,306 headline
+  # cohort -- the same access used in R/validation-backtest.R.
+  stock_source <- mufflyaccess::urps_counts_long()
   required_names <- c(
     "year",
-    "abog_active"
+    "measure",
+    "geography",
+    "board_pathway",
+    "n_active"
   )
   missing_names <- base::setdiff(
     required_names,
@@ -152,10 +158,15 @@ build_real_abog_stock <- function(
     )
   }
   observed_supply <- stock_source |>
+    dplyr::filter(
+      .data$measure == "board_certified_active",
+      .data$geography == geography,
+      .data$board_pathway == board_pathway
+    ) |>
     dplyr::transmute(
       year = base::as.integer(.data$year),
       observed_supply = base::as.integer(
-        .data$abog_active
+        .data$n_active
       )
     ) |>
     dplyr::filter(
@@ -1145,7 +1156,7 @@ write_canonical_supply_files <- function(
     source = c(
       "mufflyaccess::urps_entry_counts()",
       source_path,
-      "mufflyaccess::urps_counts()",
+      "mufflyaccess::urps_counts_long()",
       source_path
     ),
     method = c(
