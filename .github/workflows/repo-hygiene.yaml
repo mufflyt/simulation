@@ -39,6 +39,15 @@ jobs:
         with:
           use-public-rspm: true
 
+      # Install pandoc BEFORE setup-r-dependencies. That action's internal
+      # "does this package need pandoc?" check resolves pak::pkg_deps(".",
+      # dependencies = "all"), which includes Suggests and so tries to find
+      # mysterycall -- a GitHub-only Suggests deliberately kept out of Remotes
+      # (its GLMM graph conflicts with the pinned lme4/blme). With pandoc already
+      # on PATH that check short-circuits and never resolves Suggests, so the
+      # unreachable mysterycall no longer fails the job.
+      - uses: r-lib/actions/setup-pandoc@v2
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           # mufflyaccess is pinned to the same commit as DESCRIPTION and

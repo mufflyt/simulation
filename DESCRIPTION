@@ -53,6 +53,7 @@ Suggests:
     knitr,
     MASS,
     mufflyaccess,
+    mysterycall,
     pkgload,
     rcmdcheck,
     rmarkdown,
