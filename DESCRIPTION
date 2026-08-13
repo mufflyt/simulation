@@ -68,7 +68,6 @@ VignetteBuilder: knitr
 URL: https://github.com/mufflyt/simulation
 BugReports: https://github.com/mufflyt/simulation/issues
 Remotes:
-    mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208,
-    mufflyt/mysterycall@098bb834d077a3b7d125bed7f525a31e694fc321
+    mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
 Config/roxygen2/version: 8.0.0
 RoxygenNote: 7.3.3

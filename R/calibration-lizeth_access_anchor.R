@@ -52,8 +52,10 @@
   if (!base::requireNamespace("mysterycall", quietly = TRUE)) {
     base::stop(
       "Package 'mysterycall' is required to count federal business days for ",
-      "Lizeth wait times (the study's primary outcome unit). Install it with ",
-      "remotes::install_github('mufflyt/mysterycall').",
+      "Lizeth wait times (the study's primary outcome unit). Install the commit ",
+      "the study uses: remotes::install_github('mufflyt/mysterycall@098bb834'). ",
+      "It is a Suggests, not pinned in Remotes, because its GLMM dependency ",
+      "graph conflicts with this package's CI-pinned lme4/blme.",
       call. = FALSE
     )
   }
