@@ -123,6 +123,12 @@ NULL
 # state.abb were in this note too, and declaring them would have masked a
 # missing stats:: / datasets:: qualifier rather than fixing it.
 utils::globalVariables(c(
+  # CHIA/BORIM/CADR capacity-evidence linkage (calibration-chia_capacity_*)
+  "NPI", "key_raw", "key_value", "key_source", "n_npi", "score", "column",
+  "physician_identifier_raw", "physician_key", "borim_npi", "direct_npi",
+  ".source_file", ".source_row", "pop_diagnosis", "ui_diagnosis",
+  "hysterectomy_procedure", "pop_hysterectomy", "urps_diagnosis",
+  "encounter_key", "year", "stream",
   ".hdmm_off", ".hdmm_w",
   "age",
   "age_group",
