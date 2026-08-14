@@ -1,0 +1,6 @@
+stratum,n_cases,ref_band_mi,sigma_mi,monotone
+nearest <=5 mi (urban),4342,5,5,FALSE
+nearest 5-10 mi,2259,10,22.1,TRUE
+nearest 10-25 mi,1662,25,27.4,TRUE
+nearest >25 mi (rural),818,50,108.7,TRUE
+GLOBAL (case-weighted),9081,NA,22.7,NA

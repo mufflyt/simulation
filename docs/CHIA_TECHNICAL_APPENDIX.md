@@ -238,11 +238,14 @@ from availability:
 
 Two results, both material:
 
-**(a) The true decay is far steeper than Luo/Qi.** Beyond the immediate band,
-observed use falls to ~0.22 where the generic weight assumes 0.68 — roughly a
-threefold overstatement of how much distant supply is actually reachable. An
-E2SFCA surface using Luo/Qi credits catchments with urogynaecologic capacity
-that women demonstrably do not use.
+**(a) This kernel is conditional on urban availability, and must not be read as
+the population decay.** Restricting to women whose nearest capable site is
+within 5 miles isolates choice from availability — but it selects women who
+*have* close options, whose revealed decay is necessarily tight. Fitting a
+Gaussian to this stratum alone gives σ ≈ 5 miles (~10 minutes) and appears to
+show the 60-minute default overstating reach five- to sevenfold. **That is a
+selection artefact.** See §5.2a for the stratified fit, which is the
+trustworthy aggregate.
 
 **(b) The decay is not monotonic.** The 10–25 mile weight (0.236) *exceeds* the
 5–10 mile weight (0.219). Women bypass nearer capable hospitals to reach farther
@@ -256,6 +259,45 @@ Kernel bands are in **miles**, deliberately. Converting to the minute-denominate
 Luo/Qi bands requires a speed assumption that swings the answer by 14 points
 (§5.3), so the calibrated weights are published in the unit that was measured.
 At ~40 mph the 30-minute boundary falls inside the 10–25 mile band.
+
+### 5.2a Calibrating σ — the default is sound, but σ is not a constant
+
+`E2SFCA_DEFAULT_WEIGHTS` is not a raw Luo/Qi table: it is a **Gaussian with
+σ = 60 minutes** evaluated at the band edges and normalised to the 30-minute
+band. σ is therefore the single free parameter, and it has been an assumption.
+
+Fitting σ within strata defined by **how far the nearest capable hospital
+actually is** (n = 9,081):
+
+| Nearest capable hospital | Cases | σ (miles) |
+|---|---|---|
+| ≤ 5 mi (urban) | 4,342 | **5.0** |
+| 5–10 mi | 2,259 | 22.1 |
+| 10–25 mi | 1,662 | 27.4 |
+| > 25 mi (rural) | 818 | **108.7** |
+| **Case-weighted global** | **9,081** | **22.7** |
+
+**22.7 miles is 44 minutes at 40 mph and 59 minutes at 30 mph — the 60-minute
+default sits inside that range.** At 30 mph the calibrated weights reproduce the
+default almost exactly (1.000 / 0.679 / 0.144 / 0.011 against 1.000 / 0.687 /
+0.153 / 0.013). **This measurement confirms the existing parameter for aggregate
+use rather than overturning it.**
+
+The substantive result is the **twenty-fold spread**. Women adapt travel to what
+exists: those with a hospital nearby rarely pass it, those without travel as far
+as needed. A fixed-σ Gaussian cannot express that, so any single global value
+understates access in dense areas and overstates burden in sparse ones. The
+stratified vector (`URPS_INPATIENT_SIGMA_BY_AVAILABILITY` in
+`mufflyt/twostep`) is the more faithful object.
+
+Wired into twostep as `urps_inpatient_band_weights()`, which routes through
+`gaussian_band_weights()` and is monotone by construction — the raw empirical
+kernel is not, and is correctly rejected by `e2sfca_band_weights()`.
+
+Builder: `scripts/chia/fit_urps_sigma.R`; output
+`data-raw/chia/urps_sigma_by_nearest_distance.csv`.
+
+---
 
 ### 5.3 Distance is measured; drive time is not
 
@@ -366,9 +408,9 @@ kernel toward short trips. A ZIP3-area centroid fallback took geocoding from
 ### 5.7 How to use this
 
 1. Restrict the E2SFCA supply set to **urogyn-capable** facilities (§5.1).
-2. Replace the Luo/Qi weights with `chia_urogyn_travel()` / the conditional
-   kernel of §5.2 for urogynaecologic access, retaining
-   `E2SFCA_DEFAULT_WEIGHTS` as the generic-accessibility scenario.
+2. Keep σ = 60 min for aggregate work — the stratified fit confirms it (§5.2a).
+   Where the analysis can carry it, use
+   `URPS_INPATIENT_SIGMA_BY_AVAILABILITY` instead of any single σ.
 3. Treat the non-monotonicity as a finding about functional form, not noise.
 4. Stratify the kernel by payer where the analysis supports it (§5.4).
 5. Replace the drive-time approximation with HERE isochrones before publishing
