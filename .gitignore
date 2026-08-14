@@ -182,3 +182,7 @@ data-raw/chia/ref_downloads/
 # total). Same reasoning as the back-test artefacts above: a kernel that cannot
 # be re-read against the code that produced it is not reproducible.
 !data-raw/chia/*.csv
+
+# CHIA revenue-setting run artifacts are timestamped and regenerable; the
+# encounter-level RDS is large. Keep the code, not the runs.
+artifacts/chia_revenue_setting/

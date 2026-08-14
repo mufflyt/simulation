@@ -45,6 +45,36 @@ A rolling-origin back-test scored against this series would grade the demand
 model against setting migration, not disease. Do not build it without an
 ambulatory denominator.
 
+**UB-04 revenue-center evidence settles which it is.** Two hypotheses fit a
+falling count with flat LOS: the cases left the inpatient setting, or they were
+reclassified inside HIDD. Revenue codes name the hospital cost centres that
+participated, so they separate the two. For POP-indication hysterectomy
+(`R/data-chia_revenue_setting.R`, FY2015-2018 — the years `hdd_service` covers):
+
+| FY | Encounters | 036x OR | 037x anaesthesia | 071x recovery | Inpatient bed | 049x ambulatory | LOS median |
+|---|---|---|---|---|---|---|---|
+| 2015 | 617 | 99.5% | 95.6% | 99.0% | 99.7% | 0% | 1 |
+| 2016 | 523 | 99.6% | 95.8% | 98.7% | 100.0% | 0% | 1 |
+| 2017 | 448 | 99.8% | 95.1% | 98.9% | 100.0% | 0% | 1 |
+| 2018 | **358** | 98.3% | 95.8% | 96.4% | 98.9% | 0% | 1 |
+
+**Volume falls 42% while every marker of the inpatient surgical pathway holds
+between 95% and 100%.** Operating room, anaesthesia, recovery room and
+inpatient bed are all stable; ambulatory-surgery cost-centre revenue is **zero
+throughout**. The encounters that remain are the same operation on the same
+pathway — the missing volume genuinely left the dataset rather than being
+reclassified within it.
+
+This is the strongest available confirmation that the decline is setting
+migration, and it closes the question the LOS evidence could only raise. Note
+the design choice in that module: a 049x or 0762 code on an HIDD record is
+evidence about which cost centre was involved, **not** proof the encounter was
+ambulatory or observation. The classification is conservative and the raw flags
+are preserved.
+
+Coverage limit: `hdd_service` exists FY2015-FY2018 only (33.9M service lines),
+so this test cannot reach the FY2004-2014 portion of the decline.
+
 ---
 
 ## 2. Repairs required before the data could be used
