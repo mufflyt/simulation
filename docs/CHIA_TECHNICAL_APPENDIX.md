@@ -470,6 +470,79 @@ Builder: `scripts/chia/build_payer_specific_access.R`.
 
 ---
 
+### 5.4b Massachusetts health reform is the backdrop to every payer comparison
+
+Chapter 58 of the Acts of 2006 — "RomneyCare" — took effect across FY2007–2008
+and is **visible in the CHIA payer taxonomy itself**. Three payer-type codes are
+reform artefacts: `Q` Commonwealth Care/ConnectorCare and `H` Health Safety Net
+were created by it, and `9` Free Care is the pre-reform uncompensated-care
+category it replaced.
+
+**Payer mix, female adult inpatient cohort (% of discharges):**
+
+| FY | Self-pay | Free Care | Health Safety Net | Commonwealth Care | Medicaid | Private |
+|---|---|---|---|---|---|---|
+| 2004 | 1.36 | 1.90 | — | — | 11.73 | 37.11 |
+| 2006 | 0.99 | 2.00 | — | — | 13.35 | 35.63 |
+| **2007** | 0.85 | 1.66 | — | **0.31** | 14.17 | 35.28 |
+| 2008 | 0.67 | 0.97 | **0.07** | 1.01 | 14.11 | 35.38 |
+| 2010 | 0.64 | 0.31 | 0.77 | 1.60 | 14.16 | 33.70 |
+| 2013 | 0.79 | 0.30 | 0.89 | 1.94 | 15.40 | 31.65 |
+| **2015** | 0.55 | 0.09 | 0.40 | 0.99 | **18.09** | 29.86 |
+| 2018 | 1.19 | **0.02** | 0.58 | 1.40 | 17.20 | 28.34 |
+
+Free Care collapses from 2.0% to 0.02% exactly as Commonwealth Care (FY2007) and
+Health Safety Net (FY2008) appear. Self-pay falls ~60%. Medicaid climbs
+11.7% → 18.5%, with visible steps at FY2007 (Chapter 58) and FY2014–15 (ACA
+expansion). Private coverage declines throughout, 37.1% → 28.3%.
+
+#### What this does and does not do to §5.4a
+
+**It is context, not cause.** The travel analysis runs FY2007–2018 — the
+implementation year onward — so the payer gap reported there is measured
+entirely within the post-reform regime. It is not a pre/post artefact.
+
+**But the gap is closing, monotonically:**
+
+| Era | Medicaid p50 | Private p50 | Gap |
+|---|---|---|---|
+| 2007–09 (early reform) | 5.2 mi | 12.5 mi | **7.3** |
+| 2010–13 (mature) | 5.5 mi | 11.4 mi | **5.9** |
+| 2014–18 (post-ACA) | 6.7 mi | 9.8 mi | **3.1** |
+
+Convergence from both directions: Medicaid travel rises while private falls.
+
+#### Why this cannot be attributed to the reform
+
+**There is no patient geography before FY2007.** `PermanentPatientZIPCode`
+begins in FY2007; FY2004–2006 discharges carry no patient ZIP at all. A genuine
+pre/post comparison of travel is therefore **impossible with this extract** —
+the reform's implementation year is the first year travel can be measured. What
+the payer gap looked like under the pre-reform Free Care regime is unobservable.
+
+Two rival explanations fit the convergence at least as well as improved access:
+
+1. **Composition.** Medicaid grew 57% over the period. Expansion populations
+   typically resemble the general population more than the original eligibility
+   group did, which would pull Medicaid travel toward the private mean without
+   any change in access.
+2. **Private attrition.** Private coverage fell 37% → 28%, so its travel median
+   is drifting for compositional reasons of its own.
+
+Separating these needs either the pre-2007 geography CHIA does not have, or a
+within-area design — tracking ZIP-level Medicaid travel among areas whose
+coverage mix was stable. The second is buildable from what is held here and has
+not been done.
+
+**How to read the payer stratification given this.** The FY2007–2018 pooled
+figures in §5.4a average across a regime that was still changing. The
+insurance-penalty result (Medicaid +1.3 mi, private +0.1 mi) is a period average,
+not a steady state, and the era table above suggests the penalty was larger
+earlier. Any forward projection should use the post-ACA era rather than the
+pooled value, and should not assume the convergence continues.
+
+---
+
 ### 5.5 Comparison: all inpatient surgery
 
 For context, the same measurement across all 1,639,630 admitted operations on
