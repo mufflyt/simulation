@@ -104,6 +104,7 @@
 "ssot_safe_percent","api"
 "stamped_backtest_status","api"
 "state_departure_hazard","api"
+"summarise_entry_panel","api"
 "summarise_stratum_coverage","api"
 "supply_per_capita","api"
 "supply_uncertainty_drivers","api"

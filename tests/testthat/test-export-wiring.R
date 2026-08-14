@@ -166,6 +166,15 @@ test_that("the unwired surface does not grow", {
   # and fit_fellowship_conversion() -- that landed unregistered; all three are
   # analysis accessors/fitters a user calls, registered `api`. The ratio is
   # 57/482 = 0.118, still under 0.13.
-  expect_lte(length(o$orphans), 57L)
+  #
+  # RAISED 57 -> 58. The entry-panel work exported summarise_entry_panel(),
+  # which landed unregistered. It collapses a build_entry_panel() result to one
+  # row per clinician -- an accessor a user calls on an object they already
+  # hold, orphaned by construction rather than debt -- so it is registered
+  # `api` rather than wired. Wiring was considered first, per the note below,
+  # and rejected: nothing in the package consumes a summarised panel, so any
+  # call site would exist only to satisfy this gate. The ratio is 58/487 =
+  # 0.119, still under 0.13 and still the tighter constraint.
+  expect_lte(length(o$orphans), 58L)
   expect_lte(length(o$orphans) / length(o$exports), 0.13)
 })
