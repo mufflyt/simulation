@@ -110,6 +110,19 @@ response_table <- response_table[response_table$matched %in% TRUE, , drop = FALS
 holdout <- wait_response_region_holdout(response_table, region_col = "state")
 capacity <- capacity_status_with_isochrone_response(sigma_fit, holdout)
 
+# ---- Stage 5: export the tract access surface for cliff Module D v2 ----------
+# The tract-level surface (not the provider-catchment fit table) is what cliff
+# consumes; recompute it at the fitted sigma and ship it with fit provenance.
+# allow_unvalidated = TRUE so the artifact is always emitted with its honest
+# calibration_status; the downstream consumer gates on it.
+message("Stage 5: exporting the tract-level access surface.")
+final_e2 <- compute_e2sfca_access(
+  membership = membership, supply = provider_supply, demand = tract_demand,
+  weights = gaussian_band_weights(bands = bands, sigma = sigma_fit$sigma))
+export_access_surface(
+  final_e2, output_directory = out_dir, sigma_fit = sigma_fit, capacity = capacity,
+  isochrone_run_id = iso_report$run_id, allow_unvalidated = TRUE)
+
 # ---- Write results ----------------------------------------------------------
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 summary_out <- list(
