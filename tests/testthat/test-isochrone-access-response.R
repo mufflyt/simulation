@@ -125,3 +125,180 @@ test_that("join_lizeth_to_catchments validates its inputs", {
     "crosswalk"
   )
 })
+
+# --- Build #3: wait-response loss + decay-sigma fit --------------------------
+
+test_that("lizeth_wait_response_loss recovers wait_scale closed-form", {
+  # rho known -> x = rho/(1-rho); wait = k * x with k = 12 exactly.
+  rho <- c(0.2, 0.4, 0.6, 0.8)
+  x <- rho / (1 - rho)
+  rt <- data.frame(
+    wait_business_days = 12 * x,
+    demand_workload = rho,          # capacity = 1 => rho = demand_workload
+    accessible_capacity = rep(1, 4)
+  )
+  loss <- lizeth_wait_response_loss(rt)
+  expect_equal(loss$wait_scale, 12, tolerance = 1e-8)
+  expect_lt(loss$sse, 1e-12)
+  expect_equal(loss$n_used, 4L)
+  expect_equal(loss$n_censored, 0L)
+})
+
+test_that("lizeth_wait_response_loss excludes and counts saturated calls", {
+  rt <- data.frame(
+    wait_business_days = c(3, 6, 99, 99),
+    demand_workload = c(0.25, 0.5, 1.0, 1.5),  # last two rho >= 1 (saturated)
+    accessible_capacity = rep(1, 4)
+  )
+  loss <- lizeth_wait_response_loss(rt)
+  expect_equal(loss$n_used, 2L)
+  expect_equal(loss$n_censored, 2L)
+})
+
+test_that("lizeth_wait_response_loss validates inputs", {
+  expect_error(
+    lizeth_wait_response_loss(data.frame(wait_business_days = 1)),
+    "demand_workload"
+  )
+  expect_error(
+    lizeth_wait_response_loss(data.frame(
+      wait_business_days = 5, demand_workload = 0.5, accessible_capacity = 1
+    )),
+    "at least two"
+  )
+})
+
+# A base-R synthetic access model: each provider has band-level competing
+# populations and a fixed supply; rho_j(sigma) = sum_b g(b;sigma) pop_jb / supply.
+# Injected as catchments_for_sigma so the optimiser is exercised without the
+# dplyr-backed E2SFCA recompute.
+.decay_fixture <- function(true_sigma, true_wait_scale, n = 150, seed = 42) {
+  set.seed(seed)
+  bands <- c(30, 60, 120, 180)
+  pop <- matrix(runif(n * 4, 20, 200), n, 4)
+  supply <- runif(n, 300, 900)
+  npi <- sprintf("np%03d", seq_len(n))
+  gdecay <- function(b, s) exp(-(b^2) / (2 * s^2))
+  cfs <- function(sigma) {
+    wd <- as.numeric(pop %*% gdecay(bands, sigma))
+    data.frame(catchment = npi, demand_workload = wd,
+               accessible_capacity = supply, weight = wd,
+               adequacy_relative = supply / wd, stringsAsFactors = FALSE)
+  }
+  cat0 <- cfs(true_sigma)
+  rho <- cat0$demand_workload / cat0$accessible_capacity
+  lizeth <- data.frame(npi = npi,
+                       wait_business_days = true_wait_scale * rho / (1 - rho),
+                       stringsAsFactors = FALSE)
+  list(cfs = cfs, lizeth = lizeth, share_unsaturated = mean(rho < 1))
+}
+
+test_that("fit_decay_sigma recovers sigma and wait_scale on noiseless data", {
+  fx <- .decay_fixture(true_sigma = 55, true_wait_scale = 22)
+  expect_gt(fx$share_unsaturated, 0.9)   # fixture is well-posed
+  fit <- fit_decay_sigma(fx$lizeth, fx$cfs, sigma_bounds = c(15, 240))
+  expect_equal(fit$sigma, 55, tolerance = 3)
+  expect_equal(fit$wait_scale, 22, tolerance = 0.5)
+  expect_equal(fit$calibration_status, "fitted_to_lizeth_wait_response")
+})
+
+test_that("fit_decay_sigma is not anchored to one sigma (alternate truth)", {
+  fit <- with(.decay_fixture(true_sigma = 90, true_wait_scale = 14),
+              fit_decay_sigma(lizeth, cfs, sigma_bounds = c(15, 240)))
+  expect_equal(fit$sigma, 90, tolerance = 4)
+  expect_equal(fit$wait_scale, 14, tolerance = 1)
+})
+
+test_that("fit_decay_sigma validates its inputs", {
+  fx <- .decay_fixture(true_sigma = 55, true_wait_scale = 22)
+  expect_error(fit_decay_sigma(fx$lizeth, "not a function"), "must be a function")
+  expect_error(
+    fit_decay_sigma(fx$lizeth, fx$cfs, sigma_bounds = c(240, 15)),
+    "increasing positive"
+  )
+  expect_error(
+    fit_decay_sigma(fx$lizeth, fx$cfs, n_grid = 2),
+    "at least 3"
+  )
+})
+
+# --- Build #4: geographic holdout guard -------------------------------------
+
+# Per-call rows across regions; wait = k_region * rho/(1-rho) + small noise.
+.holdout_fixture <- function(k_by_region, n_per = 40, seed = 1) {
+  set.seed(seed)
+  do.call(rbind, lapply(names(k_by_region), function(rg) {
+    rho <- runif(n_per, 0.1, 0.85)
+    data.frame(
+      wait_business_days = k_by_region[[rg]] * rho / (1 - rho) +
+        rnorm(n_per, 0, 0.3),
+      demand_workload = rho,
+      accessible_capacity = rep(1, n_per),
+      region = rg,
+      stringsAsFactors = FALSE
+    )
+  }))
+}
+
+test_that("wait_response_region_holdout confirms a transportable response", {
+  rt <- .holdout_fixture(setNames(rep(20, 6), paste0("R", 1:6)))
+  h <- wait_response_region_holdout(rt)
+  expect_equal(h$n_regions, 6L)
+  expect_equal(h$metrics$calibration_slope, 1, tolerance = 0.15)
+  expect_gt(h$metrics$r2_oos, 0.8)
+})
+
+test_that("wait_response_region_holdout flags a non-transportable response", {
+  rt <- .holdout_fixture(setNames(c(5, 10, 15, 60, 80, 100), paste0("R", 1:6)))
+  h <- wait_response_region_holdout(rt)
+  # a response that differs sharply by region does not predict held-out regions.
+  expect_lt(h$metrics$calibration_slope, 0.75)
+})
+
+test_that("wait_response_region_holdout validates inputs", {
+  rt <- .holdout_fixture(setNames(rep(20, 6), paste0("R", 1:6)))
+  expect_error(
+    wait_response_region_holdout(rt[, c("wait_business_days", "region")]),
+    "demand_workload"
+  )
+  few <- .holdout_fixture(setNames(rep(20, 2), paste0("R", 1:2)))
+  expect_error(wait_response_region_holdout(few), "at least 4 distinct regions")
+})
+
+test_that("capacity_status_with_isochrone_response resolves only when transportable", {
+  stub <- list(resolved = FALSE, source = "prior")
+  fit <- list(sigma = 55, wait_scale = 20)
+
+  ok <- wait_response_region_holdout(
+    .holdout_fixture(setNames(rep(20, 6), paste0("R", 1:6)))
+  )
+  s_ok <- capacity_status_with_isochrone_response(fit, ok, base_status = stub)
+  expect_true(s_ok$resolved)
+  expect_equal(s_ok$calibration_status, "fitted_and_geographically_validated")
+  expect_equal(s_ok$fitted_sigma, 55)
+
+  bad <- wait_response_region_holdout(
+    .holdout_fixture(setNames(c(5, 10, 15, 60, 80, 100), paste0("R", 1:6)))
+  )
+  s_bad <- capacity_status_with_isochrone_response(fit, bad, base_status = stub)
+  expect_false(s_bad$resolved)
+  expect_equal(s_bad$calibration_status, "fitted_but_not_transportable")
+  expect_match(s_bad$why_unresolved, "did not transport")
+})
+
+test_that("capacity_status_with_isochrone_response validates inputs", {
+  ok <- wait_response_region_holdout(
+    .holdout_fixture(setNames(rep(20, 6), paste0("R", 1:6)))
+  )
+  expect_error(
+    capacity_status_with_isochrone_response(list(sigma = 1), ok,
+                                            base_status = list()),
+    "fit_decay_sigma"
+  )
+  expect_error(
+    capacity_status_with_isochrone_response(list(sigma = 1, wait_scale = 1),
+                                            list(nope = TRUE),
+                                            base_status = list()),
+    "wait_response_region_holdout"
+  )
+})
