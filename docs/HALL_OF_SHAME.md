@@ -285,6 +285,82 @@ Structural, not conventional.
 
 ---
 
+### A constant presented as a measurement
+
+**2026-08-14, mine (CHIA travel kernel).** The kernel reports how far women
+travel for major pelvic surgery, in 30/60/120/180-minute bands, to be compared
+against the Luo/Qi weights the E2SFCA layer uses. Distance was measured. Drive
+time was not: it was `miles * 1.3 circuity / 40 mph`, two constants I chose.
+
+The module and its outputs said "drive_min" throughout, and the band table read
+like an observation. It was an assumption wearing an observation's units.
+
+How much it mattered was not obvious until asked. The `<=30` band share ranges
+**0.646 at 30 mph to 0.790 at 50 mph** — a 14-point swing from the speed
+constant alone, wider than most effects the kernel would be used to detect.
+
+**Caught by:** the user asking, flatly, "how did you do drive time from zip code
+to zip code." Nothing in the pipeline would have surfaced it; the number had
+already been written into a module, a CSV and a summary table. The repair was to
+demote drive time to an explicitly-labelled approximation, promote the
+assumption-free **distance** distribution to the primary result, and ship the
+speed-sensitivity table beside it so the fragility is impossible to miss.
+
+**The general form:** a derived quantity in the units of a measured one. Miles
+were measured; minutes were manufactured, and only the minutes were comparable
+to the thing being challenged — which is exactly why the manufacturing happened.
+
+---
+
+### Seven hospitals fell out of a geocode and took the long trips with them
+
+**2026-08-14, mine (CHIA travel kernel).** Facility ZIPs were joined to ZCTA
+centroids. Seven hospitals hold **unique institutional ZIPs that have no ZCTA** —
+Baystate (01199), Lahey Burlington (01805), UMass University (01655), Mercy
+Springfield (01102), Lawrence General (01842), Cooley Dickinson (01061), Noble
+(01086). They dropped silently: **263,745 cases, 15.9% of the cohort.**
+
+The bias was not random. Those are western and central Massachusetts — Springfield,
+Worcester, Northampton, Westfield — **exactly the regions where patients travel
+furthest**. Dropping them biases a travel kernel toward short trips, in a
+deliverable whose entire purpose is to characterise how far people travel.
+
+**Caught by:** distrusting a summary line. The script printed `geocoded 82.7% of
+cases` and moved on to a plausible-looking distribution. Nothing failed. The only
+reason it surfaced was refusing to accept 82.7% without knowing what the missing
+17% were. Origins turned out to be 98% fine; the loss was entirely on the
+destination side.
+
+A ZIP3-area centroid fallback took geocoding to 99.0%. The final distribution
+moved only slightly (73.5% -> 73.1% in the near band), which is the
+uncomfortable part: **the answer was nearly right for the wrong reason**, and a
+check that stopped at "does this look plausible" would have passed it.
+
+---
+
+### Circumcision was the top urogynaecology procedure
+
+**2026-08-14, mine (CHIA workforce layer).** Building surgeon-year operative
+volume, the FY2018 case-mix listing for board-certified urogynaecologists came
+back with `0VTTXZZ` *Resection of Prepuce* at the top, 146 cases.
+
+Newborn stays (`AdmissionType = '4'`) carry the **mother's obstetrician** as
+operating physician. Newborns are 6-7% of all operative discharges but a far
+larger share for obstetric-adjacent specialties: excluding them cut URPS
+operative volume by **41%** in FY2018.
+
+**Caught by:** the result being clinically absurd on sight. Every structural
+check passed — the procedure code was valid, the physician resolved to a real
+NPI, the discharge was a genuine operation, the specialty was correct. Nothing
+in the data was malformed. The join was simply answering a different question
+than the one asked.
+
+**The general form:** attribution defects survive every validity check, because
+each field is individually true. They are caught by knowing what the answer
+should look like, which is not a property of the pipeline.
+
+---
+
 ## V. Reinventing what already existed
 
 ### 16. A hand-rolled GFM table renderer
