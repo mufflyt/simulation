@@ -145,6 +145,77 @@ compare_e2sfca_to_chia <- function(weights = c("30" = 1.00, "60" = 0.68,
   )
 }
 
+# ---- Urogynaecology-specific: the supply set is NOT all hospitals ------------
+#
+# Only 18-30 of ~76 Massachusetts acute hospitals host any URPS operation in a
+# given year, and only 4-16 reach 10 cases. Measuring urogynaecologic access
+# against all hospitals overstates availability by roughly 3x in the tail:
+# median distance to the nearest ANY hospital is 2.9 miles, to the nearest
+# urogyn-capable hospital 5.3 miles, and at p90 the gap is 8.2 vs 22.4 miles.
+#
+# "Urogynaecologic surgery" is defined by the OPERATOR -- an operation on the
+# female-adult cohort by a board-certified URPS surgeon (NPI matched to
+# urps.provider_snapshot). A procedure-code definition awaits
+# config/chia_urps_inpatient_codes.yml. n = 9,081 operations at 38 sites,
+# FY2007-2018, 100% geocoded.
+#
+# A site counts as urogyn-capable in a year at >= 10 URPS operations. The
+# threshold is not delicate: median nearest-capable distance is 4.4 / 5.3 / 6.1
+# miles at thresholds of 1 / 10 / 25.
+
+CHIA_UROGYN_TRAVEL_ACTUAL <- c(
+  "5" = 0.3389, "10" = 0.2170, "25" = 0.2895,
+  "50" = 0.1035, "100" = 0.0385, "999" = 0.0124
+)
+
+# Nearest hospital that actually performs URPS surgery -- the correct
+# availability denominator for a urogynaecology access surface.
+CHIA_UROGYN_NEAREST_CAPABLE <- c(
+  "5" = 0.4781, "10" = 0.2488, "25" = 0.1830,
+  "50" = 0.0677, "100" = 0.0122, "999" = 0.0101
+)
+
+# Nearest hospital of ANY kind -- shown to make the overstatement explicit.
+CHIA_UROGYN_NEAREST_ANY <- c(
+  "5" = 0.7392, "10" = 0.1858, "25" = 0.0549,
+  "50" = 0.0069, "100" = 0.0035, "999" = 0.0096
+)
+
+CHIA_UROGYN_TRAVEL_QUANTILES <- data.frame(
+  quantile                   = c("p25","p50","p75","p90","p95","p99"),
+  actual_miles               = c(3.7, 8.4, 17.8, 31.8, 50.5, 140.7),
+  nearest_urps_capable_miles = c(2.7, 5.3, 10.8, 22.4, 34.1, 102.6),
+  nearest_any_hospital_miles = c(0.0, 2.9,  5.1,  8.2, 12.1,  86.3)
+)
+
+# Share travelling more than 10 miles past their nearest urogyn-capable site.
+CHIA_UROGYN_BYPASS_RATE <- 0.202
+
+#' Urogynaecology-specific travel and availability
+#'
+#' Restricted to operations performed by board-certified URPS surgeons, because
+#' not every hospital offers urogynaecology. Use `"capable"` -- not `"any"` --
+#' as the availability denominator for any urogynaecologic access surface.
+#'
+#' @param what One of "actual" (where patients went), "capable" (nearest
+#'   urogyn-capable hospital), "any" (nearest hospital of any kind), or
+#'   "quantiles" (all three, in miles).
+#' @return Named numeric vector indexed by upper mile bound, or a data.frame
+#'   for "quantiles".
+#' @examples
+#' chia_urogyn_travel("capable")   # the right denominator
+#' chia_urogyn_travel("any")       # what using all hospitals would assume
+#' @export
+chia_urogyn_travel <- function(what = c("actual", "capable", "any", "quantiles")) {
+  what <- match.arg(what)
+  switch(what,
+    actual    = CHIA_UROGYN_TRAVEL_ACTUAL,
+    capable   = CHIA_UROGYN_NEAREST_CAPABLE,
+    any       = CHIA_UROGYN_NEAREST_ANY,
+    quantiles = CHIA_UROGYN_TRAVEL_QUANTILES
+  )
+}
+
 #' Provenance for the CHIA travel kernel
 #' @export
 chia_travel_kernel_provenance <- function() {
@@ -161,6 +232,10 @@ chia_travel_kernel_provenance <- function() {
     calibration_tier   = "observed_regional",
     substitutes_e2sfca = FALSE,
     builder            = "scripts/chia/build_chia_surgical_travel_kernel.R",
+    urogyn_builder     = "scripts/chia/build_chia_urogyn_travel_kernel.R",
+    urogyn_n           = 9081L,
+    urogyn_sites       = 38L,
+    urogyn_definition  = "operator-based: board-certified URPS surgeon",
     appendix           = "docs/CHIA_TECHNICAL_APPENDIX.md"
   )
 }

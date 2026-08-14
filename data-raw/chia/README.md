@@ -48,3 +48,16 @@ Distance is measured; drive time is not. There is no routing engine in this
 pipeline — see appendix §5.2 before using any minute-based figure.
 
 Regenerate with `scripts/chia/build_chia_surgical_travel_kernel.R`.
+
+## Urogynaecology-specific artefacts
+
+| File | Contents |
+|---|---|
+| `urogyn_travel_vs_availability.csv` | actual travel vs nearest urogyn-capable vs nearest any hospital |
+| `urogyn_travel_quantiles.csv` | the same three, as distance quantiles in miles |
+| `urogyn_site_threshold_sensitivity.csv` | how the capability threshold moves nearest-facility distance |
+
+Only 18–30 of ~76 hospitals host any URPS operation in a year. Restrict the
+E2SFCA supply set accordingly — using all hospitals overstates urogynaecologic
+accessibility by ~3x in the tail. Regenerate with
+`scripts/chia/build_chia_urogyn_travel_kernel.R`.

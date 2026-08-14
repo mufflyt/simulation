@@ -217,6 +217,53 @@ The kernel drifts outward over time — ≤30 falls 74.8% (FY2007) → 71.1%
 (FY2018) while 61–120 rises 6.6% → 8.6% — consistent with regionalisation of
 complex surgery.
 
+### 5.4 Urogynaecology specifically — the supply set is not all hospitals
+
+The figures above measure travel against **all** acute hospitals. For
+urogynaecology that overstates availability: only **18–30 of ~76** Massachusetts
+hospitals host any URPS operation in a given year, and only **4–16** reach 10
+cases.
+
+Restricting to operations by board-certified URPS surgeons (n = **9,081** at 38
+sites, FY2007–2018, 100% geocoded):
+
+| Band (miles) | Where patients went | Nearest **urogyn-capable** | Nearest **any** hospital |
+|---|---|---|---|
+| 0–5 | 33.9% | 47.8% | **73.9%** |
+| 5–10 | 21.7% | 24.9% | 18.6% |
+| 10–25 | 28.9% | 18.3% | 5.5% |
+| 25–50 | 10.4% | 6.8% | 0.7% |
+| 50–100 | 3.9% | 1.2% | 0.4% |
+| >100 | 1.2% | 1.0% | 1.0% |
+
+Distance to nearest facility, miles:
+
+| | p50 | p75 | p90 | p95 |
+|---|---|---|---|---|
+| Actual travel | 8.4 | 17.8 | 31.8 | 50.5 |
+| Nearest urogyn-capable | 5.3 | 10.8 | **22.4** | 34.1 |
+| Nearest any hospital | 2.9 | 5.1 | **8.2** | 12.1 |
+
+**Using all hospitals as the supply set overstates urogynaecologic accessibility
+by roughly 3× in the tail** (8.2 vs 22.4 miles at p90). Any E2SFCA surface for
+this subspecialty must restrict supply to facilities that actually perform the
+surgery — otherwise it will report adequate access in regions that have a
+hospital but no urogynaecologist.
+
+**20.2%** of women travelled more than 10 miles past their nearest
+urogyn-capable site.
+
+The capability threshold is not delicate: median nearest-capable distance is
+4.4 / 5.3 / 6.1 miles at thresholds of 1 / 10 / 25 annual cases
+(`urogyn_site_threshold_sensitivity.csv`).
+
+Note the definition is **operator-based** — an operation on the female-adult
+cohort performed by a board-certified URPS surgeon. A procedure-code definition
+awaits `config/chia_urps_inpatient_codes.yml`; see §2.1 for why hand-rolled code
+families are not used.
+
+---
+
 ### 5.4 A geocoding bias that was nearly shipped
 
 Seven hospitals hold **unique institutional ZIPs with no ZCTA**: Baystate
