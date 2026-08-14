@@ -15,20 +15,28 @@ anchors:
   urps_office_visits:
     source: "NAMCS / MEPS national office-visit totals for urogynecologic care"
     path: data/anchors/urps_office_visits.csv
-    sha256: ""
+    sha256: "8e98138bccacbecaa5b29d8c7b458178aee9f6acbc7559fe47721d8876f1b918"
   sling_procedure_volume:
     source: "HCUP SASD (ambulatory surgery) + Medicare Part B carrier, CPT 57288"
     note: "NIS is INPATIENT and carries ICD-10-PCS, not CPT; most slings are outpatient"
-    path: data/anchors/sling_volume.csv
+    # NOT YET ACQUIRED. Needs the licensed HCUP Central Distributor pull; see
+    # data-raw/hcup/README.md. Filename follows the <anchor_id>.csv convention
+    # used by the anchors that exist -- note scripts/data_acquisition/
+    # 10_ingest_hcup_nass.R currently writes "sling_volume.csv" and would need
+    # updating to match.
+    path: data/anchors/sling_procedure_volume.csv
     sha256: ""
+    status: missing
   prolapse_procedure_volume:
     source: "HCUP SASD + Medicare Part B carrier"
-    path: data/anchors/prolapse_volume.csv
-    sha256: ""
+    path: data/anchors/prolapse_procedure_volume.csv
+    sha256: "b449fd0131a574681a1a9d1045917f6a44efbe0b3dca585d09e9ef1ff635e312"
   ui_prevalence:
     source: "Nygaard 2008 JAMA; SWAN longitudinal prevalence"
+    # NOT YET ACQUIRED.
     path: data/anchors/ui_prevalence.csv
     sha256: ""
+    status: missing
 
 # Back-test configuration: fit through fit_through_year, project to target_year,
 # compare with observed. Goes beyond the published Dall-family standard, which
