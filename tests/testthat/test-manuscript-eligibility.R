@@ -16,7 +16,13 @@
 # Fixtures are synthesised in tempdir() rather than read from
 # artifacts/validation/, which is untracked and absent from a fresh clone.
 
-root <- rprojroot::find_root(rprojroot::has_file("DESCRIPTION"))
+# find_root() ERRORS when no DESCRIPTION ancestor exists, and this runs at top
+# level, so under R CMD check -- which copies tests to a temp tree without the
+# source root -- it aborted the file before any skip could apply. Resolve it
+# tolerantly and skip instead, the same shape test-export-wiring.R uses.
+root <- tryCatch(rprojroot::find_root(rprojroot::has_file("DESCRIPTION")),
+                 error = function(e) NULL)
+skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
 skip_if_not(file.exists(file.path(root, "scripts", "manuscript", "_eligibility.R")))
 source(file.path(root, "scripts", "validation", "_provenance.R"), local = TRUE)
 source(file.path(root, "scripts", "manuscript", "_eligibility.R"), local = TRUE)

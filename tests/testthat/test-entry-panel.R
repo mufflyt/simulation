@@ -195,8 +195,14 @@ test_that("Open Payments is never graded as practice evidence", {
 
 test_that("the database-backed panel builds with the expected shape", {
   skip_if_not(file.exists(ENTRY_PANEL_DB_DEFAULT), "credentials database not attached")
-  r <- utils::read.csv("../../data-raw/urps_roster/urps_roster_2026-07-22.csv",
-                       colClasses = "character")
+  # The roster lives under data-raw/, which is .Rbuildignore'd, so it is absent
+  # from the .Rcheck tree even though the relative path resolves in the source
+  # tree. Guarding only the database made this test fail under `make check`
+  # exclusively on machines where the volume IS attached -- the gate passed for
+  # everyone else, which is why it went unnoticed.
+  roster <- "../../data-raw/urps_roster/urps_roster_2026-07-22.csv"
+  skip_if_not(file.exists(roster), "urps roster not present (data-raw absent under R CMD check)")
+  r <- utils::read.csv(roster, colClasses = "character")
   co <- data.frame(npi = head(unique(r$npi), 3), stringsAsFactors = FALSE)
   p <- build_entry_panel(co, years = 2018:2023)
   expect_s3_class(p, "entry_panel")
