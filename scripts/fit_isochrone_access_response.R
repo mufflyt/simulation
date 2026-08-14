@@ -87,11 +87,54 @@ wait_scale_fit <- fit_wait_scale(
   catchments = catchments,
   observed_wait = observed_median_wait
 )
-base::cat("Fitted wait_scale:", wait_scale_fit$wait_scale, "\n")
-base::cat("Unit wait (wait_scale = 1):", wait_scale_fit$unit_wait, "\n")
-base::cat("Catchments used:", wait_scale_fit$n_catchments_used, "\n")
+base::cat("Fitted wait_scale (fixed decay):", wait_scale_fit$wait_scale, "\n")
 
-base::message(
-  "Stages 0-3a complete. NEXT: fit sigma (build #3) and wire ",
-  "geographic_holdout_cv (build #4) before resolving base-year adequacy."
+# ---- Stage 3b: fit the decay parameter sigma (build #3) ----------------------
+# The catchments depend on sigma through the Gaussian band weights, so the fit
+# recomputes E2SFCA at each candidate sigma. wait_scale is refit closed-form
+# inside every evaluation; sigma is the single shape parameter.
+bands <- e2sfca_bands()
+catchments_for_sigma <- function(sigma) {
+  e2sfca_catchments_from_access(
+    compute_e2sfca_access(
+      membership = membership,
+      supply = provider_supply,
+      demand = tract_demand,
+      weights = gaussian_band_weights(bands = bands, sigma = sigma)
+    ),
+    workload_per_capita = 1
+  )
+}
+sigma_fit <- fit_decay_sigma(
+  lizeth_access = lizeth_calibration$calls,
+  catchments_for_sigma = catchments_for_sigma,
+  sigma_bounds = c(15, 240),
+  bands = bands
 )
+base::cat(sigma_fit$summary_sentence, "\n")
+
+# ---- Stage 4: geographic holdout + resolve base-year adequacy (build #4) -----
+# Attach each fielded wait to its catchment at the FITTED sigma, then leave one
+# region (state) out at a time to test that the response transports.
+fitted_catchments <- catchments_for_sigma(sigma_fit$sigma)
+response_table <- join_lizeth_to_catchments(
+  lizeth_access = lizeth_calibration$calls,
+  catchments = fitted_catchments
+)
+response_table <- response_table[response_table$matched %in% TRUE, , drop = FALSE]
+
+holdout <- wait_response_region_holdout(
+  response_table = response_table,
+  region_col = "state"
+)
+capacity <- capacity_status_with_isochrone_response(
+  sigma_fit = sigma_fit,
+  holdout = holdout
+)
+
+base::cat("Out-of-sample calibration slope:",
+          holdout$metrics$calibration_slope, "\n")
+base::cat("Out-of-sample R2:", holdout$metrics$r2_oos, "\n")
+base::cat("Base-year adequacy resolved:", capacity$resolved, "\n")
+base::cat("Calibration status:", capacity$calibration_status, "\n")
+if (!isTRUE(capacity$resolved)) base::cat("Why unresolved:", capacity$why_unresolved, "\n")
