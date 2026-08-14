@@ -19,3 +19,4 @@
 ^Makefile$
 ^\.githooks$
 ^inst/archive$
+^analysis$
