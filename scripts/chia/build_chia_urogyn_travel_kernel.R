@@ -34,6 +34,7 @@ od <- dbGetQuery(con, "
                                      a.PermanentPatientZIPCode)), '-'), '') AS o_zip,
          CASE WHEN c.age_capped < 50 THEN '18-49' WHEN c.age_capped < 65 THEN '50-64'
               WHEN c.age_capped < 80 THEN '65-79' ELSE '80+' END AS age_band,
+         c.PrimaryPayerType AS payer, c.race_primary,
          count(*) AS cases
   FROM chia_casemix.v_cohort_female_adult c
   JOIN chia_casemix.v_hdd_discharge_all_years a USING (RecordType20ID, _data_year)
@@ -140,6 +141,43 @@ print(qt); write.csv(qt, file.path(OUT,"urogyn_travel_quantiles.csv"), row.names
 cat(sprintf("\ncases: %s\n", format(tot, big.mark=",")))
 cat(sprintf("travelled >10 miles past nearest URPS-capable site: %.1f%%\n",
             100*sum(res$cases[res$miles > res$near_urps + 10], na.rm=TRUE)/tot))
+
+# ---- Stratification by patient demographics ---------------------------------
+# Payer, age band and race. Reported as distance quantiles and as the share
+# travelling past their nearest urogyn-capable site, because the second is the
+# access-relevant quantity: it isolates travel that scarcity imposed.
+
+payer_lab <- c("1"="Self-pay","2"="Workers comp","3"="Medicare","F"="Medicare MC",
+               "4"="Medicaid","B"="Medicaid MC","5"="Other govt","6"="Blue Cross",
+               "C"="Blue Cross MC","7"="Commercial","D"="Commercial MC","8"="HMO")
+
+strat <- function(d, key) {
+  d |> filter(!is.na(.data[[key]]), !is.na(near_urps)) |>
+    mutate(beyond = as.integer(miles > near_urps + 10)) |>
+    group_by(grp = .data[[key]]) |>
+    summarise(
+      n_cases        = sum(cases),
+      p50_miles      = round(quantile(rep(miles, times = pmin(cases, 40)), .50), 1),
+      p75_miles      = round(quantile(rep(miles, times = pmin(cases, 40)), .75), 1),
+      p90_miles      = round(quantile(rep(miles, times = pmin(cases, 40)), .90), 1),
+      p50_nearest    = round(quantile(rep(near_urps, times = pmin(cases, 40)), .50), 1),
+      pct_beyond_10mi = round(100 * sum(cases * beyond) / sum(cases), 1),  # uses the vector, not n_cases
+      .groups = "drop") |>
+    filter(n_cases >= 100) |>
+    mutate(stratum = key) |> arrange(desc(n_cases))
+}
+
+res_p <- res |> mutate(payer_label = coalesce(payer_lab[as.character(payer)],
+                                              paste0("Other (", payer, ")")))
+by_payer <- strat(res_p, "payer_label")
+by_age   <- strat(res,   "age_band")
+by_race  <- strat(res |> mutate(race_grp = as.character(race_primary)), "race_grp")
+
+demog <- bind_rows(by_payer, by_age, by_race) |>
+  select(stratum, group = grp, cases = n_cases, p50_miles, p75_miles, p90_miles,
+         p50_nearest_capable = p50_nearest, pct_beyond_10mi)
+print(as.data.frame(demog))
+write.csv(demog, file.path(OUT, "urogyn_travel_by_demographics.csv"), row.names = FALSE)
 
 sens <- bind_rows(lapply(c(1,10,25), function(th) {
   d <- nearest_for(th)
