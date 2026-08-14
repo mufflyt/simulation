@@ -129,6 +129,74 @@ supply_survival_curve <- function(ages = 30:85, sex = "Female",
   )
 }
 
+#' Canonical URPS Retirement-Event Query for the NBER DuckDB
+#'
+#' Emits SQL producing one row per observed URPS departure, with the columns
+#' [build_urps_exit_hazard()] expects (`age`, `sex`, `confidence_score`).
+#'
+#' Cohort is defined by **NPPES taxonomy `207VF0040X`** (ObGyn / Female Pelvic
+#' Medicine & Reconstructive Surgery) across the 2013-2024 yearly rosters, not
+#' by the procedure-derived ML predictions in
+#' `main.obgyn_subspecialty_ml_predictions`. That table is built from billing
+#' volume, so retirees are absent by construction: only 16 of its 653 FPMRS
+#' NPIs appear in `credentials.retirement_consensus` (2.4%) against a
+#' roster-wide rate of 34%. `crosswalk.subspecialty_by_npi` is likewise
+#' unusable — its `npi` column holds 4-5 character surrogate keys, not NPIs.
+#'
+#' Age is `retirement_year_final - year_of_birth`, per the 2026-08-13 decision
+#' to use Doximity `year_of_birth` directly rather than a graduation-year
+#' proxy; at this sample size the retirement join, not the age join, is the
+#' binding constraint.
+#'
+#' @param min_confidence Minimum `retirement_confidence_final`. Default 0.60.
+#' @param age_range Plausible age-at-exit bounds. Default `c(30, 80)`.
+#' @return A single SQL string.
+#' @family retirement hazard
+#' @concept supply
+#' @export
+urps_cliff_query <- function(min_confidence = 0.60, age_range = c(30, 80)) {
+  taxonomy_urps <- "207VF0040X"
+  years         <- 2013:2024
+
+  tax_clause <- paste(
+    sprintf("taxonomy_%d = '%s'", 1:14, taxonomy_urps), collapse = " OR "
+  )
+  roster <- paste(sprintf(
+    "SELECT npi, gender FROM credentials.temporal_obgyn_only_%d WHERE %s",
+    years, tax_clause
+  ), collapse = " UNION ")
+
+  sprintf("
+    WITH cohort AS (
+      SELECT npi, MAX(gender) AS gender FROM (%s) GROUP BY npi
+    ),
+    consensus AS (
+      SELECT npi, retirement_year_final, retirement_confidence_final
+      FROM credentials.retirement_consensus
+      WHERE is_retired_final AND retirement_year_final IS NOT NULL
+    ),
+    birth AS (
+      SELECT npi, MAX(year_of_birth) AS year_of_birth
+      FROM main.doximity_2024_medical_school
+      WHERE year_of_birth IS NOT NULL
+      GROUP BY npi
+    )
+    SELECT
+      consensus.retirement_year_final - birth.year_of_birth AS age,
+      CASE WHEN upper(cohort.gender) = 'F' THEN 'Female'
+           WHEN upper(cohort.gender) = 'M' THEN 'Male' END AS sex,
+      consensus.retirement_confidence_final AS confidence_score
+    FROM cohort
+    JOIN consensus USING (npi)
+    JOIN birth USING (npi)
+    WHERE cohort.gender IS NOT NULL
+      AND consensus.retirement_confidence_final >= %f
+      AND consensus.retirement_year_final - birth.year_of_birth
+          BETWEEN %d AND %d",
+    roster, min_confidence, as.integer(age_range[1]), as.integer(age_range[2])
+  )
+}
+
 #' Build URPS Age-Specific Retirement Hazard
 #'
 #' Returns a per-age exit probability table. Its consumer,
@@ -140,13 +208,26 @@ supply_survival_curve <- function(ages = 30:85, sex = "Female",
 #' returned at the `calibrated` tier.
 #'
 #' @param cliff_duckdb_path Character path to the cliff DuckDB, or NULL.
+#' @param cliff_query Optional SQL returning one row per departure with columns
+#'   `age`, `sex`, and (optionally) `confidence_score`. When NULL (default) the
+#'   legacy `main`-schema table scan runs first; if that finds none of the
+#'   expected tables, [urps_cliff_query()] is attempted automatically before
+#'   falling back to the analogy tier. Pass this explicitly to override both.
+#' @param require_calibrated Logical; if TRUE, error instead of silently
+#'   returning the `derived_by_analogy` Weibull fallback. Use this whenever a
+#'   caller depends on the result actually being fitted to observed data — a
+#'   missing table or a drifted schema otherwise yields a plausible-looking
+#'   102-row curve with `n_events = 0`. Default FALSE (back-compatible).
 #' @param min_confidence Minimum cliff confidence score to include. Default 0.60.
 #' @param smooth Logical; loess-smooth the Gompertz predictions. Default TRUE.
 #' @param scale_shift Numeric scale shift applied to the Weibull fallback only
 #'   (cliff Gompertz uses its own fitted parameters). Default 0.
 #' @param verbose Logical.
 #' @return Named list: `exit_probs` (data frame), `source`, `n_events`,
-#'   `hazard_cv`, `weibull_params` (the parameters used in the fallback).
+#'   `hazard_cv`, `weibull_params` (the parameters used in the fallback). A
+#'   calibrated result also carries `cohort_source`, naming which route
+#'   supplied the departures: `"legacy_main_schema"`, `"cliff_query"` (caller
+#'   supplied), or `"urps_cliff_query_auto"`.
 #' @importFrom assertthat assert_that
 #' @importFrom dplyr mutate filter case_when select bind_rows if_else
 #' @importFrom purrr map_dfr
@@ -154,11 +235,25 @@ supply_survival_curve <- function(ages = 30:85, sex = "Female",
 #' @concept supply
 #' @export
 build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
+                                   cliff_query        = NULL,
+                                   require_calibrated = FALSE,
                                    min_confidence   = 0.60,
                                    smooth           = TRUE,
                                    scale_shift      = 0,
                                    verbose          = TRUE) {
   ages <- 30:80
+
+  # The fallback is a legitimate result when nobody is relying on calibration,
+  # and a silent failure when somebody is. `require_calibrated` lets the caller
+  # say which case they are in; every fallback path routes through here.
+  .abort_if_required <- function(src, detail) {
+    if (isTRUE(require_calibrated)) {
+      stop(sprintf(
+        "build_urps_exit_hazard(require_calibrated = TRUE): no calibrated hazard could be fitted (%s). %s",
+        src, detail
+      ), call. = FALSE)
+    }
+  }
 
   weibull_fallback <- function() {
     dplyr::bind_rows(
@@ -189,6 +284,12 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   }
 
   if (is.null(cliff_duckdb_path) || !file.exists(cliff_duckdb_path)) {
+    .abort_if_required(
+      "hwsm_weibull_analogy",
+      sprintf("cliff_duckdb_path is %s.",
+              if (is.null(cliff_duckdb_path)) "NULL" else
+                sprintf("'%s', which does not exist", cliff_duckdb_path))
+    )
     if (verbose) {
       message(sprintf(
         "build_urps_exit_hazard(): cliff DuckDB unavailable. Using Weibull survival curves (HWSM Exhibits 17-18 analogy, scale_shift=%.1f).",
@@ -199,6 +300,8 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   }
 
   if (!requireNamespace("flexsurv", quietly = TRUE)) {
+    .abort_if_required("hwsm_weibull_analogy_flexsurv_missing",
+                       "Install flexsurv to fit the Gompertz model.")
     warning("flexsurv not installed. Using Weibull fallback.", call. = FALSE)
     return(.weibull_return("hwsm_weibull_analogy_flexsurv_missing"))
   }
@@ -206,41 +309,105 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   conn <- DBI::dbConnect(duckdb::duckdb(), cliff_duckdb_path, read_only = TRUE)
   on.exit(DBI::dbDisconnect(conn, shutdown = TRUE), add = TRUE)
 
-  tables <- DBI::dbGetQuery(conn,
-    "SELECT table_name FROM information_schema.tables
-     WHERE table_schema = 'main'"
-  )$table_name
+  # Run SQL that is expected to yield departure rows. Returns NULL (never
+  # raises) so the caller decides between falling back and trying the next
+  # source; `strict` distinguishes a caller's explicit query, whose failure is
+  # an error worth surfacing, from the speculative auto-attempt below.
+  .try_query <- function(sql, label, strict) {
+    out <- tryCatch(DBI::dbGetQuery(conn, sql), error = function(e) {
+      if (strict) {
+        .abort_if_required(paste0(label, "_failed"), conditionMessage(e))
+        warning(sprintf("%s failed (%s). Using fallback.", label,
+                        conditionMessage(e)), call. = FALSE)
+      }
+      NULL
+    })
+    if (is.null(out)) return(NULL)
 
-  ret_table <- intersect(
-    c("physician_retirement_signals", "retirement_signals", "cliff_results"),
-    tables
-  )[1]
-
-  if (is.na(ret_table)) {
-    warning("No retirement table found in cliff DuckDB. Using fallback.", call. = FALSE)
-    return(list(
-      exit_probs = weibull_fallback(),
-      source        = "hwsm_weibull_analogy_no_table",
-      n_events      = 0L,
-      hazard_cv     = 0.15,
-      weibull_params = list(scale_shift = scale_shift)
-    ))
+    missing_cols <- setdiff(c("age", "sex"), names(out))
+    if (length(missing_cols)) {
+      if (strict) {
+        .abort_if_required(paste0(label, "_bad_columns"), sprintf(
+          "%s must return column(s): %s.", label, paste(missing_cols, collapse = ", ")))
+        warning(sprintf("%s missing column(s) %s. Using fallback.", label,
+                        paste(missing_cols, collapse = ", ")), call. = FALSE)
+      }
+      return(NULL)
+    }
+    out
   }
 
-  cols <- DBI::dbGetQuery(conn, sprintf(
-    "SELECT column_name FROM information_schema.columns
-     WHERE table_name = '%s'", ret_table
-  ))$column_name
+  cohort_source <- NA_character_
 
-  conf_col    <- intersect(c("retirement_confidence_score", "confidence_score"), cols)[1]
-  conf_clause <- if (!is.na(conf_col))
-    sprintf("WHERE %s >= %f", conf_col, min_confidence) else ""
+  if (!is.null(cliff_query)) {
+    # Caller-supplied SQL already encodes cohort, joins and confidence filter.
+    cliff_data <- .try_query(cliff_query, "cliff_query", strict = TRUE)
+    if (is.null(cliff_data)) return(.weibull_return("hwsm_weibull_analogy_query_failed"))
+    cohort_source <- "cliff_query"
+    cols <- names(cliff_data)
+  } else {
+    tables <- DBI::dbGetQuery(conn,
+      "SELECT table_name FROM information_schema.tables
+       WHERE table_schema = 'main'"
+    )$table_name
 
-  cliff_data <- DBI::dbGetQuery(conn,
-    sprintf("SELECT * FROM %s %s", ret_table, conf_clause)
-  )
+    ret_table <- intersect(
+      c("physician_retirement_signals", "retirement_signals", "cliff_results"),
+      tables
+    )[1]
+
+    if (is.na(ret_table)) {
+      # The legacy scan only sees schema 'main'. Rather than fall straight to
+      # the analogy tier -- which returns a full-looking 102-row curve and so
+      # reads as success at the call site -- try the canonical URPS query
+      # before giving up. On a DuckDB without those relations it simply errors
+      # and we fall through, so this cannot make any existing caller worse.
+      cliff_data <- .try_query(urps_cliff_query(min_confidence = min_confidence),
+                               "urps_cliff_query", strict = FALSE)
+
+      if (!is.null(cliff_data) && nrow(cliff_data) > 0) {
+        cohort_source <- "urps_cliff_query_auto"
+        cols <- names(cliff_data)
+        if (verbose) {
+          message(sprintf(
+            "build_urps_exit_hazard(): no retirement table in schema 'main'; auto-resolved %d departures via urps_cliff_query().",
+            nrow(cliff_data)))
+        }
+      } else {
+        .abort_if_required("hwsm_weibull_analogy_no_table", paste(
+          "None of physician_retirement_signals/retirement_signals/cliff_results",
+          "exist in schema 'main', and urps_cliff_query() returned no rows against",
+          "this database."))
+        warning("No retirement table found in cliff DuckDB. Using fallback.", call. = FALSE)
+        return(list(
+          exit_probs     = weibull_fallback(),
+          source         = "hwsm_weibull_analogy_no_table",
+          n_events       = 0L,
+          hazard_cv      = 0.15,
+          weibull_params = list(scale_shift = scale_shift)
+        ))
+      }
+    } else {
+      cols <- DBI::dbGetQuery(conn, sprintf(
+        "SELECT column_name FROM information_schema.columns
+         WHERE table_name = '%s'", ret_table
+      ))$column_name
+
+      conf_col    <- intersect(c("retirement_confidence_score", "confidence_score"), cols)[1]
+      conf_clause <- if (!is.na(conf_col))
+        sprintf("WHERE %s >= %f", conf_col, min_confidence) else ""
+
+      cliff_data <- DBI::dbGetQuery(conn,
+        sprintf("SELECT * FROM %s %s", ret_table, conf_clause)
+      )
+      cohort_source <- "legacy_main_schema"
+    }
+  }
 
   if (nrow(cliff_data) < 30) {
+    .abort_if_required("hwsm_weibull_analogy_insufficient_cliff", sprintf(
+      "Only %d departure records passed the filters; %d are required.",
+      nrow(cliff_data), 30L))
     warning(sprintf(
       "Only %d cliff records. Using fallback.", nrow(cliff_data)
     ), call. = FALSE)
@@ -317,6 +484,20 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
     )
   })
 
+  # A per-sex fallback inside the fit above leaves analogy rows in an otherwise
+  # "calibrated" result -- the partial case the caller also needs to know about.
+  uncalibrated <- unique(all_fits$sex[all_fits$calibration_tier != "calibrated"])
+  if (length(uncalibrated)) {
+    .abort_if_required("partial_fit", sprintf(
+      "Gompertz fit fell back to the analogy tier for: %s (too few events, or the fit did not converge).",
+      paste(uncalibrated, collapse = ", ")))
+    if (verbose) {
+      message(sprintf(
+        "build_urps_exit_hazard(): analogy-tier fallback for %s; result is only partially calibrated.",
+        paste(uncalibrated, collapse = ", ")))
+    }
+  }
+
   n_events  <- nrow(cliff_data)
   hazard_cv <- if (any(all_fits$se_prob_exit > 0, na.rm = TRUE))
     mean(all_fits$se_prob_exit / pmax(all_fits$prob_exit, 0.001),
@@ -331,9 +512,10 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   }
 
   return(list(
-    exit_probs = all_fits,
-    source     = "cliff_empirical_gompertz",
-    n_events   = n_events,
-    hazard_cv  = hazard_cv
+    exit_probs    = all_fits,
+    source        = "cliff_empirical_gompertz",
+    cohort_source = cohort_source,
+    n_events      = n_events,
+    hazard_cv     = hazard_cv
   ))
 }

@@ -6,6 +6,8 @@
 \usage{
 build_urps_exit_hazard(
   cliff_duckdb_path = NULL,
+  cliff_query = NULL,
+  require_calibrated = FALSE,
   min_confidence = 0.6,
   smooth = TRUE,
   scale_shift = 0,
@@ -14,6 +16,18 @@ build_urps_exit_hazard(
 }
 \arguments{
 \item{cliff_duckdb_path}{Character path to the cliff DuckDB, or NULL.}
+
+\item{cliff_query}{Optional SQL returning one row per departure with columns
+\code{age}, \code{sex}, and (optionally) \code{confidence_score}. When NULL (default) the
+legacy \code{main}-schema table scan runs first; if that finds none of the
+expected tables, \code{\link[=urps_cliff_query]{urps_cliff_query()}} is attempted automatically before
+falling back to the analogy tier. Pass this explicitly to override both.}
+
+\item{require_calibrated}{Logical; if TRUE, error instead of silently
+returning the \code{derived_by_analogy} Weibull fallback. Use this whenever a
+caller depends on the result actually being fitted to observed data — a
+missing table or a drifted schema otherwise yields a plausible-looking
+102-row curve with \code{n_events = 0}. Default FALSE (back-compatible).}
 
 \item{min_confidence}{Minimum cliff confidence score to include. Default 0.60.}
 
@@ -26,7 +40,10 @@ build_urps_exit_hazard(
 }
 \value{
 Named list: \code{exit_probs} (data frame), \code{source}, \code{n_events},
-\code{hazard_cv}, \code{weibull_params} (the parameters used in the fallback).
+\code{hazard_cv}, \code{weibull_params} (the parameters used in the fallback). A
+calibrated result also carries \code{cohort_source}, naming which route
+supplied the departures: \code{"legacy_main_schema"}, \code{"cliff_query"} (caller
+supplied), or \code{"urps_cliff_query_auto"}.
 }
 \description{
 Returns a per-age exit probability table. Its consumer,
@@ -36,6 +53,10 @@ The default fallback uses the Weibull survival curves from
 replacing the previous coarse step function.  When a cliff DuckDB is
 available, a Gompertz model is fitted to observed departure events and
 returned at the \code{calibrated} tier.
+}
+\seealso{
+Other retirement hazard: 
+\code{\link{urps_cliff_query}()}
 }
 \concept{retirement hazard}
 \concept{supply}
