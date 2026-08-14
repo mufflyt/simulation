@@ -543,6 +543,57 @@ pooled value, and should not assume the convergence continues.
 
 ---
 
+### 5.4c Within-ZIP design: the convergence is not composition
+
+§5.4b showed the Medicaid–private travel gap closing (7.3 → 5.9 → 3.1 miles)
+and named composition as a rival explanation: Medicaid grew 57%, and expansion
+populations resemble the general population more than the original eligibility
+group did, which would narrow the gap without any change in access.
+
+That is testable without the pre-2007 geography CHIA lacks. Classify origin ZIPs
+by whether their **coverage mix actually changed** — measured on the full
+female-adult cohort (large n), then applied to URPS travel — and compare the gap
+trend within each group. Composition predicts the narrowing concentrates where
+the Medicaid population changed.
+
+596 ZIPs have ≥100 cohort discharges in both the FY2007–09 and FY2014–18 windows:
+**335 stable** (Medicaid share moved <3 pp) and **239 rising** (≥3 pp).
+
+| ZIP group | Era | Medicaid p50 | Private p50 | Gap |
+|---|---|---|---|---|
+| **Stable coverage mix** | 2007–10 | 3.4 | 9.1 | **5.7** |
+| | 2011–14 | 5.1 | 9.0 | **3.9** |
+| | 2015–18 | 6.7 | 9.2 | **2.5** |
+| **Rising Medicaid share** | 2007–10 | 3.6 | 9.1 | 5.5 |
+| | 2011–14 | 3.8 | 8.0 | 4.2 |
+| | 2015–18 | 4.5 | 8.6 | 4.1 |
+
+**The result runs against composition.** The gap closes **3.2 miles in stable
+ZIPs against 1.4 miles in changing ones** — the opposite of the compositional
+prediction. In stable ZIPs private travel is flat across the whole period
+(9.1 / 9.0 / 9.2) while Medicaid travel rises 3.4 → 6.7 miles. The convergence
+is driven entirely by Medicaid women travelling farther in areas whose coverage
+mix did not change.
+
+#### Two cautions on reading it
+
+**Farther is not self-evidently better.** A narrowing gap means Medicaid women
+travel more like privately insured women. Whether that is improved choice or
+increased burden depends on whether their nearest in-network option receded or
+their chosen destination improved. The §5.4a figures favour choice — median
+nearest in-network capable site is 4.2 miles while median actual travel reaches
+6.7 in the last era, so these women are bypassing available nearer hospitals
+rather than being pushed past them. That is suggestive, not settled.
+
+**The cells are thin.** Stable-ZIP Medicaid counts are 112 / 109 / 125 per era.
+Medians from ~110 observations carry real sampling noise, and no interval is
+attached here. Treat the direction as informative and the magnitude as
+provisional.
+
+Builder: `scripts/chia/build_within_zip_payer_gap.R`.
+
+---
+
 ### 5.5 Comparison: all inpatient surgery
 
 For context, the same measurement across all 1,639,630 admitted operations on
