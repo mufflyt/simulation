@@ -1,0 +1,126 @@
+# Run the isochrone access-response calibration on real, private data, on demand.
+#
+# This is workflow_dispatch ONLY: it consumes drive-time isochrones, a Medicare
+# provider-supply table, and the fielded Lizeth export, none of which live in the
+# repo (they are large and/or contain NPIs). You stage them in S3 and pass their
+# URIs when dispatching; the job pulls them, builds the provider->tract membership,
+# fits the decay sigma + wait_scale, runs the leave-one-region-out holdout, and
+# uploads the fitted parameters + holdout predictions as an artifact.
+#
+# REQUIRED REPO SECRETS
+#   MUFFLYACCESS_PAT       PAT that can read mufflyt/mufflyaccess AND
+#                          mufflyt/mysterycall (the federal-business-day counter).
+#   AWS_ACCESS_KEY_ID      credentials that can read the three S3 URIs below.
+#   AWS_SECRET_ACCESS_KEY
+#   AWS_REGION
+#
+# INPUTS (S3 URIs, supplied at dispatch)
+#   isochrone_s3_uri       s3://.../ dir with isochrones_{30,60,120,180}min_
+#                          consolidated.rds + ISOCHRONE_REGISTRY.json
+#                          (canonical run 20260508_ec2_r6i)
+#   provider_supply_s3_uri s3://.../provider_supply.csv  (provider_id, supply =
+#                          Medicare fem65 procedure volume; provider_id = NPI)
+#   tract_demand_s3_uri    s3://.../tract_fem65_demand.csv  (demand_id, population)
+#   lizeth_s3_uri          s3://.../ICVsPOPVsSUI_DATA_LABELS_*.csv (labeled export)
+on:
+  workflow_dispatch:
+    inputs:
+      isochrone_s3_uri:
+        description: "S3 URI of the canonical isochrone artifacts directory"
+        required: true
+      provider_supply_s3_uri:
+        description: "S3 URI of provider_supply.csv (provider_id, supply)"
+        required: true
+      tract_demand_s3_uri:
+        description: "S3 URI of tract_fem65_demand.csv (demand_id, population)"
+        required: true
+      lizeth_s3_uri:
+        description: "S3 URI of the labeled Lizeth REDCap export CSV"
+        required: true
+
+name: fit-access-response
+
+permissions: read-all
+
+jobs:
+  fit:
+    runs-on: ubuntu-latest
+    env:
+      # Reads the private mufflyaccess AND mysterycall repos. See R-CMD-check.yaml.
+      GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
+      NOT_CRAN: "true"
+      TZ: UTC
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require the private-dependency token
+        run: |
+          if [ -z "${{ secrets.MUFFLYACCESS_PAT }}" ]; then
+            echo "::error::MUFFLYACCESS_PAT is not set. It must read mufflyt/mufflyaccess" \
+                 "and mufflyt/mysterycall."
+            exit 1
+          fi
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # Pandoc BEFORE setup-r-dependencies -- see R-CMD-check.yaml and the
+      # repo-hygiene guard: it stops the pandoc-needs check from resolving
+      # Suggests (and choking on mysterycall).
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          # The runner path needs the tidyverse data stack, sf for the membership
+          # overlay, duckdb/DBI if the supply table is read from a database, and
+          # mysterycall for the federal-business-day wait count. mysterycall is
+          # named here (not in DESCRIPTION Remotes) so its GLMM graph resolves on
+          # its own without the pinned lme4/blme it would otherwise conflict with.
+          extra-packages: >-
+            any::dplyr, any::tibble, any::readr, any::stringr, any::tidyr,
+            any::sf, any::yaml, any::digest, any::jsonlite, any::DBI, any::duckdb,
+            any::pkgload,
+            mufflyt/mysterycall@098bb834,
+            mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          dependencies: '"hard"'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Stage private inputs from S3
+        run: |
+          set -euo pipefail
+          mkdir -p isochrone_stage data-raw/spatial lizeth_stage
+          aws s3 cp --recursive "${{ github.event.inputs.isochrone_s3_uri }}" isochrone_stage/
+          aws s3 cp "${{ github.event.inputs.provider_supply_s3_uri }}" data-raw/spatial/provider_supply.csv
+          aws s3 cp "${{ github.event.inputs.tract_demand_s3_uri }}"    data-raw/spatial/tract_fem65_demand.csv
+          aws s3 cp "${{ github.event.inputs.lizeth_s3_uri }}"          lizeth_stage/ICVsPOPVsSUI_DATA_LABELS_dispatch.csv
+          echo "Staged $(ls -1 isochrone_stage | wc -l) isochrone artifact(s)."
+
+      - name: Build provider->tract isochrone membership
+        env:
+          SIMULATION_ISOCHRONE_ROOT: isochrone_stage
+        run: Rscript scripts/data_acquisition/12_build_provider_isochrone_membership.R --iso-dir isochrone_stage
+
+      - name: Fit the access response (Stages 0-4)
+        env:
+          SIMULATION_ISOCHRONE_ROOT: isochrone_stage
+          MEMBERSHIP_RDS: data-raw/spatial/provider_isochrone_membership.rds
+          PROVIDER_SUPPLY_CSV: data-raw/spatial/provider_supply.csv
+          TRACT_DEMAND_CSV: data-raw/spatial/tract_fem65_demand.csv
+          LIZETH_DIR: lizeth_stage
+          OUT_DIR: outputs/access_response
+        run: Rscript scripts/ci/run_access_response.R
+
+      - name: Upload fitted parameters + holdout predictions
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: access-response-fit
+          path: outputs/access_response/
