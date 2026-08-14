@@ -1,0 +1,5 @@
+"part","measure","calibrated","analogy","delta","hazard_cv","coverage95","width_mean"
+"deterministic","net_supply_2050",1970,1925,45,NA,NA,NA
+"deterministic","cohort2023_surviving_2050",294,444,-151,NA,NA,NA
+"backtest","calibrated (cliff empirical)",NA,NA,NA,0.111111111111111,0,48.2
+"backtest","analogy (HWSM Weibull)",NA,NA,NA,0.15,0.4,46.8
