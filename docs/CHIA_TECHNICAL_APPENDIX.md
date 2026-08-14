@@ -388,6 +388,88 @@ sufficient to establish that a single population-wide decay kernel is
 mis-specified. What they do not support is a causal claim about which factor
 drives it.
 
+### 5.4a Access to a hospital that does urogynaecology AND takes your insurance
+
+The supply set is **payer-specific**. A hospital that performs urogynaecologic
+surgery but does not serve Medicaid patients is not available to a Medicaid
+patient, and treating it as available is the central error in an access surface
+built on one facility list. Pooled FY2007-2018, a site counts as
+capable-for-payer when it performed >= 10 URPS operations for that payer group.
+
+**The supply sets differ by roughly half:**
+
+| Payer group | Capable hospitals |
+|---|---|
+| Private (BCBS, commercial, HMO, and their managed-care variants) | **25** |
+| Medicaid (FFS + managed care) | **13** |
+
+**Distance to the nearest hospital that does urogynaecology and takes your
+insurance** (measured, miles):
+
+| | Medicaid (n=933) | Private (n=4,239) |
+|---|---|---|
+| Median | 4.2 | 5.3 |
+| 90th percentile | 16.1 | 19.4 |
+
+**The insurance penalty** — extra distance to the nearest *in-network* capable
+hospital, over the nearest capable hospital of any kind:
+
+| | Medicaid | Private |
+|---|---|---|
+| Median | **+1.3 mi** | +0.1 mi |
+| 90th percentile | **+3.2 mi** | +0.4 mi |
+
+**The insurance constraint binds for Medicaid and is essentially inert for
+private coverage.** A privately insured woman's nearest urogynaecologic hospital
+is almost always in network; a Medicaid enrollee must pass roughly one
+additional hospital, and at the 90th percentile three miles more.
+
+**Drive time to the nearest in-network urogynaecologic hospital** (approximated
+— no routing engine; see §5.3):
+
+| | Medicaid | Private |
+|---|---|---|
+| Median | 8–11 min | 8–14 min |
+| 90th percentile | 25–42 min | 30–50 min |
+
+**Actual travel** (measured, miles):
+
+| | Medicaid | Private |
+|---|---|---|
+| Median | 5.3 | 10.6 |
+| 90th percentile | 24.8 | 34.6 |
+
+Read the three tables together. Medicaid women live **closer** to urogynaecologic
+hospitals (2.8 vs 5.2 miles to the nearest capable site of any kind) — urban
+concentration. Their insurance then removes about half the supply set, costing
+1.3 miles at the median. Privately insured women face no such constraint and
+travel farther anyway (10.6 vs 5.3 median), which is **choice, not distance**.
+
+Threshold sensitivity is modest: Medicaid median nearest in-network is 3.7 / 4.2
+/ 4.2 miles at capability thresholds of 5 / 10 / 20 pooled cases.
+
+#### Two limitations that bound what this can claim
+
+**1. Acceptance is revealed, not contractual.** "Takes your insurance" here means
+"performed >= 10 urogynaecologic operations for that payer group," which is
+observed behaviour, not a network contract. A hospital may hold a Medicaid
+contract and still appear incapable through low volume.
+
+**2. This measures women who GOT surgery — the ones turned away are invisible.**
+Every woman in this cohort has a discharge record, so by construction she
+reached a hospital that operated on her. Women who could not obtain surgery
+produce no record at all. If Medicaid coverage creates barriers that prevent
+surgery outright, those women are absent from the numerator *and* the
+denominator, which would bias the observed Medicaid distances **downward** —
+only the successful, likely those nearest a willing hospital, are counted.
+
+The second limitation is the important one: **this is a lower bound on the
+Medicaid access burden, not an estimate of it.** Measuring the unmet portion
+requires a denominator of women who needed surgery, which CHIA does not observe.
+Builder: `scripts/chia/build_payer_specific_access.R`.
+
+---
+
 ### 5.5 Comparison: all inpatient surgery
 
 For context, the same measurement across all 1,639,630 admitted operations on

@@ -1,0 +1,3 @@
+payer_grp,nearest_inNetwork_p50,nearest_inNetwork_p90,p50_30mph,p50_40mph,p50_50mph,p90_30mph,p90_40mph,p90_50mph
+medicaid,4.2,16.2,11,8,7,42,32,25
+private,5.8,21,15,11,9,55,41,33
