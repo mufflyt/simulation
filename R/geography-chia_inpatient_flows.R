@@ -216,6 +216,41 @@ chia_urogyn_travel <- function(what = c("actual", "capable", "any", "quantiles")
   )
 }
 
+# ---- The calibrated kernel ---------------------------------------------------
+# Conditional on the nearest urogyn-capable site being within 5 miles (n=4,342),
+# so availability is held roughly fixed and what remains is choice. This is the
+# quantity an E2SFCA decay weight encodes; marginal band shares are not.
+#
+# Two results. (a) Decay is ~3x steeper than Luo/Qi: 0.219 where the generic
+# weight assumes 0.68. (b) It is NOT monotonic -- the 10-25 mile weight exceeds
+# the 5-10 mile weight, because women bypass nearer capable hospitals for
+# farther ones. A strictly decreasing function cannot represent that, so the
+# functional form is mis-specified for subspecialty surgery, not just the
+# parameters. Bands are MILES: converting to Luo/Qi minutes needs a speed
+# assumption worth 14 points (see the drive-time note above).
+
+CHIA_UROGYN_DECAY_WEIGHTS <- c(
+  "5"   = 1.0000,   # 0-5 miles   (reference band)
+  "10"  = 0.2190,   # 5-10
+  "25"  = 0.2357,   # 10-25       <- exceeds the band before it
+  "50"  = 0.0190,   # 25-50
+  "999" = 0.0007    # >50
+)
+
+#' Calibrated urogynaecologic distance-decay weights
+#'
+#' Empirical replacement for `E2SFCA_DEFAULT_WEIGHTS` in urogynaecologic access
+#' surfaces. Retain the Luo/Qi weights for the generic-accessibility scenario.
+#'
+#' Conditional on nearest urogyn-capable site within 5 miles, n = 4,342
+#' operations, FY2007-2018, Massachusetts. Bands are upper bounds in MILES.
+#'
+#' @return Named numeric vector of weights, normalised to 1.0 in the 0-5 band.
+#' @examples
+#' chia_urogyn_decay_weights()
+#' @export
+chia_urogyn_decay_weights <- function() CHIA_UROGYN_DECAY_WEIGHTS
+
 #' Provenance for the CHIA travel kernel
 #' @export
 chia_travel_kernel_provenance <- function() {
