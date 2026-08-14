@@ -169,3 +169,16 @@ artifacts/validation/
 # Archived bundles are durable local evidence, self-verifying via SHA256SUMS.
 # The tarball is the object to preserve off-repo; it does not belong on main.
 artifacts/validation_archive/
+
+# CHIA Case Mix. The DuckDB build is ~4.5 GB and regenerable from
+# scripts/chia/; the licensed source .mdb files and CHIA documentation PDFs are
+# DUA-restricted and must never enter the repo.
+*.duckdb
+*.duckdb.wal
+data-raw/chia/*.mdb
+data-raw/chia/ref_downloads/
+
+# ...but the derived travel artefacts ARE deliverables and are small (<20 KB
+# total). Same reasoning as the back-test artefacts above: a kernel that cannot
+# be re-read against the code that produced it is not reproducible.
+!data-raw/chia/*.csv
