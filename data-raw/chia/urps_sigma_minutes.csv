@@ -1,0 +1,6 @@
+"stratum","sigma_mi","sigma_min"
+"global (case-weighted)",22.7,41
+"urban: nearest <=5 mi",5,10
+"nearest 5-10 mi",22.1,40
+"nearest 10-25 mi",27.4,50
+"rural: nearest >25 mi",108.7,185

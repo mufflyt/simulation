@@ -275,13 +275,25 @@ actually is** (n = 9,081):
 | 5–10 mi | 2,259 | 22.1 |
 | 10–25 mi | 1,662 | 27.4 |
 | > 25 mi (rural) | 818 | **108.7** |
-| **Case-weighted global** | **9,081** | **22.7** |
+| **Case-weighted global** | **9,081** | **22.7 (41 min)** |
 
-**22.7 miles is 44 minutes at 40 mph and 59 minutes at 30 mph — the 60-minute
-default sits inside that range.** At 30 mph the calibrated weights reproduce the
-default almost exactly (1.000 / 0.679 / 0.144 / 0.011 against 1.000 / 0.687 /
-0.153 / 0.013). **This measurement confirms the existing parameter for aggregate
-use rather than overturning it.**
+**22.7 miles is 41 minutes** on the Massachusetts road network (§5.3a), against
+a 60-minute default:
+
+| | 30 | 60 | 120 | 180 |
+|---|---|---|---|---|
+| default (σ = 60 min) | 1.000 | 0.687 | 0.153 | 0.013 |
+| **calibrated (σ = 41 min)** | 1.000 | **0.448** | **0.018** | **0.000** |
+
+**The default credits the 60-minute band 1.5×, the 120-minute band 8×, and the
+180-minute band ~100× more supply than women were observed to use.** For
+urogynaecologic surgery it materially over-states how much distant capacity is
+reachable.
+
+> **Correction.** An earlier version of this section reported 44–59 minutes and
+> concluded the 60-minute default was confirmed. That conversion applied a 1.3
+> circuity factor on top of an assumed road speed — but an isochrone's
+> equivalent-area radius already embeds circuity, so it was counted twice.
 
 The substantive result is the **twenty-fold spread**. Women adapt travel to what
 exists: those with a hospital nearby rarely pass it, those without travel as far
@@ -299,23 +311,37 @@ Builder: `scripts/chia/fit_urps_sigma.R`; output
 
 ---
 
-### 5.3 Distance is measured; drive time is not
+### 5.3a Miles to minutes, calibrated on the road network
 
-**There is no routing engine in this pipeline.** Where minutes appear they are
-`miles × 1.3 circuity ÷ 40 mph`, and both constants are choices that dominate:
+Minutes are **no longer assumed**. The conversion is calibrated against real
+drive-time isochrones for the FPMRS/urology provider cohort
+(`mufflyt/isochrones`, `augmented_isochrones_fpmrs_uro`), restricted to the 195
+Massachusetts providers. Equivalent-area radius (√(area/π), EPSG:5070) by band:
 
-| Assumed speed | ≤30 min share (all surgery) |
-|---|---|
-| 30 mph | 0.646 |
-| 40 mph | 0.731 |
-| 50 mph | 0.790 |
+| Drive time | p25 | **median** | p75 | Implied mph |
+|---|---|---|---|---|
+| 30 min | 14.5 | **15.6 mi** | 16.7 | 31.2 |
+| 60 min | 33.8 | **35.7 mi** | 37.2 | 35.7 |
+| 120 min | 67.0 | **70.1 mi** | 72.5 | 35.0 |
+| 180 min | 98.4 | **101.8 mi** | 106.4 | 33.9 |
 
-A 14-point swing from the speed constant alone — wider than most effects this
-kernel would be used to detect. Minute-denominated figures exist only for
-comparability with the Luo/Qi band structure and are never reported as
-observations. `chia_travel_kernel("drivetime")` emits a `warning()`. Real drive
-times require the HERE isochrone pipeline in `mufflyt/isochrones`, and
-substituting them is the single highest-value improvement to this layer.
+Interquartile ranges are tight and a log-log fit gives **R² = 0.997**. Effective
+speed is 31–36 mph and **rises with trip length** (local roads → highways), which
+no single mph constant reproduces — the reason the earlier assumed conversion was
+wrong in a direction that mattered.
+
+Stratified bandwidths in minutes: **10** (urban, nearest ≤5 mi), **40**, **50**,
+**185** (rural, nearest >25 mi).
+
+Builder: `scripts/chia/calibrate_miles_to_minutes.R`; output
+`data-raw/chia/urps_sigma_minutes.csv`.
+
+**One caveat on provenance.** The general `provider_isochrones.rds` in the same
+repository is **not usable** — its geometries are labelled EPSG:4326 but hold
+projected coordinates, several fail validity checks, and polygon centres regress
+against provider coordinates at R² = 0.04, i.e. no spatial correspondence. The
+`abu_urology/augmented_isochrones_fpmrs_uro` set used here is clean (valid
+geometries, correct CONUS bbox) and is also the right cohort.
 
 ### 5.4 Stratification by patient demographics
 
