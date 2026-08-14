@@ -158,113 +158,172 @@ migration as retirement.
 
 ---
 
-## 5. Surgical travel (`R/geography-chia_inpatient_flows.R`)
+## 5. Surgical travel — the calibration instrument for the E2SFCA decay weights
 
-n = 1,639,630 admitted operations on adult women, FY2007–2018, 99.0% geocoded.
-Patient residential ZIP → facility ZIP (`ref.chia_facility_guide`, all 77 sites),
-both to ZCTA centroids from `mufflyt/twostep`.
+**This is what CHIA is for.** `mufflyt/twostep` weights supply by generic Luo/Qi
+distance decay (`E2SFCA_DEFAULT_WEIGHTS`: 30 = 1.00, 60 = 0.68, 120 = 0.22,
+180 = 0.09) — a general-accessibility default carried into a subspecialty
+surgical model with no measurement behind it. CHIA replaces the assumption with
+an observation for the urogynaecologic case.
 
-### 5.1 Measured — straight-line distance
+Code: `R/geography-chia_inpatient_flows.R`. Builders:
+`scripts/chia/build_chia_surgical_travel_kernel.R` (all surgery),
+`scripts/chia/build_chia_urogyn_travel_kernel.R` (urogynaecology).
 
-| Band (miles) | Share | Cumulative |
-|---|---|---|
-| 0–5 | 40.6% | 40.6% |
-| 5–10 | 20.3% | 60.9% |
-| 10–25 | 23.5% | 84.5% |
-| 25–50 | 9.6% | 94.1% |
-| 50–100 | 3.8% | 97.9% |
-| >100 | 2.1% | 100% |
+### 5.1 The supply set must be urogyn-capable, not all hospitals
 
-Median **7.2 miles**; p75 17.2; p90 36.2; p95 58.3; p99 192.6.
+Only **18–30 of ~76** Massachusetts acute hospitals host any URPS operation in a
+given year; only **4–16** reach ten cases. Measuring against all hospitals is the
+single largest error available here:
 
-### 5.2 Assumed — drive time
+| Distance to nearest… | p50 | p75 | p90 | p95 |
+|---|---|---|---|---|
+| **any** acute hospital | 2.9 | 5.1 | **8.2** | 12.1 |
+| **urogyn-capable** hospital | 5.3 | 10.8 | **22.4** | 34.1 |
+| where women actually went | 8.4 | 17.8 | 31.8 | 50.5 |
 
-**There is no routing engine in this pipeline.** Drive time is
-`miles × 1.3 circuity ÷ 40 mph`, and both constants are choices. They dominate:
+Using all hospitals overstates urogynaecologic accessibility by **~3× in the
+tail**. An E2SFCA surface built that way reports adequate access across every
+region that has a hospital but no urogynaecologist — the exact failure a
+workforce access model exists to detect.
 
-| Assumed speed | ≤30 min share |
+The capability threshold is not delicate: median nearest-capable distance is
+4.4 / 5.3 / 6.1 miles at thresholds of 1 / 10 / 25 annual cases.
+
+### 5.2 The calibrated kernel
+
+A decay weight answers a conditional question: *given* supply at distance *n*,
+how much of it is used at distance *d*? Marginal band shares cannot answer it —
+they are dominated by where hospitals happen to be. Restricting to women whose
+nearest urogyn-capable site is **within 5 miles** (n = 4,342) isolates choice
+from availability:
+
+| Actual distance travelled | Share | **Calibrated weight** | Luo/Qi at comparable band |
+|---|---|---|---|
+| 0–5 mi | 67.8% | **1.000** | 1.00 |
+| 5–10 mi | 14.9% | **0.219** | ~0.68 |
+| 10–25 mi | 16.0% | **0.236** | ~0.68–0.22 |
+| 25–50 mi | 1.3% | **0.019** | ~0.22 |
+| >50 mi | 0.05% | **0.0007** | ~0.09 |
+
+Two results, both material:
+
+**(a) The true decay is far steeper than Luo/Qi.** Beyond the immediate band,
+observed use falls to ~0.22 where the generic weight assumes 0.68 — roughly a
+threefold overstatement of how much distant supply is actually reachable. An
+E2SFCA surface using Luo/Qi credits catchments with urogynaecologic capacity
+that women demonstrably do not use.
+
+**(b) The decay is not monotonic.** The 10–25 mile weight (0.236) *exceeds* the
+5–10 mile weight (0.219). Women bypass nearer capable hospitals to reach farther
+ones — 20.2% travelled more than 10 miles past their nearest capable site. A
+strictly decreasing distance-decay function cannot represent this; it is
+regionalisation toward higher-volume centres, and it means the *functional form*
+in the E2SFCA layer, not merely its parameters, is mis-specified for
+subspecialty surgery.
+
+Kernel bands are in **miles**, deliberately. Converting to the minute-denominated
+Luo/Qi bands requires a speed assumption that swings the answer by 14 points
+(§5.3), so the calibrated weights are published in the unit that was measured.
+At ~40 mph the 30-minute boundary falls inside the 10–25 mile band.
+
+### 5.3 Distance is measured; drive time is not
+
+**There is no routing engine in this pipeline.** Where minutes appear they are
+`miles × 1.3 circuity ÷ 40 mph`, and both constants are choices that dominate:
+
+| Assumed speed | ≤30 min share (all surgery) |
 |---|---|
 | 30 mph | 0.646 |
 | 40 mph | 0.731 |
 | 50 mph | 0.790 |
 
-A **14-point swing** from the speed constant alone — wider than most effects this
-kernel would be used to detect. Drive-time bands exist only for comparability
-with the Luo/Qi band structure and must not be reported as observations. Real
-drive times require the HERE isochrone pipeline in `mufflyt/isochrones`.
+A 14-point swing from the speed constant alone — wider than most effects this
+kernel would be used to detect. Minute-denominated figures exist only for
+comparability with the Luo/Qi band structure and are never reported as
+observations. `chia_travel_kernel("drivetime")` emits a `warning()`. Real drive
+times require the HERE isochrone pipeline in `mufflyt/isochrones`, and
+substituting them is the single highest-value improvement to this layer.
 
-### 5.3 Against the generic E2SFCA weights
+### 5.4 Stratification by patient demographics
 
-| Band | Nearest hospital available | Actually went | Luo/Qi | Observed rel. ≤30 |
+n = 9,081 URPS operations, FY2007–2018. `pct_beyond_10mi` is the share
+travelling more than ten miles past their nearest urogyn-capable site — the
+access-relevant quantity, because it isolates travel not explained by geography.
+
+**By payer:**
+
+| Payer | Cases | p50 mi | p90 mi | Nearest capable, p50 | Beyond 10 mi |
+|---|---|---|---|---|---|
+| Commercial | 306 | 12.4 | 52.0 | 6.8 | **32.0%** |
+| Blue Cross | 564 | 10.2 | 44.1 | 6.5 | 24.1% |
+| Medicare | 2,470 | 9.4 | 46.8 | 6.0 | 25.1% |
+| Blue Cross MC | 1,478 | 9.6 | 30.5 | 6.1 | 20.4% |
+| Commercial MC | 300 | 9.0 | 31.6 | 6.4 | 19.0% |
+| HMO | 1,591 | 8.1 | 26.7 | 5.4 | 16.3% |
+| Medicare MC | 606 | 7.7 | 25.7 | 5.0 | 16.7% |
+| Medicaid MC | 523 | 4.5 | 22.8 | 3.3 | 12.2% |
+| **Medicaid** | 410 | **3.8** | 18.7 | 2.9 | **11.2%** |
+
+A monotone gradient. Commercially insured women travel **3.3× the median
+distance** of Medicaid women (12.4 vs 3.8 miles) and bypass their nearest capable
+hospital **nearly three times as often** (32.0% vs 11.2%).
+
+Part of this is residence — Medicaid women live closer to capable hospitals (2.9
+vs 6.8 miles median). But the bypass column conditions on that, and the gradient
+survives. The reading that fits both columns: **women with commercial coverage
+exercise choice across the capable-hospital set; women on Medicaid largely use
+the nearest one.** Managed-care variants sit below their fee-for-service
+counterparts throughout (HMO 16.3% vs Commercial 32.0%), consistent with network
+restriction.
+
+This matters for the access surface directly: an E2SFCA model with one decay
+kernel for all women will overstate effective access for Medicaid enrollees and
+understate it for the commercially insured.
+
+**By age:**
+
+| Age band | Cases | p50 mi | p90 mi | Beyond 10 mi |
 |---|---|---|---|---|
-| ≤30 min | 95.4% | 73.1% | 1.00 | 1.000 |
-| 31–60 | 2.1% | 15.1% | 0.68 | 0.207 |
-| 61–120 | 0.8% | 7.4% | 0.22 | 0.101 |
-| 121–180 | 0.4% | 2.2% | 0.09 | 0.030 |
+| 18–49 | 3,047 | 7.0 | 26.6 | 16.7% |
+| 50–64 | 2,897 | 9.1 | 31.5 | 20.2% |
+| 65–79 | 2,552 | 10.1 | 40.9 | **24.8%** |
+| 80+ | 585 | 6.5 | 31.4 | 18.3% |
 
-**33.7% of women travelled more than 15 minutes past their nearest hospital.**
+Travel rises with age to 65–79, then falls at 80+. The inversion is the
+interesting part: the oldest women travel *less* despite the highest disease
+prevalence — consistent with the oldest patients being least able to travel for
+subspecialty care, and therefore most likely to receive it locally or not at all.
 
-The middle column is why these numbers do **not** replace
-`E2SFCA_DEFAULT_WEIGHTS`. Read as raw shares, observed decay looks ~3× steeper
-than Luo/Qi. Read as observed-versus-available, the 61–120 band is used ~9×
-*more* than nearest-hospital assignment predicts. Those readings point opposite
-ways and marginal shares cannot adjudicate: 95.4% of these women had a hospital
-within 30 minutes, so the near-band share measures hospital placement as much as
-willingness to travel. A substitute kernel needs a choice model over each
-patient's full option set.
+**By race:**
 
-The kernel drifts outward over time — ≤30 falls 74.8% (FY2007) → 71.1%
-(FY2018) while 61–120 rises 6.6% → 8.6% — consistent with regionalisation of
-complex surgery.
+| Race | Cases | p50 mi | p90 mi | Nearest capable, p50 | Beyond 10 mi |
+|---|---|---|---|---|---|
+| White (R5) | 7,243 | 9.7 | 35.5 | 6.4 | 21.6% |
+| Asian (R2) | 239 | 6.2 | 22.8 | 3.6 | 12.6% |
+| Other (R9) | 457 | 4.3 | 20.3 | 2.8 | 11.2% |
+| Black/African American (R3) | 629 | **3.0** | 16.5 | 1.8 | **11.6%** |
 
-### 5.4 Urogynaecology specifically — the supply set is not all hospitals
+White women travel **3.2× the median distance** of Black women and bypass nearly
+twice as often. As with payer, residence explains part of it (1.8 vs 6.4 miles to
+nearest capable) and the bypass column does not.
 
-The figures above measure travel against **all** acute hospitals. For
-urogynaecology that overstates availability: only **18–30 of ~76** Massachusetts
-hospitals host any URPS operation in a given year, and only **4–16** reach 10
-cases.
+**Interpret these three tables together, and cautiously.** Payer, race and
+residence are heavily confounded in Massachusetts, this is one state, and CHIA
+observes only admitted surgery. What the data support is that **travel for
+urogynaecologic surgery is not uniform across the population**, which is
+sufficient to establish that a single population-wide decay kernel is
+mis-specified. What they do not support is a causal claim about which factor
+drives it.
 
-Restricting to operations by board-certified URPS surgeons (n = **9,081** at 38
-sites, FY2007–2018, 100% geocoded):
+### 5.5 Comparison: all inpatient surgery
 
-| Band (miles) | Where patients went | Nearest **urogyn-capable** | Nearest **any** hospital |
-|---|---|---|---|
-| 0–5 | 33.9% | 47.8% | **73.9%** |
-| 5–10 | 21.7% | 24.9% | 18.6% |
-| 10–25 | 28.9% | 18.3% | 5.5% |
-| 25–50 | 10.4% | 6.8% | 0.7% |
-| 50–100 | 3.9% | 1.2% | 0.4% |
-| >100 | 1.2% | 1.0% | 1.0% |
+For context, the same measurement across all 1,639,630 admitted operations on
+adult women (99.0% geocoded): median 7.2 miles, p75 17.2, p90 36.2, p95 58.3.
+Urogynaecologic patients travel modestly farther at the median (8.4 vs 7.2) but
+face a supply set roughly a third the size.
 
-Distance to nearest facility, miles:
-
-| | p50 | p75 | p90 | p95 |
-|---|---|---|---|---|
-| Actual travel | 8.4 | 17.8 | 31.8 | 50.5 |
-| Nearest urogyn-capable | 5.3 | 10.8 | **22.4** | 34.1 |
-| Nearest any hospital | 2.9 | 5.1 | **8.2** | 12.1 |
-
-**Using all hospitals as the supply set overstates urogynaecologic accessibility
-by roughly 3× in the tail** (8.2 vs 22.4 miles at p90). Any E2SFCA surface for
-this subspecialty must restrict supply to facilities that actually perform the
-surgery — otherwise it will report adequate access in regions that have a
-hospital but no urogynaecologist.
-
-**20.2%** of women travelled more than 10 miles past their nearest
-urogyn-capable site.
-
-The capability threshold is not delicate: median nearest-capable distance is
-4.4 / 5.3 / 6.1 miles at thresholds of 1 / 10 / 25 annual cases
-(`urogyn_site_threshold_sensitivity.csv`).
-
-Note the definition is **operator-based** — an operation on the female-adult
-cohort performed by a board-certified URPS surgeon. A procedure-code definition
-awaits `config/chia_urps_inpatient_codes.yml`; see §2.1 for why hand-rolled code
-families are not used.
-
----
-
-### 5.4 A geocoding bias that was nearly shipped
+### 5.6 A geocoding bias that was nearly shipped
 
 Seven hospitals hold **unique institutional ZIPs with no ZCTA**: Baystate
 (01199), Lahey Burlington (01805), UMass University (01655), Mercy Springfield
@@ -273,6 +332,21 @@ They silently dropped **263,745 cases (15.9%)**, and they are western and
 central Massachusetts — exactly where travel is longest, so the loss biased the
 kernel toward short trips. A ZIP3-area centroid fallback took geocoding from
 82.7% to 99.0%.
+
+### 5.7 How to use this
+
+1. Restrict the E2SFCA supply set to **urogyn-capable** facilities (§5.1).
+2. Replace the Luo/Qi weights with `chia_urogyn_travel()` / the conditional
+   kernel of §5.2 for urogynaecologic access, retaining
+   `E2SFCA_DEFAULT_WEIGHTS` as the generic-accessibility scenario.
+3. Treat the non-monotonicity as a finding about functional form, not noise.
+4. Stratify the kernel by payer where the analysis supports it (§5.4).
+5. Replace the drive-time approximation with HERE isochrones before publishing
+   any minute-denominated figure (§5.3).
+
+**Scope.** Massachusetts, admitted surgery, FY2007–2018, operator-defined
+urogynaecology. `role: regional_external_validation`. It calibrates the shape of
+the decay for this subspecialty; it does not make Massachusetts national.
 
 ---
 
