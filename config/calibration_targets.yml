@@ -116,16 +116,57 @@ anchors:
         SUI diagnosis, but that ICD-10-PCS cannot identify a sling without one.
 
   prolapse_procedure_volume:
-    production_scalar_eligible: false
+    source: "HCUP NIS+NASS national estimate; ICS 2023 abstract #136 (PMID 38128098)"
+    path: data/anchors/prolapse_procedure_volume.csv
+    sha256: "b449fd0131a574681a1a9d1045917f6a44efbe0b3dca585d09e9ef1ff635e312"
+    production_scalar_eligible: true
+    estimand:
+      name: pop_operative_encounters
+      definition: >
+        Annual ENCOUNTERS with at least one operative treatment of pelvic organ
+        prolapse, counted ONCE per encounter regardless of how many prolapse
+        procedures it contains.
+      clinical_review_status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+    not_approved:
+      - >
+        Summing procedure-family counts to create total POP volume. A vaginal
+        hysterectomy + uterosacral suspension + anterior/posterior repair is ONE
+        POP operation. In CHIA the naive family sum exceeds the encounter count
+        by 12-68% depending on year.
+      - >
+        Calling 0UUG7/8 "anterior/posterior repair". The approach character does
+        not encode compartment.
+      - >
+        Calling all 0UQG* anterior/posterior colporrhaphy without a POP
+        diagnosis. CMS defines 0UQG as "Repair Vagina", which is broader.
     clinical_review:
-      status: pending
+      status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
       scope:
         - pop_diagnosis_definition
         - pop_procedure_family
         - pop_hysterectomy_definition
-    source: "HCUP SASD + Medicare Part B carrier"
-    path: data/anchors/prolapse_procedure_volume.csv
-    sha256: "b449fd0131a574681a1a9d1045917f6a44efbe0b3dca585d09e9ef1ff635e312"
+      findings:
+        - >
+          Vault-prolapse seam defect fixed. ICD-9 618.5 sits inside 618.x;
+          ICD-10 moved the identical entity to N99.3, outside N81. 121/104 cases
+          counted in FY2014/15 and 48/49/51 missed in FY2016-18. N99.3 added.
+        - >
+          0UUG split by approach into apical_abdominal_mesh (0UUG0/4) and
+          transvaginal_mesh_pop (0UUG7/8), resolving 57 double-counted cases.
+          The latter is compartment-unspecified by construction.
+        - >
+          0UQG became vaginal_native_tissue_pop_repair, requiring a POP
+          diagnosis and excluding fistula, trauma and obstetric repair.
+      residual_uncertainty: >
+        Compartment classification. ICD-10-PCS encodes body part and approach,
+        not compartment, and N81.4 "uterovaginal prolapse, unspecified" is the
+        single largest diagnosis code. This does NOT block the POP-volume
+        calibration scalar, which is defined at encounter level.
+
   ui_prevalence:
     production_scalar_eligible: false
     clinical_review:

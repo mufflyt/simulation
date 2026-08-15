@@ -15,9 +15,9 @@
 
 meta:
   version: 0.2.0
-  status: needs_clinical_review     # -> "approved" only via clinical sign-off
-  clinical_reviewer: ""             # name; required before status can be approved
-  clinical_review_date: ""          # ISO date; required before status can be approved
+  status: approved                  # POP families adjudicated 2026-08-14
+  clinical_reviewer: "T Muffly (urogynecology)"
+  clinical_review_date: "2026-08-14"
   icd9_era: [2004, 2015]      # FY2004-FY2015 use ICD-9-CM Volume 3
   icd10_era: [2016, 2018]     # FY2016+ use ICD-10-PCS
   code_format: nodot
@@ -73,6 +73,18 @@ diagnosis_qualifiers:
       Stress and mixed UI support a sling indication. Urgency incontinence
       (N39.41) and overactive bladder (N32.81) alone do NOT.
 
+  traumatic_vaginal_injury:
+    icd9cm:   ["878", "9226"]
+    icd10cm:  ["S31.4", "S3140", "S3141", "S3149"]
+    match: prefix
+    note: Non-obstetric traumatic injury to vagina/vulva.
+
+  obstetric_perineal_repair:
+    icd9cm:   ["664"]
+    icd10cm:  ["O70"]
+    match: prefix
+    note: Perineal laceration during delivery.
+
   genitourinary_fistula:
     icd9cm:   ["619"]
     icd10cm:  ["N82"]
@@ -116,9 +128,17 @@ clinical_review_criteria:
       Sacrocolpopexy, uterosacral suspension, sacrospinous fixation and
       colpopexy must remain distinguishable from anterior/posterior repair
       rather than collapsing into one "prolapse procedure" family.
-    status: OPEN_AWAITING_DECISION
-    finding: >
-      The families are named separately but are NOT disjoint: prefix 0UUG
+    status: SATISFIED
+    resolution: >
+      Adjudicated 2026-08-14. 0UUG split by approach into apical_abdominal_mesh
+      (0UUG0/4) and transvaginal_mesh_pop (0UUG7/8), and the latter is
+      explicitly compartment-unspecified rather than labelled anterior/
+      posterior -- the approach character does not encode compartment. 0UQG
+      became vaginal_native_tissue_pop_repair with a required POP diagnosis and
+      fistula/trauma/obstetric exclusions. The three are mutually exclusive at
+      code level and roll up via the encounter view.
+    prior_finding: >
+      The families were named separately but were NOT disjoint: prefix 0UUG
       (Supplement Vagina) appears in BOTH apical_suspension and
       anterior_posterior_repair, so 57 FY2016-18 cases fall in both. Named-but-
       overlapping is not distinguishable, and those cases double-count in any
@@ -201,13 +221,18 @@ families:
       ICD-9-CM v32, the final revision, which postdates their withdrawal. They
       are validated against the data instead.
 
-  apical_suspension:
-    label: Vaginal apical suspension (sacrocolpopexy, uterosacral, sacrospinous)
+  apical_abdominal_mesh:
+    label: Abdominal/laparoscopic mesh apical repair (sacrocolpopexy-type)
+    clinical_status: approved
+    requires_diagnosis: pelvic_organ_prolapse
     icd9cm:
       exact: ["7077", "7078"]      # vaginal suspension and fixation, +/- graft
     icd10pcs:
-      prefix: ["0USG", "0UUG", "0USF", "0UUF"]   # reposition/supplement vagina, cul-de-sac
-    note: ICD-9 does not distinguish abdominal sacrocolpopexy from vaginal routes.
+      prefix: ["0UUG0", "0UUG4", "0USG0", "0USG4", "0USF", "0UUF"]
+    interpretation: >
+      Abdominal or laparoscopic mesh supplementation of the vagina; the PCS
+      representation expected for sacrocolpopexy-type repair. Approach 0 (open)
+      and 4 (percutaneous endoscopic).
 
   colpocleisis:
     label: Obliterative repair (colpocleisis, LeFort)
@@ -219,16 +244,39 @@ families:
       ICD-9 70.4 conflates obliteration with total vaginal excision; the
       ICD-10 mapping is narrower. Expect a seam discontinuity in this family.
 
-  anterior_posterior_repair:
-    label: Anterior and/or posterior compartment repair (cystocele, rectocele)
+  transvaginal_mesh_pop:
+    label: Transvaginal mesh POP repair, compartment unspecified
+    clinical_status: approved
+    requires_diagnosis: pelvic_organ_prolapse
+    icd10pcs:
+      prefix: ["0UUG7", "0UUG8"]
+    compartment: not_identifiable_from_pcs
+    interpretation: >
+      Transvaginal mesh POP repair. DO NOT assign anterior, posterior or apical
+      compartment from approach alone -- a vaginal mesh procedure can support
+      anterior, apical, posterior or multiple compartments, and 0UUG encodes
+      only "Supplement Vagina" plus an approach character. Approach 7 (via
+      natural opening) and 8 (natural opening endoscopic).
+
+  vaginal_native_tissue_pop_repair:
+    label: Vaginal native-tissue POP repair
+    clinical_status: approved_with_qualifier
+    requires_diagnosis: pelvic_organ_prolapse
     icd9cm:
       exact: ["7050", "7051", "7052", "7053", "7054", "7055"]
     icd10pcs:
-      prefix: ["0UQG", "0UUG"]     # repair / supplement vagina
-    note: >
-      ICD-10-PCS has no separate cystocele/rectocele code -- both map to repair
-      or supplement of vagina, so anterior and posterior CANNOT be separated
-      after FY2015. Report them combined across the whole series.
+      prefix: ["0UQG"]
+    exclusion_diagnoses:
+      - genitourinary_fistula
+      - traumatic_vaginal_injury
+      - obstetric_perineal_repair
+    interpretation: >
+      CMS defines 0UQG* simply as "Repair Vagina", which is broader than
+      anterior/posterior colporrhaphy. The family therefore requires a
+      contemporaneous POP diagnosis and excludes fistula, trauma and obstetric
+      repair. Where anterior versus posterior is wanted, take it from diagnosis
+      where available and leave the rest compartment_unspecified -- do not force
+      an assignment from the procedure code.
 
   sui_sling:
     label: Stress urinary incontinence sling and urethral suspension
@@ -297,10 +345,10 @@ validation:
   max_seam_ratio: 2.0
   seam_years: [2015, 2016]
   icd9_revision_seam_years: [2006, 2007]
-  known_seam_unstable: ["colpocleisis", "anterior_posterior_repair",
+  known_seam_unstable: ["colpocleisis", "vaginal_native_tissue_pop_repair",
                         "genitourinary_fistula"]
   seam_notes:
-    anterior_posterior_repair: >
+    vaginal_native_tissue_pop_repair: >
       ICD-9 separates cystocele (70.51) from rectocele (70.52); ICD-10-PCS has
       only repair/supplement of vagina, which is broader. The seam ratio is
       real breadth, not a coding error -- but it means the family cannot carry
