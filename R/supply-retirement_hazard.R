@@ -275,6 +275,14 @@ supply_survival_curve <- function(ages = 30:85, sex = "Female",
 #'   hazard CSV (columns `age_band`, `person_years`, `events`, `annual_hazard`).
 #'   Defaults to the vendored copy under `inst/extdata/provider_year`; set to
 #'   `NULL` to force the DuckDB/Weibull path.
+#' @param require_calibrated Logical; if TRUE, error instead of silently
+#'   returning the `derived_by_analogy` Weibull fallback. Every fallback path
+#'   otherwise yields a well-formed 102-row curve with `n_events = 0`, which is
+#'   indistinguishable from success unless the caller inspects `source`. Set
+#'   this whenever a downstream result depends on the hazard actually being
+#'   fitted to observed data. It also catches the partial case, where a per-sex
+#'   fallback leaves analogy rows inside a result still labelled `calibrated`.
+#'   Default FALSE, so existing callers are unaffected.
 #' @param min_confidence Minimum cliff confidence score to include. Default 0.60.
 #' @param smooth Logical; loess-smooth the per-age predictions. Default TRUE.
 #' @param scale_shift Numeric years to shift the hazard curve along age
@@ -294,11 +302,26 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
                                      "extdata", "provider_year",
                                      "retirement_hazard_by_ageband.csv",
                                      package = "urpssim"),
+                                   require_calibrated = FALSE,
                                    min_confidence   = 0.60,
                                    smooth           = TRUE,
                                    scale_shift      = 0,
                                    verbose          = TRUE) {
   ages <- 30:80
+
+  # Every fallback returns a well-formed 102-row curve, so at the call site a
+  # failure is indistinguishable from success -- the caller sees a full result
+  # and has to inspect `source` to learn it is the analogy. `require_calibrated`
+  # lets a caller that depends on a real fit say so, and every fallback path
+  # routes through here.
+  .abort_if_required <- function(src, detail) {
+    if (isTRUE(require_calibrated)) {
+      stop(sprintf(
+        "build_urps_exit_hazard(require_calibrated = TRUE): no calibrated hazard could be fitted (%s). %s",
+        src, detail
+      ), call. = FALSE)
+    }
+  }
 
   weibull_fallback <- function() {
     dplyr::bind_rows(
@@ -344,6 +367,12 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   }
 
   if (is.null(cliff_duckdb_path) || !file.exists(cliff_duckdb_path)) {
+    .abort_if_required(
+      "hwsm_weibull_analogy",
+      sprintf("The age-band CSV yielded no hazard, and cliff_duckdb_path is %s.",
+              if (is.null(cliff_duckdb_path)) "NULL" else
+                sprintf("'%s', which does not exist", cliff_duckdb_path))
+    )
     if (verbose) {
       message(sprintf(
         "build_urps_exit_hazard(): cliff DuckDB unavailable. Using Weibull survival curves (HWSM Exhibits 17-18 analogy, scale_shift=%.1f).",
@@ -354,6 +383,8 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   }
 
   if (!requireNamespace("flexsurv", quietly = TRUE)) {
+    .abort_if_required("hwsm_weibull_analogy_flexsurv_missing",
+                       "Install flexsurv to fit the Gompertz model.")
     warning("flexsurv not installed. Using Weibull fallback.", call. = FALSE)
     return(.weibull_return("hwsm_weibull_analogy_flexsurv_missing"))
   }
@@ -372,6 +403,9 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   )[1]
 
   if (is.na(ret_table)) {
+    .abort_if_required("hwsm_weibull_analogy_no_table", paste(
+      "None of physician_retirement_signals/retirement_signals/cliff_results",
+      "exist in schema 'main' of the cliff DuckDB."))
     warning("No retirement table found in cliff DuckDB. Using fallback.", call. = FALSE)
     return(list(
       exit_probs = weibull_fallback(),
@@ -396,6 +430,9 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
   )
 
   if (nrow(cliff_data) < 30) {
+    .abort_if_required("hwsm_weibull_analogy_insufficient_cliff", sprintf(
+      "Only %d departure records passed the filters; %d are required.",
+      nrow(cliff_data), 30L))
     warning(sprintf(
       "Only %d cliff records. Using fallback.", nrow(cliff_data)
     ), call. = FALSE)
@@ -471,6 +508,21 @@ build_urps_exit_hazard <- function(cliff_duckdb_path = NULL,
       stringsAsFactors = FALSE
     )
   })
+
+  # A per-sex fallback inside the fit above leaves analogy rows in a result that
+  # is otherwise reported as calibrated -- the partial case, which is harder to
+  # notice than a whole-result fallback because `source` still says calibrated.
+  uncalibrated <- unique(all_fits$sex[all_fits$calibration_tier != "calibrated"])
+  if (length(uncalibrated)) {
+    .abort_if_required("partial_fit", sprintf(
+      "Gompertz fit fell back to the analogy tier for: %s (too few events, or the fit did not converge).",
+      paste(uncalibrated, collapse = ", ")))
+    if (verbose) {
+      message(sprintf(
+        "build_urps_exit_hazard(): analogy-tier fallback for %s; result is only partially calibrated.",
+        paste(uncalibrated, collapse = ", ")))
+    }
+  }
 
   n_events  <- nrow(cliff_data)
   hazard_cv <- if (any(all_fits$se_prob_exit > 0, na.rm = TRUE))
