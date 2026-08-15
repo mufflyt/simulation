@@ -186,3 +186,55 @@ test_that("POP testing is non-gating, and UI/AI were not restructured by analogy
   proc <- pw[pw$condition == "pop" & pw$stage == "procedure", ]
   expect_equal(cons * 1.00 * proc$per_entering[[1]], cons)
 })
+
+test_that("the recurrence limb is one cohort-year, and that is recorded as a defect", {
+  # STOCK-VERSUS-FLOW. The engine computes recurrence entrants as THIS YEAR's
+  # primary operations x the annual hazard, so it exposes a single cohort-year.
+  # Recurrences actually arise from the accumulated stock of everyone previously
+  # operated. This test does not assert the behaviour is correct -- it pins the
+  # arithmetic so the defect cannot be half-fixed silently. See
+  # docs/POP_RECURRENCE_ESTIMAND_AUDIT.md.
+  skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw <- .pop_pathway()
+  h    <- unique(pw$p_advance[pw$stage == "followup"])
+  reop <- pw$per_entering[pw$stage == "recurrence" &
+                            pw$service == "prolapse_procedure"]
+  st <- .pop_volume(by_stage = TRUE)
+  primary <- sum(st$volume[st$service == "prolapse_procedure" &
+                             st$stage == "procedure"])
+  recurrent <- sum(st$volume[st$service == "prolapse_procedure" &
+                               st$stage == "recurrence"])
+  # exactly one cohort-year of exposure: no accumulated stock anywhere
+  expect_equal(recurrent, primary * h * reop, tolerance = 1e-6)
+  expect_equal(1 + recurrent / primary, 1 + h * reop, tolerance = 1e-9)
+})
+
+test_that("the implied cumulative reoperation burden is flagged as too high", {
+  # 0.12 x 0.40 = 4.8%/yr implies ~39% of operated women reoperated within a
+  # decade, far above published rates. If someone lowers the hazard without
+  # also widening the exposure window, this test still passes -- which is why
+  # the audit doc requires both to move together. What is pinned here is that
+  # the CURRENT values carry an implausible annual burden, so the number cannot
+  # quietly be called sourced.
+  skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw <- .pop_pathway()
+  annual <- unique(pw$p_advance[pw$stage == "followup"]) *
+    pw$per_entering[pw$stage == "recurrence" &
+                      pw$service == "prolapse_procedure"]
+  expect_gt(1 - (1 - annual)^10, 0.30)   # implausibly high at 10 years
+  # and the hazard is still declared low-confidence, i.e. not sourced
+  expect_true(all(pw$confidence[pw$stage == "followup"] == "low"))
+})
+
+test_that("UI and AI recurrence limbs are not changed by analogy", {
+  skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw <- condition_service_pathway()
+  expect_equal(unique(pw$p_advance[pw$condition == "ui" & pw$stage == "followup"]), 0.08)
+  expect_equal(pw$per_entering[pw$condition == "ui" & pw$stage == "recurrence" &
+                                 pw$service == "sling_procedure"], 0.35)
+  # AI carries a follow-up hazard but NO reoperation row -- a separate gap,
+  # recorded so it is not mistaken for a modelling decision
+  ai_reop <- pw[pw$condition == "ai" & pw$stage == "recurrence" &
+                  grepl("procedure", pw$service), ]
+  expect_equal(nrow(ai_reop), 0L)
+})
