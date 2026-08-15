@@ -1,0 +1,334 @@
+# NIGHTLY — the thorough one.
+#
+# WHY THIS EXISTS SEPARATELY. The per-push gates are deliberately cheap: one
+# ubuntu job each, because they run on every merge. This runs once a night and
+# is allowed to be expensive. It is where the full platform matrix, the whole
+# test suite, coverage, the leak scanners and the refusal-gate audit live.
+#
+# COST. This repository is PUBLIC, so GitHub-hosted standard runners are free
+# and unmetered. The "Actions minutes are scarce / exhausted" notes in the older
+# workflows predate that and do not apply here. Nothing below needs rationing.
+#
+# SCHEDULE. 03:17 MST == 10:17 UTC. GitHub cron is UTC-only and does not observe
+# DST, so during Mountain Daylight Time (Mar-Nov) this lands at 04:17 local.
+# That is the accepted trade for a single stable schedule; the alternative is
+# two crons and a double-run on the changeover days.
+#
+# FAILURE. Every job feeds the `report` job, which opens (or updates) a single
+# tracking issue rather than one per job per night.
+
+on:
+  schedule:
+    - cron: '17 10 * * *'
+  workflow_dispatch:
+    inputs:
+      skip_matrix:
+        description: 'Skip the full platform matrix (faster manual run)'
+        type: boolean
+        default: false
+
+name: nightly
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  R_KEEP_PKG_SOURCE: yes
+  _R_CHECK_FORCE_SUGGESTS_: false
+  # See R-CMD-check.yaml: the default GITHUB_TOKEN cannot read the private
+  # mufflyaccess repo and pak fails during dependency resolution without this.
+  GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
+  # Pinned by commit, NOT by ref. An extra-packages entry does not inherit the
+  # DESCRIPTION Remotes pin, so a bare repo name silently installs HEAD and CI
+  # drifts from every developer. test-contract-pin.R asserts this SHA.
+  MUFFLYACCESS_PIN: mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+  R_EXTRA_PKGS: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. LEAK GUARDS. No R toolchain, so these finish in seconds and tell you the
+  #    single most important thing about a public clinical repo before anything
+  #    slower runs.
+  # ---------------------------------------------------------------------------
+  leak-guard:
+    name: leak guard (secrets, PHI, DUA)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # history scanning needs the whole history
+
+      - name: PHI / DUA scan — working tree
+        run: .github/scripts/scan-phi-dua.sh worktree
+
+      - name: PHI / DUA scan — full git history
+        # A public repo ships deleted blobs. HEAD being clean proves nothing.
+        run: .github/scripts/scan-phi-dua.sh history
+
+      - name: gitleaks (credentials, tokens, keys)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+
+      - name: .gitignore still covers restricted data
+        # These rules are what keep CHIA source files and PHI out. If one is
+        # deleted the scanners above would only catch it AFTER something leaked.
+        run: |
+          fail=0
+          for pat in '*.rds' '*.mdb'; do
+            grep -qF -- "$pat" .gitignore || { echo "::error::.gitignore no longer ignores $pat"; fail=1; }
+          done
+          exit $fail
+
+  # ---------------------------------------------------------------------------
+  # 2. REFUSAL GATES. The audit that ordinary tests cannot do: proving the
+  #    guardrails still say NO.
+  # ---------------------------------------------------------------------------
+  refusal-gates:
+    name: refusal gates still refuse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      # setup-pandoc BEFORE setup-r-dependencies: that action resolves Suggests
+      # in its pandoc-needs check otherwise, and trips over mysterycall (a
+      # GitHub-only Suggests deliberately absent from Remotes). Enforced by
+      # test-repo-hygiene.R.
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}
+          dependencies: '"hard"'
+      - name: Assert every refusal gate still refuses
+        run: Rscript .github/scripts/assert-refusal-gates.R
+
+  # ---------------------------------------------------------------------------
+  # 3. FULL PLATFORM MATRIX. The per-push gate checks ubuntu-release only.
+  # ---------------------------------------------------------------------------
+  matrix-check:
+    name: R CMD check ${{ matrix.config.os }} (${{ matrix.config.r }})
+    if: ${{ !inputs.skip_matrix }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: ubuntu-latest,  r: 'release' }
+          - { os: ubuntu-latest,  r: 'devel'   }
+          - { os: ubuntu-latest,  r: 'oldrel-1' }
+          - { os: macos-latest,   r: 'release' }
+          - { os: windows-latest, r: 'release' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+          http-user-agent: ${{ matrix.config.r == 'devel' && 'release' || 'default' }}
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}
+          dependencies: '"hard"'
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          args: 'c("--no-manual", "--as-cran")'
+          error-on: '"warning"'
+
+  # ---------------------------------------------------------------------------
+  # 4. FULL SUITE WITH SKIP ACCOUNTING. A skipped gate and a passing gate look
+  #    identical in a summary line; twelve tests were once silently disabled by
+  #    a dependency change. This prints every skip and its reason.
+  # ---------------------------------------------------------------------------
+  full-suite:
+    name: full test suite (+ skip accounting)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}
+          dependencies: '"hard"'
+      - name: Run the suite and account for every skip
+        run: |
+          Rscript -e '
+            suppressMessages(pkgload::load_all(".", quiet = TRUE))
+            t0 <- Sys.time()
+            res <- testthat::test_dir("tests/testthat", reporter = "silent",
+                                      stop_on_failure = FALSE)
+            df <- as.data.frame(res)
+            mins <- as.numeric(difftime(Sys.time(), t0, units = "mins"))
+            cat(sprintf("\n## Suite\n\nblocks %d | passed %d | failed %d | errors %d | skipped %d | %.1f min\n",
+                        nrow(df), sum(df$passed), sum(df$failed), sum(df$error),
+                        sum(df$skipped), mins))
+            bad <- df[df$failed > 0 | df$error > 0, c("file","failed","error")]
+            if (nrow(bad)) { cat("\nFAILING FILES\n"); print(bad, row.names = FALSE) }
+            sk <- df[df$skipped > 0, c("file","skipped")]
+            if (nrow(sk)) {
+              cat("\nSKIPPED (a skipped gate is not a passing gate)\n")
+              print(sk, row.names = FALSE)
+            }
+            if (sum(df$failed) + sum(df$error) > 0) quit(status = 1)
+          ' | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # 5. DETERMINISM. A microsimulation that does not reproduce under a fixed seed
+  #    cannot support a published number.
+  # ---------------------------------------------------------------------------
+  reproducibility:
+    name: seeded runs reproduce exactly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}
+          dependencies: '"hard"'
+      - name: Same seed twice must be bit-identical
+        run: |
+          Rscript -e '
+            suppressMessages(pkgload::load_all(".", quiet = TRUE))
+            one <- function() {
+              set.seed(20260815)
+              v <- pathway_service_volumes(
+                treated = c(pop = 3264807, ui = 2538779, ai = 372721),
+                year = 2025L)
+              v[order(v$service), ]
+            }
+            a <- one(); b <- one()
+            if (!isTRUE(all.equal(a, b))) {
+              cat("::error::identical seeds produced different volumes\n"); quit(status = 1)
+            }
+            cat("PASS: seeded pathway volumes reproduce exactly\n")
+            cat(sprintf("digest: %s\n", digest::digest(a)))
+          '
+
+  # ---------------------------------------------------------------------------
+  # 6. COVERAGE, LINT, DOCS. Reporting rather than correctness, hence nightly.
+  # ---------------------------------------------------------------------------
+  quality:
+    name: coverage / lint / docs
+    runs-on: ubuntu-latest
+    continue-on-error: true   # informational; must not mask a real failure above
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}, any::covr, any::lintr, any::spelling, any::urlchecker, any::roxygen2
+          dependencies: '"hard"'
+
+      - name: Coverage
+        run: |
+          Rscript -e '
+            cov <- covr::package_coverage(quiet = TRUE)
+            pct <- covr::percent_coverage(cov)
+            cat(sprintf("\n## Coverage\n\n%.1f%%\n", pct))
+            print(covr::coverage_to_list(cov)$filecoverage[1:20])
+          ' | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Lint
+        run: Rscript -e 'print(lintr::lint_package())'
+
+      - name: roxygen documentation is up to date
+        # Regenerate and fail if man/ or NAMESPACE would change. Two merges once
+        # reached main with @export tags missing from NAMESPACE.
+        run: |
+          Rscript -e 'roxygen2::roxygenise()'
+          if ! git diff --quiet -- man NAMESPACE; then
+            echo "::error::man/ or NAMESPACE is stale. Run roxygen2::roxygenise() and commit."
+            git --no-pager diff --stat -- man NAMESPACE
+            exit 1
+          fi
+
+      - name: Spelling
+        run: Rscript -e 'spelling::spell_check_package()'
+
+      - name: URLs resolve
+        run: Rscript -e 'urlchecker::url_check()'
+
+  # ---------------------------------------------------------------------------
+  # 7. REPORT. One tracking issue, updated — not one issue per job per night.
+  # ---------------------------------------------------------------------------
+  report:
+    name: nightly report
+    runs-on: ubuntu-latest
+    needs: [leak-guard, refusal-gates, matrix-check, full-suite, reproducibility, quality]
+    if: always()
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Summarise
+        id: sum
+        run: |
+          {
+            echo "## Nightly $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo
+            echo "| job | result |"
+            echo "|---|---|"
+            echo "| leak guard | ${{ needs.leak-guard.result }} |"
+            echo "| refusal gates | ${{ needs.refusal-gates.result }} |"
+            echo "| platform matrix | ${{ needs.matrix-check.result }} |"
+            echo "| full suite | ${{ needs.full-suite.result }} |"
+            echo "| reproducibility | ${{ needs.reproducibility.result }} |"
+            echo "| quality | ${{ needs.quality.result }} |"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or update the tracking issue on failure
+        if: ${{ needs.leak-guard.result == 'failure' || needs.refusal-gates.result == 'failure' || needs.matrix-check.result == 'failure' || needs.full-suite.result == 'failure' || needs.reproducibility.result == 'failure' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const rows = {
+              'leak guard': '${{ needs.leak-guard.result }}',
+              'refusal gates': '${{ needs.refusal-gates.result }}',
+              'platform matrix': '${{ needs.matrix-check.result }}',
+              'full suite': '${{ needs.full-suite.result }}',
+              'reproducibility': '${{ needs.reproducibility.result }}',
+              'quality (informational)': '${{ needs.quality.result }}',
+            };
+            const failed = Object.entries(rows).filter(([, v]) => v === 'failure').map(([k]) => k);
+            const title = 'Nightly CI failing';
+            const body = [
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              `**Failing:** ${failed.join(', ')}`,
+              '',
+              '| job | result |', '|---|---|',
+              ...Object.entries(rows).map(([k, v]) => `| ${k} | ${v} |`),
+              '',
+              failed.includes('leak guard')
+                ? '> **Leak guard failed on a PUBLIC repository. Treat as urgent** — check for a DUA-restricted file or PHI before anything else.'
+                : '',
+            ].join('\n');
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'nightly',
+            });
+            if (existing.data.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.data[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['nightly'],
+              });
+            }
