@@ -1,47 +1,134 @@
 # The POP anchor constrains a TRANSITION, not the output. These tests exist to
 # stop the mismatch being "fixed" by multiplying the final number.
+#
+# These assertions used to read config/pop_cascade_transitions.yml, which was
+# INERT: no production code loaded it, and it restated 0.35/0.55/0.12/0.40 that
+# actually live in inst/extdata/pathway/condition_service_pathway.csv. A gate
+# watching a file nothing executes is not a gate. Every assertion below now
+# derives from the LIVE pathway, so the numbers being guarded are the numbers the
+# model uses. The inert YAML was deleted; its anchor-constraint arithmetic is
+# preserved here and its narrative in docs/CONFIGURATION_AUTHORITY_INVENTORY.md.
 
-.cascade <- function() yaml::read_yaml("../../config/pop_cascade_transitions.yml")
+.pop_pathway <- function() {
+  pw <- condition_service_pathway()
+  pw[pw$condition == "pop", , drop = FALSE]
+}
+.pop_treated <- function() unname(FROZEN_CARE_ENGAGED[["pop"]])
+.pop_anchor <- function() {
+  a <- utils::read.csv("../../data/anchors/prolapse_procedure_volume.csv")
+  a$observed[a$anchor_id == "prolapse_procedure_volume"][[1]]
+}
+.pop_volume <- function(pathway = condition_service_pathway(), by_stage = FALSE) {
+  pathway_service_volumes(treated = c(pop = .pop_treated()), year = 2025L,
+                          pathway = pathway, by_stage = by_stage)
+}
 
-test_that("a large POP mismatch must be resolved upstream, not by a terminal scalar", {
-  skip_if_not(file.exists("../../config/pop_cascade_transitions.yml"))
-  a <- .cascade()$anchor_constraint
-  expect_false(a$terminal_scalar_applied)
-  expect_true(a$requires_pathway_recalibration)
-  expect_identical(a$resolution_required, "pathway_recalibration")
+test_that("the shipped pathway drives prolapse volume (mutation proof)", {
+  # THE test this file was missing. The pathway CSV is the most consequential
+  # artifact in the repo's configuration inventory and had nothing proving its
+  # values reach an output. Halving the FIRST advance probability must halve the
+  # procedure stage EXACTLY, because every downstream stage is multiplicative in
+  # it -- including recurrence, which derives from the procedure stage. An
+  # "output merely changed" assertion would pass even if the value were being
+  # partially overwritten downstream; exact 0.5 will not.
+  skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw <- condition_service_pathway()
+
+  base_stage <- .pop_volume(pw, by_stage = TRUE)
+  base_tot   <- .pop_volume(pw)
+
+  mut <- pw
+  mut$p_advance[mut$condition == "pop" & mut$stage == "conservative"] <- 0.175
+  mut_stage <- .pop_volume(mut, by_stage = TRUE)
+  mut_tot   <- .pop_volume(mut)
+
+  pick <- function(d, st) sum(d$volume[d$service == "prolapse_procedure" &
+                                         d$stage == st])
+  tot  <- function(d) sum(d$volume[d$service == "prolapse_procedure"])
+
+  expect_equal(pick(mut_stage, "procedure") / pick(base_stage, "procedure"),
+               0.5, tolerance = 1e-9)
+  # recurrence is downstream of procedure and multiplicative, so it halves too
+  expect_equal(pick(mut_stage, "recurrence") / pick(base_stage, "recurrence"),
+               0.5, tolerance = 1e-9)
+  expect_equal(tot(mut_tot) / tot(base_tot), 0.5, tolerance = 1e-9)
+  # and the direction is down, not merely different
+  expect_lt(tot(mut_tot), tot(base_tot))
 })
 
-test_that("every cascade transition declares its evidence", {
-  skip_if_not(file.exists("../../config/pop_cascade_transitions.yml"))
-  required <- c("probability", "source", "population", "vintage",
-                "confidence", "calibration_status")
-  for (nm in names(.cascade()$transitions)) {
-    t <- .cascade()$transitions[[nm]]
-    expect_true(all(required %in% names(t)),
-                info = paste("transition", nm, "missing evidence fields"))
-  }
+test_that("a large POP mismatch must be resolved upstream, not by a terminal scalar", {
+  skip_if_not(file.exists("../../data/anchors/prolapse_procedure_volume.csv"))
+  predicted <- sum(.pop_volume()$volume[
+    .pop_volume()$service == "prolapse_procedure"])
+  anchor <- .pop_anchor()
+  overstatement <- predicted / anchor
+
+  # The mismatch is real and large. Recording it here is the point: if someone
+  # "fixes" it by scaling the output, this number goes to 1 while every upstream
+  # probability stays wrong, and the next assertion catches it.
+  expect_gt(overstatement, 4)
+  expect_lt(overstatement, 6)
+
+  # No terminal scaling may be applied to the procedure service. The pathway has
+  # exactly one lever per stage (per_entering, p_advance); a scalar smuggled in
+  # would have to appear as a per_entering != 1.0 at the procedure stage.
+  pr <- .pop_pathway()
+  pr <- pr[pr$stage == "procedure" & pr$service == "prolapse_procedure", ]
+  expect_equal(pr$per_entering[[1]], 1.0,
+               info = "a terminal scalar would hide here as per_entering != 1")
+  expect_equal(pr$p_advance[[1]], 1.0)
 })
 
 test_that("the back-solved constraint is internally consistent", {
-  skip_if_not(file.exists("../../config/pop_cascade_transitions.yml"))
-  a <- .cascade()$anchor_constraint
-  # V = N x p_combined x recurrence_multiplier, to within rounding
-  implied <- a$treated_population * a$required_combined_probability *
-             a$recurrence_multiplier
-  expect_lt(abs(implied - a$observed_encounters) / a$observed_encounters, 0.01)
-  # and the overstatement factor must match the two probabilities
-  expect_lt(abs(a$current_combined_probability / a$required_combined_probability
-                - a$overstatement_factor), 0.05)
+  skip_if_not(file.exists("../../data/anchors/prolapse_procedure_volume.csv"))
+  pw <- .pop_pathway()
+  p_cons <- unique(pw$p_advance[pw$stage == "conservative"])
+  p_test <- unique(pw$p_advance[pw$stage == "testing"])
+  p_recur_hazard <- unique(pw$p_advance[pw$stage == "followup"])
+  p_reop <- pw$per_entering[pw$stage == "recurrence" &
+                              pw$service == "prolapse_procedure"]
+  expect_length(p_cons, 1L)   # one advance probability per stage, or the
+  expect_length(p_test, 1L)   # cascade is ambiguous
+  expect_length(p_recur_hazard, 1L)
+
+  recurrence_multiplier <- 1 + p_recur_hazard * p_reop
+  p_combined <- p_cons * p_test
+  predicted <- .pop_treated() * p_combined * recurrence_multiplier
+
+  # V = N x p_combined x recurrence_multiplier must reproduce what the pathway
+  # engine actually computes, to within rounding. If these diverge, the engine
+  # is applying something this arithmetic does not describe.
+  engine <- sum(.pop_volume()$volume[
+    .pop_volume()$service == "prolapse_procedure"])
+  expect_lt(abs(predicted - engine) / engine, 0.01)
+
+  # and the probability required to hit the anchor is the one to source
+  required <- .pop_anchor() / (.pop_treated() * recurrence_multiplier)
+  expect_lt(required, p_combined)   # the model is high, not low
+  expect_gt(p_combined / required, 4)
 })
 
-test_that("a low-confidence transition is never marked calibrated", {
-  skip_if_not(file.exists("../../config/pop_cascade_transitions.yml"))
-  for (nm in names(.cascade()$transitions)) {
-    t <- .cascade()$transitions[[nm]]
-    if (identical(t$confidence, "low")) {
-      expect_false(identical(t$calibration_status, "calibrated"),
-                   info = paste(nm, "claims calibrated on low confidence"))
+test_that("a low-confidence pathway stage is never presented as calibrated", {
+  skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw <- .pop_pathway()
+  # every POP stage is expert judgement at low confidence; none may claim
+  # otherwise while its source still says so
+  for (i in seq_len(nrow(pw))) {
+    if (identical(pw$confidence[[i]], "low")) {
+      expect_false(grepl("calibrated|validated", pw$source[[i]], ignore.case = TRUE),
+                   info = paste(pw$stage[[i]], pw$service[[i]],
+                                "claims calibration on low confidence"))
     }
+  }
+})
+
+test_that("every POP pathway row declares its evidence", {
+  skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw <- .pop_pathway()
+  for (col in c("per_entering", "confidence", "source", "notes")) {
+    expect_true(col %in% names(pw), info = col)
+    expect_true(all(!is.na(pw[[col]]) & nzchar(as.character(pw[[col]]))),
+                info = paste("blank", col, "in the POP pathway"))
   }
 })
 
@@ -59,4 +146,11 @@ test_that("illustrative predictions never reach a production scalar field", {
   skip_if_not(file.exists("../../scripts/calibration/build_empirical_calibration_targets.R"))
   src <- readLines("../../scripts/calibration/build_empirical_calibration_targets.R")
   expect_true(any(grepl("illustrative_smoke_test_scalar", src, fixed = TRUE)))
+})
+
+test_that("the inert cascade config stays deleted", {
+  # It restated live values with no execution consumer, so editing it changed
+  # nothing while looking authoritative. If it returns, it must come back with a
+  # loader and a mutation test, not as documentation shaped like config.
+  expect_false(file.exists("../../config/pop_cascade_transitions.yml"))
 })
