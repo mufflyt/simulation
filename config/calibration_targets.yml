@@ -13,10 +13,18 @@ max_scalar: 3.0
 
 anchors:
   urps_office_visits:
+    production_scalar_eligible: false
+    clinical_review_status: needs_clinical_review
+    clinical_reviewer: ""
+    clinical_review_date: ""
     source: "NAMCS / MEPS national office-visit totals for urogynecologic care"
     path: data/anchors/urps_office_visits.csv
     sha256: "8e98138bccacbecaa5b29d8c7b458178aee9f6acbc7559fe47721d8876f1b918"
   sling_procedure_volume:
+    production_scalar_eligible: false
+    clinical_review_status: needs_clinical_review
+    clinical_reviewer: ""
+    clinical_review_date: ""
     source: "HCUP SASD (ambulatory surgery) + Medicare Part B carrier, CPT 57288"
     note: "NIS is INPATIENT and carries ICD-10-PCS, not CPT; most slings are outpatient"
     # NOT YET ACQUIRED. Needs the licensed HCUP Central Distributor pull; see
@@ -28,10 +36,18 @@ anchors:
     sha256: ""
     status: missing
   prolapse_procedure_volume:
+    production_scalar_eligible: false
+    clinical_review_status: needs_clinical_review
+    clinical_reviewer: ""
+    clinical_review_date: ""
     source: "HCUP SASD + Medicare Part B carrier"
     path: data/anchors/prolapse_procedure_volume.csv
     sha256: "b449fd0131a574681a1a9d1045917f6a44efbe0b3dca585d09e9ef1ff635e312"
   ui_prevalence:
+    production_scalar_eligible: false
+    clinical_review_status: needs_clinical_review
+    clinical_reviewer: ""
+    clinical_review_date: ""
     source: "Nygaard 2008 JAMA; SWAN longitudinal prevalence"
     # NOT YET ACQUIRED.
     path: data/anchors/ui_prevalence.csv

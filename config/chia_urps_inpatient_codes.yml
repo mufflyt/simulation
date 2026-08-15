@@ -14,8 +14,10 @@
 # urogynaecologist. Do not publish family-level counts until they have.
 
 meta:
-  version: 0.1.0
-  status: needs_clinical_review
+  version: 0.2.0
+  status: needs_clinical_review     # -> "approved" only via clinical sign-off
+  clinical_reviewer: ""             # name; required before status can be approved
+  clinical_review_date: ""          # ISO date; required before status can be approved
   icd9_era: [2004, 2015]      # FY2004-FY2015 use ICD-9-CM Volume 3
   icd10_era: [2016, 2018]     # FY2016+ use ICD-10-PCS
   code_format: nodot
@@ -58,6 +60,77 @@ diagnosis_qualifiers:
     icd9cm:   ["619"]
     icd10cm:  ["N82"]
     match: prefix
+
+# ---------------------------------------------------------------------------
+# CLINICAL REVIEW CRITERIA
+#
+# What the reviewing urogynaecologist is signing off on. These are DEFINITIONS,
+# not string translations: each side of an ICD era seam must independently mean
+# the same clinical procedure family. Matching rates across the seam is
+# validation of the definition, never the definition itself.
+#
+# A family is approved only when every applicable rule is satisfied.
+# ---------------------------------------------------------------------------
+clinical_review_criteria:
+  sling:
+    rule: >
+      Count PRIMARY anti-incontinence sling and urethral-suspension procedures
+      only. Do not mix sling revision, removal, mesh excision, urethrolysis or
+      complication surgery into incident sling placement -- a sling removal is
+      emphatically not another sling placement, and is a different workload
+      event. A concomitant prolapse repair or hysterectomy does NOT disqualify
+      an incident sling.
+    status: SATISFIED_PENDING_SIGNOFF
+    note: >
+      Verified structurally: the ICD-9 members (59.4 suprapubic sling, 59.5
+      retropubic urethral suspension, 59.6 paraurethral suspension, 59.71
+      levator muscle operation) are all primary placement, and the ICD-10
+      prefix 0TUD is Supplement Urethra -- placement. Removal is 0TPD and
+      excision 0TBD; neither is reachable from 0TUD. No revision or removal
+      code enters the family. Requires clinical sign-off, not further code work.
+  pop_surgery:
+    rule: >
+      Require an actual prolapse repair, suspension or obliterative procedure,
+      OR a prolapse diagnosis paired with an appropriate hysterectomy.
+      Hysterectomy alone is not a POP operation.
+    status: SATISFIED   # pop_hysterectomy carries requires_diagnosis
+  apical_distinct:
+    rule: >
+      Sacrocolpopexy, uterosacral suspension, sacrospinous fixation and
+      colpopexy must remain distinguishable from anterior/posterior repair
+      rather than collapsing into one "prolapse procedure" family.
+    status: SATISFIED   # apical_suspension and anterior_posterior_repair are separate
+  sui_diagnosis:
+    rule: >
+      Stress and mixed urinary incontinence support a sling indication.
+      Urgency incontinence or overactive bladder ALONE does not.
+    status: OPEN        # sui_sling currently carries NO diagnosis qualifier
+  revision_removal_separate:
+    rule: >
+      Revision, removal and mesh-excision procedures belong in their own family,
+      never folded into incident placement.
+    status: OPEN        # no revision/removal family is defined yet
+  newborn_attribution:
+    rule: >
+      A newborn code appearing somewhere in an adult maternal discharge must
+      never by itself classify the record as newborn. Preserve the raw flag;
+      attribution requires maternal/newborn context.
+    status: SATISFIED
+    note: >
+      Newborn classification requires AdmissionType = '4' AND an age consistent
+      with a newborn. AdmissionType alone lands on 357 adult records (a source
+      coding error) and was erasing 56 adult female operations from workload.
+      Verified separately that the flag is not diagnosis-driven: 14 adult female
+      FY2018 records carry V30/Z38 and none are flagged newborn.
+  era_seam_semantics:
+    rule: >
+      Treat ICD-9 -> ICD-10 mappings as clinical definitions. Each side must
+      independently denote the same clinical family; rate agreement across the
+      seam is a check on that, not a substitute for it.
+    status: SATISFIED
+    note: >
+      Three families are declared seam-unstable with clinical reasons rather
+      than tuned under threshold.
 
 # ---------------------------------------------------------------------------
 # PROCEDURE FAMILIES
