@@ -186,3 +186,10 @@ data-raw/chia/ref_downloads/
 # CHIA revenue-setting run artifacts are timestamped and regenerable; the
 # encounter-level RDS is large. Keep the code, not the runs.
 artifacts/chia_revenue_setting/
+
+# Timestamped calibration run artifacts are regenerable from
+# scripts/calibration/build_empirical_calibration_targets.R; the registry and
+# report are re-emitted on every run and would otherwise accumulate.
+data/anchors/validation/
+artifacts/calibration/
+config/calibration_targets_backup_*.yml
