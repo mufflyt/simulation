@@ -66,8 +66,12 @@ test_that("a large POP mismatch must be resolved upstream, not by a terminal sca
   # The mismatch is real and large. Recording it here is the point: if someone
   # "fixes" it by scaling the output, this number goes to 1 while every upstream
   # probability stays wrong, and the next assertion catches it.
-  expect_gt(overstatement, 4)
-  expect_lt(overstatement, 6)
+  # After the estimand restructure the discrepancy is carried by ONE parameter
+  # and is therefore LARGER, not smaller: the old 0.55 gate was absorbing part
+  # of it. This is the intended state -- one honest parameter at ~8.5x is a
+  # better object to source than two unsourced ones multiplying to 4.68x.
+  expect_gt(overstatement, 8)
+  expect_lt(overstatement, 9)
 
   # No terminal scaling may be applied to the procedure service. The pathway has
   # exactly one lever per stage (per_entering, p_advance); a scalar smuggled in
@@ -153,4 +157,32 @@ test_that("the inert cascade config stays deleted", {
   # nothing while looking authoritative. If it returns, it must come back with a
   # loader and a mutation test, not as documentation shaped like config.
   expect_false(file.exists("../../config/pop_cascade_transitions.yml"))
+})
+
+test_that("POP testing is non-gating, and UI/AI were not restructured by analogy", {
+  # The estimand restructure applies to POP ONLY. UI's testing stage delivers
+  # 1.20 services per entrant -- essentially everyone entering receives a test --
+  # so a gate there is defensible and must be left alone. AI has the same defect
+  # as POP (0.25 services/entrant) but is a separate question with separate
+  # evidence, and is deliberately NOT changed here.
+  skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw <- condition_service_pathway()
+  expect_equal(unique(pw$p_advance[pw$condition == "pop" & pw$stage == "testing"]), 1.00)
+  expect_equal(unique(pw$p_advance[pw$condition == "ui"  & pw$stage == "testing"]), 0.40)
+  expect_equal(unique(pw$p_advance[pw$condition == "ai"  & pw$stage == "testing"]), 0.25)
+
+  # testing services survive as UTILISATION, unchanged in magnitude
+  pop_test <- pw[pw$condition == "pop" & pw$stage == "testing", ]
+  expect_equal(sum(pop_test$per_entering), 0.50)
+  # Assert the machine-readable declaration, not prose wording: a pass-through
+  # stage declares itself in `source` and carries no confidence interval,
+  # because there is no probability being estimated. Matching on note text
+  # instead makes the test fail on a rephrase rather than on a semantic change.
+  expect_true(all(grepl("pass-through", pop_test$source, fixed = TRUE)))
+  expect_true(all(is.na(pop_test$ci_low) & is.na(pop_test$ci_high)))
+
+  # and the conservative transition now carries the whole cascade
+  cons <- unique(pw$p_advance[pw$condition == "pop" & pw$stage == "conservative"])
+  proc <- pw[pw$condition == "pop" & pw$stage == "procedure", ]
+  expect_equal(cons * 1.00 * proc$per_entering[[1]], cons)
 })
