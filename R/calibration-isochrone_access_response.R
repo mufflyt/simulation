@@ -366,7 +366,10 @@ lizeth_wait_response_loss <- function(response_table,
 #' per sigma) is built in the runner, while tests supply a lightweight map. Each
 #' evaluation joins the Lizeth calls to that sigma's catchments and scores the
 #' unsaturated pairs; folds with fewer than two usable pairs score `Inf` so the
-#' search avoids degenerate regions.
+#' search avoids degenerate regions. The SSE surface has a sharp global well on
+#' an otherwise flat plateau, so a coarse grid of `n_grid` points brackets the
+#' minimum and [stats::optimize()] refines within one grid step of the best
+#' point.
 #'
 #' @param lizeth_access Call-level records with `npi_col` and `wait_col` (from
 #'   [prepare_lizeth_access()]).
@@ -378,6 +381,8 @@ lizeth_wait_response_loss <- function(response_table,
 #'   [join_lizeth_to_catchments()] / [lizeth_wait_response_loss()].
 #' @param bands Optional band vector; when supplied, the fitted weights
 #'   `gaussian_band_weights(bands, sigma)` are returned. Default `NULL`.
+#' @param n_grid Number of points in the coarse grid scanned across
+#'   `sigma_bounds` before refinement. Must be at least 3. Default `25L`.
 #'
 #' @return A list: `sigma` (fitted), `wait_scale` (at the fitted sigma), `sse`,
 #'   `rmse`, `n_pairs` (unsaturated matched calls), `weights` (if `bands` given),
