@@ -66,8 +66,49 @@ namcs_2019_visit_mix:
     agreeing on a SERVICE share still does not yield a PATIENT-level transition
     rate.
 
+meps_2023_person_utilization:
+  role: attempted_source
+  status: insufficient
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  source: >
+    MEPS 2023 office-based visit file (OB) linked to conditions via CLNK, with
+    the full-year consolidated file for age and sex. Person-level via DUPERSID.
+  measures:
+    ui_condition_records: 139
+    ui_condition_persons: 138
+    ui_linked_office_visits: 180
+    persons_with_any_visit: 58
+    adult_women_with_any_visit: 46
+    mean_visits_per_woman: 3.33
+    median_visits_per_woman: 3
+  why_insufficient:
+    - >
+      n = 46 adult women with any UI-linked office visit. Too thin to split into
+      first-year and continuing cohorts, which is the whole point of the
+      parameter.
+    - >
+      POP IS ENTIRELY ABSENT. N81 (female genital prolapse) does not appear in
+      MEPS 2023 conditions at all, so the office pathway's largest condition
+      (pop, 3.26M treated) has no MEPS signal whatsoever.
+    - >
+      ICD10CDX is truncated to THREE characters, so N39 conflates urinary tract
+      infection (N39.0) with stress and urge incontinence (N39.3/.4). Only R32 /
+      CCSR GEN008 is a clean incontinence signal, which is why the usable cohort
+      collapses to 139 condition records.
+    - >
+      A single-year file cannot separate entrants from continuing patients at
+      all. That split requires the longitudinal panels (Panel 27 covering
+      2022-2023, or Panel 24 covering 2019-2022 with longitudinal weights),
+      which are not on disk.
+  what_would_suffice: >
+    Pooled MEPS office-based files across several years PLUS a longitudinal
+    panel for the entrant/continuing split, with uncertainty reported rather
+    than a point estimate. Even pooled, expect POP to remain unmeasurable in
+    MEPS and to require a different source.
+
 # ---------------------------------------------------------------------------
-# STILL REQUIRED, and not obtainable from either source above:
+# STILL REQUIRED, and not obtainable from any source attempted so far:
 #   first_year_followup_rate   person-level, first year after entry
 #   annual_followup_rate       person-level, continuing engagement
 # Next source: pooled MEPS office-based visit files, which carry DUPERSID and
