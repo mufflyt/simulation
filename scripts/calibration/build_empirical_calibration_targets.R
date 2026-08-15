@@ -494,7 +494,15 @@
       }
     }
 
-    ready  <- exists && hash_declared && hash_matches
+    # Clinical review is a PRECONDITION, not metadata. An anchor whose
+    # procedure-family definitions have not been reviewed cannot produce a
+    # scalar even if its file is present and its hash matches.
+    review_ok <- !base::inherits(base::try(
+      assert_production_scalar_eligible(
+        utils::modifyList(base::list(anchor_id = anchor_name), specification)),
+      silent = TRUE), "try-error")
+
+    ready  <- exists && hash_declared && hash_matches && review_ok
     scalar <- if (ready && base::is.finite(prediction) && prediction > 0) {
       target_value / prediction
     } else NA_real_
@@ -518,7 +526,8 @@
       hash_declared = hash_declared, hash_matches = hash_matches,
       target = target_value, model_prediction = prediction, scalar = scalar,
       calibrated_prediction = calibrated_prediction, direction = direction,
-      structural_mismatch_flag = structural_flag, production_ready = ready)
+      structural_mismatch_flag = structural_flag,
+      clinical_review_ok = review_ok, production_ready = ready)
   })
 
   dplyr::bind_rows(rows)
@@ -561,6 +570,9 @@ build_empirical_calibration_targets <- function(
   base::message("========================================")
 
   .require_empirical_packages()
+  if (!base::exists("assert_production_scalar_eligible")) {
+    base::source(base::file.path("R", "calibration-clinical_review_gate.R"))
+  }
   base::message("Loading current simulation source checkout.")
   pkgload::load_all(".", quiet = TRUE)
 
