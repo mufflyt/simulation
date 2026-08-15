@@ -455,14 +455,22 @@
 
 #' Build the production-anchor readiness and scalar report
 #' @param model_predictions Optional tibble with `anchor_id` and
-#'   `model_prediction`.
+#'   `model_prediction`. NOTE: any scalar computed here is named
+#'   `illustrative_smoke_test_scalar` and is NOT a production calibration
+#'   scalar. A production scalar requires provenance on BOTH sides of the
+#'   division and must go through
+#'   [compute_production_scalar()]; a bare numeric cannot produce one.
 #' @param config_path Calibration YAML.
-#' @return Production calibration report.
+#' @return Anchor-readiness report. Contains no production scalar.
 .build_production_calibration_report <- function(
     model_predictions = NULL,
     config_path = "config/calibration_targets.yml") {
 
-  base::message("Building production calibration report.")
+  base::message("Building ANCHOR READINESS report.")
+  base::message("  Any scalar below is an illustrative smoke test, not a ",
+                "production calibration scalar. Production scalars require ",
+                "provenance on both sides and go through ",
+                "compute_production_scalar().")
   config <- yaml::read_yaml(config_path)
 
   if (!base::is.null(model_predictions)) {
@@ -523,7 +531,8 @@
       anchor_id = anchor_name, path = anchor_path, present = exists,
       expected_sha256 = expected_hash, observed_sha256 = observed_hash,
       hash_declared = hash_declared, hash_matches = hash_matches,
-      target = target_value, model_prediction = prediction, scalar = scalar,
+      target = target_value, model_prediction = prediction,
+      illustrative_smoke_test_scalar = scalar,
       calibrated_prediction = calibrated_prediction, direction = direction,
       structural_mismatch_flag = structural_flag,
       clinical_review_ok = review_ok, production_ready = ready)
