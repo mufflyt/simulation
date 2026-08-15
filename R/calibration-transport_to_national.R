@@ -28,6 +28,21 @@
 # defaults its unknown factor to 1 is laundering, not transport.
 ################################################################################
 
+# Fail loudly when an input artifact lacks a column this module depends on.
+# Named with a leading dot because it is internal to this file; it exists so a
+# malformed artifact is refused by name rather than surfacing later as a
+# confusing NULL-column subscript error.
+.require_columns <- function(data, required, what) {
+  missing <- base::setdiff(required, base::names(data))
+  if (base::length(missing) > 0L) {
+    base::stop(what, " is missing required column(s): ",
+               base::paste(missing, collapse = ", "),
+               ". Present: ", base::paste(base::names(data), collapse = ", "),
+               call. = FALSE)
+  }
+  base::invisible(data)
+}
+
 #' Massachusetts age-specific inpatient rates for a procedure family
 #'
 #' @param db Path to chia_cadr.duckdb.
