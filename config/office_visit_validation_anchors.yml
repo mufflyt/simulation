@@ -107,6 +107,68 @@ meps_2023_person_utilization:
     than a point estimate. Even pooled, expect POP to remain unmeasurable in
     MEPS and to require a different source.
 
+meps_panel27_longitudinal:
+  role: attempted_source
+  status: insufficient
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  source: >
+    MEPS Panel 27 seven-file bundle: HC-252 longitudinal person file (LONGWT,
+    VARSTR, VARPSU), HC-241/HC-239I/HC-239G for 2022, HC-249/HC-248I/HC-248G
+    for 2023. Person-level via DUPERSID, visits ordered within 2023 by OBDATEMM.
+  phenotype:
+    primary: CCSR1X == "GEN008"
+    label_per_ahrq: URINARY INCONTINENCE
+    excluded_from_primary: >
+      ICD10CDX == "N39". At three characters it conflates urinary tract
+      infection (N39.0) with stress and urge incontinence (N39.3/.4). Sample
+      size bought that way corrupts the phenotype.
+  washout_definition: >
+    newly observed in 2023 = qualifying 2023 visit AND no qualifying 2022 visit.
+    This is NEWLY OBSERVED AFTER A ONE-YEAR WASHOUT, not true first-ever
+    urogynecologic care: a patient treated in 2021 and returning in 2023 is
+    misclassified as new. It must never populate a parameter named
+    first_entry_rate.
+  cohort_construction:
+    gen008_conditions_2022: 203
+    persons_2022: 198
+    linked_office_visits_2022: 209
+    persons_with_visit_2022: 79
+    gen008_conditions_2023: 139
+    persons_2023: 138
+    linked_office_visits_2023: 180
+    persons_with_visit_2023: 58
+  estimates:
+    annual_followup_rate:
+      weighted_mean: 5.68
+      ci: [1.94, 9.43]
+      unweighted_n: 9
+      definition: 2023 UI-linked office visits among adult women with >= 1 in 2022
+    first_year_followup_rate:
+      weighted_mean: 1.77
+      ci: [0.33, 3.21]
+      unweighted_n: 16
+      definition: >
+        UI-linked office visits after the first observed 2023 visit, among adult
+        women with no observed 2022 UI visit
+  verdict: >
+    INSUFFICIENT. n = 9 continuing and n = 16 newly observed. The annual
+    follow-up interval spans 1.94 to 9.43, nearly fivefold. Neither model
+    parameter may be changed on this evidence.
+  consistency_note: >
+    5.68 sits above the CMS within-cell lower bound of 1.4463, which is the
+    expected direction: MEPS counts UI-linked office visits across ALL
+    providers per person, while the CMS ratio counts E/M services within a
+    single NPI x HCPCS x place-of-service cell. The two are not in conflict,
+    but neither can substitute for the other.
+  next_step: >
+    Panel 24 (2019-2022) as a longer-washout sensitivity, then pooled panels.
+    AHRQ recommends pooling multiple longitudinal panels for low-prevalence
+    events, and Panels 24+ share the appropriate common variance framework.
+    Panel 24 crosses the COVID utilization shock, so it is a sensitivity rather
+    than a replacement. Agreement across periods would be far stronger evidence
+    than immediate pooling.
+
 # ---------------------------------------------------------------------------
 # STILL REQUIRED, and not obtainable from any source attempted so far:
 #   first_year_followup_rate   person-level, first year after entry

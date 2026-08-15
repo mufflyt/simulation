@@ -56,3 +56,25 @@ test_that("MEPS 2023 is recorded as attempted and insufficient", {
   # and the POP gap must be explicit
   expect_true(any(grepl("POP IS ENTIRELY ABSENT", unlist(m$why_insufficient))))
 })
+
+test_that("Panel 27 is recorded with estimates, uncertainty, n, and definitions", {
+  skip_if_not(file.exists("../../config/office_visit_validation_anchors.yml"))
+  m <- .va()$meps_panel27_longitudinal
+  expect_identical(m$status, "insufficient")
+  # the gate must preserve all four: point estimate, interval, unweighted n,
+  # and an explicit phenotype/washout definition
+  for (e in c("annual_followup_rate", "first_year_followup_rate")) {
+    est <- m$estimates[[e]]
+    expect_true(is.numeric(est$weighted_mean))
+    expect_length(est$ci, 2L)
+    expect_true(is.numeric(est$unweighted_n))
+    expect_true(nzchar(est$definition))
+  }
+  expect_true(nzchar(m$washout_definition))
+  expect_match(m$washout_definition, "not true first-ever")
+  expect_identical(m$phenotype$primary, 'CCSR1X == "GEN008"')
+  # N39 must stay out of the primary phenotype
+  expect_match(m$phenotype$excluded_from_primary, "N39")
+  # and the sample must be recorded as too small to move a parameter
+  expect_lt(m$estimates$annual_followup_rate$unweighted_n, 30)
+})
