@@ -50,3 +50,18 @@ test_that("the POP diagnosis family spans the seam identically", {
   expect_true("N993" %in% q$pelvic_organ_prolapse$icd10cm)
   expect_true("618" %in% q$pelvic_organ_prolapse$icd9cm)
 })
+
+
+test_that("the YAML declares the aggregation contract, not just the code", {
+  skip_if_not(file.exists("../../config/calibration_targets.yml"))
+  a <- yaml::read_yaml("../../config/calibration_targets.yml")$anchors$prolapse_procedure_volume
+  expect_equal(a$estimand$unit, "encounter")
+  expect_equal(a$estimand$aggregation_rule, "unique_encounter")
+  # the contract must say the sum is NOT a valid anchor, in the config, so the
+  # rule survives a rewrite of the implementation
+  expect_false(a$estimand$procedure_family_sum_is_valid_anchor)
+  expect_true(all(c("compartment_not_always_identifiable",
+                    "procedure_families_may_overlap",
+                    "N99.3_required_across_icd_seam") %in%
+                  a$clinical_review$known_limitations))
+})
