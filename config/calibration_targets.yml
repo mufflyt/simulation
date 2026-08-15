@@ -27,11 +27,31 @@ max_scalar: 3.0
 # far from 1 signals a structural mismatch, NOT an offset to divide out. These
 # scalars must NOT be applied as corrections until the mismatch is diagnosed.
 #
-# Leading hypotheses, none adjudicated:
-#  - prolapse: the anchor is POP operative ENCOUNTERS, deduplicated. The model
-#    emits prolapse_procedure, which may be a procedure count. That is exactly
-#    the encounter-versus-procedure distinction the prolapse review established,
-#    and in CHIA the naive procedure sum exceeded encounters by 12-68%.
+# PROLAPSE MISMATCH DIAGNOSED, 2026-08-14. The encounter-versus-procedure
+# hypothesis is REFUTED. condition_service_pathway() assigns
+# per_entering = 1.0 for pop/procedure/prolapse_procedure and 0.4 for
+# pop/recurrence, so each unit is a distinct surgical EPISODE. The model was
+# already counting encounters and matches the anchor's unit.
+#
+# The gap is in the CASCADE, not the definition:
+#   treated POP patients            3,264,807
+#   x p_advance conservative->testing   0.35   (low confidence, expert judgement)
+#   x p_advance testing->procedure      0.55   (low confidence, expert judgement)
+#   = primary operations              628,475
+#   + recurrence 75,417 x 0.4          30,167
+#   = 658,642 encounters              vs anchor 140,762
+#
+# The model operates 19.2% of treated POP patients annually. Reconciling with
+# the anchor requires 4.3%. Every advance probability in the POP cascade is
+# marked confidence: low, source: expert judgement, and
+# condition_pathway_status() already returns "uncalibrated_illustrative".
+#
+# So this is not a defect the anchor exposed by accident -- it is a
+# known-uncalibrated component meeting its first external target, which is what
+# the anchor is for. The correction belongs in the cascade probabilities, NOT in
+# a scalar applied to the output.
+#
+# Remaining hypotheses for the OTHER flag, none adjudicated:
 #  - office visits: NAMCS is office-based only and documented as a structural
 #    LOWER bound; the model quantity is all-provider condition demand. Part of
 #    this gap is expected by construction.

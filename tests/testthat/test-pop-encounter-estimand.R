@@ -65,3 +65,15 @@ test_that("the YAML declares the aggregation contract, not just the code", {
                     "N99.3_required_across_icd_seam") %in%
                   a$clinical_review$known_limitations))
 })
+
+test_that("the model's prolapse_procedure unit is an encounter, not a procedure", {
+  skip_if_not(requireNamespace("pkgload", quietly = TRUE))
+  p <- condition_service_pathway()
+  pop <- p[p$condition == "pop" & p$service == "prolapse_procedure", ]
+  # one surgical episode per patient entering the procedure stage; the
+  # recurrence row is a SECOND episode, not a second procedure within one
+  expect_equal(pop$per_entering[pop$stage == "procedure"], 1.0)
+  expect_true(all(pop$per_entering <= 1.0))
+  # so the model and the anchor share a unit, and any gap is a cascade
+  # question rather than a definitional one
+})
