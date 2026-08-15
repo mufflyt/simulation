@@ -454,3 +454,203 @@ transport_setting_share_sensitivity <- function(
     national_all_setting = national_inpatient / shares,
     fold_change_vs_inpatient = 1 / shares)
 }
+
+# ---------------------------------------------------------------------------
+# SLING -- a free route, because HCUP SASD is not affordable
+#
+# CHIA cannot supply sling volume: inpatient slings fall to ZERO by FY2018 (the
+# procedure left the setting). But three free sources already on disk close the
+# gap by a different path:
+#
+#   1. CMS Medicare Physician & Other Practitioners PUF  -- national Medicare
+#      FFS sling volume, CPT 57288. Free, no DUA. data-raw/cms_psps/.
+#   2. CHIA Outpatient Observation -- carries CPT codes, so it yields an
+#      ALL-PAYER age distribution for sling (1,142 procedures, FY2013-2018).
+#   3. CMS Medicare Advantage penetration -- free, but not bundled here, so it
+#      stays an explicit input.
+#
+#   national_all_payer = medicare_ffs_volume / (p_65plus * ffs_share_of_medicare)
+#
+# Note the direction of the CHIA selection bias: observation-stay slings are
+# those kept overnight, who skew older than the ambulatory sling population. So
+# p_65plus is likely OVERSTATED, which makes the national estimate a LOWER
+# bound.
+# ---------------------------------------------------------------------------
+
+#' National Medicare FFS volume for a HCPCS code from the CMS PUF
+#'
+#' @param hcpcs HCPCS/CPT code.
+#' @param path CMS Geography-and-Service PUF.
+#' @return Tibble by place of service, plus a total.
+#' @export
+cms_puf_national_volume <- function(
+    hcpcs = "57288",
+    path = base::file.path("data-raw", "cms_psps",
+                           "MUP_PHY_R26_P05_V10_D24_Geo.csv")) {
+  if (!base::file.exists(path)) {
+    base::stop("CMS PUF not found: ", path,
+               ". See data-raw/cms_psps/DOWNLOAD.md -- it is a free ",
+               "unauthenticated download, no DUA.", call. = FALSE)
+  }
+  puf <- readr::read_csv(path, show_col_types = FALSE, progress = FALSE)
+  out <- puf |>
+    dplyr::filter(Rndrng_Prvdr_Geo_Lvl == "National", HCPCS_Cd == hcpcs) |>
+    dplyr::select(hcpcs = HCPCS_Cd, description = HCPCS_Desc,
+                  place_of_service = Place_Of_Srvc,
+                  providers = Tot_Rndrng_Prvdrs, beneficiaries = Tot_Benes,
+                  services = Tot_Srvcs)
+  if (base::nrow(out) == 0L) {
+    base::stop("HCPCS ", hcpcs, " not found at national level in the PUF.",
+               call. = FALSE)
+  }
+  base::message("CMS PUF, HCPCS ", hcpcs, ": ",
+                base::format(base::sum(out$services), big.mark = ","),
+                " Medicare FFS services nationally (",
+                base::paste(base::sprintf("%s=%s", out$place_of_service,
+                            base::format(out$services, big.mark = ",")),
+                            collapse = ", "), ")")
+  out
+}
+
+#' All-payer age distribution of sling from CHIA observation data
+#'
+#' CHIA's Outpatient Observation file carries CPT codes, so unlike the inpatient
+#' file it still sees sling procedures. All-payer, Massachusetts.
+#'
+#' @param db Path to chia_cadr.duckdb.
+#' @param cpt Sling CPT codes.
+#' @param year_start,year_end Observation window.
+#' @return Tibble: age band, n, share; attribute "p_65plus".
+#' @export
+chia_sling_age_distribution <- function(
+    db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+    cpt = c("57288", "51992"),
+    year_start = 2013L, year_end = 2018L) {
+
+  connection <- DBI::dbConnect(duckdb::duckdb(), db, read_only = TRUE)
+  base::on.exit(DBI::dbDisconnect(connection, shutdown = TRUE), add = TRUE)
+  codes <- base::paste(base::sprintf("'%s'", cpt), collapse = ",")
+
+  rows <- DBI::dbGetQuery(connection, base::sprintf("
+    WITH s AS (
+      SELECT CASE WHEN age_top_coded THEN 90 ELSE age END AS a
+      FROM chia_casemix.v_ood_observation_canonical
+      WHERE _data_year BETWEEN %d AND %d AND sex = 'F'
+        AND (cpt1 IN (%s) OR cpt2 IN (%s) OR cpt3 IN (%s)
+          OR cpt4 IN (%s) OR cpt5 IN (%s)))
+    SELECT CASE WHEN a < 50 THEN '18-49' WHEN a < 65 THEN '50-64'
+                WHEN a < 80 THEN '65-79' ELSE '80+' END AS age_band,
+           count(*) AS n
+    FROM s WHERE a >= 18 GROUP BY 1 ORDER BY 1",
+    year_start, year_end, codes, codes, codes, codes, codes)) |>
+    tibble::as_tibble() |>
+    dplyr::mutate(share = n / base::sum(n))
+
+  p65 <- base::sum(rows$n[rows$age_band %in% c("65-79", "80+")]) /
+         base::sum(rows$n)
+  base::message(base::sprintf(
+    "CHIA observation slings %d-%d: %s procedures, %.1f%% aged 65+",
+    year_start, year_end, base::format(base::sum(rows$n), big.mark = ","),
+    100 * p65))
+  base::attr(rows, "p_65plus") <- p65
+  rows
+}
+
+#' Transport Medicare FFS sling volume to a national all-payer estimate
+#'
+#' The free alternative to HCUP SASD. Two of the three factors come from data
+#' already on disk; the third is an explicit input because CMS publishes it
+#' separately.
+#'
+#' @param hcpcs Sling CPT for the CMS PUF lookup.
+#' @param db Path to chia_cadr.duckdb (for the age distribution).
+#' @param puf_path CMS Geography-and-Service PUF.
+#' @param ffs_share_of_medicare Fraction of Medicare beneficiaries in
+#'   fee-for-service rather than Medicare Advantage. The PUF covers FFS only.
+#'   NO DEFAULT: CMS publishes MA penetration monthly and it has moved from
+#'   ~25% to ~50% over a decade, so a stale default would silently halve or
+#'   double the answer.
+#' @param ffs_share_source Free text naming the source. Required.
+#' @param p_65plus Override the CHIA-derived 65+ share.
+#' @return Named list: components, factors, estimate.
+#' @export
+transport_sling_via_medicare <- function(
+    hcpcs = "57288",
+    db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+    puf_path = base::file.path("data-raw", "cms_psps",
+                               "MUP_PHY_R26_P05_V10_D24_Geo.csv"),
+    ffs_share_of_medicare = NULL,
+    ffs_share_source = NULL,
+    p_65plus = NULL) {
+
+  base::message("========================================")
+  base::message("SLING -> NATIONAL (free route)")
+  base::message("========================================")
+
+  if (!base::is.null(ffs_share_of_medicare)) {
+    if (base::is.null(ffs_share_source) || !base::nzchar(ffs_share_source)) {
+      base::stop("ffs_share_of_medicare supplied without ffs_share_source.",
+                 call. = FALSE)
+    }
+    if (!base::is.finite(ffs_share_of_medicare) ||
+        ffs_share_of_medicare <= 0 || ffs_share_of_medicare > 1) {
+      base::stop("ffs_share_of_medicare must be in (0, 1]; got ",
+                 ffs_share_of_medicare, call. = FALSE)
+    }
+  }
+
+  puf <- cms_puf_national_volume(hcpcs = hcpcs, path = puf_path)
+  medicare_ffs <- base::sum(puf$services)
+
+  age_dist <- chia_sling_age_distribution(db = db)
+  p65 <- if (base::is.null(p_65plus)) base::attr(age_dist, "p_65plus") else p_65plus
+
+  national <- if (!base::is.null(ffs_share_of_medicare)) {
+    medicare_ffs / (p65 * ffs_share_of_medicare)
+  } else NA_real_
+
+  if (base::is.na(national)) {
+    base::message("National ALL-PAYER sling volume: NOT COMPUTED.")
+    base::message("  ffs_share_of_medicare was not supplied. The CMS PUF ",
+                  "covers fee-for-service only; Medicare Advantage enrolment ",
+                  "has roughly doubled over a decade, so this factor cannot ",
+                  "carry a default.")
+  } else {
+    base::message(base::sprintf(
+      "National ALL-PAYER sling volume: %s/yr",
+      base::format(base::round(national), big.mark = ",")))
+  }
+
+  factors <- tibble::tribble(
+    ~factor, ~value, ~evidence_tier, ~threat_to_validity,
+    "Medicare FFS sling services", medicare_ffs, "measured (free)",
+      "CMS PUF, national, CY2024. Fee-for-service only; excludes Medicare Advantage.",
+    "share aged 65+", p65, "measured (free)",
+      base::paste("CHIA observation slings, all-payer, Massachusetts,",
+                  "FY2013-2018. Observation-stay slings are those kept",
+                  "overnight and skew OLDER than the ambulatory sling",
+                  "population, so this share is likely OVERSTATED -- which",
+                  "makes the national estimate a LOWER bound."),
+    "FFS share of Medicare",
+      if (base::is.null(ffs_share_of_medicare)) NA_real_ else ffs_share_of_medicare,
+      if (base::is.null(ffs_share_of_medicare)) "NOT SUPPLIED" else "external (free)",
+      "CMS publishes Medicare Advantage penetration monthly, at no cost.",
+    "geography of the age distribution", NA_real_, "assumed",
+      "Massachusetts age structure stands in for the national one.")
+
+  share_supplied <- !base::is.null(ffs_share_of_medicare)
+  status <- if (share_supplied) "transported_free_sources" else
+    "incomplete_transport_needs_ffs_share"
+
+  base::list(
+    puf = puf, age_distribution = age_dist, factors = factors,
+    estimate = tibble::tibble(
+      estimand = "SUI sling procedures, national all-payer, annual",
+      medicare_ffs_services = medicare_ffs,
+      p_65plus = p65,
+      ffs_share_of_medicare = if (share_supplied) ffs_share_of_medicare else NA_real_,
+      national_all_payer = national,
+      ffs_share_source = if (share_supplied) ffs_share_source else NA_character_,
+      production_scalar_eligible = FALSE,
+      evidence_status = status))
+}
