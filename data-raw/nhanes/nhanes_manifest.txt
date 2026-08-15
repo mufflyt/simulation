@@ -1,7 +1,7 @@
-Generated: 2026-08-03 19:20:25.24587
+Generated: 2026-08-14 21:19:36.727312
 Cycles pooled: 2017-2018 (J), 2021-2023 (L)
 Women 20+ observations: 7188
-Weighted UI prevalence (all ages): 52.4 %
+Weighted UI prevalence (all ages): 25.2 %
 
 Output files:
   nhanes_ui_prevalence_by_age.rds
@@ -10,7 +10,7 @@ Output files:
   nhanes_ui_prevalence_by_income.rds
   nhanes_ui_prevalence_cells.rds
 
-Outcomes: ui, stress_ui, urgency_ui, mixed_ui, bothersome, nocturia2, bowel_leak
+Outcomes: ui (ISI>=3), stress/urgency/other_leakage_12m (phenotypes, may overlap), bothersome, nocturia2, bowel_leak
 Stratifiers: age_band (5), race (5), bmi_group (3), income_group (4)
 
 Survey design: MEC weights halved for pooling (adj_weight = WTMEC2YR / 2)
