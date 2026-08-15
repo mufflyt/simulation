@@ -1,0 +1,76 @@
+# Office-visit EXTERNAL VALIDATION anchors
+# ---------------------------------------------------------------------------
+# These validate a decomposition. They are NOT transition parameters and must
+# never be assigned to incident_share, first_year_followup_rate or
+# annual_followup_rate. The distinction matters because CMS beneficiary counts
+# are distinct only WITHIN an NPI x HCPCS x place-of-service cell, so they
+# cannot reconstruct a person's first year versus subsequent years across codes
+# or providers.
+
+cms_fpmrs_em_mix:
+  role: external_validation_only
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  source: >
+    CMS Medicare Physician & Other Practitioners PUF, CY2024, by Provider and
+    Service. URPS NPI cohort (1,339 board-certified; 1,005 with new E/M, 1,106
+    with established E/M; 4,684 matched rows).
+  path: data-raw/cms_psps/urps_em_new_vs_established.csv
+  measures:
+    new_em_services: 93859
+    established_em_services: 399155
+    new_em_share: 0.1904
+    established_services_per_beneficiary_office: 1.4463
+  comparison_target: >
+    predicted new consultations / predicted office E/M
+      versus
+    observed Medicare new E/M / all office E/M (0.1904)
+  caveats:
+    - >
+      new_em_share is a share of SERVICES, not of patients, and is Medicare
+      fee-for-service only. It tests whether the new/continuing split is
+      credible; it does not measure the split.
+    - >
+      established_services_per_beneficiary_office = 1.4463 is a WITHIN-CELL
+      ratio. A patient seen by two NPIs, or under two E/M codes, is counted
+      twice in the denominator, so 1.4463 is a LOWER BOUND on annual office
+      visits per established patient, not an estimate of it.
+    - >
+      new_services_per_beneficiary_office is 1.0001, which is a sanity check
+      rather than a finding: one new-patient E/M per beneficiary is true by
+      definition of the code.
+
+namcs_2019_visit_mix:
+  role: external_validation_only
+  status: demoted
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  measures:
+    new_patient_visit_share: 0.199
+    new_patient_visit_share_ci: [0.031, 0.367]
+    mean_pastvis_established: 4.38
+    mean_pastvis_ci: [2.14, 6.62]
+    unweighted_n: 55
+  why_demoted: >
+    n = 55 pelvic-floor visits in women 20+ across 24 PSUs. The new-patient
+    share carries a 95% CI 0.336 wide -- wider than the quantity itself is
+    large. PASTVIS is ALL-CAUSE visits to the practice, not pelvic-floor
+    specific, so it overstates condition-specific follow-up by an unknown
+    amount. The redesigned 2023-2025 NAMCS Provider Survey Component no longer
+    collects patient visit data, so this cannot be refreshed.
+  convergence_note: >
+    NAMCS 0.199 and CMS 0.1904 agree closely despite entirely independent
+    sampling frames and populations. That convergence is worth recording -- it
+    is the strongest available signal that ~19% is the right order for the
+    new-patient share of pelvic-floor office encounters -- but two sources
+    agreeing on a SERVICE share still does not yield a PATIENT-level transition
+    rate.
+
+# ---------------------------------------------------------------------------
+# STILL REQUIRED, and not obtainable from either source above:
+#   first_year_followup_rate   person-level, first year after entry
+#   annual_followup_rate       person-level, continuing engagement
+# Next source: pooled MEPS office-based visit files, which carry DUPERSID and
+# so support repeated-person utilization. Expect sparse counts once restricted
+# to UI/POP; pool years and report uncertainty rather than a point estimate.
+# ---------------------------------------------------------------------------
