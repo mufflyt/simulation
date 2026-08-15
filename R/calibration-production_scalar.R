@@ -106,4 +106,3 @@ calibration_state <- function(config_path = "config/calibration_targets.yml") {
   out
 }
 
-`%||%` <- function(x, y) if (base::is.null(x)) y else x
