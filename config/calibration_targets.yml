@@ -41,32 +41,80 @@ anchors:
     path: data/anchors/urps_office_visits.csv
     sha256: "8e98138bccacbecaa5b29d8c7b458178aee9f6acbc7559fe47721d8876f1b918"
   sling_procedure_volume:
-    production_scalar_eligible: false
-    clinical_review:
-      status: blocked
-      scope:
-        - primary_sling_placement
-        - sui_indication_definition
-        - observation_setting_transport
-      blockers:
-        - missing_sui_diagnosis_qualifier
-        - missing_revision_removal_family
-      note: >
-        Primary placement verified structurally (0TUD is Supplement; removal
-        0TPD and excision 0TBD are unreachable), but the estimand contract is
-        undecided: "all primary female sling placements" and "primary sling
-        placements for SUI" are different anchors. Urgency/OAB alone must not
-        support a sling indication.
-    source: "HCUP SASD (ambulatory surgery) + Medicare Part B carrier, CPT 57288"
-    note: "NIS is INPATIENT and carries ICD-10-PCS, not CPT; most slings are outpatient"
-    # NOT YET ACQUIRED. Needs the licensed HCUP Central Distributor pull; see
-    # data-raw/hcup/README.md. Filename follows the <anchor_id>.csv convention
-    # used by the anchors that exist -- note scripts/data_acquisition/
-    # 10_ingest_hcup_nass.R currently writes "sling_volume.csv" and would need
-    # updating to match.
+    source: "CMS Medicare Physician PUF (CPT 57288) + CHIA observation age split"
+    # NOT YET BUILT as a file. The free route is implemented in
+    # R/calibration-transport_to_national.R::transport_sling_via_medicare();
+    # it needs the CMS Medicare Advantage penetration figure to emit a value.
     path: data/anchors/sling_procedure_volume.csv
     sha256: ""
     status: missing
+    production_scalar_eligible: true
+    estimand:
+      name: primary_female_anti_incontinence_sling_placements
+      clinical_review_status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+      note: >
+        The scientific target is ALL primary female anti-incontinence sling
+        placements. It is NOT "SUI-diagnosis-coded sling surgery". A patient
+        does not need an SUI diagnosis code to count clinically; the diagnosis
+        is needed only where the administrative PROCEDURE code cannot tell us
+        whether the operation was a sling.
+    identification:
+      cpt_57288:
+        requires_diagnosis_qualifier: false
+        rationale: >
+          CMS describes 57288 as creation of a sling around the female urethra
+          to control leakage. The procedure code already carries the
+          anti-incontinence meaning; requiring a diagnosis would add sensitivity
+          to diagnosis-coding completeness without improving the estimand.
+      icd9_specific_sling:
+        codes: ["594", "595", "596", "5971"]
+        requires_diagnosis_qualifier: false
+        rationale: Named sling / urethral-suspension operations.
+      icd10_pcs_0TUD:
+        requires_diagnosis_qualifier: true
+        qualifier_role: source_identification
+        not_estimand_definition: true
+        qualifying_diagnoses: ["N393", "N3946", "R32"]
+        rationale: >
+          CMS defines 0TUD* generically as Supplement Urethra with autologous,
+          synthetic or nonautologous substitute. It does not encode stress
+          incontinence or even say "sling", so unrestricted 0TUD* is too broad
+          to identify slings by itself. The qualifier narrows the SOURCE, not
+          the target.
+    exclusions:
+      - revision_removal
+      - excision
+      - urethrolysis
+      - non_sling_urethral_reconstruction
+    sensitivity:
+      primary: specific sling procedures + diagnosis-qualified 0TUD*
+      lower_bound: specific sling procedures only
+      broad: all female 0TUD*
+      empirical_result: >
+        CHIA inpatient FY2016-2018: 18 of 19 0TUD* cases (94.7%) already carry
+        an SUI/mixed/unspecified-UI diagnosis. The single unqualified case is
+        Supplement Urethra with Synthetic Substitute, Open Approach -- very
+        likely a sling with the indication uncoded. So the PCS ambiguity moves
+        the count by one case here. n = 19 makes this weak evidence, and CHIA
+        inpatient sling has nearly vanished; the test should be repeated
+        wherever 0TUD* volume is material.
+    clinical_review:
+      status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+      scope:
+        - primary_sling_placement
+        - sling_identification_by_source
+        - observation_setting_transport
+      resolved_blockers:
+        - icd10_pcs_sling_identification_requires_indication
+      note: >
+        Supersedes the earlier blocker "missing_sui_diagnosis_qualifier", which
+        misstated the problem: the issue was never that the estimand needed an
+        SUI diagnosis, but that ICD-10-PCS cannot identify a sling without one.
+
   prolapse_procedure_volume:
     production_scalar_eligible: false
     clinical_review:

@@ -56,6 +56,14 @@ diagnosis_qualifiers:
     icd9cm:   ["78831", "78833"]
     icd10cm:  ["N3941", "N3943", "N3946"]
     match: exact
+  stress_or_mixed_incontinence:
+    icd10cm:  ["N393", "N3946", "R32"]
+    icd9cm:   ["78831", "78833"]
+    match: prefix
+    note: >
+      Stress and mixed UI support a sling indication. Urgency incontinence
+      (N39.41) and overactive bladder (N32.81) alone do NOT.
+
   genitourinary_fistula:
     icd9cm:   ["619"]
     icd10cm:  ["N82"]
@@ -201,7 +209,17 @@ families:
       exact: ["594", "595", "596", "5971"]
     icd10pcs:
       prefix: ["0TUD"]             # supplement urethra (autologous/synthetic/nonautologous)
+      requires_diagnosis: stress_or_mixed_incontinence
+      qualifier_role: source_identification
     note: >
+      ASYMMETRIC IDENTIFICATION. The ICD-9 members (59.4, 59.5, 59.6, 59.71) are
+      named sling/urethral-suspension operations and stand alone. ICD-10-PCS
+      0TUD* is generically "Supplement Urethra" -- it does not encode stress
+      incontinence or say "sling" -- so it requires an SUI-compatible diagnosis
+      to IDENTIFY the operation. The qualifier narrows the source, not the
+      estimand: the target is all primary female anti-incontinence sling
+      placements, not SUI-coded sling surgery.
+
       Most slings are ambulatory and invisible to HIDD. This family measures
       only the inpatient minority and must never be read as sling volume.
 
