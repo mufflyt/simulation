@@ -86,11 +86,12 @@
 #'
 #' @param db Path to chia_cadr.duckdb.
 #' @param expected_total Regression guard on the FY2004-2018 total. The
-#'   validated value is 17,172. NOTE: 1,306 is the 2023 board-certified active
+#'   validated value is 17,676 (includes the ICD-9 codes withdrawn in the
+#'   October 2006 update; omitting them undercounts FY2004-2006 by ~10%). NOTE: 1,306 is the 2023 board-certified active
 #'   URPS PHYSICIAN count (see R/supply-roster.R), not a CHIA encounter count --
 #'   using it here would be a number collision that hard-fails the build.
 #' @return Named list with annual, summary, and anchor tables.
-.build_chia_validation <- function(db, expected_total = 17172L) {
+.build_chia_validation <- function(db, expected_total = 17676L) {
   base::message("========================================")
   base::message("CHIA REGIONAL ALL-PAYER VALIDATION")
   base::message("========================================")
@@ -113,8 +114,8 @@
     FROM chia_casemix.v_cohort_female_adult c
     JOIN dx USING (RecordType20ID, _data_year)
     WHERE (c._data_year <= 2015 AND c.principal_procedure IN
-             ('6831','6839','6841','6849','6851','6859',
-              '6861','6869','6871','6879','689'))
+             ('6831','6839','6841','6849','6851','6859','6861','6869',
+              '6871','6879','689','684','686','687'))
        OR (c._data_year >= 2016 AND (c.principal_procedure LIKE '0UT9%'
                                   OR c.principal_procedure LIKE '0UB9%'))
     GROUP BY 1 ORDER BY 1") |>
@@ -551,7 +552,7 @@ build_empirical_calibration_targets <- function(
     anchor_dir = base::file.path("data", "anchors", "validation"),
     artifact_dir = base::file.path("artifacts", "calibration"),
     config_path = base::file.path("config", "calibration_targets.yml"),
-    expected_chia_pop_hysterectomy = 17172L,
+    expected_chia_pop_hysterectomy = 17676L,
     freeze_existing_hashes = TRUE,
     strict_production_gate = FALSE) {
 

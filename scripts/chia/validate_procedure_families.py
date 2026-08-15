@@ -32,9 +32,23 @@ def main() -> int:
 
     for name, fam in cfg["families"].items():
         # --- 1. codes exist ---------------------------------------------------
+        retired = set(fam.get("retired_icd9", []))
         for code in fam.get("icd9cm", {}).get("exact", []):
             if not q(con, "SELECT 1 FROM ref.icd9cm_procedure WHERE code_nodot = ?", [code]):
-                fails.append(f"{name}: ICD-9 {code} not in ref.icd9cm_procedure")
+                if code in retired:
+                    # ref.icd9cm_procedure is v32, the FINAL revision, so codes
+                    # withdrawn before it are legitimately absent. Validate
+                    # against the data instead: a retired code must actually
+                    # appear, or it is a typo rather than a retirement.
+                    n = q(con, """SELECT count(*) FROM chia_casemix.v_cohort_female_adult
+                                  WHERE principal_procedure = ?""", [code])[0][0]
+                    if n == 0:
+                        fails.append(f"{name}: retired ICD-9 {code} appears nowhere in the data")
+                    else:
+                        warns.append(f"{name}: ICD-9 {code} retired pre-v32, "
+                                     f"validated against data ({n:,} cases)")
+                else:
+                    fails.append(f"{name}: ICD-9 {code} not in ref.icd9cm_procedure")
         for pre in fam.get("icd10pcs", {}).get("prefix", []):
             n = q(con, "SELECT count(*) FROM ref.icd10pcs_procedure WHERE code_nodot LIKE ?||'%'",
                   [pre])[0][0]
@@ -73,6 +87,27 @@ def main() -> int:
                OR (_data_year >= 2016 AND ({i10_like}))
             GROUP BY 1 ORDER BY 1""")
         by_year = dict(rows)
+        # SECOND SEAM. The validator originally checked only the FY2015/16
+        # ICD-9 -> ICD-10 boundary and so missed the October 2006 ICD-9 update,
+        # which withdrew 3-digit hysterectomy codes. Any family whose members
+        # span that revision gets the same ratio test.
+        icd9_seam = cfg["validation"].get("icd9_revision_seam_years")
+        if icd9_seam:
+            a_yr, b_yr = icd9_seam
+            ra = q(con, f"""SELECT count(*) FROM chia_casemix.v_cohort_female_adult
+                            WHERE _data_year = {a_yr}
+                              AND principal_procedure IN ({i9_list})""")[0][0]
+            rb = q(con, f"""SELECT count(*) FROM chia_casemix.v_cohort_female_adult
+                            WHERE _data_year = {b_yr}
+                              AND principal_procedure IN ({i9_list})""")[0][0]
+            if ra and rb:
+                r2 = max(ra, rb) / min(ra, rb)
+                if r2 > cfg["validation"]["max_seam_ratio"]:
+                    fails.append(f"{name}: ICD-9 revision seam FY{a_yr}={ra:,} -> "
+                                 f"FY{b_yr}={rb:,} (ratio {r2:.1f}x) -- a code "
+                                 "withdrawn in the October 2006 update is "
+                                 "probably missing from the family")
+
         pre_yr, post_yr = cfg["validation"]["seam_years"]
         pre, post = by_year.get(pre_yr, 0), by_year.get(post_yr, 0)
         if pre and post:
