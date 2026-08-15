@@ -49,9 +49,18 @@ exclusions:
 # ---------------------------------------------------------------------------
 diagnosis_qualifiers:
   pelvic_organ_prolapse:
-    icd9cm:   ["618"]          # 618.x genital prolapse (prefix match)
-    icd10cm:  ["N81"]          # N81.x female genital prolapse (prefix match)
+    icd9cm:   ["618"]            # 618.x genital prolapse -- INCLUDES 618.5 vault
+    icd10cm:  ["N81", "N993"]    # N81.x prolapse + N99.3 vault after hysterectomy
     match: prefix
+    note: >
+      SEAM DEFECT, FIXED. ICD-9 618.5 "Prolapse of vaginal vault after
+      hysterectomy" sits INSIDE 618.x; ICD-10 moved the identical entity to
+      N99.3, OUTSIDE N81. The prior definition (618% / N81%) therefore included
+      vault prolapse before FY2016 and excluded it after -- the two sides did
+      not denote the same clinical family, violating the era_seam_semantics
+      rule. Volumes: 121 / 104 cases in FY2014 / FY2015 under 618.5, then
+      48 / 49 / 51 under N99.3 in FY2016-18. Post-hysterectomy vault prolapse
+      is unambiguously POP and now counts on both sides.
   stress_incontinence:
     icd9cm:   ["78831", "78833"]
     icd10cm:  ["N3941", "N3943", "N3946"]
@@ -107,7 +116,25 @@ clinical_review_criteria:
       Sacrocolpopexy, uterosacral suspension, sacrospinous fixation and
       colpopexy must remain distinguishable from anterior/posterior repair
       rather than collapsing into one "prolapse procedure" family.
-    status: SATISFIED   # apical_suspension and anterior_posterior_repair are separate
+    status: OPEN_AWAITING_DECISION
+    finding: >
+      The families are named separately but are NOT disjoint: prefix 0UUG
+      (Supplement Vagina) appears in BOTH apical_suspension and
+      anterior_posterior_repair, so 57 FY2016-18 cases fall in both. Named-but-
+      overlapping is not distinguishable, and those cases double-count in any
+      union.
+    proposed_resolution: >
+      Split 0UUG by surgical approach, which maps to the clinical distinction:
+      abdominal mesh supplement of the vagina is sacrocolpopexy (APICAL);
+      transvaginal mesh is compartment repair (ANTERIOR/POSTERIOR).
+        approach 0 open + 4 percutaneous endoscopic  -> apical      (48 cases)
+        approach 7 + 8 via natural opening           -> ant/post    ( 9 cases)
+      REQUIRES CLINICAL SIGN-OFF. Not applied.
+    also_noted: >
+      Prefix 0UQG (Repair Vagina) is shared between anterior_posterior_repair
+      and genitourinary_fistula. Those are separable because the fistula family
+      carries a diagnosis qualifier, but the sharing should be explicit rather
+      than incidental.
   sui_diagnosis:
     rule: >
       Stress and mixed urinary incontinence support a sling indication.
