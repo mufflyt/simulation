@@ -11,6 +11,39 @@
 
 max_scalar: 3.0
 
+# ---------------------------------------------------------------------------
+# FIRST PRODUCTION CALIBRATION RUN, base year 2017
+# artifacts/demand/uncalibrated_base_year_2017.csv
+#   sha256 c1ebffb00ac6f8d5f584d1f6e0e7fa9a381eb6eb871420ad156c0e78f5978847
+# model_run_id lifecourse_2017_seed20260814, urpssim 0.5.0
+#
+#   estimand                    target      prediction    scalar   structural
+#   urps_office_visits         4,814,760   16,226,458     0.297    FLAGGED
+#   sling_procedure_volume       137,384      264,135     0.520    -
+#   prolapse_procedure_volume    140,762      658,642     0.214    FLAGGED
+#   ui_prevalence                    n/a          n/a       n/a    NOT PREDICTED
+#
+# TWO OF THREE TRIP THE STRUCTURAL FLAG. Per this file's own doctrine a scalar
+# far from 1 signals a structural mismatch, NOT an offset to divide out. These
+# scalars must NOT be applied as corrections until the mismatch is diagnosed.
+#
+# Leading hypotheses, none adjudicated:
+#  - prolapse: the anchor is POP operative ENCOUNTERS, deduplicated. The model
+#    emits prolapse_procedure, which may be a procedure count. That is exactly
+#    the encounter-versus-procedure distinction the prolapse review established,
+#    and in CHIA the naive procedure sum exceeded encounters by 12-68%.
+#  - office visits: NAMCS is office-based only and documented as a structural
+#    LOWER bound; the model quantity is all-provider condition demand. Part of
+#    this gap is expected by construction.
+#  - population year: the base year is 2017 but np2023 is a projection series
+#    starting 2022, so the age structure is 2022 standing in for 2017.
+#
+# ui_prevalence CANNOT produce a scalar. blend_nhanes_ui_prevalence() REPLACES
+# cells$ui_prevalence with the NHANES estimates, so prevalence is a model INPUT.
+# Calibrating the model against it would compare the model to what it was
+# handed. It remains a frozen INPUT CONTRACT, which is what it always was.
+# ---------------------------------------------------------------------------
+
 anchors:
   urps_office_visits:
     production_scalar_eligible: true
