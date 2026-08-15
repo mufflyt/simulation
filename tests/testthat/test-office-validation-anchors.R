@@ -63,9 +63,10 @@ test_that("Panel 27 is recorded with estimates, uncertainty, n, and definitions"
   expect_identical(m$status, "insufficient")
   # the gate must preserve all four: point estimate, interval, unweighted n,
   # and an explicit phenotype/washout definition
-  for (e in c("annual_followup_rate", "first_year_followup_rate")) {
+  for (e in c("annual_return_probability", "conditional_followup_intensity",
+              "unconditional_followup_intensity")) {
     est <- m$estimates[[e]]
-    expect_true(is.numeric(est$weighted_mean))
+    expect_true(is.numeric(est$weighted))
     expect_length(est$ci, 2L)
     expect_true(is.numeric(est$unweighted_n))
     expect_true(nzchar(est$definition))
@@ -76,5 +77,59 @@ test_that("Panel 27 is recorded with estimates, uncertainty, n, and definitions"
   # N39 must stay out of the primary phenotype
   expect_match(m$phenotype$excluded_from_primary, "N39")
   # and the sample must be recorded as too small to move a parameter
-  expect_lt(m$estimates$annual_followup_rate$unweighted_n, 30)
+  expect_lt(m$baseline_cohort$unweighted_n, 30)
+})
+
+test_that("the outcome-conditioned estimate is withdrawn, not silently dropped", {
+  skip_if_not(file.exists("../../config/office_visit_validation_anchors.yml"))
+  m <- .va()$meps_panel27_longitudinal
+  # 5.68 conditioned the denominator on the outcome. It must remain on the
+  # record as withdrawn so it cannot be rediscovered and reused.
+  expect_equal(m$withdrawn_estimate$value, 5.68)
+  expect_match(m$withdrawn_estimate$reason, "conditions the denominator")
+  expect_gt(m$withdrawn_estimate$overstatement_vs_corrected, 2)
+})
+
+test_that("the unconditional intensity retains zeroes and reconciles exactly", {
+  skip_if_not(file.exists("../../config/office_visit_validation_anchors.yml"))
+  e <- .va()$meps_panel27_longitudinal$estimates
+  # E(visits) = P(return) x E(visits | return). If this identity ever fails,
+  # zeroes have been dropped from the denominator somewhere.
+  expect_equal(e$annual_return_probability$weighted *
+                 e$conditional_followup_intensity$weighted,
+               e$unconditional_followup_intensity$weighted, tolerance = 1e-3)
+  # the conditional mean is bounded below by 1 by construction; the
+  # unconditional one is not, and that is the whole point
+  expect_gt(e$conditional_followup_intensity$weighted, 1)
+  expect_lt(e$unconditional_followup_intensity$weighted,
+            e$conditional_followup_intensity$weighted)
+  expect_true(e$unconditional_followup_intensity$unweighted_n >
+                e$conditional_followup_intensity$unweighted_n)
+})
+
+test_that("entrant estimates carry index-month censoring, not a bare mean", {
+  skip_if_not(file.exists("../../config/office_visit_validation_anchors.yml"))
+  ec <- .va()$meps_panel27_longitudinal$entrant_censoring
+  # a raw post-index mean is uninterpretable without index month; all four
+  # censoring quantities must be present
+  expect_true(is.numeric(ec$mean_index_month))
+  expect_true(is.numeric(ec$mean_months_observable))
+  expect_true(is.numeric(ec$post_index_visits_raw))
+  expect_true(is.numeric(ec$post_index_rate_per_person_month))
+  # the average entrant is first observed late in the year, so the raw mean is
+  # censored downward -- the record must say so
+  expect_gt(ec$mean_index_month, 6)
+  expect_lt(ec$mean_months_observable, 6)
+  expect_match(ec$fixed_window_sensitivity$note, "NOT as an estimate")
+})
+
+test_that("no model parameter was written from Panel 27", {
+  skip_if_not(file.exists("../../R/demand-incident_continuing_care.R"))
+  p <- care_engagement_params()
+  # gate 4 stays red: the three utilization parameters remain unsourced
+  for (nm in c("incident_share", "first_year_followup_rate", "annual_followup_rate")) {
+    row <- p[p$parameter == nm, ]
+    expect_identical(row$calibration_status, "requires_source")
+    expect_true(is.na(row$value))
+  }
 })

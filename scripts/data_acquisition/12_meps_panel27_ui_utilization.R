@@ -38,48 +38,124 @@ e22 <- ui_persons(c22, l22, "2022"); e23 <- ui_persons(c23, l23, "2023")
 v22 <- e22 |> count(DUPERSID, name = "visits_2022")
 v23 <- e23 |> count(DUPERSID, name = "visits_2023")
 
-# order 2023 visits within the year to count post-index follow-up
-o23m <- o23 |> select(DUPERSID, EVNTIDX, OBDATEYR, OBDATEMM) |>
-        semi_join(e23, by = c("DUPERSID","EVNTIDX")) |>
-        mutate(mm = suppressWarnings(as.numeric(OBDATEMM))) |>
-        filter(!is.na(mm), mm >= 1, mm <= 12)
-post_index <- o23m |> group_by(DUPERSID) |>
-  summarise(index_mm = min(mm), post_index_visits = sum(mm > min(mm)), .groups = "drop")
+# ---------------------------------------------------------------------------
+# ESTIMAND CORRECTION (reviewer, 2026-08).
+#
+# The prior version built the cohort as v23 |> left_join(v22), so the
+# denominator was conditioned on having a 2023 visit. That estimator answers
+# E(2023 visits | 2022 care AND >=1 2023 visit), which is bounded below by 1 by
+# construction and preferentially selects high utilizers. It cannot be used as
+# a per-patient intensity.
+#
+# The baseline cohort is now anchored in 2022 and ZEROES ARE RETAINED:
+#     baseline = qualifying GEN008-linked care in 2022
+#                + longitudinally observable in 2023
+#
+#     annual_return_probability      = P(any qualifying 2023 visit | 2022 care)
+#     conditional_followup_intensity = E(2023 visits | 2022 care, >=1 2023 visit)
+#     unconditional_followup_intensity
+#                                    = E(2023 visits | 2022 care)   [zeros kept]
+#                                    = return_probability x conditional_intensity
+#
+# unconditional_followup_intensity is the quantity that maps to
+#     return_visit <- previous_care_engaged * unconditional_followup_intensity
+# and is safer than a separate retention_rate until "still under care but no
+# visit this year" can be distinguished empirically from true disengagement.
+# ---------------------------------------------------------------------------
 
-coh <- v23 |>
-  left_join(v22, by = "DUPERSID") |>
-  mutate(visits_2022 = coalesce(visits_2022, 0L),
-         cohort = if_else(visits_2022 > 0, "continuing", "newly_observed")) |>
-  left_join(post_index, by = "DUPERSID")
-
-wt <- grep("^LONGWT", names(long), value = TRUE)[1]
-str <- grep("^VARSTR", names(long), value = TRUE)[1]
-psu <- grep("^VARPSU", names(long), value = TRUE)[1]
-sexc <- grep("^SEX$", names(long), value = TRUE)[1]
+wt   <- grep("^LONGWT", names(long), value = TRUE)[1]
+strv <- grep("^VARSTR", names(long), value = TRUE)[1]
+psu  <- grep("^VARPSU", names(long), value = TRUE)[1]
+sexc <- grep("^SEX$",   names(long), value = TRUE)[1]
 agec <- grep("^AGE.*X$|^AGELAST", names(long), value = TRUE)[1]
-message(sprintf("\ndesign: weight=%s strata=%s psu=%s  sex=%s age=%s", wt, str, psu, sexc, agec))
+message(sprintf("\ndesign: weight=%s strata=%s psu=%s  sex=%s age=%s",
+                wt, strv, psu, sexc, agec))
 
-base <- long |> select(DUPERSID, w = all_of(wt), s = all_of(str), p = all_of(psu),
-                       sx = all_of(sexc), ag = all_of(agec)) |>
-        filter(sx == 2, ag >= 20)
-d <- base |> left_join(coh, by = "DUPERSID") |>
-     mutate(visits_2023 = coalesce(visits_2023, 0L),
-            post_index_visits = coalesce(post_index_visits, 0L),
-            cohort = coalesce(cohort, "no_ui_care"))
+# index month and post-index visit counts within 2023, for the entrant analysis
+o23m <- o23 |>
+  select(DUPERSID, EVNTIDX, OBDATEYR, OBDATEMM) |>
+  semi_join(e23, by = c("DUPERSID", "EVNTIDX")) |>
+  mutate(mm = suppressWarnings(as.numeric(OBDATEMM))) |>
+  filter(!is.na(mm), mm >= 1, mm <= 12)
 
-des <- svydesign(id = ~p, strata = ~s, weights = ~w, nest = TRUE, data = d)
-report <- function(sub, var, label) {
-  n <- nrow(subset(d, eval(sub, d)))
-  if (n < 2) { message(sprintf("  %-34s n=%d  TOO FEW", label, n)); return(invisible(NULL)) }
-  ss <- subset(des, eval(sub, d))
-  m <- svymean(as.formula(paste0("~", var)), ss, na.rm = TRUE); ci <- confint(m)
-  message(sprintf("  %-34s n=%3d  %.2f (95%% CI %.2f-%.2f)", label, n,
-                  coef(m), ci[1], ci[2]))
+idx <- o23m |>
+  group_by(DUPERSID) |>
+  summarise(index_mm          = min(mm),
+            post_index_visits = sum(mm > min(mm)),
+            .groups = "drop") |>
+  mutate(months_observable = 12 - index_mm)   # calendar-year right censoring
+
+# Build the design on the FULL longitudinal file, then subset. Never drop rows
+# before svydesign() -- dropping them discards the variance structure.
+d <- long |>
+  mutate(.female = .data[[sexc]] == 2,
+         .adult  = .data[[agec]] >= 18,
+         .obs23  = .data[[wt]] > 0) |>
+  left_join(v22, by = "DUPERSID") |>
+  left_join(v23, by = "DUPERSID") |>
+  left_join(idx, by = "DUPERSID") |>
+  mutate(visits_2022 = coalesce(visits_2022, 0L),
+         visits_2023 = coalesce(visits_2023, 0L),      # ZEROES RETAINED
+         baseline    = .female & .adult & .obs23 & visits_2022 > 0,
+         returned    = baseline & visits_2023 > 0,
+         entrant     = .female & .adult & .obs23 & visits_2022 == 0 & visits_2023 > 0)
+
+des <- svydesign(id = ~ get(psu), strata = ~ get(strv), weights = ~ get(wt),
+                 data = d, nest = TRUE)
+
+# NOTE: survey treats a logical as a two-level factor, so svymean(~lgl) returns
+# BOTH levels and coef(.)[1] is the FALSE cell. Every indicator is therefore
+# coerced with as.numeric() at the formula, and confint is indexed [1, ] rather
+# than by flat position -- confint() is column-major, so ci[2] on a two-row
+# result is the second LOWER bound, not the upper bound.
+fmt <- function(est, label, n) {
+  stopifnot(length(coef(est)) == 1L)
+  ci <- confint(est)
+  message(sprintf("  %-32s n=%3d  %6.3f  (95%% CI %6.3f - %6.3f)",
+                  label, n, coef(est)[1], ci[1, 1], ci[1, 2]))
+  invisible(c(estimate = unname(coef(est)[1]),
+              lo = unname(ci[1, 1]), hi = unname(ci[1, 2]), n = n))
 }
-message("\n=== weighted estimates, adult women, LONGWT ===")
-report(quote(cohort == "continuing"), "visits_2023",
-       "annual_followup_rate")
-report(quote(cohort == "newly_observed"), "post_index_visits",
-       "first_year_followup_rate")
-message("\nunweighted cohort sizes:")
-print(table(d$cohort[d$cohort != "no_ui_care"]))
+
+n_base <- sum(d$baseline); n_ret <- sum(d$returned); n_ent <- sum(d$entrant)
+message(sprintf("\ncohorts: baseline(2022 care)=%d  returned in 2023=%d  entrants=%d",
+                n_base, n_ret, n_ent))
+
+message("\n=== continuing utilization, denominator anchored in 2022 ===")
+b <- subset(des, baseline)
+p_ret  <- fmt(svymean(~ as.numeric(returned), b, na.rm = TRUE), "annual_return_probability",       n_base)
+uncond <- fmt(svymean(~ visits_2023, b, na.rm = TRUE), "unconditional_followup_intensity", n_base)
+cond   <- fmt(svymean(~ visits_2023, subset(des, returned), na.rm = TRUE),
+              "conditional_followup_intensity",  n_ret)
+
+message(sprintf("\nidentity check (must reconcile exactly): return_prob x conditional = %.3f  vs  unconditional = %.3f",
+                p_ret["estimate"] * cond["estimate"], uncond["estimate"]))
+
+# --- entrants: calendar-year right censoring ------------------------------
+# A patient first observed in January has ~11 months to accumulate follow-up;
+# one first observed in November has one. Averaging post-index visits across
+# them without accounting for index month is not interpretable.
+message("\n=== apparent 2023 entrants (NEWLY OBSERVED AFTER ONE-YEAR WASHOUT) ===")
+ent <- subset(des, entrant)
+fmt(svymean(~ index_mm,          ent, na.rm = TRUE), "index_month",              n_ent)
+fmt(svymean(~ months_observable, ent, na.rm = TRUE), "months_observable",        n_ent)
+fmt(svymean(~ post_index_visits, ent, na.rm = TRUE), "post_index_visits (raw)",  n_ent)
+
+# person-time rate: total post-index visits / total observable person-months
+pm <- svyratio(~ post_index_visits, ~ months_observable, ent, na.rm = TRUE)
+pm_ci <- confint(pm)
+message(sprintf("  %-32s n=%3d  %6.4f  (95%% CI %6.4f - %6.4f)  visits/person-month",
+                "post_index_rate_per_month", n_ent, coef(pm)[1], pm_ci[1], pm_ci[2]))
+
+# fixed-window sensitivity: index early enough to permit >=6 months observation
+n_fw <- sum(d$entrant & !is.na(d$index_mm) & d$index_mm <= 6)
+message(sprintf("\nfixed-window sensitivity (index month <= 6, >=6 months observable): n=%d", n_fw))
+if (n_fw >= 5) {
+  fmt(svymean(~ post_index_visits, subset(des, entrant & index_mm <= 6), na.rm = TRUE),
+      "post_index_visits (>=6mo window)", n_fw)
+} else {
+  message("  REFUSED: n < 5. Not estimated.")
+}
+
+message("\nNOTE: no model parameter is written by this script. Adequacy of n and",
+        "\n      uncertainty is adjudicated in config/office_visit_validation_anchors.yml.")
