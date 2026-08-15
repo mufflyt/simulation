@@ -75,3 +75,29 @@ test_that("the retired ICD-9 codes are counted", {
       AND principal_procedure IN ('684','686','687')")$n
   expect_gt(n, 10000)   # ~17.5k in the cohort; they are not a rounding error
 })
+
+test_that("the free sling route works without HCUP", {
+  skip_if_not(file.exists(.root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
+  skip_if_not(file.exists(.db))
+  puf <- suppressMessages(cms_puf_national_volume(
+    path = .root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
+  expect_gt(sum(puf$services), 20000)          # ~25k Medicare FFS slings
+
+  age <- suppressMessages(chia_sling_age_distribution(db = .db))
+  p65 <- attr(age, "p_65plus")
+  expect_gt(p65, 0.25); expect_lt(p65, 0.60)   # sling is NOT a geriatric-only procedure
+})
+
+test_that("the sling route refuses without the FFS share", {
+  skip_if_not(file.exists(.root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
+  skip_if_not(file.exists(.db))
+  r <- suppressMessages(transport_sling_via_medicare(
+    db = .db, puf_path = .root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
+  expect_true(is.na(r$estimate$national_all_payer))
+  expect_equal(r$estimate$evidence_status, "incomplete_transport_needs_ffs_share")
+  expect_error(
+    suppressMessages(transport_sling_via_medicare(
+      db = .db, puf_path = .root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv"),
+      ffs_share_of_medicare = 0.5)),
+    "without ffs_share_source")
+})
