@@ -3,13 +3,18 @@
 
 .va <- function() yaml::read_yaml("../../config/office_visit_validation_anchors.yml")
 
-test_that("no validation anchor may be used as a transition parameter", {
+test_that("no anchor in this file may be used as a transition parameter", {
   skip_if_not(file.exists("../../config/office_visit_validation_anchors.yml"))
+  # Two legitimate roles live here: external_validation_only (a source that
+  # validates a decomposition) and attempted_source (a source that was tried and
+  # found insufficient, recorded so it is not retried blindly). NEITHER may
+  # become a transition parameter, which is what this asserts.
   for (nm in names(.va())) {
     a <- .va()[[nm]]
     expect_false(isTRUE(a$is_transition_parameter), info = nm)
     expect_false(isTRUE(a$production_scalar_eligible), info = nm)
-    expect_identical(a$role, "external_validation_only", info = nm)
+    expect_true(a$role %in% c("external_validation_only", "attempted_source"),
+                info = nm)
   }
 })
 
