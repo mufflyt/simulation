@@ -185,9 +185,8 @@ anchors:
   ui_prevalence:
     source: "NHANES KIQ_U pooled (primary); Nygaard 2008 JAMA / SWAN as EXTERNAL VALIDATION"
     path: data/anchors/ui_prevalence.csv
-    sha256: ""
-    status: missing        # cells regenerated; anchor CSV not yet emitted
-    production_scalar_eligible: false
+    sha256: "045e541ef49352ef23e79ca27e17d6be8f30461e9f4d159d9c6d3f19a42939ff"
+    production_scalar_eligible: true
     estimand:
       name: symptomatic_urinary_incontinence
       unit: person
@@ -287,8 +286,29 @@ anchors:
         The 15.7% -> 23.7% rise occurs WITHIN CAPI administration, so that
         portion is not a mode effect. The further 23.7% -> 27.0% spans the
         CAPI/ACASI change and cannot be attributed without a mode study.
-      remaining_blockers:
-        - select_time_aligned_cycle   # choose by model year, not sample size
+      selected_cycle:
+        cycle: "2017-2018"
+        prevalence: 0.237
+        ci: [0.218, 0.256]
+        n: 2434
+        mode: CAPI
+        rationale: >
+          Selected by MODEL YEAR, not sample size. The demand model fits through
+          2017 (R/calibration-demand_lifecourse.R: fit_through_year = 2017L);
+          the prolapse anchor spans 2016-2018 and NAMCS is 2019. NHANES
+          2017-2018 is the only cycle overlapping that window. It is also CAPI,
+          matching the administration mode of the 2005-2006 replication, so the
+          15.7% -> 23.7% series is interpretable rather than mode-confounded.
+        rejected:
+          - cycle: "2021-2023"
+            reason: >
+              4-6 years past the calibration year AND switches to ACASI.
+              Retained as a FORWARD sensitivity for the 2023 projection target,
+              but using it as the anchor would confound administration mode with
+              secular change in the one number the demand model is anchored to.
+          - cycle: "2005-2006"
+            reason: Replication benchmark only; a decade before the fit window.
+      remaining_blockers: []
       known_limitations:
         - age_floor_is_20_not_18
         - do_not_pool_2017_2018_with_2021_2023
