@@ -127,16 +127,16 @@ clinical_review_status <- function(
     cfg <- yaml::read_yaml(calibration_config)
     for (nm in base::names(cfg$anchors)) {
       a <- cfg$anchors[[nm]]
-      ok <- !base::inherits(base::try(
-        assert_production_scalar_eligible(
-          utils::modifyList(base::list(anchor_id = nm), a)),
-        silent = TRUE), "try-error")
+      ok <- !base::inherits(base::try(assert_anchor_reviewed(a),
+                                      silent = TRUE), "try-error")
+      review <- a$clinical_review %||% base::list()
       rows[[base::length(rows) + 1L]] <- tibble::tibble(
         item = nm, kind = "production_anchor",
         eligible = base::isTRUE(a$production_scalar_eligible),
-        review_status = base::as.character(
-          a$clinical_review_status %||% "not_recorded"),
-        reviewer = base::as.character(a$clinical_reviewer %||% ""),
+        review_status = base::as.character(review$status %||% "not_recorded"),
+        reviewer = base::as.character(review$reviewer %||% ""),
+        blockers = base::paste(review$blockers %||% base::character(),
+                               collapse = ", "),
         blocked = !ok)
     }
   }
@@ -150,6 +150,7 @@ clinical_review_status <- function(
         eligible = FALSE,
         review_status = status,
         reviewer = base::as.character(fam$meta$clinical_reviewer %||% ""),
+        blockers = "",
         blocked = !base::identical(status, "approved"))
     }
   }
