@@ -9,13 +9,23 @@
 #      for the two most recent cycles: 2017-2018 (J) and 2021-2023 (L).
 #   2. Restrict to women 20+.
 #   3. Compute survey-weighted prevalence of:
-#        - Any urinary incontinence  (KIQ005 != "Never")
-#        - Stress UI                 (KIQ042 == "Yes")
-#        - Urgency UI                (KIQ044 == "Yes")
+#        - PRIMARY: symptomatic UI, Incontinence Severity Index >= 3
+#          ISI = frequency(KIQ005) x amount(KIQ010), Sandvik, range 0-12.
+#          >= 3 is moderate-to-severe (Nygaard 2008 JAMA, nonpregnant women 20+).
+#          The former "any leakage" definition (KIQ005 != Never) is RETIRED: it
+#          counted women leaking less than once a month and reached 78% at 75+,
+#          which is not a workforce-demand state.
+#        - PHENOTYPES, which may overlap and are NOT subtypes of the above:
+#            stress_leakage_12m  (KIQ042 == "Yes")
+#            urgency_leakage_12m (KIQ044 == "Yes")
+#            other_leakage_12m   (KIQ046 == "Yes")
+#          KIQ042/044/046 ask whether leakage of that circumstance occurred at
+#          all in 12 months; KIQ005/010 measure overall frequency and amount.
+#          Different questions, so a phenotype may exceed primary prevalence.
 #        - Mixed UI                  (both stress + urgency)
 #        - Bothersome UI             (KIQ052: at least "Somewhat")
 #        - Nocturia ≥2               (KIQ480/KIQ481 >= 2)
-#        - Accidental bowel leakage  (KIQ042 == 1)
+#        (KIQ_U carries no bowel-leakage item; bowel_leak is NA by design.)
 #        - Pelvic organ prolapse     (RHQ740 == 1, 2017-2018 only)
 #   4. Stratify by URPS demand bands:
 #        Age: 20-39, 40-49, 50-64, 65-74, 75+
@@ -114,12 +124,12 @@ names(raw) <- names(cycles)
 harmonise_cycle <- function(dat, weight_divisor = 1) {
   demo <- dat$demo %>%
     select(SEQN, RIAGENDR, RIDAGEYR, RIDRETH3, INDFMPIR,
-           WTMEC2YR, SDMVPSU, SDMVSTRA) %>%
+           WTMEC2YR, SDMVPSU, SDMVSTRA, any_of("RIDEXPRG")) %>%
     mutate(adj_weight = WTMEC2YR / weight_divisor)
 
   kiq <- dat$kiq %>%
     select(SEQN,
-           any_of(c("KIQ005", "KIQ010", "KIQ042", "KIQ044", "KIQ052",
+           any_of(c("KIQ005", "KIQ010", "KIQ042", "KIQ044", "KIQ046", "KIQ052",
                     "KIQ480", "KIQ481")))
 
   bmx <- dat$bmx %>% select(SEQN, BMXBMI)
@@ -135,8 +145,8 @@ harmonise_cycle <- function(dat, weight_divisor = 1) {
   }
 
   # Ensure all KIQ/RHQ columns exist (asked-only-if questions may be absent)
-  for (col in c("KIQ005", "KIQ010", "KIQ042", "KIQ044", "KIQ052",
-                "KIQ480", "KIQ481", "RHQ740")) {
+  for (col in c("KIQ005", "KIQ010", "KIQ042", "KIQ044", "KIQ046", "KIQ052",
+                "KIQ480", "KIQ481", "RHQ740", "RIDEXPRG")) {
     if (!col %in% names(merged)) merged[[col]] <- NA_character_
   }
 
@@ -144,20 +154,47 @@ harmonise_cycle <- function(dat, weight_divisor = 1) {
   chr <- function(x) as.character(x)
 
   merged %>%
-    filter(chr(RIAGENDR) == "Female", RIDAGEYR >= 20) %>%
+    # Nonpregnant women 20+, following Nygaard 2008. Pregnancy UI is real but
+    # transient; it belongs to the pregnancy component of the microsimulation,
+    # not the chronic pelvic-floor prevalence anchor.
+    filter(chr(RIAGENDR) == "Female", RIDAGEYR >= 20,
+           is.na(RIDEXPRG) | chr(RIDEXPRG) != "Yes, positive lab pregnancy test") %>%
     mutate(
       # KIQ022 is kidney disease. KIQ005 is the NHANES urinary-leakage
       # frequency item; any response other than Never is urinary incontinence.
-      ui         = case_when(chr(KIQ005) == "Never" ~ 0L,
-                             chr(KIQ005) %in% c("Less than once a month", "A few times a month",
-                                                "A few times a week", "Every day and/or night") ~ 1L,
+      # --- Incontinence Severity Index (Sandvik): frequency x amount --------
+      isi_freq   = case_when(chr(KIQ005) == "Never"                  ~ 0L,
+                             chr(KIQ005) == "Less than once a month" ~ 1L,
+                             chr(KIQ005) == "A few times a month"    ~ 2L,
+                             chr(KIQ005) == "A few times a week"     ~ 3L,
+                             chr(KIQ005) == "Every day and/or night" ~ 4L,
                              TRUE ~ NA_integer_),
-      stress_ui  = if_else(chr(KIQ042) == "Yes", 1L,
-                   if_else(chr(KIQ042) == "No",  0L, NA_integer_)),
-      urgency_ui = if_else(chr(KIQ044) == "Yes", 1L,
-                   if_else(chr(KIQ044) == "No",  0L, NA_integer_)),
-      mixed_ui   = if_else(stress_ui == 1L & urgency_ui == 1L, 1L,
-                   if_else(!is.na(stress_ui) & !is.na(urgency_ui), 0L, NA_integer_)),
+      isi_amount = case_when(chr(KIQ010) == "Drops"          ~ 1L,
+                             chr(KIQ010) == "Small splashes" ~ 2L,
+                             chr(KIQ010) == "More"           ~ 3L,
+                             TRUE ~ NA_integer_),
+      # KIQ010 is skipped for "Never", so amount is legitimately NA there and
+      # the ISI is 0 rather than missing.
+      isi        = case_when(isi_freq == 0L                       ~ 0L,
+                             !is.na(isi_freq) & !is.na(isi_amount) ~ isi_freq * isi_amount,
+                             TRUE ~ NA_integer_),
+      ui         = if_else(!is.na(isi), as.integer(isi >= 3L), NA_integer_),
+
+      # --- PHENOTYPES. Not subtypes. May overlap; may exceed `ui`. ----------
+      stress_leakage_12m  = if_else(chr(KIQ042) == "Yes", 1L,
+                            if_else(chr(KIQ042) == "No",  0L, NA_integer_)),
+      urgency_leakage_12m = if_else(chr(KIQ044) == "Yes", 1L,
+                            if_else(chr(KIQ044) == "No",  0L, NA_integer_)),
+      other_leakage_12m   = if_else(chr(KIQ046) == "Yes", 1L,
+                            if_else(chr(KIQ046) == "No",  0L, NA_integer_)),
+
+      # --- phenotype WITHIN the primary population --------------------------
+      ui_phenotype = case_when(
+        is.na(ui) | ui == 0L                                       ~ "no_moderate_severe_ui",
+        stress_leakage_12m == 1L & urgency_leakage_12m == 1L        ~ "mixed_stress_urgency",
+        stress_leakage_12m == 1L & urgency_leakage_12m %in% c(0L)   ~ "stress_predominant",
+        urgency_leakage_12m == 1L & stress_leakage_12m %in% c(0L)   ~ "urgency_predominant",
+        TRUE                                                        ~ "other_or_unclassified"),
       bothersome = if_else(chr(KIQ052) %in% c("Somewhat", "Very much", "Greatly"), 1L,
                    if_else(chr(KIQ052) %in% c("Not at all", "Only a little"), 0L, NA_integer_)),
       # KIQ481 replaced KIQ480 in the later cycle.
@@ -279,7 +316,7 @@ svy_prevalence <- function(outcome_var, by_var, design) {
   bind_rows(Filter(Negate(is.null), rows))
 }
 
-outcomes <- c("ui", "stress_ui", "urgency_ui", "mixed_ui",
+outcomes <- c("ui", "stress_leakage_12m", "urgency_leakage_12m", "other_leakage_12m",
               "bothersome", "nocturia2", "bowel_leak")
 
 # ---------------------------------------------------------------------------
@@ -385,7 +422,7 @@ manifest_lines <- c(
   "  nhanes_ui_prevalence_by_income.rds",
   "  nhanes_ui_prevalence_cells.rds",
   "",
-  "Outcomes: ui, stress_ui, urgency_ui, mixed_ui, bothersome, nocturia2, bowel_leak",
+  "Outcomes: ui (ISI>=3), stress/urgency/other_leakage_12m (phenotypes, may overlap), bothersome, nocturia2, bowel_leak",
   "Stratifiers: age_band (5), race (5), bmi_group (3), income_group (4)",
   "",
   "Survey design: MEC weights halved for pooling (adj_weight = WTMEC2YR / 2)",

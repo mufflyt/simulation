@@ -183,83 +183,85 @@ anchors:
         rather than being silently normalised away.
 
   ui_prevalence:
-    source: "NHANES KIQ_U (preferred empirical anchor); Nygaard 2008 JAMA / SWAN as external validation"
+    source: "NHANES KIQ_U pooled (primary); Nygaard 2008 JAMA / SWAN as EXTERNAL VALIDATION"
     path: data/anchors/ui_prevalence.csv
     sha256: ""
-    status: missing
+    status: missing        # cells regenerated; anchor CSV not yet emitted
     production_scalar_eligible: false
     estimand:
+      name: symptomatic_urinary_incontinence
       unit: person
-      definition: >
-        POPULATION prevalence of urinary incontinence among adult US women.
-        NOT treated UI, diagnosed UI, or care-seeking UI.
-      excluded_sources:
-        # every one of these conditions on contact with the health system
-        - CHIA
-        - CADR
-        - sling_claims
-        - mystery_caller
+      population:
+        sex: female
+        age_min: 20
+        pregnancy: exclude
+        geography: United States
+        setting: noninstitutionalized_population
+      case_definition:
+        source: NHANES_KIQ_U
+        primary:
+          method: incontinence_severity_index
+          variables:
+            frequency: KIQ005
+            amount: KIQ010
+          formula: frequency_score * amount_score
+          threshold: ">= 3"
+          interpretation: moderate_to_severe_ui
+      excluded_definitions:
+        - diagnosed_ui
+        - treated_ui
+        - care_seeking_ui
+        - KIQ005_non_never_alone
+      phenotypes:
+        # NOT subtypes. Different NHANES questions -- KIQ042/044/046 ask whether
+        # leakage of that circumstance occurred at all in 12 months, while
+        # KIQ005/010 measure overall frequency and amount. A phenotype MAY
+        # exceed primary prevalence; that is correct once named properly.
+        may_overlap: true
+        may_exceed_primary: true
+        variables:
+          - stress_leakage_12m
+          - urgency_leakage_12m
+          - other_leakage_12m
+        within_primary_population:
+          - mixed_stress_urgency
+          - stress_predominant
+          - urgency_predominant
+          - other_or_unclassified
+        note: >
+          Phenotypes describe circumstances of leakage, not clinician-established
+          SUI/UUI diagnoses. Do NOT construct a subtype-specific ISI: KIQ010 asks
+          overall amount lost, not amount during stress versus urgency events.
     clinical_review:
-      status: pending
+      status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
       scope:
         - urinary_incontinence_case_definition
         - severity_threshold
         - survey_population_definition
         - recall_window
-      note: >
-        Reviewed on its own prevalence case definition. Does not inherit the
-        CHIA procedure-family block.
-      findings:
-        - id: subtypes_do_not_nest
-          severity: blocking
-          detail: >
-            `ui`, `stress_ui` and `urgency_ui` are three INDEPENDENT NHANES
-            items, not a partition. ui = KIQ005 != "Never" (any frequency);
-            stress_ui = KIQ042 == "Yes"; urgency_ui = KIQ044 == "Yes". The
-            subtypes carry no frequency threshold, so they do not nest inside
-            the total -- and empirically they do not: at ages 20-34 stress_ui
-            is 0.321 against ui 0.296, and at 35-44 it is 0.509 against 0.482,
-            on essentially the same denominator (n 1,083 vs 1,084). A subtype
-            exceeding its total is not a coding error; it is a definitional one.
-        - id: severity_threshold_is_the_loosest_available
-          severity: blocking
-          detail: >
-            The model's operative definition is ANY leakage -- KIQ005 != Never
-            includes "less than once a month". NHANES supports stricter
-            thresholds (monthly, weekly, daily) and a bothersome item (KIQ052,
-            at least "Somewhat"), but the cell file the model consumes
-            (nhanes_ui_prevalence_cells.rds) carries only the single loose
-            definition. Any-leakage prevalence runs 29.6% at 20-34 rising to
-            78.1% at 75+; a bother- or frequency-qualified definition would be
-            materially lower. The threshold is a clinical choice, not a default.
-        - id: population_floor_is_20_not_18
-          severity: non_blocking
-          detail: >
-            NHANES KIQ_U begins at age 20; the microsimulation cohort is 18+.
-            The 20-34 stratum is blended into an 18-34 cell with the mismatch
-            declared in code. Small, but it should be stated in the anchor
-            rather than only in the pipeline.
-        - id: recall_window_is_current_state
-          severity: satisfied
-          detail: >
-            KIQ005 asks current leakage frequency, which matches a prevalence
-            state rather than a 12-month recall. No pooling of incompatible
-            windows.
-        - id: stale_header_comment
-          severity: cosmetic
-          detail: >
-            The script header claims "Accidental bowel leakage (KIQ042 == 1)".
-            KIQ042 is stress UI. The code is correct -- bowel_leak is set to NA
-            with the note that KIQ_U carries no bowel item -- but the header
-            would mislead a reader.
-      decisions_required:
-        - >
-          Case definition: report subtypes on the same denominator with an
-          explicit note that they are NOT a partition, OR define them
-          conditional on ui == 1 so they nest. Cannot be both.
-        - >
-          Severity threshold: any leakage, monthly+, weekly+, or bothersome.
-          This choice moves the anchor more than any other decision here.
+      resolution: >
+        Adjudicated 2026-08-14. Primary definition moved from "any leakage"
+        (KIQ005 != Never) to the validated Incontinence Severity Index at >= 3.
+        The NHANES cells were REGENERATED, not relabelled. Effect at age 75+:
+        78.1% -> 53.6%. At 20-34: 29.6% -> 7.9%.
+      external_validation:
+        nygaard_2008: 0.157
+        this_build_population_weighted: 0.249
+        status: DISCREPANCY_RECORDED
+        note: >
+          The pooled 2017-2023 build gives ~24.9% population-weighted against
+          Nygaard's 15.7% in NHANES 2005-2006 -- roughly 1.6x. Plausible causes,
+          not adjudicated: genuine secular increase with ageing and obesity, a
+          different pooled-cycle mix, and the crude age weights used for this
+          comparison. Nygaard is EXTERNAL VALIDATION, not the target, so this
+          does not block the anchor -- but a 1.6x gap should be resolved before
+          the prevalence anchor drives a published demand figure.
+      known_limitations:
+        - age_floor_is_20_not_18
+        - phenotypes_are_circumstances_not_diagnoses
+        - no_subtype_specific_severity_available
 
 # Back-test configuration: fit through fit_through_year, project to target_year,
 # compare with observed. Goes beyond the published Dall-family standard, which
