@@ -113,7 +113,8 @@ test_that("the shipped pathway is uncalibrated, and it is the POP one", {
   # specifically the artifact holding 0.35 and 0.55, not the registry
   pop <- pw[pw$condition == "pop", ]
   expect_equal(unique(pop$p_advance[pop$stage == "conservative"]), 0.35)
-  expect_equal(unique(pop$p_advance[pop$stage == "testing"]), 0.55)
+  # testing is NON-GATING for POP after the estimand restructure: p_advance 1.0
+  expect_equal(unique(pop$p_advance[pop$stage == "testing"]), 1.00)
   expect_true(all(pop$confidence == "low"))
 })
 
