@@ -52,9 +52,23 @@ max_scalar: 3.0
 # a scalar applied to the output.
 #
 # Remaining hypotheses for the OTHER flag, none adjudicated:
-#  - office visits: NAMCS is office-based only and documented as a structural
-#    LOWER bound; the model quantity is all-provider condition demand. Part of
-#    this gap is expected by construction.
+#  - office visits: DECOMPOSED 2026-08-14. 95% of the model's 16.2M visits arise
+#    at the CONSERVATIVE stage (pop 8.2M, ui 6.3M, ai 0.9M), at 2.63 visits per
+#    treated patient. So the gap is in treated_national (6.18M patients across
+#    ui/pop/ai), not in visits-per-patient.
+#
+#    Setting coverage cannot explain it. NAMCS is office-based only and excludes
+#    HOPD/ED, so it undercounts all-setting ambulatory demand -- but for the
+#    model's 16.2M to be correct, offices would have to host only ~30% of
+#    pelvic-floor ambulatory visits. Most pelvic-floor care is office-based, so
+#    that is implausible; setting exclusion closes part of a 3.37x gap, not the
+#    bulk of it.
+#
+#    The residual points at the CARE-SEEKING cascade -- the same class of
+#    low-confidence parameters as the POP surgical cascade, and the same
+#    resolution: recalibrate the transition, do not scale the output. 6.18M
+#    treated patients is roughly 9% of US women 20+ receiving pelvic-floor
+#    treatment annually, which is the quantity to check first.
 #  - population year: the base year is 2017 but np2023 is a projection series
 #    starting 2022, so the age structure is 2022 standing in for 2017.
 #
