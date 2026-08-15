@@ -109,6 +109,29 @@ jobs:
         run: Rscript .github/scripts/assert-refusal-gates.R
 
   # ---------------------------------------------------------------------------
+  # 2b. SCIENTIFIC INVARIANTS. The failure domain unit tests cannot reach: a
+  #     model can be numerically stable, reproducible and completely wrong.
+  #     Probability legality, cascade mass balance, an INDEPENDENT reference
+  #     implementation, numerical integrity, directional scenario invariants,
+  #     and a back-test regression ratchet.
+  # ---------------------------------------------------------------------------
+  scientific-invariants:
+    name: scientific invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}
+          dependencies: '"hard"'
+      - name: Assert scientific invariants
+        run: Rscript .github/scripts/assert-scientific-invariants.R | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
   # 3. FULL PLATFORM MATRIX. The per-push gate checks ubuntu-release only.
   # ---------------------------------------------------------------------------
   matrix-check:
@@ -268,7 +291,7 @@ jobs:
   report:
     name: nightly report
     runs-on: ubuntu-latest
-    needs: [leak-guard, refusal-gates, matrix-check, full-suite, reproducibility, quality]
+    needs: [leak-guard, refusal-gates, scientific-invariants, matrix-check, full-suite, reproducibility, quality]
     if: always()
     permissions:
       contents: read
@@ -284,14 +307,39 @@ jobs:
             echo "|---|---|"
             echo "| leak guard | ${{ needs.leak-guard.result }} |"
             echo "| refusal gates | ${{ needs.refusal-gates.result }} |"
+            echo "| scientific invariants | ${{ needs.scientific-invariants.result }} |"
             echo "| platform matrix | ${{ needs.matrix-check.result }} |"
             echo "| full suite | ${{ needs.full-suite.result }} |"
             echo "| reproducibility | ${{ needs.reproducibility.result }} |"
             echo "| quality | ${{ needs.quality.result }} |"
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
+      - name: Every blocking gate must have actually RUN
+        # A skipped, cancelled or missing correctness job must not masquerade as
+        # green. Only 'success' counts; 'skipped' is a failure for a blocking
+        # gate, because the thing it protects went unchecked.
+        run: |
+          fail=0
+          check() {
+            case "$2" in
+              success) echo "  OK       $1" ;;
+              *)       echo "::error::BLOCKING GATE DID NOT PASS: $1 (result=$2)"; fail=1 ;;
+            esac
+          }
+          check "leak guard"            "${{ needs.leak-guard.result }}"
+          check "refusal gates"         "${{ needs.refusal-gates.result }}"
+          check "scientific invariants" "${{ needs.scientific-invariants.result }}"
+          check "full suite"            "${{ needs.full-suite.result }}"
+          check "reproducibility"       "${{ needs.reproducibility.result }}"
+          # matrix-check is skipped only by explicit workflow_dispatch opt-out
+          if [ "${{ needs.matrix-check.result }}" != "success" ] && [ "${{ inputs.skip_matrix }}" != "true" ]; then
+            echo "::error::BLOCKING GATE DID NOT PASS: platform matrix (result=${{ needs.matrix-check.result }})"
+            fail=1
+          fi
+          exit $fail
+
       - name: Open or update the tracking issue on failure
-        if: ${{ needs.leak-guard.result == 'failure' || needs.refusal-gates.result == 'failure' || needs.matrix-check.result == 'failure' || needs.full-suite.result == 'failure' || needs.reproducibility.result == 'failure' }}
+        if: ${{ always() && (needs.leak-guard.result != 'success' || needs.refusal-gates.result != 'success' || needs.scientific-invariants.result != 'success' || needs.full-suite.result != 'success' || needs.reproducibility.result != 'success') }}
         uses: actions/github-script@v7
         with:
           script: |
