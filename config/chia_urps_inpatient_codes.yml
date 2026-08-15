@@ -69,13 +69,29 @@ families:
     requires_diagnosis: pelvic_organ_prolapse
     icd9cm:
       exact: ["6831", "6839", "6841", "6849", "6851", "6859",
-              "6861", "6869", "6871", "6879", "689"]
+              "6861", "6869", "6871", "6879", "689",
+              # RETIRED pre-FY2007 codes -- see retired_icd9 below
+              "684", "686", "687"]
     icd10pcs:
       prefix: ["0UT9", "0UB9"]     # resection / excision of uterus, any approach
+    retired_icd9: ["684", "686", "687"]
     note: >
-      Without the POP diagnosis qualifier this counts all hysterectomies
-      (10,984 in FY2004 falling to 2,269 in FY2018), which is a hysterectomy
-      series, not a prolapse series.
+      Without the POP diagnosis qualifier this counts all hysterectomies, which
+      is a hysterectomy series, not a prolapse series.
+
+      SECOND SEAM, inside ICD-9. The October 2006 update (FY2007) split the
+      3-digit total/radical hysterectomy codes into 4-digit laparoscopic and
+      open variants: 684 -> 6841/6849, 686 -> 6861/6869, 687 -> 6871/6879.
+      In the CHIA cohort 684 runs 5,856 / 5,064 / 5 across FY2005-2007 and
+      6849 runs 0 / 0 / 4,851 -- a clean handover. Omitting the retired codes
+      undercounts POP-hysterectomy by 149-180 cases a year in FY2004-2006
+      (about 10%) and makes a real decline look flat: corrected, the series
+      reads 1,812 / 1,771 / 1,738 / 1,630 across FY2004-2007 rather than
+      1,632 / 1,596 / 1,589 / 1,630.
+
+      The retired codes are NOT in ref.icd9cm_procedure because that table is
+      ICD-9-CM v32, the final revision, which postdates their withdrawal. They
+      are validated against the data instead.
 
   apical_suspension:
     label: Vaginal apical suspension (sacrocolpopexy, uterosacral, sacrospinous)
@@ -143,6 +159,7 @@ families:
 validation:
   max_seam_ratio: 2.0
   seam_years: [2015, 2016]
+  icd9_revision_seam_years: [2006, 2007]
   known_seam_unstable: ["colpocleisis", "anterior_posterior_repair",
                         "genitourinary_fistula"]
   seam_notes:

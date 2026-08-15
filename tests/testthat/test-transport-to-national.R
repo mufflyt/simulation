@@ -45,3 +45,33 @@ test_that("the missing factor spans an order of magnitude", {
   s <- transport_setting_share_sensitivity(16959)
   expect_gt(max(s$national_all_setting) / min(s$national_all_setting), 9)
 })
+
+test_that("all three families resolve, and sling refuses for a stated reason", {
+  skip_if_not(file.exists(.db))
+  pop <- suppressMessages(chia_ma_age_specific_rates(db = .db, family = "pop_hysterectomy"))
+  all <- suppressMessages(chia_ma_age_specific_rates(db = .db, family = "all_hysterectomy"))
+  expect_equal(nrow(pop), 4L)
+  expect_equal(nrow(all), 4L)
+  # POP-indication is a strict subset of all hysterectomy
+  expect_lt(sum(pop$cases), sum(all$cases))
+  # POP peaks in the 65-79 band; all-hysterectomy does not
+  expect_equal(pop$age_band[which.max(pop$rate_per_100k)], "65-79")
+
+  # Sling has left the inpatient setting: 0 cases in FY2018, so no rate exists.
+  expect_error(
+    suppressMessages(chia_ma_age_specific_rates(db = .db, family = "sui_sling")),
+    "left the inpatient setting")
+})
+
+test_that("the retired ICD-9 codes are counted", {
+  skip_if_not(file.exists(.db))
+  # 684/686/687 were withdrawn in the October 2006 ICD-9 update and are absent
+  # from ref.icd9cm_procedure (v32). Omitting them undercuts FY2004-2006.
+  con <- DBI::dbConnect(duckdb::duckdb(), .db, read_only = TRUE)
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+  n <- DBI::dbGetQuery(con, "
+    SELECT count(*) AS n FROM chia_casemix.v_cohort_female_adult
+    WHERE _data_year BETWEEN 2004 AND 2006
+      AND principal_procedure IN ('684','686','687')")$n
+  expect_gt(n, 10000)   # ~17.5k in the cohort; they are not a rounding error
+})
