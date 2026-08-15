@@ -41,13 +41,25 @@ anchors:
     path: data/anchors/urps_office_visits.csv
     sha256: "8e98138bccacbecaa5b29d8c7b458178aee9f6acbc7559fe47721d8876f1b918"
   sling_procedure_volume:
-    source: "CMS Medicare Physician PUF (CPT 57288) + CHIA observation age split"
-    # NOT YET BUILT as a file. The free route is implemented in
-    # R/calibration-transport_to_national.R::transport_sling_via_medicare();
-    # it needs the CMS Medicare Advantage penetration figure to emit a value.
+    source: "CMS Physician PUF CY2024 (CPT 57288) / CHIA observation age split / CMS MA penetration"
+    transport:
+      formula: medicare_ffs_volume / (p_65plus * ffs_share_of_medicare)
+      medicare_ffs_services: 25179
+      p_65plus: 0.398
+      ffs_share_of_medicare: 0.46
+      ffs_share_source: >
+        CMS Medicare enrollment; MA penetration 54% in 2024 (32.8M of 61.2M
+        beneficiaries). Overall all-ages figure -- CMS/KFF publish no age- or
+        sex-specific breakdown. Rises yearly (55% by 2026), so it must be
+        re-looked-up whenever the PUF vintage changes.
+      result: 137384
+      bound: lower
+      bound_rationale: >
+        Observation-stay slings skew older than the ambulatory sling population,
+        so 39.8% likely overstates the 65+ share and the national total is
+        biased DOWNWARD.
     path: data/anchors/sling_procedure_volume.csv
-    sha256: ""
-    status: missing
+    sha256: "1c805d4a49078f8f768b3f172fadc8b696b6105abe8d05f31dea570dace9e0fd"
     production_scalar_eligible: true
     estimand:
       name: primary_female_anti_incontinence_sling_placements
