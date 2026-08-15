@@ -163,4 +163,3 @@ clinical_review_status <- function(
   out
 }
 
-`%||%` <- function(x, y) if (base::is.null(x)) y else x
