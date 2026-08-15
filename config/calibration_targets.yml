@@ -246,20 +246,52 @@ anchors:
         (KIQ005 != Never) to the validated Incontinence Severity Index at >= 3.
         The NHANES cells were REGENERATED, not relabelled. Effect at age 75+:
         78.1% -> 53.6%. At 20-34: 29.6% -> 7.9%.
-      external_validation:
-        nygaard_2008: 0.157
-        this_build_population_weighted: 0.249
-        status: DISCREPANCY_RECORDED
-        note: >
-          The pooled 2017-2023 build gives ~24.9% population-weighted against
-          Nygaard's 15.7% in NHANES 2005-2006 -- roughly 1.6x. Plausible causes,
-          not adjudicated: genuine secular increase with ageing and obesity, a
-          different pooled-cycle mix, and the crude age weights used for this
-          comparison. Nygaard is EXTERNAL VALIDATION, not the target, so this
-          does not block the anchor -- but a 1.6x gap should be resolved before
-          the prevalence anchor drives a published demand figure.
+    empirical_validation:
+      status: replication_passed
+      method: >
+        Reproduce the reference estimand on the reference vintage with the
+        production code, complex survey design, and MEC examination weight.
+      nygaard_2008_benchmark: 0.157
+      replicated_2005_2006: 0.157
+      replicated_ci: [0.134, 0.180]
+      replicated_n: 1932
+      benchmark_n: 1961
+      tolerance_pp: 1.0
+      result: PASS
+      defect_found_and_fixed: >
+        Exact label matching returned 5.7%, not 15.7%. NHANES 2005-2006 stores
+        literal question-text fragments and attaches the conjunction to the
+        PENULTIMATE option -- "drops," / "small splashes, or" / "more?" -- so the
+        MIDDLE category of BOTH ISI items silently became NA. Frequency score 3
+        and amount score 2 were entirely absent from the distribution. Nothing
+        errored. Normalised, the same code reproduces 15.7% exactly.
+      single_vintage_estimates:
+        # NOT pooled. 2017-2018 is CAPI; 2021-2023 is ACASI, so a jump across
+        # that boundary may be secular change, mode effect, or both.
+        - cycle: "2005-2006"
+          prevalence: 0.157
+          ci: [0.134, 0.180]
+          n: 1932
+          mode: CAPI
+        - cycle: "2017-2018"
+          prevalence: 0.237
+          ci: [0.218, 0.256]
+          n: 2434
+          mode: CAPI
+        - cycle: "2021-2023"
+          prevalence: 0.270
+          ci: [0.242, 0.298]
+          n: 2799
+          mode: ACASI
+      interpretation: >
+        The 15.7% -> 23.7% rise occurs WITHIN CAPI administration, so that
+        portion is not a mode effect. The further 23.7% -> 27.0% spans the
+        CAPI/ACASI change and cannot be attributed without a mode study.
+      remaining_blockers:
+        - select_time_aligned_cycle   # choose by model year, not sample size
       known_limitations:
         - age_floor_is_20_not_18
+        - do_not_pool_2017_2018_with_2021_2023
         - phenotypes_are_circumstances_not_diagnoses
         - no_subtype_specific_severity_available
 

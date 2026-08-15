@@ -97,6 +97,19 @@ cycles <- list(
 )
 
 # nhanesA returns labeled factors; wrap with error handling
+#' Normalise a KIQ value label across NHANES vintages
+#'
+#' 2005-2006 stores question-text fragments ("never,", "small splashes, or",
+#' "or more?"); later cycles store clean labels ("Never", "Small splashes").
+#' Exact matching drops whole categories -- silently, and only in the middle.
+.kiq_norm <- function(x) {
+  x <- tolower(as.character(x))
+  x <- gsub("^or\\s+", "", x)
+  x <- gsub("[[:space:],]*\\bor\\b[[:space:]]*$", "", x)
+  x <- gsub("[[:punct:]]+$", "", x)
+  trimws(x)
+}
+
 .nhanes_safe <- function(table) {
   tryCatch(nhanes(table), error = function(e) {
     message("  Could not download ", table, ": ", conditionMessage(e)); NULL
@@ -163,15 +176,21 @@ harmonise_cycle <- function(dat, weight_divisor = 1) {
       # KIQ022 is kidney disease. KIQ005 is the NHANES urinary-leakage
       # frequency item; any response other than Never is urinary incontinence.
       # --- Incontinence Severity Index (Sandvik): frequency x amount --------
-      isi_freq   = case_when(chr(KIQ005) == "Never"                  ~ 0L,
-                             chr(KIQ005) == "Less than once a month" ~ 1L,
-                             chr(KIQ005) == "A few times a month"    ~ 2L,
-                             chr(KIQ005) == "A few times a week"     ~ 3L,
-                             chr(KIQ005) == "Every day and/or night" ~ 4L,
+      # Labels are normalised before matching. NHANES 2005-2006 stores literal
+      # question-text fragments and attaches the conjunction to the PENULTIMATE
+      # option -- "drops," / "small splashes, or" / "more?" -- so exact matching
+      # silently NAs the MIDDLE category of both items. That produced 5.7%
+      # against Nygaard's 15.7% with nothing failing. Normalised, the same code
+      # reproduces 15.7% exactly.
+      isi_freq   = case_when(.kiq_norm(KIQ005) == "never"                  ~ 0L,
+                             .kiq_norm(KIQ005) == "less than once a month" ~ 1L,
+                             .kiq_norm(KIQ005) == "a few times a month"    ~ 2L,
+                             .kiq_norm(KIQ005) == "a few times a week"     ~ 3L,
+                             .kiq_norm(KIQ005) == "every day and/or night" ~ 4L,
                              TRUE ~ NA_integer_),
-      isi_amount = case_when(chr(KIQ010) == "Drops"          ~ 1L,
-                             chr(KIQ010) == "Small splashes" ~ 2L,
-                             chr(KIQ010) == "More"           ~ 3L,
+      isi_amount = case_when(.kiq_norm(KIQ010) == "drops"          ~ 1L,
+                             .kiq_norm(KIQ010) == "small splashes" ~ 2L,
+                             .kiq_norm(KIQ010) == "more"           ~ 3L,
                              TRUE ~ NA_integer_),
       # KIQ010 is skipped for "Never", so amount is legitimately NA there and
       # the ISI is 0 rather than missing.
