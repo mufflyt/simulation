@@ -51,3 +51,39 @@ test_that("every CHIA procedure family is currently blocked", {
   expect_gt(nrow(fams), 0)
   expect_true(all(fams$blocked))
 })
+
+test_that("revision/removal is mutually exclusive with incident sling", {
+  skip_if_not(file.exists("../../config/chia_urps_inpatient_codes.yml"))
+  fam <- yaml::read_yaml("../../config/chia_urps_inpatient_codes.yml")$families
+
+  sling_primary  <- c(fam$sui_sling$icd9cm$exact, fam$sui_sling$icd10pcs$prefix)
+  revision_codes <- c(fam$revision_removal$icd9cm$exact,
+                      fam$revision_removal$icd10pcs$prefix)
+
+  # the semantic negative test: incident placement must never contain a
+  # revision or removal code, in either direction
+  expect_false(any(sling_primary %in% revision_codes))
+  expect_false(any(revision_codes %in% sling_primary))
+
+  # and no ICD-10 prefix of one may be a prefix of the other
+  expect_false(any(vapply(fam$sui_sling$icd10pcs$prefix, function(a)
+    any(startsWith(fam$revision_removal$icd10pcs$prefix, a)), logical(1))))
+  expect_false(any(vapply(fam$revision_removal$icd10pcs$prefix, function(a)
+    any(startsWith(fam$sui_sling$icd10pcs$prefix, a)), logical(1))))
+
+  expect_false(isTRUE(fam$revision_removal$incident_sling_eligible))
+})
+
+test_that("NAMCS is approved and not blocked by CHIA procedure families", {
+  skip_if_not(file.exists("../../config/calibration_targets.yml"))
+  cfg <- yaml::read_yaml("../../config/calibration_targets.yml")
+  expect_true(suppressMessages(
+    assert_anchor_reviewed(cfg$anchors$urps_office_visits)))
+  # and the others remain blocked, with sling naming its blockers
+  expect_error(suppressMessages(
+    assert_anchor_reviewed(cfg$anchors$sling_procedure_volume)),
+    "missing_sui_diagnosis_qualifier")
+  expect_error(suppressMessages(
+    assert_anchor_reviewed(cfg$anchors$prolapse_procedure_volume)),
+    "not approved")
+})

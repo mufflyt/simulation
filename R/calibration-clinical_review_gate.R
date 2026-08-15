@@ -15,6 +15,48 @@
 # across the seam is validation of that definition, never the definition itself.
 ################################################################################
 
+#' Assert an anchor's own clinical dependencies are reviewed
+#'
+#' Enforces ONLY the dependencies that anchor names. The governing rule:
+#' an anchor is blocked solely by unresolved assumptions that can change THAT
+#' anchor's estimand. A global review switch is both stricter than necessary
+#' and destructive -- it blocked the NAMCS office-visit anchor on
+#' urogynaecologic procedure-family definitions NAMCS does not use.
+#'
+#' @param anchor_specification Named list for one anchor, carrying a
+#'   `clinical_review` block with `status`, `scope`, and optionally `blockers`.
+#' @return Invisibly, TRUE. Stops otherwise, naming the blockers.
+#' @export
+assert_anchor_reviewed <- function(anchor_specification) {
+  review <- anchor_specification$clinical_review
+
+  if (base::is.null(review)) {
+    base::stop("Anchor has no clinical-review specification.", call. = FALSE)
+  }
+
+  if (!base::identical(review$status, "approved")) {
+    blockers <- review$blockers %||% base::character()
+    blocker_text <- if (base::length(blockers) > 0L) {
+      base::paste0(" Blocker(s): ", base::paste(blockers, collapse = ", "), ".")
+    } else ""
+    scope_text <- if (base::length(review$scope %||% base::character()) > 0L) {
+      base::paste0(" Review scope: ",
+                   base::paste(review$scope, collapse = ", "), ".")
+    } else ""
+    base::stop("Clinical review is not approved for this anchor.",
+               blocker_text, scope_text, call. = FALSE)
+  }
+
+  if (!base::nzchar(review$reviewer %||% "")) {
+    base::stop("Approved review has no named reviewer.", call. = FALSE)
+  }
+  if (!base::nzchar(review$date %||% "")) {
+    base::stop("Approved review has no date.", call. = FALSE)
+  }
+
+  base::invisible(TRUE)
+}
+
 #' Assert an anchor may produce a production calibration scalar
 #'
 #' Fails unless the anchor is flagged eligible AND carries an approved clinical

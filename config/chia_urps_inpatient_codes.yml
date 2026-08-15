@@ -205,6 +205,25 @@ families:
       Most slings are ambulatory and invisible to HIDD. This family measures
       only the inpatient minority and must never be read as sling volume.
 
+  revision_removal:
+    label: Sling/mesh revision, removal or excision
+    role: complication_or_revision
+    incident_sling_eligible: false
+    icd10pcs:
+      prefix: ["0TPD", "0TBD"]     # removal of device / excision, urethra
+    icd9cm:
+      exact: []                    # ICD-9 has no distinct sling-removal code;
+                                   # pre-FY2016 revision is not separable
+    note: >
+      MUTUALLY EXCLUSIVE with sui_sling by construction. A sling removal is not
+      another sling placement; folding the two together would count a
+      complication as incident treatment and double-count the patient. Tested:
+      no code appears in both families.
+
+      ICD-9 has no distinct sling-removal code, so this family is ICD-10 only
+      and pre-FY2016 revision volume is NOT separable. Do not read the FY2004
+      -2015 portion as zero revisions.
+
   genitourinary_fistula:
     label: Genitourinary fistula repair
     icd9cm:
