@@ -34,13 +34,17 @@
 #' @param year Fiscal year. The CHIA series is strongly non-stationary
 #'   (POP-hysterectomy falls ~78% across FY2004-2018 through setting migration),
 #'   so a multi-year average is NOT appropriate; use the most recent year.
-#' @param family One of "pop_hysterectomy".
+#' @param family One of "pop_hysterectomy", "all_hysterectomy", or "sui_sling".
+#' @param min_cases Refuse to return rates below this count. Age-specific rates
+#'   from a handful of cases are noise, and transporting them multiplies that
+#'   noise by the US population. Default 50.
 #' @return Tibble: age band, cases, women, rate per 100,000.
 #' @export
 chia_ma_age_specific_rates <- function(
     db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
     year = 2018L,
-    family = "pop_hysterectomy") {
+    family = c("pop_hysterectomy", "all_hysterectomy", "sui_sling"),
+    min_cases = 50L) {
 
   family <- base::match.arg(family)
   if (!base::file.exists(db)) {
@@ -53,6 +57,29 @@ chia_ma_age_specific_rates <- function(
   }
 
   base::message("Computing MA age-specific rates: ", family, ", FY", year)
+
+  # Code sets follow config/chia_urps_inpatient_codes.yml, including the
+  # 3-digit ICD-9 codes withdrawn in the October 2006 update (684/686/687).
+  # Omitting those undercounts FY2004-2006 by ~10%.
+  hyst_i9 <- "'6831','6839','6841','6849','6851','6859','6861','6869',
+              '6871','6879','689','684','686','687'"
+  procedure_clause <- switch(family,
+    pop_hysterectomy = base::sprintf(
+      "(c._data_year <= 2015 AND c.principal_procedure IN (%s))
+       OR (c._data_year >= 2016 AND (c.principal_procedure LIKE '0UT9%%'
+                                  OR c.principal_procedure LIKE '0UB9%%'))", hyst_i9),
+    all_hysterectomy = base::sprintf(
+      "(c._data_year <= 2015 AND c.principal_procedure IN (%s))
+       OR (c._data_year >= 2016 AND (c.principal_procedure LIKE '0UT9%%'
+                                  OR c.principal_procedure LIKE '0UB9%%'))", hyst_i9),
+    sui_sling =
+      "(c._data_year <= 2015 AND c.principal_procedure IN ('594','595','596','5971'))
+       OR (c._data_year >= 2016 AND c.principal_procedure LIKE '0TUD%')")
+
+  # Only pop_hysterectomy is indication-qualified.
+  dx_join <- if (family == "pop_hysterectomy") {
+    "JOIN dx USING (RecordType20ID, _data_year)"
+  } else ""
 
   connection <- DBI::dbConnect(duckdb::duckdb(), db, read_only = TRUE)
   base::on.exit(DBI::dbDisconnect(connection, shutdown = TRUE), add = TRUE)
@@ -69,13 +96,8 @@ chia_ma_age_specific_rates <- function(
                   ELSE '80+' END AS age_band,
              count(*) AS cases
       FROM chia_casemix.v_cohort_female_adult c
-      JOIN dx USING (RecordType20ID, _data_year)
-      WHERE c._data_year = %d
-        AND ((c._data_year <= 2015 AND c.principal_procedure IN
-                ('6831','6839','6841','6849','6851','6859',
-                 '6861','6869','6871','6879','689'))
-          OR (c._data_year >= 2016 AND (c.principal_procedure LIKE '0UT9%%'
-                                     OR c.principal_procedure LIKE '0UB9%%')))
+      %s
+      WHERE c._data_year = %d AND (%s)
       GROUP BY 1),
     pop AS (
       SELECT CASE WHEN age < 50 THEN '18-49'
@@ -88,7 +110,7 @@ chia_ma_age_specific_rates <- function(
       GROUP BY 1)
     SELECT p.age_band, coalesce(c.cases, 0) AS cases, p.women
     FROM pop p LEFT JOIN cases c USING (age_band)
-    ORDER BY 1", year, year)) |>
+    ORDER BY 1", dx_join, year, procedure_clause, year)) |>
     tibble::as_tibble() |>
     dplyr::mutate(
       women = base::as.numeric(women),
@@ -97,10 +119,25 @@ chia_ma_age_specific_rates <- function(
       geography = "Massachusetts",
       setting = "hospital inpatient only")
 
-  base::message("  ", base::sum(rates$cases), " cases across ",
-                base::nrow(rates), " age bands; crude rate ",
-                base::sprintf("%.2f", 1e5 * base::sum(rates$cases) /
-                                base::sum(rates$women)), " per 100,000 women")
+  total_cases <- base::sum(rates$cases)
+  base::message("  ", total_cases, " cases across ", base::nrow(rates),
+                " age bands; crude rate ",
+                base::sprintf("%.2f", 1e5 * total_cases / base::sum(rates$women)),
+                " per 100,000 women")
+
+  if (total_cases < min_cases) {
+    base::stop(
+      "Refusing to return age-specific rates for '", family, "' in FY", year,
+      ": only ", total_cases, " inpatient cases (minimum ", min_cases, "). ",
+      "Rates from this few cases are noise, and transporting them multiplies ",
+      "that noise by the US female population. ",
+      if (family == "sui_sling") base::paste0(
+        "For sling this is not a sample-size accident: inpatient slings in ",
+        "the CHIA cohort fall 155 (FY2004) -> 17 (FY2014) -> 1 (FY2017) -> 0 ",
+        "(FY2018). The procedure has left the inpatient setting, so CHIA has ",
+        "no sling rate to transport at any sample size. Use HCUP SASD or ",
+        "Medicare Part B carrier claims."), call. = FALSE)
+  }
   rates
 }
 
