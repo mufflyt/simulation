@@ -122,10 +122,19 @@ anchors:
     production_scalar_eligible: true
     estimand:
       name: pop_operative_encounters
+      unit: encounter
       definition: >
-        Annual ENCOUNTERS with at least one operative treatment of pelvic organ
-        prolapse, counted ONCE per encounter regardless of how many prolapse
-        procedures it contains.
+        Annual encounters with at least one operative treatment of pelvic organ
+        prolapse.
+      aggregation_rule: unique_encounter
+      procedure_family_sum_is_valid_anchor: false
+      composition_descriptors:
+        # These flags MAY overlap. The anchor may not.
+        - pop_hysterectomy
+        - apical_abdominal_mesh
+        - transvaginal_mesh_pop
+        - vaginal_native_tissue_pop_repair
+        - obliterative
       clinical_review_status: approved
       reviewer: "T Muffly (urogynecology)"
       date: "2026-08-14"
@@ -161,27 +170,96 @@ anchors:
         - >
           0UQG became vaginal_native_tissue_pop_repair, requiring a POP
           diagnosis and excluding fistula, trauma and obstetric repair.
+      known_limitations:
+        - compartment_not_always_identifiable
+        - procedure_families_may_overlap
+        - N99.3_required_across_icd_seam
       residual_uncertainty: >
         Compartment classification. ICD-10-PCS encodes body part and approach,
         not compartment, and N81.4 "uterovaginal prolapse, unspecified" is the
         single largest diagnosis code. This does NOT block the POP-volume
-        calibration scalar, which is defined at encounter level.
+        calibration scalar, which is defined at encounter level. The 1.408
+        magnitude should stay VISIBLE as a structural-mismatch diagnostic
+        rather than being silently normalised away.
 
   ui_prevalence:
+    source: "NHANES KIQ_U (preferred empirical anchor); Nygaard 2008 JAMA / SWAN as external validation"
+    path: data/anchors/ui_prevalence.csv
+    sha256: ""
+    status: missing
     production_scalar_eligible: false
+    estimand:
+      unit: person
+      definition: >
+        POPULATION prevalence of urinary incontinence among adult US women.
+        NOT treated UI, diagnosed UI, or care-seeking UI.
+      excluded_sources:
+        # every one of these conditions on contact with the health system
+        - CHIA
+        - CADR
+        - sling_claims
+        - mystery_caller
     clinical_review:
       status: pending
       scope:
         - urinary_incontinence_case_definition
+        - severity_threshold
         - survey_population_definition
+        - recall_window
       note: >
         Reviewed on its own prevalence case definition. Does not inherit the
         CHIA procedure-family block.
-    source: "Nygaard 2008 JAMA; SWAN longitudinal prevalence"
-    # NOT YET ACQUIRED.
-    path: data/anchors/ui_prevalence.csv
-    sha256: ""
-    status: missing
+      findings:
+        - id: subtypes_do_not_nest
+          severity: blocking
+          detail: >
+            `ui`, `stress_ui` and `urgency_ui` are three INDEPENDENT NHANES
+            items, not a partition. ui = KIQ005 != "Never" (any frequency);
+            stress_ui = KIQ042 == "Yes"; urgency_ui = KIQ044 == "Yes". The
+            subtypes carry no frequency threshold, so they do not nest inside
+            the total -- and empirically they do not: at ages 20-34 stress_ui
+            is 0.321 against ui 0.296, and at 35-44 it is 0.509 against 0.482,
+            on essentially the same denominator (n 1,083 vs 1,084). A subtype
+            exceeding its total is not a coding error; it is a definitional one.
+        - id: severity_threshold_is_the_loosest_available
+          severity: blocking
+          detail: >
+            The model's operative definition is ANY leakage -- KIQ005 != Never
+            includes "less than once a month". NHANES supports stricter
+            thresholds (monthly, weekly, daily) and a bothersome item (KIQ052,
+            at least "Somewhat"), but the cell file the model consumes
+            (nhanes_ui_prevalence_cells.rds) carries only the single loose
+            definition. Any-leakage prevalence runs 29.6% at 20-34 rising to
+            78.1% at 75+; a bother- or frequency-qualified definition would be
+            materially lower. The threshold is a clinical choice, not a default.
+        - id: population_floor_is_20_not_18
+          severity: non_blocking
+          detail: >
+            NHANES KIQ_U begins at age 20; the microsimulation cohort is 18+.
+            The 20-34 stratum is blended into an 18-34 cell with the mismatch
+            declared in code. Small, but it should be stated in the anchor
+            rather than only in the pipeline.
+        - id: recall_window_is_current_state
+          severity: satisfied
+          detail: >
+            KIQ005 asks current leakage frequency, which matches a prevalence
+            state rather than a 12-month recall. No pooling of incompatible
+            windows.
+        - id: stale_header_comment
+          severity: cosmetic
+          detail: >
+            The script header claims "Accidental bowel leakage (KIQ042 == 1)".
+            KIQ042 is stress UI. The code is correct -- bowel_leak is set to NA
+            with the note that KIQ_U carries no bowel item -- but the header
+            would mislead a reader.
+      decisions_required:
+        - >
+          Case definition: report subtypes on the same denominator with an
+          explicit note that they are NOT a partition, OR define them
+          conditional on ui == 1 so they nest. Cannot be both.
+        - >
+          Severity threshold: any leakage, monthly+, weekly+, or bothersome.
+          This choice moves the anchor more than any other decision here.
 
 # Back-test configuration: fit through fit_through_year, project to target_year,
 # compare with observed. Goes beyond the published Dall-family standard, which
