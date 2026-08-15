@@ -121,3 +121,43 @@ test_that("the nightly reports failures without spamming issues", {
   # a leak-guard failure on a public repo must be called out as urgent
   expect_true(any(grepl("Treat as urgent", raw, fixed = TRUE)))
 })
+
+test_that("the scientific-invariants gate is wired and blocking", {
+  skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
+  y <- .wf()
+  expect_true("scientific-invariants" %in% names(y$jobs))
+  steps <- y$jobs$`scientific-invariants`$steps
+  runs <- paste(vapply(steps, function(s) s$run %||% "", character(1)), collapse = "\n")
+  expect_match(runs, "assert-scientific-invariants.R", fixed = TRUE)
+  # it must feed the aggregator, or a violation cannot fail the nightly
+  expect_true("scientific-invariants" %in% y$jobs$report$needs)
+  # and it must not be marked advisory
+  expect_false(isTRUE(y$jobs$`scientific-invariants`$`continue-on-error`))
+})
+
+test_that("a skipped blocking gate cannot masquerade as a green nightly", {
+  skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
+  raw <- .wf_raw()
+  # Only 'success' counts. A cancelled or skipped correctness job means the
+  # thing it protects went unchecked, which is not a pass.
+  expect_true(any(grepl("BLOCKING GATE DID NOT PASS", raw, fixed = TRUE)))
+  expect_true(any(grepl('check "scientific invariants"', raw, fixed = TRUE)))
+  expect_true(any(grepl('check "leak guard"', raw, fixed = TRUE)))
+})
+
+test_that("the back-test ratchet records a real, currently-failing baseline", {
+  skip_if_not(file.exists("../../.github/backtest-baseline.txt"))
+  kv <- readLines("../../.github/backtest-baseline.txt", warn = FALSE)
+  gv <- function(k) as.numeric(sub(".*=", "",
+          grep(paste0("^", k, "="), kv, value = TRUE)[1]))
+  cov <- gv("coverage95")
+  # The honest state: the model does NOT meet its own 0.80 interval standard.
+  # If this ever reads >= 0.80 the ratchet is no longer needed and the gate
+  # should become an absolute threshold instead.
+  expect_true(is.finite(cov))
+  expect_lt(cov, 0.80)
+  expect_true(is.finite(gv("worst_percent_error")))
+  expect_true(is.finite(gv("n_arms")))
+  # arms may not be dropped: deleting a failing arm is not an improvement
+  expect_gte(gv("n_arms"), 10)
+})
