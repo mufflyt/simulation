@@ -635,6 +635,55 @@ publishable_run_report <- function(result, artifact_path = NULL,
       if (demand_calibrated) "demand calibration artifact applied"
       else "demand is not calibrated to an independent national anchor")
 
+  # Demand coefficients must clear the publication tier HERE, at the export
+  # boundary -- not inside simulate_lifecourse_demand(). Refusing placeholders in
+  # the engine would break exploratory runs, sensitivity sweeps and tests, which
+  # legitimately need illustrative coefficients. The contract is:
+  #   simulate  -> allowed on uncalibrated coefficients
+  #   validate  -> allowed, status stays explicit
+  #   publish   -> REFUSED unless the evidence tier is acceptable
+  # A run that RECORDED its coefficient tier is judged on that, exactly as
+  # demand_calibrated and backtest are taken from scenario_meta. A run that
+  # recorded nothing is judged on the live registry, which is the real default
+  # and currently refuses.
+  coef_tier <- meta$demand_coefficient_tier %||% NULL
+  coef_err <- tryCatch({
+    if (is.null(coef_tier)) {
+      assert_publishable_demand_coefficients(mode = "strict")
+    } else {
+      assert_publishable_workload(status = coef_tier,
+                                  what = "demand-transition coefficients",
+                                  mode = "strict")
+    }
+    NULL
+  }, error = function(e) conditionMessage(e))
+  add("demand_coefficients_publishable", is.null(coef_err),
+      if (is.null(coef_err)) "demand coefficients meet the publication tier"
+      else sprintf("demand coefficients are not publishable: %s", coef_err))
+
+  # SECOND, DISTINCT GATE. The registry above covers recognition, care-seeking,
+  # referral, eligibility and disease coefficients. The staged condition-service
+  # pathway is a separate live artifact -- it holds the POP conservative and
+  # testing p_advance values (0.35, 0.55) responsible for the 4.68x prolapse
+  # discrepancy. Without this check, the registry could be calibrated and an
+  # unsourced POP cascade would still publish.
+  pathway_tier <- meta$pathway_status %||% NA_character_
+  pathway_err <- if (identical(meta$service_pathway, "flat_service_map")) {
+    paste("the legacy flat service map (per_treated) was used; it carries no",
+          "provenance columns at all and is not publishable")
+  } else {
+    if (is.na(pathway_tier)) pathway_tier <- condition_pathway_status()
+    tryCatch({
+      assert_publishable_workload(status = pathway_tier,
+                                  what = "condition-service pathway",
+                                  mode = "strict")
+      NULL
+    }, error = function(e) conditionMessage(e))
+  }
+  add("condition_service_pathway_publishable", is.null(pathway_err),
+      if (is.null(pathway_err)) "condition-service pathway meets the publication tier"
+      else sprintf("condition-service pathway is not publishable: %s", pathway_err))
+
   gap <- result$baseline_gap
   tier <- if (inherits(gap, "urps_baseline_gap")) {
     gap$calibration_status %||% NA_character_

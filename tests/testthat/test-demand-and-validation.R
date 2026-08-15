@@ -576,6 +576,13 @@ test_that("publishable_run_report passes only manuscript-ready run objects", {
       example_only = FALSE,
       cohort_provenance = list(source = "roster", is_production = TRUE),
       demand_calibrated = TRUE,
+      # A manuscript-ready run must also declare the evidence tier of the
+      # parameters it was built on. The shipped registry and pathway are both
+      # uncalibrated_illustrative, so a run recording nothing here is refused;
+      # this fixture represents a run built on calibrated parameters.
+      demand_coefficient_tier = "calibrated",
+      service_pathway = "condition_staged",
+      pathway_status = "calibrated",
       backtest = ok_status
     )
   )
