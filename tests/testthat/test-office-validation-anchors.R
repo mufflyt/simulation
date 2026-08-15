@@ -40,3 +40,14 @@ test_that("two independent sources converge on the new-patient share", {
   # ~19% is the right order, though it is still a SERVICE share
   expect_lt(abs(cms - nam), 0.02)
 })
+
+test_that("MEPS 2023 is recorded as attempted and insufficient", {
+  skip_if_not(file.exists("../../config/office_visit_validation_anchors.yml"))
+  m <- .va()$meps_2023_person_utilization
+  expect_identical(m$status, "insufficient")
+  expect_false(isTRUE(m$is_transition_parameter))
+  # the thinness must be recorded numerically, not just asserted
+  expect_lt(m$measures$adult_women_with_any_visit, 100)
+  # and the POP gap must be explicit
+  expect_true(any(grepl("POP IS ENTIRELY ABSENT", unlist(m$why_insufficient))))
+})
