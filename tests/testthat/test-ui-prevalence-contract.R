@@ -49,3 +49,24 @@ test_that("phenotypes may exceed primary prevalence without being an error", {
   # this is EXPECTED: different NHANES questions, not nested sets
   expect_gt(st, ui)
 })
+
+test_that("the UI anchor is time-aligned to the model fit year", {
+  skip_if_not(file.exists("../../config/calibration_targets.yml"))
+  cfg <- yaml::read_yaml("../../config/calibration_targets.yml")
+  sel <- cfg$anchors$ui_prevalence$empirical_validation$selected_cycle
+  bt  <- cfg$backtest$fit_through_year
+
+  # the selected cycle must contain or abut the fit-through year
+  yrs <- as.integer(strsplit(sel$cycle, "-")[[1]])
+  expect_true(bt >= yrs[1] - 1 && bt <= yrs[2])
+
+  # and it must be the CAPI cycle, so the series against the 2005-2006
+  # replication is not mode-confounded
+  expect_identical(sel$mode, "CAPI")
+
+  # the later, larger cycle must be explicitly rejected with a reason, not
+  # silently unused -- selection is by model year, never by sample size
+  rejected <- vapply(sel$rejected, function(r) r$cycle, character(1))
+  expect_true("2021-2023" %in% rejected)
+  expect_length(cfg$anchors$ui_prevalence$empirical_validation$remaining_blockers, 0L)
+})
