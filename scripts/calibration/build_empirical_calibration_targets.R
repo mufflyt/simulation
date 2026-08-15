@@ -497,10 +497,9 @@
     # Clinical review is a PRECONDITION, not metadata. An anchor whose
     # procedure-family definitions have not been reviewed cannot produce a
     # scalar even if its file is present and its hash matches.
+    # Anchor-specific: enforces only the dependencies this anchor names.
     review_ok <- !base::inherits(base::try(
-      assert_production_scalar_eligible(
-        utils::modifyList(base::list(anchor_id = anchor_name), specification)),
-      silent = TRUE), "try-error")
+      assert_anchor_reviewed(specification), silent = TRUE), "try-error")
 
     ready  <- exists && hash_declared && hash_matches && review_ok
     scalar <- if (ready && base::is.finite(prediction) && prediction > 0) {

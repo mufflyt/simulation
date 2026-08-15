@@ -13,18 +13,50 @@ max_scalar: 3.0
 
 anchors:
   urps_office_visits:
-    production_scalar_eligible: false
-    clinical_review_status: needs_clinical_review
-    clinical_reviewer: ""
-    clinical_review_date: ""
+    production_scalar_eligible: true
+    clinical_review:
+      status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+      scope:
+        - namcs_urogynecologic_diagnosis_definition
+        - office_visit_setting_definition
+      findings:
+        - >
+          N99.4 (post-procedural pelvic peritoneal adhesions) is arguably out of
+          scope for a pelvic-floor estimand -- adhesive disease is not pelvic
+          floor dysfunction. It contributes 73,146 weighted visits, ~1.5%, far
+          inside the reported CI (1,982,987-7,646,533). Recorded, not blocking:
+          it cannot change the estimand.
+        - >
+          N32.81 (overactive bladder) is documented as included but matches
+          ZERO NAMCS 2019 visits -- the inclusion is inert. Worth reconciling
+          with how NAMCS codes OAB, but it cannot change the estimand either.
+        - >
+          N39.0 (UTI) is explicitly and correctly excluded.
+      note: >
+        Does NOT depend on sling or POP procedure-family logic. Blocking this on
+        the CHIA procedure-family review would be a scope error.
     source: "NAMCS / MEPS national office-visit totals for urogynecologic care"
     path: data/anchors/urps_office_visits.csv
     sha256: "8e98138bccacbecaa5b29d8c7b458178aee9f6acbc7559fe47721d8876f1b918"
   sling_procedure_volume:
     production_scalar_eligible: false
-    clinical_review_status: needs_clinical_review
-    clinical_reviewer: ""
-    clinical_review_date: ""
+    clinical_review:
+      status: blocked
+      scope:
+        - primary_sling_placement
+        - sui_indication_definition
+        - observation_setting_transport
+      blockers:
+        - missing_sui_diagnosis_qualifier
+        - missing_revision_removal_family
+      note: >
+        Primary placement verified structurally (0TUD is Supplement; removal
+        0TPD and excision 0TBD are unreachable), but the estimand contract is
+        undecided: "all primary female sling placements" and "primary sling
+        placements for SUI" are different anchors. Urgency/OAB alone must not
+        support a sling indication.
     source: "HCUP SASD (ambulatory surgery) + Medicare Part B carrier, CPT 57288"
     note: "NIS is INPATIENT and carries ICD-10-PCS, not CPT; most slings are outpatient"
     # NOT YET ACQUIRED. Needs the licensed HCUP Central Distributor pull; see
@@ -37,17 +69,25 @@ anchors:
     status: missing
   prolapse_procedure_volume:
     production_scalar_eligible: false
-    clinical_review_status: needs_clinical_review
-    clinical_reviewer: ""
-    clinical_review_date: ""
+    clinical_review:
+      status: pending
+      scope:
+        - pop_diagnosis_definition
+        - pop_procedure_family
+        - pop_hysterectomy_definition
     source: "HCUP SASD + Medicare Part B carrier"
     path: data/anchors/prolapse_procedure_volume.csv
     sha256: "b449fd0131a574681a1a9d1045917f6a44efbe0b3dca585d09e9ef1ff635e312"
   ui_prevalence:
     production_scalar_eligible: false
-    clinical_review_status: needs_clinical_review
-    clinical_reviewer: ""
-    clinical_review_date: ""
+    clinical_review:
+      status: pending
+      scope:
+        - urinary_incontinence_case_definition
+        - survey_population_definition
+      note: >
+        Reviewed on its own prevalence case definition. Does not inherit the
+        CHIA procedure-family block.
     source: "Nygaard 2008 JAMA; SWAN longitudinal prevalence"
     # NOT YET ACQUIRED.
     path: data/anchors/ui_prevalence.csv
