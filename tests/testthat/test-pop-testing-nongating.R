@@ -97,6 +97,57 @@ testthat::test_that("testing utilization cannot gate POP surgery", {
   testthat::expect_equal(perturbed_procedure, baseline_procedure)
 })
 
+testthat::test_that("conservative transition remains the causal POP lever", {
+  pathway <- condition_service_pathway()
+  baseline <- pathway_service_volumes(
+    treated = c(pop = 1000),
+    year = 2025L,
+    pathway = pathway,
+    by_stage = TRUE
+  )
+
+  half_transition <- pathway
+  pop_conservative <-
+    half_transition$condition == "pop" &
+    half_transition$stage == "conservative"
+  half_transition$p_advance[pop_conservative] <- 0.175
+
+  perturbed <- pathway_service_volumes(
+    treated = c(pop = 1000),
+    year = 2025L,
+    pathway = half_transition,
+    by_stage = TRUE
+  )
+
+  pop_procedure <- function(service_volumes) {
+    service_volumes$volume[
+      service_volumes$condition == "pop" &
+      service_volumes$stage == "procedure" &
+      service_volumes$service == "prolapse_procedure"
+    ]
+  }
+  pop_recurrence <- function(service_volumes) {
+    service_volumes$volume[
+      service_volumes$condition == "pop" &
+      service_volumes$stage == "recurrence" &
+      service_volumes$service == "prolapse_procedure"
+    ]
+  }
+
+  baseline_primary <- pop_procedure(baseline)
+  perturbed_primary <- pop_procedure(perturbed)
+  baseline_recurrent <- pop_recurrence(baseline)
+  perturbed_recurrent <- pop_recurrence(perturbed)
+
+  testthat::expect_equal(perturbed_primary / baseline_primary, 0.5)
+  testthat::expect_equal(perturbed_recurrent / baseline_recurrent, 0.5)
+  testthat::expect_equal(
+    (perturbed_primary + perturbed_recurrent) /
+      (baseline_primary + baseline_recurrent),
+    0.5
+  )
+})
+
 testthat::test_that("UI testing transition is unchanged", {
   pathway <- condition_service_pathway()
   ui_testing <- pathway[
