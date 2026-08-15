@@ -235,3 +235,66 @@ meps_panel27_longitudinal:
 # so support repeated-person utilization. Expect sparse counts once restricted
 # to UI/POP; pool years and report uncertainty rather than a point estimate.
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+meps_panel24_longitudinal:
+  role: attempted_source
+  status: insufficient
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  source: >
+    MEPS Panel 24 (COVID-extended, nine rounds, 2019-2022). HC-245 four-year
+    longitudinal file with LONGWT/VARSTR/VARPSU, plus conditions, CLNK event
+    link, and office-visit files for all four years: h214/h213if1/h213g (2019),
+    h222/h220if1/h220g (2020), h231/h229if1/h229g (2021), h241/h239i/h239g
+    (2022). Phenotype and estimand decomposition identical to Panel 27.
+  why_attempted: >
+    Four years buys two things the Panel 27 two-year frame cannot: a REAL
+    washout (the 2021 entry cohort can require a clean 2019 AND 2020), and
+    UNCENSORED follow-up (12 months from the index visit, crossing the calendar
+    boundary, so index month stops being a nuisance parameter).
+  verdict: >
+    INSUFFICIENT, and decisively worse than Panel 27 rather than better. The
+    four-year design's strengths are precisely what destroy its power: every
+    additional requirement -- retention across nine rounds, a longer washout,
+    follow-up crossing a year boundary -- removes people from the denominator.
+    HC-245 holds 2,386 adult women against Panel 27's 3,555, and only 47 of the
+    198 persons with 2022 GEN008 care are Panel 24 members.
+  continuing_utilization:
+    "2019_to_2020": {baseline_n: 11, returned_n: 2, annual_return_probability: 0.195,
+                     ci: [-0.099, 0.489], unconditional_intensity: 0.298}
+    "2020_to_2021": {baseline_n: 2, returned_n: 1, result: REFUSED_baseline_n_lt_5}
+    "2021_to_2022": {baseline_n: 5, returned_n: 0, annual_return_probability: 0.0,
+                     ci: [0.0, 0.0], unconditional_intensity: 0.0}
+  degenerate_estimate_warning: >
+    Two cells must never be read as findings. The 2021-2022 return probability
+    of 0.000 with interval [0.000, 0.000] is a zero-numerator artifact of n = 5,
+    NOT evidence that patients do not return. The 2019-2020 interval extends to
+    -0.099; a negative lower bound on a proportion means the Wald normal
+    approximation has failed at this sample size. Neither is a point estimate.
+  entrant_cohorts:
+    kept_separate: true
+    rationale: >
+      Panel 24 straddles the COVID utilization shock. The 2020 cohort indexes
+      into the ambulatory collapse, the 2021 cohort into the rebound. Pooling
+      would average across a structural break and present the result as
+      sampling noise.
+    "washout_2019_index_2020": {entrant_n: 0, result: REFUSED}
+    "washout_2019_2020_index_2021": {entrant_n: 2, result: REFUSED}
+  covid_signal: >
+    Visible directly in the dated qualifying visit counts: 224 (2019), 141
+    (2020), 138 (2021), 209 (2022). The collapse and rebound are why the 2020
+    and 2021 baseline cells are the smallest in the panel.
+  conclusion: >
+    MEPS is EXHAUSTED for these two parameters at the individual-panel level.
+    The planned next step -- checking agreement between periods before pooling --
+    cannot be executed, because Panel 24 produces no estimable entry cohort to
+    compare against. Pooling Panel 24 into Panel 27 would add roughly a dozen
+    persons while embedding the COVID structural break inside the pooled
+    estimate, which is a worse artifact than the small sample it would fix.
+    first_year_followup_rate and annual_followup_rate remain UNSOURCED. Gate 4
+    stays red. A different data class is required -- all-payer claims or an EHR
+    cohort with real longitudinal follow-up -- not another MEPS panel.
+  panel28_note: >
+    Panel 28 (2023-2024) avoids the pandemic period, but AHRQ schedules that
+    longitudinal release for November 2026. It cannot resolve this calibration.

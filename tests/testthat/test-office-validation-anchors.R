@@ -133,3 +133,30 @@ test_that("no model parameter was written from Panel 27", {
     expect_true(is.na(row$value))
   }
 })
+
+test_that("Panel 24 records refusals rather than degenerate point estimates", {
+  skip_if_not(file.exists("../../config/office_visit_validation_anchors.yml"))
+  m <- .va()$meps_panel24_longitudinal
+  expect_identical(m$status, "insufficient")
+  # cells too small to estimate must be REFUSED, not silently reported
+  expect_identical(m$continuing_utilization$`2020_to_2021`$result,
+                   "REFUSED_baseline_n_lt_5")
+  expect_identical(m$entrant_cohorts$washout_2019_index_2020$result, "REFUSED")
+  expect_identical(m$entrant_cohorts$washout_2019_2020_index_2021$result, "REFUSED")
+  # the two degenerate cells must carry an explicit warning: a 0.000 return
+  # probability from a zero numerator is not evidence that nobody returns, and a
+  # negative lower bound on a proportion means the Wald approximation failed
+  expect_match(m$degenerate_estimate_warning, "zero-numerator artifact")
+  expect_match(m$degenerate_estimate_warning, "Wald normal approximation has failed")
+  expect_lt(m$continuing_utilization$`2019_to_2020`$ci[[1]], 0)
+})
+
+test_that("the COVID entry cohorts are never pooled", {
+  skip_if_not(file.exists("../../config/office_visit_validation_anchors.yml"))
+  m <- .va()$meps_panel24_longitudinal
+  expect_true(isTRUE(m$entrant_cohorts$kept_separate))
+  expect_match(m$entrant_cohorts$rationale, "structural break")
+  # and the conclusion must say MEPS is exhausted, not "try another panel"
+  expect_match(m$conclusion, "EXHAUSTED")
+  expect_match(m$conclusion, "different data class")
+})
