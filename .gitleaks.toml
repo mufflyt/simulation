@@ -22,6 +22,11 @@ description = "Documented false positives and one revoked, unrewritable credenti
 # Matched by FIELD NAME + exact 64-hex shape, NOT by exempting the files. A real
 # key pasted into a provenance sidecar would still be caught, because it would
 # not be 64 hex characters under one of these four names.
+# regexTarget = "line": gitleaks matches allowlist regexes against the CAPTURED
+# SECRET by default, so a field-name pattern never applies -- the secret is just
+# the hex value. Matching the whole line is what lets the exemption stay tied to
+# the field name instead of exempting every 64-hex string in the repository.
+regexTarget = "line"
 regexes = [
   '"(input_fingerprint|code_fingerprint|content_sha256|composite_key)"\s*:\s*"[0-9a-f]{64}"',
 ]
