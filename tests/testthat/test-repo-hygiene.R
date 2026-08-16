@@ -6,8 +6,18 @@
 # code installing packages. These are cheap to check and expensive to rediscover.
 
 .repo_root <- function() {
+  # A DESCRIPTION alone is NOT enough. Under covr and R CMD check the tests run
+  # inside the INSTALLED package, which also has a DESCRIPTION -- so the walk
+  # returned the install directory as the "root", ../R existed (holding .rdb and
+  # .rdx, not sources), no skip fired, and .definitions() returned NULL. The
+  # failure surfaced as `names(which(table(NULL) > 1))` being NULL rather than
+  # character(0): a confusing assertion error standing in for "the source tree
+  # is not here".
+  #
+  # Meta/ exists ONLY in an installed package, so it is the discriminator.
   for (p in c(".", "..", file.path("..", ".."), file.path("..", "..", ".."))) {
-    if (file.exists(file.path(p, "DESCRIPTION"))) return(p)
+    if (file.exists(file.path(p, "DESCRIPTION")) &&
+        !dir.exists(file.path(p, "Meta"))) return(p)
   }
   skip("repository root not found")
 }
@@ -32,7 +42,9 @@
 
 test_that("no function is defined twice in the package R directory", {
   defs <- .definitions(.r_files("R"))
-  dup <- names(which(table(defs$fn) > 1))
+  # as.character(): names() on an empty table is NULL, not character(0), so a
+  # legitimately empty result compared unequal to the expectation.
+  dup <- as.character(names(which(table(defs$fn) > 1)))
   expect_equal(
     dup, character(0),
     info = paste("Duplicate definitions silently shadow one another:",
