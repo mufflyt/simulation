@@ -12,8 +12,8 @@
 .census <- file.path("..", "..", "data-raw", "census", "np2023_d1_mid.csv")
 
 test_that("CHIA transport refuses to produce an all-setting volume without a share", {
-  skip_if_not(file.exists(.db))
-  skip_if_not(file.exists(.census))
+  skip_if(!file.exists(.db), "CHIA case-mix database not attached")
+  skip_if(!file.exists(.census), "census denominator not reachable")
   r <- suppressMessages(transport_chia_to_national(db = .db, census_path = .root("data-raw","census","np2023_d1_mid.csv")))
   expect_true(is.finite(r$estimate$national_inpatient))
   expect_true(is.na(r$estimate$national_all_setting))
@@ -21,7 +21,7 @@ test_that("CHIA transport refuses to produce an all-setting volume without a sha
 })
 
 test_that("an unsourced setting share is rejected", {
-  skip_if_not(file.exists(.db))
+  skip_if(!file.exists(.db), "CHIA case-mix database not attached")
   expect_error(
     suppressMessages(transport_chia_to_national(db = .db, census_path = .root("data-raw","census","np2023_d1_mid.csv"), inpatient_share = 0.12)),
     "without inpatient_share_source")
@@ -41,8 +41,8 @@ test_that("CADR transport refuses without a Medicare share", {
 })
 
 test_that("neither transport result is ever scalar-eligible", {
-  skip_if_not(file.exists(.db))
-  skip_if_not(file.exists(.census))
+  skip_if(!file.exists(.db), "CHIA case-mix database not attached")
+  skip_if(!file.exists(.census), "census denominator not reachable")
   a <- suppressMessages(transport_chia_to_national(
     db = .db, census_path = .root("data-raw","census","np2023_d1_mid.csv"),
     inpatient_share = 0.12, inpatient_share_source = "test"))
@@ -55,7 +55,7 @@ test_that("the missing factor spans an order of magnitude", {
 })
 
 test_that("all three families resolve, and sling refuses for a stated reason", {
-  skip_if_not(file.exists(.db))
+  skip_if(!file.exists(.db), "CHIA case-mix database not attached")
   pop <- suppressMessages(chia_ma_age_specific_rates(db = .db, family = "pop_hysterectomy"))
   all <- suppressMessages(chia_ma_age_specific_rates(db = .db, family = "all_hysterectomy"))
   expect_equal(nrow(pop), 4L)
@@ -72,7 +72,7 @@ test_that("all three families resolve, and sling refuses for a stated reason", {
 })
 
 test_that("the retired ICD-9 codes are counted", {
-  skip_if_not(file.exists(.db))
+  skip_if(!file.exists(.db), "CHIA case-mix database not attached")
   # 684/686/687 were withdrawn in the October 2006 ICD-9 update and are absent
   # from ref.icd9cm_procedure (v32). Omitting them undercuts FY2004-2006.
   con <- DBI::dbConnect(duckdb::duckdb(), .db, read_only = TRUE)
@@ -86,7 +86,7 @@ test_that("the retired ICD-9 codes are counted", {
 
 test_that("the free sling route works without HCUP", {
   skip_if_not(file.exists(.root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
-  skip_if_not(file.exists(.db))
+  skip_if(!file.exists(.db), "CHIA case-mix database not attached")
   puf <- suppressMessages(cms_puf_national_volume(
     path = .root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
   expect_gt(sum(puf$services), 20000)          # ~25k Medicare FFS slings
@@ -98,7 +98,7 @@ test_that("the free sling route works without HCUP", {
 
 test_that("the sling route refuses without the FFS share", {
   skip_if_not(file.exists(.root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
-  skip_if_not(file.exists(.db))
+  skip_if(!file.exists(.db), "CHIA case-mix database not attached")
   r <- suppressMessages(transport_sling_via_medicare(
     db = .db, puf_path = .root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
   expect_true(is.na(r$estimate$national_all_payer))
