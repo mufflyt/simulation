@@ -42,6 +42,7 @@ should be implemented in the repository that owns linkage.
 | AJ | Rare-category preservation | metamorphic.R | A 1-person stratum must not vanish. |
 | AK | Unknown category | metamorphic.R | An unknown condition must be rejected or be an explicit no-op. |
 | AL | Threshold fragility | metamorphic.R | Sweep 0.30–0.40; max step 3.3%, no cliff. |
+| S, gate 14 | Temporal traps / future-data leakage | `.github/scripts/assert-temporal-integrity.R` | Enforces input censoring at the cutoff, four self-test traps proving the checker fires, and an estimand-match audit. **Leakage was investigated and EXCLUDED** — see below. |
 | BC | Failure taxonomy | metamorphic.R | Failures are classified (NONDETERMINISM, CHUNK DEPENDENCE, INVARIANT VIOLATION, …), not "test failed". |
 | BD | Adversarial manifest | `artifacts/adversarial/*.csv` | Canary table and failure table uploaded every run. |
 | BE | Blocking policy | `scientific-adversarial.yaml` | All three gates blocking; scorecard fails if any did not actually run. |
@@ -66,7 +67,6 @@ should be implemented in the repository that owns linkage.
 |---|---|---|
 | G, G1, G2 | Study fixtures, known-truth recovery, deliberate misspecification | A synthetic data-generating process for the **supply** side. High value — this is what distinguishes "the software reproduces itself" from "the methodology recovers a known truth". |
 | R | Synthetic truth recovery | Same DGP. |
-| S | Temporal traps / future leakage | The back-test harness exists but input censoring is not separable yet. **Directly relevant**: the back-test under-predicts in all 10 arms, and leakage is one candidate explanation worth excluding. |
 | AM, AN, AO | Leave-one-year / cohort / state out | Requires the estimation pipeline to be callable on a subset. |
 | AP | Bootstrap structural stability | Requires the same. |
 | AQ | Alternate-model cross-checks | Requires a second estimator for exits/entrants. |
@@ -106,3 +106,35 @@ double-counting rows do not yet meet that and are the next thing to strengthen.
 - **Back-test coverage is 0.20 against a required 0.80**, with all 10 arms
   under-predicting. That is ratcheted, not fixed, and no adversarial gate
   changes it. It remains the largest known scientific defect.
+
+## Leakage investigated and excluded — the driver is an estimand mismatch
+
+Data leakage was the leading hypothesis for the back-test under-predicting every
+historical arm. It is **not** the explanation:
+
+- every arm declares `cohorts: <= 2020` in the manifest `leakage_audit`, and the
+  entrant arms are drawn pre-cutoff by construction ("pre-2021 data",
+  "pre-cutoff NRMP match");
+- **target leakage inflates apparent accuracy** — predictions hug the
+  observation — whereas these predictions are systematically *low*. The
+  direction of the error is evidence against contamination.
+
+The measured driver is a definitional asymmetry:
+
+| `apply_attrition` | n | mean error | 95% coverage |
+|---|---|---|---|
+| FALSE (definition-matched) | 5 | −5.44% | 0.40 |
+| TRUE | 5 | −11.29% | **0.00** |
+
+`observed_series_applies_attrition = FALSE`, so the attrited arms compare an
+**attrited prediction against a non-attrited observation**. That accounts for
+**5.84 percentage points** of bias and *all* of the coverage loss in those arms.
+
+This is a definitional defect, not a leakage defect and not a parameter-tuning
+problem. Tests pin the diagnosis: if definition-matched arms ever stop being
+less biased than mismatched ones, the investigation re-opens.
+
+Note the residual: even the matched arms average −5.44% and cover only 0.40.
+Fixing the mismatch is necessary but **not sufficient** — observed annual change
+was 69/yr against 36/yr predicted under the shipped entrant assumption of 55,
+so the entrant rate is the next thing to examine.

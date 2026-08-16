@@ -121,6 +121,8 @@ jobs:
           dependencies: '"hard"'
       - name: Reference engine, mass balance and back-test ratchet
         run: Rscript .github/scripts/assert-scientific-invariants.R | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Temporal traps and estimand-match audit (spec S / gate 14)
+        run: Rscript .github/scripts/assert-temporal-integrity.R | tee -a "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
   # BG. SCIENTIFIC ROBUSTNESS SCORECARD. Missing or skipped adversarial jobs

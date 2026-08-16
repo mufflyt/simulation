@@ -179,6 +179,8 @@ jobs:
           dependencies: '"hard"'
       - name: Assert scientific invariants
         run: Rscript .github/scripts/assert-scientific-invariants.R | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Assert temporal integrity (no future-data leakage)
+        run: Rscript .github/scripts/assert-temporal-integrity.R | tee -a "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
   # 3. FULL PLATFORM MATRIX. The per-push gate checks ubuntu-release only.
