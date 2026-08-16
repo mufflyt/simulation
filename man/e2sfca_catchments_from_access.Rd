@@ -54,7 +54,7 @@ dropped by default (\code{drop_zero_demand = TRUE}): a zero-demand provider cann
 inform a congestion fit.
 }
 \seealso{
-Other isochrone access response:
+Other isochrone access response: 
 \code{\link{capacity_status_with_isochrone_response}()},
 \code{\link{fit_decay_sigma}()},
 \code{\link{join_lizeth_to_catchments}()},

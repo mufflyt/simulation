@@ -14,15 +14,14 @@ advance_urps_supply_one_year(
 )
 }
 \arguments{
-\item{provider_tbl}{Current provider population with \code{provider_id} and
-\code{age}.}
+\item{provider_tbl}{Current provider population with \code{provider_id} and \code{age}.}
 
 \item{simulation_year}{Year being simulated.}
 
 \item{draw}{Integer Monte Carlo draw number.}
 
 \item{calibration}{Calibration object returned by
-\code{\link{calibrate_urps_supply_dynamics}}.}
+\code{\link[=calibrate_urps_supply_dynamics]{calibrate_urps_supply_dynamics()}}.}
 
 \item{entrant_age}{Age assigned to newly independent URPS physicians.}
 
@@ -38,10 +37,9 @@ year, applies the draw's age-specific departure probability, removes departed
 providers, and appends the draw's entrant count.
 }
 \seealso{
-\code{\link{calibrate_urps_supply_dynamics}},
-\code{\link{backtest_urps_supply_calibration}}
+\code{\link[=calibrate_urps_supply_dynamics]{calibrate_urps_supply_dynamics()}}, \code{\link[=backtest_urps_supply_calibration]{backtest_urps_supply_calibration()}}
 
-Other supply dynamics:
+Other supply dynamics: 
 \code{\link{backtest_urps_supply_calibration}()},
 \code{\link{calibrate_urps_supply_dynamics}()},
 \code{\link{decompose_urps_forecast_miss}()}

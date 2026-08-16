@@ -223,6 +223,23 @@ pathway_service_volumes <- function(treated, year,
   if (!nrow(entrants)) {
     return(tibble::tibble(year = numeric(), service = character(), volume = numeric()))
   }
+  # THE INCIDENT/PREVALENT CHECK RUNS ON EVERY VOLUME COMPUTATION.
+  #
+  # Under the shipped table new_consultation volume EQUALS the treated cohort
+  # exactly, which is only possible if every prevalent treated patient is
+  # counted as a new patient annually. That inflates office-visit demand and is
+  # part of what the calibration scalars were absorbing.
+  #
+  # IT REFUSES. A run that can classify the same prevalent treated population
+  # as incident again every year must stop rather than emit a plausible-looking
+  # number -- a wrong volume that looks right is worse than no volume, and this
+  # sits directly adjacent to the POP cascade discrepancy where such a number
+  # would be read as evidence.
+  #
+  # This deliberately makes some previously-passing runs fail. That is the
+  # point of wiring a dormant guard: the invalid state was always there, and
+  # was being permitted silently.
+  assert_incident_not_prevalent(treated, pathway, strict = TRUE)
   vols <- dplyr::inner_join(pathway, entrants, by = c("condition", "stage"))
   vols <- dplyr::mutate(vols, volume = .data$entering * .data$per_entering,
                         year = year)

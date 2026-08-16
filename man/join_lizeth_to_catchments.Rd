@@ -4,7 +4,12 @@
 \alias{join_lizeth_to_catchments}
 \title{Attach fielded Lizeth waits to their provider-catchment by NPI}
 \usage{
-join_lizeth_to_catchments(lizeth_access, catchments, crosswalk = NULL, npi_col = "npi")
+join_lizeth_to_catchments(
+  lizeth_access,
+  catchments,
+  crosswalk = NULL,
+  npi_col = "npi"
+)
 }
 \arguments{
 \item{lizeth_access}{Call-level records from \code{\link[=prepare_lizeth_access]{prepare_lizeth_access()}}, with at
@@ -40,7 +45,7 @@ with \code{matched = FALSE} and \code{NA} access, so the match rate is auditable
 than silently dropped.
 }
 \seealso{
-Other isochrone access response:
+Other isochrone access response: 
 \code{\link{capacity_status_with_isochrone_response}()},
 \code{\link{e2sfca_catchments_from_access}()},
 \code{\link{fit_decay_sigma}()},

@@ -384,6 +384,24 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
   summary_tbl$target_basis <- target$basis
   summary_tbl$observed_applies_attrition <- target$observed_series_applies_attrition
 
+  # THE ESTIMAND CHECK RUNS HERE, not only in tests. An arm with
+  # apply_attrition = TRUE predicts "active net of attrition"; the observed
+  # series is a cumulative certification count with n_retired = 0 in every row.
+  # Scoring one against the other is a category error, and it reads as model
+  # error -- it was a material part of the reported back-test miss.
+  #
+  # Wired at the point the summary is ASSEMBLED so no caller can obtain a
+  # summary that has not been checked.
+  #
+  # FORCED STRICT, not left to resolve_reproducibility_mode(). An estimand
+  # mismatch is not a warning-level condition: if the back-test is comparing
+  # different quantities then the apparent validation is scientifically
+  # uninterpretable, and a warning would let an uninterpretable number be
+  # reported as a result. The relaxed mode exists for reproducibility
+  # tolerances, which this is not.
+  summary_tbl$estimand_check <- list(
+    assert_backtest_estimand_match(summary_tbl, mode = "strict"))
+
   list(
     summary = summary_tbl,
     provenance = prov,

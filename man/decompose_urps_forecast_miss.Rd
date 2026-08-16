@@ -20,13 +20,13 @@ decompose_urps_forecast_miss(
 \arguments{
 \item{entrant_tbl}{Complete entrant series (\code{year}, \code{entrants}).}
 
-\item{departure_tbl}{Complete provider-year departures (\code{provider_id},
-\code{year}, \code{age}, \code{departed}).}
+\item{departure_tbl}{Complete provider-year departures (\code{provider_id}, \code{year},
+\code{age}, \code{departed}).}
 
 \item{base_provider_tbl}{Provider population at \code{start_year}.}
 
-\item{observed_supply_tbl}{Observed supply (\code{year}, \code{observed_supply})
-over the back-test window.}
+\item{observed_supply_tbl}{Observed supply (\code{year}, \code{observed_supply}) over
+the back-test window.}
 
 \item{start_year}{First back-test year and the leakage cutoff for the train
 fit.}
@@ -44,31 +44,35 @@ fit.}
 \value{
 A list with per-regime \code{metrics} (a two-row tibble), a
 \code{decomposition} tibble splitting the slope error into
-\code{unforeseeable_regime_break} and \code{deficient_entrant_model} components,
-a \code{summary_sentence}, and the underlying \code{train} and \code{oracle}
-objects (each a list of \code{calibration} and \code{backtest}).
+\code{unforeseeable_regime_break} and \code{deficient_entrant_model} components, a
+\code{summary_sentence}, and the underlying \code{train} and \code{oracle} objects (each a
+list of \code{calibration} and \code{backtest}).
 }
 \description{
-Implements the train/oracle experiment the naive back-test cannot: selecting the
-entrant break on the complete series and then claiming a prospective
+Implements the train/oracle experiment the naive back-test cannot: selecting
+the entrant break on the complete series and then claiming a prospective
 \code{start_year -> end_year} back-test leaks the future into the fit. This runs
-two calibrations from the SAME base population -- a leakage-free \code{train} fit
-truncated at \code{start_year} and an \code{oracle} post-hoc fit on the complete
-series.
+two calibrations from the SAME base population:
+\describe{
+\item{train}{Leakage-free. Both the entrant series and the departure events
+are truncated at \code{start_year} -- "what could the model have known then?"}
+\item{oracle}{Post-hoc. The complete series is used, so the break is chosen
+with hindsight.}
 }
-\details{
-The gap between them attributes the miss: what the oracle STILL gets wrong is a
-deficient entrant model (structure hindsight cannot rescue); what the oracle
-recovers that the train fit missed is the unforeseeable-at-\code{start_year}
-regime break. Each regime is scored on the same multi-metric target -- signed
-percent bias, change/slope bias, 95\% coverage, and interval width, reported
-together.
+The gap between them attributes the miss:
+\itemize{
+\item what the oracle STILL gets wrong is a deficient entrant model
+(structure hindsight cannot rescue);
+\item what the oracle recovers that the train fit missed is the
+unforeseeable-at-\code{start_year} regime break.
+}
+Each regime is scored on the same multi-metric target -- signed percent bias,
+change/slope bias, 95\\% coverage, and interval width, reported together.
 }
 \seealso{
-\code{\link{calibrate_urps_supply_dynamics}},
-\code{\link{backtest_urps_supply_calibration}}
+\code{\link[=calibrate_urps_supply_dynamics]{calibrate_urps_supply_dynamics()}}, \code{\link[=backtest_urps_supply_calibration]{backtest_urps_supply_calibration()}}
 
-Other supply dynamics:
+Other supply dynamics: 
 \code{\link{advance_urps_supply_one_year}()},
 \code{\link{backtest_urps_supply_calibration}()},
 \code{\link{calibrate_urps_supply_dynamics}()}

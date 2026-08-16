@@ -25,10 +25,13 @@ Fit multiplicative calibration scalars against independent national anchors
 \seealso{
 Other validation: 
 \code{\link{apply_calibration_scalars}()},
+\code{\link{assert_backtest_estimand_match}()},
 \code{\link{assert_demand_calibrated}()},
 \code{\link{assert_estimands_independent}()},
 \code{\link{assert_publishable_run}()},
 \code{\link{assert_validation_passed}()},
+\code{\link{backtest_estimand_contract}()},
+\code{\link{backtest_headline_metrics}()},
 \code{\link{detect_proportional_estimands}()},
 \code{\link{publishable_run_report}()},
 \code{\link{published_calibration_scalars}()},

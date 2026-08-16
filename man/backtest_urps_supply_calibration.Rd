@@ -18,11 +18,9 @@ backtest_urps_supply_calibration(
 \item{base_provider_tbl}{Provider population at back-test start, with
 \code{provider_id} and \code{age}.}
 
-\item{observed_supply_tbl}{Data frame with \code{year} and
-\code{observed_supply}.}
+\item{observed_supply_tbl}{Data frame with \code{year} and \code{observed_supply}.}
 
-\item{calibration}{Calibration object from
-\code{\link{calibrate_urps_supply_dynamics}}.}
+\item{calibration}{Calibration object from \code{\link[=calibrate_urps_supply_dynamics]{calibrate_urps_supply_dynamics()}}.}
 
 \item{start_year}{First year of the back-test.}
 
@@ -33,25 +31,23 @@ backtest_urps_supply_calibration(
 \item{seed}{Random seed.}
 }
 \value{
-List with per-draw \code{draws}, a \code{forecast_summary} (with
-\code{percent_error}, \code{covered_95}, \code{interval_width}), a one-row
-\code{metrics} summary, and a \code{summary_sentence}.
+List with per-draw \code{draws}, a \code{forecast_summary} (with \code{percent_error},
+\code{covered_95}, \code{interval_width}), a one-row \code{metrics} summary, and a
+\code{summary_sentence}.
 }
 \description{
-Runs a hindcast from a historical base-year population and evaluates whether the
-empirical entrant and departure processes recover observed future supply.
-}
-\details{
-The calibration targets are reported TOGETHER -- signed bias, empirical 95\%
+Runs a hindcast from a historical base-year population and evaluates whether
+the empirical entrant and departure processes recover observed future supply.
+
+The calibration targets are reported TOGETHER -- signed bias, empirical 95\\%
 interval coverage, and interval width -- so that a coverage failure cannot be
 repaired simply by inflating the interval.
 }
 \seealso{
-\code{\link{calibrate_urps_supply_dynamics}},
-\code{\link{advance_urps_supply_one_year}},
-\code{\link{decompose_urps_forecast_miss}}
+\code{\link[=calibrate_urps_supply_dynamics]{calibrate_urps_supply_dynamics()}}, \code{\link[=advance_urps_supply_one_year]{advance_urps_supply_one_year()}},
+\code{\link[=decompose_urps_forecast_miss]{decompose_urps_forecast_miss()}}
 
-Other supply dynamics:
+Other supply dynamics: 
 \code{\link{advance_urps_supply_one_year}()},
 \code{\link{calibrate_urps_supply_dynamics}()},
 \code{\link{decompose_urps_forecast_miss}()}

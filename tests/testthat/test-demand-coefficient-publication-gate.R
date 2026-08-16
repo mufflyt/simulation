@@ -28,10 +28,36 @@ test_that("the shipped coefficients are in fact uncalibrated", {
 test_that("ordinary simulation still runs on uncalibrated coefficients", {
   # The engine must stay composable. A demand simulation with placeholder
   # coefficients is a legitimate exploratory artifact.
+  #
+  # REWRITTEN, because the original conflated two different claims by passing
+  # the SHIPPED pathway. "Uncalibrated" is a PROVENANCE statement -- we do not
+  # know the value -- and it must stay runnable, which is what this test is for.
+  # per_entering = 1.00 on new_consultation is not that: it is an ARITHMETIC
+  # error that turns a prevalence stock into an annual flow, and
+  # assert_incident_not_prevalent() now refuses it (see
+  # docs/INCIDENT_ENTRY_ESTIMAND.md).
+  #
+  # The doctrine is preserved by using a pathway that is still uncalibrated --
+  # every confidence is "low" -- but arithmetically coherent. Asserting that the
+  # INVALID configuration runs is not a defence of composability; it is the
+  # defect the guard exists to catch.
   skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw <- condition_service_pathway()
+  pw$per_entering[pw$service == "new_consultation"] <- 0.25
+  expect_true(all(pw$confidence == "low"))   # still uncalibrated, deliberately
   expect_no_error(
     suppressMessages(
-      pathway_service_volumes(treated = c(pop = 1000), year = 2025L)))
+      pathway_service_volumes(treated = c(pop = 1000), year = 2025L, pathway = pw)))
+})
+
+test_that("the SHIPPED pathway is refused, and that is the current known state", {
+  # The counterpart to the test above, kept adjacent so the two cannot drift
+  # apart. Declared in tests/scientific-blockers.csv as pop_incident_entry.
+  # When per_entering is sourced this test must be revisited, not deleted.
+  skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  expect_error(
+    suppressMessages(pathway_service_volumes(treated = c(pop = 1000), year = 2025L)),
+    "counted as a NEW patient annually")
 })
 
 test_that("the gate itself refuses uncalibrated coefficients in strict mode", {
@@ -118,12 +144,28 @@ test_that("the shipped pathway is uncalibrated, and it is the POP one", {
   expect_true(all(pop$confidence == "low"))
 })
 
-test_that("simulation succeeds on the shipped low-confidence pathway", {
+test_that("low confidence alone does not block simulation; invalid arithmetic does", {
+  # SAME REWRITE as above, at production cohort scale. Low confidence must not
+  # block -- that is the whole point of the calibration-tier vocabulary, which
+  # labels rather than refuses. But the shipped table is refused for a reason
+  # that has nothing to do with confidence: at 3,264,807 treated it produces
+  # 3,264,807 new consultations, ratio exactly 1.00.
   skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw <- condition_service_pathway()
+  pw$per_entering[pw$service == "new_consultation"] <- 0.25
   expect_no_error(
     suppressMessages(
+      pathway_service_volumes(treated = c(pop = 3264807), year = 2025L, pathway = pw)))
+
+  # 0.25 is a TEST FIXTURE, not a candidate value. It is chosen only to be a
+  # plausible flow rather than a stock, and must never be read as an estimate of
+  # the incident-entry parameter -- that estimand is unresolved and its
+  # estimator is pre-registered in docs/INCIDENT_ENTRY_ESTIMAND.md.
+  expect_error(
+    suppressMessages(
       pathway_service_volumes(treated = c(pop = 3264807), year = 2025L,
-                              pathway = condition_service_pathway())))
+                              pathway = condition_service_pathway())),
+    "counted as a NEW patient annually")
 })
 
 test_that("publication refuses the shipped pathway", {
