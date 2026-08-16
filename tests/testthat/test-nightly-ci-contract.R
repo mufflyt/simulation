@@ -268,3 +268,62 @@ test_that("the attrition estimand mismatch is the recorded driver, not leakage",
   expect_gt(e_f - e_t, 3)   # currently 5.84 percentage points
   expect_equal(mean(as.logical(s$within_95)[as.logical(s$apply_attrition)]), 0)
 })
+
+# --- PR gates: the fast subset that must not wait for a nightly -------------
+
+test_that("the leak guard runs on every PR, not only nightly", {
+  skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
+  y <- yaml::read_yaml("../../.github/workflows/pr-gates.yaml")
+  raw <- readLines("../../.github/workflows/pr-gates.yaml", warn = FALSE)
+  # On a PUBLIC repo, a 24-hour delay before noticing a DUA file or PHI is the
+  # wrong trade. The leak guard needs no R toolchain.
+  expect_true("leak-guard" %in% names(y$jobs))
+  expect_true(any(grepl("pull_request", raw, fixed = TRUE)))
+  runs <- paste(vapply(y$jobs$`leak-guard`$steps, function(s) s$run %||% "", character(1)),
+                collapse = "\n")
+  expect_match(runs, "scan-phi-dua.sh worktree", fixed = TRUE)
+  expect_match(runs, "scan-phi-dua.sh history", fixed = TRUE)
+  expect_true(any(grepl("fetch-depth: 0", raw, fixed = TRUE)))
+})
+
+test_that("the leak guard needs no secret, so fork PRs are still covered", {
+  skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
+  y <- yaml::read_yaml("../../.github/workflows/pr-gates.yaml")
+  # The R job may skip on forks (no PAT), but the leak guard must not be gated
+  # behind an `if:` that a fork PR would fail.
+  expect_null(y$jobs$`leak-guard`$`if`)
+  expect_false(is.null(y$jobs$`science-gates`$`if`))
+})
+
+test_that("PR gates run the refusal, invariant and estimand checks", {
+  skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
+  y <- yaml::read_yaml("../../.github/workflows/pr-gates.yaml")
+  runs <- paste(vapply(y$jobs$`science-gates`$steps,
+                       function(s) s$run %||% "", character(1)), collapse = "\n")
+  for (s in c("assert-refusal-gates.R", "assert-scientific-invariants.R",
+              "assert-temporal-integrity.R", "adversarial/canaries.R"))
+    expect_match(runs, s, fixed = TRUE)
+})
+
+test_that("slow gates stay nightly and are not duplicated onto PRs", {
+  skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
+  raw <- paste(readLines("../../.github/workflows/pr-gates.yaml", warn = FALSE), collapse = "\n")
+  # Keeping the matrix, coverage, frozen restore and full suite out of PR CI is
+  # deliberate; if one appears here, the trade was changed and should be argued.
+  expect_false(grepl("renv::restore", raw, fixed = TRUE))
+  expect_false(grepl("test_dir", raw, fixed = TRUE))
+  expect_false(grepl("covr::", raw, fixed = TRUE))
+  expect_false(grepl("windows-latest", raw, fixed = TRUE))
+})
+
+test_that("every PR-gate job installing R deps installs pandoc first", {
+  skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
+  jobs <- yaml::read_yaml("../../.github/workflows/pr-gates.yaml")$jobs
+  for (jn in names(jobs)) {
+    uses <- vapply(jobs[[jn]]$steps %||% list(), function(s) s$uses %||% "", character(1))
+    d <- grep("setup-r-dependencies", uses)
+    if (!length(d)) next
+    p <- grep("setup-pandoc", uses)
+    expect_true(length(p) > 0 && min(p) < min(d), info = jn)
+  }
+})
