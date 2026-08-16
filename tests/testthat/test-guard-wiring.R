@@ -75,13 +75,19 @@ test_that("the estimand refusal lives at PUBLICATION, not inside run_backtest()"
   # The uninterpretable act is CLAIMING an attrition arm as validated. Pinned as
   # source in both directions, because the failure mode is an argument being
   # added or removed and no runtime assertion can see that.
-  run_src <- readLines(test_path("..", "..", "R", "validation-backtest_run.R"), warn = FALSE)
+  # Source-level pins need the SOURCE TREE, which an installed package does not
+  # ship -- see .source_tree_root() in helper-setup.R. Skip rather than fail
+  # under R CMD check; the behavioural tests below cover the same contract and
+  # run everywhere.
+  root <- .source_tree_root()
+  skip_if(length(root) == 0, "repository sources not present (installed-package context)")
+  run_src <- readLines(file.path(root[1], "R", "validation-backtest_run.R"), warn = FALSE)
   call_line <- grep("assert_backtest_estimand_match\\(", run_src, value = TRUE)
   expect_length(call_line, 1L)
   # classify, do not refuse: no strict mode forced in the runner
   expect_false(grepl('mode\\s*=\\s*"strict"', call_line))
 
-  val_src <- readLines(test_path("..", "..", "R", "calibration-validation.R"), warn = FALSE)
+  val_src <- readLines(file.path(root[1], "R", "calibration-validation.R"), warn = FALSE)
   pub_line <- grep("assert_backtest_estimand_match\\(", val_src, value = TRUE)
   expect_length(pub_line, 1L)
   expect_match(pub_line, 'mode\\s*=\\s*"strict"')
