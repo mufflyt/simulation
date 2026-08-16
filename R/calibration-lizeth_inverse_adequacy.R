@@ -39,7 +39,7 @@
 #'
 #' @param x Numeric values.
 #' @param w Nonnegative weights.
-#' @param probs Probabilities in [0, 1].
+#' @param probs Probabilities in \[0, 1\].
 #'
 #' @return Numeric vector of weighted quantiles.
 #'
