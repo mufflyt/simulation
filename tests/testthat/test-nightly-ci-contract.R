@@ -6,10 +6,17 @@
 # trigger block is read back as y[["true"]], not y[["on"]]. GitHub's own parser
 # handles `on:` correctly; this only affects reading the file from R.
 
+# Every test here inspects files in the REPOSITORY (.github/, docs/, artifacts/).
+# Under R CMD check the suite runs from the INSTALLED package, where none of
+# those exist and `../../` resolves nowhere. Without this guard the file fails
+# in CI while passing locally -- which is exactly what happened.
+.repo <- function() dir.exists("../../.github/workflows")
+
 .wf <- function() yaml::read_yaml("../../.github/workflows/nightly.yaml")
 .wf_raw <- function() readLines("../../.github/workflows/nightly.yaml", warn = FALSE)
 
 test_that("the nightly runs at 03:17 MST", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
   # 10:17 UTC == 03:17 MST. GitHub cron is UTC-only and ignores DST, so this
   # lands at 04:17 MDT in summer -- documented in the workflow header.
@@ -17,6 +24,7 @@ test_that("the nightly runs at 03:17 MST", {
 })
 
 test_that("every nightly job that installs R deps installs pandoc first", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
   # Same rule test-repo-hygiene.R enforces for the other workflows: without
   # pandoc on PATH, setup-r-dependencies resolves Suggests and trips over
@@ -33,6 +41,7 @@ test_that("every nightly job that installs R deps installs pandoc first", {
 })
 
 test_that("the leak guard scans history, not only the working tree", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
   # HEAD being clean proves nothing: a public clone ships deleted blobs.
   steps <- .wf()$jobs$`leak-guard`$steps
@@ -44,6 +53,7 @@ test_that("the leak guard scans history, not only the working tree", {
 })
 
 test_that("the refusal-gate audit is wired into the nightly", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
   steps <- .wf()$jobs$`refusal-gates`$steps
   runs <- paste(vapply(steps, function(s) s$run %||% "", character(1)), collapse = "\n")
@@ -52,6 +62,7 @@ test_that("the refusal-gate audit is wired into the nightly", {
 })
 
 test_that("the scanner scripts exist and are executable", {
+  skip_if_not(.repo())
   for (s in c("scan-phi-dua.sh", "assert-refusal-gates.R")) {
     p <- file.path("../../.github/scripts", s)
     expect_true(file.exists(p), info = s)
@@ -61,6 +72,7 @@ test_that("the scanner scripts exist and are executable", {
 })
 
 test_that("CRITICAL findings are never baselined", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/phi-dua-baseline.txt"))
   b <- readLines("../../.github/phi-dua-baseline.txt", warn = FALSE)
   # The ratchet may only carry HIGH (hygiene). A `critical=` key would mean a
@@ -70,6 +82,7 @@ test_that("CRITICAL findings are never baselined", {
 })
 
 test_that("the PHI scanner actually catches planted PHI", {
+  skip_if_not(.repo())
   # A scanner that has never fired is indistinguishable from one that cannot.
   # The fixture is built entirely in bash: the scanner resolves git paths
   # against the current directory, so driving it through R's system2("git",
@@ -120,6 +133,7 @@ test_that("the PHI scanner actually catches planted PHI", {
 })
 
 test_that("the nightly reports failures without spamming issues", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
   raw <- .wf_raw()
   # one tracking issue, updated by comment -- not one issue per job per night
@@ -130,6 +144,7 @@ test_that("the nightly reports failures without spamming issues", {
 })
 
 test_that("the scientific-invariants gate is wired and blocking", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
   y <- .wf()
   expect_true("scientific-invariants" %in% names(y$jobs))
@@ -143,6 +158,7 @@ test_that("the scientific-invariants gate is wired and blocking", {
 })
 
 test_that("a skipped blocking gate cannot masquerade as a green nightly", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
   raw <- .wf_raw()
   # Only 'success' counts. A cancelled or skipped correctness job means the
@@ -153,6 +169,7 @@ test_that("a skipped blocking gate cannot masquerade as a green nightly", {
 })
 
 test_that("the back-test ratchet records a real, currently-failing baseline", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/backtest-baseline.txt"))
   kv <- readLines("../../.github/backtest-baseline.txt", warn = FALSE)
   gv <- function(k) as.numeric(sub(".*=", "",
@@ -175,6 +192,7 @@ test_that("the back-test ratchet records a real, currently-failing baseline", {
 .adv_raw <- function() readLines("../../.github/workflows/scientific-adversarial.yaml", warn = FALSE)
 
 test_that("Layer 2 exists as its own workflow and does not replace Layer 1", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/scientific-adversarial.yaml"))
   # A green Layer 1 with a red Layer 2 is a meaningful state; merging them
   # would destroy that distinction.
@@ -184,6 +202,7 @@ test_that("Layer 2 exists as its own workflow and does not replace Layer 1", {
 })
 
 test_that("the adversarial run is scheduled nightly and weekly", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/scientific-adversarial.yaml"))
   raw <- .adv_raw()
   expect_true(any(grepl("cron: '47 10 \\* \\* \\*'", raw)))   # nightly 03:47 MST
@@ -193,6 +212,7 @@ test_that("the adversarial run is scheduled nightly and weekly", {
 })
 
 test_that("canary detector independence is enforced, not assumed", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/scripts/adversarial/canaries.R"))
   src <- readLines("../../.github/scripts/adversarial/canaries.R", warn = FALSE)
   # a canary counts as killed ONLY if its named detector fires
@@ -207,6 +227,7 @@ test_that("canary detector independence is enforced, not assumed", {
 })
 
 test_that("the adversarial scripts exist and are executable", {
+  skip_if_not(.repo())
   for (s in c("canaries.R", "metamorphic.R")) {
     p <- file.path("../../.github/scripts/adversarial", s)
     expect_true(file.exists(p), info = s)
@@ -216,6 +237,7 @@ test_that("the adversarial scripts exist and are executable", {
 })
 
 test_that("the coverage document addresses every specification section", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../docs/LAYER2_ADVERSARIAL_COVERAGE.md"))
   md <- paste(readLines("../../docs/LAYER2_ADVERSARIAL_COVERAGE.md", warn = FALSE), collapse = "\n")
   # the three dispositions must all be used -- a coverage doc that only says
@@ -231,6 +253,7 @@ test_that("the coverage document addresses every specification section", {
 })
 
 test_that("a skipped adversarial gate cannot masquerade as a pass", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/scientific-adversarial.yaml"))
   raw <- .adv_raw()
   expect_true(any(grepl("ADVERSARIAL GATE DID NOT PASS", raw, fixed = TRUE)))
@@ -238,6 +261,7 @@ test_that("a skipped adversarial gate cannot masquerade as a pass", {
 })
 
 test_that("the temporal-integrity gate is wired into both layers", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/scripts/assert-temporal-integrity.R"))
   n <- readLines("../../.github/workflows/nightly.yaml", warn = FALSE)
   a <- readLines("../../.github/workflows/scientific-adversarial.yaml", warn = FALSE)
@@ -248,6 +272,7 @@ test_that("the temporal-integrity gate is wired into both layers", {
 })
 
 test_that("the back-test declares censoring and a single observed estimand", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../artifacts/backtest_2020_to_2023_manifest.json"))
   m <- jsonlite::fromJSON("../../artifacts/backtest_2020_to_2023_manifest.json",
                           simplifyVector = FALSE)
@@ -261,6 +286,7 @@ test_that("the back-test declares censoring and a single observed estimand", {
 })
 
 test_that("the attrition estimand mismatch is the recorded driver, not leakage", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../artifacts/backtest_2020_to_2023_summary.csv"))
   s <- utils::read.csv("../../artifacts/backtest_2020_to_2023_summary.csv",
                        stringsAsFactors = FALSE)
@@ -279,6 +305,7 @@ test_that("the attrition estimand mismatch is the recorded driver, not leakage",
 # --- PR gates: the fast subset that must not wait for a nightly -------------
 
 test_that("the leak guard runs on every PR, not only nightly", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
   y <- yaml::read_yaml("../../.github/workflows/pr-gates.yaml")
   raw <- readLines("../../.github/workflows/pr-gates.yaml", warn = FALSE)
@@ -294,6 +321,7 @@ test_that("the leak guard runs on every PR, not only nightly", {
 })
 
 test_that("the leak guard needs no secret, so fork PRs are still covered", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
   y <- yaml::read_yaml("../../.github/workflows/pr-gates.yaml")
   # The R job may skip on forks (no PAT), but the leak guard must not be gated
@@ -303,6 +331,7 @@ test_that("the leak guard needs no secret, so fork PRs are still covered", {
 })
 
 test_that("PR gates run the refusal, invariant and estimand checks", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
   y <- yaml::read_yaml("../../.github/workflows/pr-gates.yaml")
   runs <- paste(vapply(y$jobs$`science-gates`$steps,
@@ -313,6 +342,7 @@ test_that("PR gates run the refusal, invariant and estimand checks", {
 })
 
 test_that("slow gates stay nightly and are not duplicated onto PRs", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
   raw <- paste(readLines("../../.github/workflows/pr-gates.yaml", warn = FALSE), collapse = "\n")
   # Keeping the matrix, coverage, frozen restore and full suite out of PR CI is
@@ -324,6 +354,7 @@ test_that("slow gates stay nightly and are not duplicated onto PRs", {
 })
 
 test_that("every PR-gate job installing R deps installs pandoc first", {
+  skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/pr-gates.yaml"))
   jobs <- yaml::read_yaml("../../.github/workflows/pr-gates.yaml")$jobs
   for (jn in names(jobs)) {
