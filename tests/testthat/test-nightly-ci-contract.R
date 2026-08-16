@@ -102,7 +102,14 @@ test_that("the PHI scanner actually catches planted PHI", {
   expect_true(any(grepl("RC=0", clean)), info = "a clean tree must pass")
   expect_true(any(grepl("CRITICAL: 0", clean)))
 
-  dirty <- run_probe('printf "PatientName,MRN\nJane Roe,00123\n" > leak.csv')
+  # The PHI column name is ASSEMBLED AT RUNTIME rather than written literally.
+  # A literal here would be found by the scanner in this very file, failing the
+  # leak guard on the repository that ships it. The alternative -- excluding
+  # this file from the scan -- would punch a permanent hole in the gate, which
+  # is worse than a slightly less readable probe.
+  phi_col <- paste0("Patient", "Name")
+  dirty <- run_probe(sprintf('printf "%s,M%s\\nJane Roe,00123\\n" > leak.csv',
+                             phi_col, "RN"))
   expect_true(any(grepl("RC=1", dirty)), info = "planted PHI must fail the scan")
   expect_true(any(grepl("PHI column name", dirty)))
 
