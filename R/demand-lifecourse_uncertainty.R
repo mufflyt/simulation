@@ -48,6 +48,11 @@ lifecourse_param_uncertainty <- function() {
 #' @param pop_by_age_year Tibble with `year`, `age`, `population`.
 #' @param years Years to run; default all years present.
 #' @param scenario,n,... Passed to [lifecourse_demand_trajectory()].
+#' @param pathway Optional condition-service pathway table. An EXPLICIT
+#'   formal rather than left to `...`: R partial-matches named arguments
+#'   against formals preceding `...`, so `pathway =` was silently bound to
+#'   `pathway_params` -- a different object -- and the service pathway was
+#'   unreachable through this function by any spelling.
 #' @param n_draws Number of parameter draws.
 #' @param probs Length-3 vector `c(lo, mid, hi)` of quantiles. Default 2.5/50/97.5.
 #' @param seed Optional RNG seed (controls the whole draw sequence).
