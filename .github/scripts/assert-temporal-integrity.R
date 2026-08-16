@@ -133,6 +133,38 @@ if (!file.exists(SUM)) {
   }
 }
 
+cat("\n== 3b. Estimand contract (reconciled) ==\n")
+if (file.exists(SUM)) {
+  suppressMessages(pkgload::load_all(".", quiet = TRUE))
+  s <- utils::read.csv(SUM, stringsAsFactors = FALSE)
+  cls <- suppressMessages(assert_backtest_estimand_match(s, mode = "relaxed"))
+  h <- backtest_headline_metrics(s)
+  inf(sprintf("arms: %d validated comparison, %d unvalidatable (active_net_of_attrition)",
+              sum(cls$comparable), sum(!cls$comparable)))
+  inf(sprintf("coverage: all-arms %.2f | definition-matched %.2f", h$coverage95_all, h$coverage95_matched))
+  inf(sprintf("mean error: all-arms %+.2f%% | matched %+.2f%% | unvalidatable %+.2f%%",
+              h$mean_error_all, h$mean_error_matched, h$mean_error_unvalidatable))
+  # The observation is a cumulative certification series and CANNOT be made net
+  # of attrition (n_retired is 0 in every row). So attrited arms are
+  # unvalidatable by construction; they must never be scored as failures.
+  if (all(cls$comparable)) {
+    inf("no mismatched arms remain")
+  } else if (all(grepl("active_net_of_attrition", cls$estimand[!cls$comparable]))) {
+    ok("mismatched arms are classified unvalidatable, not failing")
+  } else {
+    bad("mismatched arms are correctly classified", "an arm is scored against an incomparable observation")
+  }
+  # Matched performance must be reported ALONGSIDE all-arms, never instead of
+  # it: improving a headline by discarding arms is forbidden.
+  if (h$n_arms_all > h$n_arms_matched && is.finite(h$coverage95_all)) {
+    ok("all-arms metrics retained alongside matched metrics")
+  }
+  # and the reconciliation must not be oversold
+  if (h$coverage95_matched < 0.80)
+    inf(sprintf("matched coverage %.2f is still below the required 0.80 -- the estimand fix is necessary but NOT sufficient; observed annual change was 69/yr against 36/yr predicted at the shipped entrant assumption of 55",
+                h$coverage95_matched))
+}
+
 cat("\n== 4. Direction-of-evidence check on the leakage hypothesis ==\n")
 if (file.exists(SUM)) {
   s <- utils::read.csv(SUM, stringsAsFactors = FALSE)
