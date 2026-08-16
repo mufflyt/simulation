@@ -5,8 +5,7 @@
 # back-test arm that looks fine.
 
 nsp_csv <- function() {
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   if (length(root) == 0) return(NULL)
   p <- file.path(root[1], "data-raw", "calibration", "nrmp_urps_entrants_series.csv")
   if (file.exists(p)) p else NULL

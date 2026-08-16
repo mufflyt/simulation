@@ -14,12 +14,13 @@
   # character(0): a confusing assertion error standing in for "the source tree
   # is not here".
   #
-  # Meta/ exists ONLY in an installed package, so it is the discriminator.
-  for (p in c(".", "..", file.path("..", ".."), file.path("..", "..", ".."))) {
-    if (file.exists(file.path(p, "DESCRIPTION")) &&
-        !dir.exists(file.path(p, "Meta"))) return(p)
-  }
-  skip("repository root not found")
+  # The Meta/ discriminator that fixes this lives in helper-setup.R and is
+  # DELIBERATELY NOT RESTATED HERE. This file's whole subject is defects caused
+  # by the same logic existing in two places; keeping a second copy of the root
+  # walk would be the exact failure it tests for.
+  r <- .source_tree_root()
+  if (length(r) == 0) skip("repository sources not present (installed-package context)")
+  r
 }
 
 .r_files <- function(dir) {
