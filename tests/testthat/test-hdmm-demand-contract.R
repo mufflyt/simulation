@@ -47,7 +47,8 @@ test_that("exporter rejects a trajectory missing required columns", {
 test_that("the life-course trajectory feeds the exporter end to end", {
   pop_by_age_year <- dplyr::bind_rows(lapply(c(2025L, 2026L), function(y)
     tibble::tibble(age = 40:85, population = round(2e6 * exp(-0.02 * (40:85 - 40))), year = y)))
-  traj <- lifecourse_demand_trajectory(pop_by_age_year, n = 5000, seed = 1)
+  traj <- lifecourse_demand_trajectory(pop_by_age_year, n = 5000, seed = 1,
+                               pathway = valid_pathway())
   out <- export_hdmm(traj$demand_summary,
                                                   output_directory = tempfile("hdmm_"), verbose = FALSE)
   expect_true(file.exists(out$csv_path))

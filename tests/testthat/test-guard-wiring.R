@@ -65,16 +65,46 @@ test_that("a back-test summary comparing different estimands REFUSES under stric
     "category error")
 })
 
-test_that("run_backtest() forces strict rather than inheriting the relaxed mode", {
-  # The wiring passes mode = "strict" explicitly. If someone later drops that
-  # argument the call inherits resolve_reproducibility_mode(), which is relaxed
-  # by default, and an uninterpretable comparison would be reported as a
-  # result with only a warning. Pinned as source, because the failure is the
-  # ABSENCE of an argument and no runtime assertion can see that.
-  src <- readLines(test_path("..", "..", "R", "validation-backtest_run.R"), warn = FALSE)
-  call_line <- grep("assert_backtest_estimand_match\\(", src, value = TRUE)
+test_that("the estimand refusal lives at PUBLICATION, not inside run_backtest()", {
+  # CORRECTED WIRING. This guard was first forced strict inside run_backtest(),
+  # which was the wrong abstraction level: that function runs
+  # `for (att in c(TRUE, FALSE))` by design and labels the FALSE arms
+  # "definition-matched". Producing both estimands IS the experiment, so
+  # refusing there made the runner permanently unusable.
+  #
+  # The uninterpretable act is CLAIMING an attrition arm as validated. Pinned as
+  # source in both directions, because the failure mode is an argument being
+  # added or removed and no runtime assertion can see that.
+  run_src <- readLines(test_path("..", "..", "R", "validation-backtest_run.R"), warn = FALSE)
+  call_line <- grep("assert_backtest_estimand_match\\(", run_src, value = TRUE)
   expect_length(call_line, 1L)
-  expect_match(call_line, 'mode\\s*=\\s*"strict"')
+  # classify, do not refuse: no strict mode forced in the runner
+  expect_false(grepl('mode\\s*=\\s*"strict"', call_line))
+
+  val_src <- readLines(test_path("..", "..", "R", "calibration-validation.R"), warn = FALSE)
+  pub_line <- grep("assert_backtest_estimand_match\\(", val_src, value = TRUE)
+  expect_length(pub_line, 1L)
+  expect_match(pub_line, 'mode\\s*=\\s*"strict"')
+})
+
+test_that("publication REFUSES a result carrying mismatched back-test arms", {
+  # The behavioural counterpart to the source pin above.
+  res <- list(backtest = list(summary = .bt_summary(c(TRUE, FALSE))))
+  rep <- suppressMessages(publishable_run_report(res, artifact_path = NA_character_,
+                                                 require_artifact = FALSE))
+  row <- rep[rep$check == "backtest_estimand_match", ]
+  expect_equal(nrow(row), 1L)
+  expect_false(row$passed[[1]])
+  expect_match(row$detail[[1]], "unlike estimands")
+})
+
+test_that("publication accepts a result whose arms all match", {
+  res <- list(backtest = list(summary = .bt_summary(c(FALSE, FALSE))))
+  rep <- suppressMessages(publishable_run_report(res, artifact_path = NA_character_,
+                                                 require_artifact = FALSE))
+  row <- rep[rep$check == "backtest_estimand_match", ]
+  expect_equal(nrow(row), 1L)
+  expect_true(row$passed[[1]])
 })
 
 # ---------------------------------------------------------------------------

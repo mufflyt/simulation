@@ -10,7 +10,8 @@ test_that("lifecourse_param_uncertainty exposes coef_sd and logit_sd", {
 })
 
 test_that("the trajectory CI returns ordered lo <= median <= hi bounds", {
-  ci <- lifecourse_demand_trajectory_ci(pop_by_age_year, n = 3000, n_draws = 40, seed = 1)
+  ci <- lifecourse_demand_trajectory_ci(pop_by_age_year, n = 3000, n_draws = 40, seed = 1,
+                                  pathway = valid_pathway())
   expect_true(all(c("year", "care_seeking_national", "care_seeking_national_lo",
                     "care_seeking_national_hi", "service_units_national",
                     "service_units_national_lo", "service_units_national_hi")
@@ -23,9 +24,11 @@ test_that("the trajectory CI returns ordered lo <= median <= hi bounds", {
 
 test_that("wider parameter uncertainty produces wider intervals", {
   narrow <- lifecourse_demand_trajectory_ci(pop_by_age_year, n = 3000, n_draws = 60, seed = 2,
-              param_uncertainty = list(coef_sd = 0.05, logit_sd = 0.05))
+              param_uncertainty = list(coef_sd = 0.05, logit_sd = 0.05),
+                                  pathway = valid_pathway())
   wide   <- lifecourse_demand_trajectory_ci(pop_by_age_year, n = 3000, n_draws = 60, seed = 2,
-              param_uncertainty = list(coef_sd = 0.30, logit_sd = 0.30))
+              param_uncertainty = list(coef_sd = 0.30, logit_sd = 0.30),
+                                  pathway = valid_pathway())
   w_narrow <- narrow$service_units_national_hi - narrow$service_units_national_lo
   w_wide   <- wide$service_units_national_hi   - wide$service_units_national_lo
   expect_gt(mean(w_wide), mean(w_narrow))
@@ -50,7 +53,8 @@ test_that("a degenerate interval is refused outright", {
 })
 
 test_that("the CI trajectory feeds the exporter's lo/hi contract columns", {
-  ci <- lifecourse_demand_trajectory_ci(pop_by_age_year, n = 3000, n_draws = 30, seed = 3)
+  ci <- lifecourse_demand_trajectory_ci(pop_by_age_year, n = 3000, n_draws = 30, seed = 3,
+                                  pathway = valid_pathway())
   # Placeholder transitions: declared exploratory so the calibration gate writes it.
   out <- suppressMessages(export_hdmm_demand_contract(
     ci, output_directory = tempfile("hdmm_"), verbose = FALSE, allow_uncalibrated = TRUE))
