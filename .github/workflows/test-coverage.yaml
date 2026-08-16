@@ -30,6 +30,11 @@ jobs:
         with:
           use-public-rspm: true
 
+      # Install pandoc BEFORE setup-r-dependencies -- see R-CMD-check.yaml. Its
+      # internal pandoc-needs check resolves Suggests (dependencies = "all") and
+      # cannot find the GitHub-only mysterycall; pandoc on PATH short-circuits it.
+      - uses: r-lib/actions/setup-pandoc@v2
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::covr, any::xml2, any::testthat, any::pkgload
