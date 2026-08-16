@@ -18,7 +18,16 @@
   a <- utils::read.csv("../../data/anchors/prolapse_procedure_volume.csv")
   a$observed[a$anchor_id == "prolapse_procedure_volume"][[1]]
 }
-.pop_volume <- function(pathway = condition_service_pathway(), by_stage = FALSE) {
+# valid_pathway(), NOT the shipped table: per_entering = 1.00 on
+# new_consultation is a stock-as-flow error that assert_incident_not_prevalent()
+# refuses (docs/INCIDENT_ENTRY_ESTIMAND.md).
+#
+# THE QUANTITY THESE TESTS MEASURE IS PROVABLY UNAFFECTED. per_entering scales
+# services WITHIN a stage; prolapse_procedure sits at the procedure stage and
+# its volume is set by the p_advance cascade. Checked, not assumed: the
+# overstatement is 8.5075 under the fixture and 8.5075 under the shipped table.
+# The fixture makes the pathway runnable without perturbing the finding.
+.pop_volume <- function(pathway = valid_pathway(), by_stage = FALSE) {
   pathway_service_volumes(treated = c(pop = .pop_treated()), year = 2025L,
                           pathway = pathway, by_stage = by_stage)
 }
@@ -32,7 +41,9 @@ test_that("the shipped pathway drives prolapse volume (mutation proof)", {
   # "output merely changed" assertion would pass even if the value were being
   # partially overwritten downstream; exact 0.5 will not.
   skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
-  pw <- condition_service_pathway()
+  # valid_pathway() for the same reason as .pop_volume()'s default above: the
+  # mutation being proved is on p_advance, which the fixture does not touch.
+  pw <- valid_pathway()
 
   base_stage <- .pop_volume(pw, by_stage = TRUE)
   base_tot   <- .pop_volume(pw)

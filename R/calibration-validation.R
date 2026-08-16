@@ -684,6 +684,30 @@ publishable_run_report <- function(result, artifact_path = NULL,
       if (is.null(pathway_err)) "condition-service pathway meets the publication tier"
       else sprintf("condition-service pathway is not publishable: %s", pathway_err))
 
+  # BACK-TEST ESTIMAND MATCH -- the refusal that belongs at PUBLICATION.
+  #
+  # run_backtest() runs both attrition arms by design and attaches the
+  # classification; producing both estimands is the intended experiment. What
+  # is scientifically uninterpretable is CLAIMING an arm as validated when its
+  # prediction ("active net of attrition") has no observable counterpart in a
+  # cumulative certification series with n_retired = 0 in every row. That claim
+  # is made here, not in the runner, which is why the check lives here.
+  #
+  # Only fires when a back-test summary is actually carried into the result. A
+  # run that does not present back-test arms is not asserting anything about
+  # them and gets no row.
+  bt_summary <- result$backtest$summary %||% meta$backtest_summary
+  if (!is.null(bt_summary) && is.data.frame(bt_summary) &&
+      all(c("apply_attrition", "observed_applies_attrition") %in% names(bt_summary))) {
+    bt_err <- tryCatch({
+      assert_backtest_estimand_match(bt_summary, mode = "strict")
+      NULL
+    }, error = function(e) conditionMessage(e))
+    add("backtest_estimand_match", is.null(bt_err),
+        if (is.null(bt_err)) "every scored back-test arm matches the observed estimand"
+        else sprintf("back-test compares unlike estimands: %s", bt_err))
+  }
+
   gap <- result$baseline_gap
   tier <- if (inherits(gap, "urps_baseline_gap")) {
     gap$calibration_status %||% NA_character_

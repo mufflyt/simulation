@@ -52,8 +52,9 @@ test_that("ordinary simulation still runs on uncalibrated coefficients", {
 
 test_that("the SHIPPED pathway is refused, and that is the current known state", {
   # The counterpart to the test above, kept adjacent so the two cannot drift
-  # apart. Declared in tests/scientific-blockers.csv as pop_incident_entry.
-  # When per_entering is sourced this test must be revisited, not deleted.
+  # apart. The canonical configuration is exercised end to end by the
+  # scientific-readiness gate, which stays red; this asserts the same refusal
+  # at unit level. When per_entering is sourced, revisit both -- do not delete.
   skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
   expect_error(
     suppressMessages(pathway_service_volumes(treated = c(pop = 1000), year = 2025L)),

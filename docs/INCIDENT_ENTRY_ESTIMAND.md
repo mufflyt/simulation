@@ -135,7 +135,18 @@ be resolved from the same data extract.
 
 - The guard stays wired and stays refusing.
 - `per_entering` stays unresolved. It is **not** set to a placeholder.
-- The 30 refusing tests are a **scientific blocker**, recorded in
-  `tests/scientific-blockers.csv`, and are deliberately distinguished from
-  infrastructure breakage.
+- **`R CMD check` is green and the scientific-readiness gate is red**, and that
+  separation is deliberate. The package behaves correctly — the guards refuse
+  an invalid configuration and the tests assert that refusal — while the
+  canonical parameterization is not scientifically runnable. Collapsing the two
+  would cost both signals: a permanently red check stops meaning "the code is
+  broken", and a green one that tolerated failing tests would be a lie.
+- The canonical run is exercised by
+  `.github/scripts/assert-canonical-science.R` (workflow
+  `scientific-readiness`), which uses the REAL pathway — no fixture — and
+  **is expected to fail**. It must not be muted or made non-blocking.
+- Two fixtures work around the blocker for tests of machinery, each labelled
+  as a fixture and not a candidate value: `valid_pathway()` in
+  `tests/testthat/helper-setup.R` and `.github/scripts/_pathway_fixture.R`.
+  Both should be **deleted** once the parameter is sourced.
 - Unblocked by: APCD / longitudinal all-payer outpatient claims access.

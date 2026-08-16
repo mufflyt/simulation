@@ -21,9 +21,10 @@
 #
 # THIS IS NOT A BYPASS. It does not disable the guard, and it is not reachable
 # from library code: nothing in R/ sources it. The shipped configuration is
-# still refused everywhere it is actually used, and the refusal is declared in
-# tests/scientific-blockers.csv. When per_entering is sourced, this file should
-# be DELETED and the gates should run against the real table.
+# still refused everywhere it is actually used, and that refusal is asserted by
+# the scientific-readiness gate (.github/scripts/assert-canonical-science.R),
+# which runs the REAL table and stays red. When per_entering is sourced, this
+# file should be DELETED and the gates should run against the real table.
 
 ci_pathway_fixture <- function() {
   pw <- condition_service_pathway()
