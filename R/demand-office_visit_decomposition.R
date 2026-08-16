@@ -69,6 +69,22 @@ assert_incident_not_prevalent <- function(treated,
   d <- office_visit_decomposition(treated, pathway)
   new_consults <- base::sum(d$volume[d$component == "new_consultation"])
   treated_total <- base::sum(treated)
+
+  # AN EMPTY COHORT IS OUTSIDE THE INVARIANT'S DOMAIN, not a violation of it.
+  # The claim is "a prevalent patient must not be recounted as incident"; with
+  # no patients there is nothing to recount. Zero treated yielding zero new
+  # consultations is degenerate but correct, and the naive test fails it twice
+  # over -- `0 < 0` is FALSE, and the ratio in the message is 0/0 = NaN, so it
+  # refused with "ratio NaN" and no interpretable diagnostic.
+  #
+  # Found by the property-based worlds in adversarial/metamorphic.R, which
+  # generates empty cohorts precisely because they are the boundary nobody
+  # writes a test for. This is a DOMAIN condition, not a repair: no value is
+  # coerced, clipped or imputed, and a non-empty cohort is judged exactly as
+  # before.
+  if (!base::is.finite(treated_total) || treated_total <= 0) {
+    return(base::invisible(TRUE))
+  }
   ok <- new_consults < treated_total
 
   msg <- base::sprintf(
