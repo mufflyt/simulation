@@ -13,5 +13,8 @@
 #
 # Seeded 2026-08-15 from artifacts/backtest_2020_to_2023_summary.csv
 coverage95=0.20
+# Definition-matched arms only (apply_attrition == observed_applies_attrition).
+# Recorded ALONGSIDE the all-arms figure, never instead of it.
+coverage95_matched=0.40
 worst_percent_error=-16.2327718224
 n_arms=10
