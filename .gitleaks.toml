@@ -1,0 +1,49 @@
+# gitleaks configuration for a PUBLIC repository.
+#
+# Same doctrine as .github/phi-history-allowlist.txt: every exemption is narrow,
+# named, and justified. A secret scanner with a broad allowlist is a scanner
+# that reports clean, which is worse than none. If an entry cannot be justified
+# in a sentence, the answer is to remove the secret, not to widen this file.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented false positives and one revoked, unrewritable credential"
+
+# ---------------------------------------------------------------------------
+# 1. SHA-256 FINGERPRINTS IN PROVENANCE SIDECARS  (false positive)
+#
+# write_artifact_with_provenance() emits input_fingerprint, code_fingerprint,
+# content_sha256 and composite_key -- all 64-hex digests. gitleaks' generic
+# api-key rule fires on a long hex value sitting next to a field name ending in
+# "_key", so `composite_key` looks exactly like a credential to it.
+#
+# Matched by FIELD NAME + exact 64-hex shape, NOT by exempting the files. A real
+# key pasted into a provenance sidecar would still be caught, because it would
+# not be 64 hex characters under one of these four names.
+regexes = [
+  '"(input_fingerprint|code_fingerprint|content_sha256|composite_key)"\s*:\s*"[0-9a-f]{64}"',
+]
+
+# ---------------------------------------------------------------------------
+# 2. A REVOKED CENSUS API KEY, PRESENT ONLY IN HISTORY
+#
+# docs/DATA_DOWNLOAD_GUIDE.md carried a live Census API key from 2026-08-03
+# (6b33b35, ff55f86, 57d6d05) until it was redacted from HEAD on 2026-08-16.
+#
+# THE KEY WAS REVOKED by the owner on discovery, which is the remedy that
+# matters; the value in these commits is inert. History is deliberately NOT
+# rewritten: a filter-repo force-push would rewrite 453 commits' SHAs and break
+# every existing clone, for no security gain over revocation.
+#
+# Scoped to these three commits ONLY. A new credential in a new commit is not
+# covered, which is the point.
+# FULL SHAs: gitleaks matches the complete commit hash, and its own findings
+# report full hashes. An abbreviated prefix here would silently match nothing --
+# an allowlist that does not allow, which fails closed but for the wrong reason.
+commits = [
+  "6b33b3534c3a79c0f80324cfe1d05984f5c639bb",
+  "ff55f86b90c572224ee8454e3f34c4653ca85cc4",
+  "57d6d05d1015158812df6123f8fcc94c5e170e6b",
+]
