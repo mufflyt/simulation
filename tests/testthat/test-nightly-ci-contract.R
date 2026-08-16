@@ -161,3 +161,71 @@ test_that("the back-test ratchet records a real, currently-failing baseline", {
   # arms may not be dropped: deleting a failing arm is not an improvement
   expect_gte(gv("n_arms"), 10)
 })
+
+# --- Layer 2: scientific adversarial validation -----------------------------
+
+.adv <- function() yaml::read_yaml("../../.github/workflows/scientific-adversarial.yaml")
+.adv_raw <- function() readLines("../../.github/workflows/scientific-adversarial.yaml", warn = FALSE)
+
+test_that("Layer 2 exists as its own workflow and does not replace Layer 1", {
+  skip_if_not(file.exists("../../.github/workflows/scientific-adversarial.yaml"))
+  # A green Layer 1 with a red Layer 2 is a meaningful state; merging them
+  # would destroy that distinction.
+  expect_true(file.exists("../../.github/workflows/nightly.yaml"))
+  j <- names(.adv()$jobs)
+  expect_true(all(c("canaries", "metamorphic", "reference", "scorecard") %in% j))
+})
+
+test_that("the adversarial run is scheduled nightly and weekly", {
+  skip_if_not(file.exists("../../.github/workflows/scientific-adversarial.yaml"))
+  raw <- .adv_raw()
+  expect_true(any(grepl("cron: '47 10 \\* \\* \\*'", raw)))   # nightly 03:47 MST
+  expect_true(any(grepl("cron: '47 11 \\* \\* 0'", raw)))     # weekly deep run
+  # it must not collide with Layer 1's 10:17 slot
+  expect_false(any(grepl("cron: '17 10 \\* \\* \\*'", raw)))
+})
+
+test_that("canary detector independence is enforced, not assumed", {
+  skip_if_not(file.exists("../../.github/scripts/adversarial/canaries.R"))
+  src <- readLines("../../.github/scripts/adversarial/canaries.R", warn = FALSE)
+  # a canary counts as killed ONLY if its named detector fires
+  expect_true(any(grepl("killed_by_expected <- cn\\$expect %in% fired", src)))
+  # and the unmutated model must trip no detector, or a detector is always-on
+  expect_true(any(grepl("baseline \\(unmutated\\) detectors firing", src)))
+  # every canary declares an expected detector
+  n_expect <- sum(grepl("^\\s+expect = ", src))
+  n_id <- sum(grepl('^\\s+list\\(id = "CAN-', src))
+  expect_gt(n_id, 0)
+  expect_equal(n_expect, n_id)
+})
+
+test_that("the adversarial scripts exist and are executable", {
+  for (s in c("canaries.R", "metamorphic.R")) {
+    p <- file.path("../../.github/scripts/adversarial", s)
+    expect_true(file.exists(p), info = s)
+    if (.Platform$OS.type == "unix")
+      expect_true(file.access(p, mode = 1L) == 0L, info = paste(s, "not executable"))
+  }
+})
+
+test_that("the coverage document addresses every specification section", {
+  skip_if_not(file.exists("../../docs/LAYER2_ADVERSARIAL_COVERAGE.md"))
+  md <- paste(readLines("../../docs/LAYER2_ADVERSARIAL_COVERAGE.md", warn = FALSE), collapse = "\n")
+  # the three dispositions must all be used -- a coverage doc that only says
+  # "implemented" is not a coverage doc
+  expect_match(md, "Implemented", fixed = TRUE)
+  expect_match(md, "Not applicable", fixed = TRUE)
+  expect_match(md, "Deferred", fixed = TRUE)
+  # the linkage sections must be explicitly dispositioned, not omitted
+  expect_match(md, "no record-linkage system", fixed = TRUE)
+  # and the honest limitations must survive
+  expect_match(md, "Honest limitations", fixed = TRUE)
+  expect_match(md, "0.20 against a required 0.80", fixed = TRUE)
+})
+
+test_that("a skipped adversarial gate cannot masquerade as a pass", {
+  skip_if_not(file.exists("../../.github/workflows/scientific-adversarial.yaml"))
+  raw <- .adv_raw()
+  expect_true(any(grepl("ADVERSARIAL GATE DID NOT PASS", raw, fixed = TRUE)))
+  expect_true(any(grepl("VALIDATION SYSTEM regressed", raw, fixed = TRUE)))
+})
