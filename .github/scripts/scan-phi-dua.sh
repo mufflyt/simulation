@@ -79,10 +79,25 @@ else
   done < <(git log --all --pretty=format: --name-only --diff-filter=A 2>/dev/null \
              | sort -u | grep -E "$DUA_FILES" || true)
 
+  ALLOW=".github/phi-history-allowlist.txt"
+  allowed() {
+    [ -f "$ALLOW" ] || return 1
+    grep -qE "^[[:space:]]*$1[[:space:]]*$" "$ALLOW"
+  }
   for needle in PatientName PAT_ADDR_1 MedicalRecordNum; do
     while IFS= read -r m; do
-      [ -n "$m" ] && crit "PHI identifier introduced in history ($needle)" "$m"
-    done < <(git log --all --oneline -S"$needle" --pretty=format:'%h %ad %s' \
+      [ -n "$m" ] || continue
+      sha=${m%% *}
+      if allowed "$sha"; then
+        printf '::notice::[allowlisted] synthetic PHI-pattern match in %s -- see %s\n' "$sha" "$ALLOW"
+        continue
+      fi
+      crit "PHI identifier introduced in history ($needle)" "$m"
+    # tformat: NOT format: -- `format:` omits the trailing newline, so
+    # `while read` silently DROPS THE LAST LINE. With a single matching commit
+    # (the usual case) the loop body never ran at all and the scan reported
+    # clean. A leak scanner that misses its only finding is worse than none.
+    done < <(git log --all -S"$needle" --pretty=tformat:'%h %ad %s' \
                --date=short 2>/dev/null | head -5 || true)
   done
 fi
