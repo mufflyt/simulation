@@ -138,3 +138,14 @@ base::cat("Out-of-sample R2:", holdout$metrics$r2_oos, "\n")
 base::cat("Base-year adequacy resolved:", capacity$resolved, "\n")
 base::cat("Calibration status:", capacity$calibration_status, "\n")
 if (!isTRUE(capacity$resolved)) base::cat("Why unresolved:", capacity$why_unresolved, "\n")
+
+# ---- Stage 5: export the tract access surface for cliff Module D v2 ----------
+# Ship the tract-level E2SFCA surface (recomputed at the fitted sigma) with the
+# fit provenance, so cliff's read_access_surface() / Module D v2 can consume it.
+final_e2 <- compute_e2sfca_access(
+  membership = membership, supply = provider_supply, demand = tract_demand,
+  weights = gaussian_band_weights(bands = bands, sigma = sigma_fit$sigma))
+export_access_surface(
+  final_e2, output_directory = "outputs/access_response",
+  sigma_fit = sigma_fit, capacity = capacity,
+  isochrone_run_id = isochrone_report$run_id, allow_unvalidated = TRUE)
