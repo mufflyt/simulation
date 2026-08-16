@@ -6,7 +6,7 @@
 .db <- "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb"
 
 test_that("the encounter view deduplicates, and family sums would not", {
-  skip_if_not(file.exists(.db))
+  skip_if(!file.exists(.db), "CHIA case-mix database not attached")
   con <- DBI::dbConnect(duckdb::duckdb(), .db, read_only = TRUE)
   on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 
