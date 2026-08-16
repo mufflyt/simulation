@@ -15,6 +15,7 @@ lifecourse_demand_trajectory_ci(
   param_uncertainty = lifecourse_param_uncertainty(),
   risk_params = lifecourse_risk_params(),
   pathway_params = lifecourse_pathway_params(),
+  pathway = NULL,
   ...
 )
 }
@@ -34,6 +35,12 @@ lifecourse_demand_trajectory_ci(
 \item{param_uncertainty}{Uncertainty spec from \code{\link[=lifecourse_param_uncertainty]{lifecourse_param_uncertainty()}}.}
 
 \item{risk_params, pathway_params}{Point-estimate parameter tables to perturb.}
+
+\item{pathway}{Optional condition-service pathway table. An EXPLICIT
+formal rather than left to \code{...}: R partial-matches named arguments
+against formals preceding \code{...}, so \verb{pathway =} was silently bound to
+\code{pathway_params} -- a different object -- and the service pathway was
+unreachable through this function by any spelling.}
 }
 \value{
 Tibble \code{year}, and for care-seeking and service units the median plus
