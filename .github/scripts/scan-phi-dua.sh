@@ -98,8 +98,14 @@ else
     # `while read` silently DROPS THE LAST LINE. With a single matching commit
     # (the usual case) the loop body never ran at all and the scan reported
     # clean. A leak scanner that misses its only finding is worse than none.
-    done < <(git log --all -S"$needle" --pretty=tformat:'%h %ad %s' \
-               --date=short 2>/dev/null | head -5 || true)
+    # PATH EXCLUSIONS, mirroring the worktree scan. Without them every commit
+    # that TOUCHES the allowlist or the scanner -- both of which necessarily
+    # contain PHI patterns as data -- becomes a new pickaxe hit needing its own
+    # allowlist entry. That is a treadmill, not a gate: each fix generates the
+    # next finding.
+    done < <(git log --all -S"$needle" --pretty=tformat:'%h %ad %s' --date=short \
+               -- ':!.github/phi-history-allowlist.txt' ':!.github/scripts/*' \
+               2>/dev/null | head -5 || true)
   done
 fi
 
