@@ -229,3 +229,42 @@ test_that("a skipped adversarial gate cannot masquerade as a pass", {
   expect_true(any(grepl("ADVERSARIAL GATE DID NOT PASS", raw, fixed = TRUE)))
   expect_true(any(grepl("VALIDATION SYSTEM regressed", raw, fixed = TRUE)))
 })
+
+test_that("the temporal-integrity gate is wired into both layers", {
+  skip_if_not(file.exists("../../.github/scripts/assert-temporal-integrity.R"))
+  n <- readLines("../../.github/workflows/nightly.yaml", warn = FALSE)
+  a <- readLines("../../.github/workflows/scientific-adversarial.yaml", warn = FALSE)
+  expect_true(any(grepl("assert-temporal-integrity.R", n, fixed = TRUE)))
+  expect_true(any(grepl("assert-temporal-integrity.R", a, fixed = TRUE)))
+  if (.Platform$OS.type == "unix")
+    expect_true(file.access("../../.github/scripts/assert-temporal-integrity.R", mode = 1L) == 0L)
+})
+
+test_that("the back-test declares censoring and a single observed estimand", {
+  skip_if_not(file.exists("../../artifacts/backtest_2020_to_2023_manifest.json"))
+  m <- jsonlite::fromJSON("../../artifacts/backtest_2020_to_2023_manifest.json",
+                          simplifyVector = FALSE)
+  # A back-test without a declared censoring window is not a back-test.
+  expect_true(length(m$leakage_audit) > 0)
+  yrs <- as.integer(regmatches(unlist(m$leakage_audit),
+                               regexpr("[0-9]{4}", unlist(m$leakage_audit))))
+  expect_true(all(yrs <= as.integer(m$cutoff_year)))
+  expect_lt(as.integer(m$cutoff_year), as.integer(m$target_year))
+  expect_false(is.null(m$observed_series_applies_attrition))
+})
+
+test_that("the attrition estimand mismatch is the recorded driver, not leakage", {
+  skip_if_not(file.exists("../../artifacts/backtest_2020_to_2023_summary.csv"))
+  s <- utils::read.csv("../../artifacts/backtest_2020_to_2023_summary.csv",
+                       stringsAsFactors = FALSE)
+  # Every arm under-predicts. Target leakage inflates apparent accuracy, so
+  # systematic under-prediction is evidence AGAINST leakage.
+  expect_true(all(s$percent_error < 0))
+  e_t <- mean(s$percent_error[as.logical(s$apply_attrition)])
+  e_f <- mean(s$percent_error[!as.logical(s$apply_attrition)])
+  # Definition-matched arms must remain less biased. If this inverts, the
+  # diagnosis in assert-temporal-integrity.R is wrong and must be re-opened.
+  expect_gt(e_f, e_t)
+  expect_gt(e_f - e_t, 3)   # currently 5.84 percentage points
+  expect_equal(mean(as.logical(s$within_95)[as.logical(s$apply_attrition)]), 0)
+})
