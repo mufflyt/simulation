@@ -20,9 +20,12 @@ Summarise a validation report and fail closed on internal failures
 \seealso{
 Other validation: 
 \code{\link{apply_calibration_scalars}()},
+\code{\link{assert_backtest_estimand_match}()},
 \code{\link{assert_demand_calibrated}()},
 \code{\link{assert_estimands_independent}()},
 \code{\link{assert_publishable_run}()},
+\code{\link{backtest_estimand_contract}()},
+\code{\link{backtest_headline_metrics}()},
 \code{\link{detect_proportional_estimands}()},
 \code{\link{fit_calibration_scalars}()},
 \code{\link{publishable_run_report}()},

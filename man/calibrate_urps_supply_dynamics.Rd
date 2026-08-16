@@ -15,14 +15,14 @@ calibrate_urps_supply_dynamics(
 )
 }
 \arguments{
-\item{entrant_tbl}{A data frame with integer \code{year} and numeric
-\code{entrants}, one row per year.}
+\item{entrant_tbl}{A data frame with integer \code{year} and numeric \code{entrants},
+one row per year.}
 
 \item{departure_tbl}{A data frame with one row per provider-year and columns
 \code{provider_id}, \code{year}, \code{age}, and \code{departed} (0/1).}
 
-\item{forecast_years}{Integer vector of years to project. Must span every year
-a downstream back-test will advance through.}
+\item{forecast_years}{Integer vector of years to project. Must span every
+year a downstream back-test will advance through.}
 
 \item{n_draws}{Number of Monte Carlo parameter draws.}
 
@@ -35,10 +35,10 @@ candidate post-break regimes.}
 }
 \value{
 A named list with the fitted entrant model, the selected break year,
-per-year \code{entrant_draws} and \code{entrant_summary}, the fitted departure
-model, per-age \code{departure_hazard_draws} and \code{departure_summary}, the
-empirical \code{retirement_hazard_cv} (median CV over ages 60-80), and a
-\code{diagnostics} tibble.
+per-year \code{entrant_draws} and \code{entrant_summary}, the fitted departure model,
+per-age \code{departure_hazard_draws} and \code{departure_summary}, the empirical
+\code{retirement_hazard_cv} (median CV over ages 60-80), and a \code{diagnostics}
+tibble.
 }
 \description{
 Estimates, with uncertainty, the two supply processes the forecast back-test
@@ -46,20 +46,16 @@ found were held fixed: (1) an empirical entrant process allowing a recent
 regime shift in level and slope, and (2) an age-specific departure hazard
 fitted from observed ABOG events. Both processes are propagated through Monte
 Carlo parameter draws rather than held at a point estimate.
-}
-\details{
+
 The purpose is FORECAST calibration, not base-year calibration. Base-year
 adequacy should be calibrated separately from capacity data
-(see \code{\link{baseline_gap}}); this function calibrates the trajectory. The
-retirement hazard CV is read off the fitted hazard rather than assumed to be
-zero.
+(see \code{\link[=baseline_gap]{baseline_gap()}}); this function calibrates the trajectory.
 }
 \seealso{
-\code{\link{advance_urps_supply_one_year}},
-\code{\link{backtest_urps_supply_calibration}},
-\code{\link{decompose_urps_forecast_miss}}
+\code{\link[=advance_urps_supply_one_year]{advance_urps_supply_one_year()}}, \code{\link[=backtest_urps_supply_calibration]{backtest_urps_supply_calibration()}},
+\code{\link[=decompose_urps_forecast_miss]{decompose_urps_forecast_miss()}}
 
-Other supply dynamics:
+Other supply dynamics: 
 \code{\link{advance_urps_supply_one_year}()},
 \code{\link{backtest_urps_supply_calibration}()},
 \code{\link{decompose_urps_forecast_miss}()}

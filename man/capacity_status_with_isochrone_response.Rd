@@ -39,7 +39,7 @@ exactly as \code{\link[=capacity_status_with_lizeth]{capacity_status_with_lizeth
 input without a validated response.
 }
 \seealso{
-Other isochrone access response:
+Other isochrone access response: 
 \code{\link{e2sfca_catchments_from_access}()},
 \code{\link{fit_decay_sigma}()},
 \code{\link{join_lizeth_to_catchments}()},
