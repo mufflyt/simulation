@@ -22,6 +22,7 @@ Other workload to fte:
 \code{\link{calibrate_wrvu_per_fte}()},
 \code{\link{calibration_status_report}()},
 \code{\link{check_productivity_plausible}()},
+\code{\link{claims_service_volumes}()},
 \code{\link{compute_fte_gap}()},
 \code{\link{convert_workload_to_fte}()},
 \code{\link{implied_urps_share}()},

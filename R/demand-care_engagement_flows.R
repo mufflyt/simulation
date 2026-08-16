@@ -69,7 +69,7 @@ advance_care_engagement <- function(untreated_eligible,
   continuing <- care_engaged_previous * retention_rate
   engaged    <- entering + continuing
 
-  tibble::tibble(
+  flows <- tibble::tibble(
     untreated_eligible      = untreated_eligible,
     previously_disengaged   = previously_disengaged,
     care_engaged_previous   = care_engaged_previous,
@@ -79,6 +79,28 @@ advance_care_engagement <- function(untreated_eligible,
     # derived diagnostic only -- never an input, never a calibration lever
     derived_incident_share  = entering / engaged,
     disengaging             = care_engaged_previous * (1 - retention_rate))
+
+  # THE CIRCULARITY GATE RUNS ON EVERY ADVANCE, not only in tests.
+  #
+  # This module exists because care_engaged was once an INPUT that the incident
+  # share was then derived from -- the stock explained itself. The gates check
+  # that the identity still holds and that no one has reintroduced a supplied
+  # incident_share. A gate that only tests call is exactly the shape of defect
+  # test-export-wiring.R was written for, so it is called here where the object
+  # is constructed.
+  #
+  # Stops rather than warns: a violation means the accounting identity
+  # newly_entering + continuing = engaged is broken, so every downstream number
+  # is arithmetically wrong rather than merely uncertain.
+  gates <- assert_care_flow_gates(flows)
+  if (!base::all(gates$passed)) {
+    failed <- gates[!gates$passed, , drop = FALSE]
+    base::stop("Care-engagement flow gates failed: ",
+               base::paste(base::sprintf("%s (%s)", failed$gate, failed$detail),
+                           collapse = "; "),
+               call. = FALSE)
+  }
+  flows
 }
 
 #' Assert the flow model has not reintroduced the circularity

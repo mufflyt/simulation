@@ -90,11 +90,43 @@ care_engagement_visits <- function(split,
   }
   entrants   <- base::sum(split$newly_entering_care)
   continuing <- base::sum(split$continuing_care)
-  tibble::tibble(
+  visits <- tibble::tibble(
     component = c("new_consultation", "first_year_followup", "continuing_followup"),
     volume    = c(entrants * new_consults_per_entrant,
                   entrants * first_year_followup_rate,
                   continuing * annual_followup_rate))
+
+  # THE ACCEPTANCE GATES RUN HERE, on the object they describe.
+  #
+  # They are split by KIND, because the four are not the same sort of claim and
+  # collapsing them would force a false choice between blocking on a known-open
+  # provenance item and not checking arithmetic at all:
+  #
+  #   gates 1-3  arithmetic and structural. A failure means the decomposition
+  #              does not add up -- newly_entering + continuing must equal
+  #              care_engaged, and new_consultation must be strictly below it
+  #              rather than equal by construction. Downstream numbers would be
+  #              wrong, not uncertain, so these STOP.
+  #   gate 4     provenance: first_year_followup_rate and annual_followup_rate
+  #              are unsourced (care_engagement_params() says so). That is the
+  #              open scientific question this module was written to expose, and
+  #              it is TRUE TODAY -- blocking on it would make the package
+  #              unusable while telling us nothing new. It messages instead, so
+  #              it stays visible without being fatal.
+  gates <- assert_care_engagement_gates(split, visits)
+  arith <- gates[seq_len(3), , drop = FALSE]
+  arith <- arith[!base::is.na(arith$passed) & !arith$passed, , drop = FALSE]
+  if (base::nrow(arith) > 0L) {
+    base::stop("Care-engagement decomposition failed: ",
+               base::paste(base::sprintf("%s (%s)", arith$gate, arith$detail),
+                           collapse = "; "),
+               call. = FALSE)
+  }
+  if (!base::isTRUE(gates$passed[4])) {
+    base::message("Care-engagement utilization parameters remain unsourced: ",
+                  gates$detail[4], ".")
+  }
+  visits
 }
 
 #' Acceptance gates for the incident/continuing decomposition

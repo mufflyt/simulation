@@ -53,7 +53,7 @@ the held-out region's \code{x}. \code{sigma} is held at the value used to build
 fitted decay, not a per-fold refit of the decay itself.
 }
 \seealso{
-Other isochrone access response:
+Other isochrone access response: 
 \code{\link{capacity_status_with_isochrone_response}()},
 \code{\link{e2sfca_catchments_from_access}()},
 \code{\link{fit_decay_sigma}()},

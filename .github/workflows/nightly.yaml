@@ -76,8 +76,22 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/frozenlib"
           Rscript -e '
-            install.packages("renv", repos = "https://cloud.r-project.org")
             lib <- file.path(Sys.getenv("RUNNER_TEMP"), "frozenlib")
+            # renv must be installed INTO the frozen library, not the default
+            # user library. .libPaths(lib) REPLACES the search path rather than
+            # extending it, so a renv installed elsewhere becomes unreachable
+            # the moment the path is narrowed -- restore then died with "there
+            # is no package called renv", the library stayed empty, and the
+            # smoke test that followed reported the far more confusing "there is
+            # no package called pkgload". The gate looked like a lockfile defect
+            # when it was a library-path defect.
+            #
+            # Prepending lib to the EXISTING path would also fix the load, but
+            # it would let packages already present in the default library
+            # satisfy the lockfile, which is precisely what this job exists to
+            # rule out. Installing renv into lib keeps the library empty of
+            # everything except the restorer itself.
+            install.packages("renv", repos = "https://cloud.r-project.org", lib = lib)
             .libPaths(lib)
             renv::restore(project = ".", library = lib, prompt = FALSE)
             cat("\n## Frozen restore\n\ninstalled:", length(list.files(lib)), "packages\n")

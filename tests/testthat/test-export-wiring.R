@@ -175,6 +175,34 @@ test_that("the unwired surface does not grow", {
   # hwsm_retirement_hazard_table() -- both registered `api`, not yet wired into
   # the default orchestrator (that is the deferred 40h-basis recalibration).
   # Ratio 60/489 = 0.123, still under 0.13.
-  expect_lte(length(o$orphans), 60L)
-  expect_lte(length(o$orphans) / length(o$exports), 0.13)
+  # RAISED 60 -> 75, and the RATIO bound moved for the first time, 0.13 -> 0.14.
+  # Both need justifying, because this is the case a ratchet is built to resist.
+  #
+  # THE SURFACE DID NOT GROW. THE MEASUREMENT WAS WRONG. NAMESPACE was stale:
+  # 34 functions carried roxygen @export blocks that had never been regenerated
+  # into it, so an installed package could not call them and this gate could not
+  # see them. Regenerating with the pinned roxygen2 7.3.3 added 34 exports and
+  # removed 0. Every previous number in this comment -- including the 60 -- was
+  # computed against a NAMESPACE that undercounted the real export surface.
+  # (Pristine origin/main is doc-stale by 48 files for the same reason, so this
+  # predates the branch.)
+  #
+  # Of the 34, four were GUARDS invoked by nothing -- assert_incident_not_prevalent(),
+  # assert_backtest_estimand_match(), assert_care_flow_gates() and
+  # assert_care_engagement_gates(). They were WIRED into their earliest
+  # authoritative call sites rather than registered, exactly as the doctrine
+  # above requires, and wiring assert_incident_not_prevalent() is what exposed
+  # the stock-as-flow defect now recorded in docs/INCIDENT_ENTRY_ESTIMAND.md.
+  # The remaining analysis accessors (CHIA transport, care-engagement, back-test
+  # estimand reporters) are registered `api`.
+  #
+  # THE RATIO ROSE FOR A REAL REASON, so it is not waved through: 75/552 =
+  # 0.1359 against the previous 60/489 = 0.1227. The newly-visible exports are
+  # disproportionately orphans -- roughly 44% against a 12% baseline -- because
+  # the new modules are analysis surfaces a user calls, not orchestrator steps.
+  # That is expected for transport_*() and chia_*(), but it is also a standing
+  # obligation: when the CHIA transport layer is wired into the demand pipeline,
+  # this bound must come back DOWN, not stay at 0.14.
+  expect_lte(length(o$orphans), 75L)
+  expect_lte(length(o$orphans) / length(o$exports), 0.14)
 })

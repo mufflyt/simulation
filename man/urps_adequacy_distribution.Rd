@@ -39,4 +39,3 @@ Other Lizeth inverse adequacy:
 }
 \concept{Lizeth inverse adequacy}
 \concept{calibration}
-
