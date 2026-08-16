@@ -64,6 +64,15 @@ jobs:
           r-version: ${{ matrix.config.r }}
           use-public-rspm: true
 
+      # Install pandoc BEFORE setup-r-dependencies. That action's internal
+      # "does this package need pandoc?" check resolves pak::pkg_deps(".",
+      # dependencies = "all") -- which includes Suggests, and so tries to find
+      # mysterycall, a GitHub-only Suggests deliberately absent from Remotes
+      # (its GLMM graph conflicts with the pinned lme4/blme). With pandoc already
+      # on PATH the check short-circuits and never resolves Suggests. Pandoc is
+      # needed regardless: knitr/rmarkdown build the vignettes during R CMD check.
+      - uses: r-lib/actions/setup-pandoc@v2
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           # knitr/rmarkdown are the VignetteBuilder. They live in Suggests, which

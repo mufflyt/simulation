@@ -680,9 +680,10 @@ calibration_status_report <- function() {
   tibble::tibble(
     input = c("work RVUs", "service case mix", "delegation shares",
               "indirect time share", "clinical hours schedule",
-              "hours intercept", "base-year supply"),
+              "hours intercept", "base-year supply", "departure hazard"),
     status = c("calibrated", "derived_by_analogy", URPS_DELEGATION_STATUS,
-               "calibrated", "derived_by_analogy", "solved", "calibrated"),
+               "calibrated", "derived_by_analogy", "solved", "calibrated",
+               "calibrated"),
     source = c(
       CMS_RVU_RELEASE,
       "Case-mix weights in URPS_CPT_BASKET are a declared assumption; replace with claims-derived shares",
@@ -690,7 +691,16 @@ calibration_status_report <- function() {
       INDIRECT_TIME_SHARE_SOURCE,
       "HWSM Exhibit 14 age x sex specification (general internal medicine levels)",
       "Solved so the base-year cohort mean equals the FTE definition (37.2 clinical hrs/wk)",
-      "mufflyaccess URPS contract"
+      "mufflyaccess URPS contract",
+      # cliff exposure-based age-band hazard (build_urps_exit_hazard()). Its
+      # calibrated payoff is the gap's age-structure and TIMING, not the 2050 net
+      # magnitude, which washes out via the FTE anchor -- and not tighter
+      # intervals (the hazard_cv advantage does not survive propagation).
+      # Quantified in scripts/diagnostics/hazard_calibration_delta.R.
+      paste("cliff exposure-based age-band hazard (81 departures over",
+            "person-years); calibrates gap age-structure and timing, not the",
+            "2050 net magnitude (washes out via the FTE anchor) -- see",
+            "scripts/diagnostics/hazard_calibration_delta.R")
     )
   )
 }
