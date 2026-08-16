@@ -132,3 +132,13 @@ test_that("the unsourced-parameter gate reports without being fatal", {
                            annual_followup_rate = 0.5),
     "remain unsourced")
 })
+
+test_that("an empty cohort is outside the invariant's domain, not a violation", {
+  # REGRESSION. The first wiring refused an empty world: `0 < 0` is FALSE and
+  # the ratio printed as NaN, so a degenerate-but-correct case produced an
+  # uninterpretable refusal. Found by the property-based worlds in
+  # .github/scripts/adversarial/metamorphic.R, not by a hand-written test --
+  # which is the argument for generating boundaries rather than imagining them.
+  expect_true(assert_incident_not_prevalent(c(pop = 0), strict = TRUE))
+  expect_no_error(pathway_service_volumes(treated = c(pop = 0), year = 2025L))
+})
