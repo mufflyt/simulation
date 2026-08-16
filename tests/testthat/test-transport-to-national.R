@@ -85,7 +85,8 @@ test_that("the retired ICD-9 codes are counted", {
 })
 
 test_that("the free sling route works without HCUP", {
-  skip_if_not(file.exists(.root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
+  skip_if(!file.exists(.root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")),
+          "CMS PSPS geography file not present")
   skip_if(!file.exists(.db), "CHIA case-mix database not attached")
   puf <- suppressMessages(cms_puf_national_volume(
     path = .root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
@@ -97,7 +98,8 @@ test_that("the free sling route works without HCUP", {
 })
 
 test_that("the sling route refuses without the FFS share", {
-  skip_if_not(file.exists(.root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
+  skip_if(!file.exists(.root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")),
+          "CMS PSPS geography file not present")
   skip_if(!file.exists(.db), "CHIA case-mix database not attached")
   r <- suppressMessages(transport_sling_via_medicare(
     db = .db, puf_path = .root("data-raw","cms_psps","MUP_PHY_R26_P05_V10_D24_Geo.csv")))
