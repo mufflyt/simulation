@@ -46,11 +46,20 @@ test:
 check: document
 	$(RSCRIPT) --vanilla -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"), error_on = "warning")'
 
-# Faster subset: skips tests + vignette build (which need the heavy/compiled
-# deps). Still catches the documentation defect classes -- Rd cross-references,
+# Faster subset: skips tests + vignettes (which need the heavy/compiled deps).
+# Still catches the documentation defect classes -- Rd cross-references,
 # missing NAMESPACE exports, codoc, undeclared globals.
+#
+# --ignore-vignettes, NOT --no-build-vignettes. The latter does not skip
+# vignette code: it changes how the code is OBTAINED, tangling the .Rmd instead
+# of building it. Tangling flattens chunks to plain R and discards
+# `eval = FALSE`, so demand-model.Rmd -- whose chunks are illustrative and
+# deliberately unevaluated, referencing an undefined `swan_panel` -- executed
+# the whole demand stack and then failed on the missing symbol. That made this
+# target BOTH unable to pass and slower than `check` (1h42m against ~40m),
+# which is the opposite of a fast subset on two counts.
 check-fast: document
-	$(RSCRIPT) --vanilla -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--no-tests", "--no-build-vignettes", "--as-cran"), error_on = "warning")'
+	$(RSCRIPT) --vanilla -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--no-tests", "--ignore-vignettes", "--as-cran"), error_on = "warning")'
 
 # The no-dependency tripwire. Unlike `check` / `check-fast` (which build the
 # package and therefore need every Import, duckdb included), this only PARSES

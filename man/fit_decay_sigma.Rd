@@ -32,8 +32,8 @@ minutes. Default \code{c(15, 240)}.}
 \item{bands}{Optional band vector; when supplied, the fitted weights
 \code{gaussian_band_weights(bands, sigma)} are returned. Default \code{NULL}.}
 
-\item{n_grid}{Number of coarse grid points used to bracket the minimum before
-refining. Default \code{25}; must be at least 3.}
+\item{n_grid}{Number of points in the coarse grid scanned across
+\code{sigma_bounds} before refinement. Must be at least 3. Default \code{25L}.}
 }
 \value{
 A list: \code{sigma} (fitted), \code{wait_scale} (at the fitted sigma), \code{sse},
@@ -58,12 +58,13 @@ independent of the spatial recompute: the standard closure (recompute E2SFCA
 per sigma) is built in the runner, while tests supply a lightweight map. Each
 evaluation joins the Lizeth calls to that sigma's catchments and scores the
 unsaturated pairs; folds with fewer than two usable pairs score \code{Inf} so the
-search avoids degenerate regions. The SSE surface has a sharp global well on an
-otherwise flat plateau, so a coarse grid brackets the minimum and
-\code{\link[stats:optimize]{stats::optimize()}} refines within one grid step of the best point.
+search avoids degenerate regions. The SSE surface has a sharp global well on
+an otherwise flat plateau, so a coarse grid of \code{n_grid} points brackets the
+minimum and \code{\link[stats:optimize]{stats::optimize()}} refines within one grid step of the best
+point.
 }
 \seealso{
-Other isochrone access response:
+Other isochrone access response: 
 \code{\link{capacity_status_with_isochrone_response}()},
 \code{\link{e2sfca_catchments_from_access}()},
 \code{\link{join_lizeth_to_catchments}()},
