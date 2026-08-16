@@ -24,7 +24,8 @@ test_that("the retired any-leakage definition is explicitly excluded", {
 })
 
 test_that("raw leakage phenotypes are not labelled UI prevalence", {
-  skip_if_not(file.exists("../../data-raw/nhanes/nhanes_ui_prevalence_by_age.rds"))
+  skip_if(!file.exists("../../data-raw/nhanes/nhanes_ui_prevalence_by_age.rds"),
+          "NHANES UI prevalence artifact not built")
   d <- readRDS("../../data-raw/nhanes/nhanes_ui_prevalence_by_age.rds")
   prohibited <- c("stress_ui", "urgency_ui", "mixed_ui")
   expect_length(intersect(prohibited, unique(d$outcome)), 0L)
@@ -33,7 +34,8 @@ test_that("raw leakage phenotypes are not labelled UI prevalence", {
 })
 
 test_that("ISI >= 3 is materially stricter than any leakage", {
-  skip_if_not(file.exists("../../data-raw/nhanes/nhanes_ui_prevalence_by_age.rds"))
+  skip_if(!file.exists("../../data-raw/nhanes/nhanes_ui_prevalence_by_age.rds"),
+          "NHANES UI prevalence artifact not built")
   d <- readRDS("../../data-raw/nhanes/nhanes_ui_prevalence_by_age.rds")
   oldest <- d[d$outcome == "ui" & d$group == "75+", ]
   # the retired definition reached 0.781 at 75+; a severity-qualified state
@@ -42,7 +44,8 @@ test_that("ISI >= 3 is materially stricter than any leakage", {
 })
 
 test_that("phenotypes may exceed primary prevalence without being an error", {
-  skip_if_not(file.exists("../../data-raw/nhanes/nhanes_ui_prevalence_by_age.rds"))
+  skip_if(!file.exists("../../data-raw/nhanes/nhanes_ui_prevalence_by_age.rds"),
+          "NHANES UI prevalence artifact not built")
   d <- readRDS("../../data-raw/nhanes/nhanes_ui_prevalence_by_age.rds")
   ui <- d$prevalence[d$outcome == "ui" & d$group == "20-34"]
   st <- d$prevalence[d$outcome == "stress_leakage_12m" & d$group == "20-34"]

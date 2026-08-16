@@ -8,7 +8,7 @@
 # became NA. Nothing errored. Normalised, the same code returns 15.7%.
 
 skip_if_offline <- function() {
-  skip_if_not(requireNamespace("nhanesA", quietly = TRUE), "nhanesA not installed")
+  skip_if_not(requireNamespace("nhanesA", quietly = TRUE), "nhanesA package not available")
   ok <- tryCatch(!is.null(nhanesA::nhanes("DEMO_D")), error = function(e) FALSE)
   skip_if_not(ok, "NHANES not reachable")
 }
