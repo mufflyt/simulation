@@ -20,7 +20,12 @@ suppressMessages(pkgload::load_all(".", quiet = TRUE))
 TREATED <- c(pop = unname(FROZEN_CARE_ENGAGED[["pop"]]),
              ui  = unname(FROZEN_CARE_ENGAGED[["ui"]]),
              ai  = unname(FROZEN_CARE_ENGAGED[["ai"]]))
-BASE <- condition_service_pathway()
+# Structural gates need a pathway that RUNS. The shipped table is refused by
+# assert_incident_not_prevalent() (per_entering = 1.00 is a stock-as-flow
+# error); this fixture is NOT a candidate value -- see the header of
+# .github/scripts/_pathway_fixture.R and docs/INCIDENT_ENTRY_ESTIMAND.md.
+source(".github/scripts/_pathway_fixture.R")
+BASE <- ci_pathway_fixture()
 ANCHOR <- utils::read.csv("data/anchors/prolapse_procedure_volume.csv")$observed[[1]]
 
 # ---- detector family -------------------------------------------------------

@@ -23,7 +23,12 @@ record <- function(class, what, detail = "") {
 }
 pass <- function(what) { PASS <<- PASS + 1L; cat(sprintf("  PASS  %s\n", what)) }
 
-BASE <- condition_service_pathway()
+# Structural gates need a pathway that RUNS. The shipped table is refused by
+# assert_incident_not_prevalent() (per_entering = 1.00 is a stock-as-flow
+# error); this fixture is NOT a candidate value -- see the header of
+# .github/scripts/_pathway_fixture.R and docs/INCIDENT_ENTRY_ESTIMAND.md.
+source(".github/scripts/_pathway_fixture.R")
+BASE <- ci_pathway_fixture()
 vol <- function(treated, pathway = BASE) {
   v <- pathway_service_volumes(treated = treated, year = 2025L, pathway = pathway)
   x <- tapply(v$volume, v$service, sum)
@@ -122,6 +127,20 @@ for (w in seq_len(n_worlds)) {
     pw$p_advance[rows] <- runif(1)
   }
   pw$per_entering <- runif(nrow(pw), 0, 3)
+  # SAME PRINCIPLE AS p_advance ABOVE, one invariant later. new_consultation is
+  # now bounded by assert_incident_not_prevalent(): total new consultations must
+  # stay strictly below the treated cohort, because a prevalent patient cannot
+  # also be incident every year. Drawing per_entering from U(0, 3) generates
+  # worlds that violate that, and the guard rightly refuses them -- which this
+  # harness then reported as an invariant violation. It was testing the
+  # validator, not the model.
+  #
+  # new_consultation appears on BOTH the conservative and recurrence rows, and
+  # their volumes add, so bounding each below 1 is not sufficient. U(0, 0.4)
+  # keeps the sum under 0.8 x treated for any admissible recurrence cohort,
+  # which is comfortably legal without collapsing the range being explored.
+  nc <- pw$service == "new_consultation"
+  pw$per_entering[nc] <- runif(sum(nc), 0, 0.4)
   tr <- c(pop = sample(0:1e6, 1), ui = sample(0:1e6, 1), ai = sample(0:1e6, 1))
   v <- tryCatch(vol(tr, pw), error = function(e) NULL)
   ent <- tryCatch(pathway_stage_entrants(tr, pw), error = function(e) NULL)

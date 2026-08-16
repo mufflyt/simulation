@@ -121,7 +121,12 @@ for (m in mirror) {
 }
 
 cat("\n== 8. The POP anchor discrepancy is still reported, not silently scaled ==\n")
-pw <- condition_service_pathway()
+# Structural gates need a pathway that RUNS. The shipped table is refused by
+# assert_incident_not_prevalent() (per_entering = 1.00 is a stock-as-flow
+# error); this fixture is NOT a candidate value -- see the header of
+# .github/scripts/_pathway_fixture.R and docs/INCIDENT_ENTRY_ESTIMAND.md.
+source(".github/scripts/_pathway_fixture.R")
+pw <- ci_pathway_fixture()
 pop <- pw[pw$condition == "pop", ]
 proc <- pop[pop$stage == "procedure" & pop$service == "prolapse_procedure", ]
 if (!isTRUE(all.equal(proc$per_entering[[1]], 1.0))) {
