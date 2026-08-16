@@ -1,0 +1,100 @@
+# PR GATES — the fast subset that must not wait for the nightly.
+#
+# THE GAP THIS CLOSES. Before this workflow, the only things running on a pull
+# request were R CMD check (ubuntu-release) and repo-hygiene. Every safety and
+# scientific gate lived in the nightly, which means a PR could merge a
+# DUA-restricted file, PHI, a terminal scalar, or a broken refusal gate and it
+# would sit on main for up to 24 hours before anything noticed.
+#
+# On a PUBLIC repository that is the wrong trade for the leak guard in
+# particular: it needs no R toolchain and finishes in seconds.
+#
+# WHAT IS DELIBERATELY *NOT* HERE. The platform matrix, coverage, the frozen
+# restore, the adversarial campaign and the full suite stay nightly. They are
+# slow, and their failure modes are not ones a single PR is likely to introduce
+# undetected. This workflow is the subset where a 24-hour delay is unacceptable.
+#
+# FORK PRs. secrets are not available to fork pull requests, so the R jobs are
+# skipped there rather than failing confusingly; the leak guard still runs,
+# because it needs no secret and is the gate that matters most.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+name: pr-gates
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # No R toolchain. Seconds. This is the one that must never wait for a nightly.
+  # ---------------------------------------------------------------------------
+  leak-guard:
+    name: leak guard (PHI, DUA, secrets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the history scan is not meaningful on a shallow clone
+      - name: PHI / DUA scan — working tree
+        run: .github/scripts/scan-phi-dua.sh worktree
+      - name: PHI / DUA scan — full git history
+        run: .github/scripts/scan-phi-dua.sh history
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+      - name: .gitignore still covers restricted data
+        run: |
+          fail=0
+          for pat in '*.rds' '*.mdb'; do
+            grep -qF -- "$pat" .gitignore || { echo "::error::.gitignore no longer ignores $pat"; fail=1; }
+          done
+          exit $fail
+
+  # ---------------------------------------------------------------------------
+  # The scientific gates a PR can plausibly break in one diff.
+  # ---------------------------------------------------------------------------
+  science-gates:
+    name: refusal, invariant and estimand gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Fork PRs cannot read MUFFLYACCESS_PAT. Skip rather than fail confusingly.
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    env:
+      GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
+      _R_CHECK_FORCE_SUGGESTS_: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      # setup-pandoc BEFORE setup-r-dependencies; enforced by test-repo-hygiene.R
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::testthat, any::pkgload, any::knitr, any::rmarkdown, any::survey, any::flexsurv, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          dependencies: '"hard"'
+
+      - name: Refusal gates still refuse
+        run: Rscript .github/scripts/assert-refusal-gates.R
+
+      - name: Scientific invariants hold
+        run: Rscript .github/scripts/assert-scientific-invariants.R
+
+      - name: Temporal integrity and back-test estimand match
+        run: Rscript .github/scripts/assert-temporal-integrity.R
+
+      - name: Canary mutations still die
+        # Cheap, and it is the gate that proves the OTHER gates still work.
+        run: Rscript .github/scripts/adversarial/canaries.R
