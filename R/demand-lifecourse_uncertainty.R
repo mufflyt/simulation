@@ -65,14 +65,22 @@ lifecourse_demand_trajectory_ci <- function(pop_by_age_year,
                                             seed = NULL,
                                             param_uncertainty = lifecourse_param_uncertainty(),
                                             risk_params = lifecourse_risk_params(),
-                                            pathway_params = lifecourse_pathway_params(), ...) {
+                                            pathway_params = lifecourse_pathway_params(),
+                                            pathway = NULL, ...) {
   stopifnot(length(probs) == 3L)
   .preserve_rng_scope()
   if (!is.null(seed)) set.seed(seed)
   draws <- purrr::map(seq_len(n_draws), function(i) {
     dp <- .draw_lifecourse_params(risk_params, pathway_params, param_uncertainty)
+    # `pathway` is an EXPLICIT formal, not left to `...`. R partial-matches
+    # named arguments against formals that precede `...`, so a caller writing
+    # `pathway = <service table>` had it silently bound to `pathway_params`
+    # instead -- two entirely different objects, and the failure surfaced far
+    # downstream inside qlogis(). The service pathway was therefore unreachable
+    # through this function by any spelling. Naming it here makes it reachable
+    # and makes the partial match impossible.
     tr <- lifecourse_demand_trajectory(pop_by_age_year, years = years, scenario = scenario,
-                                       n = n, seed = NULL,
+                                       n = n, seed = NULL, pathway = pathway,
                                        risk_params = dp$risk, pathway_params = dp$pathway, ...)
     tr$demand_summary
   })

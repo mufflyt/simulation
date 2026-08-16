@@ -7,7 +7,7 @@
 # changing who reaches surgery.
 
 testthat::test_that("POP testing is a structural pass-through", {
-  pathway <- condition_service_pathway()
+  pathway <- valid_pathway()   # shipped table is refused; see helper-setup.R
   pop_testing <- pathway[
     pathway$condition == "pop" & pathway$stage == "testing",
     ,
@@ -21,7 +21,7 @@ testthat::test_that("POP testing is a structural pass-through", {
 })
 
 testthat::test_that("POP procedure entry is governed by conservative transition", {
-  pathway <- condition_service_pathway()
+  pathway <- valid_pathway()   # shipped table is refused; see helper-setup.R
   entrants <- pathway_stage_entrants(c(pop = 1000), pathway)
   pop_entering <- stats::setNames(entrants$entering, entrants$stage)
 
@@ -48,7 +48,7 @@ testthat::test_that("POP procedure entry is governed by conservative transition"
 })
 
 testthat::test_that("testing utilization cannot gate POP surgery", {
-  pathway <- condition_service_pathway()
+  pathway <- valid_pathway()   # shipped table is refused; see helper-setup.R
   baseline <- pathway_service_volumes(
     treated = c(pop = 1000),
     year = 2025L,
@@ -98,7 +98,7 @@ testthat::test_that("testing utilization cannot gate POP surgery", {
 })
 
 testthat::test_that("conservative transition remains the causal POP lever", {
-  pathway <- condition_service_pathway()
+  pathway <- valid_pathway()   # shipped table is refused; see helper-setup.R
   baseline <- pathway_service_volumes(
     treated = c(pop = 1000),
     year = 2025L,
@@ -149,7 +149,7 @@ testthat::test_that("conservative transition remains the causal POP lever", {
 })
 
 testthat::test_that("UI testing transition is unchanged", {
-  pathway <- condition_service_pathway()
+  pathway <- valid_pathway()   # shipped table is refused; see helper-setup.R
   ui_testing <- pathway[
     pathway$condition == "ui" & pathway$stage == "testing",
     ,

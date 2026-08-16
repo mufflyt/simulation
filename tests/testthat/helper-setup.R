@@ -51,3 +51,30 @@ if (!requireNamespace("urpssim", quietly = TRUE) ||
   }
   character(0)
 }
+
+# ---------------------------------------------------------------------------
+# A SCIENTIFICALLY VALID PATHWAY, for tests of machinery rather than of the
+# canonical parameterization.
+#
+# The shipped table carries per_entering = 1.00 on new_consultation, which turns
+# a prevalence STOCK into an annual FLOW, and assert_incident_not_prevalent()
+# refuses it. That refusal is CORRECT and stays until the parameter is sourced
+# (docs/INCIDENT_ENTRY_ESTIMAND.md).
+#
+# Most tests that hit the refusal are not about that parameter at all -- they
+# check that a mutation propagates, that volumes convert to FTE, that an
+# exporter carries lo/hi columns. Those need a pathway that RUNS, and asserting
+# a refusal in them would delete the coverage they exist to provide.
+#
+# 0.25 IS A FIXTURE, NOT A CANDIDATE VALUE. It is chosen only to be a plausible
+# flow rather than a stock. The real parameter is unresolved and its estimator
+# is pre-registered before data access; nothing here may be read as an estimate
+# of it, and no test should tune it to make a number come out right.
+#
+# Tests that ARE about the canonical configuration must NOT use this -- they
+# assert the refusal explicitly, and the end-to-end canonical run lives in
+# .github/scripts/assert-canonical-science.R, which stays red by design.
+valid_pathway <- function(pathway = condition_service_pathway()) {
+  pathway$per_entering[pathway$service == "new_consultation"] <- 0.25
+  pathway
+}

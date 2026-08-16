@@ -390,17 +390,23 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
   # Scoring one against the other is a category error, and it reads as model
   # error -- it was a material part of the reported back-test miss.
   #
-  # Wired at the point the summary is ASSEMBLED so no caller can obtain a
-  # summary that has not been checked.
+  # CLASSIFY HERE, REFUSE AT PUBLICATION. This was first wired as a forced
+  # strict refusal inside run_backtest(), which was the wrong abstraction level
+  # and made the function permanently unusable.
   #
-  # FORCED STRICT, not left to resolve_reproducibility_mode(). An estimand
-  # mismatch is not a warning-level condition: if the back-test is comparing
-  # different quantities then the apparent validation is scientifically
-  # uninterpretable, and a warning would let an uninterpretable number be
-  # reported as a result. The relaxed mode exists for reproducibility
-  # tolerances, which this is not.
-  summary_tbl$estimand_check <- list(
-    assert_backtest_estimand_match(summary_tbl, mode = "strict"))
+  # run_backtest() runs `for (att in c(TRUE, FALSE))` BY DESIGN and already
+  # labels the FALSE arms "[no-attrition, definition-matched]". Producing both
+  # estimands IS the intended experiment -- the attrition arms are what the
+  # matched arms are contrasted against. The mismatch is therefore not an error
+  # in running the back-test; the error is REPORTING an attrition arm as a
+  # validated comparison, because "active net of attrition" has no observable
+  # counterpart in a cumulative certification series.
+  #
+  # So the classification is ATTACHED to every summary -- no caller can obtain
+  # an unclassified one -- and the refusal lives in assert_publishable_run(),
+  # which is where a number becomes a claim. backtest_status_from_summary()
+  # already separates the two subsets for exactly this reason.
+  summary_tbl$estimand_check <- list(assert_backtest_estimand_match(summary_tbl))
 
   list(
     summary = summary_tbl,

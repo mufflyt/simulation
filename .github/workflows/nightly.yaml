@@ -74,6 +74,16 @@ jobs:
           RENV_PATHS_CACHE: ''          # no cache: prove the lockfile alone suffices
           RENV_CONFIG_CACHE_ENABLED: 'FALSE'
         run: |
+          # terra/sf link against GDAL, GEOS and PROJ. Without them the
+          # restore aborts partway with "error testing if 'terra' can be
+          # loaded", leaves the library incomplete, and the smoke test that
+          # follows reports the far more confusing "there is no package called
+          # pkgload". setup-r-dependencies normally resolves sysreqs, but this
+          # job deliberately does not use it -- the whole point is to restore
+          # from renv.lock alone -- so the system layer must be named here.
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgdal-dev libgeos-dev libproj-dev libudunits2-dev
           mkdir -p "$RUNNER_TEMP/frozenlib"
           Rscript -e '
             lib <- file.path(Sys.getenv("RUNNER_TEMP"), "frozenlib")
@@ -273,16 +283,13 @@ jobs:
               cat("\nSKIPPED (a skipped gate is not a passing gate)\n")
               print(sk, row.names = FALSE)
             }
+            # ORDINARY SEMANTICS, DELIBERATELY RESTORED. A failing test fails
+            # the job -- full stop. An earlier revision let a blocker registry
+            # decide the exit status, which would have meant a green build with
+            # tests failing. The expected scientific refusals are now asserted
+            # as PASSING tests of refusal, so there is nothing left to excuse.
+            if (sum(df$failed) + sum(df$error) > 0) quit(status = 1)
           ' | tee -a "$GITHUB_STEP_SUMMARY"
-
-      # PASS/FAIL IS DECIDED BY THE CLASSIFIER, not by a raw failure count.
-      # Thirty-one tests refuse because per_entering = 1.00 turns a prevalence
-      # stock into an annual flow; those refusals are correct and stay red until
-      # the parameter is sourced. A bare `failed > 0 -> exit 1` cannot tell that
-      # from a broken build, so within a week nobody reads it. The classifier
-      # exits non-zero only on an UNDECLARED failure.
-      - name: Classify failures (scientific blocker vs infrastructure)
-        run: Rscript .github/scripts/classify-failures.R | tee -a "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
   # 5. DETERMINISM. A microsimulation that does not reproduce under a fixed seed
@@ -337,7 +344,7 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}, any::covr, any::lintr, any::spelling, any::urlchecker, any::roxygen2
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}, any::covr, any::lintr, any::spelling, any::urlchecker, roxygen2@7.3.3
           dependencies: '"hard"'
 
       - name: Coverage
@@ -355,6 +362,14 @@ jobs:
       - name: roxygen documentation is up to date
         # Regenerate and fail if man/ or NAMESPACE would change. Two merges once
         # reached main with @export tags missing from NAMESPACE.
+        #
+        # roxygen2 IS PINNED TO 7.3.3 ABOVE, matching DESCRIPTION's RoxygenNote.
+        # An unpinned `any::roxygen2` installs whatever is current and rewrites
+        # all ~500 .Rd files on a version bump, so this gate reported "stale"
+        # against docs that were perfectly current for the declared generator --
+        # and the only way to satisfy it would have been to commit a 500-file
+        # diff that changes no documentation. The generator version is part of
+        # the contract, so it is declared in exactly one place.
         run: |
           Rscript -e 'roxygen2::roxygenise()'
           if ! git diff --quiet -- man NAMESPACE; then
