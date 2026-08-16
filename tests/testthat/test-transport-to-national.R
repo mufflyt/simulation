@@ -4,9 +4,16 @@
 
 .root <- function(...) file.path("..", "..", ...)
 .db   <- "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb"
+# transport_chia_to_national() needs BOTH the CHIA database and the census
+# denominator. Guarding only .db meant that on a machine where the external
+# drive is mounted, the skip did not fire and the census read then failed --
+# so R CMD check errored locally while passing on a runner that has neither.
+# Two dependencies, two guards.
+.census <- file.path("..", "..", "data-raw", "census", "np2023_d1_mid.csv")
 
 test_that("CHIA transport refuses to produce an all-setting volume without a share", {
   skip_if_not(file.exists(.db))
+  skip_if_not(file.exists(.census))
   r <- suppressMessages(transport_chia_to_national(db = .db, census_path = .root("data-raw","census","np2023_d1_mid.csv")))
   expect_true(is.finite(r$estimate$national_inpatient))
   expect_true(is.na(r$estimate$national_all_setting))
@@ -35,6 +42,7 @@ test_that("CADR transport refuses without a Medicare share", {
 
 test_that("neither transport result is ever scalar-eligible", {
   skip_if_not(file.exists(.db))
+  skip_if_not(file.exists(.census))
   a <- suppressMessages(transport_chia_to_national(
     db = .db, census_path = .root("data-raw","census","np2023_d1_mid.csv"),
     inpatient_share = 0.12, inpatient_share_source = "test"))
