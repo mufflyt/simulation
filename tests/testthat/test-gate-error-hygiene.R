@@ -13,10 +13,10 @@
 # argument (a literal, or sprintf/paste/paste0/gettextf/format/formatC).
 
 geh_root <- function() {
-  for (p in c(".", "..", file.path("..", ".."), file.path("..", "..", ".."))) {
-    if (file.exists(file.path(p, "DESCRIPTION"))) return(p)
-  }
-  NULL
+  # Sources, not just "a package" -- see .source_tree_root() in helper-setup.R.
+  # This gate reads R/*.R as text, which an installed tree does not ship.
+  r <- .source_tree_root()
+  if (length(r) == 0) NULL else r
 }
 
 geh_builds_message <- function(arg) {

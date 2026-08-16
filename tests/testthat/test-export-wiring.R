@@ -19,8 +19,7 @@
 # This file makes the surface explicit instead of waiting to trip over it.
 
 ew_root <- function() {
-  r <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-              c(".", "..", file.path("..", "..")))
+  r <- .source_tree_root()
   if (length(r) == 0) NULL else r[1]
 }
 

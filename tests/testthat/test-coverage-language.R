@@ -125,8 +125,7 @@ test_that("an earlier negation does not launder a later claim", {
 
 test_that("the manuscript narrative passes the guard", {
   # The document is generated prose; it should be held to the rule it states.
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   skip_if(!length(root))
   f <- file.path(root[1], "docs", "VALIDATION_PAPER.md")
   skip_if(!file.exists(f))

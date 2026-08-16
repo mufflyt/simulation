@@ -5,8 +5,7 @@
 # exist mainly to stop a partial import being mistaken for a complete one.
 
 pc_path <- function() {
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   if (length(root) == 0) return(NULL)
   p <- file.path(root[1], "data-raw", "urps_roster",
                  "urps_provider_coordinates_2026-08-02.csv")
@@ -19,8 +18,7 @@ pc_path <- function() {
 # the loaders' default relative paths do NOT resolve and every roster test
 # skips. Resolving from the package root instead is what makes these run.
 rt_path <- function() {
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   if (length(root) == 0) return(NULL)
   p <- file.path(root[1], "data-raw", "urps_roster", "urps_roster_2026-07-22.csv")
   if (file.exists(p)) p else NULL
