@@ -197,3 +197,4 @@ config/calibration_targets_backup_*.yml
 # Demand-model run artifacts are regenerable and carry a run id; the frozen
 # scalars are recorded in config/calibration_targets.yml.
 artifacts/demand/
+artifacts/adversarial/
