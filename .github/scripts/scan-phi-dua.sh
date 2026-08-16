@@ -49,7 +49,8 @@ if [ "$MODE" = "worktree" ]; then
   while IFS= read -r m; do
     [ -n "$m" ] && crit "PHI column name in tracked content" "${m:0:200}"
   done < <(git grep -InE "$PHI_COLS" -- ':!*.Rd' ':!docs/*' \
-             ':!.github/scripts/*' ':!tests/testthat/test-phi-dua-guard.R' \
+             ':!.github/scripts/*' ':!.github/phi-history-allowlist.txt' \
+             ':!tests/testthat/test-phi-dua-guard.R' \
              $PUBLIC_USE_EXCLUDE 2>/dev/null | head -40 || true)
 
   # CRITICAL 3: SSN-shaped strings outside public-use survey extracts
