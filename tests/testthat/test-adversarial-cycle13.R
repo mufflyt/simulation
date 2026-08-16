@@ -175,8 +175,7 @@ test_that("SEMANTIC: both copies of the gap check agree on the same frame", {
 test_that("ADVERSARIAL: no duplicated definition of a shared vocabulary survives in R/", {
   # The sweep, as a standing gate. Each of these labels sets is now defined
   # exactly once; a future copy-paste re-introduces the drift this cycle removed.
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   skip_if(length(root) == 0L, "package root not reachable")
   src <- unlist(lapply(list.files(file.path(root[1], "R"), "[.]R$", full.names = TRUE),
                        function(f) sub("#.*$", "", readLines(f, warn = FALSE))))

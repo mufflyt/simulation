@@ -25,10 +25,11 @@ CRITICAL_NUMERIC_API <- c(
 )
 
 gcnc_root <- function() {
-  for (p in c(".", "..", file.path("..", ".."), file.path("..", "..", ".."))) {
-    if (file.exists(file.path(p, "DESCRIPTION"))) return(p)
-  }
-  NULL
+  # Sources, not just "a package" -- see .source_tree_root() in helper-setup.R.
+  # This gate reads tests/testthat/*.R as text; an installed tree keeps its
+  # tests elsewhere, so a DESCRIPTION-only match sent it to an empty corpus.
+  r <- .source_tree_root()
+  if (length(r) == 0) NULL else r
 }
 
 gcnc_corpus <- function(root) {

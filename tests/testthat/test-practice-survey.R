@@ -70,8 +70,7 @@ test_that("the FTE status points away from the dormant module", {
 test_that("R/calibration-hrsa_fte really is dormant, so the warning stays true", {
   # If a future change wires apply_hrsa_surgical_fte() into the pipeline, this
   # fails and fte_curve_status()$do_not_fix must be rewritten.
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   r_files <- list.files(file.path(root[1], "R"), pattern = "[.]R$", full.names = TRUE)
   # Exclude the definition, and exclude R/data-practice_survey -- it names the function inside
@@ -187,8 +186,7 @@ test_that("the access layer is reached only through the fail-closed entry point"
   # compute_access()/match_points_to_isochrones() DIRECTLY from R/ or scripts/,
   # i.e. bypasses the guard. A new direct call fails here and must instead route
   # through run_geographic_access() (or re-check the ordering trap).
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   files <- c(list.files(file.path(root[1], "R"), pattern = "[.]R$", full.names = TRUE),
              list.files(file.path(root[1], "scripts"), pattern = "[.]R$",
@@ -214,8 +212,7 @@ test_that("every file path the register names actually exists", {
   # semantic prefixes rewrote that string correctly by luck; nothing verified it.
   # A status message that sends a reader to a file which no longer exists is
   # worse than no message, because it looks authoritative.
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
 
   texts <- c(unlist(fte_curve_status()), unlist(capacity_status()),

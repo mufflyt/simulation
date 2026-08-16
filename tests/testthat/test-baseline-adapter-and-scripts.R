@@ -25,8 +25,7 @@ test_that("affected scripts consume the adapter, not a hand-typed national basel
   # library(here) errored the whole file when it was absent in CI. Under R CMD
   # check the source tree is not present, so this skips; under check_suite it
   # runs from the root.
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
 
   affected <- c(
