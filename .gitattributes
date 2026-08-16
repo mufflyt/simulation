@@ -1,0 +1,36 @@
+# LINE ENDINGS ARE PART OF THE CHECKSUM -- but only for the files that are
+# actually byte-hashed. This file is deliberately narrow.
+#
+# TWO registries pin SHA-256 digests of file CONTENT:
+#
+#   config/canonical_sources.yml    26 CSVs   data-raw/** and three at data/
+#   config/calibration_targets.yml   anchors  data/anchors/**
+#
+# Both are verified with digest::digest(file = ...), which hashes RAW BYTES.
+# Git's autocrlf rewrites LF to CRLF on Windows checkout, so every one of those
+# files hashes differently there:
+#
+#   sensitivity_departure_rate  recorded d76c5a7fd544  Windows actual dbdff7d01307
+#
+# That surfaced as `R CMD check windows-latest` failing with "SHA-256 drift"
+# while Linux and macOS passed -- a checksum gate reporting data corruption when
+# the data was fine and only the CHECKOUT differed. Left alone it would train a
+# reader to dismiss drift reports, which is the one thing this gate cannot
+# afford.
+#
+# SCOPE. Only the hashed trees are pinned. R sources are NOT listed: nothing
+# committed pins a code_fingerprint (checked -- no test verifies one), so
+# forcing eol there would be scope creep dressed up as a fix. Recorded hashes
+# are unchanged; LF is what they were computed over.
+data-raw/**/*.csv   text eol=lf
+data/*.csv          text eol=lf
+data/anchors/**     text eol=lf
+
+# Binaries must never be normalised -- any rewrite corrupts them outright.
+*.rds   binary
+*.mdb   binary
+*.xlsx  binary
+*.zip   binary
+*.gz    binary
+*.png   binary
+*.pdf   binary
