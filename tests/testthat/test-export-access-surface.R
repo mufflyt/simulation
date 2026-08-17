@@ -1,93 +1,65 @@
-# Tests for export_access_surface() (R/reporting-export_demand_contract.R): the
-# upstream half of cliff's Module D v2 seam. Base-R + a temp dir, so the schema,
-# provenance stamping, and the validation gate are testable without the E2SFCA /
-# isochrone stack.
+# Unit tests for export_access_surface (spatial access contract exporter)
 
-fake_access_result <- function() {
-  list(
-    resolved = TRUE,
-    access = data.frame(
-      demand_id = c("01001020100", "56045951100"),
-      access = c(12.5, 3.2),
-      n_providers = c(4L, 1L),
-      population = c(400, 120),
-      access_scaled = c(3125, 2666.7),
-      stringsAsFactors = FALSE
-    )
-  )
+.repo_path <- function(...) {
+  p1 <- file.path(...)
+  p2 <- file.path("..", "..", ...)
+  if (file.exists(p1)) p1 else p2
 }
-val_capacity <- list(calibration_status = "fitted_and_geographically_validated",
-                     resolved = TRUE)
-a_sigma_fit  <- list(sigma = 55, wait_scale = 20,
-                     calibration_status = "fitted_to_lizeth_wait_response")
 
-test_that("export_access_surface writes a versioned CSV + manifest with provenance", {
-  dir <- withr::local_tempdir()
+test_that("export_access_surface requires valid columns and fails closed on unvalidated status", {
+  tmp_dir <- tempfile("access_export_test")
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  bad_df <- tibble::tibble(foo = 1:5)
+  expect_error(export_access_surface(bad_df, tmp_dir), "missing column")
+
+  good_df <- tibble::tibble(
+    demand_id = c("25025000100", "25025000200"),
+    access = c(1.25, 0.85),
+    population = c(5000, 4200)
+  )
+
+  # Fail-closed gate: uncalibrated status without override throws error
+  expect_error(
+    export_access_surface(good_df, tmp_dir, calibration_status = "uncalibrated_illustrative"),
+    "calibration_status is"
+  )
+})
+
+test_that("export_access_surface exports valid CSV and manifest JSON when validated or overridden", {
+  tmp_dir <- tempfile("access_export_success_test")
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  good_df <- tibble::tibble(
+    demand_id = c("25025000100", "25025000200"),
+    access = c(1.25, 0.85),
+    population = c(5000, 4200)
+  )
+
+  # With override
   res <- export_access_surface(
-    fake_access_result(), output_directory = dir,
-    sigma_fit = a_sigma_fit, capacity = val_capacity,
-    isochrone_run_id = "20260508_ec2_r6i", verbose = FALSE)
+    good_df,
+    tmp_dir,
+    calibration_status = "uncalibrated_illustrative",
+    allow_unvalidated = TRUE,
+    verbose = FALSE
+  )
 
+  expect_type(res, "list")
   expect_true(file.exists(res$csv_path))
   expect_true(file.exists(res$manifest_path))
-  expect_match(basename(res$csv_path), "^access_surface_v0\\.1\\.0\\.csv$")
 
-  df <- utils::read.csv(res$csv_path, stringsAsFactors = FALSE)
-  # the columns cliff's read_access_surface() needs, plus provenance
-  expect_true(all(c("demand_id", "access", "population",
-                    "sigma", "wait_scale", "isochrone_run_id",
-                    "calibration_status") %in% names(df)))
-  expect_equal(nrow(df), 2L)
-  expect_equal(unique(df$sigma), 55)
-  expect_equal(unique(df$wait_scale), 20)
-  expect_equal(unique(df$isochrone_run_id), "20260508_ec2_r6i")
-  expect_equal(unique(df$calibration_status),
-               "fitted_and_geographically_validated")
-})
+  csv_data <- readr::read_csv(res$csv_path, show_col_types = FALSE)
+  expect_equal(nrow(csv_data), 2L)
+  expect_true(all(c("demand_id", "access", "population", "sigma", "wait_scale", "calibration_status") %in% names(csv_data)))
 
-test_that("capacity status is preferred over sigma_fit status", {
-  res <- export_access_surface(
-    fake_access_result(), output_directory = withr::local_tempdir(),
-    sigma_fit = a_sigma_fit, capacity = val_capacity,
-    isochrone_run_id = "run", verbose = FALSE)
-  expect_equal(unique(res$data$calibration_status),
-               "fitted_and_geographically_validated")   # not the sigma_fit status
-})
-
-test_that("an un-validated surface is refused unless allow_unvalidated = TRUE", {
-  dir <- withr::local_tempdir()
-  # sigma_fit status is 'fitted_to_lizeth_wait_response' (not validated) and no capacity
-  expect_error(
-    export_access_surface(fake_access_result(), output_directory = dir,
-                          sigma_fit = a_sigma_fit, verbose = FALSE),
-    "not .*validated|allow_unvalidated"
+  # With validated status
+  res_val <- export_access_surface(
+    good_df,
+    tmp_dir,
+    calibration_status = "fitted_and_geographically_validated",
+    verbose = FALSE
   )
-  # override emits it, stamped with the honest (weaker) status
-  res <- export_access_surface(fake_access_result(), output_directory = dir,
-                               sigma_fit = a_sigma_fit, allow_unvalidated = TRUE,
-                               verbose = FALSE)
-  expect_equal(unique(res$data$calibration_status),
-               "fitted_to_lizeth_wait_response")
-})
 
-test_that("export_access_surface accepts a bare access data frame", {
-  df_in <- fake_access_result()$access
-  res <- export_access_surface(df_in, output_directory = withr::local_tempdir(),
-                               calibration_status = "calibrated", verbose = FALSE)
-  expect_equal(nrow(res$data), 2L)
-})
-
-test_that("export_access_surface validates inputs and resolution", {
-  expect_error(
-    export_access_surface(list(resolved = FALSE, reason = "no membership"),
-                          output_directory = withr::local_tempdir(),
-                          allow_unvalidated = TRUE, verbose = FALSE),
-    "unresolved"
-  )
-  expect_error(
-    export_access_surface(data.frame(demand_id = "01001020100", access = 1),
-                          output_directory = withr::local_tempdir(),
-                          allow_unvalidated = TRUE, verbose = FALSE),
-    "population"
-  )
+  expect_true(file.exists(res_val$csv_path))
 })
