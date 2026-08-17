@@ -48,6 +48,24 @@ test_that("cpt_setting_mix category filtering works correctly", {
 
   urodynamics <- cpt_setting_mix("urodynamics")
   expect_true(all(urodynamics$category == "urodynamics"))
+
+  cysto <- cpt_setting_mix("cystoscopy")
+  expect_true(all(cysto$category == "cystoscopy"))
+  expect_gt(nrow(cysto), 5L)
+
+  botox <- dplyr::filter(cysto, cpt == "52287")
+  expect_equal(nrow(botox), 1L)
+  expect_equal(botox$p_facility, 0.5091)
+})
+
+test_that("prolapse_setting_mix helper returns exact empirical ratios", {
+  psm <- prolapse_setting_mix()
+  expect_type(psm, "list")
+  expect_equal(psm$p_facility, 0.9841)
+  expect_equal(psm$p_office, 0.0159)
+  expect_equal(psm$p_facility + psm$p_office, 1.0)
+  expect_equal(psm$total_services, 52616)
+  expect_equal(length(psm$cpt_codes), 6L)
 })
 
 test_that("CMS PSPS 2024 raw CSV file exists and is non-empty when present", {

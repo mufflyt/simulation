@@ -200,7 +200,7 @@ resolve_service_volumes <- function(demand_long,
 #' @family workload to fte
 #' @concept demand
 #' @export
-cpt_setting_mix <- function(category = c("all", "slings", "prolapse", "neuromodulation", "urodynamics")) {
+cpt_setting_mix <- function(category = c("all", "slings", "prolapse", "neuromodulation", "urodynamics", "cystoscopy")) {
   category <- match.arg(category)
 
   mix <- tibble::tribble(
@@ -218,7 +218,13 @@ cpt_setting_mix <- function(category = c("all", "slings", "prolapse", "neuromodu
     "51715", "neuromodulation",     0.8407,    0.1593,           16890,
     "51726", "urodynamics",        0.1910,    0.8090,            2958,
     "51729", "urodynamics",        0.1015,    0.8985,           50174,
-    "52000", "urodynamics",        0.3334,    0.6666,          826866
+    "52000", "cystoscopy",         0.3334,    0.6666,          826866,
+    "52287", "cystoscopy",         0.5091,    0.4909,           83974,
+    "52332", "cystoscopy",         0.9855,    0.0145,          129711,
+    "52204", "cystoscopy",         0.8751,    0.1249,           26060,
+    "52005", "cystoscopy",         0.9650,    0.0350,           25432,
+    "52224", "cystoscopy",         0.5256,    0.4744,           26396,
+    "52260", "cystoscopy",         0.9616,    0.0384,            4562
   ) |>
     dplyr::mutate(
       calibration_status = "calibrated",
@@ -229,5 +235,29 @@ cpt_setting_mix <- function(category = c("all", "slings", "prolapse", "neuromodu
     mix <- dplyr::filter(mix, .data$category == !!category)
   }
   mix
+}
+
+#' Prolapse Repair Setting Mix (Facility vs Office) from CMS PSPS 2024
+#'
+#' @details
+#' Returns the national empirical setting mix for prolapse repairs (CPT 57425,
+#' 57280, 57240, 57250, 57260, 57265) extracted from CMS PSPS 2024.
+#'
+#' @return A list with `p_facility` (0.9841), `p_office` (0.0159), `cpt_codes`,
+#'   `total_services` (52,616), `calibration_status`, and `source`.
+#' @family urps settings
+#' @concept demand
+#' @export
+prolapse_setting_mix <- function() {
+  list(
+    cpt_codes = c("57425", "57280", "57240", "57250", "57260", "57265"),
+    p_facility = 0.9841,
+    p_office = 0.0159,
+    services_facility = 51780,
+    services_office = 836,
+    total_services = 52616,
+    calibration_status = "calibrated",
+    source = "CMS PSPS 2024 (Medicare Part B Physician/Supplier Procedure Summary)"
+  )
 }
 

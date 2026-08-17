@@ -28,7 +28,8 @@ nat <- psps |>
   dplyr::filter(Rndrng_Prvdr_Geo_Lvl == "National")
 
 cpts <- c("57288", "51840", "57280", "57425", "57240", "57250", "57260", "57265",
-          "64590", "64561", "51715", "53885", "51726", "51729", "52000")
+          "64590", "64561", "51715", "53885", "51726", "51729", "52000",
+          "52287", "52332", "52204", "52005", "52224", "52260")
 
 setting_summary <- nat |>
   dplyr::filter(HCPCS_Cd %in% cpts) |>
@@ -61,7 +62,8 @@ cat_summary <- setting_summary |>
       HCPCS_Cd %in% c("57288", "51840") ~ "Sling / Incontinence Surgery",
       HCPCS_Cd %in% c("57280", "57425", "57240", "57250", "57260", "57265") ~ "Prolapse Repair (Sacrocolpopexy/Vaginal)",
       HCPCS_Cd %in% c("64590", "64561", "51715", "53885") ~ "Neuromodulation / Injections",
-      TRUE ~ "Diagnostic Urodynamics & Cystoscopy"
+      HCPCS_Cd %in% c("51726", "51729") ~ "Diagnostic Urodynamics",
+      TRUE ~ "Cystourethroscopy (Diagnostic & Operative)"
     )
   ) |>
   dplyr::group_by(category) |>

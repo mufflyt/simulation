@@ -109,9 +109,9 @@ URPS_DEFAULT_SETTING_MIX <- tibble::tribble(
   "sling_procedure",       "operative",             0.3438,
   "sling_procedure",       "asc",                   0.6384,
 
-  "prolapse_procedure",    "office",                0.0137,
-  "prolapse_procedure",    "operative",             0.4438,
-  "prolapse_procedure",    "asc",                   0.5425,
+  "prolapse_procedure",    "office",                0.0159,
+  "prolapse_procedure",    "operative",             0.4428,
+  "prolapse_procedure",    "asc",                   0.5413,
 
   "postoperative_care",    "office",                0.80,
   "postoperative_care",    "telehealth",            0.15,
