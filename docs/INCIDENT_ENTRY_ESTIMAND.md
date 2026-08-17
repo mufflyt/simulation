@@ -1,152 +1,248 @@
-# Incident entry into the care pathway — estimand and pre-registered estimator
+# Incident entry into care — estimand contract and pre-registered estimator
 
-`condition_service_pathway()` `per_entering` for the `new_consultation` service.
+`condition_service_pathway()` `per_entering` at the **conservative** stage, for
+UI, POP and AI.
 
-**Status: UNRESOLVED. The production pipeline refuses.** This document exists to
-fix the estimand and the estimator *before* any data arrive, so that the
-definition cannot later be adjusted until the answer looks right.
+**Status: UNRESOLVED. The canonical pipeline refuses.** This contract is frozen
+*before* data access so the definition cannot be adjusted once the answer is
+visible. Nothing here may be estimated from the utilization anchor.
 
-Prepared 2026-08-16 on `feat/chia-inpatient-surgical-layer`.
+Prepared 2026-08-16/17 on `feat/chia-inpatient-surgical-layer`.
 
 ---
 
-## 1. The defect
+## 1. The defect, and why it is not POP-specific
 
-`per_entering` for `new_consultation` shipped as **1.00** for both `pop` and
-`ui`. That converts a **stock into an annual flow**: every prevalent treated
-patient is counted as newly presenting, every year.
-
-`assert_incident_not_prevalent()` now refuses it at the point volumes are
-computed:
+`per_entering` at conservative entry ships as **1.00** for all three limbs. That
+converts a prevalence **stock** into an annual **flow**: every prevalent patient
+is counted as newly presenting, every year. Verified per limb, independently —
+each refuses on its own:
 
 ```
-new_consultation volume is 315,544 against a treated cohort of 315,544
-(ratio 1.00). Every prevalent treated patient is being counted as a NEW
-patient annually.
+ui   treated=2,538,780  -> REFUSES     pop  treated=3,264,807  -> REFUSES
+ai   treated=  372,721  -> REFUSES
 ```
 
-Ratio exactly 1.00 at production scale. This was silently permitted until the
-guard was wired, and 30 tests now refuse. **Those refusals are correct and are
-to remain.**
+The **recurrence** stage also ships `per_entering = 1.00` and is **correct**
+there: its `entering` is already an annual flow (42 per 1,000 treated, versus
+1,000 at conservative entry), so one consultation per recurrence event is right.
+The rule is therefore semantic, not numeric:
+
+> `1.0` is valid when the denominator is already an annual event flow. It is
+> invalid when a prevalent stock is being converted into new annual entrants.
 
 ## 2. The estimand
 
-> **Among women with prevalent POP who are eligible to enter the modelled care
-> pathway and are not already in it, what proportion NEWLY enters the
-> conservative / new-consultation state during this model year?**
-
-Formally, an annual transition probability:
+For condition *c*, age band *a*, year *t*:
 
 ```
-per_entering(new_consultation)
-  = P(qualifying new consultation in year t
-      | prevalent condition, eligible, NOT already in the pathway at t-1)
+q(c,a,t) =  women NEWLY ENTERING the relevant care pathway
+            ------------------------------------------------
+            prevalent ELIGIBLE disease stock
 ```
 
-| | |
-|---|---|
-| **unit** | woman-year |
-| **numerator** | women with a qualifying POP consultation/treatment event in year *t* |
-| **denominator** | eligible prevalent women **not already in the pathway** at the start of *t* |
-| **type** | flow (annual transition probability), **not** a prevalence share |
-| **range** | strictly `(0, 1)`; `1.0` is the defect, not an upper bound in use |
+**"Incident" means incident ENTRY INTO CARE, not incident onset of disease.**
+These are different quantities and the distinction is the whole design. A woman
+may have UI for years before seeing anyone about it. Claims are excellent at
+identifying *first observed care*; they are blind to women who have symptoms and
+have never sought care. So a claims-only ratio of "new diagnoses ÷ previously
+diagnosed patients" answers the wrong question — its denominator is
+already-in-care patients, not the disease stock.
 
-### What it is NOT
+`per_entering` must be treated as a **HAZARD acting on those eligible to enter**,
+not a multiplier applied to the whole stock. It must not regenerate a fresh
+cohort of "new" patients from the entire prevalent pool each model year.
 
-- **Not** the fraction of prevalent POP patients who exist this year. That is a
-  stock, and treating it as a flow is precisely the shipped error.
-- **Not** the care-seeking or treatment-seeking prevalence.
-- **Not** anything derived from the utilization anchor — see §5.
+## 3. THE DENOMINATOR PROBLEM — resolve before estimating anything
 
-## 3. Required data source
+Traced from `R/demand-lifecourse.R:163`:
 
-**Longitudinal all-payer claims / APCD**, patient-year histories with
-continuous-enrolment observability.
+```
+female population
+   ↓  × p_ui / p_pop / p_ai            symptomatic prevalence
+   ↓  × recognition                    symptom recognised
+   ↓  × p_seek                         CARE-SEEKING
+   ↓  × p_referral                     referred
+   ↓  × p_eligible                     eligible
+   ↓  × p_treated                      treated
+"treated"  ──→ entering ──→ new_consultation
+```
 
-Incidence is defined by a **washout**: a patient becomes incident when a
-qualifying POP consultation/treatment event follows a sufficient period of
-prior *observable* enrolment containing no qualifying event.
+Composition of `treated`, as a share of prevalence:
 
-| parameter | value | rationale |
+| limb | recognition | p_seek | p_referral | p_eligible | p_treated | **product** |
+|---|---:|---:|---:|---:|---:|---:|
+| ui  | 0.55 | 0.45 | 0.40 | 1.00 | 0.70 | **0.0693** |
+| pop | 0.60 | 0.50 | 0.55 | 1.00 | 0.65 | **0.1073** |
+| ai  | 0.35 | 0.30 | 0.45 | 1.00 | 0.60 | **0.0284** |
+
+**`treated` IS NOT THE PREVALENT ELIGIBLE STOCK.** It is 2.8–10.7% of
+prevalence, already carrying care-seeking, referral and treatment. Applying a
+hazard whose denominator is the *prevalent eligible stock* on top of `treated`
+would count recognition × seeking × referral × treatment **twice**.
+
+Two admissible resolutions; the choice is a modelling decision to be made
+deliberately, not inferred here:
+
+- **(A) Re-anchor the hazard.** Define `q` on the prevalent eligible stock and
+  restructure the pathway so entry acts there, with `recognition`, `p_seek`,
+  `p_referral` and `p_treated` either removed or explicitly reinterpreted. Risks
+  discarding structure that is separately sourced.
+- **(B) Condition the hazard.** Define `per_entering` as
+  `P(new consultation this year | already in the treated subset)` and estimate a
+  numerator restricted to that subset. Preserves the existing chain but requires
+  the claims cohort to be restricted the same way — and that restriction may not
+  be observable in claims.
+
+**Every arrow above needs an explicit mathematical definition and a source
+before any number is adopted.** Several currently have neither.
+
+## 4. Numerator — MA APCD as primary
+
+MA APCD CY2024: five years of claims (2020–2024) with member eligibility and
+provider files, and longitudinal patient indexing across coverage records.
+
+Three parallel cohorts — UI, POP, AI — each defined as **first observed
+qualifying entry into urogynecologic care**:
+
+> First outpatient evaluation by a urogynecology/FPMRS clinician carrying the
+> relevant condition diagnosis, after no qualifying urogynecology encounter for
+> that condition during the lookback.
+
+Two design commitments:
+
+- **Do NOT use CPT "new patient" codes.** A patient can be clinically new to
+  urogynecology yet fail the billing definition because of prior care in the
+  same group. The index event is the first qualifying *encounter* after washout.
+- **Link rendering NPI to the existing urogynecologist roster**, in preference
+  to payer specialty labels. That makes the numerator match the model's own
+  `urps_office_visits` construct rather than a payer's taxonomy field.
+
+**Count unique women, not visits.** Ten visits by one new patient are one entry.
+Subsequent visits are measured separately — entry rate and
+visits-per-entered-patient are different quantities, and conflating them is
+plausibly a second instance of the same stock/flow error.
+
+### Incidence years: 2023–2024
+
+**2022 is deliberately NOT primary.** The 2020–2021 pandemic period suppressed
+prior care, so returning patients in 2022 would masquerade as incident entrants.
+A 2023 index has a full 2020–2022 lookback available.
+
+### Coverage limits, stated up front
+
+MA APCD covers commercial, MassHealth and Medicare Advantage. It does **not**
+include **Medicare fee-for-service**, and some self-insured commercial coverage
+has been absent since *Gobeille*. Since pelvic-floor burden is concentrated in
+older women, this is a material gap, not a footnote — see §6.
+
+## 5. Denominator — from the model's prevalence science, not from claims
+
+```
+P(c,a) = N(a) × Pr(eligible prevalent symptomatic c | a)
+q(c,a) = I(c,a) / P(c,a)
+```
+
+using the prevalence definition already underlying the simulation. A claims rate
+such as "1.8 new POP consultations per 1,000 women/year" is **not**
+`per_entering` — it is the numerator only.
+
+## 6. Medicare FFS — independent replication, started in parallel
+
+Run the same algorithm in Medicare FFS (beneficiary-level enrollment via the
+Master Beneficiary Summary File, longitudinal claims linkage) and compare
+age-standardised entry rates at 65+ against the MA APCD estimate.
+
+Concordance between two independent populations is **far stronger evidence than
+fitting the parameter until national utilization comes out right.**
+
+CMS RIF processing commonly takes **3–5 months**. Start the request now, in
+parallel — it must not become the critical path.
+
+## 7. MEPS — validation, not estimation
+
+MEPS HC-254G (2024 office-based visits) supports a national sanity check: do the
+implied annual counts of women receiving office-based care live in the right
+universe? It is **not** the estimator — condition-specific samples thin out
+quickly, especially for POP and AI.
+
+## 8. Pre-registered sensitivity matrix
+
+Fixed before the answer is seen.
+
+| dimension | primary | sensitivities |
 |---|---|---|
-| washout | **≥ 24 months** continuous enrolment, no qualifying event | POP is chronic and recurrent; 12 months misclassifies returning patients as incident |
-| denominator | prevalent + eligible + not in pathway at start of year | matches the estimand exactly |
-| stratification | age band, if cell counts support it | entry rates are strongly age-dependent |
-| censoring | index-month right-censoring handled explicitly | the same error corrected in MEPS Panel 27 |
+| washout | 24 mo | 12, 36 mo |
+| index event | first qualifying URPS encounter | first any-specialist encounter |
+| diagnosis | dx on index claim | dx ±90 days |
+| enrollment | continuous | allow 1-month gap |
+| provider | roster-linked FPMRS | specialty/taxonomy |
+| years | 2023–24 | 2022–24 |
+| case rule | ≥1 qualifying claim | ≥2 dx, or dx + procedure |
 
-### CHIA inpatient data must NOT be used for this parameter
+**If `q` swings from 0.08 to 0.40 across reasonable case definitions, that
+uncertainty belongs in the simulation.** It must not be hidden behind a point
+estimate.
 
-The CHIA extract on this branch is **inpatient-only**. New consultations are an
-**outpatient** event, so inpatient records cannot distinguish prevalent from
-incident care-seeking — the denominator is unobservable and the numerator is
-the wrong care setting. Using it would produce a number with no relationship to
-the estimand. It remains valid for the inpatient surgical-volume work it was
-acquired for.
+## 9. Stratification — not one scalar
 
-## 4. Pre-registered estimator
+Estimate by the simulation's existing age bands (18–44, 45–54, 55–64, 65–74,
+75+) and stratify by payer (commercial, MassHealth, Medicare Advantage). The
+target is an **age-specific entry hazard**, not three replacement constants.
 
-Fixed now, before data access, so the definition cannot be tuned to the answer.
-
-1. Build patient-year panels with continuous-enrolment flags.
-2. Apply the **24-month** washout to classify each patient-year as
-   *already-in-pathway*, *eligible-not-entered*, or *incident-entry*.
-3. Restrict the denominator to *eligible-not-entered* at the start of the year.
-4. Estimate the annual transition probability, with a Wilson interval; stratify
-   by age band where cells permit.
-5. Report the estimate **with its denominator**, so the flow/stock distinction
-   is auditable in the output rather than implied.
-
-**Stopping rule.** The estimate is adopted only if the denominator is
-observable and the washout is satisfiable. If either fails, the parameter stays
-unresolved and the pipeline stays refusing. A number that cannot be defined is
-not preferable to no number.
-
-## 5. The 0.297 ratio is a magnitude check, NOT an estimator
+## 10. The 0.297 ratio is a HOLDOUT, never an estimator
 
 | | |
-|---|---|
+|---|---:|
 | predicted `urps_office_visits` | 16,226,458 |
 | target | 4,814,760 |
-| target / predicted | **0.297** |
+| ratio | **0.297** |
 
-> Correcting prevalent-as-incident classification is expected to reduce
-> utilization substantially; the observed utilization ratio is 0.297, which
-> provides an independent magnitude check but **is not used to estimate the
-> incident-entry parameter.**
+Only *after* the entry estimates are locked and inserted **without calibration**
+do we ask whether the discrepancy collapses.
 
-The ratio is consistent with the direction and rough scale of the defect, and
-that is all it establishes. It does **not** show the true incident share is
-29.7%: other pathway limbs contribute to the same discrepancy, and adopting it
-would be back-solving a parameter from the anchor it is supposed to be
-validated against — the exact failure mode `config/calibration_targets.yml`
-forbids.
+- If the independently measured correction moves output toward 0.297 → strong
+  evidence the stock/flow error drove the mismatch.
+- If the empirical shares are ~0.10 or ~0.60 → **do not tune them.** That says
+  another pathway term is also wrong.
 
-Any exploratory sensitivity analysis using a provisional value must be labelled
-a scenario and must not be written into the pathway table as calibrated.
+## 11. Same cohort, next question: the recurrence limb
 
-## 6. UI carries the same defect
+Follow each incident entrant forward to estimate conservative management after
+entry, time to treatment, probability of procedure, repeat visits per episode,
+recurrence/re-entry, and censoring. That attacks the known **0.12 / 0.40**
+recurrence problem with the same data rather than a second expedition.
 
-`ui/conservative/new_consultation` also ships `per_entering = 1.00` and has the
-same stock-as-flow error. It is not currently the binding constraint on the
-reported discrepancy, but the same estimand and estimator apply and it should
-be resolved from the same data extract.
+## 12. Questions this contract must answer before code
 
-## 7. Blocking status
+What is the prevalent stock · who is eligible to enter · what constitutes entry ·
+can a person enter more than once · what resets eligibility · what is recurrence
+rather than incident entry · what is the claims numerator · what is the external
+prevalence denominator · what age strata · what washout · what censoring and
+enrollment rules · what source supplies each quantity.
 
-- The guard stays wired and stays refusing.
-- `per_entering` stays unresolved. It is **not** set to a placeholder.
-- **`R CMD check` is green and the scientific-readiness gate is red**, and that
-  separation is deliberate. The package behaves correctly — the guards refuse
-  an invalid configuration and the tests assert that refusal — while the
-  canonical parameterization is not scientifically runnable. Collapsing the two
-  would cost both signals: a permanently red check stops meaning "the code is
-  broken", and a green one that tolerated failing tests would be a lie.
-- The canonical run is exercised by
-  `.github/scripts/assert-canonical-science.R` (workflow
-  `scientific-readiness`), which uses the REAL pathway — no fixture — and
-  **is expected to fail**. It must not be muted or made non-blocking.
-- Two fixtures work around the blocker for tests of machinery, each labelled
-  as a fixture and not a candidate value: `valid_pathway()` in
-  `tests/testthat/helper-setup.R` and `.github/scripts/_pathway_fixture.R`.
-  Both should be **deleted** once the parameter is sourced.
-- Unblocked by: APCD / longitudinal all-payer outpatient claims access.
+§3 is the open one and blocks the rest.
+
+## 13. Disease incidence literature is a plausibility check only
+
+Longitudinal studies of incident symptomatic POP describe **onset/progression of
+disease**, not first entry into care. Useful for bounding, never a substitute.
+
+## 14. Blocking status
+
+- Guard stays wired; the canonical pipeline stays refusing.
+- `per_entering` stays unresolved. **No placeholder.**
+- `R CMD check` green / `scientific-readiness` red is deliberate — the package
+  behaves correctly while the canonical configuration is not scientifically
+  runnable.
+- Blockers `ui_incident_entry`, `pop_incident_entry`, `ai_incident_entry` under
+  `category=conservative_incident_entry`, emitted as `::SCIENTIFIC-BLOCKER::`
+  markers at exit 1.
+- Fixtures working around it — `valid_pathway()` in
+  `tests/testthat/helper-setup.R` and `.github/scripts/_pathway_fixture.R` —
+  are labelled as fixtures, not candidate values, and are to be **deleted** once
+  the parameter is sourced.
+- Priority order: **estimand contract → resolve §3 denominator → APCD cohort →
+  age-specific first-care incidence → prevalence-denominator alignment →
+  Medicare FFS replication → insert without calibration → observe the
+  8.51× / 0.297 discrepancy → recurrence limb.**
