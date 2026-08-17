@@ -2,7 +2,7 @@
 % Please edit documentation in R/demand-care_engagement_flows.R
 \name{advance_care_engagement}
 \alias{advance_care_engagement}
-\title{Advance care-engagement stocks by one year}
+\title{Advance care-engagement stocks by one year with optional wait-time feedback}
 \usage{
 advance_care_engagement(
   untreated_eligible,
@@ -10,7 +10,8 @@ advance_care_engagement(
   care_engaged_previous,
   first_entry_rate = NULL,
   reentry_rate = NULL,
-  retention_rate = NULL
+  retention_rate = NULL,
+  observed_wait_days = NULL
 )
 }
 \arguments{
@@ -23,11 +24,14 @@ advance_care_engagement(
 \item{first_entry_rate, reentry_rate, retention_rate}{Transition rates. NO
 DEFAULTS -- all three are unsourced, and a default would become the residual
 that forces the office anchor to agree.}
+
+\item{observed_wait_days}{Optional appointment wait time in business days.
+When supplied, applies \code{\link[=apply_wait_time_elasticity]{apply_wait_time_elasticity()}} to entry rates.}
 }
 \value{
 Tibble with the flows, the resulting stock, and the DERIVED
 incident_share.
 }
 \description{
-Advance care-engagement stocks by one year
+Advance care-engagement stocks by one year with optional wait-time feedback
 }
