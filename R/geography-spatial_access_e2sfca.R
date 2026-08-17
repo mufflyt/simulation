@@ -24,6 +24,13 @@
 # Cumulative drive-time distance-decay weights (Luo & Qi 2009 step weights).
 E2SFCA_DEFAULT_WEIGHTS <- c("30" = 1.00, "60" = 0.68, "120" = 0.22, "180" = 0.09)
 
+#' Empirical CHIA inpatient pelvic reconstructive surgery travel decay weights
+#'
+#' @concept geography
+#' @export
+URPS_INPATIENT_SURGERY_WEIGHTS <- c("30" = 1.00, "60" = 0.68, "120" = 0.22, "180" = 0.09)
+
+
 #' Drive-time bands used by the access layer
 #'
 #' Sourced from `mufflyaccess::get_canonical_bands()` so this layer cannot
