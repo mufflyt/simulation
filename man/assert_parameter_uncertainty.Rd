@@ -18,11 +18,11 @@ assert_parameter_uncertainty(spec, mode = resolve_reproducibility_mode())
 Warn when the interval will describe only sampling noise
 }
 \seealso{
-Other parameter uncertainty: 
-\code{\link{draw_supply_parameters}()},
-\code{\link{entrant_spec_from_series}()},
-\code{\link{series_mean_se}()},
-\code{\link{supply_parameter_spec}()}
+Other parameter uncertainty:
+\code{\link[=draw_supply_parameters]{draw_supply_parameters()}},
+\code{\link[=entrant_spec_from_series]{entrant_spec_from_series()}},
+\code{\link[=series_mean_se]{series_mean_se()}},
+\code{\link[=supply_parameter_spec]{supply_parameter_spec()}}
 }
 \concept{calibration}
 \concept{parameter uncertainty}

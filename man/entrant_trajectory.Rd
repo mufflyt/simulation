@@ -22,10 +22,10 @@ Numeric vector, one entrant count per year in \code{years}.
 Build an annual entrant trajectory
 }
 \seealso{
-Other entrant trajectory: 
-\code{\link{compound_growth_rate}()},
-\code{\link{entrant_trajectory_scenarios}()},
-\code{\link{nrmp_growth_rates}()}
+Other entrant trajectory:
+\code{\link[=compound_growth_rate]{compound_growth_rate()}},
+\code{\link[=entrant_trajectory_scenarios]{entrant_trajectory_scenarios()}},
+\code{\link[=nrmp_growth_rates]{nrmp_growth_rates()}}
 }
 \concept{entrant trajectory}
 \concept{supply}

@@ -55,11 +55,11 @@ year (matched by \code{catchment}), so a persistent shortfall compounds instead 
 vanishing at the year boundary.
 }
 \seealso{
-Other access clearing: 
-\code{\link{catchment_neighbors_from_coords}()},
-\code{\link{clear_access}()},
-\code{\link{overflow_access}()},
-\code{\link{overflow_conservation}()}
+Other access clearing:
+\code{\link[=catchment_neighbors_from_coords]{catchment_neighbors_from_coords()}},
+\code{\link[=clear_access]{clear_access()}},
+\code{\link[=overflow_access]{overflow_access()}},
+\code{\link[=overflow_conservation]{overflow_conservation()}}
 }
 \concept{access clearing}
 \concept{geography}

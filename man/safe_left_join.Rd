@@ -16,7 +16,7 @@ safe_left_join(
 \arguments{
 \item{x, y}{Data frames.}
 
-\item{by}{Join specification (as in \code{\link[dplyr:mutate-joins]{dplyr::left_join()}}).}
+\item{by}{Join specification (as in \code{\link[dplyr:left_join]{dplyr::left_join()}}).}
 
 \item{allow_fanout}{If FALSE (default), a non-unique key in \code{y} is an error.}
 
@@ -35,7 +35,7 @@ asserts keys are present, checks the right table has unique keys unless
 differs from the left input (which can only happen via fan-out).
 }
 \details{
-Three distinct failures, all of which a plain \code{\link[dplyr:mutate-joins]{dplyr::left_join()}} performs
+Three distinct failures, all of which a plain \code{\link[dplyr:left_join]{dplyr::left_join()}} performs
 silently: a missing key column, a fan-out that duplicates left rows because
 the right table's key is not unique, and a join that succeeds while matching
 almost nothing.
@@ -55,8 +55,8 @@ safe_left_join(
 )
 }
 \seealso{
-Other canonical and joins: 
-\code{\link{resolve_canonical}()}
+Other canonical and joins:
+\code{\link[=resolve_canonical]{resolve_canonical()}}
 }
 \concept{canonical and joins}
 \concept{core}

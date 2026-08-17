@@ -19,11 +19,11 @@ The legacy scripts referenced the SWAN directory eleven different ways. This
 is the single entry point.
 }
 \seealso{
-Other paths: 
-\code{\link{artifact_path}()},
-\code{\link{check_external_data}()},
-\code{\link{data_raw_path}()},
-\code{\link{external_path}()}
+Other paths:
+\code{\link[=artifact_path]{artifact_path()}},
+\code{\link[=check_external_data]{check_external_data()}},
+\code{\link[=data_raw_path]{data_raw_path()}},
+\code{\link[=external_path]{external_path()}}
 }
 \concept{core}
 \concept{paths}

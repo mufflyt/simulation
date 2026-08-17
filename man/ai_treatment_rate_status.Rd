@@ -13,11 +13,11 @@ A length-one character calibration tier.
 Status of the AI definitive-treatment parameters
 }
 \seealso{
-Other ai treatment: 
+Other ai treatment:
 \code{\link{AI_TREATMENT_DENOMINATORS}},
-\code{\link{ai_conditional_treatment_share}()},
-\code{\link{ai_definitive_treatment_rates}()},
-\code{\link{ai_treatment_evidence_register}()}
+\code{\link[=ai_conditional_treatment_share]{ai_conditional_treatment_share()}},
+\code{\link[=ai_definitive_treatment_rates]{ai_definitive_treatment_rates()}},
+\code{\link[=ai_treatment_evidence_register]{ai_treatment_evidence_register()}}
 }
 \concept{ai treatment}
 \concept{demand}

@@ -19,9 +19,9 @@ because the supply panel is a sum over many providers and is close enough,
 not because it is exact.
 }
 \seealso{
-Other monte carlo: 
-\code{\link{assert_monte_carlo_adequate}()},
-\code{\link{mc_min_iterations}()},
-\code{\link{monte_carlo_diagnostics}()}
+Other monte carlo:
+\code{\link[=assert_monte_carlo_adequate]{assert_monte_carlo_adequate()}},
+\code{\link[=mc_min_iterations]{mc_min_iterations()}},
+\code{\link[=monte_carlo_diagnostics]{monte_carlo_diagnostics()}}
 }
 \concept{monte carlo}

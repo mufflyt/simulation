@@ -43,8 +43,8 @@ workforce_gap_probabilities(rnorm(500, mean = 8, sd = 4),
 \seealso{
 \code{\link[=psa_workforce_gap]{psa_workforce_gap()}}, \code{\link[=forecast_probabilities]{forecast_probabilities()}}
 
-Other forecast probabilities: 
-\code{\link{forecast_probabilities}()}
+Other forecast probabilities:
+\code{\link[=forecast_probabilities]{forecast_probabilities()}}
 }
 \concept{forecast probabilities}
 \concept{validation}

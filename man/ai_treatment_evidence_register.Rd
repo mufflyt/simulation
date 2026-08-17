@@ -13,11 +13,11 @@ Tibble of candidate AI treatment-rate evidence.
 AI definitive-treatment evidence register
 }
 \seealso{
-Other ai treatment: 
+Other ai treatment:
 \code{\link{AI_TREATMENT_DENOMINATORS}},
-\code{\link{ai_conditional_treatment_share}()},
-\code{\link{ai_definitive_treatment_rates}()},
-\code{\link{ai_treatment_rate_status}()}
+\code{\link[=ai_conditional_treatment_share]{ai_conditional_treatment_share()}},
+\code{\link[=ai_definitive_treatment_rates]{ai_definitive_treatment_rates()}},
+\code{\link[=ai_treatment_rate_status]{ai_treatment_rate_status()}}
 }
 \concept{ai treatment}
 \concept{demand}

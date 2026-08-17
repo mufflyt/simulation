@@ -24,9 +24,9 @@ assert_canonical_isochrones(
 Fail closed unless the canonical isochrone set is present and verified
 }
 \seealso{
-Other isochrone import: 
-\code{\link{isochrone_source_dir}()},
-\code{\link{verify_canonical_isochrones}()}
+Other isochrone import:
+\code{\link[=isochrone_source_dir]{isochrone_source_dir()}},
+\code{\link[=verify_canonical_isochrones]{verify_canonical_isochrones()}}
 }
 \concept{geography}
 \concept{isochrone import}

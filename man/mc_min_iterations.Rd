@@ -18,9 +18,9 @@ bounds are order statistics only once at least one draw falls beyond each.
 Below this the bounds are the sample extremes and understate the spread.
 }
 \seealso{
-Other monte carlo: 
-\code{\link{assert_monte_carlo_adequate}()},
-\code{\link{monte_carlo_diagnostics}()},
-\code{\link{monte_carlo_se}()}
+Other monte carlo:
+\code{\link[=assert_monte_carlo_adequate]{assert_monte_carlo_adequate()}},
+\code{\link[=monte_carlo_diagnostics]{monte_carlo_diagnostics()}},
+\code{\link[=monte_carlo_se]{monte_carlo_se()}}
 }
 \concept{monte carlo}

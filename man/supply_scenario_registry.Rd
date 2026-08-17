@@ -22,10 +22,10 @@ extensions live. Pass \code{prefer_ssot = FALSE} to force the local fallback (an
 reach those extensions) even when mufflyaccess is present.
 }
 \seealso{
-Other scenario registry: 
-\code{\link{demand_scenario_registry}()},
-\code{\link{local_supply_scenario_registry}()},
-\code{\link{validate_scenario_registry}()}
+Other scenario registry:
+\code{\link[=demand_scenario_registry]{demand_scenario_registry()}},
+\code{\link[=local_supply_scenario_registry]{local_supply_scenario_registry()}},
+\code{\link[=validate_scenario_registry]{validate_scenario_registry()}}
 }
 \concept{reporting}
 \concept{scenario registry}

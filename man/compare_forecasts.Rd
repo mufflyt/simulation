@@ -46,9 +46,9 @@ across cutoffs: a model that only wins on average but swings between best and
 worst across origins is not a reliable forecaster.
 }
 \seealso{
-Other forecast scorecard: 
-\code{\link{forecast_scorecard}()},
-\code{\link{weighted_interval_score}()}
+Other forecast scorecard:
+\code{\link[=forecast_scorecard]{forecast_scorecard()}},
+\code{\link[=weighted_interval_score]{weighted_interval_score()}}
 }
 \concept{forecast scorecard}
 \concept{validation}

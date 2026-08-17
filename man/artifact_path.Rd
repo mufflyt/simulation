@@ -28,11 +28,11 @@ the normal case in an installed package and is not itself a fault.
 artifact_path("does_not_exist.csv")
 }
 \seealso{
-Other paths: 
-\code{\link{check_external_data}()},
-\code{\link{data_raw_path}()},
-\code{\link{external_path}()},
-\code{\link{swan_path}()}
+Other paths:
+\code{\link[=check_external_data]{check_external_data()}},
+\code{\link[=data_raw_path]{data_raw_path()}},
+\code{\link[=external_path]{external_path()}},
+\code{\link[=swan_path]{swan_path()}}
 }
 \concept{core}
 \concept{paths}

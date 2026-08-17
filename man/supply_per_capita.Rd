@@ -4,7 +4,7 @@
 \alias{supply_per_capita}
 \title{Provider supply per capita by geography}
 \usage{
-supply_per_capita(supply, population, per = 1e+06)
+supply_per_capita(supply, population, per = 1000000)
 }
 \arguments{
 \item{supply}{Tibble with \code{geo} and \code{fte}.}
@@ -28,16 +28,16 @@ supply_per_capita(
 )
 }
 \seealso{
-Other provider geography: 
-\code{\link{add_returning_providers}()},
-\code{\link{apply_provider_migration_matrix}()},
-\code{\link{assign_entrant_geography}()},
-\code{\link{benchmark_density_shortfall}()},
-\code{\link{historical_placement_shares}()},
-\code{\link{migration_hazard}()},
-\code{\link{migration_matrix_from_moves}()},
-\code{\link{opportunity_placement_shares}()},
-\code{\link{validate_migration_matrix}()}
+Other provider geography:
+\code{\link[=add_returning_providers]{add_returning_providers()}},
+\code{\link[=apply_provider_migration_matrix]{apply_provider_migration_matrix()}},
+\code{\link[=assign_entrant_geography]{assign_entrant_geography()}},
+\code{\link[=benchmark_density_shortfall]{benchmark_density_shortfall()}},
+\code{\link[=historical_placement_shares]{historical_placement_shares()}},
+\code{\link[=migration_hazard]{migration_hazard()}},
+\code{\link[=migration_matrix_from_moves]{migration_matrix_from_moves()}},
+\code{\link[=opportunity_placement_shares]{opportunity_placement_shares()}},
+\code{\link[=validate_migration_matrix]{validate_migration_matrix()}}
 }
 \concept{geography}
 \concept{provider geography}

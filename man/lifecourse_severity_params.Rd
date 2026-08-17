@@ -30,10 +30,10 @@ as the observed category distribution (not-computable / continent rows are
 dropped, not folded into "slight"), and the \code{status} reflects that.
 }
 \seealso{
-Other transition registry: 
-\code{\link{assert_publishable_demand_coefficients}()},
-\code{\link{demand_transition_registry}()},
-\code{\link{lifecourse_eligibility_params}()}
+Other transition registry:
+\code{\link[=assert_publishable_demand_coefficients]{assert_publishable_demand_coefficients()}},
+\code{\link[=demand_transition_registry]{demand_transition_registry()}},
+\code{\link[=lifecourse_eligibility_params]{lifecourse_eligibility_params()}}
 }
 \concept{demand}
 \concept{transition registry}

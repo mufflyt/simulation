@@ -27,9 +27,9 @@ List: \code{hazards} (tibble with \code{unpooled}, \code{pooled}, \code{partial}
 Fit unpooled / pooled / partial-pooled age-band departure hazards
 }
 \seealso{
-Other partial pooling hazard: 
-\code{\link{hazard_pooled_long}()},
-\code{\link{hazard_shrinkage_summary}()}
+Other partial pooling hazard:
+\code{\link[=hazard_pooled_long]{hazard_pooled_long()}},
+\code{\link[=hazard_shrinkage_summary]{hazard_shrinkage_summary()}}
 }
 \concept{partial pooling hazard}
 \concept{supply}

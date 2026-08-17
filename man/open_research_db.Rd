@@ -35,8 +35,8 @@ zero result, because an empty table is exactly what a mis-resolved path
 produces.
 }
 \seealso{
-Other research database: 
-\code{\link{resolve_research_db}()}
+Other research database:
+\code{\link[=resolve_research_db]{resolve_research_db()}}
 }
 \concept{core}
 \concept{research database}

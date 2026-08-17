@@ -14,13 +14,13 @@ and kernel compatibility.
 Recurrence evidence register
 }
 \seealso{
-Other recurrence: 
+Other recurrence:
 \code{\link{RECURRENCE_MEASURE_TYPES}},
-\code{\link{assert_recurrence_kernel_compatible}()},
-\code{\link{build_recurrence_kernel}()},
-\code{\link{compute_recurrence_convolution}()},
-\code{\link{recurrence_mass_from_cumulative}()},
-\code{\link{recurrence_parameter_status}()}
+\code{\link[=assert_recurrence_kernel_compatible]{assert_recurrence_kernel_compatible()}},
+\code{\link[=build_recurrence_kernel]{build_recurrence_kernel()}},
+\code{\link[=compute_recurrence_convolution]{compute_recurrence_convolution()}},
+\code{\link[=recurrence_mass_from_cumulative]{recurrence_mass_from_cumulative()}},
+\code{\link[=recurrence_parameter_status]{recurrence_parameter_status()}}
 }
 \concept{demand}
 \concept{recurrence}

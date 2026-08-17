@@ -41,7 +41,7 @@ assumed baseline need was about 37\% greater than the reference calibration",
 and never "baseline need is 37\% greater".
 }
 \seealso{
-Other baseline gap reporting: 
+Other baseline gap reporting:
 \code{\link{ADEQUACY_ANALOGUES}},
 \code{\link{ADEQUACY_EVIDENCE_TYPES}},
 \code{\link{CALIBRATION_STATUS_RANK}},
@@ -49,19 +49,19 @@ Other baseline gap reporting:
 \code{\link{DEMAND_ESTIMANDS}},
 \code{\link{REFERENCE_ADEQUACY_CALIBRATION}},
 \code{\link{REPORTABLE_MIN_CALIBRATION}},
-\code{\link{adequacy_conclusion_sentence}()},
-\code{\link{adequacy_evidence_is_discordant}()},
-\code{\link{adequacy_evidence_table}()},
-\code{\link{assert_external_anchor}()},
-\code{\link{balance_reversal_sentence}()},
-\code{\link{baseline_anchor_sensitivity}()},
-\code{\link{baseline_gap_claim}()},
-\code{\link{baseline_gap_provenance}()},
-\code{\link{demand_calibration_is_provisional}()},
-\code{\link{demand_dimension_status}()},
-\code{\link{demand_estimand_status}()},
-\code{\link{demand_estimand_table}()},
-\code{\link{has_external_anchor}()}
+\code{\link[=adequacy_conclusion_sentence]{adequacy_conclusion_sentence()}},
+\code{\link[=adequacy_evidence_is_discordant]{adequacy_evidence_is_discordant()}},
+\code{\link[=adequacy_evidence_table]{adequacy_evidence_table()}},
+\code{\link[=assert_external_anchor]{assert_external_anchor()}},
+\code{\link[=balance_reversal_sentence]{balance_reversal_sentence()}},
+\code{\link[=baseline_anchor_sensitivity]{baseline_anchor_sensitivity()}},
+\code{\link[=baseline_gap_claim]{baseline_gap_claim()}},
+\code{\link[=baseline_gap_provenance]{baseline_gap_provenance()}},
+\code{\link[=demand_calibration_is_provisional]{demand_calibration_is_provisional()}},
+\code{\link[=demand_dimension_status]{demand_dimension_status()}},
+\code{\link[=demand_estimand_status]{demand_estimand_status()}},
+\code{\link[=demand_estimand_table]{demand_estimand_table()}},
+\code{\link[=has_external_anchor]{has_external_anchor()}}
 }
 \concept{baseline gap reporting}
 \concept{reporting}

@@ -18,10 +18,10 @@ validate_scenario_registry(registry, kind = c("supply", "demand"))
 Validate a scenario registry against its contract
 }
 \seealso{
-Other scenario registry: 
-\code{\link{demand_scenario_registry}()},
-\code{\link{local_supply_scenario_registry}()},
-\code{\link{supply_scenario_registry}()}
+Other scenario registry:
+\code{\link[=demand_scenario_registry]{demand_scenario_registry()}},
+\code{\link[=local_supply_scenario_registry]{local_supply_scenario_registry()}},
+\code{\link[=supply_scenario_registry]{supply_scenario_registry()}}
 }
 \concept{reporting}
 \concept{scenario registry}

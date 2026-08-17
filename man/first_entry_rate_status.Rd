@@ -14,8 +14,8 @@ Reports whether a sourced estimate exists. Returns \code{"unresolved"} until one
 does; the canonical pathway refuses in that state, which is deliberate.
 }
 \seealso{
-Other first entry: 
-\code{\link{annual_first_urps_entry_rate}()}
+Other first entry:
+\code{\link[=annual_first_urps_entry_rate]{annual_first_urps_entry_rate()}}
 }
 \concept{demand}
 \concept{first entry}

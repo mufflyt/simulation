@@ -22,25 +22,26 @@ age axis preserves the shape of the retirement curve; a multiplier does not
 (it can push a 50-year-old's hazard above a 70-year-old's).
 }
 \seealso{
-Other provider lifecycle: 
+Other provider lifecycle:
 \code{\link{RETIREMENT_HAZARD_BY_AGE}},
-\code{\link{agents_from_roster}()},
-\code{\link{calibrate_hours_intercept}()},
-\code{\link{calibrate_retirement_schedule}()},
-\code{\link{deduplicate_provider_roster}()},
-\code{\link{departure_hazard}()},
-\code{\link{fit_clinical_hours_model}()},
-\code{\link{fte_definition}()},
-\code{\link{hwsm_reference_hours}()},
-\code{\link{implied_annual_departure_rate}()},
-\code{\link{participation_fte}()},
-\code{\link{participation_p_no_patient_care}()},
-\code{\link{predict_clinical_hours}()},
-\code{\link{restate_fte}()},
-\code{\link{retirement_survival}()},
-\code{\link{urps_baseline_supply}()},
-\code{\link{validate_participation_table}()},
-\code{\link{validate_provider_roster}()}
+\code{\link[=agents_from_roster]{agents_from_roster()}},
+\code{\link[=calibrate_hours_intercept]{calibrate_hours_intercept()}},
+\code{\link[=calibrate_retirement_schedule]{calibrate_retirement_schedule()}},
+\code{\link[=deduplicate_provider_roster]{deduplicate_provider_roster()}},
+\code{\link[=departure_hazard]{departure_hazard()}},
+\code{\link[=fit_clinical_hours_model]{fit_clinical_hours_model()}},
+\code{\link[=fte_definition]{fte_definition()}},
+\code{\link[=hwsm_reference_hours]{hwsm_reference_hours()}},
+\code{\link[=implied_annual_departure_rate]{implied_annual_departure_rate()}},
+\code{\link[=participation_fte]{participation_fte()}},
+\code{\link[=participation_p_no_patient_care]{participation_p_no_patient_care()}},
+\code{\link[=predict_clinical_hours]{predict_clinical_hours()}},
+\code{\link[=provider_fte_decay_curve]{provider_fte_decay_curve()}},
+\code{\link[=restate_fte]{restate_fte()}},
+\code{\link[=retirement_survival]{retirement_survival()}},
+\code{\link[=urps_baseline_supply]{urps_baseline_supply()}},
+\code{\link[=validate_participation_table]{validate_participation_table()}},
+\code{\link[=validate_provider_roster]{validate_provider_roster()}}
 }
 \concept{provider lifecycle}
 \concept{supply}

@@ -22,9 +22,9 @@ largely asymptomatic. Confusing the two is the specific error this function
 exists to correct.
 }
 \seealso{
-Other prevalence calibration: 
-\code{\link{calibrate_lifecourse_prevalence}()},
-\code{\link{lifecourse_risk_params_prevalence_anchored}()}
+Other prevalence calibration:
+\code{\link[=calibrate_lifecourse_prevalence]{calibrate_lifecourse_prevalence()}},
+\code{\link[=lifecourse_risk_params_prevalence_anchored]{lifecourse_risk_params_prevalence_anchored()}}
 }
 \concept{demand}
 \concept{prevalence calibration}

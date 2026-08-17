@@ -4,7 +4,7 @@
 \alias{overflow_conservation}
 \title{Check the demand-conservation invariants of an overflow_access() result}
 \usage{
-overflow_conservation(x, tol = 1e-08)
+overflow_conservation(x, tol = 0.00000001)
 }
 \arguments{
 \item{x}{A tibble returned by \code{\link[=overflow_access]{overflow_access()}}.}
@@ -23,11 +23,11 @@ identity \code{sum(served) + sum(unmet) = sum(demand)}. Returns the residuals so
 caller (or a test) can assert they are ~0 rather than trusting a boolean.
 }
 \seealso{
-Other access clearing: 
-\code{\link{catchment_neighbors_from_coords}()},
-\code{\link{clear_access}()},
-\code{\link{clear_access_trajectory}()},
-\code{\link{overflow_access}()}
+Other access clearing:
+\code{\link[=catchment_neighbors_from_coords]{catchment_neighbors_from_coords()}},
+\code{\link[=clear_access]{clear_access()}},
+\code{\link[=clear_access_trajectory]{clear_access_trajectory()}},
+\code{\link[=overflow_access]{overflow_access()}}
 }
 \concept{access clearing}
 \concept{geography}

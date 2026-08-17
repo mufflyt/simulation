@@ -29,13 +29,13 @@ empirical URPS band hazards; ages 70+ use the HWSM physician tail
 literature where the data run out.
 }
 \seealso{
-Other sources: 
-\code{\link{nrmp_entrant_series}()},
-\code{\link{nrmp_entrants}()},
-\code{\link{nrmp_track_split}()},
-\code{\link{urps_age_productivity_curve}()},
-\code{\link{urps_empirical_hazard_by_ageband}()},
-\code{\link{urps_hazard_exposure}()}
+Other sources:
+\code{\link[=nrmp_entrant_series]{nrmp_entrant_series()}},
+\code{\link[=nrmp_entrants]{nrmp_entrants()}},
+\code{\link[=nrmp_track_split]{nrmp_track_split()}},
+\code{\link[=urps_age_productivity_curve]{urps_age_productivity_curve()}},
+\code{\link[=urps_empirical_hazard_by_ageband]{urps_empirical_hazard_by_ageband()}},
+\code{\link[=urps_hazard_exposure]{urps_hazard_exposure()}}
 }
 \concept{calibration}
 \concept{sources}

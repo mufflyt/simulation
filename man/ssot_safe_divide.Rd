@@ -25,12 +25,12 @@ uses the house convention for divide-by-zero rather than producing \code{Inf}.
 ssot_safe_divide(c(3, 5), c(4, 0))
 }
 \seealso{
-Other ssot: 
-\code{\link{as_urps_projection}()},
-\code{\link{assert_scenarios_registered}()},
-\code{\link{ssot_coverage_report}()},
-\code{\link{ssot_rurality}()},
-\code{\link{ssot_safe_percent}()}
+Other ssot:
+\code{\link[=as_urps_projection]{as_urps_projection()}},
+\code{\link[=assert_scenarios_registered]{assert_scenarios_registered()}},
+\code{\link[=ssot_coverage_report]{ssot_coverage_report()}},
+\code{\link[=ssot_rurality]{ssot_rurality()}},
+\code{\link[=ssot_safe_percent]{ssot_safe_percent()}}
 }
 \concept{core}
 \concept{ssot}

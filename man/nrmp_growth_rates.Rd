@@ -22,10 +22,10 @@ List with \code{offered}, \code{filled}, \code{fill_rate_first}, \code{fill_rate
 Growth rates implied by the NRMP fellowship series
 }
 \seealso{
-Other entrant trajectory: 
-\code{\link{compound_growth_rate}()},
-\code{\link{entrant_trajectory}()},
-\code{\link{entrant_trajectory_scenarios}()}
+Other entrant trajectory:
+\code{\link[=compound_growth_rate]{compound_growth_rate()}},
+\code{\link[=entrant_trajectory]{entrant_trajectory()}},
+\code{\link[=entrant_trajectory_scenarios]{entrant_trajectory_scenarios()}}
 }
 \concept{entrant trajectory}
 \concept{supply}

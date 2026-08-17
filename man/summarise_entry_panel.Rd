@@ -16,10 +16,10 @@ One row per NPI with the entry determination and source dates.
 Collapse an entry panel to one row per clinician
 }
 \seealso{
-Other entry panel: 
+Other entry panel:
 \code{\link{ENTRY_EVIDENCE_SOURCES}},
 \code{\link{ENTRY_PANEL_DB_DEFAULT}},
-\code{\link{build_entry_panel}()}
+\code{\link[=build_entry_panel]{build_entry_panel()}}
 }
 \concept{entry panel}
 \concept{supply}

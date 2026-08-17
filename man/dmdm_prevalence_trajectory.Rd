@@ -8,7 +8,7 @@ dmdm_prevalence_trajectory(
   pop_by_age,
   start_year,
   end_year,
-  n = 1e+05,
+  n = 100000,
   cesarean_rate = 0.32,
   seed = NULL,
   risk_params = lifecourse_risk_params(),
@@ -35,10 +35,11 @@ The per-year data frame from \code{\link[=simulate_dmdm]{simulate_dmdm()}}.
 Convenience wrapper: build the base-year cohort and run \code{\link[=simulate_dmdm]{simulate_dmdm()}}.
 }
 \seealso{
-Other dynamic multistate: 
-\code{\link{assert_calibrated_transitions}()},
-\code{\link{dmdm_default_transitions}()},
-\code{\link{simulate_dmdm}()}
+Other dynamic multistate:
+\code{\link[=assert_calibrated_transitions]{assert_calibrated_transitions()}},
+\code{\link[=dmdm_default_transitions]{dmdm_default_transitions()}},
+\code{\link[=dmdm_swan_fitted_transitions]{dmdm_swan_fitted_transitions()}},
+\code{\link[=simulate_dmdm]{simulate_dmdm()}}
 }
 \concept{demand}
 \concept{dynamic multistate}

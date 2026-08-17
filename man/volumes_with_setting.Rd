@@ -23,16 +23,17 @@ setting, with a warning.
 This is a prerequisite for \code{convert_workload_to_fte(by_setting = TRUE)}.
 }
 \seealso{
-Other urps settings: 
+Other urps settings:
 \code{\link{URPS_DEFAULT_SETTING_MIX}},
 \code{\link{URPS_SETTING_SCENARIOS}},
-\code{\link{apply_setting_productivity}()},
-\code{\link{apply_setting_scenario}()},
-\code{\link{apply_setting_shift}()},
-\code{\link{load_psps_pos_shares}()},
-\code{\link{setting_scenario_summary}()},
-\code{\link{split_volumes_by_setting}()},
-\code{\link{validate_setting_mix}()}
+\code{\link[=apply_setting_productivity]{apply_setting_productivity()}},
+\code{\link[=apply_setting_scenario]{apply_setting_scenario()}},
+\code{\link[=apply_setting_shift]{apply_setting_shift()}},
+\code{\link[=load_psps_pos_shares]{load_psps_pos_shares()}},
+\code{\link[=prolapse_setting_mix]{prolapse_setting_mix()}},
+\code{\link[=setting_scenario_summary]{setting_scenario_summary()}},
+\code{\link[=split_volumes_by_setting]{split_volumes_by_setting()}},
+\code{\link[=validate_setting_mix]{validate_setting_mix()}}
 }
 \concept{supply}
 \concept{urps settings}

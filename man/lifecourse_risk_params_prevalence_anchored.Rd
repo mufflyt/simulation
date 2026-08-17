@@ -7,7 +7,7 @@
 lifecourse_risk_params_prevalence_anchored(
   n = 40000L,
   seed = 20260817L,
-  pop_by_age = data.frame(age = 18:90, population = 1e+05)
+  pop_by_age = data.frame(age = 18:90, population = 100000)
 )
 }
 \arguments{
@@ -32,9 +32,9 @@ unchanged. Deterministic: it builds its own cohort under a fixed seed, so
 repeated calls return identical coefficients.
 }
 \seealso{
-Other prevalence calibration: 
-\code{\link{calibrate_lifecourse_prevalence}()},
-\code{\link{lifecourse_prevalence_targets}()}
+Other prevalence calibration:
+\code{\link[=calibrate_lifecourse_prevalence]{calibrate_lifecourse_prevalence()}},
+\code{\link[=lifecourse_prevalence_targets]{lifecourse_prevalence_targets()}}
 }
 \concept{demand}
 \concept{prevalence calibration}

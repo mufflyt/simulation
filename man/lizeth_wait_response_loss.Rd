@@ -48,12 +48,12 @@ closed-form; the reference-adequacy inverse fit, which matches log-wait
 quantiles, is a separate step.
 }
 \seealso{
-Other isochrone access response: 
-\code{\link{capacity_status_with_isochrone_response}()},
-\code{\link{e2sfca_catchments_from_access}()},
-\code{\link{fit_decay_sigma}()},
-\code{\link{join_lizeth_to_catchments}()},
-\code{\link{wait_response_region_holdout}()}
+Other isochrone access response:
+\code{\link[=capacity_status_with_isochrone_response]{capacity_status_with_isochrone_response()}},
+\code{\link[=e2sfca_catchments_from_access]{e2sfca_catchments_from_access()}},
+\code{\link[=fit_decay_sigma]{fit_decay_sigma()}},
+\code{\link[=join_lizeth_to_catchments]{join_lizeth_to_catchments()}},
+\code{\link[=wait_response_region_holdout]{wait_response_region_holdout()}}
 }
 \concept{calibration}
 \concept{isochrone access response}

@@ -16,20 +16,20 @@ Reference values for sanity-checking the magnitude of a newly fitted scalar.
 published_calibration_scalars()
 }
 \seealso{
-Other validation: 
-\code{\link{apply_calibration_scalars}()},
-\code{\link{assert_backtest_estimand_match}()},
-\code{\link{assert_demand_calibrated}()},
-\code{\link{assert_estimands_independent}()},
-\code{\link{assert_publishable_run}()},
-\code{\link{assert_validation_passed}()},
-\code{\link{backtest_estimand_contract}()},
-\code{\link{backtest_headline_metrics}()},
-\code{\link{detect_proportional_estimands}()},
-\code{\link{fit_calibration_scalars}()},
-\code{\link{publishable_run_report}()},
-\code{\link{two_method_agreement}()},
-\code{\link{validation_report}()}
+Other validation:
+\code{\link[=apply_calibration_scalars]{apply_calibration_scalars()}},
+\code{\link[=assert_backtest_estimand_match]{assert_backtest_estimand_match()}},
+\code{\link[=assert_demand_calibrated]{assert_demand_calibrated()}},
+\code{\link[=assert_estimands_independent]{assert_estimands_independent()}},
+\code{\link[=assert_publishable_run]{assert_publishable_run()}},
+\code{\link[=assert_validation_passed]{assert_validation_passed()}},
+\code{\link[=backtest_estimand_contract]{backtest_estimand_contract()}},
+\code{\link[=backtest_headline_metrics]{backtest_headline_metrics()}},
+\code{\link[=detect_proportional_estimands]{detect_proportional_estimands()}},
+\code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}},
+\code{\link[=publishable_run_report]{publishable_run_report()}},
+\code{\link[=two_method_agreement]{two_method_agreement()}},
+\code{\link[=validation_report]{validation_report()}}
 }
 \concept{calibration}
 \concept{validation}

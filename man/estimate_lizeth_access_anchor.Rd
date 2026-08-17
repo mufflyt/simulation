@@ -19,13 +19,13 @@ This estimates realized national URPS appointment access. It does not
 transform wait time into a supply/demand adequacy ratio.
 }
 \seealso{
-Other Lizeth access anchor: 
-\code{\link{build_lizeth_access_anchor}()},
-\code{\link{capacity_status_with_lizeth}()},
-\code{\link{find_lizeth_redcap}()},
-\code{\link{lizeth_adequacy_evidence}()},
-\code{\link{parse_lizeth_physician_information}()},
-\code{\link{prepare_lizeth_access}()}
+Other Lizeth access anchor:
+\code{\link[=build_lizeth_access_anchor]{build_lizeth_access_anchor()}},
+\code{\link[=capacity_status_with_lizeth]{capacity_status_with_lizeth()}},
+\code{\link[=find_lizeth_redcap]{find_lizeth_redcap()}},
+\code{\link[=lizeth_adequacy_evidence]{lizeth_adequacy_evidence()}},
+\code{\link[=parse_lizeth_physician_information]{parse_lizeth_physician_information()}},
+\code{\link[=prepare_lizeth_access]{prepare_lizeth_access()}}
 }
 \concept{Lizeth access anchor}
 \concept{calibration}

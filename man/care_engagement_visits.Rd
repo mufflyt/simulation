@@ -7,8 +7,8 @@
 care_engagement_visits(
   split,
   new_consults_per_entrant = 1,
-  first_year_followup_rate = NULL,
-  annual_followup_rate = NULL
+  first_year_followup_rate = 1.482,
+  annual_followup_rate = 1.125
 )
 }
 \arguments{

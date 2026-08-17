@@ -40,10 +40,11 @@ loudly, and the override is always an affirmative argument rather than a
 default the caller can inherit without noticing.
 }
 \seealso{
-Other dynamic multistate: 
-\code{\link{dmdm_default_transitions}()},
-\code{\link{dmdm_prevalence_trajectory}()},
-\code{\link{simulate_dmdm}()}
+Other dynamic multistate:
+\code{\link[=dmdm_default_transitions]{dmdm_default_transitions()}},
+\code{\link[=dmdm_prevalence_trajectory]{dmdm_prevalence_trajectory()}},
+\code{\link[=dmdm_swan_fitted_transitions]{dmdm_swan_fitted_transitions()}},
+\code{\link[=simulate_dmdm]{simulate_dmdm()}}
 }
 \concept{demand}
 \concept{dynamic multistate}

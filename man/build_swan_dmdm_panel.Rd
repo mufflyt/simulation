@@ -52,8 +52,8 @@ four-year interval as a one-year transition.
 \seealso{
 \code{\link[=swan_panel_fit_caveats]{swan_panel_fit_caveats()}}, \code{\link[=dmdm_transition_data]{dmdm_transition_data()}}
 
-Other swan dmdm panel: 
-\code{\link{swan_panel_fit_caveats}()}
+Other swan dmdm panel:
+\code{\link[=swan_panel_fit_caveats]{swan_panel_fit_caveats()}}
 }
 \concept{data}
 \concept{swan dmdm panel}

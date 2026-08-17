@@ -16,10 +16,10 @@ Tibble of \code{fn} and the files defining it.
 Names defined by more than one legacy script
 }
 \seealso{
-Other legacy loader: 
+Other legacy loader:
 \code{\link{LEGACY_CANONICAL}},
-\code{\link{check_legacy_canonical}()},
-\code{\link{load_legacy}()}
+\code{\link[=check_legacy_canonical]{check_legacy_canonical()}},
+\code{\link[=load_legacy]{load_legacy()}}
 }
 \concept{core}
 \concept{legacy loader}

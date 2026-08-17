@@ -39,23 +39,23 @@ pre-cutoff years contain the COVID-collapsed 2020 examination cohort, not of
 the engine.
 }
 \seealso{
-Other backtest: 
-\code{\link{.series_through}()},
+Other backtest:
+\code{\link[=.series_through]{.series_through()}},
 \code{\link{BACKTEST_PARAMETER_PROVENANCE}},
 \code{\link{BACKTEST_TARGET_YEAR}},
-\code{\link{assert_backtest_parameters_precede_cutoff}()},
-\code{\link{assert_no_leakage}()},
-\code{\link{backtest_attrition_requirement}()},
-\code{\link{backtest_cohort_at}()},
-\code{\link{backtest_cohorts_through}()},
-\code{\link{backtest_entrant_estimate}()},
-\code{\link{backtest_loo_validation}()},
-\code{\link{backtest_oos_interval}()},
-\code{\link{backtest_retirement_regime}()},
-\code{\link{backtest_rolling_origin}()},
-\code{\link{backtest_target_candidates}()},
-\code{\link{reset_leakage_audit}()},
-\code{\link{validate_backtest_target}()}
+\code{\link[=assert_backtest_parameters_precede_cutoff]{assert_backtest_parameters_precede_cutoff()}},
+\code{\link[=assert_no_leakage]{assert_no_leakage()}},
+\code{\link[=backtest_attrition_requirement]{backtest_attrition_requirement()}},
+\code{\link[=backtest_cohort_at]{backtest_cohort_at()}},
+\code{\link[=backtest_cohorts_through]{backtest_cohorts_through()}},
+\code{\link[=backtest_entrant_estimate]{backtest_entrant_estimate()}},
+\code{\link[=backtest_loo_validation]{backtest_loo_validation()}},
+\code{\link[=backtest_oos_interval]{backtest_oos_interval()}},
+\code{\link[=backtest_retirement_regime]{backtest_retirement_regime()}},
+\code{\link[=backtest_rolling_origin]{backtest_rolling_origin()}},
+\code{\link[=backtest_target_candidates]{backtest_target_candidates()}},
+\code{\link[=reset_leakage_audit]{reset_leakage_audit()}},
+\code{\link[=validate_backtest_target]{validate_backtest_target()}}
 }
 \concept{backtest}
 \concept{validation}

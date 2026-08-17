@@ -36,10 +36,10 @@ filesystem that may not exist and would run analyses nobody asked for, so the
 loader evaluates the function definitions and skips the rest.
 }
 \seealso{
-Other legacy loader: 
+Other legacy loader:
 \code{\link{LEGACY_CANONICAL}},
-\code{\link{check_legacy_canonical}()},
-\code{\link{legacy_collisions}()}
+\code{\link[=check_legacy_canonical]{check_legacy_canonical()}},
+\code{\link[=legacy_collisions]{legacy_collisions()}}
 }
 \concept{core}
 \concept{legacy loader}

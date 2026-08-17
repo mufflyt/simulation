@@ -38,11 +38,11 @@ draw <- draw_supply_parameters(spec)
 draw$entrants_per_year
 }
 \seealso{
-Other parameter uncertainty: 
-\code{\link{assert_parameter_uncertainty}()},
-\code{\link{entrant_spec_from_series}()},
-\code{\link{series_mean_se}()},
-\code{\link{supply_parameter_spec}()}
+Other parameter uncertainty:
+\code{\link[=assert_parameter_uncertainty]{assert_parameter_uncertainty()}},
+\code{\link[=entrant_spec_from_series]{entrant_spec_from_series()}},
+\code{\link[=series_mean_se]{series_mean_se()}},
+\code{\link[=supply_parameter_spec]{supply_parameter_spec()}}
 }
 \concept{calibration}
 \concept{parameter uncertainty}

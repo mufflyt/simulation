@@ -14,11 +14,11 @@ Run before a legacy analysis script rather than discovering a missing file
 halfway through a long job.
 }
 \seealso{
-Other paths: 
-\code{\link{artifact_path}()},
-\code{\link{data_raw_path}()},
-\code{\link{external_path}()},
-\code{\link{swan_path}()}
+Other paths:
+\code{\link[=artifact_path]{artifact_path()}},
+\code{\link[=data_raw_path]{data_raw_path()}},
+\code{\link[=external_path]{external_path()}},
+\code{\link[=swan_path]{swan_path()}}
 }
 \concept{core}
 \concept{paths}

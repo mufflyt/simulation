@@ -6,8 +6,8 @@
 \usage{
 example_female_population_by_band(
   years = 2025:2050,
-  base_pop = c(`20-39` = 4.3e+07, `40-59` = 41500000, `60-64` = 1.1e+07, `65-79` =
-    2.2e+07, `80+` = 7500000),
+  base_pop = c(`20-39` = 43000000, `40-59` = 41500000, `60-64` = 11000000, `65-79` =
+    22000000, `80+` = 7500000),
   growth = c(`20-39` = 0.001, `40-59` = 0.004, `60-64` = 0.008, `65-79` = 0.016, `80+` =
     0.031)
 )
@@ -39,10 +39,10 @@ through \code{pop_by_band}.
 head(example_female_population_by_band(2025:2027))
 }
 \seealso{
-Other run workforce microsimulation: 
-\code{\link{example_capacity_survey}()},
-\code{\link{example_service_volumes}()},
-\code{\link{run_workforce_microsimulation}()}
+Other run workforce microsimulation:
+\code{\link[=example_capacity_survey]{example_capacity_survey()}},
+\code{\link[=example_service_volumes]{example_service_volumes()}},
+\code{\link[=run_workforce_microsimulation]{run_workforce_microsimulation()}}
 }
 \concept{core}
 \concept{run workforce microsimulation}

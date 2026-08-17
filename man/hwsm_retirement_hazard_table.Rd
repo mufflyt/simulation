@@ -30,9 +30,9 @@ head(hz)   # (age, sex, prob_exit): the shape build_urps_exit_hazard() returns
 }
 }
 \seealso{
-Other hwsm supply: 
-\code{\link{add_hwsm_supply_parameters}()},
-\code{\link{hwsm_provenance}()}
+Other hwsm supply:
+\code{\link[=add_hwsm_supply_parameters]{add_hwsm_supply_parameters()}},
+\code{\link[=hwsm_provenance]{hwsm_provenance()}}
 }
 \concept{hwsm supply}
 \concept{supply}

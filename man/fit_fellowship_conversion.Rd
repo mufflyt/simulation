@@ -59,12 +59,12 @@ steady-state comparison so a reader can see how much the shape is being
 asked to do.
 }
 \seealso{
-Other fellowship conversion: 
+Other fellowship conversion:
 \code{\link{FELLOWSHIP_DEFAULT_LAGS}},
 \code{\link{FELLOWSHIP_ROSTER_ABOG_COVERAGE}},
-\code{\link{fellowship_certification_series}()},
-\code{\link{fellowship_conversion_steady_state}()},
-\code{\link{fellowship_first_billing_series}()}
+\code{\link[=fellowship_certification_series]{fellowship_certification_series()}},
+\code{\link[=fellowship_conversion_steady_state]{fellowship_conversion_steady_state()}},
+\code{\link[=fellowship_first_billing_series]{fellowship_first_billing_series()}}
 }
 \concept{fellowship conversion}
 \concept{supply}

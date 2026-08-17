@@ -13,13 +13,13 @@ Character vector of logical sensitivity-table names.
 List the available vetted sensitivity-analysis datasets
 }
 \seealso{
-Other workforce statistics: 
-\code{\link{calculate_proportion_ci}()},
-\code{\link{calculate_replacement_gap}()},
-\code{\link{calculate_rural_metro_comparison}()},
-\code{\link{calculate_state_vulnerability}()},
-\code{\link{calculate_two_prop_test}()},
-\code{\link{load_sensitivity_table}()}
+Other workforce statistics:
+\code{\link[=calculate_proportion_ci]{calculate_proportion_ci()}},
+\code{\link[=calculate_replacement_gap]{calculate_replacement_gap()}},
+\code{\link[=calculate_rural_metro_comparison]{calculate_rural_metro_comparison()}},
+\code{\link[=calculate_state_vulnerability]{calculate_state_vulnerability()}},
+\code{\link[=calculate_two_prop_test]{calculate_two_prop_test()}},
+\code{\link[=load_sensitivity_table]{load_sensitivity_table()}}
 }
 \concept{reporting}
 \concept{workforce statistics}

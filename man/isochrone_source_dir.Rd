@@ -16,9 +16,9 @@ than copied: the set is ~1.6 GB, checksum verification makes in-place safe,
 and duplicating it would create a second thing to keep true.
 }
 \seealso{
-Other isochrone import: 
-\code{\link{assert_canonical_isochrones}()},
-\code{\link{verify_canonical_isochrones}()}
+Other isochrone import:
+\code{\link[=assert_canonical_isochrones]{assert_canonical_isochrones()}},
+\code{\link[=verify_canonical_isochrones]{verify_canonical_isochrones()}}
 }
 \concept{geography}
 \concept{isochrone import}

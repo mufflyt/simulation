@@ -35,11 +35,11 @@ Poisson otherwise, then widened by \code{interval_inflation}. Pass an inflation
 factor from \code{\link[=solve_interval_inflation]{solve_interval_inflation()}} rather than a hand-picked one.
 }
 \seealso{
-Other interval coverage: 
-\code{\link{assert_interval_coverage_publishable}()},
-\code{\link{fit_certification_baseline}()},
-\code{\link{rolling_origin_coverage}()},
-\code{\link{solve_interval_inflation}()}
+Other interval coverage:
+\code{\link[=assert_interval_coverage_publishable]{assert_interval_coverage_publishable()}},
+\code{\link[=fit_certification_baseline]{fit_certification_baseline()}},
+\code{\link[=rolling_origin_coverage]{rolling_origin_coverage()}},
+\code{\link[=solve_interval_inflation]{solve_interval_inflation()}}
 }
 \concept{interval coverage}
 \concept{validation}

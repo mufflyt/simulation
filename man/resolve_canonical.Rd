@@ -37,8 +37,8 @@ each call site, and a file that changed underneath the analysis is caught at
 read time instead of surfacing as an unexplained shift in a result.
 }
 \seealso{
-Other canonical and joins: 
-\code{\link{safe_left_join}()}
+Other canonical and joins:
+\code{\link[=safe_left_join]{safe_left_join()}}
 }
 \concept{canonical and joins}
 \concept{core}

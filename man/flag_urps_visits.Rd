@@ -2,30 +2,38 @@
 % Please edit documentation in R/demand-namcs_visit_equations.R
 \name{flag_urps_visits}
 \alias{flag_urps_visits}
-\title{Flag visits whose ICD-10 diagnoses match URPS condition prefixes}
+\title{Flag URPS visits in NAMCS data, supporting both ICD-9 (2015) and ICD-10 (2016+)}
 \usage{
-flag_urps_visits(namcs, prefixes = URPS_ICD10_PREFIXES)
+flag_urps_visits(
+  namcs,
+  icd10_prefixes = URPS_ICD10_PREFIXES,
+  icd9_prefixes = URPS_ICD9_PREFIXES
+)
 }
 \arguments{
-\item{namcs}{Tibble from \code{\link[=load_namcs_2019]{load_namcs_2019()}}.}
+\item{namcs}{Tibble from \code{\link[=load_namcs_2019]{load_namcs_2019()}} or \code{\link[=load_namcs_pooled]{load_namcs_pooled()}}.}
 
-\item{prefixes}{Character vector of ICD-10-CM prefixes.}
+\item{icd10_prefixes}{ICD-10-CM prefix vector (default \link{URPS_ICD10_PREFIXES}).}
+
+\item{icd9_prefixes}{ICD-9-CM prefix vector (default \link{URPS_ICD9_PREFIXES}).}
 }
 \value{
 \code{namcs} with logical column \code{is_urps}.
 }
 \description{
 A visit is flagged when ANY of DIAG1, DIAG2, or DIAG3 starts with a prefix
-in \link{URPS_ICD10_PREFIXES}.
+in the appropriate code set.  Coding system is determined per-visit from the
+\code{YEAR} or \code{namcs_year} column (≤ 2015 → ICD-9-CM; ≥ 2016 → ICD-10-CM).
+If neither year column is present, ICD-10 prefixes are used throughout.
 }
 \seealso{
-Other namcs visit equations: 
-\code{\link{brfss_population_by_stratum}()},
-\code{\link{compute_namcs_demand_estimand}()},
-\code{\link{compute_urps_visit_rates}()},
-\code{\link{fit_urps_visit_rate_model}()},
-\code{\link{load_namcs_2019}()},
-\code{\link{namcs_urps_stratum_visits}()}
+Other namcs visit equations:
+\code{\link[=brfss_population_by_stratum]{brfss_population_by_stratum()}},
+\code{\link[=compute_namcs_demand_estimand]{compute_namcs_demand_estimand()}},
+\code{\link[=compute_urps_visit_rates]{compute_urps_visit_rates()}},
+\code{\link[=fit_urps_visit_rate_model]{fit_urps_visit_rate_model()}},
+\code{\link[=load_namcs_2019]{load_namcs_2019()}},
+\code{\link[=namcs_urps_stratum_visits]{namcs_urps_stratum_visits()}}
 }
 \concept{demand}
 \concept{namcs visit equations}

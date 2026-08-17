@@ -25,11 +25,11 @@ number; a wired one running on the wrong geometry produces a publishable one.
 Coordinates and isochrones come first.
 }
 \seealso{
-Other practice survey: 
-\code{\link{fte_curve_gradient_leverage}()},
-\code{\link{fte_curve_status}()},
-\code{\link{unresolved_calibration_items}()},
-\code{\link{urps_practice_survey_requirements}()}
+Other practice survey:
+\code{\link[=fte_curve_gradient_leverage]{fte_curve_gradient_leverage()}},
+\code{\link[=fte_curve_status]{fte_curve_status()}},
+\code{\link[=unresolved_calibration_items]{unresolved_calibration_items()}},
+\code{\link[=urps_practice_survey_requirements]{urps_practice_survey_requirements()}}
 }
 \concept{data}
 \concept{practice survey}

@@ -20,9 +20,9 @@ Accepts the \code{hazard_by_band_pooled_vs_unpooled.csv} layout (columns
 person-year / event table the fit consumes.
 }
 \seealso{
-Other partial pooling hazard: 
-\code{\link{fit_partial_pooled_hazards}()},
-\code{\link{hazard_shrinkage_summary}()}
+Other partial pooling hazard:
+\code{\link[=fit_partial_pooled_hazards]{fit_partial_pooled_hazards()}},
+\code{\link[=hazard_shrinkage_summary]{hazard_shrinkage_summary()}}
 }
 \concept{partial pooling hazard}
 \concept{supply}

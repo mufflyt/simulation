@@ -8,7 +8,7 @@ lifecourse_demand_trajectory(
   pop_by_age_year,
   years = sort(unique(pop_by_age_year$year)),
   scenario = "baseline",
-  n = 1e+05,
+  n = 100000,
   seed = NULL,
   ...
 )
@@ -31,12 +31,12 @@ volumes plus a national demand summary (care-seeking and total service units),
 the latter feeding the contract tiers 5-6 in \code{\link[=export_hdmm_demand_contract]{export_hdmm_demand_contract()}}.
 }
 \seealso{
-Other lifecourse: 
-\code{\link{lifecourse_demand_estimand}()},
-\code{\link{lifecourse_required_fte}()},
-\code{\link{lifecourse_risk_params_cited}()},
-\code{\link{lifecourse_risk_params_placeholder}()},
-\code{\link{simulate_lifecourse_demand}()}
+Other lifecourse:
+\code{\link[=lifecourse_demand_estimand]{lifecourse_demand_estimand()}},
+\code{\link[=lifecourse_required_fte]{lifecourse_required_fte()}},
+\code{\link[=lifecourse_risk_params_cited]{lifecourse_risk_params_cited()}},
+\code{\link[=lifecourse_risk_params_placeholder]{lifecourse_risk_params_placeholder()}},
+\code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}}
 }
 \concept{demand}
 \concept{lifecourse}

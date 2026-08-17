@@ -34,9 +34,9 @@ isochrone band whose polygon contains it. Produces the \code{membership} table t
 base-R engine (\code{\link[=compute_e2sfca_access]{compute_e2sfca_access()}}) consumes. Requires \code{sf}.
 }
 \seealso{
-Other spatial access data: 
-\code{\link{load_provider_isochrones}()},
-\code{\link{load_tract_demand}()}
+Other spatial access data:
+\code{\link[=load_provider_isochrones]{load_provider_isochrones()}},
+\code{\link[=load_tract_demand]{load_tract_demand()}}
 }
 \concept{geography}
 \concept{spatial access data}

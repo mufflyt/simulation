@@ -76,11 +76,11 @@ catchments <- tibble::tibble(
 clear_access(catchments)[, c("catchment", "utilization", "unmet_demand")]
 }
 \seealso{
-Other access clearing: 
-\code{\link{catchment_neighbors_from_coords}()},
-\code{\link{clear_access_trajectory}()},
-\code{\link{overflow_access}()},
-\code{\link{overflow_conservation}()}
+Other access clearing:
+\code{\link[=catchment_neighbors_from_coords]{catchment_neighbors_from_coords()}},
+\code{\link[=clear_access_trajectory]{clear_access_trajectory()}},
+\code{\link[=overflow_access]{overflow_access()}},
+\code{\link[=overflow_conservation]{overflow_conservation()}}
 }
 \concept{access clearing}
 \concept{geography}

@@ -21,12 +21,12 @@ geographies also carry disproportionate need. This weights the access ratio
 (e.g. an E2SFCA ratio from R/geography-spatial_access_e2sfca) by each geography's need.
 }
 \seealso{
-Other demand: 
-\code{\link{accessible_need_vs_capacity}()},
-\code{\link{demand_by_travel_band}()},
-\code{\link{geographic_demand_summary}()},
-\code{\link{isochrone_demand_from_tracts}()},
-\code{\link{tract_need_from_population}()}
+Other demand:
+\code{\link[=accessible_need_vs_capacity]{accessible_need_vs_capacity()}},
+\code{\link[=demand_by_travel_band]{demand_by_travel_band()}},
+\code{\link[=geographic_demand_summary]{geographic_demand_summary()}},
+\code{\link[=isochrone_demand_from_tracts]{isochrone_demand_from_tracts()}},
+\code{\link[=tract_need_from_population]{tract_need_from_population()}}
 }
 \concept{demand}
 \concept{geography}

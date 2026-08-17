@@ -18,20 +18,20 @@ bands are local literals. Falls back entirely to local values when the
 contract is unavailable, and says so.
 }
 \seealso{
-Other urps: 
-\code{\link{anchor_index}()},
-\code{\link{apply_age_specific_surgery_demand}()},
-\code{\link{assess_demand_concordance}()},
-\code{\link{compute_brfss_demand_estimand}()},
-\code{\link{compute_demand_coverage}()},
-\code{\link{compute_demand_denominators}()},
-\code{\link{compute_demand_denominators_crude}()},
-\code{\link{compute_growth_adequacy}()},
-\code{\link{npp_female_by_band}()},
-\code{\link{npp_women_65plus}()},
-\code{\link{pfd_prevalence_ownership}()},
-\code{\link{rebase_to_year}()},
-\code{\link{resolve_demand_population}()}
+Other urps:
+\code{\link[=anchor_index]{anchor_index()}},
+\code{\link[=apply_age_specific_surgery_demand]{apply_age_specific_surgery_demand()}},
+\code{\link[=assess_demand_concordance]{assess_demand_concordance()}},
+\code{\link[=compute_brfss_demand_estimand]{compute_brfss_demand_estimand()}},
+\code{\link[=compute_demand_coverage]{compute_demand_coverage()}},
+\code{\link[=compute_demand_denominators]{compute_demand_denominators()}},
+\code{\link[=compute_demand_denominators_crude]{compute_demand_denominators_crude()}},
+\code{\link[=compute_growth_adequacy]{compute_growth_adequacy()}},
+\code{\link[=npp_female_by_band]{npp_female_by_band()}},
+\code{\link[=npp_women_65plus]{npp_women_65plus()}},
+\code{\link[=pfd_prevalence_ownership]{pfd_prevalence_ownership()}},
+\code{\link[=rebase_to_year]{rebase_to_year()}},
+\code{\link[=resolve_demand_population]{resolve_demand_population()}}
 }
 \concept{demand}
 \concept{urps}

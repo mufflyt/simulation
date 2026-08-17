@@ -27,12 +27,12 @@ AI  OR ~1.10/delivery (log 0.10), weak/uncertain; OASI-specific OR 2.66
 PROVISIONAL: full-text verification recommended before publication.
 }
 \seealso{
-Other lifecourse: 
-\code{\link{lifecourse_demand_estimand}()},
-\code{\link{lifecourse_demand_trajectory}()},
-\code{\link{lifecourse_required_fte}()},
-\code{\link{lifecourse_risk_params_placeholder}()},
-\code{\link{simulate_lifecourse_demand}()}
+Other lifecourse:
+\code{\link[=lifecourse_demand_estimand]{lifecourse_demand_estimand()}},
+\code{\link[=lifecourse_demand_trajectory]{lifecourse_demand_trajectory()}},
+\code{\link[=lifecourse_required_fte]{lifecourse_required_fte()}},
+\code{\link[=lifecourse_risk_params_placeholder]{lifecourse_risk_params_placeholder()}},
+\code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}}
 }
 \concept{demand}
 \concept{lifecourse}

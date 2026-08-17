@@ -21,11 +21,11 @@ outcomes can be read as trajectories (e.g. a wait time that climbs as a
 shortfall compounds under backlog).
 }
 \seealso{
-Other access outcomes: 
-\code{\link{access_outcomes_by_severity}()},
-\code{\link{access_outcomes_national}()},
-\code{\link{assert_access_outcomes_labeled}()},
-\code{\link{publish_access_outcomes}()}
+Other access outcomes:
+\code{\link[=access_outcomes_by_severity]{access_outcomes_by_severity()}},
+\code{\link[=access_outcomes_national]{access_outcomes_national()}},
+\code{\link[=assert_access_outcomes_labeled]{assert_access_outcomes_labeled()}},
+\code{\link[=publish_access_outcomes]{publish_access_outcomes()}}
 }
 \concept{access outcomes}
 \concept{reporting}

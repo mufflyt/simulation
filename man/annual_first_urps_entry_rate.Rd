@@ -54,8 +54,8 @@ denominator would let this function return a number when no data exists,
 which is the failure mode the whole estimand contract exists to prevent.
 }
 \seealso{
-Other first entry: 
-\code{\link{first_entry_rate_status}()}
+Other first entry:
+\code{\link[=first_entry_rate_status]{first_entry_rate_status()}}
 }
 \concept{demand}
 \concept{first entry}

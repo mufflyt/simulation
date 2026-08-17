@@ -18,11 +18,11 @@ Derives mean vaginal and cesarean deliveries per woman for each birth cohort
 (see module header for the derivation and its assumptions).
 }
 \seealso{
-Other obstetric exposure: 
-\code{\link{cesarean_rate_for_year}()},
-\code{\link{completed_parity_for_cohort}()},
-\code{\link{compute_demand_denominators_lifecourse}()},
-\code{\link{obstetric_exposure_multiplier}()}
+Other obstetric exposure:
+\code{\link[=cesarean_rate_for_year]{cesarean_rate_for_year()}},
+\code{\link[=completed_parity_for_cohort]{completed_parity_for_cohort()}},
+\code{\link[=compute_demand_denominators_lifecourse]{compute_demand_denominators_lifecourse()}},
+\code{\link[=obstetric_exposure_multiplier]{obstetric_exposure_multiplier()}}
 }
 \concept{demand}
 \concept{obstetric exposure}

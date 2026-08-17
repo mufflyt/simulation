@@ -26,10 +26,10 @@ migration (modeled, R/geography-provider_geography / urps_migration) and tempora
 (modeled, R/supply-provider_lifecycle reentry_probability).
 }
 \seealso{
-Other review followups: 
-\code{\link{entrant_pipeline_transition}()},
-\code{\link{nrmp_match_to_cert_ratio}()},
-\code{\link{supply_uncertainty_drivers}()}
+Other review followups:
+\code{\link[=entrant_pipeline_transition]{entrant_pipeline_transition()}},
+\code{\link[=nrmp_match_to_cert_ratio]{nrmp_match_to_cert_ratio()}},
+\code{\link[=supply_uncertainty_drivers]{supply_uncertainty_drivers()}}
 }
 \concept{review followups}
 \concept{supply}

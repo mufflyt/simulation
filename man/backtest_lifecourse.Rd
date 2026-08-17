@@ -45,9 +45,9 @@ totals — the credibility check the Dall-family models stop short of. Defaults
 read \code{config/calibration_targets.yml$backtest}.
 }
 \seealso{
-Other demand lifecourse: 
-\code{\link{calibrate_lifecourse_demand}()},
-\code{\link{lifecourse_anchor_predictions}()}
+Other demand lifecourse:
+\code{\link[=calibrate_lifecourse_demand]{calibrate_lifecourse_demand()}},
+\code{\link[=lifecourse_anchor_predictions]{lifecourse_anchor_predictions()}}
 }
 \concept{calibration}
 \concept{demand lifecourse}

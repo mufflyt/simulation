@@ -52,12 +52,12 @@ fee-for-service services after access, referral, payer mix, and capacity have
 already shaped care. It must not be substituted for latent all-payer demand.
 }
 \seealso{
-Other medicare capacity: 
-\code{\link{compare_medicare_realized_care}()},
-\code{\link{medicare_work_rvu_by_provider}()},
-\code{\link{medicare_workload_index}()},
-\code{\link{summarise_medicare_capacity}()},
-\code{\link{urps_medicare_service_crosswalk}()}
+Other medicare capacity:
+\code{\link[=compare_medicare_realized_care]{compare_medicare_realized_care()}},
+\code{\link[=medicare_work_rvu_by_provider]{medicare_work_rvu_by_provider()}},
+\code{\link[=medicare_workload_index]{medicare_workload_index()}},
+\code{\link[=summarise_medicare_capacity]{summarise_medicare_capacity()}},
+\code{\link[=urps_medicare_service_crosswalk]{urps_medicare_service_crosswalk()}}
 }
 \concept{medicare capacity}
 \concept{supply}
