@@ -1,0 +1,31 @@
+# AI (fecal incontinence) DEFINITIVE-TREATMENT EVIDENCE REGISTER
+#
+# THERE IS NO SINGLE SNM-VERSUS-SPHINCTEROPLASTY SHARE, and none may be added.
+# p_snm + p_sphincteroplasty DOES NOT equal 1: many women with FI receive
+# neither, and the two do not have identical indications. SNM is a first-line
+# surgical option with or without a sphincter defect; sphincteroplasty is for
+# selected patients with an external anal sphincter defect. Forcing a split
+# would invent a competition between treatments whose eligibility sets differ.
+#
+# Each treatment therefore gets its OWN rate against a STATED denominator:
+#
+#   p_snm             = P(SNM implant        | AI/FI care population)
+#   p_sphincteroplasty = P(sphincteroplasty  | AI/FI care population,
+#                          additionally repair-eligible anatomy if modelled)
+#
+# A conditional fraction P(SNM | SNM or sphincteroplasty) may be DERIVED
+# secondarily as N_snm / (N_snm + N_sph). It must never be the primary pathway
+# probability.
+#
+# INDICATION LINKAGE IS MANDATORY FOR SNM. A bare SNM CPT count is INVALID as a
+# fecal-incontinence quantity: the same implantation codes are used for urinary
+# urgency/OAB and retention, so the codes are not indication-specific.
+# Sphincteroplasty is procedurally cleaner.
+#
+# canonical_compatible is FALSE by default. An empty value means the field has
+# not been established and must not be filled by inference.
+treatment,denominator,age_group,calendar_period,geography,source,claims_definition,indication_specific,value,uncertainty,transportability,canonical_compatible,notes
+snm,AI/FI care population,65+,2010-2018,national (5% Medicare sample),"Halani et al 2025 AJOG, national 5% Medicare sample",CPT-identified SNM among women with FI diagnosis codes,unverified,,,"older women only; Medicare FFS; pre-2019",FALSE,"BENCHMARK / TAXONOMY VALIDATION. Study separately identifies PFPT-biofeedback, SNM, sphincteroplasty, PTNS and other anal procedures -- independently corroborating that PTNS belongs with conservative treatment rather than as the definitive AI procedure. Procedure-specific rates not yet extracted; do NOT convert to a canonical probability before extracting the DENOMINATOR alongside the numerator."
+sphincteroplasty,AI/FI care population,65+,2010-2018,national (5% Medicare sample),"Halani et al 2025 AJOG, national 5% Medicare sample",CPT-identified sphincteroplasty among women with FI diagnosis codes,unverified,,,"older women only; Medicare FFS; pre-2019",FALSE,"BENCHMARK. Same extraction caveat as the snm row."
+snm,"patients treated with SNM or sphincteroplasty",all treated,2011-2014,New York State,"Xu et al, population-based New York",,unverified,,,"NON-TRANSPORTABLE to 2026 national: single state, 2011-2014 era",FALSE,"TEMPORAL/CONTEXT EVIDENCE ONLY. Demonstrates sphincteroplasty utilization DECLINED after SNM became available in the US -- direction and era effect, 621 treated patients. Must NOT be used as a current national treatment share. Its denominator is also the CONDITIONAL one (treated with either), not the AI/FI care population."
+sphincteroplasty,"patients treated with SNM or sphincteroplasty",all treated,2011-2014,New York State,"Xu et al, population-based New York",,unverified,,,"NON-TRANSPORTABLE to 2026 national",FALSE,"TEMPORAL/CONTEXT EVIDENCE ONLY. Same caveats as the paired snm row."
