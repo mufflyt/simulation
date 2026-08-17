@@ -8,21 +8,27 @@ build_chia_inpatient_urps_series(
   con = NULL,
   min_year = 2004L,
   max_year = 2018L,
-  save_dir = "artifacts/chia_inpatient"
+  mode = c("observed", "synthetic_fixture"),
+  save_dir = "artifacts/chia_inpatient",
+  allow_synthetic_artifact = FALSE
 )
 }
 \arguments{
-\item{con}{Database connection to DuckDB CHIA casemix, or NULL to load/generate mock fixture.}
+\item{con}{Database connection to DuckDB CHIA casemix. Required in mode = "observed".}
 
 \item{min_year}{Starting fiscal year (default 2004).}
 
 \item{max_year}{Ending fiscal year (default 2018).}
 
+\item{mode}{Operation mode: "observed" (default, fails if con missing) or "synthetic_fixture".}
+
 \item{save_dir}{Directory for timestamped artifact output.}
+
+\item{allow_synthetic_artifact}{Permit writing synthetic artifacts to save_dir (default FALSE).}
 }
 \value{
-A tibble with columns: \code{year}, \code{age_band}, \code{procedure_family},
-\code{inpatient_cases}, \code{female_population}, \code{rate_per_100k}.
+A tibble with columns \code{year}, \code{age_band}, \code{procedure_family},
+\code{inpatient_cases}, \code{female_population}, \code{rate_per_100k} and provenance attributes.
 }
 \description{
 Extracts annual counts and population-adjusted rates for inpatient URPS procedure
@@ -31,6 +37,8 @@ families across FY2004-FY2018 from CHIA inpatient discharge data.
 \seealso{
 Other chia inpatient surgery:
 \code{\link[=fit_inpatient_surgery_rate_model]{fit_inpatient_surgery_rate_model()}},
+\code{\link[=fixture_chia_d6]{fixture_chia_d6()}},
+\code{\link[=ma_female_population_by_year_age_band]{ma_female_population_by_year_age_band()}},
 \code{\link[=validate_chia_inpatient_demand]{validate_chia_inpatient_demand()}}
 }
 \concept{chia inpatient surgery}

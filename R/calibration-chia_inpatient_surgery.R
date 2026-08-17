@@ -1,11 +1,53 @@
-# Poisson Population-Offset Inpatient Surgery Rate Model ----
-#
-# Calibration tier: observed_regional (Massachusetts, FY2004-FY2018)
-#
-# Fits log(E[cases]) = X * beta + log(female_population) using a Poisson or
-# quasi-Poisson rate model with female population as the offset.
+# Estimand Boundary Registry for CHIA D6 ----
+
+#' Estimand Scope & Boundary Registry for CHIA D6
+#'
+#' Mechanically enforces allowed vs forbidden roles for Estimand D6 (all-payer inpatient URPS surgery).
+#' Inpatient CHIA utilization must NOT be used to calibrate total surgical volume (D3), care seeking,
+#' appointment wait time, or national provider FTE capacity.
+#'
+#' @export
+D6_ESTIMAND_REGISTRY <- list(
+  estimand_id = "D6",
+  label = "all-payer inpatient URPS surgery",
+  setting_scope = "hospital_inpatient",
+  geography_scope = "Massachusetts",
+  allowed_roles = c(
+    "regional_external_validation",
+    "inpatient_setting_validation",
+    "facility_geography_validation"
+  ),
+  forbidden_roles = c(
+    "total_surgical_volume_calibration",
+    "care_seeking_calibration",
+    "appointment_wait_calibration",
+    "national_fte_calibration"
+  )
+)
+
+#' Assert Estimand Boundary Role Compliance
+#'
+#' Checks whether a proposed role is permitted for Estimand D6 under scientific hardening rules.
+#'
+#' @param role Proposed modeling/calibration role string.
+#' @param registry Estimand registry list (defaults to [D6_ESTIMAND_REGISTRY]).
+#' @return (Invisibly) TRUE if compliant; throws a hard error if forbidden.
+#' @export
+assert_estimand_boundary <- function(role, registry = D6_ESTIMAND_REGISTRY) {
+  if (role %in% registry$forbidden_roles) {
+    stop(sprintf(
+      "assert_estimand_boundary(): Role '%s' is FORBIDDEN for Estimand %s (%s). Inpatient-only CHIA data cannot calibrate total surgical demand, care seeking, wait times, or national FTE capacity.",
+      role, registry$estimand_id, registry$label
+    ), call. = FALSE)
+  }
+  if (!role %in% registry$allowed_roles) {
+    stop(sprintf("assert_estimand_boundary(): Role '%s' is unrecognized for Estimand %s.", role, registry$estimand_id), call. = FALSE)
+  }
+  invisible(TRUE)
+}
 
 #' Fit Poisson population-offset inpatient surgery rate model
+
 #'
 #' Fits an age- and year-stratified rate model for inpatient pelvic reconstructive
 #' surgery using CHIA D6 series data with population at risk as offset.

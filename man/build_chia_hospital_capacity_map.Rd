@@ -2,32 +2,10 @@
 % Please edit documentation in R/geography-chia_hospital_capacity.R
 \name{build_chia_hospital_capacity_map}
 \alias{build_chia_hospital_capacity_map}
-\title{Build CHIA hospital surgical capacity map and market concentration metrics}
+\title{Legacy Alias for \code{\link[=build_chia_hospital_surgical_volume_map]{build_chia_hospital_surgical_volume_map()}}}
 \usage{
-build_chia_hospital_capacity_map(
-  con = NULL,
-  min_year = 2004L,
-  max_year = 2018L,
-  save_dir = "artifacts/chia_capacity"
-)
-}
-\arguments{
-\item{con}{Database connection to DuckDB CHIA casemix, or NULL for synthetic fixture.}
-
-\item{min_year}{Starting fiscal year (default 2004).}
-
-\item{max_year}{Ending fiscal year (default 2018).}
-
-\item{save_dir}{Directory for timestamped capacity map artifacts.}
-}
-\value{
-A list containing \code{facility_volumes} (tibble of per-facility annual metrics),
-\code{market_summary} (state-level Gini and volume category distribution), and artifact paths.
+build_chia_hospital_capacity_map(...)
 }
 \description{
-Evaluates annual hospital inpatient URPS case volumes, market shares,
-Gini concentration coefficients, and catchment migration across Massachusetts
-facilities from CHIA discharge data.
+Legacy Alias for \code{\link[=build_chia_hospital_surgical_volume_map]{build_chia_hospital_surgical_volume_map()}}
 }
-\concept{chia inpatient geography}
-\concept{geography}

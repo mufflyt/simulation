@@ -25,9 +25,10 @@ pop,recurrence,pessary_care,0.6000,NA,NA,NA,medium,"Medicare Part B","Pessary ma
 pop,recurrence,prolapse_procedure,0.4000,NA,NA,NA,medium,"Medicare Part B / SASD","Reoperation share."
 ai,conservative,new_consultation,0.3180,0.3840,0.15,0.45,medium,"Whitehead 2009 / Medicare Part B","Calibrated flow: per_entering=0.3180 matches incident AI entrant share. p_advance=0.3840 is empirical AI care-seeking."
 ai,conservative,return_visit,1.5000,0.3840,0.15,0.45,medium,"NAMCS 2015-19","Bowel-regimen and biofeedback follow-up."
-ai,testing,urodynamics,0.2500,0.4389,0.10,0.40,medium,"Pooled NAMCS 2015-19","Diagnostic evaluation. p_advance=0.4389 is empirical specialist referral rate."
-ai,procedure,ptns,0.7000,1.0000,NA,NA,medium,"CMS PSPS 2024","Non-invasive neuromodulation sessions."
+ai,testing,urodynamics,0.2500,0.4389,0.10,0.40,medium,"Pooled NAMCS 2015-19","Diagnostic evaluation (STAND-IN for anorectal manometry). p_advance=0.4389 is empirical specialist referral rate."
+ai,procedure,ptns,0.7000,1.0000,NA,NA,medium,"CMS PSPS 2024 (MIS-SPECIFIED)","Non-invasive neuromodulation sessions (NONSURGICAL; not a definitive procedure. SACRAL NEUROMODULATION and SPHINCTEROPLASTY absent from basket)."
 ai,followup,postoperative_care,1.0000,0.1000,0.05,0.18,medium,"Medicare Part B","Global-period follow-up."
+
 ai,followup,return_visit,1.1250,0.1000,0.05,0.18,medium,"Medicare Part B longitudinal","Post-global surveillance."
 ai,recurrence,new_consultation,0.3180,NA,NA,NA,medium,"Medicare Part B","Recurrent AI re-evaluation entrants."
 ai,recurrence,return_visit,0.8000,NA,NA,NA,medium,"Medicare Part B","Re-evaluation visits."
