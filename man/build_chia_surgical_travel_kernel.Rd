@@ -2,7 +2,7 @@
 % Please edit documentation in R/geography-chia_inpatient_flows.R
 \name{build_chia_surgical_travel_kernel}
 \alias{build_chia_surgical_travel_kernel}
-\title{Build empirical inpatient surgical travel kernel from CHIA patient-to-hospital routes}
+\title{Build empirical inpatient surgical travel band distribution from CHIA patient-to-hospital routes}
 \usage{
 build_chia_surgical_travel_kernel(
   routed_pairs,
@@ -12,15 +12,16 @@ build_chia_surgical_travel_kernel(
 \arguments{
 \item{routed_pairs}{Output table from \code{\link[=valhalla_zip_drive_time]{valhalla_zip_drive_time()}} with \code{drive_minutes}.}
 
-\item{save_dir}{Directory for saving the empirical travel kernel artifact.}
+\item{save_dir}{Directory for saving the empirical travel distribution artifact.}
 }
 \value{
-A list containing \code{band_shares} (empirical shares), \code{decay_weights}
-(normalized decay weights for E2SFCA), and output \code{saved_path}.
+A list containing \code{observed_travel_band_distribution} (empirical shares),
+\code{band_shares} (tibble of count and share), and \code{saved_path}.
 }
 \description{
-Estimates empirical drive-time band shares and distance-decay weights for
-major inpatient pelvic reconstructive surgery.
+Estimates empirical drive-time band shares from observed CHIA patient-to-hospital routing.
+Note: Observed travel reflects patient origin, hospital facility availability, and referral patterns,
+and is labeled \code{observed_travel_band_distribution} rather than spatial distance-decay weights.
 }
 \seealso{
 Other geography chia:
