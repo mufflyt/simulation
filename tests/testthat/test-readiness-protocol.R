@@ -187,3 +187,75 @@ test_that("no workflow step can swallow a gate's exit code through a pipe", {
                             "failing gate reports success:",
                             paste(offenders, collapse = ", ")))
 })
+
+# ---------------------------------------------------------------------------
+# Register integrity: exit 2, because a lying register breaks the ASSESSMENT
+# ---------------------------------------------------------------------------
+
+.with_file <- function(path, mutate, code) {
+  bak <- tempfile(); file.copy(path, bak, overwrite = TRUE)
+  on.exit({ file.copy(bak, path, overwrite = TRUE); unlink(bak) }, add = TRUE)
+  writeLines(mutate(readLines(path, warn = FALSE)), path)
+  force(code)
+}
+
+.reg_path <- function(f) {
+  root <- .source_tree_root()
+  if (length(root) == 0) return(NA_character_)
+  file.path(root[1], "config", f)
+}
+
+test_that("a no-conversion-route measure marked compatible exits 2", {
+  skip_on_cran()
+  p <- .reg_path("recurrence_evidence.csv")
+  skip_if(is.na(p) || !file.exists(p), "register not present")
+  # THE CASE THE FIRST VERSION MISSED. This row has a source, an endpoint and a
+  # value -- they are simply the wrong ones. A check that only looked for EMPTY
+  # fields passed it, which a negative control caught.
+  r <- .with_file(p, function(x) sub("unsupported_or_unknown,,,FALSE",
+                                     "unsupported_or_unknown,,,TRUE", x), run_gate())
+  expect_equal(r$status, 2L)
+  expect_match(r$text, "NO conversion route to g_k")
+  expect_false(grepl("::SCIENTIFIC-BLOCKER::", r$text, fixed = TRUE))
+})
+
+test_that("a retreatment rate marked compatible exits 2", {
+  skip_on_cran()
+  p <- .reg_path("recurrence_evidence.csv")
+  skip_if(is.na(p) || !file.exists(p), "register not present")
+  r <- .with_file(p, function(x) sub("repeat_treatment_rate,,,FALSE",
+                                     "repeat_treatment_rate,,,TRUE", x), run_gate())
+  expect_equal(r$status, 2L)
+  expect_match(r$text, "repeat_treatment_rate")
+})
+
+test_that("populating anal_procedures while NOT_DEFINED exits 2", {
+  skip_on_cran()
+  p <- .reg_path("ai_claims_basket.yml")
+  skip_if(is.na(p) || !file.exists(p), "basket not present")
+  r <- .with_file(p, function(x) sub("^    cpt: \\[\\]$",
+                                     "    cpt:\n      - code: \"99999\"\n        label: \"invented\"",
+                                     x), run_gate())
+  expect_equal(r$status, 2L)
+  expect_match(r$text, "still marked")
+})
+
+test_that("integrity failures are NOT reported as scientific blockers", {
+  skip_on_cran()
+  # The most dangerous available failure would be a broken register reported as
+  # routine science. Exit 2 and the absence of blocker markers is what prevents
+  # that.
+  p <- .reg_path("recurrence_evidence.csv")
+  skip_if(is.na(p) || !file.exists(p), "register not present")
+  r <- .with_file(p, function(x) sub("repeat_treatment_rate,,,FALSE",
+                                     "repeat_treatment_rate,,,TRUE", x), run_gate())
+  expect_match(r$text, "::UNEXPECTED-FAILURE::")
+  expect_match(r$text, "INFRASTRUCTURE, not a known scientific blocker")
+})
+
+test_that("the unmodified registers pass integrity and still exit 1", {
+  skip_on_cran()
+  r <- run_gate()
+  expect_equal(r$status, 1L)
+  expect_match(r$text, "PASS     register and basket integrity")
+})
