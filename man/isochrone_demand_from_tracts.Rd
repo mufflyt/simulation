@@ -31,8 +31,10 @@ access-ratio / capacity columns are used when present.
 Other demand:
 \code{\link[=accessible_need_vs_capacity]{accessible_need_vs_capacity()}},
 \code{\link[=demand_by_travel_band]{demand_by_travel_band()}},
+\code{\link[=generate_obstetric_lifecourse_cohort]{generate_obstetric_lifecourse_cohort()}},
 \code{\link[=geographic_demand_summary]{geographic_demand_summary()}},
 \code{\link[=need_weighted_access]{need_weighted_access()}},
+\code{\link[=predict_pelvic_floor_disease_trajectory]{predict_pelvic_floor_disease_trajectory()}},
 \code{\link[=tract_need_from_population]{tract_need_from_population()}}
 }
 \concept{demand}
