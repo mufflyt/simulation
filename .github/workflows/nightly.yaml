@@ -32,6 +32,28 @@ name: nightly
 permissions:
   contents: read
 
+# EVERY `run:` STEP USES bash WITH pipefail.
+#
+# GitHub's default shell is `bash -e {0}` -- WITHOUT pipefail. A pipeline's exit
+# status is its LAST command's, so
+#
+#     run: Rscript .github/scripts/assert-canonical-science.R | tee -a "$GITHUB_STEP_SUMMARY"
+#
+# reported SUCCESS while the script exited 1. The readiness gate printed
+# "CANONICAL CONFIGURATION IS NOT SCIENTIFICALLY RUNNABLE" and four
+# ::SCIENTIFIC-BLOCKER:: markers, and the job went green. tee succeeded, so the
+# step succeeded.
+#
+# Twelve piped steps across three workflows had this, including
+# assert-scientific-invariants and assert-temporal-integrity. Any of them could
+# have been failing silently for as long as they have existed -- a gate that
+# cannot fail is not a gate, and its green tells you nothing.
+#
+# `shell: bash` makes Actions use `bash --noprofile --norc -eo pipefail {0}`.
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: nightly-${{ github.ref }}
   cancel-in-progress: false
