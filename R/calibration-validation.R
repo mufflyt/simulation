@@ -512,7 +512,7 @@ validation_report <- function(supply, required = NULL, gap = NULL,
   # mode impossible for every contract-free run.
   if (requireNamespace("mufflyaccess", quietly = TRUE)) {
     mc <- relaxed_check(function() assert_mufflyaccess_contract(mode = "relaxed"))
-    add("mufflyaccess_contract_usable", "internal", mc,
+    add("mufflyaccess_contract_usable", "external", mc,
         if (mc) "installed contract provides every export this package calls"
         else "installed mufflyaccess build is missing an export this package calls")
 

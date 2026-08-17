@@ -92,10 +92,10 @@ demand_transition_registry <- function() {
   # those, so replacing the risk model wholesale would have matched prevalence
   # and destroyed every scenario the model exists to run.
   risk_wide <- tibble::tribble(
-    ~condition,  ~b0,   ~bvag, ~bage,  ~bysl, ~bbmi, ~bhyst, ~bmeno, ~bcomorb,
-    "ui",      -2.1952,  0.18,  0.2504, 0.05,  0.12,   0.10,   0.25,     0.15,
-    "pop",     -5.0063,  0.42,  0.1662, 0.08,  0.08,   0.45,   0.20,     0.05,
-    "ai",      -3.7295,  0.22,  0.2138, 0.04,  0.06,   0.05,   0.10,     0.20
+    ~condition,  ~b0,     ~bvag,   ~bage,  ~bysl, ~bbmi,   ~bhyst,  ~bmeno, ~bcomorb,
+    "ui",      -1.7825,  0.0499,  0.3387,  0.00,  0.1997,  0.4694,   0.00,   0.00,
+    "pop",     -4.4147,  0.3000,  0.3157,  0.00,  0.0800,  0.3365,   0.00,   0.00,
+    "ai",      -3.2071,  0.0042,  0.2957,  0.00,  0.0851,  0.3906,   0.00,   0.00
   )
 
   # The superseded placeholder intercept/slope, kept reachable and auditable
