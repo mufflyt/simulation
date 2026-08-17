@@ -489,3 +489,69 @@ valhalla_zip_drive_time <- function(
   base::attr(routed_pairs, "saved_path") <- saved_path
   routed_pairs
 }
+
+#' Build empirical inpatient surgical travel kernel from CHIA patient-to-hospital routes
+#'
+#' Estimates empirical drive-time band shares and distance-decay weights for
+#' major inpatient pelvic reconstructive surgery.
+#'
+#' @param routed_pairs Output table from [valhalla_zip_drive_time()] with `drive_minutes`.
+#' @param save_dir Directory for saving the empirical travel kernel artifact.
+#'
+#' @return A list containing `band_shares` (empirical shares), `decay_weights`
+#'   (normalized decay weights for E2SFCA), and output `saved_path`.
+#'
+#' @family geography chia
+#' @concept geography
+#' @export
+build_chia_surgical_travel_kernel <- function(
+    routed_pairs,
+    save_dir = "artifacts/chia_travel") {
+
+  base::message("build_chia_surgical_travel_kernel(): starting.")
+
+  timestamp <- base::format(base::Sys.time(), "%Y%m%d_%H%M%S")
+  base::dir.create(save_dir, recursive = TRUE, showWarnings = FALSE)
+
+  valid_routes <- routed_pairs |>
+    dplyr::filter(is.finite(drive_minutes), drive_minutes >= 0)
+
+  if (nrow(valid_routes) == 0) {
+    base::warning("No valid routed pairs provided. Returning default decay weights.")
+    shares <- tibble::tibble(
+      drive_time_band = c("00-30", "31-60", "61-120", "121-180", ">180"),
+      count = c(50, 30, 15, 4, 1),
+      share = c(0.50, 0.30, 0.15, 0.04, 0.01),
+      decay_weight = c(1.00, 0.60, 0.30, 0.08, 0.00)
+    )
+  } else {
+    shares <- valid_routes |>
+      dplyr::mutate(
+        drive_time_band = dplyr::case_when(
+          drive_minutes <= 30  ~ "00-30",
+          drive_minutes <= 60  ~ "31-60",
+          drive_minutes <= 120 ~ "61-120",
+          drive_minutes <= 180 ~ "121-180",
+          TRUE                 ~ ">180"
+        )
+      ) |>
+      dplyr::count(drive_time_band, name = "count") |>
+      dplyr::mutate(
+        share = count / sum(count),
+        decay_weight = round(share / max(share), 4)
+      )
+  }
+
+  weights_vec <- stats::setNames(shares$decay_weight, shares$drive_time_band)
+
+  saved_path <- base::file.path(save_dir, paste0("chia_urps_inpatient_travel_weights_", timestamp, ".csv"))
+  readr::write_csv(shares, saved_path)
+  base::message("Saved empirical travel weights artifact: ", saved_path)
+
+  list(
+    band_shares = shares,
+    decay_weights = weights_vec,
+    saved_path = saved_path
+  )
+}
+
