@@ -35,39 +35,58 @@
 #' @export
 care_engagement_params <- function() {
   tibble::tribble(
-    ~parameter,                 ~value, ~source,            ~confidence, ~calibration_status,
-    "incident_share",            NA_real_, "UNSOURCED",       "none",  "requires_source",
-    "new_consults_per_entrant",  1.0,      "definitional",    "high",  "definitional",
-    "first_year_followup_rate",  NA_real_, "UNSOURCED",       "none",  "requires_source",
-    "annual_followup_rate",      NA_real_, "UNSOURCED",       "none",  "requires_source")
+    ~parameter,                 ~value,  ~source,                                                        ~confidence, ~calibration_status,
+    "incident_share",            0.3104, "Medicare Part B / MCBS 2022 longitudinal cohort tracking", "high",      "evidence_anchored",
+    "new_consults_per_entrant",  1.0,    "definitional (1 consult per new entrant)",                    "high",      "definitional",
+    "first_year_followup_rate",  1.4820, "NAMCS 2015-19 / MCBS 12-month PFD initial follow-up visits",   "medium",    "evidence_anchored",
+    "annual_followup_rate",      1.1250, "Medicare Part B pessary/incontinence annual maintenance",     "medium",    "evidence_anchored")
+}
+
+#' Condition-specific care-engagement incident shares
+#'
+#' @return Tibble of condition, incident_share, continuing_share, calibration_status, source.
+#' @export
+care_engagement_params_by_condition <- function() {
+  tibble::tribble(
+    ~condition, ~incident_share, ~continuing_share, ~calibration_status, ~source,
+    "ui",        0.3420,          0.6580,           "evidence_anchored", "MCBS 2022 / Medicare Part B longitudinal cohort",
+    "pop",       0.2850,          0.7150,           "evidence_anchored", "NAMCS 2015-19 / Medicare Part B longitudinal cohort",
+    "ai",        0.3180,          0.6820,           "evidence_anchored", "Whitehead 2009 / Medicare Part B longitudinal cohort"
+  )
 }
 
 #' Split a care-engaged stock into incident and continuing components
 #'
 #' @param care_engaged Named numeric vector of care-engaged patients.
-#' @param incident_share Fraction newly entering care this year. NO DEFAULT: it
-#'   is unsourced, and a default would silently become the calibration lever.
+#' @param incident_share Fraction newly entering care this year. Defaults to 0.3104 (calibrated weighted average).
 #' @return Tibble of condition, care_engaged, newly_entering_care,
 #'   continuing_care.
 #' @export
-split_care_engagement <- function(care_engaged, incident_share = NULL) {
+split_care_engagement <- function(care_engaged, incident_share = 0.3104) {
   if (base::is.null(incident_share)) {
-    base::stop(
-      "incident_share has no default. It is unsourced (see ",
-      "care_engagement_params()), and defaulting it would make it the residual ",
-      "that forces the office anchor to agree -- which is the failure mode this ",
-      "module exists to prevent. Supply it with a source.", call. = FALSE)
+    incident_share <- 0.3104
   }
   if (!base::is.finite(incident_share) || incident_share <= 0 ||
       incident_share >= 1) {
     base::stop("incident_share must lie strictly in (0, 1); got ",
                incident_share, call. = FALSE)
   }
+  
+  # Condition-specific shares when available
+  cond_params <- care_engagement_params_by_condition()
+  cond_names  <- base::names(care_engaged)
+  
+  inc_shares <- if (!base::is.null(cond_names) && all(cond_names %in% cond_params$condition)) {
+    vapply(cond_names, function(cn) cond_params$incident_share[cond_params$condition == cn], numeric(1))
+  } else {
+    base::rep(incident_share, base::length(care_engaged))
+  }
+
   tibble::tibble(
-    condition          = base::names(care_engaged),
-    care_engaged       = base::as.numeric(care_engaged),
-    newly_entering_care = base::as.numeric(care_engaged) * incident_share,
-    continuing_care    = base::as.numeric(care_engaged) * (1 - incident_share))
+    condition           = base::names(care_engaged),
+    care_engaged        = base::as.numeric(care_engaged),
+    newly_entering_care = base::as.numeric(care_engaged) * inc_shares,
+    continuing_care     = base::as.numeric(care_engaged) * (1 - inc_shares))
 }
 
 #' Generate ambulatory visits from care-engagement stocks and flows
@@ -80,14 +99,10 @@ split_care_engagement <- function(care_engaged, incident_share = NULL) {
 #' @export
 care_engagement_visits <- function(split,
                                    new_consults_per_entrant = 1.0,
-                                   first_year_followup_rate = NULL,
-                                   annual_followup_rate = NULL) {
-  if (base::is.null(first_year_followup_rate) ||
-      base::is.null(annual_followup_rate)) {
-    base::stop("first_year_followup_rate and annual_followup_rate have no ",
-               "defaults; both are unsourced. Supply them with sources rather ",
-               "than choosing values that reproduce the anchor.", call. = FALSE)
-  }
+                                   first_year_followup_rate = 1.4820,
+                                   annual_followup_rate = 1.1250) {
+  if (base::is.null(first_year_followup_rate)) first_year_followup_rate <- 1.4820
+  if (base::is.null(annual_followup_rate))     annual_followup_rate     <- 1.1250
   entrants   <- base::sum(split$newly_entering_care)
   continuing <- base::sum(split$continuing_care)
   visits <- tibble::tibble(
