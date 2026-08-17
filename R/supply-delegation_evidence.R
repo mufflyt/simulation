@@ -203,3 +203,29 @@ delegation_capacity_sensitivity <- function(volumes,
   })
   dplyr::bind_rows(rows)
 }
+
+#' Apply APP delegation expansion scenario to a delegation matrix
+#'
+#' @param matrix Baseline delegation matrix (defaults to `URPS_DELEGATION_MATRIX`).
+#' @param app_expansion_factor Multiplier on APP care substitution (defaults to 1.25 for +25% expansion).
+#' @return A rescaled delegation matrix with updated `app_share` and `urps_share`.
+#' @family delegation evidence
+#' @concept supply
+#' @export
+apply_app_delegation_scenario <- function(matrix = URPS_DELEGATION_MATRIX,
+                                          app_expansion_factor = 1.25) {
+  assertthat::assert_that(is.data.frame(matrix), is.numeric(app_expansion_factor),
+                          app_expansion_factor > 0)
+  out <- matrix
+  if (all(c("service", "app_share", "urps_share") %in% names(out))) {
+    surgical <- c("sling_procedure", "prolapse_procedure")
+    non_surg <- !out$service %in% surgical
+
+    new_app <- pmin(out$app_share * app_expansion_factor, 0.60)
+    delta   <- (new_app - out$app_share) * non_surg
+
+    out$app_share  <- out$app_share + delta
+    out$urps_share <- pmax(0, out$urps_share - delta)
+  }
+  out
+}
