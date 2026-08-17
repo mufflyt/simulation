@@ -149,7 +149,84 @@ probability.
 
 Registered in `config/recurrence_evidence.csv`, `kernel_compatible = FALSE`.
 
-## 6. What is deliberately NOT decided
+## 6. Observed evidence, and the states it exposes
+
+`config/ai_treatment_evidence.csv` now carries real rates. Two structural
+findings follow from them.
+
+### SNM has a TEST state the model lacks
+
+```
+persistent treatment-requiring AI
+        ↓
+   SNM test / stage 1
+        ↓  P(implant | stage 1) ~ 0.797   [NY 2011-2014, FI-specific]
+   permanent implant
+        ↓
+   device-maintenance state
+```
+
+Progression from test to permanent implant is **well below 100%**, so the test
+phase must not be collapsed into the implant state. Both generate workload, and
+they are different workloads.
+
+### Device maintenance is NOT recurrence
+
+```
+permanent SNM implant
+      ├── routine device follow-up
+      ├── reprogramming            (loss of stimulation, adverse stimulation,
+      │                             troubleshooting)
+      ├── revision / replacement / explant   ~6.5% after stage 2
+      └── recurrent / lost-efficacy FI care  ← the ONLY branch g_k may count
+```
+
+A revision proportion measured on implanted devices is a **device-maintenance
+rate**, not a clinical recurrence probability. Reprogramming is attempted before
+revision is considered, so even the revision count understates the maintenance
+workload while overstating nothing about recurrence.
+
+### The definitive-treatment rates, and why they are not yet canonical
+
+| quantity | value | denominator |
+|---|---:|---|
+| any studied treatment | **0.096** | women 65+ with an FI diagnosis (n = 33,010) |
+| anal procedures | 0.065 | same |
+| SNM | **0.024** | same |
+| PTNS | 0.009 | same |
+| sphincteroplasty | **0.004** | same |
+| PFPT / biofeedback | 0.001 | same |
+
+The five modality rates sum to **0.103** against an any-treatment rate of
+**0.096** — an excess of +0.007, so the categories are **not mutually
+exclusive** and must not be treated as a partition.
+
+`P(SNM | SNM or sphincteroplasty) = 0.024/0.028 = 0.857` is recorded as a
+**descriptive conditional mix**, never a pathway probability: its denominator is
+the wrong one, and it is derived from two non-exclusive rates.
+
+**Neither 0.024 nor 0.004 is inserted.** Their denominator is *claims-diagnosed
+FI among older Medicare women*, not the model's *persistent treatment-requiring
+AI* state. Transport must be explicit and is not yet specified.
+
+### The larger finding: this is realized care, not need
+
+**Only 9.6% of women with a claims FI diagnosis received any studied treatment**
+over a median ~2.5-year follow-up, and receipt varied with age, dual
+eligibility, poverty, comorbidity and race.
+
+That is direct evidence for the concern raised about
+`annual_first_urps_entry_rate`: a claims-observed treatment probability is a
+**realized-care transition under access**, not a latent-need probability. The
+architecture should eventually be
+
+```
+latent treatment need  →  realized treatment under access
+```
+
+rather than one claims-derived parameter serving as both.
+
+## 7. What is deliberately NOT decided
 
 - The fraction of definitive AI treatment going to SNM vs sphincteroplasty.
   ASCRS notes sphincteroplasty use has fallen substantially while SNM is an

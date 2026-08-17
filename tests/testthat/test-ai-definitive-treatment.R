@@ -107,26 +107,113 @@ test_that("no AI treatment evidence is canonical yet", {
 
 test_that("the Medicare benchmark records its scope limits", {
   reg <- ai_treatment_evidence_register()
-  med <- reg[grepl("Medicare", reg$geography), ]
+  # DIRECTLY OBSERVED rows only. The derived 0.857 shares this geography but
+  # has no denominator_n by construction -- it is a ratio of two rates, not a
+  # measured proportion, which is itself why it cannot be a pathway parameter.
+  med <- reg[grepl("Medicare", reg$geography) & !is.na(reg$denominator_n), ]
   testthat::expect_gte(nrow(med), 2L)
   testthat::expect_true(all(med$age_group == "65+"))
-  testthat::expect_match(paste(med$transportability, collapse = " "), "older women only")
-  # values NOT extracted -- nothing invented from a described study
-  testthat::expect_true(all(is.na(med$value) | !nzchar(as.character(med$value))))
+  testthat::expect_true(all(med$calendar_period == "2010-2018"))
+  # The denominator travels with every observed rate -- that is what makes them
+  # transportable-or-not rather than free-floating numbers.
+  testthat::expect_true(all(med$denominator_n == 33010))
+  testthat::expect_match(paste(med$notes, collapse = " "),
+                         "not the modelled persistent treatment-requiring AI state")
 })
 
-test_that("the New York study is marked NON-transportable and conditional", {
+test_that("the New York study is marked non-transportable", {
   reg <- ai_treatment_evidence_register()
   ny <- reg[grepl("New York", reg$geography), ]
-  testthat::expect_gte(nrow(ny), 2L)
-  testthat::expect_match(paste(ny$transportability, collapse = " "), "NON-TRANSPORTABLE")
-  # its denominator is the CONDITIONAL one, not the care population
-  testthat::expect_true(all(ny$denominator == "patients treated with SNM or sphincteroplasty"))
+  testthat::expect_gte(nrow(ny), 3L)
+  testthat::expect_true(all(ny$calendar_period == "2011-2014"))
+  testthat::expect_match(paste(ny$notes, collapse = " "),
+                         "Non-transportable|NOT stationary|QUALITATIVE")
+  testthat::expect_false(any(as.logical(ny$canonical_compatible), na.rm = TRUE))
 })
 
-test_that("PTNS is absent from the definitive-treatment register", {
-  # It is conservative/nondefinitive; the Medicare study treats it as a
-  # distinct category from SNM and sphincteroplasty.
+test_that("PTNS is present but labelled conservative, not definitive", {
+  # It IS in the register now -- the source treats it as a category distinct
+  # from SNM and sphincteroplasty, which is precisely the corroboration that it
+  # does not belong in the definitive-procedure state.
   reg <- ai_treatment_evidence_register()
-  testthat::expect_false(any(grepl("ptns", reg$treatment, ignore.case = TRUE)))
+  ptns <- reg[reg$treatment == "ptns", ]
+  testthat::expect_equal(nrow(ptns), 1L)
+  testthat::expect_match(ptns$notes, "CONSERVATIVE/NONDEFINITIVE")
+  testthat::expect_false(as.logical(ptns$canonical_compatible))
+})
+
+# ---------------------------------------------------------------------------
+# Observed evidence: rates recorded, denominators preserved, nothing inserted
+# ---------------------------------------------------------------------------
+
+test_that("the modality categories are NOT mutually exclusive", {
+  # The five modality rates sum ABOVE the any-treatment rate, so they cannot be
+  # a partition and must never be normalised into one.
+  reg <- ai_treatment_evidence_register()
+  mods <- reg[reg$treatment %in% c("anal_procedures", "snm", "ptns",
+                                   "sphincteroplasty", "pfpt_biofeedback") &
+                !is.na(reg$denominator_n) & reg$denominator_n == 33010, ]
+  any_tx <- reg$value[reg$treatment == "any_studied_treatment"]
+  testthat::expect_gt(sum(mods$value), any_tx)
+  testthat::expect_true(all(as.logical(mods$mutually_exclusive) == FALSE))
+})
+
+test_that("modality numerators were NOT reconstructed from rounded rates", {
+  # Multiplying a rounded percentage by 33,010 would fabricate false precision.
+  reg <- ai_treatment_evidence_register()
+  mods <- reg[reg$treatment %in% c("snm", "sphincteroplasty", "ptns",
+                                   "pfpt_biofeedback", "anal_procedures") &
+                !is.na(reg$denominator_n) & reg$denominator_n == 33010, ]
+  testthat::expect_true(all(is.na(mods$observed_n)))
+  # ...whereas the quantities actually reported as counts ARE recorded
+  any_tx <- reg[reg$treatment == "any_studied_treatment", ]
+  testthat::expect_equal(any_tx$observed_n, 3160)
+  testthat::expect_equal(any_tx$denominator_n, 33010)
+})
+
+test_that("the derived conditional mix is stored but non-canonical", {
+  reg <- ai_treatment_evidence_register()
+  d <- reg[grepl("received SNM or sphincteroplasty", reg$quantity), ]
+  testthat::expect_equal(round(d$value, 3), 0.857)
+  testthat::expect_false(as.logical(d$canonical_compatible))
+  testthat::expect_match(d$notes, "NOT A PATHWAY PROBABILITY")
+})
+
+test_that("the SNM test-to-implant state is registered", {
+  # A pathway state the model currently lacks entirely.
+  reg <- ai_treatment_evidence_register()
+  s1 <- reg[grepl("permanent implant \\| SNM stage 1", reg$quantity), ]
+  testthat::expect_equal(s1$value, 0.797)
+  testthat::expect_equal(s1$denominator_n, 621)
+  testthat::expect_lt(s1$value, 1)   # must not be collapsed into the implant state
+})
+
+test_that("device revision is registered as maintenance, not recurrence", {
+  reg <- ai_treatment_evidence_register()
+  rev <- reg[grepl("revision/replacement/explant", reg$quantity), ]
+  testthat::expect_equal(rev$value, 0.065)
+  testthat::expect_equal(rev$denominator_n, 495)
+  testthat::expect_match(rev$notes, "NOT clinical recurrence|never populate a recurrence kernel")
+})
+
+test_that("NOTHING is canonical, including the strongest evidence", {
+  # 0.024 and 0.004 are real observed rates but their denominator is
+  # claims-diagnosed FI among older Medicare women, not the modelled state.
+  reg <- ai_treatment_evidence_register()
+  testthat::expect_false(any(as.logical(reg$canonical_compatible), na.rm = TRUE))
+  snm <- reg[reg$treatment == "snm" & !is.na(reg$denominator_n) &
+               reg$denominator_n == 33010, ]
+  testthat::expect_equal(snm$value, 0.024)
+  testthat::expect_match(snm$notes, "not the modelled persistent treatment-requiring AI state")
+})
+
+test_that("the realized-care-not-need finding is recorded", {
+  # Only 9.6% of women with a claims FI diagnosis received any studied
+  # treatment -- direct evidence that observed treatment is a realized-care
+  # transition under access, not a latent-need probability.
+  reg <- ai_treatment_evidence_register()
+  any_tx <- reg[reg$treatment == "any_studied_treatment", ]
+  testthat::expect_equal(any_tx$value, 0.096)
+  testthat::expect_match(any_tx$notes, "REALIZED-CARE transition")
+  testthat::expect_match(any_tx$notes, "NOT a latent-need probability")
 })
