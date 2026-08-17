@@ -143,3 +143,29 @@ build_access_membership <- function(iso_sf, tracts,
   )
 }
 
+#' Load pre-computed E2SFCA spatial access scores from twostep repository
+#'
+#' Reads pre-calculated 83,492 Census tract E2SFCA access scores and racial/ethnic
+#' disparity metrics from `mufflyt/twostep` without requiring spatial point-in-polygon overlay recomputation.
+#'
+#' @param twostep_dir Directory path to twostep repository or artifacts folder.
+#' @return A tibble with `demand_id` (GEOID), `access_score`, and demographic breakdown.
+#' @family spatial access data
+#' @concept geography
+#' @export
+load_precomputed_twostep_access <- function(
+    twostep_dir = file.path(getwd(), "..", "twostep")) {
+  candidate_paths <- c(
+    file.path(twostep_dir, "artifacts", "2sfca", "spatial_outcomes", "spatial_outcomes_2020.csv"),
+    file.path("/Users/tmuffly/twostep", "artifacts", "2sfca", "spatial_outcomes", "spatial_outcomes_2020.csv"),
+    file.path(twostep_dir, "data", "step_4_access_by_group.csv"),
+    file.path("/Users/tmuffly/twostep", "data", "step_4_access_by_group.csv")
+  )
+  found <- candidate_paths[file.exists(candidate_paths)]
+  if (length(found) == 0L) {
+    stop("load_precomputed_twostep_access(): twostep pre-computed access files not found.", call. = FALSE)
+  }
+  readr::read_csv(found[1], show_col_types = FALSE)
+}
+
+

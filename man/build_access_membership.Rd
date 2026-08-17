@@ -35,6 +35,7 @@ base-R engine (\code{\link[=compute_e2sfca_access]{compute_e2sfca_access()}}) co
 }
 \seealso{
 Other spatial access data:
+\code{\link[=load_precomputed_twostep_access]{load_precomputed_twostep_access()}},
 \code{\link[=load_provider_isochrones]{load_provider_isochrones()}},
 \code{\link[=load_tract_demand]{load_tract_demand()}}
 }

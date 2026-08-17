@@ -27,6 +27,7 @@ closed if the directory or files are absent. Requires \code{sf}.
 \seealso{
 Other spatial access data:
 \code{\link[=build_access_membership]{build_access_membership()}},
+\code{\link[=load_precomputed_twostep_access]{load_precomputed_twostep_access()}},
 \code{\link[=load_tract_demand]{load_tract_demand()}}
 }
 \concept{geography}
