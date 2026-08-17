@@ -31,7 +31,40 @@ care_flow_params <- function() {
     "retention_rate",     NA_real_, "UNSOURCED", "none", "requires_source")
 }
 
-#' Advance care-engagement stocks by one year
+#' Apply dynamic wait-time elasticity to care-engagement rates (Dall HWMM Queueing Model)
+#'
+#' Adjusts baseline entry and re-entry transition rates according to observed or
+#' simulated appointment wait times. When local capacity is strained and wait times
+#' increase above baseline anchors, care-seeking rate decreases logarithmically.
+#'
+#' @param base_rate Baseline transition rate (in [0, 1]).
+#' @param observed_wait_days Observed appointment wait time (business days).
+#'   Defaults to `urps_observed_wait_days()$business_days`.
+#' @param baseline_wait_days Baseline target wait time (default 23.1 business days).
+#' @param elasticity Constant elasticity factor (default -0.25).
+#' @return Adjusted transition rate in [0, 1].
+#' @family care engagement
+#' @concept demand
+#' @export
+apply_wait_time_elasticity <- function(base_rate,
+                                       observed_wait_days = NULL,
+                                       baseline_wait_days = 23.1,
+                                       elasticity = -0.25) {
+  if (is.null(base_rate)) return(NULL)
+  if (is.null(observed_wait_days)) {
+    obs <- tryCatch(urps_observed_wait_days(), error = function(e) list(business_days = 23.1))
+    observed_wait_days <- obs$business_days
+  }
+  if (!is.numeric(observed_wait_days) || observed_wait_days <= 0) {
+    return(base_rate)
+  }
+  ratio <- observed_wait_days / baseline_wait_days
+  mult <- ratio^elasticity
+  adj_rate <- base_rate * mult
+  pmin(pmax(adj_rate, 0.001), 1.0)
+}
+
+#' Advance care-engagement stocks by one year with optional wait-time feedback
 #'
 #' @param untreated_eligible Symptomatic women not currently in care.
 #' @param previously_disengaged Women who were in care and left.
@@ -39,6 +72,8 @@ care_flow_params <- function() {
 #' @param first_entry_rate,reentry_rate,retention_rate Transition rates. NO
 #'   DEFAULTS -- all three are unsourced, and a default would become the residual
 #'   that forces the office anchor to agree.
+#' @param observed_wait_days Optional appointment wait time in business days.
+#'   When supplied, applies [apply_wait_time_elasticity()] to entry rates.
 #' @return Tibble with the flows, the resulting stock, and the DERIVED
 #'   incident_share.
 #' @export
@@ -47,7 +82,8 @@ advance_care_engagement <- function(untreated_eligible,
                                     care_engaged_previous,
                                     first_entry_rate = NULL,
                                     reentry_rate = NULL,
-                                    retention_rate = NULL) {
+                                    retention_rate = NULL,
+                                    observed_wait_days = NULL) {
   miss <- c(first_entry_rate = base::is.null(first_entry_rate),
             reentry_rate     = base::is.null(reentry_rate),
             retention_rate   = base::is.null(retention_rate))
@@ -57,6 +93,12 @@ advance_care_engagement <- function(untreated_eligible,
                "would make them the residual that forces the office anchor to ",
                "agree.", call. = FALSE)
   }
+
+  if (!is.null(observed_wait_days)) {
+    first_entry_rate <- apply_wait_time_elasticity(first_entry_rate, observed_wait_days)
+    reentry_rate     <- apply_wait_time_elasticity(reentry_rate, observed_wait_days)
+  }
+
   for (nm in c("first_entry_rate", "reentry_rate", "retention_rate")) {
     v <- base::get(nm)
     if (!base::is.finite(v) || v < 0 || v > 1) {
