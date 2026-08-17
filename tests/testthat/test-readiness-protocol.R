@@ -155,3 +155,35 @@ test_that("the real pathway table is intact after these tests", {
   expect_true(all(cons$per_entering == 1.00))
   expect_equal(sum(grepl("per_entering INVALID", pw$source, fixed = TRUE)), 3L)
 })
+
+test_that("no workflow step can swallow a gate's exit code through a pipe", {
+  skip_on_cran()
+  # THE BUG THIS PINS. `run: Rscript gate.R | tee -a "$GITHUB_STEP_SUMMARY"`
+  # reports the exit status of tee, not of the gate. scientific-readiness
+  # printed "NOT SCIENTIFICALLY RUNNABLE" plus four ::SCIENTIFIC-BLOCKER::
+  # markers and the job went GREEN. Twelve piped steps across three workflows
+  # had the same shape.
+  #
+  # GitHub's default shell is `bash -e {0}` -- no pipefail. Declaring
+  # `defaults.run.shell: bash` switches it to `-eo pipefail`. Any workflow that
+  # pipes MUST declare it, or its gates cannot fail.
+  root <- .source_tree_root()
+  skip_if(length(root) == 0, "repository sources not present")
+  wf <- list.files(file.path(root[1], ".github", "workflows"),
+                   pattern = "[.]ya?ml$", full.names = TRUE)
+  skip_if(length(wf) == 0, "no workflows present")
+
+  offenders <- character(0)
+  for (f in wf) {
+    txt <- readLines(f, warn = FALSE)
+    pipes <- grepl("\\|[[:space:]]*tee", txt)
+    if (!any(pipes)) next
+    has_pipefail <- any(grepl("shell:[[:space:]]*bash", txt)) ||
+      any(grepl("pipefail", txt))
+    if (!has_pipefail) offenders <- c(offenders, basename(f))
+  }
+  expect_equal(offenders, character(0),
+               info = paste("workflow(s) pipe to tee without pipefail, so a",
+                            "failing gate reports success:",
+                            paste(offenders, collapse = ", ")))
+})
