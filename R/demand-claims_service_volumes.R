@@ -186,3 +186,48 @@ resolve_service_volumes <- function(demand_long,
                     path, attr(out, "overall_status")))
   dplyr::select(out, "year", "service", "volume")
 }
+
+#' CMS PSPS 2024 CPT Place of Service Setting Mix Ratios
+#'
+#' @details
+#' Returns national facility (Hospital OR / ASC) vs non-facility (Office) service
+#' volume ratios extracted from CMS PSPS 2024 (`MUP_PHY_R26_P05_V10_D24_Geo.csv`).
+#'
+#' @param category Optional filter for clinical category (`"all"`, `"slings"`,
+#'   `"prolapse"`, `"neuromodulation"`, `"urodynamics"`).
+#' @return A tibble with `cpt`, `category`, `p_facility`, `p_office`,
+#'   `total_services`, `calibration_status`, and `source`.
+#' @family workload to fte
+#' @concept demand
+#' @export
+cpt_setting_mix <- function(category = c("all", "slings", "prolapse", "neuromodulation", "urodynamics")) {
+  category <- match.arg(category)
+
+  mix <- tibble::tribble(
+    ~cpt,    ~category,        ~p_facility, ~p_office, ~total_services,
+    "57288", "slings",              0.9807,    0.0193,           25179,
+    "51840", "slings",              1.0000,    0.0000,             153,
+    "57425", "prolapse",            0.9884,    0.0116,           15452,
+    "57280", "prolapse",            1.0000,    0.0000,             574,
+    "57240", "prolapse",            0.9798,    0.0202,            8235,
+    "57250", "prolapse",            0.9814,    0.0186,           12068,
+    "57260", "prolapse",            0.9840,    0.0160,           11020,
+    "57265", "prolapse",            0.9827,    0.0173,            5267,
+    "64590", "neuromodulation",     0.9790,    0.0210,           26714,
+    "64561", "neuromodulation",     0.8648,    0.1352,           41049,
+    "51715", "neuromodulation",     0.8407,    0.1593,           16890,
+    "51726", "urodynamics",        0.1910,    0.8090,            2958,
+    "51729", "urodynamics",        0.1015,    0.8985,           50174,
+    "52000", "urodynamics",        0.3334,    0.6666,          826866
+  ) |>
+    dplyr::mutate(
+      calibration_status = "calibrated",
+      source = "CMS PSPS 2024 (Medicare Part B Physician/Supplier Procedure Summary)"
+    )
+
+  if (category != "all") {
+    mix <- dplyr::filter(mix, .data$category == !!category)
+  }
+  mix
+}
+
