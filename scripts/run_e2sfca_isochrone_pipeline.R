@@ -19,8 +19,10 @@ suppressPackageStartupMessages({
 })
 
 pkgload::load_all(".", quiet = TRUE)
+if (requireNamespace("sf", quietly = TRUE)) sf::sf_use_s2(FALSE)
 
 cat("=================================================================\n")
+
 cat("END-TO-END E2SFCA REAL ISOCHRONE ACCESS PIPELINE (STEPS 1 - 4)\n")
 cat("=================================================================\n\n")
 
