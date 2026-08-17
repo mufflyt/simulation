@@ -1,0 +1,164 @@
+# AI (fecal incontinence) CLAIMS BASKET
+# ---------------------------------------------------------------------------
+# PROVENANCE, STATED UP FRONT. This is NOT an extraction of Halani et al's code
+# list. That paper (PMID 40633708) is paywalled on both AJOG and ScienceDirect
+# and has no PubMed Central deposit, so its exact code definitions could not be
+# read. Its abstract names the five treatment CATEGORIES but no code numbers.
+#
+# This basket is therefore INDEPENDENTLY CONSTRUCTED from primary code sources
+# and aligned to Halani's published categories. It must not be described as a
+# replication of their algorithm, and any comparison of counts against their
+# published rates is a comparison of two different code sets until their
+# supplement is obtained.
+#
+# STATUS: candidate. Not wired into URPS_CPT_BASKET. Every entry needs
+# clinical review before use.
+#
+# Assembled 2026-08-17.
+
+diagnosis:
+  fecal_incontinence:
+    icd10:
+      - code: "R15.0"
+        label: "Incomplete defecation"
+        include: review          # arguably not incontinence; see notes
+      - code: "R15.1"
+        label: "Fecal smearing / soiling (minor leakage)"
+        include: true
+      - code: "R15.2"
+        label: "Fecal urgency"
+        include: review          # urgency without leakage
+      - code: "R15.9"
+        label: "Full incontinence of feces"
+        include: true
+    icd9:
+      - code: "787.6"
+        label: "Incontinence of feces"
+        include: true
+        note: >
+          Required for the 2010-2015 portion of any Medicare series. ICD-10
+          began 2015-10-01, so a 2010-2018 study spans BOTH systems and a
+          code set with only one of them silently truncates the early years.
+    notes: >
+      R15 itself is a parent and is not billable. The include flags are a
+      DELIBERATE open question: R15.0 and R15.2 describe defecatory symptoms
+      that are not necessarily incontinence, and whether they belong depends on
+      whether the model wants incontinence or the broader symptom complex.
+      Resolving this changes the denominator, so it is flagged rather than
+      assumed.
+
+treatments:
+
+  # ---- DEFINITIVE -------------------------------------------------------
+  sacral_neuromodulation:
+    definitive: true
+    cpt:
+      - code: "64561"
+        label: "Percutaneous implantation of neurostimulator electrode array; sacral nerve (transforaminal), incl imaging guidance"
+        stage: test_or_lead
+      - code: "64581"
+        label: "Incision for implantation of neurostimulator electrode array; sacral nerve (transforaminal)"
+        stage: test_or_lead
+      - code: "64590"
+        label: "Insertion or replacement of peripheral or gastric neurostimulator pulse generator or receiver"
+        stage: permanent_implant
+      - code: "64585"
+        label: "Revision or removal of peripheral neurostimulator electrode array"
+        stage: device_maintenance
+      - code: "64595"
+        label: "Revision or removal of peripheral or gastric neurostimulator pulse generator or receiver"
+        stage: device_maintenance
+    indication_specific: "none"    # quoted: bare NO parses as boolean false in YAML 1.1
+    indication_warning: >
+      CRITICAL. These codes are NOT indication-specific. Sacral neuromodulation
+      is used for urinary urgency/OAB and retention as well as fecal
+      incontinence, and 64590/64585/64595 are generic peripheral-neurostimulator
+      codes used well beyond the pelvis. A bare CPT count is therefore NOT a
+      fecal-incontinence quantity. Require an FI diagnosis on the procedure
+      claim or within a preregistered peri-procedure window, and flag
+      concurrent urinary indications.
+    stage_note: >
+      64561/64581 place the lead; 64590 places the generator. The
+      test-to-implant transition (~0.797 in one FI-specific NY cohort) lives
+      between them, so a basket that lumps all five codes together destroys the
+      state the evidence just exposed.
+
+  sphincteroplasty:
+    definitive: true
+    cpt:
+      - code: "46750"
+        label: "Sphincteroplasty, anal, for incontinence or prolapse; adult"
+        stage: definitive_procedure
+      - code: "46751"
+        label: "Sphincteroplasty, anal, for incontinence or prolapse; child"
+        include: false
+        note: "Excluded: the model is an adult female population."
+    indication_specific: "partial"
+    indication_warning: >
+      46750 names "incontinence OR PROLAPSE" in its own descriptor, so it is
+      not purely a fecal-incontinence code. Cleaner than the SNM codes, but
+      still benefits from diagnosis linkage.
+
+  # ---- CONSERVATIVE / NONDEFINITIVE -------------------------------------
+  ptns:
+    definitive: false
+    cpt:
+      - code: "64566"
+        label: "Posterior tibial neurostimulation, percutaneous needle electrode, single treatment, includes programming"
+        stage: conservative_course
+    indication_specific: "none"    # quoted: bare NO parses as boolean false in YAML 1.1
+    indication_warning: >
+      Same problem as SNM, and it was found while verifying rather than
+      assumed: 64566 is described predominantly in terms of OVERACTIVE BLADDER.
+      A bare count is not an FI quantity.
+    unit_warning: >
+      64566 is a SINGLE TREATMENT in a repeated weekly series. Counting claims
+      counts SESSIONS, not patients. Any per-patient rate must deduplicate to
+      unique beneficiaries -- exactly the visits-versus-women distinction that
+      the first-entry estimand required.
+    placement_note: >
+      CONSERVATIVE, not definitive. This is the code currently occupying the
+      AI `procedure` stage in condition_service_pathway.csv, which is the
+      mis-specification recorded in docs/AI_PATHWAY_TOPOLOGY_AUDIT.md.
+
+  pelvic_floor_pt_biofeedback:
+    definitive: false
+    cpt:
+      - code: "90911"
+        label: "Biofeedback training, perineal muscles, anorectal or urethral sphincter (DELETED 2020-01-01)"
+        valid_through: "2019-12-31"
+      - code: "90912"
+        label: "Biofeedback training, perineal muscles, anorectal or urethral sphincter; initial 15 min"
+        valid_from: "2020-01-01"
+      - code: "90913"
+        label: "... each additional 15 minutes (add-on)"
+        valid_from: "2020-01-01"
+        note: "Add-on. Must accompany 90912; never counted as a separate episode."
+    indication_specific: "none"    # quoted: bare NO parses as boolean false in YAML 1.1
+    indication_warning: >
+      Perineal biofeedback serves urinary and anorectal indications alike.
+    era_warning: >
+      CRITICAL FOR ANY SERIES SPANNING 2020. 90911 was DELETED 2020-01-01 and
+      replaced by the time-based pair 90912/90913. A basket carrying only
+      90911 loses all biofeedback from 2020 onward; one carrying only
+      90912/90913 loses everything before it. Halani's 2010-2018 window ends
+      before the change, so their basket would legitimately use 90911 alone --
+      and reusing it unchanged on 2020+ data would silently return zero.
+
+  anal_procedures:
+    definitive: "unresolved"
+    cpt: []
+    status: NOT_DEFINED
+    note: >
+      The LARGEST category in the Medicare evidence at 6.5% of the FI cohort,
+      and the one whose composition is entirely unknown here. Halani's
+      definition is exactly what the paywall withholds. Leaving it EMPTY
+      rather than guessing: a 6.5% category assembled from plausible-looking
+      anorectal codes would dominate any AI workload estimate while
+      corresponding to nothing in particular.
+
+open_questions:
+  - "Whether R15.0 and R15.2 belong in the FI denominator (changes it materially)."
+  - "The composition of `anal_procedures`, the largest observed category."
+  - "Whether SNM leads (64561/64581) without a generator (64590) should count as treatment."
+  - "Whether the model wants SNM device-maintenance codes (64585/64595) as workload -- they are maintenance, NOT recurrence."
