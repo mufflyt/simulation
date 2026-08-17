@@ -171,11 +171,11 @@ and today they do not:
 | women never reaching treatment intentionally outside the denominator | unclear |
 | parameter stable as treatment patterns change | ✗ — it would drift with practice |
 
-## 7. DECISION (2026-08-17): one estimable entry hazard
+## 7. DECISION (2026-08-17): one estimable entry rate
 
 Ruled, and now canonical:
 
-> Estimate **one** annual hazard from the eligible prevalent stock to first
+> Estimate **one** annual RATE from the eligible prevalent stock to first
 > observed URPS care. It subsumes recognition, seeking, referral, access and
 > arrival, insofar as those determine whether a prevalent woman reaches the
 > claims-observable URPS state.
@@ -195,7 +195,7 @@ not its components. Multiplying an empirical hazard by `p_seek` and
 | `recognition` | **retire** as an independent multiplier |
 | `p_seek` | **retire** as an independent multiplier |
 | `p_referral` | **retire** as an independent multiplier |
-| `per_entering` (conservative) | **replace** with an empirical annual entry hazard |
+| `per_entering` (conservative) | **replace** with the empirical annual first-entry RATE |
 | treatment / procedure | **keep**, downstream of first care |
 | recurrence | **keep**, a separate flow process |
 
@@ -204,11 +204,11 @@ misplaced. The topology is fixed now so that setting it to 0.7 later changes the
 intended quantity.
 
 **Renamed.** `per_entering` hid the stock/flow ambiguity. The canonical name is
-**`p_urps_entry`**:
+**`annual_first_urps_entry_rate`** -- NOT a conditional hazard, see §8:
 
-> Annual probability that an eligible prevalent woman **not already in the
-> modelled URPS-care state** has her first qualifying observed URPS care episode
-> during the year.
+> Among ALL eligible prevalent women in a year -- regardless of previous care
+> history -- the fraction having their first qualifying observed URPS care
+> episode during that year.
 
 Previously treated women re-enter through **recurrence**, never through this
 hazard.
@@ -220,95 +220,153 @@ cannot identify while the causal story survives. Any component becomes
 identifiable only if an external source (survey, EHR, referral records)
 measures it directly.
 
-## 8. THE DEPLETION DEFECT — the architecture has no stock to deplete
+## 8. TWO ESTIMANDS — and only one needs persistent state
 
-Checked before proposing any implementation, and the answer is worse than "the
-depletion rule is missing".
+**A correction to an earlier draft of this section.** It concluded that the
+repeated-cross-section engine made first-entry modelling invalid and that a
+longitudinal demand engine was required. That was an overcorrection: *"not
+longitudinal"* and *"invalid for annual aggregate first-entry demand"* are
+different claims, and conflating them would have forced an expensive rewrite
+that the evidence does not demand.
 
-`lifecourse_demand_trajectory()` is:
+### The architectural fact (unchanged)
 
-```r
-runs <- purrr::map(years, function(y) {
-  pa <- dplyr::filter(pop_by_age_year, .data$year == y)
-  simulate_lifecourse_demand(pa, year = y, scenario = scenario, n = n, seed = seed, ...)
-})
+`lifecourse_demand_trajectory()` runs `purrr::map(years, ...)` — one
+**independent** `simulate_lifecourse_demand()` per year, with the SAME `seed`
+each time. A grep for cross-year state (`previous`, `prior_year`, `carry`,
+`already_in_care`, `year - 1`) returns nothing. The engine is a repeated
+independent cross-section and carries no individual history.
+
+That is true. What it *implies* depends entirely on which estimand is adopted.
+
+### A. Population-level first-entry rate — NO persistent state required
+
+```
+q_pop(c,a,t) =  first observed qualifying URPS entrants in year t
+                -------------------------------------------------
+                ALL eligible prevalent women in year t
 ```
 
-Every year is an **independent** call from that year's population table. Grep
-for cross-year state (`previous`, `prior_year`, `carry`, `already_in_care`,
-`year - 1`) returns **nothing**, and the SAME `seed` is passed to every year, so
-the synthetic cohort is regenerated identically each time.
+Women who entered care in earlier years **remain in the denominator** and
+**cannot appear in the numerator**. Depletion is therefore already embedded,
+empirically, in the measured rate. Applied to an annual cross-sectional stock:
 
-**The demand model is a repeated independent cross-section, not a longitudinal
-cohort.** Consequences:
+```
+first_entrants(c,a,t) = eligible_prevalent_stock(c,a,t) x q_pop(c,a,t)
+```
 
-1. A woman who entered care in 2026 is fully back in the at-risk stock in 2027
-   with an unchanged chance of being "new" again.
-2. There is no state in which "already in care" could be recorded, so the
-   required transition
+is valid for aggregate annual first-entry demand **without individual care
+histories**.
 
-   ```
-   S(t+1) = S(t) + new disease - first entries - other exits + eligible returns
-   ```
+This is also precisely what the chosen evidence identifies: an APCD numerator
+divided by an external prevalence denominator.
 
-   has nowhere to live.
-3. **Therefore `p_urps_entry` cannot simply be substituted for `per_entering`.**
-   Dropping a correct hazard into a stateless cross-section reproduces the same
-   defect at a smaller magnitude: each year still regenerates entrants from the
-   undepleted stock, just a smaller fraction of it.
+### B. Conditional first-entry hazard — persistent state REQUIRED
 
-This is the same class of error one level deeper. The guard caught "prevalent
-patients become new every year"; this is "there is no mechanism by which they
-could stop being new".
+```
+h_entry(c,a,t) =  first observed qualifying URPS entrants in year t
+                  --------------------------------------------------
+                  eligible prevalent women who have NEVER entered before
+```
 
-### What this implies for sequencing
+This needs a never-entered risk set that depletes over time. **APCD numerator ÷
+external total prevalence does not estimate it** — the never-entered denominator
+is not directly observable and would itself have to be reconstructed.
 
-The APCD estimator is still worth building — `p_urps_entry` is well defined and
-estimable regardless. But **inserting it requires a persistent care-state stock
-first**, which is an architectural change to the demand engine, not a parameter
-swap. Options, none costed here:
+### DECISION: adopt A as the canonical baseline
 
-- carry an `already_in_care` compartment across years (a genuine stock model);
-- or model entry as an age-specific first-passage/hazard over the life course,
-  where "already entered" is absorbing until recurrence returns her.
+Because it is directly identifiable from the evidence already chosen; it
+subsumes recognition, seeking, referral, access, arrival **and prior-care
+depletion** into one observable aggregate; it invents no unobservable
+never-treated denominator; and it lets the demand side stay cross-sectional for
+this quantity.
 
-The supply side already runs a longitudinal microsimulation
-(`simulate_provider_career_once`), so the machinery pattern exists in the
-repository.
+Consequences, each load-bearing:
 
-## 9. Canonical state-transition diagram
+1. **It is NOT a conditional hazard and must not be named like one.** Canonical
+   name: **`annual_first_urps_entry_rate`**, denominator stated explicitly as
+   *all eligible prevalent women regardless of previous care history*.
+2. **DO NOT add a depletion correction on top of it.** Historical depletion is
+   already inside the measured rate; subtracting prior entrants again would
+   double-count it. This is the specific trap created by the earlier draft's
+   conclusion.
+3. `recognition`, `p_seek`, `p_referral` stay retired (§7).
+4. `p_eligible` stays upstream, defining the exposed stock.
+
+### The forecast assumption this carries
+
+`q_pop` measured on historical years embeds the then-current mixture of
+never-treated and previously-treated women, recognition, referral, access,
+insurance and specialist availability. Holding it fixed over a 20-year forecast
+assumes those processes are stable — **especially questionable in a model whose
+whole purpose is to vary specialist supply.**
+
+That is an explicit, estimable baseline assumption, and far preferable to
+pretending `recognition x p_seek x p_referral` are separately known. If evidence
+later supports it, `q_pop` can be modelled as a function of access.
+
+### What the cross-sectional engine CANNOT support
+
+Valid under A for annual aggregate first-entry counts. **Not** valid for any
+individual longitudinal claim:
+
+- cumulative probability of ever entering care;
+- time since treatment, or time-to-event of any kind;
+- individual recurrence histories;
+- anything conditioned on a person's own past.
+
+Those require persistent state, and no amount of parameter work substitutes.
+
+### RECURRENCE IS THE CASE THAT GENUINELY DIFFERS — audit separately
+
+The engine computes recurrence entrants as **this year's** primary operations x
+the annual hazard: 350 x 0.12 = 42 per 1,000 treated. Recurrences actually arise
+from the **accumulated stock of everyone previously operated**, so the model
+exposes a single cohort-year. Already pinned in
+`test-pop-cascade-gate.R` and `docs/POP_RECURRENCE_ESTIMAND_AUDIT.md`.
+
+Unlike first entry, no population-level rate rescues this automatically: the
+denominator *is* explicitly a historical cohort. It needs either
+
+1. persistent prior-treatment state, or
+2. an externally estimated population-level recurrence rate whose denominator is
+   itself measurable without simulated history.
+
+**The first-entry finding must not force the recurrence limb into an
+architecture chosen for a different quantity, and vice versa.** They are audited
+separately.
+
+## 9. Canonical state-transition diagram (estimand A)
 
 Identical structure for UI, POP and AI; only the scalars differ.
 
 ```mermaid
 stateDiagram-v2
     [*] --> Prevalent: incidence of symptomatic disease
-    Prevalent --> Eligible: p_eligible
-    Eligible --> NotInCare: not already in URPS care
-    NotInCare --> FirstCare: p_urps_entry (ANNUAL HAZARD, empirical)
+    Prevalent --> Eligible: p_eligible (UPSTREAM)
+    Eligible --> FirstCare: annual_first_urps_entry_rate
     FirstCare --> Conservative: evaluation / conservative management
     Conservative --> Treatment: p_treated
     Treatment --> Procedure: p_advance
     Procedure --> PostOp: global-period follow-up
-    PostOp --> Recurrence: recurrence hazard
-    Recurrence --> FirstCare: RE-ENTRY, not incident entry
-    NotInCare --> NotInCare: remains at risk
-    FirstCare --> AlreadyInCare: DEPLETES the at-risk stock
-    AlreadyInCare --> NotInCare: only if eligibility is scientifically re-established
+    PostOp --> Recurrence: recurrence hazard (SEPARATE AUDIT)
+    Recurrence --> Conservative: re-entry, NOT first entry
 ```
 
-The two edges that do not exist in the code today are
-`FirstCare --> AlreadyInCare` and its complement `NotInCare --> NotInCare`.
-Without them the model has no at-risk stock to deplete (§8).
+**There is deliberately no `AlreadyInCare` compartment.** Under estimand A the
+denominator is *all* eligible prevalent women, so previously-entered women stay
+in `Eligible` and are prevented from re-appearing in the numerator by the
+empirical rate itself, not by a modelled transition. Adding a depletion edge
+here would double-count history already inside the measured rate.
 
-`Recurrence --> FirstCare` is deliberately a **separate** edge: previously
-treated women re-enter through recurrence and must never be counted by
-`p_urps_entry`.
+`Recurrence --> Conservative` is drawn dashed in intent: it is a separate flow
+process whose own denominator is a historical cohort, and it is audited apart
+from first entry (§8).
 
 ## 10. Old versus new, final form
 
 ```
-CURRENT  (repeated cross-section; no state)
+CURRENT  (repeated cross-section)
 
   treated(c,t)     = N(t) x p_c x recognition_c x p_seek_c x p_referral_c
                             x p_eligible_c x p_treated_c
@@ -316,27 +374,28 @@ CURRENT  (repeated cross-section; no state)
   new_consult(c,t) = entering(c,t) x per_entering          [= 1.00]
 
   -- p_eligible and p_treated applied BEFORE the consultation they follow
-  -- entering is a STOCK emitted as a FLOW
-  -- no depletion: every prevalent woman is eligible to be "new" every year
+  -- a prevalence STOCK emitted as a FLOW
+  -- recognition x p_seek x p_referral not separately identifiable
 
 
-PROPOSED  (stock/flow with a persistent care state)
+PROPOSED  (estimand A -- still cross-sectional, no persistent state)
 
-  E(c,a,t)         = N(a,t) x p_c(a,t) x p_eligible_c            ELIGIBLE STOCK
-  S(c,a,t)         = E(c,a,t) - AlreadyInCare(c,a,t)             AT RISK
-  N_entry(c,a,t)   ~ Binomial( S(c,a,t), p_urps_entry(c,a,t) )   FLOW
+  E(c,a,t)        = N(a,t) x p_c(a,t) x p_eligible_c        ELIGIBLE STOCK
+  entrants(c,a,t) = E(c,a,t) x annual_first_urps_entry_rate(c,a,t)
 
-  conservative     = N_entry
-  treatment        = conservative x p_treated_c
-  procedure        = treatment x p_advance
-  recurrence       = procedure x recurrence_hazard               separate flow
+      denominator: ALL eligible prevalent women, regardless of prior care.
+      Historical depletion is EMBEDDED in the empirical rate.
+      DO NOT subtract prior entrants -- that double-counts it.
 
-  AlreadyInCare(c,a,t+1) = AlreadyInCare(c,a,t) + N_entry(c,a,t)
-                           - exits - eligible returns
+  conservative    = entrants
+  treatment       = conservative x p_treated_c
+  procedure       = treatment x p_advance
+  recurrence      = SEPARATE audit; denominator is a historical cohort,
+                    currently one cohort-year (350 x 0.12 = 42 per 1,000)
 ```
 
 `recognition`, `p_seek`, `p_referral` no longer appear: they are latent
-components of `p_urps_entry`, identified only as their product.
+components of the measured entry rate, identified only as their product.
 
 ## 11. What this does NOT resolve
 
