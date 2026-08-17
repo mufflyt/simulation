@@ -1,0 +1,3 @@
+# Local path configuration for simulation package
+isochrones_root: /Users/tmuffly/isochrones/data/derived
+twostep_root: /Users/tmuffly/twostep/data
