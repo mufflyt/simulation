@@ -24,10 +24,10 @@ Tibble of mismatches (empty when the order is correct).
 Check that the load order delivers the declared canonical implementations
 }
 \seealso{
-Other legacy loader: 
+Other legacy loader:
 \code{\link{LEGACY_CANONICAL}},
-\code{\link{legacy_collisions}()},
-\code{\link{load_legacy}()}
+\code{\link[=legacy_collisions]{legacy_collisions()}},
+\code{\link[=load_legacy]{load_legacy()}}
 }
 \concept{core}
 \concept{legacy loader}

@@ -39,9 +39,9 @@ via \code{\link[=predict_count_with_uncertainty]{predict_count_with_uncertainty(
 }
 }
 \seealso{
-Other utilization models: 
-\code{\link{fit_visit_model}()},
-\code{\link{predict_count_with_uncertainty}()}
+Other utilization models:
+\code{\link[=fit_visit_model]{fit_visit_model()}},
+\code{\link[=predict_count_with_uncertainty]{predict_count_with_uncertainty()}}
 }
 \concept{demand}
 \concept{utilization models}

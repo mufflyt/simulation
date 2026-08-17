@@ -60,8 +60,8 @@ function does not invent the dispersion). \code{adequacy}, \code{base_supply_fte
 \code{\link[=required_fte_base_year]{required_fte_base_year()}} for the demand side, \code{\link[=clear_access]{clear_access()}} for
 the queue it feeds, \code{\link[=simulate_access_for_adequacy]{simulate_access_for_adequacy()}} for the composed map.
 
-Other access response bridge: 
-\code{\link{simulate_access_for_adequacy}()}
+Other access response bridge:
+\code{\link[=simulate_access_for_adequacy]{simulate_access_for_adequacy()}}
 }
 \concept{access response bridge}
 \concept{calibration}

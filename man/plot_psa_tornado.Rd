@@ -18,16 +18,16 @@ A ggplot object (requires ggplot2).
 Horizontal tornado plot of PSA sensitivity indices
 }
 \seealso{
-Other psa: 
-\code{\link{psa_discrete}()},
-\code{\link{psa_normal}()},
-\code{\link{psa_prcc}()},
-\code{\link{psa_sample}()},
-\code{\link{psa_srrc}()},
-\code{\link{psa_tornado}()},
-\code{\link{psa_triangular}()},
-\code{\link{psa_uniform}()},
-\code{\link{run_psa}()}
+Other psa:
+\code{\link[=psa_discrete]{psa_discrete()}},
+\code{\link[=psa_normal]{psa_normal()}},
+\code{\link[=psa_prcc]{psa_prcc()}},
+\code{\link[=psa_sample]{psa_sample()}},
+\code{\link[=psa_srrc]{psa_srrc()}},
+\code{\link[=psa_tornado]{psa_tornado()}},
+\code{\link[=psa_triangular]{psa_triangular()}},
+\code{\link[=psa_uniform]{psa_uniform()}},
+\code{\link[=run_psa]{run_psa()}}
 }
 \concept{calibration}
 \concept{psa}

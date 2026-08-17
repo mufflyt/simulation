@@ -30,10 +30,10 @@ one with 98, disagreeing about whether \code{n_retired} is served as NA or as
 integer zero -- the field the back-test attrition guard reads.
 }
 \seealso{
-Other contract pin: 
+Other contract pin:
 \code{\link{MUFFLYACCESS_PINNED_SHA}},
 \code{\link{MUFFLYACCESS_REQUIRED_EXPORTS}},
-\code{\link{mufflyaccess_build}()}
+\code{\link[=mufflyaccess_build]{mufflyaccess_build()}}
 }
 \concept{contract pin}
 \concept{core}

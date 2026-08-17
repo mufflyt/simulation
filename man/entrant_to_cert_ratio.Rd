@@ -47,10 +47,10 @@ It is why this estimator is stable where the NRMP-based one drifted from 0.755
 to 1.197 across successive windows.
 }
 \seealso{
-Other acgme fellows: 
-\code{\link{acgme_entering_cohort}()},
-\code{\link{acgme_urps_fellows}()},
-\code{\link{entrant_source_series}()}
+Other acgme fellows:
+\code{\link[=acgme_entering_cohort]{acgme_entering_cohort()}},
+\code{\link[=acgme_urps_fellows]{acgme_urps_fellows()}},
+\code{\link[=entrant_source_series]{entrant_source_series()}}
 }
 \concept{acgme fellows}
 \concept{supply}

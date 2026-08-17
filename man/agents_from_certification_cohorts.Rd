@@ -38,12 +38,12 @@ carries \code{cohort_source} per agent so the observed and assumed halves stay
 distinguishable downstream.
 }
 \seealso{
-Other roster: 
-\code{\link{cohort_composition}()},
-\code{\link{cohort_provenance}()},
-\code{\link{implied_gross_entrants}()},
-\code{\link{observed_entrant_rate}()},
-\code{\link{urps_certification_cohorts}()}
+Other roster:
+\code{\link[=cohort_composition]{cohort_composition()}},
+\code{\link[=cohort_provenance]{cohort_provenance()}},
+\code{\link[=implied_gross_entrants]{implied_gross_entrants()}},
+\code{\link[=observed_entrant_rate]{observed_entrant_rate()}},
+\code{\link[=urps_certification_cohorts]{urps_certification_cohorts()}}
 }
 \concept{roster}
 \concept{supply}

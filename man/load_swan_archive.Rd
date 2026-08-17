@@ -53,11 +53,11 @@ validated one.
 \code{\link[=swan_archive_provenance]{swan_archive_provenance()}}, \code{\link[=build_swan_dmdm_panel]{build_swan_dmdm_panel()}},
 \code{\link[=swan_dmdm_panel_from_archive]{swan_dmdm_panel_from_archive()}}
 
-Other swan archive: 
+Other swan archive:
 \code{\link{SWAN_ARCHIVE_BYTES}},
 \code{\link{SWAN_ARCHIVE_SHA256}},
-\code{\link{swan_archive_provenance}()},
-\code{\link{swan_dmdm_panel_from_archive}()}
+\code{\link[=swan_archive_provenance]{swan_archive_provenance()}},
+\code{\link[=swan_dmdm_panel_from_archive]{swan_dmdm_panel_from_archive()}}
 }
 \concept{data}
 \concept{swan archive}

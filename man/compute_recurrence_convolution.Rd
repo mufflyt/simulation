@@ -45,13 +45,13 @@ for a 2028 total you can see which treatment years produced it and in what
 proportion, which \verb{this_year_operations x 0.12} never permitted.
 }
 \seealso{
-Other recurrence: 
+Other recurrence:
 \code{\link{RECURRENCE_MEASURE_TYPES}},
-\code{\link{assert_recurrence_kernel_compatible}()},
-\code{\link{build_recurrence_kernel}()},
-\code{\link{recurrence_evidence_register}()},
-\code{\link{recurrence_mass_from_cumulative}()},
-\code{\link{recurrence_parameter_status}()}
+\code{\link[=assert_recurrence_kernel_compatible]{assert_recurrence_kernel_compatible()}},
+\code{\link[=build_recurrence_kernel]{build_recurrence_kernel()}},
+\code{\link[=recurrence_evidence_register]{recurrence_evidence_register()}},
+\code{\link[=recurrence_mass_from_cumulative]{recurrence_mass_from_cumulative()}},
+\code{\link[=recurrence_parameter_status]{recurrence_parameter_status()}}
 }
 \concept{demand}
 \concept{recurrence}

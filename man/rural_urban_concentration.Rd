@@ -31,14 +31,14 @@ states at each projected year. Useful for reporting the geographic
 distribution consequences of a supply scenario.
 }
 \seealso{
-Other urps migration: 
+Other urps migration:
 \code{\link{CONUS_STATE_URBANICITY}},
 \code{\link{URPS_MIGRATION_HAZARD}},
 \code{\link{URPS_RURAL_URBAN_DRIFT}},
-\code{\link{agent_urbanicity_summary}()},
-\code{\link{classify_state_urbanicity}()},
-\code{\link{migration_drift_scenario}()},
-\code{\link{urps_migration_matrix}()}
+\code{\link[=agent_urbanicity_summary]{agent_urbanicity_summary()}},
+\code{\link[=classify_state_urbanicity]{classify_state_urbanicity()}},
+\code{\link[=migration_drift_scenario]{migration_drift_scenario()}},
+\code{\link[=urps_migration_matrix]{urps_migration_matrix()}}
 }
 \concept{geography}
 \concept{urps migration}

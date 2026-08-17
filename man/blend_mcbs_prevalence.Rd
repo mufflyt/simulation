@@ -29,17 +29,17 @@ Cells outside "65-74" / "75+" are unchanged. Source fields identify MCBS
 as the UI source and preserve the fact that POP/FI use separate inputs.
 }
 \seealso{
-Other urps population: 
+Other urps population:
 \code{\link{CARE_SEEKING_BY_INCOME}},
 \code{\link{CARE_SEEKING_BY_INSURANCE}},
 \code{\link{URPS_POP_AGE_BANDS}},
-\code{\link{blend_nhanes_ui_prevalence}()},
-\code{\link{brfss_pfd_prevalence_for_demand_bands}()},
-\code{\link{build_calibrated_population_cells}()},
-\code{\link{build_urps_population_cells}()},
-\code{\link{load_brfss_women}()},
-\code{\link{project_urps_demand}()},
-\code{\link{summarise_stratum_coverage}()}
+\code{\link[=blend_nhanes_ui_prevalence]{blend_nhanes_ui_prevalence()}},
+\code{\link[=brfss_pfd_prevalence_for_demand_bands]{brfss_pfd_prevalence_for_demand_bands()}},
+\code{\link[=build_calibrated_population_cells]{build_calibrated_population_cells()}},
+\code{\link[=build_urps_population_cells]{build_urps_population_cells()}},
+\code{\link[=load_brfss_women]{load_brfss_women()}},
+\code{\link[=project_urps_demand]{project_urps_demand()}},
+\code{\link[=summarise_stratum_coverage]{summarise_stratum_coverage()}}
 }
 \concept{data}
 \concept{urps population}

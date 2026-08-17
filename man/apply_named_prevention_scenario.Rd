@@ -34,11 +34,11 @@ vols <- tibble::tibble(
 apply_named_prevention_scenario(vols, "conservative_25pct")
 }
 \seealso{
-Other prevention: 
+Other prevention:
 \code{\link{URPS_PREVENTION_SCENARIOS}},
-\code{\link{apply_prevention_multipliers}()},
-\code{\link{conservative_management_multipliers}()},
-\code{\link{prevention_volume_summary}()}
+\code{\link[=apply_prevention_multipliers]{apply_prevention_multipliers()}},
+\code{\link[=conservative_management_multipliers]{conservative_management_multipliers()}},
+\code{\link[=prevention_volume_summary]{prevention_volume_summary()}}
 }
 \concept{demand}
 \concept{prevention}

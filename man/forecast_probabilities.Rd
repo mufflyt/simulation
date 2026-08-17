@@ -42,8 +42,8 @@ exceeds (or falls below) each of a set of thresholds. Works on any Monte Carlo
 output: a workforce gap, an access metric, a shortfall count.
 }
 \seealso{
-Other forecast probabilities: 
-\code{\link{workforce_gap_probabilities}()}
+Other forecast probabilities:
+\code{\link[=workforce_gap_probabilities]{workforce_gap_probabilities()}}
 }
 \concept{forecast probabilities}
 \concept{validation}

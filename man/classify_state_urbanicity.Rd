@@ -24,14 +24,14 @@ a misspelled abbreviation).
 classify_state_urbanicity(c("NY", "WV", "CA", "MT"))
 }
 \seealso{
-Other urps migration: 
+Other urps migration:
 \code{\link{CONUS_STATE_URBANICITY}},
 \code{\link{URPS_MIGRATION_HAZARD}},
 \code{\link{URPS_RURAL_URBAN_DRIFT}},
-\code{\link{agent_urbanicity_summary}()},
-\code{\link{migration_drift_scenario}()},
-\code{\link{rural_urban_concentration}()},
-\code{\link{urps_migration_matrix}()}
+\code{\link[=agent_urbanicity_summary]{agent_urbanicity_summary()}},
+\code{\link[=migration_drift_scenario]{migration_drift_scenario()}},
+\code{\link[=rural_urban_concentration]{rural_urban_concentration()}},
+\code{\link[=urps_migration_matrix]{urps_migration_matrix()}}
 }
 \concept{geography}
 \concept{urps migration}

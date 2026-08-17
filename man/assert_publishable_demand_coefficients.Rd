@@ -35,10 +35,10 @@ This is a standalone gate; it is intentionally NOT auto-wired into
 \code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}}.
 }
 \seealso{
-Other transition registry: 
-\code{\link{demand_transition_registry}()},
-\code{\link{lifecourse_eligibility_params}()},
-\code{\link{lifecourse_severity_params}()}
+Other transition registry:
+\code{\link[=demand_transition_registry]{demand_transition_registry()}},
+\code{\link[=lifecourse_eligibility_params]{lifecourse_eligibility_params()}},
+\code{\link[=lifecourse_severity_params]{lifecourse_severity_params()}}
 }
 \concept{demand}
 \concept{transition registry}

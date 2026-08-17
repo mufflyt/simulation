@@ -6,8 +6,8 @@
 \usage{
 build_d5_namcs_estimand(
   pop_projection,
-  namcs_path = "data-raw/namcs/namcs2019_clean.rds",
-  brfss_path = "data-raw/brfss/brfss_2023_women18plus.rds",
+  namcs_path = NULL,
+  brfss_path = "data-raw/brfss/brfss_2024_women18plus.rds",
   visits_per_fte = 2800,
   fte_fraction = 0.35
 )
@@ -15,9 +15,10 @@ build_d5_namcs_estimand(
 \arguments{
 \item{pop_projection}{Tibble as described in \code{\link[=compute_namcs_demand_estimand]{compute_namcs_demand_estimand()}}.}
 
-\item{namcs_path}{Path to cleaned NAMCS 2019 RDS file.}
+\item{namcs_path}{Path to NAMCS RDS file.  Default: pooled 2015-2019 file;
+falls back to 2019-only if the pooled file is absent.}
 
-\item{brfss_path}{Path to BRFSS 2023 women 18+ RDS file.}
+\item{brfss_path}{Path to BRFSS women 18+ RDS file.}
 
 \item{visits_per_fte}{Annual URPS visits one FTE can handle; defaults to
 2800 (4 visits/day x 700 provider-days/FTE).}
@@ -32,5 +33,10 @@ List with \code{model}, \code{rate_table}, \code{estimand} (tibble).
 \description{
 One-call wrapper that loads NAMCS, flags URPS visits, computes visit rates,
 fits the log-linear model, and applies it to a population projection.
+}
+\details{
+Prefers the pooled 2015-2019 NAMCS file when available (more URPS visits for
+women 65+; ~6× the sample vs 2019 alone).  Falls back to NAMCS 2019 only.
+ICD-9/ICD-10 coding is handled automatically by \code{\link[=flag_urps_visits]{flag_urps_visits()}}.
 }
 \keyword{internal}

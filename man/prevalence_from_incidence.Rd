@@ -21,9 +21,9 @@ The discrete (Euler) form of dP/da = (1-P) i - P r. \code{remission} is the annu
 1->0 probability (external). \code{prevalence_from_onset} is kept as an alias.
 }
 \seealso{
-Other prevalence-calibration: 
-\code{\link{fit_prevalence_consistent_psa}()},
-\code{\link{fit_prevalence_consistent_transitions}()},
-\code{\link{prevalence_observation}()}
+Other prevalence-calibration:
+\code{\link[=fit_prevalence_consistent_psa]{fit_prevalence_consistent_psa()}},
+\code{\link[=fit_prevalence_consistent_transitions]{fit_prevalence_consistent_transitions()}},
+\code{\link[=prevalence_observation]{prevalence_observation()}}
 }
 \concept{prevalence-calibration}

@@ -50,11 +50,11 @@ far off the intervals are, and report the factor alongside any interval it
 widened.
 }
 \seealso{
-Other interval coverage: 
-\code{\link{assert_interval_coverage_publishable}()},
-\code{\link{fit_certification_baseline}()},
-\code{\link{forecast_certification}()},
-\code{\link{rolling_origin_coverage}()}
+Other interval coverage:
+\code{\link[=assert_interval_coverage_publishable]{assert_interval_coverage_publishable()}},
+\code{\link[=fit_certification_baseline]{fit_certification_baseline()}},
+\code{\link[=forecast_certification]{forecast_certification()}},
+\code{\link[=rolling_origin_coverage]{rolling_origin_coverage()}}
 }
 \concept{interval coverage}
 \concept{validation}

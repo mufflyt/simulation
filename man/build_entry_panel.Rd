@@ -34,10 +34,10 @@ plus the provider-level entry determination repeated across that provider's
 rows.
 }
 \seealso{
-Other entry panel: 
+Other entry panel:
 \code{\link{ENTRY_EVIDENCE_SOURCES}},
 \code{\link{ENTRY_PANEL_DB_DEFAULT}},
-\code{\link{summarise_entry_panel}()}
+\code{\link[=summarise_entry_panel]{summarise_entry_panel()}}
 }
 \concept{entry panel}
 \concept{supply}

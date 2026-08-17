@@ -30,9 +30,9 @@ as a \code{ci} interval, because they are narrower than the truth and get narrow
 still as \code{n} falls.
 }
 \seealso{
-Other monte carlo: 
-\code{\link{mc_min_iterations}()},
-\code{\link{monte_carlo_diagnostics}()},
-\code{\link{monte_carlo_se}()}
+Other monte carlo:
+\code{\link[=mc_min_iterations]{mc_min_iterations()}},
+\code{\link[=monte_carlo_diagnostics]{monte_carlo_diagnostics()}},
+\code{\link[=monte_carlo_se]{monte_carlo_se()}}
 }
 \concept{monte carlo}

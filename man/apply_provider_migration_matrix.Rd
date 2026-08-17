@@ -43,16 +43,16 @@ rather than being deleted, so headcount can be audited; downstream supply
 counts should filter them out.
 }
 \seealso{
-Other provider geography: 
-\code{\link{add_returning_providers}()},
-\code{\link{assign_entrant_geography}()},
-\code{\link{benchmark_density_shortfall}()},
-\code{\link{historical_placement_shares}()},
-\code{\link{migration_hazard}()},
-\code{\link{migration_matrix_from_moves}()},
-\code{\link{opportunity_placement_shares}()},
-\code{\link{supply_per_capita}()},
-\code{\link{validate_migration_matrix}()}
+Other provider geography:
+\code{\link[=add_returning_providers]{add_returning_providers()}},
+\code{\link[=assign_entrant_geography]{assign_entrant_geography()}},
+\code{\link[=benchmark_density_shortfall]{benchmark_density_shortfall()}},
+\code{\link[=historical_placement_shares]{historical_placement_shares()}},
+\code{\link[=migration_hazard]{migration_hazard()}},
+\code{\link[=migration_matrix_from_moves]{migration_matrix_from_moves()}},
+\code{\link[=opportunity_placement_shares]{opportunity_placement_shares()}},
+\code{\link[=supply_per_capita]{supply_per_capita()}},
+\code{\link[=validate_migration_matrix]{validate_migration_matrix()}}
 }
 \concept{geography}
 \concept{provider geography}

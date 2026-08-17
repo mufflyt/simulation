@@ -34,8 +34,8 @@ Resolved path, or \code{NA_character_} when \code{required = FALSE} and absent.
 Resolve a removable research database, failing closed
 }
 \seealso{
-Other research database: 
-\code{\link{open_research_db}()}
+Other research database:
+\code{\link[=open_research_db]{open_research_db()}}
 }
 \concept{core}
 \concept{research database}

@@ -49,9 +49,9 @@ a mistake made before any data was seen.
 \seealso{
 \code{\link[=assert_spec_matches_prereg]{assert_spec_matches_prereg()}}, \code{\link[=rolling_origin_evaluation]{rolling_origin_evaluation()}}
 
-Other preregistration: 
-\code{\link{assert_spec_matches_prereg}()},
-\code{\link{rolling_origin_evaluation}()}
+Other preregistration:
+\code{\link[=assert_spec_matches_prereg]{assert_spec_matches_prereg()}},
+\code{\link[=rolling_origin_evaluation]{rolling_origin_evaluation()}}
 }
 \concept{preregistration}
 \concept{validation}

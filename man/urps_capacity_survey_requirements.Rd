@@ -17,11 +17,11 @@ are registered as one instrument. Fielding two surveys to collect one
 questionnaire's worth of questions is how neither gets fielded.
 }
 \seealso{
-Other roster capacity: 
-\code{\link{capacity_status}()},
-\code{\link{load_urps_roster}()},
-\code{\link{roster_workload_concentration}()},
-\code{\link{urps_provider_roster}()}
+Other roster capacity:
+\code{\link[=capacity_status]{capacity_status()}},
+\code{\link[=load_urps_roster]{load_urps_roster()}},
+\code{\link[=roster_workload_concentration]{roster_workload_concentration()}},
+\code{\link[=urps_provider_roster]{urps_provider_roster()}}
 }
 \concept{roster capacity}
 \concept{supply}

@@ -28,11 +28,11 @@ the seed anybody chose.
 IS its purpose.
 }
 \seealso{
-Other repro provenance: 
-\code{\link{read_artifact_with_provenance}()},
-\code{\link{resolve_reproducibility_mode}()},
-\code{\link{seed_microsimulation}()},
-\code{\link{write_artifact_with_provenance}()}
+Other repro provenance:
+\code{\link[=read_artifact_with_provenance]{read_artifact_with_provenance()}},
+\code{\link[=resolve_reproducibility_mode]{resolve_reproducibility_mode()}},
+\code{\link[=seed_microsimulation]{seed_microsimulation()}},
+\code{\link[=write_artifact_with_provenance]{write_artifact_with_provenance()}}
 }
 \concept{core}
 \concept{repro provenance}

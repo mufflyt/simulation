@@ -19,10 +19,11 @@ Default annual transition parameters for the DMDM (placeholder)
 str(dmdm_default_transitions(), max.level = 1)
 }
 \seealso{
-Other dynamic multistate: 
-\code{\link{assert_calibrated_transitions}()},
-\code{\link{dmdm_prevalence_trajectory}()},
-\code{\link{simulate_dmdm}()}
+Other dynamic multistate:
+\code{\link[=assert_calibrated_transitions]{assert_calibrated_transitions()}},
+\code{\link[=dmdm_prevalence_trajectory]{dmdm_prevalence_trajectory()}},
+\code{\link[=dmdm_swan_fitted_transitions]{dmdm_swan_fitted_transitions()}},
+\code{\link[=simulate_dmdm]{simulate_dmdm()}}
 }
 \concept{demand}
 \concept{dynamic multistate}

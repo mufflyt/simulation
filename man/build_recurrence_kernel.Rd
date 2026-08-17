@@ -20,13 +20,13 @@ A tibble with \code{survival_start}, \code{recurrence_prob}, \code{survival_end}
 interval \code{k}.
 }
 \seealso{
-Other recurrence: 
+Other recurrence:
 \code{\link{RECURRENCE_MEASURE_TYPES}},
-\code{\link{assert_recurrence_kernel_compatible}()},
-\code{\link{compute_recurrence_convolution}()},
-\code{\link{recurrence_evidence_register}()},
-\code{\link{recurrence_mass_from_cumulative}()},
-\code{\link{recurrence_parameter_status}()}
+\code{\link[=assert_recurrence_kernel_compatible]{assert_recurrence_kernel_compatible()}},
+\code{\link[=compute_recurrence_convolution]{compute_recurrence_convolution()}},
+\code{\link[=recurrence_evidence_register]{recurrence_evidence_register()}},
+\code{\link[=recurrence_mass_from_cumulative]{recurrence_mass_from_cumulative()}},
+\code{\link[=recurrence_parameter_status]{recurrence_parameter_status()}}
 }
 \concept{demand}
 \concept{recurrence}

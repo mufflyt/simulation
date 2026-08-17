@@ -29,21 +29,21 @@ The alternative -- a footnote elsewhere in the document -- is exactly how a
 range becomes a prediction interval on its way to a reader.
 }
 \seealso{
-Other backtest status: 
+Other backtest status:
 \code{\link{BACKTEST_RECORD_2020_2023}},
 \code{\link{BACKTEST_RECORD_SHA256}},
 \code{\link{COVERAGE_RATE_PHRASINGS}},
-\code{\link{assert_backtest_record_current}()},
-\code{\link{assert_forecast_intervals_validated}()},
-\code{\link{assert_no_coverage_rate_claim}()},
-\code{\link{backtest_artifact_path}()},
-\code{\link{backtest_status}()},
-\code{\link{backtest_status_from_summary}()},
-\code{\link{containment_statement}()},
-\code{\link{coverage_is_estimable}()},
-\code{\link{stamp_backtest_status}()},
-\code{\link{stamped_backtest_status}()},
-\code{\link{verify_backtest_record}()}
+\code{\link[=assert_backtest_record_current]{assert_backtest_record_current()}},
+\code{\link[=assert_forecast_intervals_validated]{assert_forecast_intervals_validated()}},
+\code{\link[=assert_no_coverage_rate_claim]{assert_no_coverage_rate_claim()}},
+\code{\link[=backtest_artifact_path]{backtest_artifact_path()}},
+\code{\link[=backtest_status]{backtest_status()}},
+\code{\link[=backtest_status_from_summary]{backtest_status_from_summary()}},
+\code{\link[=containment_statement]{containment_statement()}},
+\code{\link[=coverage_is_estimable]{coverage_is_estimable()}},
+\code{\link[=stamp_backtest_status]{stamp_backtest_status()}},
+\code{\link[=stamped_backtest_status]{stamped_backtest_status()}},
+\code{\link[=verify_backtest_record]{verify_backtest_record()}}
 }
 \concept{backtest status}
 \concept{validation}

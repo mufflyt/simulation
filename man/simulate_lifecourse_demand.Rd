@@ -8,7 +8,7 @@ simulate_lifecourse_demand(
   pop_by_age,
   year,
   scenario = "baseline",
-  n = 1e+05,
+  n = 100000,
   seed = NULL,
   cesarean_rate = NULL,
   access_gain = 1,
@@ -99,12 +99,12 @@ live). Provider-mix / treatment-substitution scenarios belong to
 R/supply-workload_to_fte.R, not here.
 }
 \seealso{
-Other lifecourse: 
-\code{\link{lifecourse_demand_estimand}()},
-\code{\link{lifecourse_demand_trajectory}()},
-\code{\link{lifecourse_required_fte}()},
-\code{\link{lifecourse_risk_params_cited}()},
-\code{\link{lifecourse_risk_params_placeholder}()}
+Other lifecourse:
+\code{\link[=lifecourse_demand_estimand]{lifecourse_demand_estimand()}},
+\code{\link[=lifecourse_demand_trajectory]{lifecourse_demand_trajectory()}},
+\code{\link[=lifecourse_required_fte]{lifecourse_required_fte()}},
+\code{\link[=lifecourse_risk_params_cited]{lifecourse_risk_params_cited()}},
+\code{\link[=lifecourse_risk_params_placeholder]{lifecourse_risk_params_placeholder()}}
 }
 \concept{demand}
 \concept{lifecourse}

@@ -20,8 +20,8 @@ source, so the provenance travels with the number.
 \code{\link[=dmdm_transitions_with_pop_literature]{dmdm_transitions_with_pop_literature()}} to compile these into a
 transition object the DMDM engines can run.
 
-Other pop transitions: 
-\code{\link{dmdm_transitions_with_pop_literature}()}
+Other pop transitions:
+\code{\link[=dmdm_transitions_with_pop_literature]{dmdm_transitions_with_pop_literature()}}
 }
 \concept{demand}
 \concept{pop transitions}

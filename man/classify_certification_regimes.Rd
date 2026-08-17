@@ -62,11 +62,11 @@ s <- data.frame(year = 2013:2020,
 classify_certification_regimes(s, verbose = FALSE)[, c("year", "regime")]
 }
 \seealso{
-Other entrant regime: 
-\code{\link{draw_entrant_paths}()},
-\code{\link{entrant_regime_rolling_validation}()},
-\code{\link{fit_entrant_regime_model}()},
-\code{\link{project_entrant_path}()}
+Other entrant regime:
+\code{\link[=draw_entrant_paths]{draw_entrant_paths()}},
+\code{\link[=entrant_regime_rolling_validation]{entrant_regime_rolling_validation()}},
+\code{\link[=fit_entrant_regime_model]{fit_entrant_regime_model()}},
+\code{\link[=project_entrant_path]{project_entrant_path()}}
 }
 \concept{entrant regime}
 \concept{supply}

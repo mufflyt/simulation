@@ -4,7 +4,7 @@
 \alias{assert_interval_nondegenerate}
 \title{Refuse a zero-width interval when the underlying draws vary}
 \usage{
-assert_interval_nondegenerate(out, draws, tol = 1e-09)
+assert_interval_nondegenerate(out, draws, tol = 0.000000001)
 }
 \arguments{
 \item{out}{Summarised tibble with \verb{_lo}/\verb{_hi} columns.}
@@ -23,9 +23,9 @@ summarise below originally computed the point estimate first, under the same
 name as its source column, so the bounds were taken over a single value.
 }
 \seealso{
-Other lifecourse uncertainty: 
-\code{\link{lifecourse_demand_trajectory_ci}()},
-\code{\link{lifecourse_param_uncertainty}()}
+Other lifecourse uncertainty:
+\code{\link[=lifecourse_demand_trajectory_ci]{lifecourse_demand_trajectory_ci()}},
+\code{\link[=lifecourse_param_uncertainty]{lifecourse_param_uncertainty()}}
 }
 \concept{demand}
 \concept{lifecourse uncertainty}

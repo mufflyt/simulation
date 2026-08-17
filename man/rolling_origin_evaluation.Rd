@@ -51,9 +51,9 @@ altered after the targets were seen.
 \seealso{
 \code{\link[=preregister_spec]{preregister_spec()}}, \code{\link[=assert_spec_matches_prereg]{assert_spec_matches_prereg()}}
 
-Other preregistration: 
-\code{\link{assert_spec_matches_prereg}()},
-\code{\link{preregister_spec}()}
+Other preregistration:
+\code{\link[=assert_spec_matches_prereg]{assert_spec_matches_prereg()}},
+\code{\link[=preregister_spec]{preregister_spec()}}
 }
 \concept{preregistration}
 \concept{validation}

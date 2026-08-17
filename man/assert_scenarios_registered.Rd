@@ -18,12 +18,12 @@ assert_scenarios_registered(ids, mode = resolve_reproducibility_mode())
 Refuse a scenario id the SSOT registry does not know
 }
 \seealso{
-Other ssot: 
-\code{\link{as_urps_projection}()},
-\code{\link{ssot_coverage_report}()},
-\code{\link{ssot_rurality}()},
-\code{\link{ssot_safe_divide}()},
-\code{\link{ssot_safe_percent}()}
+Other ssot:
+\code{\link[=as_urps_projection]{as_urps_projection()}},
+\code{\link[=ssot_coverage_report]{ssot_coverage_report()}},
+\code{\link[=ssot_rurality]{ssot_rurality()}},
+\code{\link[=ssot_safe_divide]{ssot_safe_divide()}},
+\code{\link[=ssot_safe_percent]{ssot_safe_percent()}}
 }
 \concept{core}
 \concept{ssot}

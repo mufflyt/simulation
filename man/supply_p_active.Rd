@@ -88,8 +88,8 @@ supply_p_active(65, "male", 32, scenario_id = "retire_2yr_later")
 \code{\link[=departure_hazard]{departure_hazard()}}, \code{\link[=shift_retirement_schedule]{shift_retirement_schedule()}},
 \code{\link[=participation_fte]{participation_fte()}}, \link{URPS_P_ACTIVE_COEF}, \code{\link[=fit_p_active_model]{fit_p_active_model()}}
 
-Other urps flows: 
-\code{\link{p_active_by_age}()}
+Other urps flows:
+\code{\link[=p_active_by_age]{p_active_by_age()}}
 }
 \concept{supply}
 \concept{urps flows}

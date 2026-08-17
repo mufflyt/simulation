@@ -27,9 +27,9 @@ decide; \code{\link[=assert_canonical_isochrones]{assert_canonical_isochrones()}
 only for a fast presence check; it cannot establish identity.
 }
 \seealso{
-Other isochrone import: 
-\code{\link{assert_canonical_isochrones}()},
-\code{\link{isochrone_source_dir}()}
+Other isochrone import:
+\code{\link[=assert_canonical_isochrones]{assert_canonical_isochrones()}},
+\code{\link[=isochrone_source_dir]{isochrone_source_dir()}}
 }
 \concept{geography}
 \concept{isochrone import}

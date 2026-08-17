@@ -26,13 +26,13 @@ against projected retirements per subspecialty and reports the net gap,
 replacement ratio, and an adequacy flag.
 }
 \seealso{
-Other workforce statistics: 
-\code{\link{calculate_proportion_ci}()},
-\code{\link{calculate_rural_metro_comparison}()},
-\code{\link{calculate_state_vulnerability}()},
-\code{\link{calculate_two_prop_test}()},
-\code{\link{load_sensitivity_table}()},
-\code{\link{sensitivity_registry}()}
+Other workforce statistics:
+\code{\link[=calculate_proportion_ci]{calculate_proportion_ci()}},
+\code{\link[=calculate_rural_metro_comparison]{calculate_rural_metro_comparison()}},
+\code{\link[=calculate_state_vulnerability]{calculate_state_vulnerability()}},
+\code{\link[=calculate_two_prop_test]{calculate_two_prop_test()}},
+\code{\link[=load_sensitivity_table]{load_sensitivity_table()}},
+\code{\link[=sensitivity_registry]{sensitivity_registry()}}
 }
 \concept{reporting}
 \concept{workforce statistics}

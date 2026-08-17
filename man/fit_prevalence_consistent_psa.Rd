@@ -44,9 +44,9 @@ a higher remission must be met by a higher onset, so the fitted onset level is
 strongly positively correlated with r across the prior (the identifiability read).
 }
 \seealso{
-Other prevalence-calibration: 
-\code{\link{fit_prevalence_consistent_transitions}()},
-\code{\link{prevalence_from_incidence}()},
-\code{\link{prevalence_observation}()}
+Other prevalence-calibration:
+\code{\link[=fit_prevalence_consistent_transitions]{fit_prevalence_consistent_transitions()}},
+\code{\link[=prevalence_from_incidence]{prevalence_from_incidence()}},
+\code{\link[=prevalence_observation]{prevalence_observation()}}
 }
 \concept{prevalence-calibration}

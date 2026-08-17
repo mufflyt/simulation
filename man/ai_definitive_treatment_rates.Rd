@@ -47,11 +47,11 @@ fecal-incontinence quantity. \code{snm_indication_linked} must be \code{TRUE}, a
 window used must be recorded.
 }
 \seealso{
-Other ai treatment: 
+Other ai treatment:
 \code{\link{AI_TREATMENT_DENOMINATORS}},
-\code{\link{ai_conditional_treatment_share}()},
-\code{\link{ai_treatment_evidence_register}()},
-\code{\link{ai_treatment_rate_status}()}
+\code{\link[=ai_conditional_treatment_share]{ai_conditional_treatment_share()}},
+\code{\link[=ai_treatment_evidence_register]{ai_treatment_evidence_register()}},
+\code{\link[=ai_treatment_rate_status]{ai_treatment_rate_status()}}
 }
 \concept{ai treatment}
 \concept{demand}

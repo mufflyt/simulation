@@ -33,23 +33,24 @@ service_volume_to_wrvu(tibble::tibble(
 ))
 }
 \seealso{
-Other workload to fte: 
+Other workload to fte:
 \code{\link{URPS_DELEGATION_MATRIX}},
 \code{\link{WRVU_PER_FTE_BENCHMARK}},
-\code{\link{allocate_fte_by_setting}()},
-\code{\link{apportion_service_volume}()},
-\code{\link{assert_publishable_workload}()},
-\code{\link{calibrate_wrvu_per_fte}()},
-\code{\link{calibration_status_report}()},
-\code{\link{check_productivity_plausible}()},
-\code{\link{claims_service_volumes}()},
-\code{\link{compute_fte_gap}()},
-\code{\link{convert_workload_to_fte}()},
-\code{\link{implied_urps_share}()},
-\code{\link{rescale_delegation_to_capacity}()},
-\code{\link{urps_service_workload}()},
-\code{\link{urps_service_workload_status}()},
-\code{\link{validate_delegation_matrix}()}
+\code{\link[=allocate_fte_by_setting]{allocate_fte_by_setting()}},
+\code{\link[=apportion_service_volume]{apportion_service_volume()}},
+\code{\link[=assert_publishable_workload]{assert_publishable_workload()}},
+\code{\link[=calibrate_wrvu_per_fte]{calibrate_wrvu_per_fte()}},
+\code{\link[=calibration_status_report]{calibration_status_report()}},
+\code{\link[=check_productivity_plausible]{check_productivity_plausible()}},
+\code{\link[=claims_service_volumes]{claims_service_volumes()}},
+\code{\link[=compute_fte_gap]{compute_fte_gap()}},
+\code{\link[=convert_workload_to_fte]{convert_workload_to_fte()}},
+\code{\link[=cpt_setting_mix]{cpt_setting_mix()}},
+\code{\link[=implied_urps_share]{implied_urps_share()}},
+\code{\link[=rescale_delegation_to_capacity]{rescale_delegation_to_capacity()}},
+\code{\link[=urps_service_workload]{urps_service_workload()}},
+\code{\link[=urps_service_workload_status]{urps_service_workload_status()}},
+\code{\link[=validate_delegation_matrix]{validate_delegation_matrix()}}
 }
 \concept{supply}
 \concept{workload to fte}

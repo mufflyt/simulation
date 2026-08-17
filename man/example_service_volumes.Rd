@@ -18,10 +18,10 @@ Volumes are per year, national. Replace with MEPS-derived ambulatory volumes
 and a claims/SASD-derived procedure basket for production runs.
 }
 \seealso{
-Other run workforce microsimulation: 
-\code{\link{example_capacity_survey}()},
-\code{\link{example_female_population_by_band}()},
-\code{\link{run_workforce_microsimulation}()}
+Other run workforce microsimulation:
+\code{\link[=example_capacity_survey]{example_capacity_survey()}},
+\code{\link[=example_female_population_by_band]{example_female_population_by_band()}},
+\code{\link[=run_workforce_microsimulation]{run_workforce_microsimulation()}}
 }
 \concept{core}
 \concept{run workforce microsimulation}

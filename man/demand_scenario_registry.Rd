@@ -14,10 +14,10 @@ Named list of demand scenario definitions.
 double-count guard can compare them against the base-year gap.
 }
 \seealso{
-Other scenario registry: 
-\code{\link{local_supply_scenario_registry}()},
-\code{\link{supply_scenario_registry}()},
-\code{\link{validate_scenario_registry}()}
+Other scenario registry:
+\code{\link[=local_supply_scenario_registry]{local_supply_scenario_registry()}},
+\code{\link[=supply_scenario_registry]{supply_scenario_registry()}},
+\code{\link[=validate_scenario_registry]{validate_scenario_registry()}}
 }
 \concept{reporting}
 \concept{scenario registry}

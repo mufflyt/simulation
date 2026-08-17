@@ -37,9 +37,9 @@ quasipoisson (always available) with a warning that the SEs are not
 design-based.
 }
 \seealso{
-Other utilization models: 
-\code{\link{fit_sling_rate_model}()},
-\code{\link{predict_count_with_uncertainty}()}
+Other utilization models:
+\code{\link[=fit_sling_rate_model]{fit_sling_rate_model()}},
+\code{\link[=predict_count_with_uncertainty]{predict_count_with_uncertainty()}}
 }
 \concept{demand}
 \concept{utilization models}

@@ -30,10 +30,10 @@ it extrapolates a filled-position growth rate that was partly fill-rate
 catch-up, and the catch-up is spent.
 }
 \seealso{
-Other entrant trajectory: 
-\code{\link{compound_growth_rate}()},
-\code{\link{entrant_trajectory}()},
-\code{\link{nrmp_growth_rates}()}
+Other entrant trajectory:
+\code{\link[=compound_growth_rate]{compound_growth_rate()}},
+\code{\link[=entrant_trajectory]{entrant_trajectory()}},
+\code{\link[=nrmp_growth_rates]{nrmp_growth_rates()}}
 }
 \concept{entrant trajectory}
 \concept{supply}

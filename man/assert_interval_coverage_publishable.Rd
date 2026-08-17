@@ -29,11 +29,11 @@ the measured output. Fails if \code{n_folds < minimum_folds} or
 \code{coverage_ratio > maximum_coverage_ratio}.
 }
 \seealso{
-Other interval coverage: 
-\code{\link{fit_certification_baseline}()},
-\code{\link{forecast_certification}()},
-\code{\link{rolling_origin_coverage}()},
-\code{\link{solve_interval_inflation}()}
+Other interval coverage:
+\code{\link[=fit_certification_baseline]{fit_certification_baseline()}},
+\code{\link[=forecast_certification]{forecast_certification()}},
+\code{\link[=rolling_origin_coverage]{rolling_origin_coverage()}},
+\code{\link[=solve_interval_inflation]{solve_interval_inflation()}}
 }
 \concept{interval coverage}
 \concept{validation}

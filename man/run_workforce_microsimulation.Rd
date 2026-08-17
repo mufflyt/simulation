@@ -25,6 +25,8 @@ run_workforce_microsimulation(
   parameter_spec = NULL,
   allow_analogy = FALSE,
   brfss_cells = NULL,
+  d5_estimand = NULL,
+  d6_estimand = NULL,
   prevention_scenario = NULL,
   setting_scenario = NULL,
   output_dir = NULL,
@@ -118,6 +120,17 @@ D4 (BRFSS survey-weighted UI care-seeking demand) is appended to
 Requires that \code{\link[=brfss_pfd_prevalence_for_demand_bands]{brfss_pfd_prevalence_for_demand_bands()}} is available (i.e.
 that R/data-urps_population.R is loaded).}
 
+\item{d5_estimand}{Optional precomputed D5 tibble from
+\code{build_d5_namcs_estimand()$estimand} (NAMCS visit-rate demand, pooled
+2015-2019 with ICD-9/ICD-10 coding).  Must have columns \code{year},
+\code{estimand}, \code{demand_visits}.  When non-NULL, appended to \code{demand_long}
+(as \code{demand_cases = demand_visits}) for concordance assessment.}
+
+\item{d6_estimand}{Optional precomputed D6 tibble from
+\code{build_d6_nhanes_estimand()$estimand} (NHANES UI prevalence × care-seeking
+demand).  Must have columns \code{year}, \code{estimand}, \code{demand_visits}.
+When non-NULL, appended to \code{demand_long} for concordance assessment.}
+
 \item{prevention_scenario}{Character key in \link{URPS_PREVENTION_SCENARIOS}, or
 \code{NULL} (default). When non-NULL, service volumes are adjusted by
 \code{\link[=apply_named_prevention_scenario]{apply_named_prevention_scenario()}} before \code{\link[=convert_workload_to_fte]{convert_workload_to_fte()}},
@@ -169,10 +182,10 @@ names(result)
 result$scenario_meta$demand_calibrated
 }
 \seealso{
-Other run workforce microsimulation: 
-\code{\link{example_capacity_survey}()},
-\code{\link{example_female_population_by_band}()},
-\code{\link{example_service_volumes}()}
+Other run workforce microsimulation:
+\code{\link[=example_capacity_survey]{example_capacity_survey()}},
+\code{\link[=example_female_population_by_band]{example_female_population_by_band()}},
+\code{\link[=example_service_volumes]{example_service_volumes()}}
 }
 \concept{core}
 \concept{run workforce microsimulation}

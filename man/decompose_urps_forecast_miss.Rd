@@ -72,10 +72,10 @@ change/slope bias, 95\\% coverage, and interval width, reported together.
 \seealso{
 \code{\link[=calibrate_urps_supply_dynamics]{calibrate_urps_supply_dynamics()}}, \code{\link[=backtest_urps_supply_calibration]{backtest_urps_supply_calibration()}}
 
-Other supply dynamics: 
-\code{\link{advance_urps_supply_one_year}()},
-\code{\link{backtest_urps_supply_calibration}()},
-\code{\link{calibrate_urps_supply_dynamics}()}
+Other supply dynamics:
+\code{\link[=advance_urps_supply_one_year]{advance_urps_supply_one_year()}},
+\code{\link[=backtest_urps_supply_calibration]{backtest_urps_supply_calibration()}},
+\code{\link[=calibrate_urps_supply_dynamics]{calibrate_urps_supply_dynamics()}}
 }
 \concept{supply}
 \concept{supply dynamics}

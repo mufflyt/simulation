@@ -35,9 +35,9 @@ categories via \code{\link[=fit_calibration_scalars]{fit_calibration_scalars()}}
 on anchored volumes rather than raw model output.
 }
 \seealso{
-Other demand lifecourse: 
-\code{\link{backtest_lifecourse}()},
-\code{\link{lifecourse_anchor_predictions}()}
+Other demand lifecourse:
+\code{\link[=backtest_lifecourse]{backtest_lifecourse()}},
+\code{\link[=lifecourse_anchor_predictions]{lifecourse_anchor_predictions()}}
 }
 \concept{calibration}
 \concept{demand lifecourse}

@@ -45,9 +45,9 @@ with population-weighted interval integration and a Normal smoothness prior on
 the log-rate shape (a penalized MAP estimate).
 }
 \seealso{
-Other prevalence-calibration: 
-\code{\link{fit_prevalence_consistent_psa}()},
-\code{\link{prevalence_from_incidence}()},
-\code{\link{prevalence_observation}()}
+Other prevalence-calibration:
+\code{\link[=fit_prevalence_consistent_psa]{fit_prevalence_consistent_psa()}},
+\code{\link[=prevalence_from_incidence]{prevalence_from_incidence()}},
+\code{\link[=prevalence_observation]{prevalence_observation()}}
 }
 \concept{prevalence-calibration}

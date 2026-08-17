@@ -24,14 +24,14 @@ Named numeric vector with p25, p50 and p75.
 Extract Lizeth wait-time calibration targets
 }
 \seealso{
-Other Lizeth inverse adequacy: 
-\code{\link{bootstrap_lizeth_inverse_adequacy}()},
-\code{\link{fit_lizeth_inverse_adequacy}()},
-\code{\link{forward_lizeth_adequacy}()},
-\code{\link{lizeth_adequacy_loss}()},
-\code{\link{urps_adequacy_distribution}()},
-\code{\link{urps_catchment_scores}()},
-\code{\link{urps_weighted_quantile}()}
+Other Lizeth inverse adequacy:
+\code{\link[=bootstrap_lizeth_inverse_adequacy]{bootstrap_lizeth_inverse_adequacy()}},
+\code{\link[=fit_lizeth_inverse_adequacy]{fit_lizeth_inverse_adequacy()}},
+\code{\link[=forward_lizeth_adequacy]{forward_lizeth_adequacy()}},
+\code{\link[=lizeth_adequacy_loss]{lizeth_adequacy_loss()}},
+\code{\link[=urps_adequacy_distribution]{urps_adequacy_distribution()}},
+\code{\link[=urps_catchment_scores]{urps_catchment_scores()}},
+\code{\link[=urps_weighted_quantile]{urps_weighted_quantile()}}
 }
 \concept{Lizeth inverse adequacy}
 \concept{calibration}

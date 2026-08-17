@@ -35,14 +35,14 @@ the same physician. Resampling individual calls would understate sampling
 uncertainty.
 }
 \seealso{
-Other Lizeth inverse adequacy: 
-\code{\link{fit_lizeth_inverse_adequacy}()},
-\code{\link{forward_lizeth_adequacy}()},
-\code{\link{lizeth_adequacy_loss}()},
-\code{\link{lizeth_wait_targets}()},
-\code{\link{urps_adequacy_distribution}()},
-\code{\link{urps_catchment_scores}()},
-\code{\link{urps_weighted_quantile}()}
+Other Lizeth inverse adequacy:
+\code{\link[=fit_lizeth_inverse_adequacy]{fit_lizeth_inverse_adequacy()}},
+\code{\link[=forward_lizeth_adequacy]{forward_lizeth_adequacy()}},
+\code{\link[=lizeth_adequacy_loss]{lizeth_adequacy_loss()}},
+\code{\link[=lizeth_wait_targets]{lizeth_wait_targets()}},
+\code{\link[=urps_adequacy_distribution]{urps_adequacy_distribution()}},
+\code{\link[=urps_catchment_scores]{urps_catchment_scores()}},
+\code{\link[=urps_weighted_quantile]{urps_weighted_quantile()}}
 }
 \concept{Lizeth inverse adequacy}
 \concept{calibration}

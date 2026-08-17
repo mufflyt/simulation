@@ -18,11 +18,11 @@ Resolved path.
 Resolve a path beneath the external data root
 }
 \seealso{
-Other paths: 
-\code{\link{artifact_path}()},
-\code{\link{check_external_data}()},
-\code{\link{data_raw_path}()},
-\code{\link{swan_path}()}
+Other paths:
+\code{\link[=artifact_path]{artifact_path()}},
+\code{\link[=check_external_data]{check_external_data()}},
+\code{\link[=data_raw_path]{data_raw_path()}},
+\code{\link[=swan_path]{swan_path()}}
 }
 \concept{core}
 \concept{paths}

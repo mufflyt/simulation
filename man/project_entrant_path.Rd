@@ -20,11 +20,11 @@ the scheduled release of any deferred backlog. Carries no uncertainty and must
 not be reported with an interval.
 }
 \seealso{
-Other entrant regime: 
-\code{\link{classify_certification_regimes}()},
-\code{\link{draw_entrant_paths}()},
-\code{\link{entrant_regime_rolling_validation}()},
-\code{\link{fit_entrant_regime_model}()}
+Other entrant regime:
+\code{\link[=classify_certification_regimes]{classify_certification_regimes()}},
+\code{\link[=draw_entrant_paths]{draw_entrant_paths()}},
+\code{\link[=entrant_regime_rolling_validation]{entrant_regime_rolling_validation()}},
+\code{\link[=fit_entrant_regime_model]{fit_entrant_regime_model()}}
 }
 \concept{entrant regime}
 \concept{supply}

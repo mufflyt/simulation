@@ -79,10 +79,10 @@ entrant_pipeline_transition(
 )
 }
 \seealso{
-Other review followups: 
-\code{\link{international_migration_assumption}()},
-\code{\link{nrmp_match_to_cert_ratio}()},
-\code{\link{supply_uncertainty_drivers}()}
+Other review followups:
+\code{\link[=international_migration_assumption]{international_migration_assumption()}},
+\code{\link[=nrmp_match_to_cert_ratio]{nrmp_match_to_cert_ratio()}},
+\code{\link[=supply_uncertainty_drivers]{supply_uncertainty_drivers()}}
 }
 \concept{review followups}
 \concept{supply}

@@ -19,13 +19,13 @@ Applies PATWT patient weights to produce nationally representative visit
 counts per stratum.  Strata are age_band x sex x race_eth x insurance_2tier.
 }
 \seealso{
-Other namcs visit equations: 
-\code{\link{brfss_population_by_stratum}()},
-\code{\link{compute_namcs_demand_estimand}()},
-\code{\link{compute_urps_visit_rates}()},
-\code{\link{fit_urps_visit_rate_model}()},
-\code{\link{flag_urps_visits}()},
-\code{\link{load_namcs_2019}()}
+Other namcs visit equations:
+\code{\link[=brfss_population_by_stratum]{brfss_population_by_stratum()}},
+\code{\link[=compute_namcs_demand_estimand]{compute_namcs_demand_estimand()}},
+\code{\link[=compute_urps_visit_rates]{compute_urps_visit_rates()}},
+\code{\link[=fit_urps_visit_rate_model]{fit_urps_visit_rate_model()}},
+\code{\link[=flag_urps_visits]{flag_urps_visits()}},
+\code{\link[=load_namcs_2019]{load_namcs_2019()}}
 }
 \concept{demand}
 \concept{namcs visit equations}

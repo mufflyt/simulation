@@ -8,7 +8,7 @@ lifecourse_required_fte(
   pop_by_age_year,
   wrvu_per_fte,
   scenario = "baseline",
-  n = 1e+05,
+  n = 100000,
   seed = NULL,
   ...
 )
@@ -47,12 +47,12 @@ fte$required_fte
 }
 }
 \seealso{
-Other lifecourse: 
-\code{\link{lifecourse_demand_estimand}()},
-\code{\link{lifecourse_demand_trajectory}()},
-\code{\link{lifecourse_risk_params_cited}()},
-\code{\link{lifecourse_risk_params_placeholder}()},
-\code{\link{simulate_lifecourse_demand}()}
+Other lifecourse:
+\code{\link[=lifecourse_demand_estimand]{lifecourse_demand_estimand()}},
+\code{\link[=lifecourse_demand_trajectory]{lifecourse_demand_trajectory()}},
+\code{\link[=lifecourse_risk_params_cited]{lifecourse_risk_params_cited()}},
+\code{\link[=lifecourse_risk_params_placeholder]{lifecourse_risk_params_placeholder()}},
+\code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}}
 }
 \concept{demand}
 \concept{lifecourse}

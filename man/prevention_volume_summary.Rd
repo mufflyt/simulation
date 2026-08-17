@@ -30,11 +30,11 @@ returns a summary tibble showing absolute and relative changes per service.
 Useful for reporting and validation.
 }
 \seealso{
-Other prevention: 
+Other prevention:
 \code{\link{URPS_PREVENTION_SCENARIOS}},
-\code{\link{apply_named_prevention_scenario}()},
-\code{\link{apply_prevention_multipliers}()},
-\code{\link{conservative_management_multipliers}()}
+\code{\link[=apply_named_prevention_scenario]{apply_named_prevention_scenario()}},
+\code{\link[=apply_prevention_multipliers]{apply_prevention_multipliers()}},
+\code{\link[=conservative_management_multipliers]{conservative_management_multipliers()}}
 }
 \concept{demand}
 \concept{prevention}

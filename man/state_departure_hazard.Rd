@@ -22,11 +22,11 @@ machine. It exists so the transition matrix and the engine read the SAME
 hazard; it is guarded to remain identical to \code{departure_hazard()}.
 }
 \seealso{
-Other provider state machine: 
-\code{\link{assert_publishable_supply_transitions}()},
-\code{\link{career_departure_by_state}()},
-\code{\link{career_state_of}()},
-\code{\link{career_transition_registry}()}
+Other provider state machine:
+\code{\link[=assert_publishable_supply_transitions]{assert_publishable_supply_transitions()}},
+\code{\link[=career_departure_by_state]{career_departure_by_state()}},
+\code{\link[=career_state_of]{career_state_of()}},
+\code{\link[=career_transition_registry]{career_transition_registry()}}
 }
 \concept{provider state machine}
 \concept{supply}

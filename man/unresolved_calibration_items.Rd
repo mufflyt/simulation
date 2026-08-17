@@ -22,11 +22,11 @@ cancels arithmetically. Geographic access is not in it at all, because the
 layer is dormant -- so it cannot be wrong, only absent.
 }
 \seealso{
-Other practice survey: 
-\code{\link{fte_curve_gradient_leverage}()},
-\code{\link{fte_curve_status}()},
-\code{\link{geographic_access_status}()},
-\code{\link{urps_practice_survey_requirements}()}
+Other practice survey:
+\code{\link[=fte_curve_gradient_leverage]{fte_curve_gradient_leverage()}},
+\code{\link[=fte_curve_status]{fte_curve_status()}},
+\code{\link[=geographic_access_status]{geographic_access_status()}},
+\code{\link[=urps_practice_survey_requirements]{urps_practice_survey_requirements()}}
 }
 \concept{data}
 \concept{practice survey}
