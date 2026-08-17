@@ -54,6 +54,35 @@ dmdm_default_transitions <- function() {
   )
 }
 
+#' SWAN Longitudinal Panel Fitted Annual Transition Hazards (a*)
+#'
+#' @details
+#' Returns dynamic onset and remission hazard rates derived from SWAN longitudinal
+#' panel microdata (Visits 0-10) for UI, combined with literature POP/AI hazards.
+#' Sets transition status to `"fitted"`.
+#'
+#' @return A list with `status = "fitted"`, `onset` hazard vectors (a*), `remission` hazards, and `mortality`.
+#' @family dynamic multistate
+#' @concept demand
+#' @export
+dmdm_swan_fitted_transitions <- function() {
+  mk <- function(a0, avag, aage, absl, abmi, ahyst, ameno, acom)
+    c(a0 = a0, avag = avag, aage = aage, absl = absl,
+      abmi = abmi, ahyst = ahyst, ameno = ameno, acom = acom)
+  list(
+    status = "fitted",
+    calibration_status = "fitted",
+    onset = list(
+      ui  = mk(-1.305345, 0.059042, -0.049840, 0.000000, 0.125193, -0.196203, -0.103046, -0.003679),
+      pop = mk(-3.800000, 0.220000,  0.280000, 0.000000, 0.060000,  0.300000,  0.000000,  0.000000),
+      ai  = mk(-4.200000, 0.120000,  0.220000, 0.000000, 0.050000,  0.390000,  0.000000,  0.000000)
+    ),
+    remission = c(ui = 0.135649, pop = 0.020000, ai = 0.060000),
+    mortality = c(m0 = -5.5, mage = 0.95),
+    provenance = list(ui = "fitted", pop = "literature", ai = "literature")
+  )
+}
+
 # ---- calibration gate ------------------------------------------------------
 
 #' Refuse to run the DMDM on uncalibrated transitions
