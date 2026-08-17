@@ -57,7 +57,8 @@
 # Each row must sum to 1 across settings; `validate_setting_mix()` enforces it.
 
 URPS_SETTING_NAMES <- c("office", "telehealth", "hospital_outpatient",
-                         "asc", "operative", "postacute")
+                         "asc", "hospital_inpatient", "postacute")
+
 
 #' Default care-delivery setting mix for each URPS service
 #'
@@ -106,12 +107,13 @@ URPS_DEFAULT_SETTING_MIX <- tibble::tribble(
   "bladder_instillation",  "hospital_outpatient",   0.1604,
 
   "sling_procedure",       "office",                0.0178,
-  "sling_procedure",       "operative",             0.3438,
+  "sling_procedure",       "hospital_inpatient",    0.3438,
   "sling_procedure",       "asc",                   0.6384,
 
   "prolapse_procedure",    "office",                0.0159,
-  "prolapse_procedure",    "operative",             0.4428,
+  "prolapse_procedure",    "hospital_inpatient",    0.4428,
   "prolapse_procedure",    "asc",                   0.5413,
+
 
   "postoperative_care",    "office",                0.80,
   "postoperative_care",    "telehealth",            0.15,
@@ -154,9 +156,10 @@ URPS_SETTING_PRODUCTIVITY <- c(
   telehealth          = 0.92,
   hospital_outpatient = 0.88,
   asc                 = 1.05,
-  operative           = 1.00,
+  hospital_inpatient  = 1.00,
   postacute           = 0.80
 )
+
 
 # ---- Pre-defined scenarios ---------------------------------------------------
 

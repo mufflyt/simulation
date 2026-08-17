@@ -58,3 +58,14 @@ test_that("build_chia_surgical_travel_kernel computes empirical decay weights", 
   expect_true(all(c("band_shares", "decay_weights", "saved_path") %in% names(kernel)))
   expect_equal(unname(kernel$decay_weights[["00-30"]]), 1.00)
 })
+
+test_that("build_chia_hospital_capacity_map evaluates facility volume & Gini concentration", {
+  cap_res <- build_chia_hospital_capacity_map(min_year = 2004L, max_year = 2006L)
+  expect_type(cap_res, "list")
+  expect_true(all(c("facility_volumes", "market_summary", "paths") %in% names(cap_res)))
+  expect_s3_class(cap_res$facility_volumes, "data.frame")
+  expect_true(all(c("year", "facility_id", "inpatient_cases", "market_share", "volume_category") %in% names(cap_res$facility_volumes)))
+  expect_true("hospital_inpatient" %in% URPS_SETTING_NAMES)
+  expect_false("operative" %in% URPS_SETTING_NAMES)
+})
+
