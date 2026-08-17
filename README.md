@@ -1124,9 +1124,9 @@ original source and the repository entry point that obtains or documents it.
 
 | Source | Use | Original data | Reproducible entry point |
 |---|---|---|---|
-| CMS Physician Fee Schedule RVU file | work RVUs for the service basket | [CMS RVU25A release](https://www.cms.gov/files/zip/rvu25a.zip) | [`R/data-cms_rvu.R`](R/data-cms_rvu.R) and [`config/service_workload.yml`](config/service_workload.yml) |
+| CMS Physician Fee Schedule RVU file | work RVUs for the service basket | [CMS RVU25A release](https://www.cms.gov/files/zip/rvu25a-updated-01/10/2025.zip) | [`R/data-cms_rvu.R`](R/data-cms_rvu.R) and [`config/service_workload.yml`](config/service_workload.yml) |
 | CMS Medicare Physician & Other Practitioners PUF | CPT 57288 sling-activity figure | [CMS data portal](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners) | [`scripts/plot_medicare_sling_workload.R`](scripts/plot_medicare_sling_workload.R); processed cache is configured with `MEDICARE_SLING_CACHE` |
-| US Census 2023 National Population Projections | demand denominator by age band (D1–D3) | [Census 2023 population projections](https://www.census.gov/data/datasets/2023/demo/popproj/2023-summary-tables.html) | [`data-raw/census/README.md`](data-raw/census/README.md) |
+| US Census 2023 National Population Projections | demand denominator by age band (D1–D3) | [Census 2023 population projections](https://www.census.gov/data/tables/2023/demo/popproj/2023-summary-tables.html) | [`data-raw/census/README.md`](data-raw/census/README.md) |
 | CDC BRFSS 2023 | D4 survey-weighted UI prevalence and population cells | [BRFSS 2023 annual data](https://www.cdc.gov/brfss/annual_data/annual_2023.html) | [`scripts/data_acquisition/01_download_brfss.R`](scripts/data_acquisition/01_download_brfss.R) |
 | Census ACS 2023 5-year and PUMS | demographic and insurance/income population cells | [Census API](https://api.census.gov/data/key_signup.html) | [`scripts/data_acquisition/02_download_acs.R`](scripts/data_acquisition/02_download_acs.R) and [`scripts/data_acquisition/08_download_acs_tracts.R`](scripts/data_acquisition/08_download_acs_tracts.R) |
 | `mufflyaccess` URPS contract | base-year supply, scenarios, PFD prevalence, provenance | [`mufflyt/mufflyaccess`](https://github.com/mufflyt/mufflyaccess) | [`R/core-ssot.R`](R/core-ssot.R) |
@@ -1136,7 +1136,7 @@ original source and the repository entry point that obtains or documents it.
 | MEPS | care-seeking and access calibration | [AHRQ MEPS data](https://meps.ahrq.gov/mepsweb/data_stats/download_data_files.jsp) | [`scripts/data_acquisition/05_download_meps_2022.R`](scripts/data_acquisition/05_download_meps_2022.R) and [`scripts/data_acquisition/06_download_meps_2023.R`](scripts/data_acquisition/06_download_meps_2023.R) |
 | MCBS | Medicare-aged demand calibration | [CMS MCBS public-use files](https://www.cms.gov/data-research/research/medicare-current-beneficiary-survey) | [`scripts/data_acquisition/03_download_mcbs.R`](scripts/data_acquisition/03_download_mcbs.R) |
 | NHANES | urinary-symptom prevalence | [CDC NHANES](https://www.cdc.gov/nchs/nhanes/) | [`scripts/data_acquisition/07_download_nhanes_urinary.R`](scripts/data_acquisition/07_download_nhanes_urinary.R) |
-| HCUP NASS / Fast Stats | surgical procedure anchors | [HCUP Central Distributor](https://hcup-us.ahrq.gov/tech_assist/centdist.jsp) / [HCUP Fast Stats](https://datatools.ahrq.gov/hcup-fast-stats) | [`scripts/data_acquisition/10_ingest_hcup_nass.R`](scripts/data_acquisition/10_ingest_hcup_nass.R) |
+| HCUP NASS / Fast Stats | surgical procedure anchors | [HCUP Central Distributor](https://hcup-us.ahrq.gov/tech_assist/centdist.jsp) / [HCUP Fast Stats](https://datatools.ahrq.gov/hcup-fast-stats/) | [`scripts/data_acquisition/10_ingest_hcup_nass.R`](scripts/data_acquisition/10_ingest_hcup_nass.R) |
 
 ---
 

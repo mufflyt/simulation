@@ -388,16 +388,23 @@ jobs:
 
           Rscript -e 'roxygen2::roxygenise()'
 
-          # BYTE-STABILITY. If regenerating twice in ONE environment differs,
-          # the generator is nondeterministic and no amount of pinning helps --
-          # that is a different defect from a stale commit, and must not be
-          # diagnosed as one.
-          git stash push -q -- man NAMESPACE 2>/dev/null || true
-          Rscript -e 'roxygen2::roxygenise()' >/dev/null 2>&1
-          cp -r man /tmp/man_pass1 && cp NAMESPACE /tmp/NAMESPACE_pass1
-          Rscript -e 'roxygen2::roxygenise()' >/dev/null 2>&1
-          if diff -r -q /tmp/man_pass1 man >/dev/null 2>&1 && \
-             diff -q /tmp/NAMESPACE_pass1 NAMESPACE >/dev/null 2>&1; then
+          # BYTE-STABILITY, MEASURED ON A COPY. The first version of this probe
+          # stashed man/ and regenerated twice IN THE WORKING TREE with output
+          # sent to /dev/null. If either regeneration had errored, the tree
+          # would sit at the committed state and the staleness check below
+          # would pass VACUOUSLY -- a diagnostic that destroys what it measures.
+          # It runs in a scratch copy now, and errors are fatal rather than
+          # swallowed.
+          rm -rf /tmp/roxcheck && cp -a . /tmp/roxcheck
+          ( cd /tmp/roxcheck \
+            && Rscript -e 'roxygen2::roxygenise()' \
+            && cp -a man /tmp/rox_pass1 && cp NAMESPACE /tmp/rox_ns1 \
+            && Rscript -e 'roxygen2::roxygenise()' ) || {
+              echo "::error::roxygenise() FAILED during the stability probe" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            }
+          if diff -r -q /tmp/rox_pass1 /tmp/roxcheck/man >/dev/null 2>&1 && \
+             diff -q /tmp/rox_ns1 /tmp/roxcheck/NAMESPACE >/dev/null 2>&1; then
             echo "regeneration is byte-stable within this environment" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::error::roxygen output is NONDETERMINISTIC in a single environment" >> "$GITHUB_STEP_SUMMARY"
