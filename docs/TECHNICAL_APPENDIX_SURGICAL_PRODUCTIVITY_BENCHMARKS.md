@@ -24,10 +24,10 @@ The table below summarizes the empirical productivity and clinical intensity ben
 | Surgical Subspecialty | Median wRVU / FTE | 25th – 75th Percentile Range | Mid-Career Clinical Hrs/Wk | Primary Data & Benchmark Source |
 |---|---|---|---|---|
 | **Urogynecology (URPS)** | **7,850** | **5,600 – 10,200** | **55.2** | [ABOG URPS Certification](https://www.abog.org/subspecialties/urps) + [ABU Urology Certification](https://www.abu.org/certification) Logs + [CMS Medicare CY2024 Attestations](https://www.cms.gov/medicare/payment/fee-schedules/physician) |
-| **Gynecologic Oncology** | **8,400** | **6,100 – 11,100** | **58.0** | [MGMA Provider Compensation & Productivity Survey](https://www.mgma.com/data/benchmarks) / [AMGA Medical Group Survey](https://www.amga.org/surveys) Crosswalk |
-| **Urology** | **8,900** | **6,400 – 11,800** | **56.5** | [MGMA Provider Compensation & Productivity Survey](https://www.mgma.com/data/benchmarks) / [AMGA Medical Group Survey](https://www.amga.org/surveys) Crosswalk |
-| **General Surgery** | **8,600** | **6,200 – 11,500** | **57.2** | [MGMA Provider Compensation & Productivity Survey](https://www.mgma.com/data/benchmarks) / [AMGA Medical Group Survey](https://www.amga.org/surveys) Crosswalk |
-| **General OB/GYN** | **6,200** | **4,500 – 8,300** | **51.0** | [MGMA Provider Compensation & Productivity Survey](https://www.mgma.com/data/benchmarks) / [AMGA Medical Group Survey](https://www.amga.org/surveys) Crosswalk |
+| **Gynecologic Oncology** | **8,400** | **6,100 – 11,100** | **58.0** | [MGMA Data & DataDive Platform](https://www.mgma.com/data) / [AMGA Surveys & Analytics](https://www.amga.org/analytics-research/surveys/) Crosswalk |
+| **Urology** | **8,900** | **6,400 – 11,800** | **56.5** | [MGMA Data & DataDive Platform](https://www.mgma.com/data) / [AMGA Surveys & Analytics](https://www.amga.org/analytics-research/surveys/) Crosswalk |
+| **General Surgery** | **8,600** | **6,200 – 11,500** | **57.2** | [MGMA Data & DataDive Platform](https://www.mgma.com/data) / [AMGA Surveys & Analytics](https://www.amga.org/analytics-research/surveys/) Crosswalk |
+| **General OB/GYN** | **6,200** | **4,500 – 8,300** | **51.0** | [MGMA Data & DataDive Platform](https://www.mgma.com/data) / [AMGA Surveys & Analytics](https://www.amga.org/analytics-research/surveys/) Crosswalk |
 
 ---
 
@@ -54,10 +54,11 @@ $$\text{Clinical\_Hours}(age, sex) = \left( 20.35 + 1.35 \cdot age - 0.0145 \cdo
    [ABOG URPS Subspecialty Board](https://www.abog.org/subspecialties/urps) — Used in [`load_urps_roster()`](file:///Users/tmuffly/simulation/R/supply-roster_capacity.R#L42).
 3. **American Board of Urology (ABU) Roster**:  
    [ABU Certification Portal](https://www.abu.org/certification) — Combined with ABOG for dual-pathway provider tracking.
-4. **MGMA Data Benchmarks**:  
-   [MGMA Compensation & Productivity](https://www.mgma.com/data/benchmarks) — Crosswalked for peer surgical subspecialty comparisons.
-5. **AMGA Compensation Survey**:  
-   [AMGA Medical Group Benchmarks](https://www.amga.org/surveys) — Crosswalked for Gyn-Onc, Urology, and General Surgery wRVU distributions.
+4. **MGMA DataBenchmarking / DataDive**:  
+   [MGMA Data Center](https://www.mgma.com/data) — Crosswalked for peer surgical subspecialty comparisons.
+5. **AMGA Surveys & Analytics Benchmarks**:  
+   [AMGA Compensation & Productivity Surveys](https://www.amga.org/analytics-research/surveys/) — Crosswalked for Gyn-Onc, Urology, and General Surgery wRVU distributions.
+
 6. **Published Literature Citations**:
    * Dall TM et al. The medical workforce in 2025: What befalls neurology? *Neurology* 2013;81:470–478. [PMC3775691](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3775691/)
    * Dall TM et al. Supply and Demand Analysis of the Physiatry Workforce. *Am J Phys Med Rehabil* 2021;100:877–884. [PMC8380504](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8380504/)
