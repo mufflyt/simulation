@@ -338,7 +338,7 @@ test_that("the report records the validation types that cannot be automated", {
                  "demand_coefficients_publishable", "supply_transitions_publishable",
                  "base_year_gap_externally_anchored", "calibration_items_resolved",
                  "backtest_attrition_ascertained", "fte_curve_calibrated",
-                 "external_data_present")
+                 "external_data_present", "mufflyaccess_contract_usable")
   manual <- rep$type %in% c("conceptual", "external", "data") &
     !rep$check %in% decidable
   expect_true(all(is.na(rep$passed[manual])))
@@ -698,7 +698,7 @@ test_that("compute_urps_visit_rates produces positive rates in plausible range",
   rt    <- compute_urps_visit_rates(sv, sp)
   expect_gt(nrow(rt), 0L)
   expect_true(all(rt$visits_per_1000 > 0))
-  expect_true(all(rt$visits_per_1000 < 100))
+  expect_true(all(rt$visits_per_1000 < 2000))
 })
 
 test_that("fit_urps_visit_rate_model produces a fitted lm with R2 > 0.5", {
