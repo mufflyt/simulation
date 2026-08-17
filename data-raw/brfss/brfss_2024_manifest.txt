@@ -1,0 +1,27 @@
+BRFSS 2024 Download Manifest
+Generated: 2026-08-03 23:10:08.685558
+Source URL: https://www.cdc.gov/brfss/annual_data/2024/files/LLCP2024XPT.zip
+ZIP size (MB): 83
+XPT size (MB): 1093.9
+RDS size (MB): 4
+Raw record count: 457,670
+Women 18+ record count: 240,163
+Required vars present: SEQNO, _STATE, _LLCPWT, _PSU, _STSTR, _AGEG5YR, _IMPRACE, _HLTHPL1, INCOME3, _METSTAT, _BMI5CAT, _SMOKER3, CHILDREN, _SEX
+Required vars MISSING: none
+PFD optional vars found: none
+PFD optional vars missing: BLADCON, URINCON, INCONTI, PROPLAP, PELVORGAN, BOWLLEA, BOWLINC
+
+2024-specific notes:
+  - _HLTHPL1 renamed to _HLTHPL2 in 2024; normalised to _HLTHPL1 in this RDS.
+  - No pelvic floor optional module columns found in 2024 core file.
+
+To use with the URPS demand pipeline:
+  brfss <- load_brfss_women('data-raw/brfss/brfss_2024_women18plus.rds')
+  cells <- build_urps_population_cells(brfss_women = brfss)
+  demand <- project_urps_demand(cells, access_scenario = 'status_quo')
+
+Survey design for svydesign():
+  ids     = ~_PSU
+  strata  = ~_STSTR
+  weights = ~_LLCPWT
+  nest    = TRUE

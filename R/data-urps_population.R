@@ -248,7 +248,7 @@ load_meps_care_seeking_multipliers <- function(year    = 2022L,
 #' and risk-factor flags needed by the demand cell builder.
 #'
 #' @param brfss_rds Path to the women-subset RDS. Defaults to the repo-local
-#'   `data-raw/brfss/brfss_2023_women18plus.rds`.
+#'   `data-raw/brfss/brfss_2024_women18plus.rds` (2024 is the current release).
 #' @param verbose Logical; if TRUE prints a one-line summary.
 #' @return A tibble with columns: `seqno`, `state_fips`, `survey_wt`,
 #'   `age_group`, `race_eth`, `insurance`, `income_tier`, `metro`,
@@ -260,10 +260,10 @@ load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
   if (is.null(brfss_rds)) {
     pkg_root <- system.file(package = "urpssim")
     brfss_rds <- file.path(pkg_root, "..", "..", "data-raw", "brfss",
-                           "brfss_2023_women18plus.rds")
+                           "brfss_2024_women18plus.rds")
     brfss_rds <- normalizePath(brfss_rds, mustWork = FALSE)
     if (!file.exists(brfss_rds)) {
-      brfss_rds <- file.path("data-raw", "brfss", "brfss_2023_women18plus.rds")
+      brfss_rds <- file.path("data-raw", "brfss", "brfss_2024_women18plus.rds")
     }
   }
   if (!file.exists(brfss_rds)) {
@@ -281,7 +281,11 @@ load_brfss_women <- function(brfss_rds = NULL, verbose = TRUE) {
 
   age_code <- as.character(raw[["X_AGEG5YR"]])
   race_code <- as.character(raw[["X_IMPRACE"]])
-  ins_code  <- as.character(raw[["X_HLTHPL1"]])
+  # _HLTHPL: canonical name in 2024+ RDS (was _HLTHPL1 in 2023).
+  # The acquisition script renames the year-specific name to _HLTHPL;
+  # after sub("^_","X_") above it becomes X_HLTHPL.
+  hlthpl_col <- if ("X_HLTHPL" %in% names(raw)) "X_HLTHPL" else "X_HLTHPL1"
+  ins_code  <- as.character(raw[[hlthpl_col]])
 
   age_grp  <- .AGEG5YR_TO_URPS_BAND[age_code]
   race_eth <- .IMPRACE_LABELS[race_code]
