@@ -269,6 +269,18 @@ anchors:
         magnitude should stay VISIBLE as a structural-mismatch diagnostic
         rather than being silently normalised away.
 
+  ma_inpatient_prolapse_volume:
+    source: "CHIA Massachusetts All-Payer Inpatient Discharge Database (FY2004-FY2018)"
+    role: regional_external_validation
+    production_scalar_eligible: false
+    estimand:
+      name: d6_inpatient_pelvic_floor_surgery
+      unit: inpatient_encounter
+      definition: >
+        Annual all-payer Massachusetts inpatient/overnight treated pelvic organ
+        prolapse and reconstructive surgical encounters (Estimand D6). Used for
+        regional rolling-origin backtest validation, NOT for national calibration scalars.
+
   ui_prevalence:
     source: "NHANES KIQ_U pooled (primary); Nygaard 2008 JAMA / SWAN as EXTERNAL VALIDATION"
     path: data/anchors/ui_prevalence.csv
