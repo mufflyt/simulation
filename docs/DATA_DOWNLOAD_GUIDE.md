@@ -55,7 +55,7 @@ Sys.setenv(CENSUS_API_KEY = "YOUR_KEY_HERE")
 ```
 
 The key already installed on this machine is in `~/.Renviron` as
-`CENSUS_API_KEY=485c6da8987af0b9829c25f899f2393b4bb1a4fb`.
+`CENSUS_API_KEY=<redacted: the key that was here has been REVOKED>`.
 
 ---
 

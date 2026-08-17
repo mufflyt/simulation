@@ -1,0 +1,22 @@
+"stratum","group","cases","p50_miles","p75_miles","p90_miles","p50_nearest_capable","pct_beyond_10mi"
+"payer_label","Medicare",2470,9.4,20.3,46.8,6,25.1
+"payer_label","HMO",1591,8.1,16.5,26.7,5.4,16.3
+"payer_label","Blue Cross MC",1478,9.6,18.3,30.5,6.1,20.4
+"payer_label","Medicare MC",606,7.7,15.8,25.7,5,16.7
+"payer_label","Blue Cross",564,10.2,21.7,44.1,6.5,24.1
+"payer_label","Medicaid MC",523,4.5,12.4,22.8,3.3,12.2
+"payer_label","Medicaid",410,3.8,10.7,18.7,2.9,11.2
+"payer_label","Commercial",306,12.4,24,52,6.8,32
+"payer_label","Commercial MC",300,9,18.3,31.6,6.4,19
+"payer_label","Other (Q)",295,6.1,12.3,23.4,4.2,14.9
+"payer_label","Other (E)",207,7.7,17.1,43.2,5.4,23.2
+"payer_label","Other (H)",110,4.8,11.8,24,2.7,15.5
+"age_band","18-49",3047,7,15.4,26.6,4.8,16.7
+"age_band","50-64",2897,9.1,18.3,31.5,5.7,20.2
+"age_band","65-79",2552,10.1,20,40.9,6.1,24.8
+"age_band","80+",585,6.5,15.8,31.4,4.9,18.3
+"race_grp","R5",7243,9.7,19,35.5,6.4,21.6
+"race_grp","R3",629,3,6.4,16.5,1.8,11.6
+"race_grp","R9",457,4.3,9.7,20.3,2.8,11.2
+"race_grp","UNKNOW",419,5.2,16.7,26.4,3.4,22.4
+"race_grp","R2",239,6.2,11.2,22.8,3.6,12.6

@@ -26,4 +26,3 @@ Other Lizeth access anchor:
 }
 \concept{Lizeth access anchor}
 \concept{calibration}
-

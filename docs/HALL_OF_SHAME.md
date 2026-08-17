@@ -167,6 +167,63 @@ the anomaly, so they were de-linked to backticks.
 
 ---
 
+### 20. A PHI history scanner that silently dropped its only finding
+
+**2026-08-16, mine.** `scan-phi-dua.sh` scanned git history with
+
+```sh
+git log --all -S"$needle" --pretty=format:'%h %ad %s' | while read -r m; do ...
+```
+
+`--pretty=format:` emits **no trailing newline**. `while read` discards a final
+line that has none, so with a **single** matching commit — the ordinary case —
+the loop body never executed and the scan reported `CRITICAL: 0` regardless of
+what was in the history.
+
+It appeared to work in this repository only by accident: there were *two*
+matches, so the first was read and the second discarded. One match away from a
+scanner that always says clean.
+
+**What caught it:** a negative control. The gate itself reported PASS. Testing
+whether the allowlist was too broad — planting PHI in a throwaway repo and
+requiring failure — returned PASS, and that impossibility is what exposed it.
+
+**Rule:** for a detector, `PASS` is not evidence. The only evidence is that it
+fails when it should. `tformat:` terminates every record; `format:` does not.
+
+### 21. The test proving the scanner fires was itself inert
+
+**2026-08-16, mine.** The probe that plants PHI into a throwaway repository and
+requires a CRITICAL used:
+
+```r
+system2("bash", c("-c", probe))     # probe is multi-line
+```
+
+`system2()` does not quote its arguments, so bash received a fragment and
+reported `-c: option requires an argument`. Output was empty, every `grepl()`
+matched nothing, and the assertions never ran. The file reported 26 passing
+tests with the probe silently absent.
+
+**What caught it:** noticing `bash: -c: option requires an argument` in output I
+had already read past once, while the counts looked fine.
+
+### 22. A CI sweep that labelled all 164 test files "ok" unconditionally
+
+**2026-08-15, mine.** To find which test file was hanging:
+
+```sh
+out=$(timeout 90 Rscript -e "..." | grep -cE "Failed|Error"); rc=$?
+[ $rc -eq 124 ] && echo TIMEOUT || echo ok
+```
+
+`$?` after a pipeline is **grep's** exit status, never `timeout`'s 124. Every
+file printed `ok`, including any that failed or hung. **I cited that sweep as
+evidence twice** before checking it against a file I already knew to be failing.
+
+**Rule:** a checker that has never produced its failure output has not been
+tested. Run it against a known-bad case first.
+
 ## II. Primitives that are silently wrong
 
 No error, no warning, plausible output, wrong number.
@@ -211,6 +268,37 @@ to a sample and generalised to a column.
 
 ---
 
+### 23. `names(which(table(x) > 1))` is NULL, not `character(0)`
+
+**2026-08-16, mine.** A duplicate-function gate compared its result to
+`character(0)`. When the input was legitimately empty the expression returned
+**NULL**, so an empty result compared unequal to an empty expectation and the
+gate failed with `actual is NULL, expected is a character vector ()` — an
+assertion error standing in for "there was nothing to check".
+
+### 24. `.repo_root()` mistook the installed package for the source tree
+
+**2026-08-16, mine.** The walk accepted any directory containing a
+`DESCRIPTION`. Under `covr` and `R CMD check` the tests execute **inside the
+installed package**, which has one — so `../R` existed (holding `.rdb` and
+`.rdx`, not sources), no skip fired, and eight structural gates ran against an
+empty file list. `Meta/` exists only in an installed package and is now the
+discriminator.
+
+Both of these produced the same shape of failure: a confusing assertion error
+where the honest answer was *the thing being inspected is not here*.
+
+### 25. `survey` treats a logical as a two-level factor
+
+**2026-08-15, mine.** `svymean(~lgl, design)` returns **both** levels, so
+`coef(.)[1]` is the `FALSE` cell, and `confint()` is column-major so `ci[2]` is
+the second **lower** bound. Reported P(no return) = 0.518 as the return
+probability, with an interval printed as `0.265 – 0.229` — upper below lower.
+
+**What caught it:** an identity check that had to reconcile.
+`0.482 × 5.684 = 2.740` matched the directly estimated mean; `0.518` did not.
+The arithmetic refused to close.
+
 ## III. Claims made faster than they were checked
 
 Assertions stated with confidence, then withdrawn. Each was stated to a human
@@ -247,6 +335,46 @@ as false rather than quietly replaced.
 
 ---
 
+### 26. "Full suite green" — measured in the one context where it could not fail
+
+**2026-08-15/16, mine.** Reported a clean suite after every commit for a full
+day, from `testthat::test_dir()` run at the repository root, where
+`../../config`, `../../.github` and `../../artifacts` all resolve. CI runs the
+suite from the **installed package**, where none of them do — 208 skips there
+against 14 locally, and 22 failures.
+
+I built the CI apparatus and then verified my work with a method that does not
+match it. Every green claim measured the wrong thing. The gate scripts and the
+scientific findings were unaffected, but the claim was repeated to a human who
+could have acted on it.
+
+**Rule:** the authority for "the suite passes" is `R CMD check`, not
+`test_dir()` from a developer's working directory.
+
+### 27. "Still running" — reported for a process that had been dead for seven minutes
+
+**2026-08-16, mine.** A faithful-CI reproduction was killed by a foreground
+timeout (exit 143). I kept reporting it as in progress because the output file
+had no completion marker, without checking whether anything was writing to it.
+The frozen byte count was visible in two consecutive checks before I looked.
+
+Compounding it: earlier waiters used `pgrep -f "test_dir"`, and the wait command
+**contained that string in its own command line**, so they matched themselves
+and could never exit. Several "STILL RUNNING" reports were self-detection.
+
+### 28. "The POP cascade is inert; the live model uses a single rate"
+
+**2026-08-15, mine.** Asserted that `config/pop_cascade_transitions.yml` was
+dead and that the live path was `lifecourse_service_map()`'s `per_treated =
+0.25`, implying a 6.08× overstatement. **Wrong.** `use_condition_pathway`
+defaults `TRUE`, so the staged CSV *is* the live path and `per_treated` is the
+legacy branch. The reviewer corrected it; a mutation test then reproduced
+4.68× exactly.
+
+The grep was accurate and the conclusion was not: the config file *was* inert
+while the mechanism it described was live under different names in a different
+file.
+
 ## IV. Numbers that drifted from their source
 
 ### 13. The Tier A upper bound was wrong in five places
@@ -282,6 +410,82 @@ the *procedural* codes runs 40.2% (prolapse) to 54.3% (sling).
 **Rule:** capture is now column 2 of Table 5, immediately after the service, so
 a bound cannot be read off the table without the fraction of volume behind it.
 Structural, not conventional.
+
+---
+
+### A constant presented as a measurement
+
+**2026-08-14, mine (CHIA travel kernel).** The kernel reports how far women
+travel for major pelvic surgery, in 30/60/120/180-minute bands, to be compared
+against the Luo/Qi weights the E2SFCA layer uses. Distance was measured. Drive
+time was not: it was `miles * 1.3 circuity / 40 mph`, two constants I chose.
+
+The module and its outputs said "drive_min" throughout, and the band table read
+like an observation. It was an assumption wearing an observation's units.
+
+How much it mattered was not obvious until asked. The `<=30` band share ranges
+**0.646 at 30 mph to 0.790 at 50 mph** — a 14-point swing from the speed
+constant alone, wider than most effects the kernel would be used to detect.
+
+**Caught by:** the user asking, flatly, "how did you do drive time from zip code
+to zip code." Nothing in the pipeline would have surfaced it; the number had
+already been written into a module, a CSV and a summary table. The repair was to
+demote drive time to an explicitly-labelled approximation, promote the
+assumption-free **distance** distribution to the primary result, and ship the
+speed-sensitivity table beside it so the fragility is impossible to miss.
+
+**The general form:** a derived quantity in the units of a measured one. Miles
+were measured; minutes were manufactured, and only the minutes were comparable
+to the thing being challenged — which is exactly why the manufacturing happened.
+
+---
+
+### Seven hospitals fell out of a geocode and took the long trips with them
+
+**2026-08-14, mine (CHIA travel kernel).** Facility ZIPs were joined to ZCTA
+centroids. Seven hospitals hold **unique institutional ZIPs that have no ZCTA** —
+Baystate (01199), Lahey Burlington (01805), UMass University (01655), Mercy
+Springfield (01102), Lawrence General (01842), Cooley Dickinson (01061), Noble
+(01086). They dropped silently: **263,745 cases, 15.9% of the cohort.**
+
+The bias was not random. Those are western and central Massachusetts — Springfield,
+Worcester, Northampton, Westfield — **exactly the regions where patients travel
+furthest**. Dropping them biases a travel kernel toward short trips, in a
+deliverable whose entire purpose is to characterise how far people travel.
+
+**Caught by:** distrusting a summary line. The script printed `geocoded 82.7% of
+cases` and moved on to a plausible-looking distribution. Nothing failed. The only
+reason it surfaced was refusing to accept 82.7% without knowing what the missing
+17% were. Origins turned out to be 98% fine; the loss was entirely on the
+destination side.
+
+A ZIP3-area centroid fallback took geocoding to 99.0%. The final distribution
+moved only slightly (73.5% -> 73.1% in the near band), which is the
+uncomfortable part: **the answer was nearly right for the wrong reason**, and a
+check that stopped at "does this look plausible" would have passed it.
+
+---
+
+### Circumcision was the top urogynaecology procedure
+
+**2026-08-14, mine (CHIA workforce layer).** Building surgeon-year operative
+volume, the FY2018 case-mix listing for board-certified urogynaecologists came
+back with `0VTTXZZ` *Resection of Prepuce* at the top, 146 cases.
+
+Newborn stays (`AdmissionType = '4'`) carry the **mother's obstetrician** as
+operating physician. Newborns are 6-7% of all operative discharges but a far
+larger share for obstetric-adjacent specialties: excluding them cut URPS
+operative volume by **41%** in FY2018.
+
+**Caught by:** the result being clinically absurd on sight. Every structural
+check passed — the procedure code was valid, the physician resolved to a real
+NPI, the discharge was a genuine operation, the specialty was correct. Nothing
+in the data was malformed. The join was simply answering a different question
+than the one asked.
+
+**The general form:** attribution defects survive every validity check, because
+each field is individually true. They are caught by knowing what the answer
+should look like, which is not a property of the pipeline.
 
 ---
 
@@ -393,17 +597,55 @@ rather than committing the union.
 
 ---
 
+### 29. The branch reverted a fix that `main` already had
+
+**2026-08-16.** `test-manuscript-eligibility.R` on `main` wraps
+`rprojroot::find_root()` in `tryCatch` with a `skip_if()` and a comment
+describing exactly the failure it prevents — *"under R CMD check, which copies
+tests to a temp tree without the source root, it aborted the file before any
+skip could apply."*
+
+The branch contained the naive call. The diff was that hunk only, so a rebase or
+merge resolution had quietly restored the older behaviour, and `R CMD check`
+failed for a reason `main` had already solved and documented.
+
+Git reported no conflict. Nothing textual was in dispute; the regression was
+semantic.
+
+**Rule:** before merging a long-lived branch, diff it against `main` looking for
+commits on `main` that the branch has effectively undone. A clean merge is not
+evidence that nothing was lost.
+
+### 30. A live API key, public for two weeks
+
+**2026-08-03 introduced, found 2026-08-16.** `docs/DATA_DOWNLOAD_GUIDE.md`
+carried an actual Census API key — not the `YOUR_KEY_HERE` placeholder three
+lines above it — in a **public** repository, across three commits.
+
+**What caught it:** gitleaks, on the first run of the new `pr-gates` workflow.
+Not a human, not a review, and *not my PHI scanner*, which looks for patient
+identifiers and would never have matched it. The key was revoked within minutes
+of being reported.
+
+The uncomfortable part is the interval. Every local run, every prior CI pass and
+every human read of that file missed it for two weeks. The gate that found it
+had existed for about an hour.
+
 ## What the pattern says
 
 Counting the entries by what caught them:
 
 | caught by | n |
 |---|---:|
-| running the thing and reading the output | 6 |
-| a human reviewing | 5 |
-| a guard doing its job | 4 |
-| accident — noticed a number that looked off | 3 |
-| still open | 2 |
+| running the thing and reading the output | 9 |
+| a human reviewing | 7 |
+| a guard doing its job | 6 |
+| accident — noticed a number that looked off | 4 |
+| a NEGATIVE control — requiring a detector to fail | 3 |
+| still open | 1 |
+
+Entries 20–30 were added 2026-08-16 and shifted this table. Three of them
+introduced a category the first nineteen did not have.
 
 Two of those four guard catches deserve an asterisk. The orphan detector caught
 a false positive of its own making (#3's sequel) — the machinery working only in
@@ -411,11 +653,19 @@ the sense that it failed loudly enough to be investigated rather than
 accommodated. And #4b was a correct gate blocking every push in the repository
 over one square bracket, which is a catch and a cost at the same time.
 
-Four of nineteen were caught by automation, and two of those four were the
+Six of thirty were caught by automation, and two of those six were the
 automation reacting to itself. The single most productive habit in this
 repository is still not a gate: it is **rendering the number next to its source
 and looking at both**. Every gate here was written after a human did that and
 found something.
+
+**The new category is the important one.** Entries 20, 21 and 22 were all found
+by a NEGATIVE control — deliberately breaking something and requiring the
+detector to notice. In every case the detector was reporting PASS at the time.
+A scanner that has never failed is indistinguishable from one that cannot fail,
+and three separate detectors built in a single day were all in that state
+simultaneously. Two of the three were false negatives, which is the direction
+that does not announce itself.
 
 **The same defect shape recurs across unrelated layers**, which is the argument
 for reading this file rather than each entry's fix:
@@ -425,8 +675,10 @@ for reading this file rather than each entry's fix:
 | a predicate applied to a sample and generalised to a column | #6, #8 |
 | a broad pattern reaching a path invented later | #2, #4 (×3) |
 | a claim of impossibility asserted without the attempt | #9, #12 |
-| a check whose own output is indistinguishable from its subject | #1, #3 |
-| a guardrail mistaken for a proof | #14, #17 |
+| a check whose own output is indistinguishable from its subject | #1, #3, #21, #22 |
+| a guardrail mistaken for a proof | #14, #17, #20 |
+| a context difference read as a defect in the thing being checked | #23, #24, #26 |
+| a scanner detecting its own machinery | #21, #30's siblings |
 
 **And the newest pattern, which the first sixteen entries did not have: a fix
 that satisfies a gate by telling it something false.** #3's sequel and #18 are
@@ -441,3 +693,23 @@ that caught instance two — list what `git add` *would* stage — was written d
 in this file and still did not reach the person who hit instance three. Writing
 the lesson down is necessary and demonstrably not sufficient; the ones that stop
 recurring are the ones that became a test.
+
+**2026-08-16: the verification context is itself a variable.** Entries 23, 24
+and 26 are one lesson seen three times in a day. `test_dir()` at a repository
+root, `R CMD check` inside an installed package, and `covr` are three different
+worlds: paths resolve differently, `DESCRIPTION` appears in places that are not
+the source tree, and the developer's machine has files and packages a clean
+runner does not. A green run says nothing until you name *which* of those worlds
+produced it. The corollary is unwelcome and worth stating: for a full day, every
+"suite green" reported here was measured in the one context where the failures
+could not appear.
+
+**And the shape that keeps beating the gate-builder specifically.** A PHI
+scanner must contain PHI patterns as data, so it keeps detecting itself —
+entries 21 and 30 have siblings that never got numbers, because the leak guard
+failed four times in one afternoon on its own machinery: a literal in the probe,
+a literal in the allowlist documenting the exception, the pickaxe flagging the
+commit that removed the literal, and the pickaxe flagging every later commit
+that touched the allowlist. Each fix generated the next finding until the
+scanner's own files were excluded by pathspec in both scan modes. The gate was
+never wrong about the *repository*; it was wrong about *itself*.

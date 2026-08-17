@@ -1,9 +1,24 @@
 # URPS Service Workload Basket
 # ---------------------------------------------------------------------------
-# CALIBRATED. Work RVUs come from the CMS Physician Fee Schedule Relative Value
-# File, release RVU25A (PPRRVU25_JAN, 2025), unmodified codes only. The
-# authoritative table and the CPT mix live in R/23-cms_rvu.R; this file records
-# the provenance and the tiering.
+# PROVENANCE MIRROR -- NOT RUNTIME CONFIGURATION.
+#
+# Nothing loads this file. Executable values live in the referenced R objects,
+# and editing a number here changes NO model behaviour. It is kept because the
+# provenance is worth recording, and tests require it to stay synchronised with
+# the objects it mirrors:
+#
+#   indirect_time_share.value        == INDIRECT_TIME_SHARE
+#   delegation_shares.level_correction == URPS_DELEGATION_CAPACITY_FACTOR
+#   productivity_benchmark.{low,median,high} == WRVU_PER_FTE_BENCHMARK
+#   work_rvu.status                  == urps_service_workload_status()
+#
+# See tests/testthat/test-service-workload-mirror.R. Update the executable value
+# and its provenance mirror TOGETHER.
+#
+# Work RVUs come from the CMS Physician Fee Schedule Relative Value File,
+# release RVU25A (PPRRVU25_JAN, 2025), unmodified codes only. The authoritative
+# table and the CPT mix live in R/23-cms_rvu.R; this file records the provenance
+# and the tiering.
 #
 #   refresh_cms_work_rvu(path)   re-derive from a newer CMS release
 #   verify_cms_work_rvu(path)    diff the shipped table against a release

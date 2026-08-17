@@ -42,6 +42,11 @@ jobs:
           # reach. Hard dependencies only; tests needing it skip themselves.
           dependencies: '"hard"'
 
+      # ORDINARY package_coverage(), which aborts on a failing test. That is
+      # correct: a failing test is a failing test. An earlier revision tolerated
+      # failures here so a blocker registry could classify them, but the
+      # expected scientific refusals are now asserted as PASSING tests of
+      # refusal, so nothing needs tolerating.
       - name: Test coverage
         run: |
           cov <- covr::package_coverage(quiet = FALSE, clean = FALSE)
