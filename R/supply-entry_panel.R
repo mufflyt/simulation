@@ -52,10 +52,40 @@ ENTRY_EVIDENCE_SOURCES <- data.frame(
 )
 
 #' Default location of the 84 GB credentials/claims database
+#'
+#' @details
+#' RESOLVED, NOT HARDCODED. This was
+#' `"/Volumes/MufflySamsung 1 1/DuckDB/nber_my_duckdb.duckdb"` -- a literal that
+#' encoded a macOS remount artifact. The same physical drive appears in this
+#' repository under THREE names (`MufflySamsung`, `MufflySamsung 1`,
+#' `MufflySamsung 1 1`) because macOS appends a counter when a volume is
+#' remounted while an earlier mount is stale. Any one of them is wrong on some
+#' boot.
+#'
+#' `researchpaths::resolve_duckdb()` globs the volume name, validates existence
+#' and file size, refuses an ambiguous match rather than picking one, honours an
+#' explicit `URPS_NBER_DUCKDB` override, and -- critically -- never opens or
+#' creates anything during discovery. DuckDB CREATES an empty database when
+#' asked to connect to a missing path, so a stale literal does not fail loudly;
+#' it silently yields an empty database and every downstream count becomes zero.
+#'
+#' Returns `NA_character_` when the drive is absent, so callers can skip rather
+#' than erroring at load time.
 #' @family entry panel
 #' @concept supply
 #' @export
-ENTRY_PANEL_DB_DEFAULT <- "/Volumes/MufflySamsung 1 1/DuckDB/nber_my_duckdb.duckdb"
+ENTRY_PANEL_DB_DEFAULT <- local({
+  if (!requireNamespace("researchpaths", quietly = TRUE)) return(NA_character_)
+  tryCatch(
+    researchpaths::resolve_duckdb(
+      relative_path  = file.path("DuckDB", "nber_my_duckdb.duckdb"),
+      volume_pattern = "MufflySamsung*",
+      env_var        = "URPS_NBER_DUCKDB",
+      quiet          = TRUE
+    ),
+    error = function(e) NA_character_
+  )
+})
 
 .ep_stop <- function(...) stop("entry panel: ", ..., call. = FALSE)
 
