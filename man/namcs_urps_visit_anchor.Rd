@@ -20,9 +20,9 @@ carrying \code{provenance} and \code{data_year} attributes.
 National annual URPS ambulatory-visit anchor from NAMCS
 }
 \seealso{
-Other namcs demand: 
-\code{\link{apply_demand_calibration}()},
-\code{\link{namcs_demand_calibration}()}
+Other namcs demand:
+\code{\link[=apply_demand_calibration]{apply_demand_calibration()}},
+\code{\link[=namcs_demand_calibration]{namcs_demand_calibration()}}
 }
 \concept{calibration}
 \concept{namcs demand}

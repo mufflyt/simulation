@@ -34,11 +34,11 @@ varies each emit a warning and proceed. In \code{strict} each is an error. Use
 resolve_reproducibility_mode()
 }
 \seealso{
-Other repro provenance: 
-\code{\link{read_artifact_with_provenance}()},
-\code{\link{seed_microsimulation}()},
-\code{\link{with_preserved_rng}()},
-\code{\link{write_artifact_with_provenance}()}
+Other repro provenance:
+\code{\link[=read_artifact_with_provenance]{read_artifact_with_provenance()}},
+\code{\link[=seed_microsimulation]{seed_microsimulation()}},
+\code{\link[=with_preserved_rng]{with_preserved_rng()}},
+\code{\link[=write_artifact_with_provenance]{write_artifact_with_provenance()}}
 }
 \concept{core}
 \concept{repro provenance}

@@ -44,10 +44,10 @@ pulls the pre-cutoff mean from 0.75 to 0.60.
 }
 }
 \seealso{
-Other review followups: 
-\code{\link{entrant_pipeline_transition}()},
-\code{\link{international_migration_assumption}()},
-\code{\link{supply_uncertainty_drivers}()}
+Other review followups:
+\code{\link[=entrant_pipeline_transition]{entrant_pipeline_transition()}},
+\code{\link[=international_migration_assumption]{international_migration_assumption()}},
+\code{\link[=supply_uncertainty_drivers]{supply_uncertainty_drivers()}}
 }
 \concept{review followups}
 \concept{supply}

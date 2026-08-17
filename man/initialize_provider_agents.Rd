@@ -32,17 +32,17 @@ initialize_provider_agents(n = 50, subspecialty = "FPMRS",
                            baseline_year = 2025)
 }
 \seealso{
-Other provider microsimulation: 
-\code{\link{build_hazard_table}()},
-\code{\link{classify_workforce_outlook}()},
-\code{\link{microsim_age_band_of}()},
-\code{\link{project_supply_deterministic}()},
-\code{\link{provider_active_in_year}()},
-\code{\link{provider_clinical_fte}()},
-\code{\link{provider_us_practising_in_year}()},
-\code{\link{retirement_hazard}()},
-\code{\link{run_supply_microsimulation}()},
-\code{\link{simulate_provider_career_once}()}
+Other provider microsimulation:
+\code{\link[=build_hazard_table]{build_hazard_table()}},
+\code{\link[=classify_workforce_outlook]{classify_workforce_outlook()}},
+\code{\link[=microsim_age_band_of]{microsim_age_band_of()}},
+\code{\link[=project_supply_deterministic]{project_supply_deterministic()}},
+\code{\link[=provider_active_in_year]{provider_active_in_year()}},
+\code{\link[=provider_clinical_fte]{provider_clinical_fte()}},
+\code{\link[=provider_us_practising_in_year]{provider_us_practising_in_year()}},
+\code{\link[=retirement_hazard]{retirement_hazard()}},
+\code{\link[=run_supply_microsimulation]{run_supply_microsimulation()}},
+\code{\link[=simulate_provider_career_once]{simulate_provider_career_once()}}
 }
 \concept{provider microsimulation}
 \concept{supply}

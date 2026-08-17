@@ -53,12 +53,12 @@ the held-out region's \code{x}. \code{sigma} is held at the value used to build
 fitted decay, not a per-fold refit of the decay itself.
 }
 \seealso{
-Other isochrone access response: 
-\code{\link{capacity_status_with_isochrone_response}()},
-\code{\link{e2sfca_catchments_from_access}()},
-\code{\link{fit_decay_sigma}()},
-\code{\link{join_lizeth_to_catchments}()},
-\code{\link{lizeth_wait_response_loss}()}
+Other isochrone access response:
+\code{\link[=capacity_status_with_isochrone_response]{capacity_status_with_isochrone_response()}},
+\code{\link[=e2sfca_catchments_from_access]{e2sfca_catchments_from_access()}},
+\code{\link[=fit_decay_sigma]{fit_decay_sigma()}},
+\code{\link[=join_lizeth_to_catchments]{join_lizeth_to_catchments()}},
+\code{\link[=lizeth_wait_response_loss]{lizeth_wait_response_loss()}}
 }
 \concept{isochrone access response}
 \concept{validation}

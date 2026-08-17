@@ -39,10 +39,10 @@ providers, and appends the draw's entrant count.
 \seealso{
 \code{\link[=calibrate_urps_supply_dynamics]{calibrate_urps_supply_dynamics()}}, \code{\link[=backtest_urps_supply_calibration]{backtest_urps_supply_calibration()}}
 
-Other supply dynamics: 
-\code{\link{backtest_urps_supply_calibration}()},
-\code{\link{calibrate_urps_supply_dynamics}()},
-\code{\link{decompose_urps_forecast_miss}()}
+Other supply dynamics:
+\code{\link[=backtest_urps_supply_calibration]{backtest_urps_supply_calibration()}},
+\code{\link[=calibrate_urps_supply_dynamics]{calibrate_urps_supply_dynamics()}},
+\code{\link[=decompose_urps_forecast_miss]{decompose_urps_forecast_miss()}}
 }
 \concept{supply}
 \concept{supply dynamics}

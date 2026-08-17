@@ -27,11 +27,11 @@ career_state_of(c(38, 52, 66))
 career_state_of(58, retired = TRUE)
 }
 \seealso{
-Other provider state machine: 
-\code{\link{assert_publishable_supply_transitions}()},
-\code{\link{career_departure_by_state}()},
-\code{\link{career_transition_registry}()},
-\code{\link{state_departure_hazard}()}
+Other provider state machine:
+\code{\link[=assert_publishable_supply_transitions]{assert_publishable_supply_transitions()}},
+\code{\link[=career_departure_by_state]{career_departure_by_state()}},
+\code{\link[=career_transition_registry]{career_transition_registry()}},
+\code{\link[=state_departure_hazard]{state_departure_hazard()}}
 }
 \concept{provider state machine}
 \concept{supply}

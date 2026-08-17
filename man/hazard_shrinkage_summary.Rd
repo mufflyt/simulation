@@ -17,9 +17,9 @@ Shrinkage is visible as a smaller between-subspecialty spread under partial
 pooling than under unpooled estimation. This summarises that per band.
 }
 \seealso{
-Other partial pooling hazard: 
-\code{\link{fit_partial_pooled_hazards}()},
-\code{\link{hazard_pooled_long}()}
+Other partial pooling hazard:
+\code{\link[=fit_partial_pooled_hazards]{fit_partial_pooled_hazards()}},
+\code{\link[=hazard_pooled_long]{hazard_pooled_long()}}
 }
 \concept{partial pooling hazard}
 \concept{supply}

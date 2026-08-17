@@ -34,12 +34,12 @@ every provider already practising then registers a first-billing year of
 2013. That year is excluded rather than counted as a 2013 entry cohort.
 }
 \seealso{
-Other fellowship conversion: 
+Other fellowship conversion:
 \code{\link{FELLOWSHIP_DEFAULT_LAGS}},
 \code{\link{FELLOWSHIP_ROSTER_ABOG_COVERAGE}},
-\code{\link{fellowship_certification_series}()},
-\code{\link{fellowship_conversion_steady_state}()},
-\code{\link{fit_fellowship_conversion}()}
+\code{\link[=fellowship_certification_series]{fellowship_certification_series()}},
+\code{\link[=fellowship_conversion_steady_state]{fellowship_conversion_steady_state()}},
+\code{\link[=fit_fellowship_conversion]{fit_fellowship_conversion()}}
 }
 \concept{fellowship conversion}
 \concept{supply}

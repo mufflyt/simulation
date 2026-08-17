@@ -36,11 +36,11 @@ The intercept is re-solved for every scale, so each row is normalised to
 is the point: the level is not what is borrowed in a way that matters.
 }
 \seealso{
-Other practice survey: 
-\code{\link{fte_curve_status}()},
-\code{\link{geographic_access_status}()},
-\code{\link{unresolved_calibration_items}()},
-\code{\link{urps_practice_survey_requirements}()}
+Other practice survey:
+\code{\link[=fte_curve_status]{fte_curve_status()}},
+\code{\link[=geographic_access_status]{geographic_access_status()}},
+\code{\link[=unresolved_calibration_items]{unresolved_calibration_items()}},
+\code{\link[=urps_practice_survey_requirements]{urps_practice_survey_requirements()}}
 }
 \concept{data}
 \concept{practice survey}

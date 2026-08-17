@@ -31,13 +31,13 @@ about 3 percentage points where it is non-zero.
 nrmp_track_split(track = "urology")[, c("appointment_year", "positions_filled")]
 }
 \seealso{
-Other sources: 
-\code{\link{nrmp_entrant_series}()},
-\code{\link{nrmp_entrants}()},
-\code{\link{urps_age_productivity_curve}()},
-\code{\link{urps_empirical_hazard_by_ageband}()},
-\code{\link{urps_empirical_retirement_schedule}()},
-\code{\link{urps_hazard_exposure}()}
+Other sources:
+\code{\link[=nrmp_entrant_series]{nrmp_entrant_series()}},
+\code{\link[=nrmp_entrants]{nrmp_entrants()}},
+\code{\link[=urps_age_productivity_curve]{urps_age_productivity_curve()}},
+\code{\link[=urps_empirical_hazard_by_ageband]{urps_empirical_hazard_by_ageband()}},
+\code{\link[=urps_empirical_retirement_schedule]{urps_empirical_retirement_schedule()}},
+\code{\link[=urps_hazard_exposure]{urps_hazard_exposure()}}
 }
 \concept{calibration}
 \concept{sources}

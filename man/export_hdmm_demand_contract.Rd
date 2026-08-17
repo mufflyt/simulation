@@ -52,8 +52,8 @@ emitting \code{tier5_care_seeking} and \code{tier6_procedural} indexed to the ba
 plus a JSON provenance manifest.
 }
 \seealso{
-Other export demand contract: 
-\code{\link{export_dmdm_demand_contract}()}
+Other export demand contract:
+\code{\link[=export_dmdm_demand_contract]{export_dmdm_demand_contract()}}
 }
 \concept{export demand contract}
 \concept{reporting}

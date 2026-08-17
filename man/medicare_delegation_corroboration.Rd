@@ -26,8 +26,9 @@ share of billed services rendered by an APP. Compares with the shipped
 delegation matrix.
 }
 \seealso{
-Other delegation evidence: 
-\code{\link{delegation_capacity_sensitivity}()}
+Other delegation evidence:
+\code{\link[=apply_app_delegation_scenario]{apply_app_delegation_scenario()}},
+\code{\link[=delegation_capacity_sensitivity]{delegation_capacity_sensitivity()}}
 }
 \concept{delegation evidence}
 \concept{supply}

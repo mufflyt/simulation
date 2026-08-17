@@ -42,9 +42,9 @@ binomial SE is used. Failing loudly when neither uncertainty source is present
 keeps an "exact" observation from silently dominating the likelihood.
 }
 \seealso{
-Other prevalence-calibration: 
-\code{\link{fit_prevalence_consistent_psa}()},
-\code{\link{fit_prevalence_consistent_transitions}()},
-\code{\link{prevalence_from_incidence}()}
+Other prevalence-calibration:
+\code{\link[=fit_prevalence_consistent_psa]{fit_prevalence_consistent_psa()}},
+\code{\link[=fit_prevalence_consistent_transitions]{fit_prevalence_consistent_transitions()}},
+\code{\link[=prevalence_from_incidence]{prevalence_from_incidence()}}
 }
 \concept{prevalence-calibration}

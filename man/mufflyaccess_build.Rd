@@ -14,10 +14,10 @@ List with \code{version}, \code{sha}, \code{sha_matches_pin}, \code{n_exports},
 Identity of the installed contract build
 }
 \seealso{
-Other contract pin: 
+Other contract pin:
 \code{\link{MUFFLYACCESS_PINNED_SHA}},
 \code{\link{MUFFLYACCESS_REQUIRED_EXPORTS}},
-\code{\link{assert_mufflyaccess_contract}()}
+\code{\link[=assert_mufflyaccess_contract]{assert_mufflyaccess_contract()}}
 }
 \concept{contract pin}
 \concept{core}

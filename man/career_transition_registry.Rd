@@ -30,11 +30,11 @@ because it is an unexported internal with no Rd topic to point at, and
 \verb{R CMD check} fails an unresolvable cross-reference as a WARNING.
 }
 \seealso{
-Other provider state machine: 
-\code{\link{assert_publishable_supply_transitions}()},
-\code{\link{career_departure_by_state}()},
-\code{\link{career_state_of}()},
-\code{\link{state_departure_hazard}()}
+Other provider state machine:
+\code{\link[=assert_publishable_supply_transitions]{assert_publishable_supply_transitions()}},
+\code{\link[=career_departure_by_state]{career_departure_by_state()}},
+\code{\link[=career_state_of]{career_state_of()}},
+\code{\link[=state_departure_hazard]{state_departure_hazard()}}
 }
 \concept{provider state machine}
 \concept{supply}

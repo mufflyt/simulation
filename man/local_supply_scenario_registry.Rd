@@ -16,10 +16,10 @@ Named list of scenario definitions.
 Local fallback scenario definitions
 }
 \seealso{
-Other scenario registry: 
-\code{\link{demand_scenario_registry}()},
-\code{\link{supply_scenario_registry}()},
-\code{\link{validate_scenario_registry}()}
+Other scenario registry:
+\code{\link[=demand_scenario_registry]{demand_scenario_registry()}},
+\code{\link[=supply_scenario_registry]{supply_scenario_registry()}},
+\code{\link[=validate_scenario_registry]{validate_scenario_registry()}}
 }
 \concept{reporting}
 \concept{scenario registry}

@@ -31,12 +31,12 @@ window, total outcomes divided by total positions filled \code{lag} years earlie
 Robust when the shape of \code{w} is weakly identified, which it usually is.
 }
 \seealso{
-Other fellowship conversion: 
+Other fellowship conversion:
 \code{\link{FELLOWSHIP_DEFAULT_LAGS}},
 \code{\link{FELLOWSHIP_ROSTER_ABOG_COVERAGE}},
-\code{\link{fellowship_certification_series}()},
-\code{\link{fellowship_first_billing_series}()},
-\code{\link{fit_fellowship_conversion}()}
+\code{\link[=fellowship_certification_series]{fellowship_certification_series()}},
+\code{\link[=fellowship_first_billing_series]{fellowship_first_billing_series()}},
+\code{\link[=fit_fellowship_conversion]{fit_fellowship_conversion()}}
 }
 \concept{fellowship conversion}
 \concept{supply}

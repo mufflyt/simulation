@@ -48,24 +48,24 @@ therefore reports them separately and fails if absent tracts carry more than
 \code{max_uncovered_need} of modelled need.
 }
 \seealso{
-Other access: 
+Other access:
 \code{\link{ACCESS_PROVIDER_DISPOSITIONS}},
 \code{\link{ACCESS_SURFACE_GATES}},
 \code{\link{TEMPORAL_ACCESS_MODES}},
 \code{\link{URPS_ACCESS_TIME_UNIT}},
 \code{\link{URPS_WAIT_OBSERVATIONS}},
-\code{\link{access_ascertainment_status}()},
-\code{\link{access_provider_flow}()},
-\code{\link{access_surface_for_demand}()},
-\code{\link{access_validation_targets}()},
-\code{\link{assert_access_surface_usable}()},
-\code{\link{assert_temporal_access_comparison}()},
-\code{\link{contemporary_access_year}()},
-\code{\link{fit_wait_scale}()},
-\code{\link{set_access_target}()},
-\code{\link{urps_appointment_window}()},
-\code{\link{urps_observed_wait_days}()},
-\code{\link{validate_access_outcomes}()}
+\code{\link[=access_ascertainment_status]{access_ascertainment_status()}},
+\code{\link[=access_provider_flow]{access_provider_flow()}},
+\code{\link[=access_surface_for_demand]{access_surface_for_demand()}},
+\code{\link[=access_validation_targets]{access_validation_targets()}},
+\code{\link[=assert_access_surface_usable]{assert_access_surface_usable()}},
+\code{\link[=assert_temporal_access_comparison]{assert_temporal_access_comparison()}},
+\code{\link[=contemporary_access_year]{contemporary_access_year()}},
+\code{\link[=fit_wait_scale]{fit_wait_scale()}},
+\code{\link[=set_access_target]{set_access_target()}},
+\code{\link[=urps_appointment_window]{urps_appointment_window()}},
+\code{\link[=urps_observed_wait_days]{urps_observed_wait_days()}},
+\code{\link[=validate_access_outcomes]{validate_access_outcomes()}}
 }
 \concept{access}
 \concept{validation}

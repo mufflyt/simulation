@@ -42,11 +42,11 @@ apply_prevention_multipliers(vols, m)
 \code{\link[=conservative_management_multipliers]{conservative_management_multipliers()}},
 \code{\link[=prevention_demand_trajectory]{prevention_demand_trajectory()}}
 
-Other prevention: 
+Other prevention:
 \code{\link{URPS_PREVENTION_SCENARIOS}},
-\code{\link{apply_named_prevention_scenario}()},
-\code{\link{conservative_management_multipliers}()},
-\code{\link{prevention_volume_summary}()}
+\code{\link[=apply_named_prevention_scenario]{apply_named_prevention_scenario()}},
+\code{\link[=conservative_management_multipliers]{conservative_management_multipliers()}},
+\code{\link[=prevention_volume_summary]{prevention_volume_summary()}}
 }
 \concept{demand}
 \concept{prevention}

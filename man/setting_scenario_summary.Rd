@@ -25,16 +25,17 @@ Tibble: \code{service}, \code{volume_baseline}, \code{volume_adjusted},
 Compare service volumes before and after a setting-shift scenario
 }
 \seealso{
-Other urps settings: 
+Other urps settings:
 \code{\link{URPS_DEFAULT_SETTING_MIX}},
 \code{\link{URPS_SETTING_SCENARIOS}},
-\code{\link{apply_setting_productivity}()},
-\code{\link{apply_setting_scenario}()},
-\code{\link{apply_setting_shift}()},
-\code{\link{load_psps_pos_shares}()},
-\code{\link{split_volumes_by_setting}()},
-\code{\link{validate_setting_mix}()},
-\code{\link{volumes_with_setting}()}
+\code{\link[=apply_setting_productivity]{apply_setting_productivity()}},
+\code{\link[=apply_setting_scenario]{apply_setting_scenario()}},
+\code{\link[=apply_setting_shift]{apply_setting_shift()}},
+\code{\link[=load_psps_pos_shares]{load_psps_pos_shares()}},
+\code{\link[=prolapse_setting_mix]{prolapse_setting_mix()}},
+\code{\link[=split_volumes_by_setting]{split_volumes_by_setting()}},
+\code{\link[=validate_setting_mix]{validate_setting_mix()}},
+\code{\link[=volumes_with_setting]{volumes_with_setting()}}
 }
 \concept{supply}
 \concept{urps settings}

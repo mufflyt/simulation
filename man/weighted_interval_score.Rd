@@ -45,9 +45,9 @@ weighted_interval_score(
 )
 }
 \seealso{
-Other forecast scorecard: 
-\code{\link{compare_forecasts}()},
-\code{\link{forecast_scorecard}()}
+Other forecast scorecard:
+\code{\link[=compare_forecasts]{compare_forecasts()}},
+\code{\link[=forecast_scorecard]{forecast_scorecard()}}
 }
 \concept{forecast scorecard}
 \concept{validation}

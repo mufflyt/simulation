@@ -19,17 +19,17 @@ Weighted mean of the per-category adequacy ratios, weighting by the share of
 respondents (or of FTE) in each category.
 }
 \seealso{
-Other baseline gap: 
-\code{\link{assert_access_not_double_counted}()},
-\code{\link{assert_baseline_gap_estimated}()},
-\code{\link{assumed_baseline_gap}()},
-\code{\link{baseline_gap}()},
-\code{\link{capacity_category_adequacy}()},
-\code{\link{capacity_survey_shortfall_bottom_up}()},
-\code{\link{external_anchor_gap}()},
-\code{\link{hpsa_removal_shortfall}()},
-\code{\link{published_baseline_gaps}()},
-\code{\link{required_fte_base_year}()}
+Other baseline gap:
+\code{\link[=assert_access_not_double_counted]{assert_access_not_double_counted()}},
+\code{\link[=assert_baseline_gap_estimated]{assert_baseline_gap_estimated()}},
+\code{\link[=assumed_baseline_gap]{assumed_baseline_gap()}},
+\code{\link[=baseline_gap]{baseline_gap()}},
+\code{\link[=capacity_category_adequacy]{capacity_category_adequacy()}},
+\code{\link[=capacity_survey_shortfall_bottom_up]{capacity_survey_shortfall_bottom_up()}},
+\code{\link[=external_anchor_gap]{external_anchor_gap()}},
+\code{\link[=hpsa_removal_shortfall]{hpsa_removal_shortfall()}},
+\code{\link[=published_baseline_gaps]{published_baseline_gaps()}},
+\code{\link[=required_fte_base_year]{required_fte_base_year()}}
 }
 \concept{baseline gap}
 \concept{reporting}

@@ -27,11 +27,11 @@ point estimate the data cannot distinguish from "no effect" repeats the error
 of the hard-coded constants it would replace.
 }
 \seealso{
-Other meps care seeking: 
+Other meps care seeking:
 \code{\link{MEPS_PELVIC_FLOOR_ICD10}},
-\code{\link{build_meps_care_seeking_panel}()},
-\code{\link{fit_care_seeking_model}()},
-\code{\link{predict_care_seeking}()}
+\code{\link[=build_meps_care_seeking_panel]{build_meps_care_seeking_panel()}},
+\code{\link[=fit_care_seeking_model]{fit_care_seeking_model()}},
+\code{\link[=predict_care_seeking]{predict_care_seeking()}}
 }
 \concept{data}
 \concept{meps care seeking}

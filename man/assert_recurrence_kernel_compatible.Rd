@@ -23,13 +23,13 @@ prolapse against 10\% recurrent surgery, which is the size of the error that
 substitution would introduce.
 }
 \seealso{
-Other recurrence: 
+Other recurrence:
 \code{\link{RECURRENCE_MEASURE_TYPES}},
-\code{\link{build_recurrence_kernel}()},
-\code{\link{compute_recurrence_convolution}()},
-\code{\link{recurrence_evidence_register}()},
-\code{\link{recurrence_mass_from_cumulative}()},
-\code{\link{recurrence_parameter_status}()}
+\code{\link[=build_recurrence_kernel]{build_recurrence_kernel()}},
+\code{\link[=compute_recurrence_convolution]{compute_recurrence_convolution()}},
+\code{\link[=recurrence_evidence_register]{recurrence_evidence_register()}},
+\code{\link[=recurrence_mass_from_cumulative]{recurrence_mass_from_cumulative()}},
+\code{\link[=recurrence_parameter_status]{recurrence_parameter_status()}}
 }
 \concept{demand}
 \concept{recurrence}

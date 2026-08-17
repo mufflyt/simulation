@@ -30,11 +30,11 @@ that keeps the archive provenance attached to the panel, so
 \code{\link[=swan_panel_fit_caveats]{swan_panel_fit_caveats()}} can name the exact file a fit came from.
 }
 \seealso{
-Other swan archive: 
+Other swan archive:
 \code{\link{SWAN_ARCHIVE_BYTES}},
 \code{\link{SWAN_ARCHIVE_SHA256}},
-\code{\link{load_swan_archive}()},
-\code{\link{swan_archive_provenance}()}
+\code{\link[=load_swan_archive]{load_swan_archive()}},
+\code{\link[=swan_archive_provenance]{swan_archive_provenance()}}
 }
 \concept{data}
 \concept{swan archive}

@@ -4,7 +4,7 @@
 \alias{benchmark_density_shortfall}
 \title{Providers required to raise every geography to a benchmark density}
 \usage{
-benchmark_density_shortfall(per_capita, benchmark, per = 1e+06)
+benchmark_density_shortfall(per_capita, benchmark, per = 1000000)
 }
 \arguments{
 \item{per_capita}{Tibble from \code{\link[=supply_per_capita]{supply_per_capita()}}.}
@@ -24,16 +24,16 @@ well-supplied states cannot offset deficits elsewhere). Reporting both numbers
 makes the difference between national and geographic adequacy explicit.
 }
 \seealso{
-Other provider geography: 
-\code{\link{add_returning_providers}()},
-\code{\link{apply_provider_migration_matrix}()},
-\code{\link{assign_entrant_geography}()},
-\code{\link{historical_placement_shares}()},
-\code{\link{migration_hazard}()},
-\code{\link{migration_matrix_from_moves}()},
-\code{\link{opportunity_placement_shares}()},
-\code{\link{supply_per_capita}()},
-\code{\link{validate_migration_matrix}()}
+Other provider geography:
+\code{\link[=add_returning_providers]{add_returning_providers()}},
+\code{\link[=apply_provider_migration_matrix]{apply_provider_migration_matrix()}},
+\code{\link[=assign_entrant_geography]{assign_entrant_geography()}},
+\code{\link[=historical_placement_shares]{historical_placement_shares()}},
+\code{\link[=migration_hazard]{migration_hazard()}},
+\code{\link[=migration_matrix_from_moves]{migration_matrix_from_moves()}},
+\code{\link[=opportunity_placement_shares]{opportunity_placement_shares()}},
+\code{\link[=supply_per_capita]{supply_per_capita()}},
+\code{\link[=validate_migration_matrix]{validate_migration_matrix()}}
 }
 \concept{geography}
 \concept{provider geography}

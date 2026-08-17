@@ -23,11 +23,11 @@ when \code{agents} is supplied.
 Status of the hours-to-FTE curve
 }
 \seealso{
-Other practice survey: 
-\code{\link{fte_curve_gradient_leverage}()},
-\code{\link{geographic_access_status}()},
-\code{\link{unresolved_calibration_items}()},
-\code{\link{urps_practice_survey_requirements}()}
+Other practice survey:
+\code{\link[=fte_curve_gradient_leverage]{fte_curve_gradient_leverage()}},
+\code{\link[=geographic_access_status]{geographic_access_status()}},
+\code{\link[=unresolved_calibration_items]{unresolved_calibration_items()}},
+\code{\link[=urps_practice_survey_requirements]{urps_practice_survey_requirements()}}
 }
 \concept{data}
 \concept{practice survey}

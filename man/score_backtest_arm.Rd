@@ -20,9 +20,9 @@ One-row tibble of metrics.
 Score one arm against the observed series
 }
 \seealso{
-Other backtest run: 
-\code{\link{run_backtest}()},
-\code{\link{run_backtest_arm}()}
+Other backtest run:
+\code{\link[=run_backtest]{run_backtest()}},
+\code{\link[=run_backtest_arm]{run_backtest_arm()}}
 }
 \concept{backtest run}
 \concept{validation}

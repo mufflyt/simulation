@@ -43,9 +43,9 @@ List with \code{summary}, \code{iterations}, \code{trajectory}, \code{target}, \
 Run the full prespecified back-test
 }
 \seealso{
-Other backtest run: 
-\code{\link{run_backtest_arm}()},
-\code{\link{score_backtest_arm}()}
+Other backtest run:
+\code{\link[=run_backtest_arm]{run_backtest_arm()}},
+\code{\link[=score_backtest_arm]{score_backtest_arm()}}
 }
 \concept{backtest run}
 \concept{validation}

@@ -19,13 +19,13 @@ approximation of the HWMM MEPS-based negative binomial; individual-level NB
 requires person-level annual count data (MEPS), which are not available here.
 }
 \seealso{
-Other namcs visit equations: 
-\code{\link{brfss_population_by_stratum}()},
-\code{\link{compute_namcs_demand_estimand}()},
-\code{\link{compute_urps_visit_rates}()},
-\code{\link{flag_urps_visits}()},
-\code{\link{load_namcs_2019}()},
-\code{\link{namcs_urps_stratum_visits}()}
+Other namcs visit equations:
+\code{\link[=brfss_population_by_stratum]{brfss_population_by_stratum()}},
+\code{\link[=compute_namcs_demand_estimand]{compute_namcs_demand_estimand()}},
+\code{\link[=compute_urps_visit_rates]{compute_urps_visit_rates()}},
+\code{\link[=flag_urps_visits]{flag_urps_visits()}},
+\code{\link[=load_namcs_2019]{load_namcs_2019()}},
+\code{\link[=namcs_urps_stratum_visits]{namcs_urps_stratum_visits()}}
 }
 \concept{demand}
 \concept{namcs visit equations}

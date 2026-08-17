@@ -57,9 +57,9 @@ gap_projections_all_scenarios(supply_by_scenario, required_fte)
 }
 }
 \seealso{
-Other urps projection: 
-\code{\link{as_urps_gap_projection}()},
-\code{\link{validate_urps_gap_projection}()}
+Other urps projection:
+\code{\link[=as_urps_gap_projection]{as_urps_gap_projection()}},
+\code{\link[=validate_urps_gap_projection]{validate_urps_gap_projection()}}
 }
 \concept{reporting}
 \concept{urps projection}

@@ -19,12 +19,12 @@ above published symptomatic values and are NOT suitable for any reported
 figure -- they exist to document what changed.
 }
 \seealso{
-Other lifecourse: 
-\code{\link{lifecourse_demand_estimand}()},
-\code{\link{lifecourse_demand_trajectory}()},
-\code{\link{lifecourse_required_fte}()},
-\code{\link{lifecourse_risk_params_cited}()},
-\code{\link{simulate_lifecourse_demand}()}
+Other lifecourse:
+\code{\link[=lifecourse_demand_estimand]{lifecourse_demand_estimand()}},
+\code{\link[=lifecourse_demand_trajectory]{lifecourse_demand_trajectory()}},
+\code{\link[=lifecourse_required_fte]{lifecourse_required_fte()}},
+\code{\link[=lifecourse_risk_params_cited]{lifecourse_risk_params_cited()}},
+\code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_demand()}}
 }
 \concept{demand}
 \concept{lifecourse}

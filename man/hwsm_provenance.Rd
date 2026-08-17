@@ -14,9 +14,9 @@ Every field a reader needs to decide whether these parameters fit their
 purpose, carried with the numbers rather than in a document beside them.
 }
 \seealso{
-Other hwsm supply: 
-\code{\link{add_hwsm_supply_parameters}()},
-\code{\link{hwsm_retirement_hazard_table}()}
+Other hwsm supply:
+\code{\link[=add_hwsm_supply_parameters]{add_hwsm_supply_parameters()}},
+\code{\link[=hwsm_retirement_hazard_table]{hwsm_retirement_hazard_table()}}
 }
 \concept{hwsm supply}
 \concept{supply}

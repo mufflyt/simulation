@@ -29,11 +29,11 @@ Returns the seed actually applied, so a run can record it rather than leaving
 reproducibility to a claim in a method section.
 }
 \seealso{
-Other repro provenance: 
-\code{\link{read_artifact_with_provenance}()},
-\code{\link{resolve_reproducibility_mode}()},
-\code{\link{with_preserved_rng}()},
-\code{\link{write_artifact_with_provenance}()}
+Other repro provenance:
+\code{\link[=read_artifact_with_provenance]{read_artifact_with_provenance()}},
+\code{\link[=resolve_reproducibility_mode]{resolve_reproducibility_mode()}},
+\code{\link[=with_preserved_rng]{with_preserved_rng()}},
+\code{\link[=write_artifact_with_provenance]{write_artifact_with_provenance()}}
 }
 \concept{core}
 \concept{repro provenance}

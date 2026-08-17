@@ -22,11 +22,11 @@ stacks the results, so the A-series can be read per severity (e.g. an urgent
 wait that must clear a 7-day window vs a routine 30-day one).
 }
 \seealso{
-Other access outcomes: 
-\code{\link{access_outcomes_national}()},
-\code{\link{access_outcomes_trajectory}()},
-\code{\link{assert_access_outcomes_labeled}()},
-\code{\link{publish_access_outcomes}()}
+Other access outcomes:
+\code{\link[=access_outcomes_national]{access_outcomes_national()}},
+\code{\link[=access_outcomes_trajectory]{access_outcomes_trajectory()}},
+\code{\link[=assert_access_outcomes_labeled]{assert_access_outcomes_labeled()}},
+\code{\link[=publish_access_outcomes]{publish_access_outcomes()}}
 }
 \concept{access outcomes}
 \concept{reporting}

@@ -22,13 +22,13 @@ group is below \code{min_sample_size}, so a workforce comparison never reports a
 significant p-value off a handful of physicians.
 }
 \seealso{
-Other workforce statistics: 
-\code{\link{calculate_proportion_ci}()},
-\code{\link{calculate_replacement_gap}()},
-\code{\link{calculate_rural_metro_comparison}()},
-\code{\link{calculate_state_vulnerability}()},
-\code{\link{load_sensitivity_table}()},
-\code{\link{sensitivity_registry}()}
+Other workforce statistics:
+\code{\link[=calculate_proportion_ci]{calculate_proportion_ci()}},
+\code{\link[=calculate_replacement_gap]{calculate_replacement_gap()}},
+\code{\link[=calculate_rural_metro_comparison]{calculate_rural_metro_comparison()}},
+\code{\link[=calculate_state_vulnerability]{calculate_state_vulnerability()}},
+\code{\link[=load_sensitivity_table]{load_sensitivity_table()}},
+\code{\link[=sensitivity_registry]{sensitivity_registry()}}
 }
 \concept{reporting}
 \concept{workforce statistics}

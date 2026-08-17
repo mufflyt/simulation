@@ -22,12 +22,12 @@ geographies with capacity < need), and \code{by_geo} (input plus per-geography
 Accessible capacity vs need, by geography and nationally
 }
 \seealso{
-Other demand: 
-\code{\link{demand_by_travel_band}()},
-\code{\link{geographic_demand_summary}()},
-\code{\link{isochrone_demand_from_tracts}()},
-\code{\link{need_weighted_access}()},
-\code{\link{tract_need_from_population}()}
+Other demand:
+\code{\link[=demand_by_travel_band]{demand_by_travel_band()}},
+\code{\link[=geographic_demand_summary]{geographic_demand_summary()}},
+\code{\link[=isochrone_demand_from_tracts]{isochrone_demand_from_tracts()}},
+\code{\link[=need_weighted_access]{need_weighted_access()}},
+\code{\link[=tract_need_from_population]{tract_need_from_population()}}
 }
 \concept{demand}
 \concept{geography}

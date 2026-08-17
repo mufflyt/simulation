@@ -21,9 +21,9 @@ interval describing the workforce, or the simulator? A share near or above 1
 means the band would move materially on a re-run with a different seed.
 }
 \seealso{
-Other monte carlo: 
-\code{\link{assert_monte_carlo_adequate}()},
-\code{\link{mc_min_iterations}()},
-\code{\link{monte_carlo_se}()}
+Other monte carlo:
+\code{\link[=assert_monte_carlo_adequate]{assert_monte_carlo_adequate()}},
+\code{\link[=mc_min_iterations]{mc_min_iterations()}},
+\code{\link[=monte_carlo_se]{monte_carlo_se()}}
 }
 \concept{monte carlo}

@@ -33,9 +33,9 @@ shape -- a poor match means the covariate structure, not the intercept, is
 wrong, and the residuals are returned so that is visible rather than hidden.
 }
 \seealso{
-Other prevalence calibration: 
-\code{\link{lifecourse_prevalence_targets}()},
-\code{\link{lifecourse_risk_params_prevalence_anchored}()}
+Other prevalence calibration:
+\code{\link[=lifecourse_prevalence_targets]{lifecourse_prevalence_targets()}},
+\code{\link[=lifecourse_risk_params_prevalence_anchored]{lifecourse_risk_params_prevalence_anchored()}}
 }
 \concept{demand}
 \concept{prevalence calibration}

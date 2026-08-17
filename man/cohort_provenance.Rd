@@ -17,12 +17,12 @@ Records which construction path produced the cohort, so a published number
 can never be mistaken for one built on a real roster.
 }
 \seealso{
-Other roster: 
-\code{\link{agents_from_certification_cohorts}()},
-\code{\link{cohort_composition}()},
-\code{\link{implied_gross_entrants}()},
-\code{\link{observed_entrant_rate}()},
-\code{\link{urps_certification_cohorts}()}
+Other roster:
+\code{\link[=agents_from_certification_cohorts]{agents_from_certification_cohorts()}},
+\code{\link[=cohort_composition]{cohort_composition()}},
+\code{\link[=implied_gross_entrants]{implied_gross_entrants()}},
+\code{\link[=observed_entrant_rate]{observed_entrant_rate()}},
+\code{\link[=urps_certification_cohorts]{urps_certification_cohorts()}}
 }
 \concept{roster}
 \concept{supply}

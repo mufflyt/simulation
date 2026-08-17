@@ -58,8 +58,8 @@ vector for a finite national wait.
 \code{\link[=adequacy_access_load]{adequacy_access_load()}}, \code{\link[=clear_access]{clear_access()}},
 \code{\link[=access_outcomes_national]{access_outcomes_national()}}, \code{\link[=fit_wait_scale]{fit_wait_scale()}}.
 
-Other access response bridge: 
-\code{\link{adequacy_access_load}()}
+Other access response bridge:
+\code{\link[=adequacy_access_load]{adequacy_access_load()}}
 }
 \concept{access response bridge}
 \concept{calibration}

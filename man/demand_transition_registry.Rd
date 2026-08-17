@@ -17,10 +17,10 @@ source. \code{variant = "default"} rows are the placeholder set; \code{variant =
 \code{\link[=lifecourse_risk_params_cited]{lifecourse_risk_params_cited()}}.
 }
 \seealso{
-Other transition registry: 
-\code{\link{assert_publishable_demand_coefficients}()},
-\code{\link{lifecourse_eligibility_params}()},
-\code{\link{lifecourse_severity_params}()}
+Other transition registry:
+\code{\link[=assert_publishable_demand_coefficients]{assert_publishable_demand_coefficients()}},
+\code{\link[=lifecourse_eligibility_params]{lifecourse_eligibility_params()}},
+\code{\link[=lifecourse_severity_params]{lifecourse_severity_params()}}
 }
 \concept{demand}
 \concept{transition registry}

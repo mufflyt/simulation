@@ -27,23 +27,23 @@ that bypasses it will not be audited, so the leakage test also asserts that
 the back-test functions call nothing else.
 }
 \seealso{
-Other backtest: 
+Other backtest:
 \code{\link{BACKTEST_PARAMETER_PROVENANCE}},
 \code{\link{BACKTEST_TARGET_YEAR}},
-\code{\link{assert_backtest_parameters_precede_cutoff}()},
-\code{\link{assert_no_leakage}()},
-\code{\link{backtest_attrition_requirement}()},
-\code{\link{backtest_cohort_at}()},
-\code{\link{backtest_cohorts_through}()},
-\code{\link{backtest_entrant_estimate}()},
-\code{\link{backtest_loo_validation}()},
-\code{\link{backtest_multi_window}()},
-\code{\link{backtest_oos_interval}()},
-\code{\link{backtest_retirement_regime}()},
-\code{\link{backtest_rolling_origin}()},
-\code{\link{backtest_target_candidates}()},
-\code{\link{reset_leakage_audit}()},
-\code{\link{validate_backtest_target}()}
+\code{\link[=assert_backtest_parameters_precede_cutoff]{assert_backtest_parameters_precede_cutoff()}},
+\code{\link[=assert_no_leakage]{assert_no_leakage()}},
+\code{\link[=backtest_attrition_requirement]{backtest_attrition_requirement()}},
+\code{\link[=backtest_cohort_at]{backtest_cohort_at()}},
+\code{\link[=backtest_cohorts_through]{backtest_cohorts_through()}},
+\code{\link[=backtest_entrant_estimate]{backtest_entrant_estimate()}},
+\code{\link[=backtest_loo_validation]{backtest_loo_validation()}},
+\code{\link[=backtest_multi_window]{backtest_multi_window()}},
+\code{\link[=backtest_oos_interval]{backtest_oos_interval()}},
+\code{\link[=backtest_retirement_regime]{backtest_retirement_regime()}},
+\code{\link[=backtest_rolling_origin]{backtest_rolling_origin()}},
+\code{\link[=backtest_target_candidates]{backtest_target_candidates()}},
+\code{\link[=reset_leakage_audit]{reset_leakage_audit()}},
+\code{\link[=validate_backtest_target]{validate_backtest_target()}}
 }
 \concept{backtest}
 \concept{validation}

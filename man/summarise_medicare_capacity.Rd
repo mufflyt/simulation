@@ -18,12 +18,12 @@ Roster count, reference-eligible count, and relative capacity total.
 Summarise Medicare-workload-indexed capacity by provider characteristics
 }
 \seealso{
-Other medicare capacity: 
-\code{\link{aggregate_medicare_realized_care}()},
-\code{\link{compare_medicare_realized_care}()},
-\code{\link{medicare_work_rvu_by_provider}()},
-\code{\link{medicare_workload_index}()},
-\code{\link{urps_medicare_service_crosswalk}()}
+Other medicare capacity:
+\code{\link[=aggregate_medicare_realized_care]{aggregate_medicare_realized_care()}},
+\code{\link[=compare_medicare_realized_care]{compare_medicare_realized_care()}},
+\code{\link[=medicare_work_rvu_by_provider]{medicare_work_rvu_by_provider()}},
+\code{\link[=medicare_workload_index]{medicare_workload_index()}},
+\code{\link[=urps_medicare_service_crosswalk]{urps_medicare_service_crosswalk()}}
 }
 \concept{medicare capacity}
 \concept{supply}

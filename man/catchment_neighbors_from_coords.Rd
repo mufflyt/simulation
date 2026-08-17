@@ -24,11 +24,11 @@ links each catchment to its \code{k} nearest others by great-circle distance
 hand; supply a measured matrix directly for production use.
 }
 \seealso{
-Other access clearing: 
-\code{\link{clear_access}()},
-\code{\link{clear_access_trajectory}()},
-\code{\link{overflow_access}()},
-\code{\link{overflow_conservation}()}
+Other access clearing:
+\code{\link[=clear_access]{clear_access()}},
+\code{\link[=clear_access_trajectory]{clear_access_trajectory()}},
+\code{\link[=overflow_access]{overflow_access()}},
+\code{\link[=overflow_conservation]{overflow_conservation()}}
 }
 \concept{access clearing}
 \concept{geography}

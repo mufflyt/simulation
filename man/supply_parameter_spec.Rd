@@ -71,11 +71,11 @@ spec <- supply_parameter_spec(entrant_series = c(50, 57, 53, 59, 59),
 spec$quantified
 }
 \seealso{
-Other parameter uncertainty: 
-\code{\link{assert_parameter_uncertainty}()},
-\code{\link{draw_supply_parameters}()},
-\code{\link{entrant_spec_from_series}()},
-\code{\link{series_mean_se}()}
+Other parameter uncertainty:
+\code{\link[=assert_parameter_uncertainty]{assert_parameter_uncertainty()}},
+\code{\link[=draw_supply_parameters]{draw_supply_parameters()}},
+\code{\link[=entrant_spec_from_series]{entrant_spec_from_series()}},
+\code{\link[=series_mean_se]{series_mean_se()}}
 }
 \concept{calibration}
 \concept{parameter uncertainty}

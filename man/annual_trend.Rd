@@ -22,27 +22,27 @@ its 95\% t-interval and p-value; the access-per-year change over a study window.
 annual_trend(2015:2020, c(100, 104, 110, 113, 119, 126))
 }
 \seealso{
-Other spatial access e2sfca: 
-\code{\link{access_moe_ci}()},
-\code{\link{access_weight_sensitivity}()},
-\code{\link{assign_access_category}()},
-\code{\link{compare_access_methods}()},
-\code{\link{compute_access}()},
-\code{\link{compute_access_preset}()},
-\code{\link{compute_e2sfca_access}()},
-\code{\link{conus_ok}()},
-\code{\link{e2sfca_bands}()},
-\code{\link{e2sfca_incremental_weights}()},
-\code{\link{e2sfca_weight_presets}()},
-\code{\link{gaussian_band_weights}()},
-\code{\link{haversine_km}()},
-\code{\link{match_points_to_isochrones}()},
-\code{\link{run_geographic_access}()},
-\code{\link{spatial_access_ratio}()},
-\code{\link{summarize_access}()},
-\code{\link{weighted_mean_all}()},
-\code{\link{wilson_ci}()},
-\code{\link{zero_access_share}()}
+Other spatial access e2sfca:
+\code{\link[=access_moe_ci]{access_moe_ci()}},
+\code{\link[=access_weight_sensitivity]{access_weight_sensitivity()}},
+\code{\link[=assign_access_category]{assign_access_category()}},
+\code{\link[=compare_access_methods]{compare_access_methods()}},
+\code{\link[=compute_access]{compute_access()}},
+\code{\link[=compute_access_preset]{compute_access_preset()}},
+\code{\link[=compute_e2sfca_access]{compute_e2sfca_access()}},
+\code{\link[=conus_ok]{conus_ok()}},
+\code{\link[=e2sfca_bands]{e2sfca_bands()}},
+\code{\link[=e2sfca_incremental_weights]{e2sfca_incremental_weights()}},
+\code{\link[=e2sfca_weight_presets]{e2sfca_weight_presets()}},
+\code{\link[=gaussian_band_weights]{gaussian_band_weights()}},
+\code{\link[=haversine_km]{haversine_km()}},
+\code{\link[=match_points_to_isochrones]{match_points_to_isochrones()}},
+\code{\link[=run_geographic_access]{run_geographic_access()}},
+\code{\link[=spatial_access_ratio]{spatial_access_ratio()}},
+\code{\link[=summarize_access]{summarize_access()}},
+\code{\link[=weighted_mean_all]{weighted_mean_all()}},
+\code{\link[=wilson_ci]{wilson_ci()}},
+\code{\link[=zero_access_share]{zero_access_share()}}
 }
 \concept{geography}
 \concept{spatial access e2sfca}

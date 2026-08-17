@@ -45,12 +45,12 @@ with \code{matched = FALSE} and \code{NA} access, so the match rate is auditable
 than silently dropped.
 }
 \seealso{
-Other isochrone access response: 
-\code{\link{capacity_status_with_isochrone_response}()},
-\code{\link{e2sfca_catchments_from_access}()},
-\code{\link{fit_decay_sigma}()},
-\code{\link{lizeth_wait_response_loss}()},
-\code{\link{wait_response_region_holdout}()}
+Other isochrone access response:
+\code{\link[=capacity_status_with_isochrone_response]{capacity_status_with_isochrone_response()}},
+\code{\link[=e2sfca_catchments_from_access]{e2sfca_catchments_from_access()}},
+\code{\link[=fit_decay_sigma]{fit_decay_sigma()}},
+\code{\link[=lizeth_wait_response_loss]{lizeth_wait_response_loss()}},
+\code{\link[=wait_response_region_holdout]{wait_response_region_holdout()}}
 }
 \concept{calibration}
 \concept{isochrone access response}

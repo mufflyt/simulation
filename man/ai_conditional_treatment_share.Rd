@@ -22,11 +22,11 @@ modelled uptake depend on the other's, which is false when their eligibility
 sets differ and when many patients receive neither.
 }
 \seealso{
-Other ai treatment: 
+Other ai treatment:
 \code{\link{AI_TREATMENT_DENOMINATORS}},
-\code{\link{ai_definitive_treatment_rates}()},
-\code{\link{ai_treatment_evidence_register}()},
-\code{\link{ai_treatment_rate_status}()}
+\code{\link[=ai_definitive_treatment_rates]{ai_definitive_treatment_rates()}},
+\code{\link[=ai_treatment_evidence_register]{ai_treatment_evidence_register()}},
+\code{\link[=ai_treatment_rate_status]{ai_treatment_rate_status()}}
 }
 \concept{ai treatment}
 \concept{demand}

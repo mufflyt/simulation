@@ -48,9 +48,9 @@ Entrants are seeded from the cross-sectional risk at \code{entry_age} (low, sinc
 most disease develops later) and then evolve dynamically.
 }
 \seealso{
-Other dynamic open: 
-\code{\link{dmdm_population_audit}()},
-\code{\link{simulate_dmdm_open}()}
+Other dynamic open:
+\code{\link[=dmdm_population_audit]{dmdm_population_audit()}},
+\code{\link[=simulate_dmdm_open]{simulate_dmdm_open()}}
 }
 \concept{demand}
 \concept{dynamic open}

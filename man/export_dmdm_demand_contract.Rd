@@ -61,8 +61,8 @@ per-condition \code{dmdm_ui}/\code{dmdm_pop}/\code{dmdm_ai}, indexed to the base
 JSON provenance manifest.
 }
 \seealso{
-Other export demand contract: 
-\code{\link{export_hdmm_demand_contract}()}
+Other export demand contract:
+\code{\link[=export_hdmm_demand_contract]{export_hdmm_demand_contract()}}
 }
 \concept{export demand contract}
 \concept{reporting}

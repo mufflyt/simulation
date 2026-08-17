@@ -21,11 +21,11 @@ Standard error of a mean estimated from an observed annual series
 series_mean_se(c(50, 57, 53, 59, 59))
 }
 \seealso{
-Other parameter uncertainty: 
-\code{\link{assert_parameter_uncertainty}()},
-\code{\link{draw_supply_parameters}()},
-\code{\link{entrant_spec_from_series}()},
-\code{\link{supply_parameter_spec}()}
+Other parameter uncertainty:
+\code{\link[=assert_parameter_uncertainty]{assert_parameter_uncertainty()}},
+\code{\link[=draw_supply_parameters]{draw_supply_parameters()}},
+\code{\link[=entrant_spec_from_series]{entrant_spec_from_series()}},
+\code{\link[=supply_parameter_spec]{supply_parameter_spec()}}
 }
 \concept{calibration}
 \concept{parameter uncertainty}

@@ -36,11 +36,11 @@ refusal, which is the point: activating burnout / parental-leave /
 participation knobs makes a run uncalibrated.
 }
 \seealso{
-Other provider state machine: 
-\code{\link{career_departure_by_state}()},
-\code{\link{career_state_of}()},
-\code{\link{career_transition_registry}()},
-\code{\link{state_departure_hazard}()}
+Other provider state machine:
+\code{\link[=career_departure_by_state]{career_departure_by_state()}},
+\code{\link[=career_state_of]{career_state_of()}},
+\code{\link[=career_transition_registry]{career_transition_registry()}},
+\code{\link[=state_departure_hazard]{state_departure_hazard()}}
 }
 \concept{provider state machine}
 \concept{supply}

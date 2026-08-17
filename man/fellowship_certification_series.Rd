@@ -24,12 +24,12 @@ Named numeric vector of new certifications keyed by year.
 The cumulative certification series differenced into an annual flow.
 }
 \seealso{
-Other fellowship conversion: 
+Other fellowship conversion:
 \code{\link{FELLOWSHIP_DEFAULT_LAGS}},
 \code{\link{FELLOWSHIP_ROSTER_ABOG_COVERAGE}},
-\code{\link{fellowship_conversion_steady_state}()},
-\code{\link{fellowship_first_billing_series}()},
-\code{\link{fit_fellowship_conversion}()}
+\code{\link[=fellowship_conversion_steady_state]{fellowship_conversion_steady_state()}},
+\code{\link[=fellowship_first_billing_series]{fellowship_first_billing_series()}},
+\code{\link[=fit_fellowship_conversion]{fit_fellowship_conversion()}}
 }
 \concept{fellowship conversion}
 \concept{supply}

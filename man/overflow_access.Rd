@@ -74,11 +74,11 @@ neighbors <- tibble::tibble(from = c("A", "A", "B"), to = c("B", "C", "C"),
 overflow_access(catchments, neighbors)[, c("catchment", "spilled_out", "spilled_in")]
 }
 \seealso{
-Other access clearing: 
-\code{\link{catchment_neighbors_from_coords}()},
-\code{\link{clear_access}()},
-\code{\link{clear_access_trajectory}()},
-\code{\link{overflow_conservation}()}
+Other access clearing:
+\code{\link[=catchment_neighbors_from_coords]{catchment_neighbors_from_coords()}},
+\code{\link[=clear_access]{clear_access()}},
+\code{\link[=clear_access_trajectory]{clear_access_trajectory()}},
+\code{\link[=overflow_conservation]{overflow_conservation()}}
 }
 \concept{access clearing}
 \concept{geography}

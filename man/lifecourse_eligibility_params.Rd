@@ -18,10 +18,10 @@ unchanged. Pass to \code{\link[=simulate_lifecourse_demand]{simulate_lifecourse_
 gate treatment on medical eligibility.
 }
 \seealso{
-Other transition registry: 
-\code{\link{assert_publishable_demand_coefficients}()},
-\code{\link{demand_transition_registry}()},
-\code{\link{lifecourse_severity_params}()}
+Other transition registry:
+\code{\link[=assert_publishable_demand_coefficients]{assert_publishable_demand_coefficients()}},
+\code{\link[=demand_transition_registry]{demand_transition_registry()}},
+\code{\link[=lifecourse_severity_params]{lifecourse_severity_params()}}
 }
 \concept{demand}
 \concept{transition registry}

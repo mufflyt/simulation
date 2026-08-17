@@ -16,9 +16,9 @@ Tibble \code{demand_id} (GEOID), \code{population} (fem65), \code{lon}, \code{la
 Load the real tract demand denominator (female 65+, with centroids)
 }
 \seealso{
-Other spatial access data: 
-\code{\link{build_access_membership}()},
-\code{\link{load_provider_isochrones}()}
+Other spatial access data:
+\code{\link[=build_access_membership]{build_access_membership()}},
+\code{\link[=load_provider_isochrones]{load_provider_isochrones()}}
 }
 \concept{geography}
 \concept{spatial access data}

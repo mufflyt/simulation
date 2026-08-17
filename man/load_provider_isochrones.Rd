@@ -5,7 +5,7 @@
 \title{Load provider drive-time isochrone polygons (external artifact, fail-closed)}
 \usage{
 load_provider_isochrones(
-  artifacts_dir = Sys.getenv("ISOCHRONES_ARTIFACTS_DIR", ""),
+  artifacts_dir = isochrone_source_dir(),
   bands = c(30L, 60L, 120L, 180L)
 )
 }
@@ -25,9 +25,9 @@ directory (these are large Valhalla-produced artifacts, not vendored). Fails
 closed if the directory or files are absent. Requires \code{sf}.
 }
 \seealso{
-Other spatial access data: 
-\code{\link{build_access_membership}()},
-\code{\link{load_tract_demand}()}
+Other spatial access data:
+\code{\link[=build_access_membership]{build_access_membership()}},
+\code{\link[=load_tract_demand]{load_tract_demand()}}
 }
 \concept{geography}
 \concept{spatial access data}

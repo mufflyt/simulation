@@ -34,12 +34,12 @@ owns a 13-column projection contract that downstream consumers read through
 validated before anything downstream sees it.
 }
 \seealso{
-Other ssot: 
-\code{\link{assert_scenarios_registered}()},
-\code{\link{ssot_coverage_report}()},
-\code{\link{ssot_rurality}()},
-\code{\link{ssot_safe_divide}()},
-\code{\link{ssot_safe_percent}()}
+Other ssot:
+\code{\link[=assert_scenarios_registered]{assert_scenarios_registered()}},
+\code{\link[=ssot_coverage_report]{ssot_coverage_report()}},
+\code{\link[=ssot_rurality]{ssot_rurality()}},
+\code{\link[=ssot_safe_divide]{ssot_safe_divide()}},
+\code{\link[=ssot_safe_percent]{ssot_safe_percent()}}
 }
 \concept{core}
 \concept{ssot}

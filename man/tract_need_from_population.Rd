@@ -57,12 +57,12 @@ tract_need_from_population(tibble::tibble(
 ))
 }
 \seealso{
-Other demand: 
-\code{\link{accessible_need_vs_capacity}()},
-\code{\link{demand_by_travel_band}()},
-\code{\link{geographic_demand_summary}()},
-\code{\link{isochrone_demand_from_tracts}()},
-\code{\link{need_weighted_access}()}
+Other demand:
+\code{\link[=accessible_need_vs_capacity]{accessible_need_vs_capacity()}},
+\code{\link[=demand_by_travel_band]{demand_by_travel_band()}},
+\code{\link[=geographic_demand_summary]{geographic_demand_summary()}},
+\code{\link[=isochrone_demand_from_tracts]{isochrone_demand_from_tracts()}},
+\code{\link[=need_weighted_access]{need_weighted_access()}}
 }
 \concept{demand}
 \concept{geography}

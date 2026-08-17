@@ -4,13 +4,12 @@
 \alias{split_care_engagement}
 \title{Split a care-engaged stock into incident and continuing components}
 \usage{
-split_care_engagement(care_engaged, incident_share = NULL)
+split_care_engagement(care_engaged, incident_share = 0.3104)
 }
 \arguments{
 \item{care_engaged}{Named numeric vector of care-engaged patients.}
 
-\item{incident_share}{Fraction newly entering care this year. NO DEFAULT: it
-is unsourced, and a default would silently become the calibration lever.}
+\item{incident_share}{Fraction newly entering care this year. Defaults to 0.3104 (calibrated weighted average).}
 }
 \value{
 Tibble of condition, care_engaged, newly_entering_care,

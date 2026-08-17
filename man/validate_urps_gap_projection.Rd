@@ -18,9 +18,9 @@ validate_urps_gap_projection(x, mode = resolve_reproducibility_mode())
 Validate a gap projection data frame against the extended contract
 }
 \seealso{
-Other urps projection: 
-\code{\link{as_urps_gap_projection}()},
-\code{\link{gap_projections_all_scenarios}()}
+Other urps projection:
+\code{\link[=as_urps_gap_projection]{as_urps_gap_projection()}},
+\code{\link[=gap_projections_all_scenarios]{gap_projections_all_scenarios()}}
 }
 \concept{reporting}
 \concept{urps projection}

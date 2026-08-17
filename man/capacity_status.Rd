@@ -19,11 +19,11 @@ Status of the base-year capacity anchor
 capacity_status()
 }
 \seealso{
-Other roster capacity: 
-\code{\link{load_urps_roster}()},
-\code{\link{roster_workload_concentration}()},
-\code{\link{urps_capacity_survey_requirements}()},
-\code{\link{urps_provider_roster}()}
+Other roster capacity:
+\code{\link[=load_urps_roster]{load_urps_roster()}},
+\code{\link[=roster_workload_concentration]{roster_workload_concentration()}},
+\code{\link[=urps_capacity_survey_requirements]{urps_capacity_survey_requirements()}},
+\code{\link[=urps_provider_roster]{urps_provider_roster()}}
 }
 \concept{roster capacity}
 \concept{supply}

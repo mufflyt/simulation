@@ -44,11 +44,11 @@ admits few folds, and few folds cannot establish coverage however favourable
 they look; \code{\link[=assert_interval_coverage_publishable]{assert_interval_coverage_publishable()}} enforces that separately.
 }
 \seealso{
-Other entrant regime: 
-\code{\link{classify_certification_regimes}()},
-\code{\link{draw_entrant_paths}()},
-\code{\link{fit_entrant_regime_model}()},
-\code{\link{project_entrant_path}()}
+Other entrant regime:
+\code{\link[=classify_certification_regimes]{classify_certification_regimes()}},
+\code{\link[=draw_entrant_paths]{draw_entrant_paths()}},
+\code{\link[=fit_entrant_regime_model]{fit_entrant_regime_model()}},
+\code{\link[=project_entrant_path]{project_entrant_path()}}
 }
 \concept{entrant regime}
 \concept{supply}

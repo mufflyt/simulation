@@ -16,13 +16,13 @@ Tibble with physician, insurance, scenario, state and NPI.
 Parse the REDCap physician information field
 }
 \seealso{
-Other Lizeth access anchor: 
-\code{\link{build_lizeth_access_anchor}()},
-\code{\link{capacity_status_with_lizeth}()},
-\code{\link{estimate_lizeth_access_anchor}()},
-\code{\link{find_lizeth_redcap}()},
-\code{\link{lizeth_adequacy_evidence}()},
-\code{\link{prepare_lizeth_access}()}
+Other Lizeth access anchor:
+\code{\link[=build_lizeth_access_anchor]{build_lizeth_access_anchor()}},
+\code{\link[=capacity_status_with_lizeth]{capacity_status_with_lizeth()}},
+\code{\link[=estimate_lizeth_access_anchor]{estimate_lizeth_access_anchor()}},
+\code{\link[=find_lizeth_redcap]{find_lizeth_redcap()}},
+\code{\link[=lizeth_adequacy_evidence]{lizeth_adequacy_evidence()}},
+\code{\link[=prepare_lizeth_access]{prepare_lizeth_access()}}
 }
 \concept{Lizeth access anchor}
 \concept{calibration}

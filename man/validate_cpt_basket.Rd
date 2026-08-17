@@ -4,7 +4,7 @@
 \alias{validate_cpt_basket}
 \title{Validate that a CPT basket's mix weights sum to 1 per service}
 \usage{
-validate_cpt_basket(basket = URPS_CPT_BASKET, tol = 1e-08)
+validate_cpt_basket(basket = URPS_CPT_BASKET, tol = 0.00000001)
 }
 \arguments{
 \item{basket}{Service-to-CPT basket.}
@@ -18,7 +18,7 @@ validate_cpt_basket(basket = URPS_CPT_BASKET, tol = 1e-08)
 Validate that a CPT basket's mix weights sum to 1 per service
 }
 \seealso{
-Other cms rvu: 
+Other cms rvu:
 \code{\link{CMS_WORK_RVU}}
 }
 \concept{cms rvu}

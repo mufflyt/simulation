@@ -49,11 +49,11 @@ The sidecar is written after (and separately from) the payload so a crash
 mid-write leaves no sidecar -> the artifact is treated as absent on load.
 }
 \seealso{
-Other repro provenance: 
-\code{\link{read_artifact_with_provenance}()},
-\code{\link{resolve_reproducibility_mode}()},
-\code{\link{seed_microsimulation}()},
-\code{\link{with_preserved_rng}()}
+Other repro provenance:
+\code{\link[=read_artifact_with_provenance]{read_artifact_with_provenance()}},
+\code{\link[=resolve_reproducibility_mode]{resolve_reproducibility_mode()}},
+\code{\link[=seed_microsimulation]{seed_microsimulation()}},
+\code{\link[=with_preserved_rng]{with_preserved_rng()}}
 }
 \concept{core}
 \concept{repro provenance}

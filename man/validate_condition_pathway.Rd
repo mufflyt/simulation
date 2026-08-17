@@ -34,11 +34,11 @@ late and far from the cause.
 }
 }
 \seealso{
-Other condition service pathway: 
-\code{\link{condition_pathway_status}()},
-\code{\link{condition_service_pathway}()},
-\code{\link{pathway_service_volumes}()},
-\code{\link{pathway_stage_entrants}()}
+Other condition service pathway:
+\code{\link[=condition_pathway_status]{condition_pathway_status()}},
+\code{\link[=condition_service_pathway]{condition_service_pathway()}},
+\code{\link[=pathway_service_volumes]{pathway_service_volumes()}},
+\code{\link[=pathway_stage_entrants]{pathway_stage_entrants()}}
 }
 \concept{condition service pathway}
 \concept{demand}

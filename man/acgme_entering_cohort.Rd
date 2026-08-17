@@ -18,10 +18,10 @@ Both parent specialties are summed, because the certification series this is
 calibrated against (ABOG plus ABU) also spans both.
 }
 \seealso{
-Other acgme fellows: 
-\code{\link{acgme_urps_fellows}()},
-\code{\link{entrant_source_series}()},
-\code{\link{entrant_to_cert_ratio}()}
+Other acgme fellows:
+\code{\link[=acgme_urps_fellows]{acgme_urps_fellows()}},
+\code{\link[=entrant_source_series]{entrant_source_series()}},
+\code{\link[=entrant_to_cert_ratio]{entrant_to_cert_ratio()}}
 }
 \concept{acgme fellows}
 \concept{supply}

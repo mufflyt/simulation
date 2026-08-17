@@ -26,9 +26,9 @@ quantiles for prediction intervals (combine with a \code{rpois}/\code{rnbinom} d
 cell to add individual-level uncertainty on top of parameter uncertainty).
 }
 \seealso{
-Other utilization models: 
-\code{\link{fit_sling_rate_model}()},
-\code{\link{fit_visit_model}()}
+Other utilization models:
+\code{\link[=fit_sling_rate_model]{fit_sling_rate_model()}},
+\code{\link[=fit_visit_model]{fit_visit_model()}}
 }
 \concept{demand}
 \concept{utilization models}

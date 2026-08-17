@@ -24,11 +24,11 @@ series (verified: sha256 193aefef...), which is two places for one number to
 drift. Re-exported rather than left internal so that duplicate can be deleted.
 }
 \seealso{
-Other obstetric exposure: 
-\code{\link{cesarean_rate_for_year}()},
-\code{\link{cohort_vaginal_exposure}()},
-\code{\link{compute_demand_denominators_lifecourse}()},
-\code{\link{obstetric_exposure_multiplier}()}
+Other obstetric exposure:
+\code{\link[=cesarean_rate_for_year]{cesarean_rate_for_year()}},
+\code{\link[=cohort_vaginal_exposure]{cohort_vaginal_exposure()}},
+\code{\link[=compute_demand_denominators_lifecourse]{compute_demand_denominators_lifecourse()}},
+\code{\link[=obstetric_exposure_multiplier]{obstetric_exposure_multiplier()}}
 }
 \concept{demand}
 \concept{obstetric exposure}

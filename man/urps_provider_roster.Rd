@@ -24,11 +24,11 @@ information, and \code{\link[=validate_provider_roster]{validate_provider_roster
 not to be populated.
 }
 \seealso{
-Other roster capacity: 
-\code{\link{capacity_status}()},
-\code{\link{load_urps_roster}()},
-\code{\link{roster_workload_concentration}()},
-\code{\link{urps_capacity_survey_requirements}()}
+Other roster capacity:
+\code{\link[=capacity_status]{capacity_status()}},
+\code{\link[=load_urps_roster]{load_urps_roster()}},
+\code{\link[=roster_workload_concentration]{roster_workload_concentration()}},
+\code{\link[=urps_capacity_survey_requirements]{urps_capacity_survey_requirements()}}
 }
 \concept{roster capacity}
 \concept{supply}

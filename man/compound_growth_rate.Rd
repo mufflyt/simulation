@@ -18,10 +18,10 @@ Numeric annual growth rate.
 Compound annual growth rate between the endpoints of a series
 }
 \seealso{
-Other entrant trajectory: 
-\code{\link{entrant_trajectory}()},
-\code{\link{entrant_trajectory_scenarios}()},
-\code{\link{nrmp_growth_rates}()}
+Other entrant trajectory:
+\code{\link[=entrant_trajectory]{entrant_trajectory()}},
+\code{\link[=entrant_trajectory_scenarios]{entrant_trajectory_scenarios()}},
+\code{\link[=nrmp_growth_rates]{nrmp_growth_rates()}}
 }
 \concept{entrant trajectory}
 \concept{supply}

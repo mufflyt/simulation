@@ -51,8 +51,8 @@ chosen output, and the deficit definition. Reading the artifact back with any
 of those changed fails rather than returning a stale object.
 }
 \seealso{
-Other psa reporting: 
-\code{\link{psa_outcome_summary}()}
+Other psa reporting:
+\code{\link[=psa_outcome_summary]{psa_outcome_summary()}}
 }
 \concept{calibration}
 \concept{psa reporting}

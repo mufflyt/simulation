@@ -20,9 +20,9 @@ quantity that decides whether a reweighted trajectory may be read as a
 Census-consistent population.
 }
 \seealso{
-Other dynamic open: 
-\code{\link{dmdm_open_prevalence_trajectory}()},
-\code{\link{simulate_dmdm_open}()}
+Other dynamic open:
+\code{\link[=dmdm_open_prevalence_trajectory]{dmdm_open_prevalence_trajectory()}},
+\code{\link[=simulate_dmdm_open]{simulate_dmdm_open()}}
 }
 \concept{demand}
 \concept{dynamic open}

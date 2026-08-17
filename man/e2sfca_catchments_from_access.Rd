@@ -54,12 +54,12 @@ dropped by default (\code{drop_zero_demand = TRUE}): a zero-demand provider cann
 inform a congestion fit.
 }
 \seealso{
-Other isochrone access response: 
-\code{\link{capacity_status_with_isochrone_response}()},
-\code{\link{fit_decay_sigma}()},
-\code{\link{join_lizeth_to_catchments}()},
-\code{\link{lizeth_wait_response_loss}()},
-\code{\link{wait_response_region_holdout}()}
+Other isochrone access response:
+\code{\link[=capacity_status_with_isochrone_response]{capacity_status_with_isochrone_response()}},
+\code{\link[=fit_decay_sigma]{fit_decay_sigma()}},
+\code{\link[=join_lizeth_to_catchments]{join_lizeth_to_catchments()}},
+\code{\link[=lizeth_wait_response_loss]{lizeth_wait_response_loss()}},
+\code{\link[=wait_response_region_holdout]{wait_response_region_holdout()}}
 }
 \concept{calibration}
 \concept{isochrone access response}

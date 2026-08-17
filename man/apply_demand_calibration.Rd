@@ -22,9 +22,9 @@ evidence. Untouched rows keep \code{calibration_scalar = 1}, so the table record
 what was and was not calibrated.
 }
 \seealso{
-Other namcs demand: 
-\code{\link{namcs_demand_calibration}()},
-\code{\link{namcs_urps_visit_anchor}()}
+Other namcs demand:
+\code{\link[=namcs_demand_calibration]{namcs_demand_calibration()}},
+\code{\link[=namcs_urps_visit_anchor]{namcs_urps_visit_anchor()}}
 }
 \concept{calibration}
 \concept{namcs demand}

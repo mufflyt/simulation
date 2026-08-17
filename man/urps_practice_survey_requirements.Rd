@@ -19,11 +19,11 @@ variable serves, so the questionnaire can be read as one document while each
 status function reports only what bears on it.
 }
 \seealso{
-Other practice survey: 
-\code{\link{fte_curve_gradient_leverage}()},
-\code{\link{fte_curve_status}()},
-\code{\link{geographic_access_status}()},
-\code{\link{unresolved_calibration_items}()}
+Other practice survey:
+\code{\link[=fte_curve_gradient_leverage]{fte_curve_gradient_leverage()}},
+\code{\link[=fte_curve_status]{fte_curve_status()}},
+\code{\link[=geographic_access_status]{geographic_access_status()}},
+\code{\link[=unresolved_calibration_items]{unresolved_calibration_items()}}
 }
 \concept{data}
 \concept{practice survey}

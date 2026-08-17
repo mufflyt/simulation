@@ -49,9 +49,9 @@ List with per-iteration trajectories and the arm's settings.
 Run one back-test arm
 }
 \seealso{
-Other backtest run: 
-\code{\link{run_backtest}()},
-\code{\link{score_backtest_arm}()}
+Other backtest run:
+\code{\link[=run_backtest]{run_backtest()}},
+\code{\link[=score_backtest_arm]{score_backtest_arm()}}
 }
 \concept{backtest run}
 \concept{validation}

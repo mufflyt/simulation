@@ -50,8 +50,9 @@ benchmark ceiling. That tension is evidence about the service-volume basket,
 not about the delegation matrix.
 }
 \seealso{
-Other delegation evidence: 
-\code{\link{medicare_delegation_corroboration}()}
+Other delegation evidence:
+\code{\link[=apply_app_delegation_scenario]{apply_app_delegation_scenario()}},
+\code{\link[=medicare_delegation_corroboration]{medicare_delegation_corroboration()}}
 }
 \concept{delegation evidence}
 \concept{supply}

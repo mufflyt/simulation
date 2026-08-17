@@ -8,7 +8,7 @@ lifecourse_demand_trajectory_ci(
   pop_by_age_year,
   years = sort(unique(pop_by_age_year$year)),
   scenario = "baseline",
-  n = 1e+05,
+  n = 100000,
   n_draws = 200L,
   probs = c(0.025, 0.5, 0.975),
   seed = NULL,
@@ -53,9 +53,9 @@ and returns the national demand summary with median and lower/upper prediction
 bounds. The bounds combine parameter uncertainty with cohort sampling noise.
 }
 \seealso{
-Other lifecourse uncertainty: 
-\code{\link{assert_interval_nondegenerate}()},
-\code{\link{lifecourse_param_uncertainty}()}
+Other lifecourse uncertainty:
+\code{\link[=assert_interval_nondegenerate]{assert_interval_nondegenerate()}},
+\code{\link[=lifecourse_param_uncertainty]{lifecourse_param_uncertainty()}}
 }
 \concept{demand}
 \concept{lifecourse uncertainty}
