@@ -32,6 +32,33 @@
 # Named with a leading dot because it is internal to this file; it exists so a
 # malformed artifact is refused by name rather than surfacing later as a
 # confusing NULL-column subscript error.
+# THE CHIA DATABASE PATH IS RESOLVED, NOT HARDCODED.
+#
+# Four call sites below carried "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb"
+# as a literal. The same physical drive appears in this repository under three
+# names (MufflySamsung, MufflySamsung 1, MufflySamsung 1 1) because macOS
+# appends a counter when remounting over a stale mount, so any single literal is
+# wrong on some boot.
+#
+# That matters more than usual here: DuckDB CREATES a database when asked to
+# connect to a path that does not exist. A stale literal therefore does not
+# error -- it yields an EMPTY database, and every transported count silently
+# becomes zero. researchpaths::resolve_duckdb() globs the volume, validates
+# existence and size, refuses an ambiguous match, honours an explicit override,
+# and never opens or creates anything while discovering.
+.chia_duckdb_default <- function() {
+  if (!requireNamespace("researchpaths", quietly = TRUE)) return(NA_character_)
+  tryCatch(
+    researchpaths::resolve_duckdb(
+      relative_path  = file.path("DuckDB", "chia_cadr.duckdb"),
+      volume_pattern = "MufflySamsung*",
+      env_var        = "URPS_CHIA_DUCKDB",
+      quiet          = TRUE
+    ),
+    error = function(e) NA_character_
+  )
+}
+
 .require_columns <- function(data, required, what) {
   missing <- base::setdiff(required, base::names(data))
   if (base::length(missing) > 0L) {
@@ -56,7 +83,7 @@
 #' @return Tibble: age band, cases, women, rate per 100,000.
 #' @export
 chia_ma_age_specific_rates <- function(
-    db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+    db = .chia_duckdb_default(),
     year = 2018L,
     family = c("pop_hysterectomy", "all_hysterectomy", "sui_sling"),
     min_cases = 50L) {
@@ -227,7 +254,7 @@ us_female_population_bands <- function(
 #' @return Named list: rates, us_population, factors, and estimate.
 #' @export
 transport_chia_to_national <- function(
-    db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+    db = .chia_duckdb_default(),
     chia_year = 2018L,
     target_year = 2023L,
     inpatient_share = NULL,
@@ -538,7 +565,7 @@ cms_puf_national_volume <- function(
 #' @return Tibble: age band, n, share; attribute "p_65plus".
 #' @export
 chia_sling_age_distribution <- function(
-    db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+    db = .chia_duckdb_default(),
     cpt = c("57288", "51992"),
     year_start = 2013L, year_end = 2018L) {
 
@@ -591,7 +618,7 @@ chia_sling_age_distribution <- function(
 #' @export
 transport_sling_via_medicare <- function(
     hcpcs = "57288",
-    db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+    db = .chia_duckdb_default(),
     puf_path = base::file.path("data-raw", "cms_psps",
                                "MUP_PHY_R26_P05_V10_D24_Geo.csv"),
     ffs_share_of_medicare = NULL,

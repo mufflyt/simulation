@@ -19,7 +19,16 @@ pkgload::load_all(root, quiet = TRUE)
 
 cache_path <- Sys.getenv(
   "MEDICARE_SLING_CACHE",
-  "/Volumes/MufflySamsung 1/sling-volume-patterns/data/cache/provider_volume.rds"
+  # Resolved, not hardcoded: the volume name varies across remounts
+  # (MufflySamsung / MufflySamsung 1 / MufflySamsung 1 1).
+  if (requireNamespace("researchpaths", quietly = TRUE)) {
+    researchpaths::resolve_file_on_volume(
+      relative_path  = file.path("sling-volume-patterns", "data", "cache",
+                                 "provider_volume.rds"),
+      volume_pattern = "MufflySamsung*",
+      env_var        = "URPS_SLING_VOLUME_CACHE"
+    )
+  } else NA_character_
 )
 output_path <- Sys.getenv(
   "MEDICARE_SLING_FIGURE",

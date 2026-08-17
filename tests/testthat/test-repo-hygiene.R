@@ -95,7 +95,15 @@ test_that("no source file hardcodes a personal filesystem path", {
     x <- readLines(f, warn = FALSE)
     # Ignore roxygen and plain comments: documenting a historical path is fine.
     code <- x[!grepl("^\\s*#", x)]
-    hits <- grep("/Users/|~/Dropbox|C:\\\\Users", code, value = TRUE)
+    # /Volumes/ WAS MISSING, and that is how a dead path reached library code.
+    # ENTRY_PANEL_DB_DEFAULT held "/Volumes/MufflySamsung 1 1/..." -- a macOS
+    # remount artifact (the counter is appended when a volume is remounted over
+    # a stale mount). That directory did not exist, and DuckDB CREATES a
+    # database when asked to connect to a missing path, so the failure mode was
+    # not an error: it was an empty database and zero counts everywhere
+    # downstream. Removable-drive paths must route through
+    # researchpaths::resolve_duckdb() or external_path().
+    hits <- grep("/Users/|~/Dropbox|C:\\\\Users|/Volumes/", code, value = TRUE)
     if (length(hits)) bad <- c(bad, sprintf("%s: %s", basename(f), hits[1]))
   }
   expect_equal(bad, character(0),
