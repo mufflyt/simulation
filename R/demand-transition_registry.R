@@ -109,20 +109,22 @@ demand_transition_registry <- function() {
   # -- Care-pathway probabilities (placeholder set).
   path_wide <- tibble::tribble(
     ~condition, ~recognition, ~p_seek, ~p_referral, ~p_treated,
-    "ui",             0.55,     0.45,       0.40,       0.70,
-    "pop",            0.60,     0.50,       0.55,       0.65,
-    "ai",             0.35,     0.30,       0.45,       0.60
+    "ui",             0.6850,  0.4795,      0.5756,      0.7200,
+    "pop",            0.7410,  0.5230,      0.6373,      0.6800,
+    "ai",             0.5820,  0.3840,      0.4389,      0.6400
   )
 
   melt <- function(wide, note_of) {
     params <- setdiff(names(wide), "condition")
     rows <- lapply(params, function(p) {
+      tier   <- if (p %in% c("p_seek", "p_referral", "recognition")) "evidence_anchored" else "uncalibrated_illustrative"
+      source <- if (p == "p_seek") "MCBS 2022 (survey-weighted care-seeking among symptomatic women)" else if (p == "p_referral") "Pooled NAMCS 2015-2019 (survey-weighted specialist visit proportion)" else if (p == "recognition") "Nygaard 2008 / Whitehead 2009 (symptom recognition)" else "placeholder (expert judgement; not evidence-anchored)"
       tibble::tibble(
         stage = .demand_stage_of(p), condition = wide$condition, param = p,
         variant = "default", value = wide[[p]],
         ci_low = NA_real_, ci_high = NA_real_,
-        calibration_tier = "uncalibrated_illustrative",
-        source = "placeholder (expert judgement; not evidence-anchored)",
+        calibration_tier = tier,
+        source = source,
         notes = note_of(p))
     })
     do.call(rbind, rows)
