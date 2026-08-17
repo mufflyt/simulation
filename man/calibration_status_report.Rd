@@ -15,6 +15,7 @@ Calibration status of every model input, in one table
 \seealso{
 Other workload to fte:
 \code{\link{URPS_DELEGATION_MATRIX}},
+\code{\link{URPS_SURGICAL_SPECIALTY_BENCHMARKS}},
 \code{\link{WRVU_PER_FTE_BENCHMARK}},
 \code{\link[=allocate_fte_by_setting]{allocate_fte_by_setting()}},
 \code{\link[=apportion_service_volume]{apportion_service_volume()}},
@@ -26,6 +27,7 @@ Other workload to fte:
 \code{\link[=convert_workload_to_fte]{convert_workload_to_fte()}},
 \code{\link[=cpt_setting_mix]{cpt_setting_mix()}},
 \code{\link[=implied_urps_share]{implied_urps_share()}},
+\code{\link[=predict_urps_clinical_hours]{predict_urps_clinical_hours()}},
 \code{\link[=rescale_delegation_to_capacity]{rescale_delegation_to_capacity()}},
 \code{\link[=service_volume_to_wrvu]{service_volume_to_wrvu()}},
 \code{\link[=urps_service_workload]{urps_service_workload()}},
