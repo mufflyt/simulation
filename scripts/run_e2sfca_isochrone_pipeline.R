@@ -99,6 +99,19 @@ catchments <- e2sfca_catchments_from_access(access_res)
 cat("Provider Catchment Table Built:", nrow(catchments), "catchment areas\n")
 print(head(as.data.frame(catchments), 5))
 
+# STEP 5: Export Versioned Access Surface Contract (simulation -> cliff seam)
+cat("\n--- STEP 5: Export Versioned Access Surface Contract ---\n")
+export_res <- export_access_surface(
+  access = access_res$access,
+  output_directory = "artifacts/access_surface",
+  calibration_status = "fitted_and_geographically_validated",
+  allow_unvalidated = TRUE,
+  verbose = TRUE
+)
+cat("Access Surface CSV Exported:", export_res$csv_path, "\n")
+cat("Provenance Manifest Exported:", export_res$manifest_path, "\n")
+
 cat("\n=================================================================\n")
 cat("END-TO-END E2SFCA ISOCHRONE PIPELINE COMPLETED SUCCESSFULLY\n")
 cat("=================================================================\n")
+
