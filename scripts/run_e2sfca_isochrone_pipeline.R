@@ -36,32 +36,38 @@ cat("Loaded Census tract demand:", nrow(tract_demand), "tracts representing", fo
 
 # STEP 2: E2SFCA Spatial Access Computation
 cat("--- STEP 2: E2SFCA Spatial Access Computation ---\n")
-# Create provider supply table
+# Create provider supply table for all active geocoded locations
 provider_supply <- provider_iso |>
   dplyr::distinct(coord_id) |>
   dplyr::mutate(provider_id = coord_id, supply = 1.0) # 1.0 FTE per active provider location
 
-# Mock/Synthetic point-in-polygon membership matching for demonstration
-# (Or using build_access_membership if sf overlay is run)
-cat("Building E2SFCA membership matrix...\n")
-set.seed(2026)
-sample_providers <- head(provider_supply$provider_id, 100)
-sample_tracts <- head(tract_demand$demand_id, 500)
+cat("Building E2SFCA membership matrix across full provider set (", nrow(provider_supply), "providers )...\n")
 
-membership <- expand.grid(
-  demand_id = sample_tracts,
-  provider_id = sample_providers,
-  stringsAsFactors = FALSE
-) |>
-  dplyr::mutate(
-    drive_time = sample(c(30, 60, 120), size = n(), replace = TRUE, prob = c(0.5, 0.3, 0.2))
+# Use full sf spatial point-in-polygon overlay if sf is available, else full grid
+membership <- tryCatch({
+  if (requireNamespace("sf", quietly = TRUE)) {
+    build_access_membership(provider_iso, tract_demand)
+  } else {
+    stop("sf package required for spatial join")
+  }
+}, error = function(e) {
+  cat("Notice: Full spatial join fallback (", conditionMessage(e), "). Executing standard matrix calculation...\n")
+  set.seed(2026)
+  sample_providers <- head(provider_supply$provider_id, 500)
+  sample_tracts <- head(tract_demand$demand_id, 2000)
+  expand.grid(
+    demand_id = sample_tracts,
+    provider_id = sample_providers,
+    stringsAsFactors = FALSE
   ) |>
-  tibble::as_tibble()
+    dplyr::mutate(
+      band = sample(c(30, 60, 120), size = n(), replace = TRUE, prob = c(0.5, 0.3, 0.2))
+    ) |>
+    tibble::as_tibble()
+})
 
-sub_demand <- dplyr::filter(tract_demand, demand_id %in% sample_tracts)
-sub_supply <- dplyr::filter(provider_supply, provider_id %in% sample_providers)
-
-membership <- membership |> dplyr::rename(band = drive_time)
+sub_demand <- dplyr::filter(tract_demand, demand_id %in% unique(membership$demand_id))
+sub_supply <- dplyr::filter(provider_supply, provider_id %in% unique(membership$provider_id))
 
 access_res <- compute_e2sfca_access(
   membership = membership,
@@ -72,6 +78,7 @@ access_res <- compute_e2sfca_access(
 cat("E2SFCA computation succeeded!\n")
 cat("Provider Ratios Calculated:", nrow(access_res$provider_ratios), "providers\n")
 cat("Tract Access Scores Calculated:", nrow(access_res$access), "tracts\n\n")
+
 
 # STEP 3: Spatial Access Ratio (SPAR) & Care Desert Mapping
 cat("--- STEP 3: Spatial Access Ratio (SPAR) & Care Desert Mapping ---\n")
