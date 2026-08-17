@@ -116,6 +116,10 @@ build_access_membership <- function(iso_sf, tracts,
   }
   assertthat::assert_that(all(c(provider_col, band_col) %in% names(iso_sf)))
 
+  old_s2 <- sf::sf_use_s2()
+  on.exit(sf::sf_use_s2(old_s2), add = TRUE)
+  sf::sf_use_s2(FALSE)
+
   pts <- if (inherits(tracts, "sf")) {
     assertthat::assert_that("demand_id" %in% names(tracts))
     tracts
@@ -126,12 +130,9 @@ build_access_membership <- function(iso_sf, tracts,
   # Align CRS, repair invalid geometries, and assign each point the attributes of any polygon containing it.
   iso_al <- sf::st_transform(iso_sf, sf::st_crs(pts))
 
-  old_s2 <- sf::sf_use_s2()
-  on.exit(sf::sf_use_s2(old_s2), add = TRUE)
-  sf::sf_use_s2(FALSE)
-
   iso_valid <- tryCatch(sf::st_make_valid(iso_al), error = function(e) iso_al)
   joined <- sf::st_join(pts, iso_valid[c(provider_col, band_col)], join = sf::st_within)
+
 
 
   out <- sf::st_drop_geometry(joined)
