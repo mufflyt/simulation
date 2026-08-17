@@ -10,7 +10,7 @@
 #
 #   * NAMCS 2019 (visit-level): 8,250 sampled office visits -> national totals
 #     via PATWT patient weights.  Identifies URPS visits by ICD-10-CM code.
-#   * BRFSS 2023 (person-level): 229,541 women 18+ -> population denominators
+#   * BRFSS 2024 (person-level): 240,183 women 18+ -> population denominators
 #     by demographic stratum (age x race/eth x insurance).
 #
 # Rate estimation: visits_weighted[stratum] / population_weighted[stratum]
@@ -27,9 +27,14 @@
 #   IHS Markit (2020) Health Workforce Microsimulation Model v5.19.20, section HDMM.
 #   Dall et al. (2013) Health Affairs 32(11):1993-2000.
 
-# ---- URPS ICD-10-CM code prefixes -------------------------------------------
+# ---- URPS diagnosis code prefixes (ICD-10 and ICD-9) -----------------------
+#
+# NAMCS used ICD-9-CM through 2015; ICD-10-CM from 2016 onward.
+# flag_urps_visits() auto-detects the coding system per visit from the
+# first character of DIAG1 (ICD-10 starts with a letter; ICD-9 starts with
+# a digit or "V"/"E").
 
-#' ICD-10-CM prefixes defining URPS conditions in NAMCS
+#' ICD-10-CM prefixes defining URPS conditions in NAMCS (2016+)
 #'
 #' Covers stress, urgency, and mixed urinary incontinence; pelvic organ
 #' prolapse; unspecified incontinence; and vault prolapse after hysterectomy.
@@ -43,6 +48,18 @@ URPS_ICD10_PREFIXES <- c(
   "R32",   # Unspecified urinary incontinence
   "N993",  # Prolapse of vaginal vault after hysterectomy
   "N994"   # Postprocedural pelvic peritoneal adhesions
+)
+
+#' ICD-9-CM prefixes defining URPS conditions in NAMCS (2015 and earlier)
+#' @export
+URPS_ICD9_PREFIXES <- c(
+  "6256",  # Stress incontinence, female
+  "618",   # Genital prolapse (618.0-618.9: cystocele, rectocele, uterine prolapse)
+  "5964",  # Atony of bladder / overactive bladder
+  "59651", # Hypertonicity of bladder
+  "5965",  # Other functional disorders of bladder
+  "7883",  # Urinary incontinence (788.30-788.39: all subtypes)
+  "59982"  # Intrinsic (urethral) sphincter deficiency
 )
 
 # ---- Age band mapping -------------------------------------------------------
@@ -145,30 +162,73 @@ load_namcs_2019 <- function(path = "data-raw/namcs/namcs2019_clean.rds") {
 
 # ---- Visit filtering --------------------------------------------------------
 
-#' Flag visits whose ICD-10 diagnoses match URPS condition prefixes
+#' Load the cleaned pooled NAMCS file (2015, 2016, 2018, 2019)
+#'
+#' Reads the RDS produced by `data-raw/namcs/02-namcs_multiyear_acquire.R`.
+#' The pooled file has a `namcs_year` column; 2015 uses ICD-9-CM codes and
+#' 2016+ use ICD-10-CM codes.  [flag_urps_visits()] handles both automatically.
+#'
+#' @param path Path to the pooled RDS file.
+#' @return Tibble with 59,700 rows (4 years combined).
+#' @export
+load_namcs_pooled <- function(path = "data-raw/namcs/namcs_pooled_2015_2019.rds") {
+  if (!file.exists(path)) {
+    stop(
+      "NAMCS pooled file not found at '", path, "'.\n",
+      "Run data-raw/namcs/02-namcs_multiyear_acquire.R to create it."
+    )
+  }
+  readRDS(path)
+}
+
+#' Flag URPS visits in NAMCS data, supporting both ICD-9 (2015) and ICD-10 (2016+)
 #'
 #' A visit is flagged when ANY of DIAG1, DIAG2, or DIAG3 starts with a prefix
-#' in [URPS_ICD10_PREFIXES].
+#' in the appropriate code set.  Coding system is determined per-visit from the
+#' `YEAR` or `namcs_year` column (≤ 2015 → ICD-9-CM; ≥ 2016 → ICD-10-CM).
+#' If neither year column is present, ICD-10 prefixes are used throughout.
 #'
-#' @param namcs Tibble from [load_namcs_2019()].
-#' @param prefixes Character vector of ICD-10-CM prefixes.
+#' @param namcs Tibble from [load_namcs_2019()] or [load_namcs_pooled()].
+#' @param icd10_prefixes ICD-10-CM prefix vector (default [URPS_ICD10_PREFIXES]).
+#' @param icd9_prefixes  ICD-9-CM prefix vector (default [URPS_ICD9_PREFIXES]).
 #' @return `namcs` with logical column `is_urps`.
 #' @family namcs visit equations
 #' @concept demand
 #' @export
 flag_urps_visits <- function(namcs,
-                             prefixes = URPS_ICD10_PREFIXES) {
+                             icd10_prefixes = URPS_ICD10_PREFIXES,
+                             icd9_prefixes  = URPS_ICD9_PREFIXES) {
   assertthat::assert_that(all(c("DIAG1", "DIAG2", "DIAG3") %in% names(namcs)))
 
   match_any <- function(code, pref) {
     vapply(code, function(x) any(startsWith(x, pref)), logical(1))
   }
-  namcs |>
-    dplyr::mutate(
-      is_urps = match_any(.data$DIAG1, prefixes) |
-                match_any(.data$DIAG2, prefixes) |
-                match_any(.data$DIAG3, prefixes)
-    )
+
+  yr_col <- intersect(c("YEAR", "namcs_year"), names(namcs))[1]
+
+  if (!is.na(yr_col)) {
+    namcs |>
+      dplyr::mutate(
+        .icd9 = .data[[yr_col]] <= 2015L,
+        is_urps = dplyr::if_else(
+          .data$.icd9,
+          match_any(.data$DIAG1, icd9_prefixes)  |
+            match_any(.data$DIAG2, icd9_prefixes)  |
+            match_any(.data$DIAG3, icd9_prefixes),
+          match_any(.data$DIAG1, icd10_prefixes) |
+            match_any(.data$DIAG2, icd10_prefixes) |
+            match_any(.data$DIAG3, icd10_prefixes)
+        )
+      ) |>
+      dplyr::select(-".icd9")
+  } else {
+    namcs |>
+      dplyr::mutate(
+        is_urps = match_any(.data$DIAG1, icd10_prefixes) |
+                  match_any(.data$DIAG2, icd10_prefixes) |
+                  match_any(.data$DIAG3, icd10_prefixes)
+      )
+  }
 }
 
 # ---- Weighted stratum estimates ---------------------------------------------
@@ -221,19 +281,22 @@ namcs_urps_stratum_visits <- function(namcs) {
 
 #' Compute BRFSS population counts by stratum (denominators for visit rates)
 #'
-#' Uses BRFSS 2023 survey weights (`_LLCPWT`) to estimate the US civilian
+#' Uses BRFSS 2024 survey weights (`_LLCPWT`) to estimate the US civilian
 #' non-institutionalized adult female population by demographic stratum,
 #' matching the NAMCS strata produced by [namcs_urps_stratum_visits()].
 #'
-#' @param brfss Tibble from `data-raw/brfss/brfss_2023_women18plus.rds`.
-#'   Must contain `_AGEG5YR`, `_IMPRACE`, `_HLTHPL1`, `_LLCPWT`.
+#' @param brfss Tibble from `data-raw/brfss/brfss_2024_women18plus.rds`.
+#'   Must contain `_AGEG5YR`, `_IMPRACE`, `_HLTHPL` (canonical; was `_HLTHPL1`
+#'   in 2023), `_LLCPWT`.
 #' @return Tibble with `age_band`, `sex`, `race_eth`, `insurance_2tier`,
 #'   `pop_weighted` (BRFSS-estimated population).
 #' @family namcs visit equations
 #' @concept demand
 #' @export
 brfss_population_by_stratum <- function(brfss) {
-  needed <- c("_AGEG5YR", "_IMPRACE", "_HLTHPL1", "_LLCPWT")
+  # Accept both 2024 canonical (_HLTHPL) and 2023 legacy (_HLTHPL1) names.
+  hlthpl_col <- if ("_HLTHPL" %in% names(brfss)) "_HLTHPL" else "_HLTHPL1"
+  needed <- c("_AGEG5YR", "_IMPRACE", "_LLCPWT")
   assertthat::assert_that(all(needed %in% names(brfss)),
                           msg = paste("BRFSS missing:", paste(setdiff(needed, names(brfss)), collapse = ", ")))
 
@@ -252,7 +315,7 @@ brfss_population_by_stratum <- function(brfss) {
     age_band        = age_band,
     sex             = "Female",
     race_eth        = .brfss_imprace_label(brfss[["_IMPRACE"]]),
-    insurance_2tier = .brfss_insurance_tier(brfss[["_HLTHPL1"]]),
+    insurance_2tier = .brfss_insurance_tier(brfss[[hlthpl_col]]),
     wt              = brfss[["_LLCPWT"]]
   ) |>
     dplyr::filter(!is.na(.data$age_band),
@@ -426,18 +489,34 @@ compute_namcs_demand_estimand <- function(pop_projection,
 #' One-call wrapper that loads NAMCS, flags URPS visits, computes visit rates,
 #' fits the log-linear model, and applies it to a population projection.
 #'
+#' Prefers the pooled 2015-2019 NAMCS file when available (more URPS visits for
+#' women 65+; ~6× the sample vs 2019 alone).  Falls back to NAMCS 2019 only.
+#' ICD-9/ICD-10 coding is handled automatically by [flag_urps_visits()].
+#'
 #' @param pop_projection Tibble as described in [compute_namcs_demand_estimand()].
-#' @param namcs_path Path to cleaned NAMCS 2019 RDS file.
-#' @param brfss_path Path to BRFSS 2023 women 18+ RDS file.
+#' @param namcs_path Path to NAMCS RDS file.  Default: pooled 2015-2019 file;
+#'   falls back to 2019-only if the pooled file is absent.
+#' @param brfss_path Path to BRFSS women 18+ RDS file.
 #' @inheritParams compute_namcs_demand_estimand
 #' @return List with `model`, `rate_table`, `estimand` (tibble).
 #' @keywords internal
 build_d5_namcs_estimand <- function(pop_projection,
-                                    namcs_path    = "data-raw/namcs/namcs2019_clean.rds",
-                                    brfss_path    = "data-raw/brfss/brfss_2023_women18plus.rds",
+                                    namcs_path    = NULL,
+                                    brfss_path    = "data-raw/brfss/brfss_2024_women18plus.rds",
                                     visits_per_fte = 2800,
                                     fte_fraction   = 0.35) {
-  namcs <- load_namcs_2019(namcs_path)
+  pooled_path <- "data-raw/namcs/namcs_pooled_2015_2019.rds"
+  single_path <- "data-raw/namcs/namcs2019_clean.rds"
+
+  if (is.null(namcs_path)) {
+    namcs_path <- if (file.exists(pooled_path)) pooled_path else single_path
+  }
+
+  namcs <- if (grepl("pooled", namcs_path, fixed = TRUE)) {
+    load_namcs_pooled(namcs_path)
+  } else {
+    load_namcs_2019(namcs_path)
+  }
   namcs <- flag_urps_visits(namcs)
 
   stratum_visits <- namcs_urps_stratum_visits(namcs)

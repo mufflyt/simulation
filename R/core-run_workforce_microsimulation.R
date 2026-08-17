@@ -238,6 +238,15 @@ example_capacity_survey <- function() {
 #'   `demand_long` and flows through concordance assessment alongside D1-D3.
 #'   Requires that [brfss_pfd_prevalence_for_demand_bands()] is available (i.e.
 #'   that R/data-urps_population.R is loaded).
+#' @param d5_estimand Optional precomputed D5 tibble from
+#'   `build_d5_namcs_estimand()$estimand` (NAMCS visit-rate demand, pooled
+#'   2015-2019 with ICD-9/ICD-10 coding).  Must have columns `year`,
+#'   `estimand`, `demand_visits`.  When non-NULL, appended to `demand_long`
+#'   (as `demand_cases = demand_visits`) for concordance assessment.
+#' @param d6_estimand Optional precomputed D6 tibble from
+#'   `build_d6_nhanes_estimand()$estimand` (NHANES UI prevalence × care-seeking
+#'   demand).  Must have columns `year`, `estimand`, `demand_visits`.
+#'   When non-NULL, appended to `demand_long` for concordance assessment.
 #' @param prevention_scenario Character key in [URPS_PREVENTION_SCENARIOS], or
 #'   `NULL` (default). When non-NULL, service volumes are adjusted by
 #'   [apply_named_prevention_scenario()] before [convert_workload_to_fte()],
@@ -300,6 +309,8 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
                                           parameter_spec = NULL,
                                           allow_analogy = FALSE,
                                           brfss_cells = NULL,
+                                          d5_estimand = NULL,
+                                          d6_estimand = NULL,
                                           prevention_scenario = NULL,
                                           setting_scenario = NULL,
                                           output_dir = NULL,
@@ -543,6 +554,61 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       if (verbose) {
         d4_2025 <- d4$demand_cases[d4$year == min(years)]
         .msg_info(sprintf("  D4 (BRFSS UI): %.0f cases in %d", d4_2025[1], min(years)))
+      }
+    }
+  }
+
+  # D5: NAMCS visit-rate demand (pooled 2015-2019, ICD-9/ICD-10 dual-coded).
+  # User supplies a precomputed estimand tibble from build_d5_namcs_estimand().
+  if (!is.null(d5_estimand)) {
+    d5 <- tryCatch({
+      assertthat::assert_that(
+        is.data.frame(d5_estimand),
+        all(c("year", "estimand", "demand_visits") %in% names(d5_estimand))
+      )
+      d5_estimand |>
+        dplyr::mutate(
+          demand_cases = .data$demand_visits,
+          label = "NAMCS visit-rate demand (pooled 2015-2019)"
+        ) |>
+        dplyr::filter(.data$year %in% years) |>
+        dplyr::select("year", "estimand", "label", "demand_cases")
+    }, error = function(e) {
+      .msg_warn("D5 NAMCS estimand failed (", conditionMessage(e), "); skipping")
+      NULL
+    })
+    if (!is.null(d5)) {
+      demand_long <- dplyr::bind_rows(demand_long, d5)
+      if (verbose) {
+        d5_2025 <- d5$demand_cases[d5$year == min(years)]
+        .msg_info(sprintf("  D5 (NAMCS visits): %.0f visits in %d", d5_2025[1], min(years)))
+      }
+    }
+  }
+
+  # D6: NHANES prevalence-based demand.
+  if (!is.null(d6_estimand)) {
+    d6 <- tryCatch({
+      assertthat::assert_that(
+        is.data.frame(d6_estimand),
+        all(c("year", "estimand", "demand_visits") %in% names(d6_estimand))
+      )
+      d6_estimand |>
+        dplyr::mutate(
+          demand_cases = .data$demand_visits,
+          label = "NHANES UI prevalence × care-seeking demand"
+        ) |>
+        dplyr::filter(.data$year %in% years) |>
+        dplyr::select("year", "estimand", "label", "demand_cases")
+    }, error = function(e) {
+      .msg_warn("D6 NHANES estimand failed (", conditionMessage(e), "); skipping")
+      NULL
+    })
+    if (!is.null(d6)) {
+      demand_long <- dplyr::bind_rows(demand_long, d6)
+      if (verbose) {
+        d6_2025 <- d6$demand_cases[d6$year == min(years)]
+        .msg_info(sprintf("  D6 (NHANES UI): %.0f cases in %d", d6_2025[1], min(years)))
       }
     }
   }
