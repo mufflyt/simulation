@@ -44,6 +44,8 @@
 # `add a row` is the whole cost of a new collision. Do not widen a
 # classification to make one fit.
 fn,sibling,classification,note
+.assert_required_columns,isochrones,utility_name_only,"The name appears in isochrones only inside roxygen and comments describing a validation concept; there is no competing function definition. Generic helper name, no shared implementation to reconcile."
+.fmt_n,mysterycall,stronger_here,"Both format an integer-like value with big.mark. The sibling coerces via as.integer(), which returns NA above 2^31 -- the same overflow class that breaks researchpaths on an 83.7 GB file size. Ours formats the numeric directly and disables scientific notation, so large counts survive."
 .obstetric_extdata,mufflyaccess,unexamined,"obstetric-exposure family; implementations not opened"
 annual_trend,mufflyaccess,stronger_here,"identical save one token: NA_real_ here vs bare logical NA upstream, so this one is type-stable on short series"
 calculate_proportion_ci,cliff,equivalent,"Wilson score interval, same algebra"

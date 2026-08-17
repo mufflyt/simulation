@@ -38,9 +38,12 @@ test_that("calibration adjusts ONLY the placeholder coefficients", {
 })
 
 test_that("POP prevalence comes down by roughly the observed factor", {
+  # `lifecourse_risk_params()` is NOW the anchored set, so the before/after
+  # comparison must start from the SUPERSEDED placeholders, which is exactly
+  # why they were kept reachable rather than deleted.
   ch <- .cal_cohort()
-  before <- lifecourse_risk_params()
-  after <- calibrate_lifecourse_prevalence(ch)$risk_params
+  before <- lifecourse_risk_params_placeholder()
+  after <- calibrate_lifecourse_prevalence(ch, risk_params = before)$risk_params
   lp <- function(p) stats::plogis(
     p$b0 + p$bvag * ch$cumulative_vaginal_deliveries +
       p$bage * ((ch$age - 50) / 10) +
