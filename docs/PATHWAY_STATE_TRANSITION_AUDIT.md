@@ -397,7 +397,53 @@ PROPOSED  (estimand A -- still cross-sectional, no persistent state)
 `recognition`, `p_seek`, `p_referral` no longer appear: they are latent
 components of the measured entry rate, identified only as their product.
 
-## 11. What this does NOT resolve
+## 11. WHAT THE DEMAND MODEL PRODUCES — need, or realized utilization?
+
+The two interpretations cannot be mixed, and which one applies decides whether
+`annual_first_urps_entry_rate` may stay fixed while simulated supply changes.
+
+**Architecturally the model produces LATENT NEED.** Demand runs one-directional
+into `convert_workload_to_fte()`; a grep for supply terms in the demand modules
+finds only comments about handing volumes onward. No supply variable feeds back
+into care entry. The gap analysis then contrasts required FTE with available
+FTE, which only makes sense if the requirement is independent of the supply.
+
+Under that reading, holding the entry rate fixed as supply falls is **correct**:
+need does not shrink because fewer specialists exist.
+
+### The tension this creates, and it is not small
+
+`annual_first_urps_entry_rate` is measured from **observed first entries in
+claims** — which is realized utilization, not need. Using it as a need parameter
+assumes:
+
+> the observed entry rate already equals the need rate — i.e. current access is
+> not binding.
+
+If URPS supply is **already** constrained today, observed entries **understate**
+need, and a model built on them understates the gap. The direction of that bias
+is knowable even if the magnitude is not: it makes the workforce shortfall look
+smaller than it is, which is the conservative direction for a shortage claim but
+the wrong direction for planning.
+
+### Consequences to carry into estimation
+
+1. Label every reported quantity. `annual_first_urps_entry_rate` is an
+   **observed-utilization** measurement being **used as** a need parameter.
+   That substitution is an assumption, not a definition.
+2. Do **not** add supply-dependence to the entry rate without also changing the
+   model's declared output from need to realized utilization. A hybrid — a
+   need model whose entry rate responds to supply — is not interpretable.
+3. The pre-registered sensitivity matrix should include a stratum on **baseline
+   access adequacy**: if entry rates in high-supply regions materially exceed
+   low-supply regions after age standardisation, current access IS binding and
+   the need/utilization substitution is measurably wrong. The MA APCD carries
+   geography, so this is testable rather than merely arguable.
+4. `access_gain` already modifies care-seeking for high-barrier individuals, but
+   it is a scenario lever, not supply-driven feedback. It must not be mistaken
+   for the mechanism described above.
+
+## 12. What this does NOT resolve
 
 - No value for `q` is proposed. The estimator stays as pre-registered in
   `docs/INCIDENT_ENTRY_ESTIMAND.md`.
