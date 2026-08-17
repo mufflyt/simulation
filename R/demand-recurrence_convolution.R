@@ -383,3 +383,73 @@ recurrence_parameter_status <- function() {
   # docs/RECURRENCE_ENDPOINT_CONTRACT.md.
   "unresolved_requires_source"
 }
+
+#' Recurrence evidence register
+#'
+#' @return Tibble of candidate recurrence parameters with their measure type
+#'   and kernel compatibility.
+#' @family recurrence
+#' @concept demand
+#' @export
+recurrence_evidence_register <- function() {
+  p <- system.file("extdata", "recurrence_evidence.csv", package = "urpssim")
+  if (!nzchar(p) || !file.exists(p)) {
+    root <- if (file.exists("config/recurrence_evidence.csv")) "." else "../.."
+    p <- file.path(root, "config", "recurrence_evidence.csv")
+  }
+  if (!file.exists(p)) {
+    base::stop("recurrence_evidence.csv not found.", call. = FALSE)
+  }
+  tibble::as_tibble(utils::read.csv(p, comment.char = "#", stringsAsFactors = FALSE))
+}
+
+#' Permitted measure types for recurrence evidence
+#' @family recurrence
+#' @concept demand
+#' @export
+RECURRENCE_MEASURE_TYPES <- c(
+  "discrete_hazard",
+  "cumulative_incidence",
+  "first_recurrence_probability_mass",
+  "repeat_treatment_rate",
+  "unsupported_or_unknown"
+)
+
+#' Assert a recurrence parameter may enter the kernel
+#'
+#' @details
+#' Compatibility is FALSE BY DEFAULT. `repeat_treatment_rate` has NO conversion
+#' route to `g_k` -- a retreatment proportion is not recurrence probability
+#' mass, and one vaginal-hysterectomy/USLS cohort reports roughly 20% recurrent
+#' prolapse against 10% recurrent surgery, which is the size of the error that
+#' substitution would introduce.
+#'
+#' @param condition,parameter Identify the register row.
+#' @return Invisibly `TRUE` when the parameter may be converted to `g_k`.
+#' @family recurrence
+#' @concept demand
+#' @export
+assert_recurrence_kernel_compatible <- function(condition, parameter) {
+  reg <- recurrence_evidence_register()
+  row <- reg[reg$condition == condition & reg$parameter == parameter, , drop = FALSE]
+  if (base::nrow(row) == 0L) {
+    base::stop(base::sprintf(
+      "No recurrence-evidence row for %s/%s. Every candidate parameter must be ",
+      condition, parameter), "registered before it can enter the kernel.",
+      call. = FALSE)
+  }
+  if (!row$measure_type[[1]] %in% RECURRENCE_MEASURE_TYPES) {
+    base::stop(base::sprintf("Unknown measure_type '%s'. Permitted: %s",
+                             row$measure_type[[1]],
+                             base::paste(RECURRENCE_MEASURE_TYPES, collapse = ", ")),
+               call. = FALSE)
+  }
+  if (!base::isTRUE(base::as.logical(row$kernel_compatible[[1]]))) {
+    base::stop(base::sprintf(
+      paste0("%s/%s is NOT kernel-compatible (measure_type = %s). %s ",
+             "See docs/RECURRENCE_ENDPOINT_CONTRACT.md."),
+      condition, parameter, row$measure_type[[1]],
+      row$incompatibility_reason[[1]]), call. = FALSE)
+  }
+  base::invisible(TRUE)
+}

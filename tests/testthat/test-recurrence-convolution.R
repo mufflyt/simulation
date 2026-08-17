@@ -163,3 +163,60 @@ testthat::test_that("same-year recurrence is not supported", {
 testthat::test_that("the recurrence parameters remain unresolved", {
   testthat::expect_equal(recurrence_parameter_status(), "unresolved_requires_source")
 })
+
+# ---------------------------------------------------------------------------
+# The evidence register: compatibility is FALSE BY DEFAULT
+# ---------------------------------------------------------------------------
+
+testthat::test_that("every registered parameter uses a permitted measure_type", {
+  reg <- recurrence_evidence_register()
+  testthat::expect_true(all(reg$measure_type %in% RECURRENCE_MEASURE_TYPES))
+})
+
+testthat::test_that("NOTHING is currently kernel-compatible", {
+  # If this ever passes with a TRUE row, evidence was attached -- check that it
+  # was, rather than assuming the register drifted.
+  reg <- recurrence_evidence_register()
+  testthat::expect_false(any(as.logical(reg$kernel_compatible)))
+})
+
+testthat::test_that("0.12 is refused, and the reason names the horizon mismatch", {
+  err <- tryCatch(assert_recurrence_kernel_compatible("pop", "followup_p_advance"),
+                  error = conditionMessage)
+  testthat::expect_match(err, "NOT kernel-compatible")
+  testthat::expect_match(err, "CUMULATIVE")
+})
+
+testthat::test_that("a repeat_treatment_rate has NO route into g_k", {
+  # 0.40 is a reoperation share. Recurrent prolapse and recurrent SURGERY are
+  # different quantities (~20% vs ~10% in one USLS cohort).
+  err <- tryCatch(assert_recurrence_kernel_compatible("pop", "recurrence_per_entering"),
+                  error = conditionMessage)
+  testthat::expect_match(err, "repeat_treatment_rate")
+  testthat::expect_match(err, "DOWNSTREAM|downstream")
+})
+
+testthat::test_that("the AI block is recorded at the index-treatment level", {
+  err <- tryCatch(assert_recurrence_kernel_compatible("ai", "followup_p_advance"),
+                  error = conditionMessage)
+  testthat::expect_match(err, "ptns|not a definitive procedure")
+})
+
+testthat::test_that("an unregistered parameter cannot enter the kernel", {
+  testthat::expect_error(
+    assert_recurrence_kernel_compatible("pop", "invented_parameter"),
+    "No recurrence-evidence row")
+})
+
+testthat::test_that("changing a reoperation share cannot change recurrent-care episodes", {
+  # THE STRUCTURAL SEPARATION. Reoperation is downstream of the recurrent-care
+  # episode; g_k counts episodes. Altering the former must not move the latter.
+  cohorts <- tibble::tribble(~condition, ~treatment_year, ~treated_n,
+                             "pop", 2019L, 100)
+  a <- suppressMessages(compute_recurrence_convolution(
+    cohorts, .kern(), 2020, tail_policy = "zero_after_kernel"))
+  # a reoperation share lives nowhere in this call -- proving it cannot enter
+  testthat::expect_false("reoperation" %in% names(a$annual))
+  testthat::expect_false(any(grepl("reoper", names(a$contributions))))
+  testthat::expect_equal(a$annual$recurrence_n, 10)
+})
