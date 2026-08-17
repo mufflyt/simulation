@@ -17,11 +17,17 @@
 #' @concept demand
 #' @export
 ma_female_population_by_year_age_band <- function(years = 2004:2018) {
+  years <- as.integer(years)
+  if (any(years < 2004L | years > 2018L)) {
+    stop("ma_female_population_by_year_age_band(): Year outside documented census population range (2004-2018).", call. = FALSE)
+  }
+
   grid <- expand.grid(
-    year = as.integer(years),
+    year = years,
     age_band = c("18-49", "50-64", "65-74", "75+"),
     stringsAsFactors = FALSE
   ) |> tibble::as_tibble()
+
 
   out <- grid |>
     dplyr::mutate(
