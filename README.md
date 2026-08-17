@@ -581,7 +581,7 @@ the faceted trend plot. To reproduce the figure shown above from the mounted
 external drive:
 
 ```bash
-MEDICARE_PROVIDER_SERVICE_DIR="/Volumes/MufflySamsung 1/sling-volume-patterns/data/raw" \
+MEDICARE_PROVIDER_SERVICE_DIR="$SLING_DATA_ROOT/sling-volume-patterns/data/raw" \
 MEDICARE_REALIZED_CARE_OUTPUT_DIR="figures" \
 MEDICARE_REALIZED_CARE_YEARS="2013,2014,2015,2016" \
 MEDICARE_REALIZED_CARE_PREFIX="medicare_realized_care_2013_2016" \

@@ -5,7 +5,7 @@
 \title{All-payer age distribution of sling from CHIA observation data}
 \usage{
 chia_sling_age_distribution(
-  db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+  db = .chia_duckdb_default(),
   cpt = c("57288", "51992"),
   year_start = 2013L,
   year_end = 2018L

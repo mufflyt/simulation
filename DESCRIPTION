@@ -67,7 +67,7 @@ Suggests:
     zipcodeR
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://github.com/mufflyt/simulation
+URL: https://github.com/mufflyt/simulation, https://mufflyt.github.io/simulation/
 BugReports: https://github.com/mufflyt/simulation/issues
 Remotes:
     mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208,
