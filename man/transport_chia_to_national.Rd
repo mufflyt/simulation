@@ -5,7 +5,7 @@
 \title{Transport CHIA to a national volume}
 \usage{
 transport_chia_to_national(
-  db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+  db = .chia_duckdb_default(),
   chia_year = 2018L,
   target_year = 2023L,
   inpatient_share = NULL,

@@ -6,7 +6,7 @@
 \usage{
 transport_sling_via_medicare(
   hcpcs = "57288",
-  db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+  db = .chia_duckdb_default(),
   puf_path = base::file.path("data-raw", "cms_psps", "MUP_PHY_R26_P05_V10_D24_Geo.csv"),
   ffs_share_of_medicare = NULL,
   ffs_share_source = NULL,

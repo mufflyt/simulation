@@ -2,8 +2,8 @@
 #
 # ABSENCE MUST NEVER SILENTLY BECOME ZERO.
 #
-# ENTRY_PANEL_DB_DEFAULT once held "/Volumes/MufflySamsung 1 1/DuckDB/..." -- a
-# path that did not exist. DuckDB CREATES a database when asked to connect to a
+# ENTRY_PANEL_DB_DEFAULT once held a literal path into a removable research
+# volume -- one that did not exist, because the mount name had changed. DuckDB CREATES a database when asked to connect to a
 # missing one, so the failure mode was not an error: it was an empty database
 # and zero counts everywhere downstream. "Missing input" became "zero observed
 # events", which is how a plausible but false scientific result gets made.
@@ -24,7 +24,9 @@
 #' Resolve a removable research database, failing closed
 #'
 #' @param relative_path Path beneath the volume, e.g. `"DuckDB/x.duckdb"`.
-#' @param volume_pattern Glob for the volume name, e.g. `"MufflySamsung*"`.
+#' @param volume_pattern Glob for the volume name, e.g. `"ResearchDrive*"`.
+#'   A glob rather than a literal, because macOS appends a counter when a
+#'   volume is remounted over a stale mount.
 #' @param env_var Environment variable holding an explicit override.
 #' @param required `TRUE` for canonical scientific runs: absence is an ERROR.
 #'   `FALSE` only for explicitly optional or exploratory paths, where absence

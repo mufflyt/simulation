@@ -5,7 +5,7 @@
 \title{Massachusetts age-specific inpatient rates for a procedure family}
 \usage{
 chia_ma_age_specific_rates(
-  db = "/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb",
+  db = .chia_duckdb_default(),
   year = 2018L,
   family = c("pop_hysterectomy", "all_hysterectomy", "sui_sling"),
   min_cases = 50L

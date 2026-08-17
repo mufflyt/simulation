@@ -198,3 +198,6 @@ config/calibration_targets_backup_*.yml
 # scalars are recorded in config/calibration_targets.yml.
 artifacts/demand/
 artifacts/adversarial/
+
+# Built pkgdown site (NOT docs/, which holds design documents)
+pkgdown-site/
