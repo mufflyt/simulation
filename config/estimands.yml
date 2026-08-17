@@ -1,0 +1,109 @@
+# Machine-Readable Estimand Registry & Semantic Contracts
+# ---------------------------------------------------------------------------
+# Enforces exact semantic boundaries across all scientific outputs.
+# Unrestricted substitution across estimands is strictly prohibited.
+
+version: "1.0.0"
+
+estimands:
+  D1:
+    name: latent_disease_prevalence
+    unit: persons_per_year
+    numerator: symptomatic_pfd_female_population
+    denominator: total_female_population
+    geography: United_States
+    setting_scope:
+      - community
+    includes:
+      - noninstitutionalized_female_population_20plus
+    excludes:
+      - institutionalized
+      - male
+    allowed_uses:
+      - incident_care_seeking_denominator
+      - disease_burden_baseline
+    forbidden_uses:
+      - annual_surgical_incidence
+      - direct_office_visit_volume
+
+  D2:
+    name: care_engaged_disease
+    unit: persons_per_year
+    numerator: treatment_seeking_pfd_female_population
+    denominator: latent_pfd_female_population
+    geography: United_States
+    setting_scope:
+      - ambulatory
+      - primary_care
+      - specialty_care
+    includes:
+      - newly_entering_care
+      - continuing_care
+    excludes:
+      - untreated_latent
+    allowed_uses:
+      - office_visit_decomposition
+      - conservative_management_rate
+    forbidden_uses:
+      - total_surgical_volume_calibration
+
+  D3:
+    name: total_surgical_utilization
+    unit: encounters_per_year
+    numerator: all_setting_urps_operations
+    denominator: female_population
+    geography: United_States
+    setting_scope:
+      - hospital_inpatient
+      - hospital_outpatient
+      - asc
+    includes:
+      - inpatient_procedures
+      - outpatient_procedures
+      - asc_procedures
+    excludes:
+      - office_based_procedures
+    allowed_uses:
+      - total_surgical_capacity_planning
+      - total_surgical_demand_calibration
+    forbidden_uses:
+      - inpatient_only_validation
+
+  D6:
+    name: all_payer_inpatient_urps_surgery
+    unit: encounters_per_year
+    numerator: admitted_overnight_urps_operations
+    denominator: female_population
+    geography: Massachusetts
+    setting_scope:
+      - hospital_inpatient
+    includes:
+      - overnight_admissions
+    excludes:
+      - hospital_outpatient
+      - asc
+      - office
+    allowed_uses:
+      - regional_external_validation
+      - inpatient_setting_validation
+      - facility_volume_validation
+      - inpatient_travel_validation
+    forbidden_uses:
+      - total_surgical_demand_calibration
+      - care_seeking_calibration
+      - wait_time_calibration
+      - national_fte_calibration
+
+  clinical_fte:
+    name: clinical_full_time_equivalent
+    unit: fte_count
+    numerator: annual_clinical_hours_supplied
+    denominator: standard_full_time_clinical_hours_37_2
+    geography: United_States
+    setting_scope:
+      - all_clinical_settings
+    allowed_uses:
+      - workforce_capacity_planning
+      - spatial_access_e2sfca
+    forbidden_uses:
+      - headcounts_without_fte_adjustment
