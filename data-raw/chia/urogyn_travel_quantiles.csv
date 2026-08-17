@@ -1,0 +1,7 @@
+"quantile","urogyn_actual_miles","nearest_urps_capable_miles","nearest_any_hospital_miles"
+"25%",3.7,2.7,0
+"50%",8.4,5.3,2.9
+"75%",17.8,10.8,5.1
+"90%",31.8,22.4,8.2
+"95%",50.5,34.1,12.1
+"99%",140.7,102.6,86.3

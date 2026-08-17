@@ -1,0 +1,366 @@
+# Harmonized urogynaecologic procedure families for CHIA inpatient discharges
+# ---------------------------------------------------------------------------
+# Purpose: compare CLINICAL PROCEDURE FAMILIES across the FY2015/FY2016
+# ICD-9-CM -> ICD-10-PCS seam. Raw codes are not comparable across it. A
+# hand-rolled attempt produced a family reading 189 -> 5,710 -> 1,065 across
+# FY2015/16/18 -- a 30x jump that was entirely mapping artefact.
+#
+# EVERY code below was verified to exist in ref.icd9cm_procedure /
+# ref.icd10pcs_procedure. Codes are stored nodot, matching
+# v_hdd_discharge_canonical.principal_procedure.
+#
+# STATUS: needs_clinical_review. The families are structurally validated (codes
+# exist; seam stability is gated) but have NOT been reviewed by a
+# urogynaecologist. Do not publish family-level counts until they have.
+
+meta:
+  version: 0.2.0
+  status: approved                  # POP families adjudicated 2026-08-14
+  clinical_reviewer: "T Muffly (urogynecology)"
+  clinical_review_date: "2026-08-14"
+  icd9_era: [2004, 2015]      # FY2004-FY2015 use ICD-9-CM Volume 3
+  icd10_era: [2016, 2018]     # FY2016+ use ICD-10-PCS
+  code_format: nodot
+  applies_to: chia_casemix.v_hdd_discharge_canonical.principal_procedure
+  cohort: chia_casemix.v_cohort_female_adult   # female, 18+
+
+# ---------------------------------------------------------------------------
+# CRITICAL EXCLUSIONS
+#
+# Perineal repair codes are dominated by OBSTETRIC LACERATION, not prolapse.
+# In FY2016-2018 the cohort, 0KQM0ZZ (Repair Perineum Muscle, Open) alone has
+# 9,506 cases -- an order of magnitude more than every prolapse repair combined.
+# Including it silently converts a urogynaecology series into an obstetrics one.
+# Any family that would capture these MUST require a POP diagnosis.
+# ---------------------------------------------------------------------------
+exclusions:
+  obstetric_perineal_repair:
+    icd10pcs: ["0KQM0ZZ", "0HQ9XZZ", "0WQNXZZ", "0W8NXZZ"]
+    note: >
+      Perineal laceration repair at delivery. Excluded unless a pelvic organ
+      prolapse diagnosis is present on the same encounter.
+
+# ---------------------------------------------------------------------------
+# DIAGNOSIS QUALIFIERS
+#
+# Hysterectomy is performed for many indications. A POP-indication hysterectomy
+# requires a prolapse diagnosis on the encounter; without this qualifier the
+# family counts all hysterectomies and is not a urogynaecology measure.
+# ---------------------------------------------------------------------------
+diagnosis_qualifiers:
+  pelvic_organ_prolapse:
+    icd9cm:   ["618"]            # 618.x genital prolapse -- INCLUDES 618.5 vault
+    icd10cm:  ["N81", "N993"]    # N81.x prolapse + N99.3 vault after hysterectomy
+    match: prefix
+    note: >
+      SEAM DEFECT, FIXED. ICD-9 618.5 "Prolapse of vaginal vault after
+      hysterectomy" sits INSIDE 618.x; ICD-10 moved the identical entity to
+      N99.3, OUTSIDE N81. The prior definition (618% / N81%) therefore included
+      vault prolapse before FY2016 and excluded it after -- the two sides did
+      not denote the same clinical family, violating the era_seam_semantics
+      rule. Volumes: 121 / 104 cases in FY2014 / FY2015 under 618.5, then
+      48 / 49 / 51 under N99.3 in FY2016-18. Post-hysterectomy vault prolapse
+      is unambiguously POP and now counts on both sides.
+  stress_incontinence:
+    icd9cm:   ["78831", "78833"]
+    icd10cm:  ["N3941", "N3943", "N3946"]
+    match: exact
+  stress_or_mixed_incontinence:
+    icd10cm:  ["N393", "N3946", "R32"]
+    icd9cm:   ["78831", "78833"]
+    match: prefix
+    note: >
+      Stress and mixed UI support a sling indication. Urgency incontinence
+      (N39.41) and overactive bladder (N32.81) alone do NOT.
+
+  traumatic_vaginal_injury:
+    icd9cm:   ["878", "9226"]
+    icd10cm:  ["S31.4", "S3140", "S3141", "S3149"]
+    match: prefix
+    note: Non-obstetric traumatic injury to vagina/vulva.
+
+  obstetric_perineal_repair:
+    icd9cm:   ["664"]
+    icd10cm:  ["O70"]
+    match: prefix
+    note: Perineal laceration during delivery.
+
+  genitourinary_fistula:
+    icd9cm:   ["619"]
+    icd10cm:  ["N82"]
+    match: prefix
+
+# ---------------------------------------------------------------------------
+# CLINICAL REVIEW CRITERIA
+#
+# What the reviewing urogynaecologist is signing off on. These are DEFINITIONS,
+# not string translations: each side of an ICD era seam must independently mean
+# the same clinical procedure family. Matching rates across the seam is
+# validation of the definition, never the definition itself.
+#
+# A family is approved only when every applicable rule is satisfied.
+# ---------------------------------------------------------------------------
+clinical_review_criteria:
+  sling:
+    rule: >
+      Count PRIMARY anti-incontinence sling and urethral-suspension procedures
+      only. Do not mix sling revision, removal, mesh excision, urethrolysis or
+      complication surgery into incident sling placement -- a sling removal is
+      emphatically not another sling placement, and is a different workload
+      event. A concomitant prolapse repair or hysterectomy does NOT disqualify
+      an incident sling.
+    status: SATISFIED_PENDING_SIGNOFF
+    note: >
+      Verified structurally: the ICD-9 members (59.4 suprapubic sling, 59.5
+      retropubic urethral suspension, 59.6 paraurethral suspension, 59.71
+      levator muscle operation) are all primary placement, and the ICD-10
+      prefix 0TUD is Supplement Urethra -- placement. Removal is 0TPD and
+      excision 0TBD; neither is reachable from 0TUD. No revision or removal
+      code enters the family. Requires clinical sign-off, not further code work.
+  pop_surgery:
+    rule: >
+      Require an actual prolapse repair, suspension or obliterative procedure,
+      OR a prolapse diagnosis paired with an appropriate hysterectomy.
+      Hysterectomy alone is not a POP operation.
+    status: SATISFIED   # pop_hysterectomy carries requires_diagnosis
+  apical_distinct:
+    rule: >
+      Sacrocolpopexy, uterosacral suspension, sacrospinous fixation and
+      colpopexy must remain distinguishable from anterior/posterior repair
+      rather than collapsing into one "prolapse procedure" family.
+    status: SATISFIED
+    resolution: >
+      Adjudicated 2026-08-14. 0UUG split by approach into apical_abdominal_mesh
+      (0UUG0/4) and transvaginal_mesh_pop (0UUG7/8), and the latter is
+      explicitly compartment-unspecified rather than labelled anterior/
+      posterior -- the approach character does not encode compartment. 0UQG
+      became vaginal_native_tissue_pop_repair with a required POP diagnosis and
+      fistula/trauma/obstetric exclusions. The three are mutually exclusive at
+      code level and roll up via the encounter view.
+    prior_finding: >
+      The families were named separately but were NOT disjoint: prefix 0UUG
+      (Supplement Vagina) appears in BOTH apical_suspension and
+      anterior_posterior_repair, so 57 FY2016-18 cases fall in both. Named-but-
+      overlapping is not distinguishable, and those cases double-count in any
+      union.
+    proposed_resolution: >
+      Split 0UUG by surgical approach, which maps to the clinical distinction:
+      abdominal mesh supplement of the vagina is sacrocolpopexy (APICAL);
+      transvaginal mesh is compartment repair (ANTERIOR/POSTERIOR).
+        approach 0 open + 4 percutaneous endoscopic  -> apical      (48 cases)
+        approach 7 + 8 via natural opening           -> ant/post    ( 9 cases)
+      REQUIRES CLINICAL SIGN-OFF. Not applied.
+    also_noted: >
+      Prefix 0UQG (Repair Vagina) is shared between anterior_posterior_repair
+      and genitourinary_fistula. Those are separable because the fistula family
+      carries a diagnosis qualifier, but the sharing should be explicit rather
+      than incidental.
+  sui_diagnosis:
+    rule: >
+      Stress and mixed urinary incontinence support a sling indication.
+      Urgency incontinence or overactive bladder ALONE does not.
+    status: OPEN        # sui_sling currently carries NO diagnosis qualifier
+  revision_removal_separate:
+    rule: >
+      Revision, removal and mesh-excision procedures belong in their own family,
+      never folded into incident placement.
+    status: OPEN        # no revision/removal family is defined yet
+  newborn_attribution:
+    rule: >
+      A newborn code appearing somewhere in an adult maternal discharge must
+      never by itself classify the record as newborn. Preserve the raw flag;
+      attribution requires maternal/newborn context.
+    status: SATISFIED
+    note: >
+      Newborn classification requires AdmissionType = '4' AND an age consistent
+      with a newborn. AdmissionType alone lands on 357 adult records (a source
+      coding error) and was erasing 56 adult female operations from workload.
+      Verified separately that the flag is not diagnosis-driven: 14 adult female
+      FY2018 records carry V30/Z38 and none are flagged newborn.
+  era_seam_semantics:
+    rule: >
+      Treat ICD-9 -> ICD-10 mappings as clinical definitions. Each side must
+      independently denote the same clinical family; rate agreement across the
+      seam is a check on that, not a substitute for it.
+    status: SATISFIED
+    note: >
+      Three families are declared seam-unstable with clinical reasons rather
+      than tuned under threshold.
+
+# ---------------------------------------------------------------------------
+# PROCEDURE FAMILIES
+# ---------------------------------------------------------------------------
+families:
+
+  pop_hysterectomy:
+    label: Hysterectomy performed for pelvic organ prolapse
+    requires_diagnosis: pelvic_organ_prolapse
+    icd9cm:
+      exact: ["6831", "6839", "6841", "6849", "6851", "6859",
+              "6861", "6869", "6871", "6879", "689",
+              # RETIRED pre-FY2007 codes -- see retired_icd9 below
+              "684", "686", "687"]
+    icd10pcs:
+      prefix: ["0UT9", "0UB9"]     # resection / excision of uterus, any approach
+    retired_icd9: ["684", "686", "687"]
+    note: >
+      Without the POP diagnosis qualifier this counts all hysterectomies, which
+      is a hysterectomy series, not a prolapse series.
+
+      SECOND SEAM, inside ICD-9. The October 2006 update (FY2007) split the
+      3-digit total/radical hysterectomy codes into 4-digit laparoscopic and
+      open variants: 684 -> 6841/6849, 686 -> 6861/6869, 687 -> 6871/6879.
+      In the CHIA cohort 684 runs 5,856 / 5,064 / 5 across FY2005-2007 and
+      6849 runs 0 / 0 / 4,851 -- a clean handover. Omitting the retired codes
+      undercounts POP-hysterectomy by 149-180 cases a year in FY2004-2006
+      (about 10%) and makes a real decline look flat: corrected, the series
+      reads 1,812 / 1,771 / 1,738 / 1,630 across FY2004-2007 rather than
+      1,632 / 1,596 / 1,589 / 1,630.
+
+      The retired codes are NOT in ref.icd9cm_procedure because that table is
+      ICD-9-CM v32, the final revision, which postdates their withdrawal. They
+      are validated against the data instead.
+
+  apical_abdominal_mesh:
+    label: Abdominal/laparoscopic mesh apical repair (sacrocolpopexy-type)
+    clinical_status: approved
+    requires_diagnosis: pelvic_organ_prolapse
+    icd9cm:
+      exact: ["7077", "7078"]      # vaginal suspension and fixation, +/- graft
+    icd10pcs:
+      prefix: ["0UUG0", "0UUG4", "0USG0", "0USG4", "0USF", "0UUF"]
+    interpretation: >
+      Abdominal or laparoscopic mesh supplementation of the vagina; the PCS
+      representation expected for sacrocolpopexy-type repair. Approach 0 (open)
+      and 4 (percutaneous endoscopic).
+
+  colpocleisis:
+    label: Obliterative repair (colpocleisis, LeFort)
+    icd9cm:
+      exact: ["708", "704"]        # obliteration of vaginal vault; obliteration/total excision
+    icd10pcs:
+      prefix: ["0ULG"]             # occlusion of vagina
+    note: >
+      ICD-9 70.4 conflates obliteration with total vaginal excision; the
+      ICD-10 mapping is narrower. Expect a seam discontinuity in this family.
+
+  transvaginal_mesh_pop:
+    label: Transvaginal mesh POP repair, compartment unspecified
+    clinical_status: approved
+    requires_diagnosis: pelvic_organ_prolapse
+    icd10pcs:
+      prefix: ["0UUG7", "0UUG8"]
+    compartment: not_identifiable_from_pcs
+    interpretation: >
+      Transvaginal mesh POP repair. DO NOT assign anterior, posterior or apical
+      compartment from approach alone -- a vaginal mesh procedure can support
+      anterior, apical, posterior or multiple compartments, and 0UUG encodes
+      only "Supplement Vagina" plus an approach character. Approach 7 (via
+      natural opening) and 8 (natural opening endoscopic).
+
+  vaginal_native_tissue_pop_repair:
+    label: Vaginal native-tissue POP repair
+    clinical_status: approved_with_qualifier
+    requires_diagnosis: pelvic_organ_prolapse
+    icd9cm:
+      exact: ["7050", "7051", "7052", "7053", "7054", "7055"]
+    icd10pcs:
+      prefix: ["0UQG"]
+    exclusion_diagnoses:
+      - genitourinary_fistula
+      - traumatic_vaginal_injury
+      - obstetric_perineal_repair
+    interpretation: >
+      CMS defines 0UQG* simply as "Repair Vagina", which is broader than
+      anterior/posterior colporrhaphy. The family therefore requires a
+      contemporaneous POP diagnosis and excludes fistula, trauma and obstetric
+      repair. Where anterior versus posterior is wanted, take it from diagnosis
+      where available and leave the rest compartment_unspecified -- do not force
+      an assignment from the procedure code.
+
+  sui_sling:
+    label: Stress urinary incontinence sling and urethral suspension
+    icd9cm:
+      exact: ["594", "595", "596", "5971"]
+    icd10pcs:
+      prefix: ["0TUD"]             # supplement urethra (autologous/synthetic/nonautologous)
+      requires_diagnosis: stress_or_mixed_incontinence
+      qualifier_role: source_identification
+    note: >
+      ASYMMETRIC IDENTIFICATION. The ICD-9 members (59.4, 59.5, 59.6, 59.71) are
+      named sling/urethral-suspension operations and stand alone. ICD-10-PCS
+      0TUD* is generically "Supplement Urethra" -- it does not encode stress
+      incontinence or say "sling" -- so it requires an SUI-compatible diagnosis
+      to IDENTIFY the operation. The qualifier narrows the source, not the
+      estimand: the target is all primary female anti-incontinence sling
+      placements, not SUI-coded sling surgery.
+
+      Most slings are ambulatory and invisible to HIDD. This family measures
+      only the inpatient minority and must never be read as sling volume.
+
+  revision_removal:
+    label: Sling/mesh revision, removal or excision
+    role: complication_or_revision
+    incident_sling_eligible: false
+    icd10pcs:
+      prefix: ["0TPD", "0TBD"]     # removal of device / excision, urethra
+    icd9cm:
+      exact: []                    # ICD-9 has no distinct sling-removal code;
+                                   # pre-FY2016 revision is not separable
+    note: >
+      MUTUALLY EXCLUSIVE with sui_sling by construction. A sling removal is not
+      another sling placement; folding the two together would count a
+      complication as incident treatment and double-count the patient. Tested:
+      no code appears in both families.
+
+      ICD-9 has no distinct sling-removal code, so this family is ICD-10 only
+      and pre-FY2016 revision volume is NOT separable. Do not read the FY2004
+      -2015 portion as zero revisions.
+
+  genitourinary_fistula:
+    label: Genitourinary fistula repair
+    icd9cm:
+      exact: ["5783", "5784", "7072", "7073", "7074", "7075"]
+    icd10pcs:
+      prefix: ["0UQG", "0TQB", "0TQD"]
+    requires_diagnosis: genitourinary_fistula
+    note: >
+      The diagnosis qualifier is required because the ICD-10 repair codes are
+      shared with non-fistula indications. Inpatient fistula volume is stable
+      at ~460/year while prolapse falls 75%, which is the acuity signal CHIA
+      is genuinely good at measuring.
+
+# ---------------------------------------------------------------------------
+# VALIDATION
+#
+# scripts/chia/validate_procedure_families.py asserts, per family:
+#   1. every listed code exists in the reference tables
+#   2. no family spans the FY2015/FY2016 seam with a >2x year-over-year jump
+#      that is absent in adjacent years (the mapping-artefact signature)
+#   3. exclusion codes never appear in a family's counts
+# A family failing (2) is marked seam_unstable and must not be used in any
+# series that crosses FY2015.
+# ---------------------------------------------------------------------------
+validation:
+  max_seam_ratio: 2.0
+  seam_years: [2015, 2016]
+  icd9_revision_seam_years: [2006, 2007]
+  known_seam_unstable: ["colpocleisis", "vaginal_native_tissue_pop_repair",
+                        "genitourinary_fistula"]
+  seam_notes:
+    vaginal_native_tissue_pop_repair: >
+      ICD-9 separates cystocele (70.51) from rectocele (70.52); ICD-10-PCS has
+      only repair/supplement of vagina, which is broader. The seam ratio is
+      real breadth, not a coding error -- but it means the family cannot carry
+      a level comparison across FY2015. Use within-era trends only.
+    colpocleisis: >
+      ICD-9 70.4 conflates obliteration with total vaginal excision; the
+      ICD-10 mapping (0ULG) is narrower.
+    genitourinary_fistula: >
+      2.3x, down from 11.3x once the diagnosis qualifier was applied. The
+      residual is real: ICD-9 names the fistula explicitly (70.72 colovaginal,
+      70.73 rectovaginal, 70.74 vaginoenteric), whereas ICD-10-PCS codes the
+      repaired organ and leaves the fistula to the diagnosis, so repairs
+      approached through bowel or other systems fall outside these prefixes.
+      Declared rather than tuned under threshold -- narrowing the gate to make
+      it pass would record a mapping as validated when it is not.

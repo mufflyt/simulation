@@ -16,3 +16,65 @@ if (!requireNamespace("urpssim", quietly = TRUE) ||
     suppressMessages(pkgload::load_all(root, quiet = TRUE, export_all = TRUE))
   }
 }
+
+# ---------------------------------------------------------------------------
+# LOCATING THE SOURCE TREE, WHICH IS NOT THE SAME AS LOCATING A PACKAGE.
+#
+# Seventeen call sites across fourteen test files walked upward looking for a
+# DESCRIPTION and treated the first hit as the repository root. That is wrong
+# in exactly the execution contexts CI uses. Under covr and R CMD check the
+# suite runs from inside the INSTALLED package, which also carries a
+# DESCRIPTION -- so the walk stopped there, the guard `skip_if(length(root) ==
+# 0)` never fired, and the test proceeded to look for R/*.R sources, scripts/
+# and docs/ in a tree that ships none of them.
+#
+# The failures that produced were not "source tree absent"; they were assertion
+# errors that read like real defects: "status text names non-existent path(s):
+# R/geography-demand.R". A guard that cannot fire is worse than no guard,
+# because it converts a missing precondition into a false accusation against
+# the code.
+#
+# Meta/ is the discriminator: R's installer creates it, and it never exists in
+# a source checkout. DESCRIPTION says "a package lives here"; DESCRIPTION
+# without Meta/ says "the SOURCES live here", which is the actual precondition
+# every one of those tests needs.
+#
+# Returns character(0) rather than erroring, so the existing call-site idiom --
+# skip_if(length(root) == 0, ...) then root[1] -- keeps working unchanged.
+.source_tree_root <- function() {
+  candidates <- c(".", "..", file.path("..", ".."),
+                  file.path("..", "..", ".."), file.path("..", "..", "..", ".."))
+  for (p in candidates) {
+    if (file.exists(file.path(p, "DESCRIPTION")) && !dir.exists(file.path(p, "Meta"))) {
+      return(p)
+    }
+  }
+  character(0)
+}
+
+# ---------------------------------------------------------------------------
+# A SCIENTIFICALLY VALID PATHWAY, for tests of machinery rather than of the
+# canonical parameterization.
+#
+# The shipped table carries per_entering = 1.00 on new_consultation, which turns
+# a prevalence STOCK into an annual FLOW, and assert_incident_not_prevalent()
+# refuses it. That refusal is CORRECT and stays until the parameter is sourced
+# (docs/INCIDENT_ENTRY_ESTIMAND.md).
+#
+# Most tests that hit the refusal are not about that parameter at all -- they
+# check that a mutation propagates, that volumes convert to FTE, that an
+# exporter carries lo/hi columns. Those need a pathway that RUNS, and asserting
+# a refusal in them would delete the coverage they exist to provide.
+#
+# 0.25 IS A FIXTURE, NOT A CANDIDATE VALUE. It is chosen only to be a plausible
+# flow rather than a stock. The real parameter is unresolved and its estimator
+# is pre-registered before data access; nothing here may be read as an estimate
+# of it, and no test should tune it to make a number come out right.
+#
+# Tests that ARE about the canonical configuration must NOT use this -- they
+# assert the refusal explicitly, and the end-to-end canonical run lives in
+# .github/scripts/assert-canonical-science.R, which stays red by design.
+valid_pathway <- function(pathway = condition_service_pathway()) {
+  pathway$per_entering[pathway$service == "new_consultation"] <- 0.25
+  pathway
+}

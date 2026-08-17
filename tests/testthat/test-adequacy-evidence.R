@@ -292,8 +292,7 @@ test_that("the calibration ranking does not drift from the demand-contract copy"
   # R/reporting-export_demand_contract.R carries a local status_rank. Two
   # rankings that disagree would mean the two layers disagree about what counts
   # as calibrated -- the same silent-divergence failure as a duplicated function.
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   skip_if(!length(root))
   f <- file.path(root[1], "R", "reporting-export_demand_contract.R")
   skip_if(!file.exists(f))

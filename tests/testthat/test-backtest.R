@@ -244,8 +244,7 @@ test_that("the written summary carries its provenance to disk", {
   # Self-contained: .repo_root() lives in another test file and is not visible
   # under R CMD check, and artifacts/ is .Rbuildignore'd so it is absent from a
   # built package. Skip cleanly in both cases.
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   path <- file.path(root[1], "artifacts", "backtest_2020_to_2023_summary.csv")
   skip_if_not(file.exists(path))
@@ -361,8 +360,7 @@ test_that("filled never exceeds offered, and the frozen series matches data-raw"
   s <- nrmp_entrant_series()
   expect_true(all(s$positions_filled <= s$positions_offered))
 
-  root <- Filter(function(p) file.exists(file.path(p, "DESCRIPTION")),
-                 c(".", "..", file.path("..", "..")))
+  root <- .source_tree_root()
   skip_if(length(root) == 0, "repository root not reachable (source tree absent under R CMD check)")
   path <- file.path(root[1], "data-raw", "calibration", "nrmp_urps_entrants_series.csv")
   skip_if_not(file.exists(path))

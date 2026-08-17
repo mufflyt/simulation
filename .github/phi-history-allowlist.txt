@@ -1,0 +1,23 @@
+# Commits whose PHI-pattern match in git history is DEMONSTRABLY SYNTHETIC.
+#
+# The history scan uses `git log -S`, which matches a commit when the count of a
+# term CHANGES -- so it flags the commit that REMOVED a string as well as the one
+# that added it. That is correct behaviour for a leak scanner (the blob is still
+# in history either way) but it means a fabricated test fixture is indistinguishable
+# from real PHI without an explicit judgement.
+#
+# EVERY ENTRY MUST NAME THE STRING AND WHY IT IS NOT PHI. This file is a
+# permanent hole in a CRITICAL gate, so it stays as small as possible. If you
+# cannot state plainly why the content is fabricated, the answer is to purge the
+# history, not to add a line here.
+#
+# 5d22d50  added   tests/testthat/test-nightly-ci-contract.R
+# 24d772c  removed same
+#   String: printf "PatientName,MRN\nJane Roe,00123\n" > leak.csv
+#   A probe planted into a mktemp throwaway git repository to prove the scanner
+#   actually fires -- "a scanner that has never fired is indistinguishable from
+#   one that cannot". The name is a placeholder, the MRN is 00123, and the file
+#   never existed outside the fixture. 24d772c replaced the literal with a
+#   runtime-assembled string precisely so the scanner would stop matching it.
+5d22d50
+24d772c

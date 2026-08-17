@@ -14,8 +14,14 @@ pop_by_age_year <- dplyr::bind_rows(lapply(c(2025L, 2030L), function(y)
 BASKET <- urps_service_workload()$service
 
 run <- function(scenario = "baseline", ...) {
+  # valid_pathway(): these tests check MACHINERY -- output shape, scenario
+  # direction, FTE conversion -- not the canonical incident-entry parameter.
+  # The shipped table is refused by assert_incident_not_prevalent() because
+  # per_entering = 1.00 is a stock-as-flow error, and asserting that refusal
+  # here would delete the coverage these tests exist to provide. The canonical
+  # configuration is exercised by the scientific-readiness gate instead.
   simulate_lifecourse_demand(pop_by_age, year = 2025L, scenario = scenario,
-                             n = 8000, seed = 1, ...)
+                             n = 8000, seed = 1, pathway = valid_pathway(), ...)
 }
 
 test_that("service_volumes come out in the shape convert_workload_to_fte() consumes", {
@@ -55,7 +61,8 @@ test_that("BMI-reduction prevention lowers demand and is the ONLY place BMI inte
 })
 
 test_that("trajectory summarises care-seeking and service units by year", {
-  traj <- lifecourse_demand_trajectory(pop_by_age_year, scenario = "baseline", n = 6000, seed = 1)
+  traj <- lifecourse_demand_trajectory(pop_by_age_year, scenario = "baseline", n = 6000,
+                                       seed = 1, pathway = valid_pathway())
   expect_true(all(c("year", "care_seeking_national", "service_units_national")
                   %in% names(traj$demand_summary)))
   expect_setequal(traj$demand_summary$year, c(2025L, 2030L))

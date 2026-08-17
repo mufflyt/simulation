@@ -11,24 +11,396 @@
 
 max_scalar: 3.0
 
+# ---------------------------------------------------------------------------
+# FIRST PRODUCTION CALIBRATION RUN, base year 2017
+# artifacts/demand/uncalibrated_base_year_2017.csv
+#   sha256 c1ebffb00ac6f8d5f584d1f6e0e7fa9a381eb6eb871420ad156c0e78f5978847
+# model_run_id lifecourse_2017_seed20260814, urpssim 0.5.0
+#
+#   estimand                    target      prediction    scalar   structural
+#   urps_office_visits         4,814,760   16,226,458     0.297    FLAGGED
+#   sling_procedure_volume       137,384      264,135     0.520    -
+#   prolapse_procedure_volume    140,762      658,642     0.214    FLAGGED
+#   ui_prevalence                    n/a          n/a       n/a    NOT PREDICTED
+#
+# TWO OF THREE TRIP THE STRUCTURAL FLAG. Per this file's own doctrine a scalar
+# far from 1 signals a structural mismatch, NOT an offset to divide out. These
+# scalars must NOT be applied as corrections until the mismatch is diagnosed.
+#
+# PROLAPSE MISMATCH DIAGNOSED, 2026-08-14. The encounter-versus-procedure
+# hypothesis is REFUTED. condition_service_pathway() assigns
+# per_entering = 1.0 for pop/procedure/prolapse_procedure and 0.4 for
+# pop/recurrence, so each unit is a distinct surgical EPISODE. The model was
+# already counting encounters and matches the anchor's unit.
+#
+# The gap is in the CASCADE, not the definition:
+#   treated POP patients            3,264,807
+#   x p_advance conservative->testing   0.35   (low confidence, expert judgement)
+#   x p_advance testing->procedure      0.55   (low confidence, expert judgement)
+#   = primary operations              628,475
+#   + recurrence 75,417 x 0.4          30,167
+#   = 658,642 encounters              vs anchor 140,762
+#
+# The model operates 19.2% of treated POP patients annually. Reconciling with
+# the anchor requires 4.3%. Every advance probability in the POP cascade is
+# marked confidence: low, source: expert judgement, and
+# condition_pathway_status() already returns "uncalibrated_illustrative".
+#
+# So this is not a defect the anchor exposed by accident -- it is a
+# known-uncalibrated component meeting its first external target, which is what
+# the anchor is for. The correction belongs in the cascade probabilities, NOT in
+# a scalar applied to the output.
+#
+# Remaining hypotheses for the OTHER flag, none adjudicated:
+#  - office visits: DECOMPOSED 2026-08-14, then CORRECTED. This is a SERVICE
+#    INTENSITY defect, not a care-seeking one, and it is a DIFFERENT parameter
+#    family from the POP mismatch.
+#
+#    The conservative stage assigns new_consultation 1.0 + return_visit 1.5 to
+#    EVERY treated patient, for UI, POP and AI alike. 6.18M x 2.5 = 15.44M
+#    visits = 95.2% of the 16.2M prediction, generated before any clinically
+#    interesting transition. NAMCS implies 0.78 visits per treated woman; the
+#    model floors at 2.50.
+#
+#    SEMANTIC DEFECT UNDERNEATH: `treated` is a PREVALENT annual cohort, yet
+#    every member receives one new_consultation every year. new_consultation
+#    volume equals the treated cohort EXACTLY -- ratio 1.00. A prevalent patient
+#    cannot be a new patient annually. The fix is structural: split
+#    care_engaged into newly_entering_care and continuing_care, then attach
+#    first-year and continuing follow-up intensities separately. Tuning 1.0 and
+#    1.5 downward would preserve the conflation.
+#
+#    TWO CORRECTIONS TO MY EARLIER ENTRY. (1) 6.18M is 4.81% of US women 20+
+#    (128.4M), NOT ~9% -- my denominator was wrong by 60M. Against published
+#    care-seeking among symptomatic women, 4.8% is not obviously implausible and
+#    the treated cohort is no longer the leading suspect; it still warrants
+#    validation. (2) "Offices host only ~31% of pelvic-floor visits" was NOT
+#    independent evidence: 4,814,760 / 15,440,770 = 31.2% is the same 2.5-visit
+#    assumption restated. The argument was circular.
+#  - population year: the base year is 2017 but np2023 is a projection series
+#    starting 2022, so the age structure is 2022 standing in for 2017.
+#
+# ui_prevalence CANNOT produce a scalar. blend_nhanes_ui_prevalence() REPLACES
+# cells$ui_prevalence with the NHANES estimates, so prevalence is a model INPUT.
+# Calibrating the model against it would compare the model to what it was
+# handed. It remains a frozen INPUT CONTRACT, which is what it always was.
+# ---------------------------------------------------------------------------
+
 anchors:
   urps_office_visits:
+    production_scalar_eligible: true
+    clinical_review:
+      status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+      scope:
+        - namcs_urogynecologic_diagnosis_definition
+        - office_visit_setting_definition
+      findings:
+        - >
+          N99.4 (post-procedural pelvic peritoneal adhesions) is arguably out of
+          scope for a pelvic-floor estimand -- adhesive disease is not pelvic
+          floor dysfunction. It contributes 73,146 weighted visits, ~1.5%, far
+          inside the reported CI (1,982,987-7,646,533). Recorded, not blocking:
+          it cannot change the estimand.
+        - >
+          N32.81 (overactive bladder) is documented as included but matches
+          ZERO NAMCS 2019 visits -- the inclusion is inert. Worth reconciling
+          with how NAMCS codes OAB, but it cannot change the estimand either.
+        - >
+          N39.0 (UTI) is explicitly and correctly excluded.
+      note: >
+        Does NOT depend on sling or POP procedure-family logic. Blocking this on
+        the CHIA procedure-family review would be a scope error.
     source: "NAMCS / MEPS national office-visit totals for urogynecologic care"
     path: data/anchors/urps_office_visits.csv
-    sha256: ""
+    sha256: "8e98138bccacbecaa5b29d8c7b458178aee9f6acbc7559fe47721d8876f1b918"
   sling_procedure_volume:
-    source: "HCUP SASD (ambulatory surgery) + Medicare Part B carrier, CPT 57288"
-    note: "NIS is INPATIENT and carries ICD-10-PCS, not CPT; most slings are outpatient"
-    path: data/anchors/sling_volume.csv
-    sha256: ""
+    source: "CMS Physician PUF CY2024 (CPT 57288) / CHIA observation age split / CMS MA penetration"
+    transport:
+      formula: medicare_ffs_volume / (p_65plus * ffs_share_of_medicare)
+      medicare_ffs_services: 25179
+      p_65plus: 0.398
+      ffs_share_of_medicare: 0.46
+      ffs_share_source: >
+        CMS Medicare enrollment; MA penetration 54% in 2024 (32.8M of 61.2M
+        beneficiaries). Overall all-ages figure -- CMS/KFF publish no age- or
+        sex-specific breakdown. Rises yearly (55% by 2026), so it must be
+        re-looked-up whenever the PUF vintage changes.
+      result: 137384
+      bound: lower
+      bound_rationale: >
+        Observation-stay slings skew older than the ambulatory sling population,
+        so 39.8% likely overstates the 65+ share and the national total is
+        biased DOWNWARD.
+    path: data/anchors/sling_procedure_volume.csv
+    sha256: "1c805d4a49078f8f768b3f172fadc8b696b6105abe8d05f31dea570dace9e0fd"
+    production_scalar_eligible: true
+    estimand:
+      name: primary_female_anti_incontinence_sling_placements
+      clinical_review_status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+      note: >
+        The scientific target is ALL primary female anti-incontinence sling
+        placements. It is NOT "SUI-diagnosis-coded sling surgery". A patient
+        does not need an SUI diagnosis code to count clinically; the diagnosis
+        is needed only where the administrative PROCEDURE code cannot tell us
+        whether the operation was a sling.
+    identification:
+      cpt_57288:
+        requires_diagnosis_qualifier: false
+        rationale: >
+          CMS describes 57288 as creation of a sling around the female urethra
+          to control leakage. The procedure code already carries the
+          anti-incontinence meaning; requiring a diagnosis would add sensitivity
+          to diagnosis-coding completeness without improving the estimand.
+      icd9_specific_sling:
+        codes: ["594", "595", "596", "5971"]
+        requires_diagnosis_qualifier: false
+        rationale: Named sling / urethral-suspension operations.
+      icd10_pcs_0TUD:
+        requires_diagnosis_qualifier: true
+        qualifier_role: source_identification
+        not_estimand_definition: true
+        qualifying_diagnoses: ["N393", "N3946", "R32"]
+        rationale: >
+          CMS defines 0TUD* generically as Supplement Urethra with autologous,
+          synthetic or nonautologous substitute. It does not encode stress
+          incontinence or even say "sling", so unrestricted 0TUD* is too broad
+          to identify slings by itself. The qualifier narrows the SOURCE, not
+          the target.
+    exclusions:
+      - revision_removal
+      - excision
+      - urethrolysis
+      - non_sling_urethral_reconstruction
+    sensitivity:
+      primary: specific sling procedures + diagnosis-qualified 0TUD*
+      lower_bound: specific sling procedures only
+      broad: all female 0TUD*
+      empirical_result: >
+        CHIA inpatient FY2016-2018: 18 of 19 0TUD* cases (94.7%) already carry
+        an SUI/mixed/unspecified-UI diagnosis. The single unqualified case is
+        Supplement Urethra with Synthetic Substitute, Open Approach -- very
+        likely a sling with the indication uncoded. So the PCS ambiguity moves
+        the count by one case here. n = 19 makes this weak evidence, and CHIA
+        inpatient sling has nearly vanished; the test should be repeated
+        wherever 0TUD* volume is material.
+    clinical_review:
+      status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+      scope:
+        - primary_sling_placement
+        - sling_identification_by_source
+        - observation_setting_transport
+      resolved_blockers:
+        - icd10_pcs_sling_identification_requires_indication
+      note: >
+        Supersedes the earlier blocker "missing_sui_diagnosis_qualifier", which
+        misstated the problem: the issue was never that the estimand needed an
+        SUI diagnosis, but that ICD-10-PCS cannot identify a sling without one.
+
   prolapse_procedure_volume:
-    source: "HCUP SASD + Medicare Part B carrier"
-    path: data/anchors/prolapse_volume.csv
-    sha256: ""
+    source: "HCUP NIS+NASS national estimate; ICS 2023 abstract #136 (PMID 38128098)"
+    path: data/anchors/prolapse_procedure_volume.csv
+    sha256: "b449fd0131a574681a1a9d1045917f6a44efbe0b3dca585d09e9ef1ff635e312"
+    production_scalar_eligible: true
+    estimand:
+      name: pop_operative_encounters
+      unit: encounter
+      definition: >
+        Annual encounters with at least one operative treatment of pelvic organ
+        prolapse.
+      aggregation_rule: unique_encounter
+      procedure_family_sum_is_valid_anchor: false
+      composition_descriptors:
+        # These flags MAY overlap. The anchor may not.
+        - pop_hysterectomy
+        - apical_abdominal_mesh
+        - transvaginal_mesh_pop
+        - vaginal_native_tissue_pop_repair
+        - obliterative
+      clinical_review_status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+    not_approved:
+      - >
+        Summing procedure-family counts to create total POP volume. A vaginal
+        hysterectomy + uterosacral suspension + anterior/posterior repair is ONE
+        POP operation. In CHIA the naive family sum exceeds the encounter count
+        by 12-68% depending on year.
+      - >
+        Calling 0UUG7/8 "anterior/posterior repair". The approach character does
+        not encode compartment.
+      - >
+        Calling all 0UQG* anterior/posterior colporrhaphy without a POP
+        diagnosis. CMS defines 0UQG as "Repair Vagina", which is broader.
+    clinical_review:
+      status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+      scope:
+        - pop_diagnosis_definition
+        - pop_procedure_family
+        - pop_hysterectomy_definition
+      findings:
+        - >
+          Vault-prolapse seam defect fixed. ICD-9 618.5 sits inside 618.x;
+          ICD-10 moved the identical entity to N99.3, outside N81. 121/104 cases
+          counted in FY2014/15 and 48/49/51 missed in FY2016-18. N99.3 added.
+        - >
+          0UUG split by approach into apical_abdominal_mesh (0UUG0/4) and
+          transvaginal_mesh_pop (0UUG7/8), resolving 57 double-counted cases.
+          The latter is compartment-unspecified by construction.
+        - >
+          0UQG became vaginal_native_tissue_pop_repair, requiring a POP
+          diagnosis and excluding fistula, trauma and obstetric repair.
+      known_limitations:
+        - compartment_not_always_identifiable
+        - procedure_families_may_overlap
+        - N99.3_required_across_icd_seam
+      residual_uncertainty: >
+        Compartment classification. ICD-10-PCS encodes body part and approach,
+        not compartment, and N81.4 "uterovaginal prolapse, unspecified" is the
+        single largest diagnosis code. This does NOT block the POP-volume
+        calibration scalar, which is defined at encounter level. The 1.408
+        magnitude should stay VISIBLE as a structural-mismatch diagnostic
+        rather than being silently normalised away.
+
   ui_prevalence:
-    source: "Nygaard 2008 JAMA; SWAN longitudinal prevalence"
+    source: "NHANES KIQ_U pooled (primary); Nygaard 2008 JAMA / SWAN as EXTERNAL VALIDATION"
     path: data/anchors/ui_prevalence.csv
-    sha256: ""
+    sha256: "045e541ef49352ef23e79ca27e17d6be8f30461e9f4d159d9c6d3f19a42939ff"
+    production_scalar_eligible: true
+    estimand:
+      name: symptomatic_urinary_incontinence
+      unit: person
+      population:
+        sex: female
+        age_min: 20
+        pregnancy: exclude
+        geography: United States
+        setting: noninstitutionalized_population
+      case_definition:
+        source: NHANES_KIQ_U
+        primary:
+          method: incontinence_severity_index
+          variables:
+            frequency: KIQ005
+            amount: KIQ010
+          formula: frequency_score * amount_score
+          threshold: ">= 3"
+          interpretation: moderate_to_severe_ui
+      excluded_definitions:
+        - diagnosed_ui
+        - treated_ui
+        - care_seeking_ui
+        - KIQ005_non_never_alone
+      phenotypes:
+        # NOT subtypes. Different NHANES questions -- KIQ042/044/046 ask whether
+        # leakage of that circumstance occurred at all in 12 months, while
+        # KIQ005/010 measure overall frequency and amount. A phenotype MAY
+        # exceed primary prevalence; that is correct once named properly.
+        may_overlap: true
+        may_exceed_primary: true
+        variables:
+          - stress_leakage_12m
+          - urgency_leakage_12m
+          - other_leakage_12m
+        within_primary_population:
+          - mixed_stress_urgency
+          - stress_predominant
+          - urgency_predominant
+          - other_or_unclassified
+        note: >
+          Phenotypes describe circumstances of leakage, not clinician-established
+          SUI/UUI diagnoses. Do NOT construct a subtype-specific ISI: KIQ010 asks
+          overall amount lost, not amount during stress versus urgency events.
+    clinical_review:
+      status: approved
+      reviewer: "T Muffly (urogynecology)"
+      date: "2026-08-14"
+      scope:
+        - urinary_incontinence_case_definition
+        - severity_threshold
+        - survey_population_definition
+        - recall_window
+      resolution: >
+        Adjudicated 2026-08-14. Primary definition moved from "any leakage"
+        (KIQ005 != Never) to the validated Incontinence Severity Index at >= 3.
+        The NHANES cells were REGENERATED, not relabelled. Effect at age 75+:
+        78.1% -> 53.6%. At 20-34: 29.6% -> 7.9%.
+    empirical_validation:
+      status: replication_passed
+      method: >
+        Reproduce the reference estimand on the reference vintage with the
+        production code, complex survey design, and MEC examination weight.
+      nygaard_2008_benchmark: 0.157
+      replicated_2005_2006: 0.157
+      replicated_ci: [0.134, 0.180]
+      replicated_n: 1932
+      benchmark_n: 1961
+      tolerance_pp: 1.0
+      result: PASS
+      defect_found_and_fixed: >
+        Exact label matching returned 5.7%, not 15.7%. NHANES 2005-2006 stores
+        literal question-text fragments and attaches the conjunction to the
+        PENULTIMATE option -- "drops," / "small splashes, or" / "more?" -- so the
+        MIDDLE category of BOTH ISI items silently became NA. Frequency score 3
+        and amount score 2 were entirely absent from the distribution. Nothing
+        errored. Normalised, the same code reproduces 15.7% exactly.
+      single_vintage_estimates:
+        # NOT pooled. 2017-2018 is CAPI; 2021-2023 is ACASI, so a jump across
+        # that boundary may be secular change, mode effect, or both.
+        - cycle: "2005-2006"
+          prevalence: 0.157
+          ci: [0.134, 0.180]
+          n: 1932
+          mode: CAPI
+        - cycle: "2017-2018"
+          prevalence: 0.237
+          ci: [0.218, 0.256]
+          n: 2434
+          mode: CAPI
+        - cycle: "2021-2023"
+          prevalence: 0.270
+          ci: [0.242, 0.298]
+          n: 2799
+          mode: ACASI
+      interpretation: >
+        The 15.7% -> 23.7% rise occurs WITHIN CAPI administration, so that
+        portion is not a mode effect. The further 23.7% -> 27.0% spans the
+        CAPI/ACASI change and cannot be attributed without a mode study.
+      selected_cycle:
+        cycle: "2017-2018"
+        prevalence: 0.237
+        ci: [0.218, 0.256]
+        n: 2434
+        mode: CAPI
+        rationale: >
+          Selected by MODEL YEAR, not sample size. The demand model fits through
+          2017 (R/calibration-demand_lifecourse.R: fit_through_year = 2017L);
+          the prolapse anchor spans 2016-2018 and NAMCS is 2019. NHANES
+          2017-2018 is the only cycle overlapping that window. It is also CAPI,
+          matching the administration mode of the 2005-2006 replication, so the
+          15.7% -> 23.7% series is interpretable rather than mode-confounded.
+        rejected:
+          - cycle: "2021-2023"
+            reason: >
+              4-6 years past the calibration year AND switches to ACASI.
+              Retained as a FORWARD sensitivity for the 2023 projection target,
+              but using it as the anchor would confound administration mode with
+              secular change in the one number the demand model is anchored to.
+          - cycle: "2005-2006"
+            reason: Replication benchmark only; a decade before the fit window.
+      remaining_blockers: []
+      known_limitations:
+        - age_floor_is_20_not_18
+        - do_not_pool_2017_2018_with_2021_2023
+        - phenotypes_are_circumstances_not_diagnoses
+        - no_subtype_specific_severity_available
 
 # Back-test configuration: fit through fit_through_year, project to target_year,
 # compare with observed. Goes beyond the published Dall-family standard, which
@@ -45,3 +417,46 @@ backtest:
     # we own directly are Medicare-FFS (population-limited). Sling stays a
     # calibration anchor and a secondary back-test diagnostic.
     - prolapse_procedure_volume
+
+# >>> VALIDATION ANCHORS (generated) >>>
+# ---------------------------------------------------------------------------
+# VALIDATION anchors -- regenerated by
+# scripts/calibration/build_empirical_calibration_targets.R.
+#
+# These are NOT calibration targets. Every entry is
+# production_scalar_eligible: false, and the build refuses to divide a
+# national model prediction by any of them. CHIA is Massachusetts inpatient;
+# CADR is workload GIVEN TREATMENT in a 2008-2016 Medicare cohort, so its
+# 5,566 sling episodes are not an annual national sling volume.
+# ---------------------------------------------------------------------------
+validation_anchors:
+  lizeth_access:
+    source: "Lizeth national URPS mystery caller"
+    path: "data/anchors/validation/lizeth_access_20260814_182838.csv"
+    sha256: "d5e45e99bcf4251dc2a4bb7fad826d1915ed5e8f605ad1b8c9fc757f90d7a171"
+    calibration_role: "access_output_validation"
+    production_scalar_eligible: false
+  lizeth_access_by_insurance:
+    source: "Lizeth national URPS mystery caller"
+    path: "data/anchors/validation/lizeth_access_by_insurance_20260814_182838.csv"
+    sha256: "e040438b41c798b1dafd8b3f9a6466f04f036010e1301707a016ac7c5736f0a5"
+    calibration_role: "payer_access_validation"
+    production_scalar_eligible: false
+  rabice_wait:
+    source: "Rabice national URPS mystery caller"
+    path: "data/anchors/validation/rabice_wait_20260814_182838.csv"
+    sha256: "ad72a4d3a659e1e1e44ba08546b02da94297fe1bee4b93f7324a43e3ee781b7d"
+    calibration_role: "access_output_validation"
+    production_scalar_eligible: false
+  cadr_service_intensity:
+    source: "CADR Medicare"
+    path: "data/anchors/validation/cadr_service_intensity_20260814_182838.csv"
+    sha256: "4e99e2c6441f71aa6d63784a4c372204c3cc67b6e7629c02d2751497aa45417e"
+    calibration_role: "treated_patient_service_intensity"
+    production_scalar_eligible: false
+  chia_pop_hysterectomy:
+    source: "CHIA Massachusetts"
+    path: "data/anchors/validation/chia_pop_hysterectomy_20260814_182838.csv"
+    sha256: "8bf3a75948e143c9ce9be11b9e52181e49fd5961d94778aa4a5855466bff3255"
+    calibration_role: "regional_demand_validation"
+    production_scalar_eligible: false

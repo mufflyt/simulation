@@ -51,7 +51,7 @@ add_hwsm_supply_parameters(roster)
 }
 }
 \seealso{
-Other hwsm supply:
+Other hwsm supply: 
 \code{\link{hwsm_provenance}()},
 \code{\link{hwsm_retirement_hazard_table}()}
 }

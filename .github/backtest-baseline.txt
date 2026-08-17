@@ -1,0 +1,20 @@
+# Back-test regression ratchet.
+#
+# The model FAILS its own interval standard today: 2 of 10 arms cover the
+# observation at 95%, against a required 0.80, and EVERY arm under-predicts
+# (percent error -16.23% to -3.14%). That is systematic bias, not Monte Carlo
+# noise, and it is an outstanding scientific defect -- see the interval warning
+# emitted by the supply engine.
+#
+# These values are NOT a target and NOT an acceptance threshold. They record
+# where the defect stands so it cannot get quietly worse while it is being
+# fixed. Coverage may only rise; worst-arm bias may only shrink; arms may not be
+# dropped, because deleting a failing arm is not an improvement.
+#
+# Seeded 2026-08-15 from artifacts/backtest_2020_to_2023_summary.csv
+coverage95=0.20
+# Definition-matched arms only (apply_attrition == observed_applies_attrition).
+# Recorded ALONGSIDE the all-arms figure, never instead of it.
+coverage95_matched=0.40
+worst_percent_error=-16.2327718224
+n_arms=10

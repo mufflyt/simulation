@@ -1,0 +1,300 @@
+# Office-visit EXTERNAL VALIDATION anchors
+# ---------------------------------------------------------------------------
+# These validate a decomposition. They are NOT transition parameters and must
+# never be assigned to incident_share, first_year_followup_rate or
+# annual_followup_rate. The distinction matters because CMS beneficiary counts
+# are distinct only WITHIN an NPI x HCPCS x place-of-service cell, so they
+# cannot reconstruct a person's first year versus subsequent years across codes
+# or providers.
+
+cms_fpmrs_em_mix:
+  role: external_validation_only
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  source: >
+    CMS Medicare Physician & Other Practitioners PUF, CY2024, by Provider and
+    Service. URPS NPI cohort (1,339 board-certified; 1,005 with new E/M, 1,106
+    with established E/M; 4,684 matched rows).
+  path: data-raw/cms_psps/urps_em_new_vs_established.csv
+  measures:
+    new_em_services: 93859
+    established_em_services: 399155
+    new_em_share: 0.1904
+    established_services_per_beneficiary_office: 1.4463
+  comparison_target: >
+    predicted new consultations / predicted office E/M
+      versus
+    observed Medicare new E/M / all office E/M (0.1904)
+  caveats:
+    - >
+      new_em_share is a share of SERVICES, not of patients, and is Medicare
+      fee-for-service only. It tests whether the new/continuing split is
+      credible; it does not measure the split.
+    - >
+      established_services_per_beneficiary_office = 1.4463 is a WITHIN-CELL
+      ratio. A patient seen by two NPIs, or under two E/M codes, is counted
+      twice in the denominator, so 1.4463 is a LOWER BOUND on annual office
+      visits per established patient, not an estimate of it.
+    - >
+      new_services_per_beneficiary_office is 1.0001, which is a sanity check
+      rather than a finding: one new-patient E/M per beneficiary is true by
+      definition of the code.
+
+namcs_2019_visit_mix:
+  role: external_validation_only
+  status: demoted
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  measures:
+    new_patient_visit_share: 0.199
+    new_patient_visit_share_ci: [0.031, 0.367]
+    mean_pastvis_established: 4.38
+    mean_pastvis_ci: [2.14, 6.62]
+    unweighted_n: 55
+  why_demoted: >
+    n = 55 pelvic-floor visits in women 20+ across 24 PSUs. The new-patient
+    share carries a 95% CI 0.336 wide -- wider than the quantity itself is
+    large. PASTVIS is ALL-CAUSE visits to the practice, not pelvic-floor
+    specific, so it overstates condition-specific follow-up by an unknown
+    amount. The redesigned 2023-2025 NAMCS Provider Survey Component no longer
+    collects patient visit data, so this cannot be refreshed.
+  convergence_note: >
+    NAMCS 0.199 and CMS 0.1904 agree closely despite entirely independent
+    sampling frames and populations. That convergence is worth recording -- it
+    is the strongest available signal that ~19% is the right order for the
+    new-patient share of pelvic-floor office encounters -- but two sources
+    agreeing on a SERVICE share still does not yield a PATIENT-level transition
+    rate.
+
+meps_2023_person_utilization:
+  role: attempted_source
+  status: insufficient
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  source: >
+    MEPS 2023 office-based visit file (OB) linked to conditions via CLNK, with
+    the full-year consolidated file for age and sex. Person-level via DUPERSID.
+  measures:
+    ui_condition_records: 139
+    ui_condition_persons: 138
+    ui_linked_office_visits: 180
+    persons_with_any_visit: 58
+    adult_women_with_any_visit: 46
+    mean_visits_per_woman: 3.33
+    median_visits_per_woman: 3
+  why_insufficient:
+    - >
+      n = 46 adult women with any UI-linked office visit. Too thin to split into
+      first-year and continuing cohorts, which is the whole point of the
+      parameter.
+    - >
+      POP IS ENTIRELY ABSENT. N81 (female genital prolapse) does not appear in
+      MEPS 2023 conditions at all, so the office pathway's largest condition
+      (pop, 3.26M treated) has no MEPS signal whatsoever.
+    - >
+      ICD10CDX is truncated to THREE characters, so N39 conflates urinary tract
+      infection (N39.0) with stress and urge incontinence (N39.3/.4). Only R32 /
+      CCSR GEN008 is a clean incontinence signal, which is why the usable cohort
+      collapses to 139 condition records.
+    - >
+      A single-year file cannot separate entrants from continuing patients at
+      all. That split requires the longitudinal panels (Panel 27 covering
+      2022-2023, or Panel 24 covering 2019-2022 with longitudinal weights),
+      which are not on disk.
+  what_would_suffice: >
+    Pooled MEPS office-based files across several years PLUS a longitudinal
+    panel for the entrant/continuing split, with uncertainty reported rather
+    than a point estimate. Even pooled, expect POP to remain unmeasurable in
+    MEPS and to require a different source.
+
+meps_panel27_longitudinal:
+  role: attempted_source
+  status: insufficient
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  source: >
+    MEPS Panel 27 seven-file bundle: HC-252 longitudinal person file (LONGWT,
+    VARSTR, VARPSU), HC-241/HC-239I/HC-239G for 2022, HC-249/HC-248I/HC-248G
+    for 2023. Person-level via DUPERSID, visits ordered within 2023 by OBDATEMM.
+  phenotype:
+    primary: CCSR1X == "GEN008"
+    label_per_ahrq: URINARY INCONTINENCE
+    excluded_from_primary: >
+      ICD10CDX == "N39". At three characters it conflates urinary tract
+      infection (N39.0) with stress and urge incontinence (N39.3/.4). Sample
+      size bought that way corrupts the phenotype.
+  washout_definition: >
+    newly observed in 2023 = qualifying 2023 visit AND no qualifying 2022 visit.
+    This is NEWLY OBSERVED AFTER A ONE-YEAR WASHOUT, not true first-ever
+    urogynecologic care: a patient treated in 2021 and returning in 2023 is
+    misclassified as new. It must never populate a parameter named
+    first_entry_rate.
+  cohort_construction:
+    gen008_conditions_2022: 203
+    persons_2022: 198
+    linked_office_visits_2022: 209
+    persons_with_visit_2022: 79
+    gen008_conditions_2023: 139
+    persons_2023: 138
+    linked_office_visits_2023: 180
+    persons_with_visit_2023: 58
+  withdrawn_estimate:
+    label: annual_followup_rate
+    value: 5.68
+    ci: [1.94, 9.43]
+    unweighted_n: 9
+    reason: >
+      WITHDRAWN, not merely underpowered. The cohort was built as
+      v23 |> left_join(v22), which conditions the denominator on having a 2023
+      visit -- the very outcome being measured. That estimator answers
+      E(2023 visits | 2022 care AND >= 1 2023 visit). It is bounded below by 1
+      by construction, cannot fall no matter how completely a population
+      disengages, and preferentially selects high utilizers. Superseded by the
+      2022-anchored decomposition below, which retains zeroes.
+    overstatement_vs_corrected: 2.07   # 5.684 / 2.740
+  baseline_cohort:
+    definition: >
+      Adult women with qualifying GEN008-linked office care in 2022 AND
+      longitudinally observable in 2023 (LONGWT > 0). Zero qualifying 2023
+      visits are RETAINED as zeroes.
+    unweighted_n: 20
+    returned_in_2023: 9
+    note: >
+      n = 20 is the finding the biased estimator concealed. The previously
+      reported n = 9 was not the sample size; it was the count of returners,
+      i.e. the numerator reported as though it were the denominator.
+  estimates:
+    annual_return_probability:
+      weighted: 0.482
+      ci: [0.229, 0.735]
+      unweighted_n: 20
+      definition: P(any qualifying 2023 UI visit | qualifying 2022 UI care)
+    conditional_followup_intensity:
+      weighted: 5.684
+      ci: [1.941, 9.428]
+      unweighted_n: 9
+      definition: E(2023 UI visits | 2022 care AND >= 1 2023 visit)
+    unconditional_followup_intensity:
+      weighted: 2.740
+      ci: [0.357, 5.123]
+      unweighted_n: 20
+      definition: E(2023 UI visits | 2022 care), zeroes retained
+      identity_check: >
+        0.482 x 5.684 = 2.740, reconciling exactly with the directly estimated
+        unconditional mean. This is the quantity that maps to
+        return_visit <- previous_care_engaged * unconditional_followup_intensity,
+        and it is safer than a separate retention_rate until "still under care
+        but no visit this year" can be empirically distinguished from true
+        disengagement.
+  entrant_censoring:
+    problem: >
+      Calendar-year right censoring. An entrant whose index visit falls in
+      January has ~11 months to accumulate follow-up; one first observed in
+      November has one. Averaging post-index visits across them is not
+      interpretable without accounting for index month.
+    mean_index_month: 7.949         # ci [6.169, 9.730]
+    mean_months_observable: 4.051   # ci [2.270, 5.831]
+    post_index_visits_raw: 1.767    # ci [0.326, 3.208], n = 16
+    post_index_rate_per_person_month: 0.4363   # ci [0.1833, 0.6894]
+    fixed_window_sensitivity:
+      restriction: index month <= 6, permitting >= 6 months of observation
+      unweighted_n: 5
+      post_index_visits: 4.745      # ci [0.861, 8.630]
+      note: >
+        2.7x the uncensored raw mean, in the direction censoring predicts, but
+        n = 5. Reported to show the censoring is real and material, NOT as an
+        estimate. The raw 1.767 is biased DOWNWARD because the average entrant
+        is first observed in August.
+  verdict: >
+    INSUFFICIENT. The baseline cohort is n = 20, of whom 9 returned; entrants
+    are n = 16 with a fixed-window subset of n = 5. The unconditional intensity
+    spans 0.357 to 5.123 -- more than an order of magnitude, and the lower bound
+    is near zero. Neither model parameter may be changed on this evidence. The
+    correction changes the estimand, not the conclusion.
+  consistency_note: >
+    The comparison to CMS must use the UNCONDITIONAL 2.740, not the withdrawn
+    5.68: the CMS ratio is a per-beneficiary quantity, so pairing it with a
+    conditional-on-return mean compared two different estimands. 2.740 sits
+    above the CMS within-cell lower bound of 1.4463, the expected direction,
+    because MEPS counts UI-linked office visits across ALL providers per person
+    while the CMS ratio counts E/M services within a single NPI x HCPCS x
+    place-of-service cell. Not in conflict; neither substitutes for the other.
+  next_step: >
+    Panel 24 (2019-2022) as a longer-washout sensitivity, then pooled panels.
+    AHRQ recommends pooling multiple longitudinal panels for low-prevalence
+    events, and Panels 24+ share the appropriate common variance framework.
+    Panel 24 crosses the COVID utilization shock, so it is a sensitivity rather
+    than a replacement. Agreement across periods would be far stronger evidence
+    than immediate pooling.
+
+# ---------------------------------------------------------------------------
+# STILL REQUIRED, and not obtainable from any source attempted so far:
+#   first_year_followup_rate   person-level, first year after entry
+#   annual_followup_rate       person-level, continuing engagement
+# Next source: pooled MEPS office-based visit files, which carry DUPERSID and
+# so support repeated-person utilization. Expect sparse counts once restricted
+# to UI/POP; pool years and report uncertainty rather than a point estimate.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+meps_panel24_longitudinal:
+  role: attempted_source
+  status: insufficient
+  production_scalar_eligible: false
+  is_transition_parameter: false
+  source: >
+    MEPS Panel 24 (COVID-extended, nine rounds, 2019-2022). HC-245 four-year
+    longitudinal file with LONGWT/VARSTR/VARPSU, plus conditions, CLNK event
+    link, and office-visit files for all four years: h214/h213if1/h213g (2019),
+    h222/h220if1/h220g (2020), h231/h229if1/h229g (2021), h241/h239i/h239g
+    (2022). Phenotype and estimand decomposition identical to Panel 27.
+  why_attempted: >
+    Four years buys two things the Panel 27 two-year frame cannot: a REAL
+    washout (the 2021 entry cohort can require a clean 2019 AND 2020), and
+    UNCENSORED follow-up (12 months from the index visit, crossing the calendar
+    boundary, so index month stops being a nuisance parameter).
+  verdict: >
+    INSUFFICIENT, and decisively worse than Panel 27 rather than better. The
+    four-year design's strengths are precisely what destroy its power: every
+    additional requirement -- retention across nine rounds, a longer washout,
+    follow-up crossing a year boundary -- removes people from the denominator.
+    HC-245 holds 2,386 adult women against Panel 27's 3,555, and only 47 of the
+    198 persons with 2022 GEN008 care are Panel 24 members.
+  continuing_utilization:
+    "2019_to_2020": {baseline_n: 11, returned_n: 2, annual_return_probability: 0.195,
+                     ci: [-0.099, 0.489], unconditional_intensity: 0.298}
+    "2020_to_2021": {baseline_n: 2, returned_n: 1, result: REFUSED_baseline_n_lt_5}
+    "2021_to_2022": {baseline_n: 5, returned_n: 0, annual_return_probability: 0.0,
+                     ci: [0.0, 0.0], unconditional_intensity: 0.0}
+  degenerate_estimate_warning: >
+    Two cells must never be read as findings. The 2021-2022 return probability
+    of 0.000 with interval [0.000, 0.000] is a zero-numerator artifact of n = 5,
+    NOT evidence that patients do not return. The 2019-2020 interval extends to
+    -0.099; a negative lower bound on a proportion means the Wald normal
+    approximation has failed at this sample size. Neither is a point estimate.
+  entrant_cohorts:
+    kept_separate: true
+    rationale: >
+      Panel 24 straddles the COVID utilization shock. The 2020 cohort indexes
+      into the ambulatory collapse, the 2021 cohort into the rebound. Pooling
+      would average across a structural break and present the result as
+      sampling noise.
+    "washout_2019_index_2020": {entrant_n: 0, result: REFUSED}
+    "washout_2019_2020_index_2021": {entrant_n: 2, result: REFUSED}
+  covid_signal: >
+    Visible directly in the dated qualifying visit counts: 224 (2019), 141
+    (2020), 138 (2021), 209 (2022). The collapse and rebound are why the 2020
+    and 2021 baseline cells are the smallest in the panel.
+  conclusion: >
+    MEPS is EXHAUSTED for these two parameters at the individual-panel level.
+    The planned next step -- checking agreement between periods before pooling --
+    cannot be executed, because Panel 24 produces no estimable entry cohort to
+    compare against. Pooling Panel 24 into Panel 27 would add roughly a dozen
+    persons while embedding the COVID structural break inside the pooled
+    estimate, which is a worse artifact than the small sample it would fix.
+    first_year_followup_rate and annual_followup_rate remain UNSOURCED. Gate 4
+    stays red. A different data class is required -- all-payer claims or an EHR
+    cohort with real longitudinal follow-up -- not another MEPS panel.
+  panel28_note: >
+    Panel 28 (2023-2024) avoids the pandemic period, but AHRQ schedules that
+    longitudinal release for November 2026. It cannot resolve this calibration.

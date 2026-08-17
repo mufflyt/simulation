@@ -1,0 +1,18 @@
+# PHI/DUA scanner ratchet baseline.
+#
+# CRITICAL findings are never baselined -- they fail immediately and cannot be
+# grandfathered. Only HIGH (hygiene) findings are counted here.
+#
+# This number may only go DOWN. If a change raises it, the nightly fails and
+# names the new finding. Lowering it is the point: fix a personal path, drop
+# the count, tighten this file.
+#
+# As seeded 2026-08-15: 60 pre-existing findings, all HIGH, none a disclosure.
+#   ~57  absolute personal paths in R/ and scripts/ (leak a username, the
+#        external-drive name "MufflySamsung", and local directory layout)
+#     3  tracked files over 10MB (MCBS SFPUF x2, NAMCS 2019) -- public-use
+#        survey data, deliberately committed, bloats a public clone
+#
+# Draining this backlog means routing those paths through R/core-paths.R
+# (config/paths.yml) instead of hardcoding them.
+high=60
