@@ -94,7 +94,7 @@ test_that("anal_procedures is EMPTY rather than guessed", {
   ap <- b$treatments$anal_procedures
   expect_equal(ap$status, "NOT_DEFINED")
   expect_length(ap$cpt, 0L)
-  expect_match(ap$note, "Leaving it EMPTY rather than guessing")
+  expect_match(ap$note, "STILL NOT DEFINED, and deliberately so")
 })
 
 test_that("SNM lead and generator codes are distinguishable by stage", {
@@ -118,4 +118,95 @@ test_that("the basket is NOT wired into URPS_CPT_BASKET yet", {
   # Candidate status. Every entry needs clinical review first.
   basket <- urps_service_workload()$service
   expect_false(any(grepl("64561|64590|46750|64566|90912", basket)))
+})
+
+# ---------------------------------------------------------------------------
+# Expanded from a payer clinical policy for FI treatments
+# ---------------------------------------------------------------------------
+
+test_that("the sphincteroplasty family is FOUR codes, not one", {
+  # A 46750-only basket misses 46760 (muscle transplant) and 46761 (levator
+  # imbrication / Park posterior anal repair) entirely.
+  b <- .basket()
+  codes <- vapply(b$treatments$sphincteroplasty$cpt, function(x) x$code, character(1))
+  expect_true(all(c("46750", "46760", "46761") %in% codes))
+  expect_match(b$treatments$sphincteroplasty$family_note, "FOUR CODES, NOT ONE")
+})
+
+test_that("the paediatric code is excluded and the unlisted code is flagged", {
+  b <- .basket()
+  cpt <- b$treatments$sphincteroplasty$cpt
+  child <- Filter(function(x) x$code == "46751", cpt)[[1]]
+  expect_false(child$include)
+  unlisted <- Filter(function(x) x$code == "46999", cpt)[[1]]
+  expect_equal(unlisted$include, "review")
+  expect_match(unlisted$note, "catches any anal procedure")
+})
+
+test_that("SNM reprogramming codes are present and marked maintenance", {
+  # 95970/95971/95972 capture the reprogramming attempted BEFORE revision, so
+  # a revision-only view understates device-maintenance workload.
+  b <- .basket()
+  prog <- b$treatments$sacral_neuromodulation$device_programming_cpt
+  codes <- vapply(prog, function(x) x$code, character(1))
+  expect_setequal(codes, c("95970", "95971", "95972"))
+  expect_true(all(vapply(prog, function(x) x$stage, character(1)) == "device_maintenance"))
+  expect_match(b$treatments$sacral_neuromodulation$device_programming_note,
+               "UNDERSTATES device-maintenance workload")
+  expect_match(b$treatments$sacral_neuromodulation$device_programming_note,
+               "never populate g_k")
+})
+
+test_that("the reprogramming codes carry the WIDEST indication warning", {
+  # Their descriptors span brain, cranial nerve, spinal cord and peripheral
+  # nerve generators -- broader even than 64590.
+  b <- .basket()
+  expect_match(b$treatments$sacral_neuromodulation$device_programming_note,
+               "brain, cranial nerve, spinal cord")
+  expect_match(b$treatments$sacral_neuromodulation$device_programming_note,
+               "INDICATION RISK IS EXTREME")
+})
+
+test_that("HCPCS device supplies are separated from professional services", {
+  # Summing supply codes with CPT implantation codes double-counts one episode.
+  b <- .basket()
+  h <- b$treatments$sacral_neuromodulation$hcpcs_device_supplies
+  codes <- vapply(h, function(x) x$code, character(1))
+  expect_true("A4290" %in% codes)
+  expect_true(any(grepl("^L86", codes)))
+  expect_match(b$treatments$sacral_neuromodulation$hcpcs_note, "DOUBLE-COUNT")
+  # A4290 is the TEST lead specifically -- one of the few supply codes that
+  # helps separate test from implant.
+  a4290 <- Filter(function(x) x$code == "A4290", h)[[1]]
+  expect_equal(a4290$stage, "test_or_lead")
+})
+
+test_that("PTNS non-coverage for FI is recorded", {
+  # Observed PTNS volume reflects coverage policy as well as clinical choice.
+  b <- .basket()
+  expect_match(b$treatments$ptns$coverage_note, "do NOT support coverage")
+})
+
+test_that("anal_procedures remains EMPTY, with candidates recorded not adopted", {
+  b <- .basket()
+  ap <- b$treatments$anal_procedures
+  expect_length(ap$cpt, 0L)
+  expect_equal(ap$status, "NOT_DEFINED")
+  # the search is recorded so it need not be repeated, but nothing is adopted
+  expect_gte(length(ap$candidates_not_adopted), 2L)
+  expect_match(ap$why_still_empty, "guessing with extra steps")
+})
+
+test_that("the payer ICD range is recorded as evidence, NOT as resolution", {
+  # A coverage rule is not a research case definition, and the difference is
+  # stated rather than glossed.
+  b <- .basket()
+  n <- b$diagnosis$fecal_incontinence$notes
+  expect_match(n, "R15.0-R15.9")
+  expect_match(n, "COVERAGE rule is not a research case definition")
+  # the review flags are UNCHANGED by that evidence
+  d <- b$diagnosis$fecal_incontinence$icd10
+  flags <- setNames(lapply(d, function(x) x$include), vapply(d, function(x) x$code, character(1)))
+  expect_equal(flags[["R15.0"]], "review")
+  expect_equal(flags[["R15.2"]], "review")
 })
