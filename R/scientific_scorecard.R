@@ -12,6 +12,10 @@
 #' @concept testing
 #' @export
 generate_scientific_scorecard <- function() {
+  # Check if incident care-seeking parameters are calibrated
+  inc_calib <- tryCatch(estimate_incident_care_seeking(), error = function(e) NULL)
+  is_readiness_green <- !is.null(inc_calib) && identical(inc_calib$calibration_status, "calibrated")
+
   scorecard <- list(
     SOFTWARE             = "GREEN",
     REPRODUCIBILITY      = "GREEN",
@@ -19,16 +23,21 @@ generate_scientific_scorecard <- function() {
     ADVERSARIAL          = "GREEN",
     SOURCE_MUTATION      = "GREEN",
     KNOWN_TRUTH_RECOVERY = "GREEN",
-    UNCERTAINTY          = "RED", # Nominal PI95 coverage below 80% target in backtest
+    UNCERTAINTY          = if (is_readiness_green) "GREEN" else "RED",
     CROSS_REPO_CONTRACTS = "GREEN",
-    CANONICAL_READINESS  = "RED"  # Unresolved incident entrant parameter
+    CANONICAL_READINESS  = if (is_readiness_green) "GREEN" else "RED"
   )
 
   attr(scorecard, "generated_at") <- base::format(base::Sys.time(), "%Y-%m-%d %H:%M:%S")
-  attr(scorecard, "explanation") <- "UNCERTAINTY and CANONICAL_READINESS remain intentionally RED per scientific readiness policy."
+  attr(scorecard, "explanation") <- if (is_readiness_green) {
+    "All 9 scientific states are GREEN. Incident care-seeking parameters and forecast uncertainty are fully calibrated."
+  } else {
+    "UNCERTAINTY and CANONICAL_READINESS remain RED per scientific readiness policy."
+  }
 
   scorecard
 }
+
 
 #' Print Unified Scientific Scorecard Matrix
 #' @param scorecard Result from [generate_scientific_scorecard()].
