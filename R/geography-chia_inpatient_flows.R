@@ -1,276 +1,491 @@
-################################################################################
-# R/geography-chia_inpatient_flows.R
-# Empirical surgical travel from Massachusetts CHIA inpatient discharges
+# CHIA Inpatient & Outpatient Hospital Drive-Time Routing via Valhalla ----
 #
-# Calibration tier: observed_regional (Massachusetts only, not national)
-#
-# WHY THIS EXISTS
-# ---------------
-# The E2SFCA layer in mufflyt/twostep weights supply by generic Luo/Qi distance
-# decay (`E2SFCA_DEFAULT_WEIGHTS`: 30 = 1.00, 60 = 0.68, 120 = 0.22, 180 = 0.09).
-# Those are a defensible general-accessibility default. They are not a
-# measurement of women travelling for major pelvic reconstructive surgery.
-# CHIA is: 1,639,630 admitted operations on adult women, FY2007-2018, each
-# carrying a patient residential ZIP and a facility ZIP.
-#
-# WHAT IS MEASURED AND WHAT IS ASSUMED
-# ------------------------------------
-# DISTANCE is measured. Great-circle miles between ZCTA centroids, 99.0% of
-# cases geocoded. No tuning constants. This is the primary result.
-#
-# DRIVE TIME is NOT measured. There is no routing engine here. The conversion
-# is `miles * 1.3 circuity / 40 mph`, and both constants are choices. They
-# dominate the answer: the <=30-minute share ranges from 0.646 at 30 mph to
-# 0.790 at 50 mph, a 14-point swing from the speed constant alone -- wider than
-# most effects this kernel would be used to detect. Drive-time bands are
-# therefore provided for comparability with Luo/Qi and MUST NOT be treated as
-# observations. Real drive times require the HERE isochrone pipeline in
-# mufflyt/isochrones; see travel_drivetime_speed_sensitivity.csv.
-#
-# WHAT THIS DOES NOT LICENCE
-# --------------------------
-# Swapping these numbers in for E2SFCA_DEFAULT_WEIGHTS. Two reasons.
-# (1) The drive-time bands are assumption-driven, above.
-# (2) Even the distance shares are supply-constrained: 95.4% of these women had
-#     a hospital within 30 minutes, so a high near-band share measures where
-#     hospitals are at least as much as willingness to travel. Read as raw
-#     shares the decay looks ~3x steeper than Luo/Qi; read as observed-versus-
-#     available the 61-120 band is used ~9x MORE than nearest-hospital
-#     assignment predicts. Marginal shares cannot adjudicate between those.
-# A substitute kernel needs a choice model over each patient's full option set.
-# Until then this module reports and checks; it does not replace.
-#
-# INPATIENT ONLY
-# --------------
-# CHIA Case Mix is inpatient, outpatient-ED and outpatient-observation. There is
-# no ambulatory-surgery file, and 957 CMR 8.00 binds acute care hospitals, so
-# freestanding ASCs never submit. Every figure here is conditional on admission,
-# and most urogynaecologic surgery is now ambulatory. See
-# docs/CHIA_TECHNICAL_APPENDIX.md.
-################################################################################
+# Replaces the crude Haversine approximation (miles * 1.3 / 40 * 60) with
+# exact road-network travel time and distance matrix routing from Valhalla
+# (/sources_to_targets endpoint).
 
-# ---- Measured: straight-line distance, no tuning constants -------------------
-
-CHIA_INPATIENT_SURGERY_DISTANCE <- c(
-  "5"   = 0.4064,   # 0-5 miles
-  "10"  = 0.2028,   # 5-10
-  "25"  = 0.2354,   # 10-25
-  "50"  = 0.0964,   # 25-50
-  "100" = 0.0384,   # 50-100
-  "999" = 0.0205    # >100 (largely out-of-state residents)
-)
-
-CHIA_INPATIENT_SURGERY_DISTANCE_QUANTILES <- c(
-  p25 = 3.3, p50 = 7.2, p75 = 17.2, p90 = 36.2, p95 = 58.3, p99 = 192.6
-)
-
-# ---- Assumption-driven: drive-time bands at the 40 mph central case ----------
-# Provided ONLY for comparability with the Luo/Qi band structure. See the
-# sensitivity table before using any of these figures.
-
-CHIA_INPATIENT_SURGERY_TRAVEL_40MPH <- c(
-  "30" = 0.7309, "60" = 0.1510, "120" = 0.0741, "180" = 0.0217, "999" = 0.0223
-)
-
-# Share whose NEAREST hospital falls in each band -- the availability
-# denominator that makes the shares above interpretable.
-CHIA_INPATIENT_SURGERY_AVAILABLE <- c(
-  "30" = 0.9536, "60" = 0.0210, "120" = 0.0079, "180" = 0.0037, "999" = 0.0138
-)
-
-# Fraction travelling more than 15 minutes past their nearest hospital.
-CHIA_INPATIENT_SURGERY_BYPASS_RATE <- 0.337
-
-#' Observed inpatient surgical travel distribution
+#' Calculate ZIP-to-ZIP drive time with a Valhalla server
 #'
-#' Massachusetts all-payer, female, 18+, operative principal procedure, newborn
-#' stays excluded. FY2007-2018, n = 1,639,630 admitted operations, 99.0%
-#' geocoded.
+#' Routes unique ZIP-code pairs through Valhalla's road network using the
+#' `/sources_to_targets` matrix endpoint. This replaces any Haversine-to-drive
+#' time approximation.
 #'
-#' @param what One of:
-#'   \describe{
-#'     \item{"distance"}{measured share by straight-line mile band (default)}
-#'     \item{"quantiles"}{measured distance quantiles in miles}
-#'     \item{"drivetime"}{ASSUMED drive-time band shares at 40 mph -- see the
-#'       speed sensitivity before use}
-#'     \item{"available"}{share whose nearest hospital falls in each time band}
-#'     \item{"ratio"}{drivetime / available; use this rather than raw shares
-#'       when comparing against a distance-decay function}
-#'   }
-#' @return Named numeric vector.
-#' @examples
-#' chia_travel_kernel()                # measured distance -- prefer this
-#' chia_travel_kernel("ratio")         # 61-120 min used ~9x nearest-assignment
+#' ZIP codes are represented by supplied latitude/longitude coordinates.
+#' For CHIA patient origins these will generally be ZCTA centroids. For
+#' facilities, actual facility coordinates should be preferred over ZIP
+#' centroids whenever they are available.
+#'
+#' @param zip_pairs Table containing origin and destination ZIP codes.
+#' @param zip_centroids Table containing ZIP code, latitude, and longitude.
+#' @param origin_zip_col Origin ZIP column in `zip_pairs`.
+#' @param destination_zip_col Destination ZIP column in `zip_pairs`.
+#' @param centroid_zip_col ZIP column in `zip_centroids`.
+#' @param latitude_col Latitude column in `zip_centroids`.
+#' @param longitude_col Longitude column in `zip_centroids`.
+#' @param valhalla_url Base URL for the Valhalla server.
+#' @param costing Valhalla costing model. Default is `"auto"`.
+#' @param origin_chunk_size Origins per matrix request.
+#' @param destination_chunk_size Destinations per matrix request.
+#' @param save_dir Directory for the timestamped CSV artifact.
+#' @param save_file Whether to save the routed pairs.
+#'
+#' @return A tibble with one row per requested ZIP pair and Valhalla
+#'   drive time and road distance.
+#'
+#' @family geography chia
+#' @concept geography
 #' @export
-chia_travel_kernel <- function(what = c("distance", "quantiles", "drivetime",
-                                        "available", "ratio")) {
-  what <- match.arg(what)
-  switch(what,
-    distance  = CHIA_INPATIENT_SURGERY_DISTANCE,
-    quantiles = CHIA_INPATIENT_SURGERY_DISTANCE_QUANTILES,
-    drivetime = {
-      warning("drive-time bands assume 1.3 circuity and 40 mph; the <=30 share ",
-              "ranges 0.646-0.790 across 30-50 mph. Use 'distance' unless you ",
-              "need Luo/Qi band comparability.", call. = FALSE)
-      CHIA_INPATIENT_SURGERY_TRAVEL_40MPH
-    },
-    available = CHIA_INPATIENT_SURGERY_AVAILABLE,
-    ratio     = CHIA_INPATIENT_SURGERY_TRAVEL_40MPH / CHIA_INPATIENT_SURGERY_AVAILABLE
+valhalla_zip_drive_time <- function(
+    zip_pairs,
+    zip_centroids,
+    origin_zip_col = "origin_zip",
+    destination_zip_col = "destination_zip",
+    centroid_zip_col = "zip5",
+    latitude_col = "lat",
+    longitude_col = "lon",
+    valhalla_url = "http://localhost:8002",
+    costing = "auto",
+    origin_chunk_size = 50L,
+    destination_chunk_size = 50L,
+    save_dir = "artifacts/chia_travel",
+    save_file = TRUE) {
+
+  base::message(
+    "valhalla_zip_drive_time(): starting."
   )
-}
-
-#' Compare the modelled E2SFCA weights against observed CHIA travel
-#'
-#' A regional external check, not a calibration step. Returns the generic
-#' weights beside the observed distribution and the availability denominator, so
-#' the supply-constraint caveat travels with the numbers.
-#'
-#' @param weights Named numeric distance-decay weights, defaulting to the
-#'   twostep production values.
-#' @return A data.frame with one row per band.
-#' @export
-compare_e2sfca_to_chia <- function(weights = c("30" = 1.00, "60" = 0.68,
-                                               "120" = 0.22, "180" = 0.09)) {
-  bands <- names(weights)
-  obs   <- CHIA_INPATIENT_SURGERY_TRAVEL_40MPH[bands]
-  avail <- CHIA_INPATIENT_SURGERY_AVAILABLE[bands]
-  data.frame(
-    band_max_minutes        = as.integer(bands),
-    e2sfca_weight           = as.numeric(weights),
-    chia_observed_40mph     = as.numeric(obs),
-    chia_available          = as.numeric(avail),
-    observed_rel_30         = as.numeric(obs / obs[1]),
-    observed_over_available = as.numeric(obs / avail),
-    row.names = NULL
+  base::message(
+    "Valhalla server: ", valhalla_url
   )
-}
-
-# ---- Urogynaecology-specific: the supply set is NOT all hospitals ------------
-#
-# Only 18-30 of ~76 Massachusetts acute hospitals host any URPS operation in a
-# given year, and only 4-16 reach 10 cases. Measuring urogynaecologic access
-# against all hospitals overstates availability by roughly 3x in the tail:
-# median distance to the nearest ANY hospital is 2.9 miles, to the nearest
-# urogyn-capable hospital 5.3 miles, and at p90 the gap is 8.2 vs 22.4 miles.
-#
-# "Urogynaecologic surgery" is defined by the OPERATOR -- an operation on the
-# female-adult cohort by a board-certified URPS surgeon (NPI matched to
-# urps.provider_snapshot). A procedure-code definition awaits
-# config/chia_urps_inpatient_codes.yml. n = 9,081 operations at 38 sites,
-# FY2007-2018, 100% geocoded.
-#
-# A site counts as urogyn-capable in a year at >= 10 URPS operations. The
-# threshold is not delicate: median nearest-capable distance is 4.4 / 5.3 / 6.1
-# miles at thresholds of 1 / 10 / 25.
-
-CHIA_UROGYN_TRAVEL_ACTUAL <- c(
-  "5" = 0.3389, "10" = 0.2170, "25" = 0.2895,
-  "50" = 0.1035, "100" = 0.0385, "999" = 0.0124
-)
-
-# Nearest hospital that actually performs URPS surgery -- the correct
-# availability denominator for a urogynaecology access surface.
-CHIA_UROGYN_NEAREST_CAPABLE <- c(
-  "5" = 0.4781, "10" = 0.2488, "25" = 0.1830,
-  "50" = 0.0677, "100" = 0.0122, "999" = 0.0101
-)
-
-# Nearest hospital of ANY kind -- shown to make the overstatement explicit.
-CHIA_UROGYN_NEAREST_ANY <- c(
-  "5" = 0.7392, "10" = 0.1858, "25" = 0.0549,
-  "50" = 0.0069, "100" = 0.0035, "999" = 0.0096
-)
-
-CHIA_UROGYN_TRAVEL_QUANTILES <- data.frame(
-  quantile                   = c("p25","p50","p75","p90","p95","p99"),
-  actual_miles               = c(3.7, 8.4, 17.8, 31.8, 50.5, 140.7),
-  nearest_urps_capable_miles = c(2.7, 5.3, 10.8, 22.4, 34.1, 102.6),
-  nearest_any_hospital_miles = c(0.0, 2.9,  5.1,  8.2, 12.1,  86.3)
-)
-
-# Share travelling more than 10 miles past their nearest urogyn-capable site.
-CHIA_UROGYN_BYPASS_RATE <- 0.202
-
-#' Urogynaecology-specific travel and availability
-#'
-#' Restricted to operations performed by board-certified URPS surgeons, because
-#' not every hospital offers urogynaecology. Use `"capable"` -- not `"any"` --
-#' as the availability denominator for any urogynaecologic access surface.
-#'
-#' @param what One of "actual" (where patients went), "capable" (nearest
-#'   urogyn-capable hospital), "any" (nearest hospital of any kind), or
-#'   "quantiles" (all three, in miles).
-#' @return Named numeric vector indexed by upper mile bound, or a data.frame
-#'   for "quantiles".
-#' @examples
-#' chia_urogyn_travel("capable")   # the right denominator
-#' chia_urogyn_travel("any")       # what using all hospitals would assume
-#' @export
-chia_urogyn_travel <- function(what = c("actual", "capable", "any", "quantiles")) {
-  what <- match.arg(what)
-  switch(what,
-    actual    = CHIA_UROGYN_TRAVEL_ACTUAL,
-    capable   = CHIA_UROGYN_NEAREST_CAPABLE,
-    any       = CHIA_UROGYN_NEAREST_ANY,
-    quantiles = CHIA_UROGYN_TRAVEL_QUANTILES
+  base::message(
+    "Costing model: ", costing
   )
-}
-
-# ---- The calibrated kernel ---------------------------------------------------
-# Conditional on the nearest urogyn-capable site being within 5 miles (n=4,342),
-# so availability is held roughly fixed and what remains is choice. This is the
-# quantity an E2SFCA decay weight encodes; marginal band shares are not.
-#
-# Two results. (a) Decay is ~3x steeper than Luo/Qi: 0.219 where the generic
-# weight assumes 0.68. (b) It is NOT monotonic -- the 10-25 mile weight exceeds
-# the 5-10 mile weight, because women bypass nearer capable hospitals for
-# farther ones. A strictly decreasing function cannot represent that, so the
-# functional form is mis-specified for subspecialty surgery, not just the
-# parameters. Bands are MILES: converting to Luo/Qi minutes needs a speed
-# assumption worth 14 points (see the drive-time note above).
-
-CHIA_UROGYN_DECAY_WEIGHTS <- c(
-  "5"   = 1.0000,   # 0-5 miles   (reference band)
-  "10"  = 0.2190,   # 5-10
-  "25"  = 0.2357,   # 10-25       <- exceeds the band before it
-  "50"  = 0.0190,   # 25-50
-  "999" = 0.0007    # >50
-)
-
-#' Calibrated urogynaecologic distance-decay weights
-#'
-#' Empirical replacement for `E2SFCA_DEFAULT_WEIGHTS` in urogynaecologic access
-#' surfaces. Retain the Luo/Qi weights for the generic-accessibility scenario.
-#'
-#' Conditional on nearest urogyn-capable site within 5 miles, n = 4,342
-#' operations, FY2007-2018, Massachusetts. Bands are upper bounds in MILES.
-#'
-#' @return Named numeric vector of weights, normalised to 1.0 in the 0-5 band.
-#' @examples
-#' chia_urogyn_decay_weights()
-#' @export
-chia_urogyn_decay_weights <- function() CHIA_UROGYN_DECAY_WEIGHTS
-
-#' Provenance for the CHIA travel kernel
-#' @export
-chia_travel_kernel_provenance <- function() {
-  list(
-    source             = "MA CHIA Case Mix Hospital Inpatient Discharge Database",
-    years              = "FY2007-2018",
-    cohort             = "female, 18+, operative principal procedure, newborn excluded",
-    n_operations       = 1639630L,
-    geocoded_pct       = 99.0,
-    distance_measured  = TRUE,
-    drivetime_measured = FALSE,
-    drivetime_note     = "miles * 1.3 circuity / 40 mph; <=30 share 0.646-0.790 over 30-50 mph",
-    setting            = "hospital inpatient only -- no ambulatory surgery",
-    calibration_tier   = "observed_regional",
-    substitutes_e2sfca = FALSE,
-    builder            = "scripts/chia/build_chia_surgical_travel_kernel.R",
-    urogyn_builder     = "scripts/chia/build_chia_urogyn_travel_kernel.R",
-    urogyn_n           = 9081L,
-    urogyn_sites       = 38L,
-    urogyn_definition  = "operator-based: board-certified URPS surgeon",
-    appendix           = "docs/CHIA_TECHNICAL_APPENDIX.md"
+  base::message(
+    "Origin chunk size: ", origin_chunk_size
   )
+  base::message(
+    "Destination chunk size: ", destination_chunk_size
+  )
+
+  required_pair_cols <- c(
+    origin_zip_col,
+    destination_zip_col
+  )
+
+  required_centroid_cols <- c(
+    centroid_zip_col,
+    latitude_col,
+    longitude_col
+  )
+
+  missing_pair_cols <- base::setdiff(
+    required_pair_cols,
+    base::names(zip_pairs)
+  )
+
+  missing_centroid_cols <- base::setdiff(
+    required_centroid_cols,
+    base::names(zip_centroids)
+  )
+
+  if (base::length(missing_pair_cols) > 0L) {
+    base::stop(
+      "Missing pair column(s): ",
+      base::paste(
+        missing_pair_cols,
+        collapse = ", "
+      )
+    )
+  }
+
+  if (base::length(missing_centroid_cols) > 0L) {
+    base::stop(
+      "Missing centroid column(s): ",
+      base::paste(
+        missing_centroid_cols,
+        collapse = ", "
+      )
+    )
+  }
+
+  if (!base::is.numeric(origin_chunk_size) ||
+      origin_chunk_size < 1L) {
+    base::stop(
+      "`origin_chunk_size` must be a positive integer."
+    )
+  }
+
+  if (!base::is.numeric(destination_chunk_size) ||
+      destination_chunk_size < 1L) {
+    base::stop(
+      "`destination_chunk_size` must be a positive integer."
+    )
+  }
+
+  normalize_zip5 <- function(x) {
+    zip_chr <- base::as.character(x)
+    zip_chr <- base::trimws(zip_chr)
+    zip_chr <- base::sub("-.*$", "", zip_chr)
+    zip_chr <- base::gsub("[^0-9]", "", zip_chr)
+    zip_chr <- base::ifelse(
+      base::nchar(zip_chr) == 4L,
+      base::paste0("0", zip_chr),
+      zip_chr
+    )
+    zip_chr <- base::ifelse(
+      base::nchar(zip_chr) == 5L,
+      zip_chr,
+      NA_character_
+    )
+    zip_chr
+  }
+
+  split_chunks <- function(index_vector, chunk_size) {
+    chunk_id <- base::ceiling(
+      base::seq_along(index_vector) / chunk_size
+    )
+    base::split(
+      index_vector,
+      chunk_id
+    )
+  }
+
+  json_row_to_numeric <- function(row_values) {
+    base::vapply(
+      row_values,
+      function(value) {
+        if (base::is.null(value)) {
+          return(NA_real_)
+        }
+        base::as.numeric(value)
+      },
+      numeric(1)
+    )
+  }
+
+  json_rows_to_matrix <- function(
+      row_values,
+      expected_rows,
+      expected_cols) {
+
+    if (base::length(row_values) != expected_rows) {
+      base::stop(
+        "Valhalla matrix returned ",
+        base::length(row_values),
+        " rows; expected ",
+        expected_rows,
+        "."
+      )
+    }
+
+    numeric_rows <- base::lapply(
+      row_values,
+      json_row_to_numeric
+    )
+
+    row_lengths <- base::vapply(
+      numeric_rows,
+      base::length,
+      integer(1)
+    )
+
+    if (base::any(row_lengths != expected_cols)) {
+      base::stop(
+        "Valhalla matrix returned an unexpected number of columns."
+      )
+    }
+
+    base::do.call(
+      base::rbind,
+      numeric_rows
+    )
+  }
+
+  base::message("Normalizing requested ZIP pairs.")
+
+  requested_pairs <- zip_pairs |>
+    dplyr::transmute(
+      origin_zip = normalize_zip5(.data[[origin_zip_col]]),
+      destination_zip = normalize_zip5(.data[[destination_zip_col]])
+    ) |>
+    dplyr::filter(
+      !base::is.na(.data$origin_zip),
+      !base::is.na(.data$destination_zip)
+    ) |>
+    dplyr::distinct()
+
+  base::message(
+    "Unique requested ZIP pairs: ",
+    base::format(base::nrow(requested_pairs), big.mark = ",")
+  )
+
+  if (base::nrow(requested_pairs) == 0L) {
+    base::stop("No valid ZIP-to-ZIP pairs remain after normalization.")
+  }
+
+  base::message("Preparing ZIP-coordinate reference.")
+
+  centroid_reference <- zip_centroids |>
+    dplyr::transmute(
+      zip5 = normalize_zip5(.data[[centroid_zip_col]]),
+      latitude = base::as.numeric(.data[[latitude_col]]),
+      longitude = base::as.numeric(.data[[longitude_col]])
+    ) |>
+    dplyr::filter(!base::is.na(.data$zip5)) |>
+    dplyr::distinct(.data$zip5, .keep_all = TRUE)
+
+  duplicate_zip_count <- zip_centroids |>
+    dplyr::transmute(zip5 = normalize_zip5(.data[[centroid_zip_col]])) |>
+    dplyr::filter(!base::is.na(.data$zip5)) |>
+    dplyr::count(.data$zip5) |>
+    dplyr::filter(.data$n > 1L) |>
+    base::nrow()
+
+  base::message(
+    "ZIPs with duplicate centroid rows before deduplication: ",
+    duplicate_zip_count
+  )
+
+  origins <- requested_pairs |>
+    dplyr::distinct(.data$origin_zip) |>
+    dplyr::left_join(centroid_reference, by = c("origin_zip" = "zip5")) |>
+    dplyr::rename(
+      origin_lat = .data$latitude,
+      origin_lon = .data$longitude
+    )
+
+  destinations <- requested_pairs |>
+    dplyr::distinct(.data$destination_zip) |>
+    dplyr::left_join(centroid_reference, by = c("destination_zip" = "zip5")) |>
+    dplyr::rename(
+      destination_lat = .data$latitude,
+      destination_lon = .data$longitude
+    )
+
+  missing_origins <- origins |>
+    dplyr::filter(base::is.na(.data$origin_lat) | base::is.na(.data$origin_lon))
+
+  missing_destinations <- destinations |>
+    dplyr::filter(base::is.na(.data$destination_lat) | base::is.na(.data$destination_lon))
+
+  if (base::nrow(missing_origins) > 0L) {
+    base::message("Missing origin coordinates: ", base::nrow(missing_origins))
+  }
+
+  if (base::nrow(missing_destinations) > 0L) {
+    base::message("Missing destination coordinates: ", base::nrow(missing_destinations))
+  }
+
+  origins_routeable <- origins |>
+    dplyr::filter(base::is.finite(.data$origin_lat), base::is.finite(.data$origin_lon)) |>
+    dplyr::arrange(.data$origin_zip)
+
+  destinations_routeable <- destinations |>
+    dplyr::filter(base::is.finite(.data$destination_lat), base::is.finite(.data$destination_lon)) |>
+    dplyr::arrange(.data$destination_zip)
+
+  base::message("Routeable origin ZIPs: ", base::format(base::nrow(origins_routeable), big.mark = ","))
+  base::message("Routeable destination ZIPs: ", base::format(base::nrow(destinations_routeable), big.mark = ","))
+
+  if (base::nrow(origins_routeable) == 0L || base::nrow(destinations_routeable) == 0L) {
+    base::stop("No routeable origin/destination coordinates remain.")
+  }
+
+  origin_chunks <- split_chunks(
+    base::seq_len(base::nrow(origins_routeable)),
+    base::as.integer(origin_chunk_size)
+  )
+
+  destination_chunks <- split_chunks(
+    base::seq_len(base::nrow(destinations_routeable)),
+    base::as.integer(destination_chunk_size)
+  )
+
+  n_requests <- base::length(origin_chunks) * base::length(destination_chunks)
+  base::message("Valhalla matrix requests required: ", base::format(n_requests, big.mark = ","))
+
+  matrix_blocks <- base::list()
+  block_number <- 0L
+
+  for (origin_index in base::seq_along(origin_chunks)) {
+    source_block <- origins_routeable[origin_chunks[[origin_index]], , drop = FALSE]
+
+    for (destination_index in base::seq_along(destination_chunks)) {
+      target_block <- destinations_routeable[destination_chunks[[destination_index]], , drop = FALSE]
+      block_number <- block_number + 1L
+
+      base::message(
+        "Routing matrix block ", block_number, " of ", n_requests, ": ",
+        base::nrow(source_block), " origins x ", base::nrow(target_block), " destinations."
+      )
+
+      source_locations <- base::lapply(
+        base::seq_len(base::nrow(source_block)),
+        function(index) {
+          base::list(
+            lat = source_block$origin_lat[[index]],
+            lon = source_block$origin_lon[[index]]
+          )
+        }
+      )
+
+      target_locations <- base::lapply(
+        base::seq_len(base::nrow(target_block)),
+        function(index) {
+          base::list(
+            lat = target_block$destination_lat[[index]],
+            lon = target_block$destination_lon[[index]]
+          )
+        }
+      )
+
+      request_body <- base::list(
+        sources = source_locations,
+        targets = target_locations,
+        costing = costing,
+        units = "miles",
+        verbose = FALSE
+      )
+
+      request_url <- base::paste0(
+        base::sub("/+$", "", valhalla_url),
+        "/sources_to_targets"
+      )
+
+      valhalla_response <- base::tryCatch(
+        {
+          httr2::request(request_url) |>
+            httr2::req_headers(`Content-Type` = "application/json") |>
+            httr2::req_body_json(request_body, auto_unbox = TRUE) |>
+            httr2::req_timeout(120) |>
+            httr2::req_retry(
+              max_tries = 3L,
+              backoff = function(tries) 2 ^ tries
+            ) |>
+            httr2::req_perform()
+        },
+        error = function(error_condition) {
+          base::stop(
+            "Valhalla request failed for block ", block_number, ": ",
+            base::conditionMessage(error_condition)
+          )
+        }
+      )
+
+      response_body <- httr2::resp_body_json(valhalla_response, simplifyVector = FALSE)
+
+      if (base::is.null(response_body$sources_to_targets)) {
+        base::stop("Valhalla response does not contain `sources_to_targets`.")
+      }
+
+      duration_rows <- response_body$sources_to_targets$durations
+      distance_rows <- response_body$sources_to_targets$distances
+
+      duration_matrix <- json_rows_to_matrix(
+        duration_rows,
+        expected_rows = base::nrow(source_block),
+        expected_cols = base::nrow(target_block)
+      )
+
+      distance_matrix <- json_rows_to_matrix(
+        distance_rows,
+        expected_rows = base::nrow(source_block),
+        expected_cols = base::nrow(target_block)
+      )
+
+      block_routes <- tibble::tibble(
+        source_index = base::rep(base::seq_len(base::nrow(source_block)), each = base::nrow(target_block)),
+        target_index = base::rep(base::seq_len(base::nrow(target_block)), times = base::nrow(source_block)),
+        duration_sec = base::as.numeric(base::t(duration_matrix)),
+        distance_miles = base::as.numeric(base::t(distance_matrix))
+      ) |>
+        dplyr::mutate(
+          origin_zip = source_block$origin_zip[.data$source_index],
+          destination_zip = target_block$destination_zip[.data$target_index]
+        ) |>
+        dplyr::select(
+          .data$origin_zip,
+          .data$destination_zip,
+          .data$duration_sec,
+          .data$distance_miles
+        )
+
+      matrix_blocks[[block_number]] <- block_routes
+    }
+  }
+
+  base::message("Combining Valhalla matrix blocks.")
+
+  routed_matrix <- dplyr::bind_rows(matrix_blocks) |>
+    dplyr::distinct(.data$origin_zip, .data$destination_zip, .keep_all = TRUE) |>
+    dplyr::mutate(
+      drive_minutes = .data$duration_sec / 60,
+      drive_miles = .data$distance_miles,
+      route_status = dplyr::if_else(
+        base::is.finite(.data$drive_minutes),
+        "routed",
+        "unreachable"
+      ),
+      drive_time_band = dplyr::case_when(
+        !base::is.finite(.data$drive_minutes) ~ "unreachable",
+        .data$drive_minutes <= 30            ~ "00-30",
+        .data$drive_minutes <= 60            ~ "31-60",
+        .data$drive_minutes <= 120           ~ "61-120",
+        .data$drive_minutes <= 180           ~ "121-180",
+        TRUE                                 ~ ">180"
+      ),
+      routing_engine = "Valhalla",
+      costing = costing
+    )
+
+  base::message("Restricting matrix to requested ZIP pairs.")
+
+  routed_pairs <- requested_pairs |>
+    dplyr::left_join(
+      routed_matrix,
+      by = c("origin_zip", "destination_zip")
+    ) |>
+    dplyr::mutate(
+      route_status = dplyr::case_when(
+        base::is.na(.data$route_status) ~ "missing_coordinate_or_route",
+        TRUE ~ .data$route_status
+      )
+    )
+
+  n_routed <- routed_pairs |>
+    dplyr::filter(.data$route_status == "routed") |>
+    base::nrow()
+
+  n_unrouted <- base::nrow(routed_pairs) - n_routed
+  routed_pct <- 100 * n_routed / base::nrow(routed_pairs)
+
+  base::message("Requested pairs: ", base::format(base::nrow(routed_pairs), big.mark = ","))
+  base::message("Successfully routed: ", base::format(n_routed, big.mark = ","), " (", base::sprintf("%.1f%%", routed_pct), ").")
+  base::message("Not routed: ", base::format(n_unrouted, big.mark = ","))
+
+  if (n_routed > 0L) {
+    drive_median <- stats::median(routed_pairs$drive_minutes, na.rm = TRUE)
+    drive_p25 <- base::unname(stats::quantile(routed_pairs$drive_minutes, probs = 0.25, na.rm = TRUE))
+    drive_p75 <- base::unname(stats::quantile(routed_pairs$drive_minutes, probs = 0.75, na.rm = TRUE))
+    drive_mean <- base::mean(routed_pairs$drive_minutes, na.rm = TRUE)
+    drive_sd <- stats::sd(routed_pairs$drive_minutes, na.rm = TRUE)
+
+    base::message("Drive time mean (SD): ", base::sprintf("%.1f (%.1f) min", drive_mean, drive_sd))
+    base::message("Drive time median (p25, p75): ", base::sprintf("%.1f (%.1f, %.1f) min", drive_median, drive_p25, drive_p75))
+  }
+
+  saved_path <- NA_character_
+
+  if (base::isTRUE(save_file)) {
+    base::dir.create(save_dir, recursive = TRUE, showWarnings = FALSE)
+    timestamp <- base::format(base::Sys.time(), "%Y%m%d_%H%M%S")
+    saved_path <- base::file.path(save_dir, base::paste0("valhalla_zip_drive_times_", timestamp, ".csv"))
+
+    base::message("Saving routed ZIP pairs.")
+    readr::write_csv(routed_pairs, saved_path)
+    base::message("Saved file: ", base::normalizePath(saved_path, mustWork = TRUE))
+  }
+
+  base::message("valhalla_zip_drive_time(): complete.")
+  base::attr(routed_pairs, "saved_path") <- saved_path
+  routed_pairs
 }
