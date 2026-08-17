@@ -47,6 +47,15 @@ diagnosis:
       Resolving this changes the denominator, so it is flagged rather than
       assumed.
 
+      EVIDENCE, NOT RESOLUTION: a payer clinical policy for FI treatments
+      specifies the whole range "R15.0-R15.9" as supporting coverage. That is
+      real information and is recorded here -- but a COVERAGE rule is not a
+      research case definition. A payer has reason to be inclusive about which
+      diagnoses justify paying for a treatment; an epidemiological denominator
+      has reason to be specific about who actually has the condition. The
+      question stays open on those grounds rather than being closed by
+      borrowing a payer's boundary.
+
 treatments:
 
   # ---- DEFINITIVE -------------------------------------------------------
@@ -77,6 +86,47 @@ treatments:
       fecal-incontinence quantity. Require an FI diagnosis on the procedure
       claim or within a preregistered peri-procedure window, and flag
       concurrent urinary indications.
+    device_programming_cpt:
+      - code: "95970"
+        label: "Electronic analysis of implanted neurostimulator pulse generator/transmitter; WITHOUT programming"
+        stage: device_maintenance
+      - code: "95971"
+        label: "... with SIMPLE spinal cord or peripheral (eg sacral) nerve programming"
+        stage: device_maintenance
+      - code: "95972"
+        label: "... with COMPLEX spinal cord or peripheral (eg sacral) nerve programming"
+        stage: device_maintenance
+    device_programming_note: >
+      THE REPROGRAMMING WORKLOAD, previously missing entirely. Reprogramming is
+      attempted before revision is considered, so 95970/95971/95972 capture
+      maintenance activity that 64585/64595 (revision/removal) never see. This
+      is why the 6.5% revision rate UNDERSTATES device-maintenance workload.
+      These are NOT recurrence and must never populate g_k.
+
+      INDICATION RISK IS EXTREME HERE. The descriptors span brain, cranial
+      nerve, spinal cord, peripheral nerve AND sacral nerve generators, so
+      these codes are used far outside pelvic care -- much broader even than
+      64590. Diagnosis linkage is mandatory, and a bare count is meaningless.
+    hcpcs_device_supplies:
+      - code: "A4290"
+        label: "Sacral nerve stimulation test lead, each"
+        stage: test_or_lead
+      - code: "L8680"
+        label: "Implantable neurostimulator electrode, each"
+      - code: "L8685"
+        label: "Implantable neurostimulator pulse generator, single array, rechargeable"
+      - code: "L8686"
+        label: "Implantable neurostimulator pulse generator, single array, nonrechargeable"
+      - code: "L8687"
+        label: "Implantable neurostimulator pulse generator, dual array, rechargeable"
+      - code: "L8688"
+        label: "Implantable neurostimulator pulse generator, dual array, nonrechargeable"
+    hcpcs_note: >
+      DEVICE SUPPLY codes, not professional services. They identify hardware and
+      would DOUBLE-COUNT if summed with the CPT implantation codes for the same
+      episode. Useful for identifying implants in a facility/supply file;
+      dangerous in a procedure count. A4290 is specifically the TEST lead, so
+      it is one of the few supply codes that helps separate test from implant.
     stage_note: >
       64561/64581 place the lead; 64590 places the generator. The
       test-to-implant transition (~0.797 in one FI-specific NY cohort) lives
@@ -89,10 +139,35 @@ treatments:
       - code: "46750"
         label: "Sphincteroplasty, anal, for incontinence or prolapse; adult"
         stage: definitive_procedure
+        include: true
+      - code: "46760"
+        label: "Sphincteroplasty, anal, for incontinence or prolapse, adult; muscle transplant"
+        stage: definitive_procedure
+        include: true
+      - code: "46761"
+        label: "Sphincteroplasty, anal, for incontinence or prolapse, adult; levator muscle imbrication (Park posterior anal repair)"
+        stage: definitive_procedure
+        include: true
       - code: "46751"
         label: "Sphincteroplasty, anal, for incontinence or prolapse; child"
         include: false
         note: "Excluded: the model is an adult female population."
+      - code: "46999"
+        label: "Unlisted procedure, anus"
+        include: "review"
+        note: >
+          A payer policy lists this as supporting FI coverage, but it is an
+          UNLISTED code that catches any anal procedure whatsoever. Including
+          it would import unrelated anorectal surgery into the AI limb;
+          excluding it loses genuinely-coded FI operations that had no specific
+          code. Neither is obviously right, so it is flagged.
+    family_note: >
+      THE SPHINCTEROPLASTY FAMILY IS FOUR CODES, NOT ONE. 46760 (muscle
+      transplant) and 46761 (levator imbrication / Park posterior anal repair)
+      are distinct definitive repairs that a 46750-only basket misses entirely.
+      They may also warrant separate index_treatment values, since a muscle
+      transposition and a direct overlapping repair are different operations
+      with different expected durability.
     indication_specific: "partial"
     indication_warning: >
       46750 names "incontinence OR PROLAPSE" in its own descriptor, so it is
@@ -116,6 +191,12 @@ treatments:
       counts SESSIONS, not patients. Any per-patient rate must deduplicate to
       unique beneficiaries -- exactly the visits-versus-women distinction that
       the first-entry estimand required.
+    coverage_note: >
+      A payer clinical policy for fecal-incontinence treatments lists 64566
+      under "CPT codes that do NOT support coverage criteria" -- i.e. PTNS is
+      not covered for FI by that payer. Observed PTNS volume in FI claims is
+      therefore shaped by coverage policy as well as clinical choice, which is
+      another reason the 0.9% observed rate is realized care rather than need.
     placement_note: >
       CONSERVATIVE, not definitive. This is the code currently occupying the
       AI `procedure` stage in condition_service_pathway.csv, which is the
@@ -150,12 +231,33 @@ treatments:
     cpt: []
     status: NOT_DEFINED
     note: >
-      The LARGEST category in the Medicare evidence at 6.5% of the FI cohort,
-      and the one whose composition is entirely unknown here. Halani's
-      definition is exactly what the paywall withholds. Leaving it EMPTY
-      rather than guessing: a 6.5% category assembled from plausible-looking
-      anorectal codes would dominate any AI workload estimate while
-      corresponding to nothing in particular.
+      STILL NOT DEFINED, and deliberately so. This is the LARGEST category in
+      the Medicare evidence at 6.5% of the FI cohort, and Halani's definition
+      is exactly what the paywall withholds. A 6.5% category assembled from
+      plausible-looking anorectal codes would dominate any AI workload estimate
+      while corresponding to nothing in particular.
+    candidates_not_adopted:
+      - code: "L8605"
+        label: "Injectable bulking agent, dextranomer/hyaluronic acid copolymer implant, anal canal, 1 ml"
+        source: "payer FI policy, listed as NOT supporting coverage"
+        why_not_adopted: >
+          A real FI treatment (anal bulking) and a plausible member of an
+          "anal procedures" category -- but it is a HCPCS SUPPLY code, and the
+          payer policy examined lists it as non-covered. Whether Halani counted
+          bulking agents, and under which code, is unknown.
+      - code: "46999"
+        label: "Unlisted procedure, anus"
+        why_not_adopted: >
+          Would catch any anal procedure whatsoever. Also listed under
+          sphincteroplasty above, which illustrates the problem: the same code
+          cannot sit in two mutually-non-exclusive categories without
+          double-counting.
+    why_still_empty: >
+      These candidates are recorded so the search is not repeated from scratch,
+      NOT adopted. Assembling 6.5% of a cohort out of two codes found in one
+      payer policy would be guessing with extra steps. The composition needs
+      either the article supplement or an explicit, clinically reviewed
+      definition of what the model means by an "anal procedure" for FI.
 
 open_questions:
   - "Whether R15.0 and R15.2 belong in the FI denominator (changes it materially)."
