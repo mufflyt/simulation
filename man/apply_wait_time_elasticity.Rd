@@ -29,5 +29,9 @@ Adjusts baseline entry and re-entry transition rates according to observed or
 simulated appointment wait times. When local capacity is strained and wait times
 increase above baseline anchors, care-seeking rate decreases logarithmically.
 }
+\seealso{
+Other care engagement:
+\code{\link[=estimate_incident_care_seeking]{estimate_incident_care_seeking()}}
+}
 \concept{care engagement}
 \concept{demand}
