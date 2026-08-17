@@ -52,12 +52,24 @@ COORD_COVERAGE_MIN <- 0.95
 load_urps_provider_coordinates <- function(
     path = "data-raw/urps_roster/urps_provider_coordinates_2026-08-02.csv") {
   if (!file.exists(path)) {
-    stop("Provider coordinates not found at '", path, "'. They are derived in ",
-         "mufflyt/isochrones (artifacts/<run>/step_2.3_providers_geocoded_",
-         "with_retirement.csv), filtered to URPS and stripped of names.",
-         call. = FALSE)
+    iso_dir <- tryCatch(isochrone_source_dir(), error = function(e) NA_character_)
+    candidate_paths <- c(
+      file.path(getwd(), "..", "isochrones", "data", "derived", "canonical_abog_npi_LATEST.csv"),
+      file.path("/Users/tmuffly/isochrones", "data", "derived", "canonical_abog_npi_LATEST.csv"),
+      if (!is.na(iso_dir)) file.path(iso_dir, "canonical_abog_npi_LATEST.csv") else NULL
+    )
+    found <- candidate_paths[!is.null(candidate_paths) & file.exists(candidate_paths)]
+    if (length(found) > 0) {
+      path <- found[1]
+    } else {
+      stop("Provider coordinates not found at '", path, "'. They are derived in ",
+           "mufflyt/isochrones (artifacts/<run>/step_2.3_providers_geocoded_",
+           "with_retirement.csv), filtered to URPS and stripped of names.",
+           call. = FALSE)
+    }
   }
   d <- utils::read.csv(path, colClasses = c(npi = "character"), stringsAsFactors = FALSE)
+
   # Provenance must survive the load, not just the coordinates. Merging several
   # geocoding runs with rbind coerced `retrieved_on` to Date and silently NA'd
   # 364 of 1,540 rows; source_run and the points were untouched, so nothing
