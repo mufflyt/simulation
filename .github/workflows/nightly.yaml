@@ -74,10 +74,34 @@ jobs:
           RENV_PATHS_CACHE: ''          # no cache: prove the lockfile alone suffices
           RENV_CONFIG_CACHE_ENABLED: 'FALSE'
         run: |
+          # terra/sf link against GDAL, GEOS and PROJ. Without them the
+          # restore aborts partway with "error testing if 'terra' can be
+          # loaded", leaves the library incomplete, and the smoke test that
+          # follows reports the far more confusing "there is no package called
+          # pkgload". setup-r-dependencies normally resolves sysreqs, but this
+          # job deliberately does not use it -- the whole point is to restore
+          # from renv.lock alone -- so the system layer must be named here.
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgdal-dev libgeos-dev libproj-dev libudunits2-dev
           mkdir -p "$RUNNER_TEMP/frozenlib"
           Rscript -e '
-            install.packages("renv", repos = "https://cloud.r-project.org")
             lib <- file.path(Sys.getenv("RUNNER_TEMP"), "frozenlib")
+            # renv must be installed INTO the frozen library, not the default
+            # user library. .libPaths(lib) REPLACES the search path rather than
+            # extending it, so a renv installed elsewhere becomes unreachable
+            # the moment the path is narrowed -- restore then died with "there
+            # is no package called renv", the library stayed empty, and the
+            # smoke test that followed reported the far more confusing "there is
+            # no package called pkgload". The gate looked like a lockfile defect
+            # when it was a library-path defect.
+            #
+            # Prepending lib to the EXISTING path would also fix the load, but
+            # it would let packages already present in the default library
+            # satisfy the lockfile, which is precisely what this job exists to
+            # rule out. Installing renv into lib keeps the library empty of
+            # everything except the restorer itself.
+            install.packages("renv", repos = "https://cloud.r-project.org", lib = lib)
             .libPaths(lib)
             renv::restore(project = ".", library = lib, prompt = FALSE)
             cat("\n## Frozen restore\n\ninstalled:", length(list.files(lib)), "packages\n")
@@ -90,7 +114,14 @@ jobs:
           Rscript -e '
             .libPaths(file.path(Sys.getenv("RUNNER_TEMP"), "frozenlib"))
             suppressMessages(pkgload::load_all(".", quiet = TRUE))
-            v <- pathway_service_volumes(treated = c(pop = 1000), year = 2025L)
+            # Structural smoke test: does the restored library RUN the model?
+            # The shipped pathway is refused by assert_incident_not_prevalent()
+            # (per_entering = 1.00 is a stock-as-flow error), so this uses the
+            # labelled fixture -- NOT a candidate value. See
+            # .github/scripts/_pathway_fixture.R.
+            source(".github/scripts/_pathway_fixture.R")
+            v <- pathway_service_volumes(treated = c(pop = 1000), year = 2025L,
+                                         pathway = ci_pathway_fixture())
             stopifnot(nrow(v) > 0, all(is.finite(v$volume)))
             cat("PASS: model runs in the frozen library\n")
           '
@@ -252,6 +283,11 @@ jobs:
               cat("\nSKIPPED (a skipped gate is not a passing gate)\n")
               print(sk, row.names = FALSE)
             }
+            # ORDINARY SEMANTICS, DELIBERATELY RESTORED. A failing test fails
+            # the job -- full stop. An earlier revision let a blocker registry
+            # decide the exit status, which would have meant a green build with
+            # tests failing. The expected scientific refusals are now asserted
+            # as PASSING tests of refusal, so there is nothing left to excuse.
             if (sum(df$failed) + sum(df$error) > 0) quit(status = 1)
           ' | tee -a "$GITHUB_STEP_SUMMARY"
 
@@ -275,11 +311,15 @@ jobs:
         run: |
           Rscript -e '
             suppressMessages(pkgload::load_all(".", quiet = TRUE))
+            # Determinism, not calibration: the question is whether one seed
+            # gives one answer. Uses the labelled fixture because the shipped
+            # pathway is refused -- see .github/scripts/_pathway_fixture.R.
+            source(".github/scripts/_pathway_fixture.R")
             one <- function() {
               set.seed(20260815)
               v <- pathway_service_volumes(
                 treated = c(pop = 3264807, ui = 2538779, ai = 372721),
-                year = 2025L)
+                year = 2025L, pathway = ci_pathway_fixture())
               v[order(v$service), ]
             }
             a <- one(); b <- one()
@@ -304,7 +344,7 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}, any::covr, any::lintr, any::spelling, any::urlchecker, any::roxygen2
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}, any::covr, any::lintr, any::spelling, any::urlchecker, roxygen2@7.3.3
           dependencies: '"hard"'
 
       - name: Coverage
@@ -322,10 +362,71 @@ jobs:
       - name: roxygen documentation is up to date
         # Regenerate and fail if man/ or NAMESPACE would change. Two merges once
         # reached main with @export tags missing from NAMESPACE.
+        #
+        # roxygen2 IS PINNED TO 7.3.3 ABOVE, matching DESCRIPTION's RoxygenNote.
+        # An unpinned `any::roxygen2` installs whatever is current and rewrites
+        # all ~500 .Rd files on a version bump, so this gate reported "stale"
+        # against docs that were perfectly current for the declared generator --
+        # and the only way to satisfy it would have been to commit a 500-file
+        # diff that changes no documentation. The generator version is part of
+        # the contract, so it is declared in exactly one place.
         run: |
+          # PROVENANCE FIRST. "Stale" is not actionable without knowing which
+          # generator produced the committed files and which produced the
+          # comparison. RoxygenNote pins roxygen2; R itself is NOT pinned here,
+          # and whether R version materially changes generated bytes is exactly
+          # what this reports.
+          {
+            echo "## Documentation generation environment"
+            echo '```'
+            Rscript -e 'cat("R           :", R.version.string, "\n");
+                        cat("roxygen2    :", as.character(packageVersion("roxygen2")), "\n");
+                        d <- read.dcf("DESCRIPTION");
+                        cat("RoxygenNote :", d[1, "RoxygenNote"], "\n")'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
           Rscript -e 'roxygen2::roxygenise()'
+
+          # BYTE-STABILITY, MEASURED ON A COPY. The first version of this probe
+          # stashed man/ and regenerated twice IN THE WORKING TREE with output
+          # sent to /dev/null. If either regeneration had errored, the tree
+          # would sit at the committed state and the staleness check below
+          # would pass VACUOUSLY -- a diagnostic that destroys what it measures.
+          # It runs in a scratch copy now, and errors are fatal rather than
+          # swallowed.
+          rm -rf /tmp/roxcheck && cp -a . /tmp/roxcheck
+          ( cd /tmp/roxcheck \
+            && Rscript -e 'roxygen2::roxygenise()' \
+            && cp -a man /tmp/rox_pass1 && cp NAMESPACE /tmp/rox_ns1 \
+            && Rscript -e 'roxygen2::roxygenise()' ) || {
+              echo "::error::roxygenise() FAILED during the stability probe" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            }
+          if diff -r -q /tmp/rox_pass1 /tmp/roxcheck/man >/dev/null 2>&1 && \
+             diff -q /tmp/rox_ns1 /tmp/roxcheck/NAMESPACE >/dev/null 2>&1; then
+            echo "regeneration is byte-stable within this environment" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::roxygen output is NONDETERMINISTIC in a single environment" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
           if ! git diff --quiet -- man NAMESPACE; then
             echo "::error::man/ or NAMESPACE is stale. Run roxygen2::roxygenise() and commit."
+            # WRITE THE DIFF TO THE STEP SUMMARY, not only to the log. The log
+            # interleaves all jobs, and this step's output proved unrecoverable
+            # from it -- the gate said "stale" and could not say WHAT, which is
+            # a gate that reports a problem without reporting the problem.
+            {
+              echo "## Stale generated docs"
+              echo '```'
+              git --no-pager diff --stat -- man NAMESPACE
+              echo '```'
+              echo "<details><summary>full diff</summary>"
+              echo '```diff'
+              git --no-pager diff -- man NAMESPACE | head -200
+              echo '```'
+              echo "</details>"
+            } >> "$GITHUB_STEP_SUMMARY"
             git --no-pager diff --stat -- man NAMESPACE
             exit 1
           fi

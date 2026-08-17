@@ -14,29 +14,27 @@ claims_service_volumes(
 )
 }
 \arguments{
-\item{claims}{A data frame with \code{service}, \code{year}, \code{volume}, and
-optionally \code{calibration_status} and \code{source}. Missing
-\code{calibration_status} defaults to \code{claims_status_default}; missing
-\code{source} to \code{"claims"}.}
+\item{claims}{A data frame with \code{service}, \code{year}, \code{volume}, and optionally
+\code{calibration_status} and \code{source}. Missing \code{calibration_status} defaults to
+\code{claims_status_default}; missing \code{source} to \code{"claims"}.}
 
-\item{fallback}{Optional data frame with \code{service}, \code{year},
-\code{volume} for the services/years not covered by \code{claims} (e.g. the
-illustrative basket). \code{NULL} uses \code{claims} alone.}
+\item{fallback}{Optional data frame with \code{service}, \code{year}, \code{volume} for the
+services/years not covered by \code{claims} (e.g. the illustrative basket).
+\code{NULL} uses \code{claims} alone.}
 
 \item{fallback_status}{Calibration tier stamped on fallback rows.}
 
 \item{claims_status_default}{Calibration tier for claims rows that carry no
 \code{calibration_status} of their own.}
 
-\item{require_complete}{When \code{TRUE}, using any fallback row is treated as
-an incomplete calibration: \code{strict} mode errors, \code{relaxed} warns.}
+\item{require_complete}{When \code{TRUE}, using any fallback row is treated as an
+incomplete calibration: \code{strict} mode errors, \code{relaxed} warns.}
 
 \item{mode}{Reproducibility mode.}
 }
 \value{
-A tibble \code{year}, \code{service}, \code{volume},
-\code{calibration_status}, \code{source}, with the weakest overall tier
-recorded in \code{attr(., "overall_status")}.
+A tibble \code{year}, \code{service}, \code{volume}, \code{calibration_status}, \code{source},
+with the weakest overall tier recorded in \code{attr(., "overall_status")}.
 }
 \description{
 The calibrated counterpart of \code{example_service_volumes()}. Merges a real,
@@ -47,21 +45,38 @@ claims-backed -- it never overclaims a fully calibrated basket while some
 services still ride the fallback ratios.
 }
 \details{
-\code{claims} is source-agnostic: CADR Medicare procedure counts, a
-NAMCS-derived visit level, and SASD operative counts all funnel into the same
-\code{service}/\code{year}/\code{volume} shape, each carrying its own
-\code{calibration_status}. Services (or years) absent from \code{claims} are
-filled from \code{fallback} -- e.g. \code{example_service_volumes(demand_long)}
--- and tagged \code{fallback_status}.
+\code{claims} is source-agnostic: CADR Medicare procedure counts, a NAMCS-derived
+visit level, and SASD operative counts all funnel into the same
+\code{service}/\code{year}/\code{volume} shape, each carrying its own \code{calibration_status}.
+Services (or years) absent from \code{claims} are filled from \code{fallback} -- e.g.
+\code{example_service_volumes(demand_long)} -- and tagged \code{fallback_status}.
 
-Fail-closed: with \code{fallback = NULL} the function does not invent the
-missing rows; with \code{require_complete = TRUE} any reliance on the fallback
-is a hard stop in \code{strict} mode (a warning in \code{relaxed}), so a run
-cannot silently ship a half-claims basket as if it were fully calibrated.
+Fail-closed: with \code{fallback = NULL} the function does not invent the missing
+rows; with \code{require_complete = TRUE} any reliance on the fallback is a hard
+stop in \code{strict} mode (a warning in \code{relaxed}), so a run cannot silently ship
+a half-claims basket as if it were fully calibrated.
 }
 \seealso{
-\code{example_service_volumes()}, \code{\link{calibrate_wrvu_per_fte}},
-\code{\link{check_productivity_plausible}}
+\code{example_service_volumes()}, \code{\link[=calibrate_wrvu_per_fte]{calibrate_wrvu_per_fte()}},
+\code{\link[=check_productivity_plausible]{check_productivity_plausible()}}
+
+Other workload to fte: 
+\code{\link{URPS_DELEGATION_MATRIX}},
+\code{\link{WRVU_PER_FTE_BENCHMARK}},
+\code{\link{allocate_fte_by_setting}()},
+\code{\link{apportion_service_volume}()},
+\code{\link{assert_publishable_workload}()},
+\code{\link{calibrate_wrvu_per_fte}()},
+\code{\link{calibration_status_report}()},
+\code{\link{check_productivity_plausible}()},
+\code{\link{compute_fte_gap}()},
+\code{\link{convert_workload_to_fte}()},
+\code{\link{implied_urps_share}()},
+\code{\link{rescale_delegation_to_capacity}()},
+\code{\link{service_volume_to_wrvu}()},
+\code{\link{urps_service_workload}()},
+\code{\link{urps_service_workload_status}()},
+\code{\link{validate_delegation_matrix}()}
 }
 \concept{demand}
 \concept{workload to fte}

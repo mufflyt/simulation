@@ -1,0 +1,104 @@
+# URPS entrant rate — sourced, with the window question made explicit
+# ---------------------------------------------------------------------------
+# THE HEADLINE FINDING, AND IT REVERSES THE OBVIOUS READING OF THE BACK-TEST.
+#
+# The 2020->2023 back-test shows observed annual change of 69/yr against 36/yr
+# predicted, which invites raising the entrant rate to ~69. THAT WOULD BE
+# WRONG. 69/yr is a COVID exam-scheduling artifact, not a sustainable rate:
+#
+#     cert year 2020 =  10   ABOG/ABU examination disrupted
+#     cert year 2021 =  81   catch-up bolus, includes the 2020 cohort
+#     pair mean      =  45.5 vs 2019 = 48 and 2022 = 54
+#
+# Smoothing the 2020/2021 pair moves the 2021-2023 mean from 69.00 to 57.17.
+# Raising the long-run entrant parameter to 69 would bake a one-time catch-up
+# into every future year of the forecast.
+#
+# TWO INDEPENDENT SERIES CONVERGE once the artifact is removed:
+#
+#     certification flow, 2021-2023, COVID pair smoothed   57.17 / yr
+#     NRMP fellowship starts lagged 3 yr (appt 2018-2020)  57.67 / yr
+#
+# They agree to within 0.5/yr despite being different instruments measuring
+# different events three years apart. That convergence is the strongest
+# evidence available here.
+
+estimand:
+  id: urps_entrant_rate
+  definition: >
+    Annual flow of newly URPS-subspecialty-certified physicians INTO the
+    board_certified_active stock. The entrant estimand is CERTIFICATION, not
+    fellowship entry: the modelled stock is keyed on urps_subspecialty_cert_year.
+  units: physicians per year
+  not_this: >
+    NOT NRMP filled fellowship positions. NRMP is an upstream leading indicator
+    with a 2-3 year lag (fellowship is 3 years for OB-GYN, 2 for urology) and a
+    level difference: only ~85% of fellowship starts convert to certification.
+
+sources:
+  certification_flow:
+    role: primary
+    accessor: urps_certification_cohorts()
+    definition: n_certified by cert_year
+    series:
+      2013: 655   # initial backlog, NOT a flow -- URPS certification began 2013
+      2014: 175   # backlog tail
+      2015: 102   # backlog tail
+      2016: 36
+      2017: 33
+      2018: 40
+      2019: 48
+      2020: 10    # COVID exam disruption
+      2021: 81    # catch-up
+      2022: 54
+      2023: 72
+    excluded_years:
+      - years: [2013, 2014, 2015]
+        why: >
+          Backlog cohorts. URPS subspecialty certification began in 2013, so the
+          first years certify physicians already in practice. Treating them as
+          an annual entrant flow would overstate entry by an order of magnitude.
+  nrmp_fellowship_starts:
+    role: corroborating_leading_indicator
+    path: data-raw/calibration/nrmp_urps_entrants_series.csv
+    definition: positions_filled by appointment_year, 2010-2025
+    provenance: NRMP Results and Data, Specialties Matching Service; source_url and retrieved_on per row
+    lag_to_certification_years: 3
+    conversion_to_certification: 0.850   # 46.75 / 55.00 over cert years 2016-2023
+
+window_estimates:
+  # The estimate depends enormously on the window. Recording all of them, so a
+  # choice cannot be made silently.
+  "2016-2019": {mean: 39.25, n_years: 4, note: "pre-COVID, post-backlog"}
+  "2016-2023": {mean: 46.75, n_years: 8, note: "longest post-backlog window"}
+  "2018-2023": {mean: 50.83, n_years: 6, note: "the 50.8/yr figure quoted in the supply warning"}
+  "2019-2023": {mean: 53.00, n_years: 5}
+  "2021-2023": {mean: 69.00, n_years: 3, note: "CONTAMINATED by the 2021 catch-up bolus"}
+  "2021-2023_covid_smoothed": {mean: 57.17, n_years: 3, note: "2020/2021 pair averaged"}
+
+recommendation:
+  value: null
+  status: NOT_ADOPTED
+  why_not_adopted: >
+    A single number is not yet warranted. The defensible range is 47-58/yr
+    depending on how the COVID pair is handled and how far back the window
+    reaches, and the choice between those is a modelling decision that should be
+    made deliberately rather than inferred here. What IS established: the rate
+    is NOT 69, and the shipped back-test assumption of 55 sits inside the
+    defensible range rather than outside it.
+  shipped_assumption: 55
+  shipped_assumption_verdict: >
+    DEFENSIBLE. 55 lies between the long-run certification mean (46.75-53.00)
+    and the NRMP-lagged rate (55.00-57.67). The back-test under-prediction is
+    therefore NOT primarily an entrant-rate error.
+  what_would_settle_it: >
+    A certification series that separates first-time certification from
+    recertification, and an explicit decision on whether the forecast should
+    represent the COVID-disrupted years as they happened or as smoothed.
+
+consequences_for_the_backtest: >
+  The remaining back-test gap (matched arms -5.44%, coverage 0.40) cannot be
+  closed by raising the entrant rate to the observed 69/yr, because that figure
+  is an artifact of the window. Doing so would improve the back-test while
+  making the forecast worse -- the exact failure mode the calibration gates
+  exist to prevent.

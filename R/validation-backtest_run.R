@@ -384,6 +384,30 @@ run_backtest <- function(cutoff_year = BACKTEST_CUTOFF_YEAR,
   summary_tbl$target_basis <- target$basis
   summary_tbl$observed_applies_attrition <- target$observed_series_applies_attrition
 
+  # THE ESTIMAND CHECK RUNS HERE, not only in tests. An arm with
+  # apply_attrition = TRUE predicts "active net of attrition"; the observed
+  # series is a cumulative certification count with n_retired = 0 in every row.
+  # Scoring one against the other is a category error, and it reads as model
+  # error -- it was a material part of the reported back-test miss.
+  #
+  # CLASSIFY HERE, REFUSE AT PUBLICATION. This was first wired as a forced
+  # strict refusal inside run_backtest(), which was the wrong abstraction level
+  # and made the function permanently unusable.
+  #
+  # run_backtest() runs `for (att in c(TRUE, FALSE))` BY DESIGN and already
+  # labels the FALSE arms "[no-attrition, definition-matched]". Producing both
+  # estimands IS the intended experiment -- the attrition arms are what the
+  # matched arms are contrasted against. The mismatch is therefore not an error
+  # in running the back-test; the error is REPORTING an attrition arm as a
+  # validated comparison, because "active net of attrition" has no observable
+  # counterpart in a cumulative certification series.
+  #
+  # So the classification is ATTACHED to every summary -- no caller can obtain
+  # an unclassified one -- and the refusal lives in assert_publishable_run(),
+  # which is where a number becomes a claim. backtest_status_from_summary()
+  # already separates the two subsets for exactly this reason.
+  summary_tbl$estimand_check <- list(assert_backtest_estimand_match(summary_tbl))
+
   list(
     summary = summary_tbl,
     provenance = prov,

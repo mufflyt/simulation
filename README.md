@@ -474,6 +474,70 @@ narrow.
 
 ---
 
+## The NAMCS calibration scalar, and what 0.963 means
+
+The model predicts office-visit demand from disease burden and care pathways.
+Nothing internal tells you whether that prediction is the right size. A
+calibration scalar is the external check:
+
+```
+scalar = independent national estimate / model prediction
+```
+
+The NAMCS anchor is **4,814,760** pelvic-floor-related office visits (NAMCS 2019
+Public Use File, CI 1,982,987–7,646,533). Against a base-year prediction of
+5,000,000 that gives a scalar of **0.963** — the model runs about **3.7% high**,
+which is close agreement.
+
+**How to read the number.** A scalar near 1 means the model and an independent
+source agree on magnitude. A scalar far from 1 signals a **structural
+mismatch**, not an offset to divide out — the published HDMM scalars in
+`config/calibration_targets.yml` make the point (Ob/Gyn 0.906, Urology 0.728,
+Orthopaedic Surgery 0.243). A value like 0.243 says the model and the anchor are
+counting different things. `max_scalar: 3.0` flags anything beyond threefold as
+structural rather than calibratable.
+
+**What the anchor is, precisely.** Any of `DIAG1`–`DIAG3` beginning with an
+ICD-10-CM prefix in `URPS_ICD10_PREFIXES`: `N393`, `N394`, `N81`, `N3281`,
+`R32`, `N993`, `N994`. Weighted contributions:
+
+| Prefix | Meaning | Weighted visits |
+|---|---|---|
+| `N394` | other specified UI | 2,461,101 |
+| `R32` | unspecified UI | 2,047,284 |
+| `N81` | female genital prolapse | 1,856,110 |
+| `N393` | stress UI | 462,053 |
+| `N993` | vault prolapse after hysterectomy | 104,062 |
+| `N994` | post-procedural pelvic adhesions | 73,146 |
+| `N3281` | overactive bladder | **0** |
+
+(These sum above the anchor because a visit can carry several qualifying
+diagnoses; the anchor de-duplicates at visit level.)
+
+**Two findings from the clinical review, recorded and non-blocking.** `N99.4` is
+adhesive disease, not pelvic floor dysfunction, so it is arguably out of scope —
+but at ~1.5% it sits far inside the CI. `N32.81` is documented as included and
+matches **zero** visits, so the overactive-bladder inclusion is inert. Neither
+can change the estimand, which is why neither blocks under the governing rule
+(below). `N39.0` (UTI) is correctly excluded.
+
+**What it is not.** NAMCS is **office-based only** — it excludes hospital
+outpatient departments and the ED — so the anchor is a **structural lower bound**
+for all-setting ambulatory demand. It is all-provider and condition-defined, not
+FPMRS-specialist visits. Do not average or blend it with the MEPS 2023 figure
+(9,063,442); that uses a different visit frame.
+
+**Why this anchor is approved while others are not.** Clinical review attaches
+to each anchor's own estimand dependencies:
+
+> An anchor is blocked only by unresolved assumptions that can change **that
+> anchor's** estimand.
+
+NAMCS does not use the urogynaecologic procedure-family definitions, so the CHIA
+procedure review does not block it. `prolapse_procedure_volume` and
+`ui_prevalence` remain pending on their own definitions.
+`assert_anchor_reviewed()` enforces exactly the scope each anchor names.
+
 ## Medicare sling-activity comparison
 
 ![Annual Medicare sling workload by clinician tag](figures/medicare_sling_workload_index.png)
@@ -1060,9 +1124,9 @@ original source and the repository entry point that obtains or documents it.
 
 | Source | Use | Original data | Reproducible entry point |
 |---|---|---|---|
-| CMS Physician Fee Schedule RVU file | work RVUs for the service basket | [CMS RVU25A release](https://www.cms.gov/files/zip/rvu25a.zip) | [`R/data-cms_rvu.R`](R/data-cms_rvu.R) and [`config/service_workload.yml`](config/service_workload.yml) |
+| CMS Physician Fee Schedule RVU file | work RVUs for the service basket | [CMS RVU25A release](https://www.cms.gov/files/zip/rvu25a-updated-01/10/2025.zip) | [`R/data-cms_rvu.R`](R/data-cms_rvu.R) and [`config/service_workload.yml`](config/service_workload.yml) |
 | CMS Medicare Physician & Other Practitioners PUF | CPT 57288 sling-activity figure | [CMS data portal](https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners) | [`scripts/plot_medicare_sling_workload.R`](scripts/plot_medicare_sling_workload.R); processed cache is configured with `MEDICARE_SLING_CACHE` |
-| US Census 2023 National Population Projections | demand denominator by age band (D1–D3) | [Census 2023 population projections](https://www.census.gov/data/datasets/2023/demo/popproj/2023-summary-tables.html) | [`data-raw/census/README.md`](data-raw/census/README.md) |
+| US Census 2023 National Population Projections | demand denominator by age band (D1–D3) | [Census 2023 population projections](https://www.census.gov/data/tables/2023/demo/popproj/2023-summary-tables.html) | [`data-raw/census/README.md`](data-raw/census/README.md) |
 | CDC BRFSS 2023 | D4 survey-weighted UI prevalence and population cells | [BRFSS 2023 annual data](https://www.cdc.gov/brfss/annual_data/annual_2023.html) | [`scripts/data_acquisition/01_download_brfss.R`](scripts/data_acquisition/01_download_brfss.R) |
 | Census ACS 2023 5-year and PUMS | demographic and insurance/income population cells | [Census API](https://api.census.gov/data/key_signup.html) | [`scripts/data_acquisition/02_download_acs.R`](scripts/data_acquisition/02_download_acs.R) and [`scripts/data_acquisition/08_download_acs_tracts.R`](scripts/data_acquisition/08_download_acs_tracts.R) |
 | `mufflyaccess` URPS contract | base-year supply, scenarios, PFD prevalence, provenance | [`mufflyt/mufflyaccess`](https://github.com/mufflyt/mufflyaccess) | [`R/core-ssot.R`](R/core-ssot.R) |
@@ -1072,7 +1136,7 @@ original source and the repository entry point that obtains or documents it.
 | MEPS | care-seeking and access calibration | [AHRQ MEPS data](https://meps.ahrq.gov/mepsweb/data_stats/download_data_files.jsp) | [`scripts/data_acquisition/05_download_meps_2022.R`](scripts/data_acquisition/05_download_meps_2022.R) and [`scripts/data_acquisition/06_download_meps_2023.R`](scripts/data_acquisition/06_download_meps_2023.R) |
 | MCBS | Medicare-aged demand calibration | [CMS MCBS public-use files](https://www.cms.gov/data-research/research/medicare-current-beneficiary-survey) | [`scripts/data_acquisition/03_download_mcbs.R`](scripts/data_acquisition/03_download_mcbs.R) |
 | NHANES | urinary-symptom prevalence | [CDC NHANES](https://www.cdc.gov/nchs/nhanes/) | [`scripts/data_acquisition/07_download_nhanes_urinary.R`](scripts/data_acquisition/07_download_nhanes_urinary.R) |
-| HCUP NASS / Fast Stats | surgical procedure anchors | [HCUP Central Distributor](https://hcup-us.ahrq.gov/tech_assist/centdist.jsp) / [HCUP Fast Stats](https://datatools.ahrq.gov/hcup-fast-stats) | [`scripts/data_acquisition/10_ingest_hcup_nass.R`](scripts/data_acquisition/10_ingest_hcup_nass.R) |
+| HCUP NASS / Fast Stats | surgical procedure anchors | [HCUP Central Distributor](https://hcup-us.ahrq.gov/tech_assist/centdist.jsp) / [HCUP Fast Stats](https://datatools.ahrq.gov/hcup-fast-stats/) | [`scripts/data_acquisition/10_ingest_hcup_nass.R`](scripts/data_acquisition/10_ingest_hcup_nass.R) |
 
 ---
 

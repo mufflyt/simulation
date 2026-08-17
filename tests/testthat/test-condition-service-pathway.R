@@ -6,15 +6,25 @@
 # conditioning, the validation that keeps the table honest, and the fact that
 # post-operative follow-up now exists at all.
 
+# new_consultation per_entering is 0.25, NOT 1.0. At 1.0 this fixture asserted
+# 1000 + 20 = 1020 new consultations against a treated cohort of 1000 -- more
+# new patients than patients -- which is the stock-as-flow error
+# assert_incident_not_prevalent() now refuses. The fixture demonstrated the
+# defect it was written before anyone noticed.
+#
+# 0.25 is a FIXTURE VALUE chosen to be a plausible flow, not an estimate of the
+# real incident share; that parameter is unresolved and its estimator is
+# pre-registered in docs/INCIDENT_ENTRY_ESTIMAND.md. Nothing these tests check
+# depends on its magnitude -- they check cascade arithmetic and summation.
 mk_pathway <- function() {
   tibble::tribble(
     ~condition, ~stage,         ~service,             ~per_entering, ~p_advance,
-    "ui",       "conservative", "new_consultation",   1.0,           0.50,
+    "ui",       "conservative", "new_consultation",   0.25,          0.50,
     "ui",       "conservative", "return_visit",       2.0,           0.50,
     "ui",       "testing",      "urodynamics",        1.0,           0.40,
     "ui",       "procedure",    "sling_procedure",    1.0,           1.00,
     "ui",       "followup",     "postoperative_care", 2.0,           0.10,
-    "ui",       "recurrence",   "new_consultation",   1.0,           NA
+    "ui",       "recurrence",   "new_consultation",   0.25,          NA
   )
 }
 
@@ -47,7 +57,9 @@ test_that("services are summed across conditions and stages", {
   # new_consultation appears in both conservative and recurrence; the collapsed
   # result must add them rather than keep the first.
   v <- pathway_service_volumes(c(ui = 1000), 2025L, mk_pathway())
-  expect_equal(v$volume[v$service == "new_consultation"], 1000 + 20)
+  # 1000 * 0.25 (conservative) + 20 * 0.25 (recurrence). The SUMMATION is what
+  # this checks; the per_entering magnitude is fixture, not finding.
+  expect_equal(v$volume[v$service == "new_consultation"], 250 + 5)
   expect_equal(nrow(v[v$service == "new_consultation", ]), 1L)
 })
 
@@ -124,7 +136,7 @@ test_that("every shipped row carries provenance", {
 
 test_that("the staged pathway is the default and is recorded in meta", {
   pop <- data.frame(age = 40:85, population = 1e5)
-  s <- simulate_lifecourse_demand(pop, 2025L, n = 3000, seed = 1)
+  s <- simulate_lifecourse_demand(pop, 2025L, n = 3000, seed = 1, pathway = valid_pathway())
   expect_identical(s$meta$service_pathway, "condition_staged")
   expect_identical(s$meta$pathway_status, "uncalibrated_illustrative")
   expect_false(is.null(s$meta$stage_volumes))
@@ -138,13 +150,13 @@ test_that("the flat map remains reproducible for comparison", {
   # The flat map generated no post-operative follow-up; that is the gap the
   # staged pathway closes.
   expect_false("postoperative_care" %in% flat$service_volumes$service)
-  staged <- simulate_lifecourse_demand(pop, 2025L, n = 3000, seed = 1)
+  staged <- simulate_lifecourse_demand(pop, 2025L, n = 3000, seed = 1, pathway = valid_pathway())
   expect_true("postoperative_care" %in% staged$service_volumes$service)
 })
 
 test_that("staged volumes still convert to FTE (every service matches)", {
   pop <- data.frame(age = 40:85, population = 1e5)
-  s <- simulate_lifecourse_demand(pop, 2025L, n = 3000, seed = 1)
+  s <- simulate_lifecourse_demand(pop, 2025L, n = 3000, seed = 1, pathway = valid_pathway())
   f <- convert_workload_to_fte(s$service_volumes,
                                wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]])
   expect_true(is.finite(f$required_fte))

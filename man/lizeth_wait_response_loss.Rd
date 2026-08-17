@@ -39,7 +39,7 @@ is linear in \code{wait_scale}, so for a fixed catchment structure the best
 }
 \details{
 For each matched call, \code{rho = demand_workload / accessible_capacity} and
-\code{x = rho / (1 - rho)}. Only unsaturated calls (\code{0 <= rho < 1}, finite wait)
+\code{x = rho / (1 - rho)}. Only unsaturated calls (\verb{0 <= rho < 1}, finite wait)
 enter the fit; saturated calls (\code{rho >= 1}, infinite modelled wait) are counted
 but excluded, mirroring \code{\link[=fit_wait_scale]{fit_wait_scale()}}. The weighted least-squares estimate
 through the origin is \code{wait_scale = sum(w * W * x) / sum(w * x^2)}, and the loss
@@ -48,7 +48,7 @@ closed-form; the reference-adequacy inverse fit, which matches log-wait
 quantiles, is a separate step.
 }
 \seealso{
-Other isochrone access response:
+Other isochrone access response: 
 \code{\link{capacity_status_with_isochrone_response}()},
 \code{\link{e2sfca_catchments_from_access}()},
 \code{\link{fit_decay_sigma}()},

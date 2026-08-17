@@ -30,11 +30,11 @@ least \code{demand_id}, \code{access}, \code{population} (and optionally \code{a
 \item{capacity}{Optional \code{\link[=capacity_status_with_isochrone_response]{capacity_status_with_isochrone_response()}} result;
 supplies the object \code{calibration_status} (preferred over \code{sigma_fit}'s).}
 
-\item{isochrone_run_id}{Provenance id of the isochrone run the surface was built
-on (e.g. \code{ISOCHRONE_CANONICAL_RUN_ID}). Default \code{NA}.}
+\item{isochrone_run_id}{Provenance id of the isochrone run the surface was
+built on (e.g. \code{ISOCHRONE_CANONICAL_RUN_ID}). Default \code{NA}.}
 
-\item{model_version}{Version string stamped on every row + the manifest. Default
-\code{ACCESS_SURFACE_CONTRACT_VERSION}.}
+\item{model_version}{Version string stamped on every row + the manifest.
+Default \code{ACCESS_SURFACE_CONTRACT_VERSION}.}
 
 \item{calibration_status}{Override the provenance status. When \code{NULL} (default)
 it is taken from \code{capacity}, then \code{sigma_fit}, then \code{"assumed_illustrative"}.}
@@ -50,16 +50,12 @@ un-transportable fit does not silently reach downstream as a contract.}
 (invisibly) a list with \code{csv_path}, \code{manifest_path}, and the tidy \code{data}.
 }
 \description{
-Ships the E2SFCA drive-time access surface (one row per demand tract) as a
-versioned CSV + JSON manifest for downstream consumers (cliff's Module D v2). The
-distance-decay \code{sigma} and wait-response \code{wait_scale} fitted by the isochrone
-access-response pipeline are stamped on every row alongside the
-\code{isochrone_run_id} and the \code{calibration_status}, so the consumer gates on
+Ships the E2SFCA drive-time access surface (one row per demand
+tract) as a versioned CSV + JSON manifest for downstream consumers (cliff's
+Module D v2). The distance-decay \code{sigma} and wait-response \code{wait_scale} fitted
+by the isochrone access-response pipeline are stamped on every row alongside
+the \code{isochrone_run_id} and the \code{calibration_status}, so the consumer gates on
 provenance exactly as it does for the demand contracts.
-}
-\seealso{
-\code{\link[=run_geographic_access]{run_geographic_access()}}, \code{\link[=fit_decay_sigma]{fit_decay_sigma()}},
-\code{\link[=capacity_status_with_isochrone_response]{capacity_status_with_isochrone_response()}}
 }
 \concept{export access surface}
 \concept{reporting}

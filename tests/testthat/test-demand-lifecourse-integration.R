@@ -7,7 +7,8 @@ pop_by_age_year <- tidyr::expand_grid(year = c(2025L, 2030L, 2035L), age = 40:85
 test_that("lifecourse_required_fte hands service volumes to convert_workload_to_fte", {
   out <- lifecourse_required_fte(pop_by_age_year,
                                  wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]],
-                                 n = 4000, seed = 1)
+                                 n = 4000, seed = 1,
+                          pathway = valid_pathway())
   expect_true(all(c("service_volumes", "demand_summary", "required_fte") %in% names(out)))
   expect_true(all(c("year", "required_fte") %in% names(out$required_fte)))
   expect_true(all(out$required_fte$required_fte > 0))
@@ -17,7 +18,8 @@ test_that("lifecourse_required_fte hands service volumes to convert_workload_to_
 })
 
 test_that("lifecourse_demand_estimand matches the demand_long estimand shape", {
-  traj <- lifecourse_demand_trajectory(pop_by_age_year, n = 4000, seed = 1)
+  traj <- lifecourse_demand_trajectory(pop_by_age_year, n = 4000, seed = 1,
+                               pathway = valid_pathway())
   d5 <- lifecourse_demand_estimand(traj$demand_summary, measure = "service_units")
   expect_named(d5, c("year", "estimand", "label", "demand_cases"))
   expect_true(all(d5$estimand == "D5_lifecourse_service"))
@@ -33,7 +35,8 @@ test_that("the life-course estimand is NOT a proportional rescaling of D1/D2/D3"
   years <- sort(unique(bands$year))
   pay <- tidyr::expand_grid(year = years, age = 40:85) %>%
     dplyr::mutate(population = round(2e6 * exp(-0.02 * (age - 40))))
-  traj <- lifecourse_demand_trajectory(pay, n = 4000, seed = 1)
+  traj <- lifecourse_demand_trajectory(pay, n = 4000, seed = 1,
+                               pathway = valid_pathway())
   demand_long <- dplyr::bind_rows(
     compute_demand_denominators(bands),
     lifecourse_demand_estimand(traj$demand_summary))

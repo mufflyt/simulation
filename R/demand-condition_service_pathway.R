@@ -1,34 +1,39 @@
 # Condition-specific service pathways ---------------------------------------
 #
-# lifecourse_service_map() (R/demand-lifecourse) already separated UI, POP and AI -- the model
-# has never used one pooled "PFD demand" rate. What it did not have was PATHWAY
-# STRUCTURE. The map was a flat annual rate per treated patient, so a UI patient
-# contributed 0.8 PTNS and 0.12 slings in the same year as PARALLEL draws, with
-# no dependency between them. Nothing represented "conservative care first,
-# testing only for those who fail it, surgery only for those who fail testing",
-# and nothing generated recurrence or post-operative follow-up at all.
+# lifecourse_service_map() (R/demand-lifecourse) already separated UI, POP and
+# AI -- the model has never used one pooled "PFD demand" rate. What it did not
+# have was PATHWAY STRUCTURE. The map was a flat annual rate per treated patient,
+# so a UI patient contributed 0.8 PTNS and 0.12 slings in the same year as
+# PARALLEL draws, with no dependency between them. Nothing represented staged
+# care, recurrence, or post-operative follow-up.
 #
-# This module replaces the flat map with an explicit cascade:
+# This module replaces the flat map with an explicit ordered pathway:
 #
 #   conservative -> testing -> procedure -> followup -> recurrence
 #
 # Each stage carries one `p_advance`, the probability of reaching the NEXT
 # stage, so the number entering stage k+1 is the number entering stage k times
 # that stage's p_advance. Service volume within a stage is
-# `entering[stage] * per_entering`. A sling therefore accrues only to patients
-# who failed conservative care AND completed testing, which is the dependency the
-# flat map could not express.
+# `entering[stage] * per_entering`.
+#
+# IMPORTANT: an ordered stage need not be a clinical attrition gate. A stage
+# whose services are selective utilization within the same clinical episode can
+# use `p_advance = 1` as a structural pass-through. POP testing is the canonical
+# example: urodynamics and cystoscopy are emitted as utilization, but receiving
+# neither cannot prevent progression to the POP procedure stage. UI retains a
+# genuine testing transition pending its own estimand audit.
 #
 # WHAT THIS CHANGES AND WHAT IT DOES NOT
 #
 # It changes the FTE conversion, because the workload mix shifts: procedures move
-# down the cascade (fewer patients reach them) while follow-up appears for the
-# first time. It does NOT make any of it publishable. Every `per_entering` and
+# down the pathway while follow-up appears for the first time. It does NOT make
+# any of it publishable. Every empirical `per_entering` and non-structural
 # `p_advance` is expert judgement carrying confidence = "low", exactly as
 # unsourced as the flat literals it replaces -- the difference is that the
-# structure is now correct and the provenance is declared per row rather than
-# implied by a bare tribble. The basket-level status stays
-# "uncalibrated_illustrative", so assert_publishable_workload() keeps refusing it.
+# structure is explicit and provenance is declared per row. Structural
+# pass-through values (`p_advance = 1`) are identities, not empirical estimates.
+# The basket-level status stays "uncalibrated_illustrative", so the publication
+# boundary continues to refuse it.
 #
 # TWO HONEST GAPS IN THE AI PATHWAY
 #
@@ -218,6 +223,23 @@ pathway_service_volumes <- function(treated, year,
   if (!nrow(entrants)) {
     return(tibble::tibble(year = numeric(), service = character(), volume = numeric()))
   }
+  # THE INCIDENT/PREVALENT CHECK RUNS ON EVERY VOLUME COMPUTATION.
+  #
+  # Under the shipped table new_consultation volume EQUALS the treated cohort
+  # exactly, which is only possible if every prevalent treated patient is
+  # counted as a new patient annually. That inflates office-visit demand and is
+  # part of what the calibration scalars were absorbing.
+  #
+  # IT REFUSES. A run that can classify the same prevalent treated population
+  # as incident again every year must stop rather than emit a plausible-looking
+  # number -- a wrong volume that looks right is worse than no volume, and this
+  # sits directly adjacent to the POP cascade discrepancy where such a number
+  # would be read as evidence.
+  #
+  # This deliberately makes some previously-passing runs fail. That is the
+  # point of wiring a dormant guard: the invalid state was always there, and
+  # was being permitted silently.
+  assert_incident_not_prevalent(treated, pathway, strict = TRUE)
   vols <- dplyr::inner_join(pathway, entrants, by = c("condition", "stage"))
   vols <- dplyr::mutate(vols, volume = .data$entering * .data$per_entering,
                         year = year)

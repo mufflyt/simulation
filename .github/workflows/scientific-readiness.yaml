@@ -1,0 +1,86 @@
+# CANONICAL SCIENTIFIC READINESS -- a different question from R CMD check.
+#
+#   R-CMD-check           Does the package BEHAVE correctly?      -> GREEN
+#   scientific-readiness  Can the CANONICAL parameterization
+#                         produce a scientifically valid run?     -> RED
+#
+# Keeping these separate is the whole point. The package is correct: the guards
+# refuse an invalid configuration and the tests assert that refusal, so every
+# ordinary gate passes honestly. What is not correct is the SCIENCE -- the
+# shipped pathway carries per_entering = 1.00 on new_consultation, turning a
+# prevalence stock into an annual flow.
+#
+# Collapsing the two would cost both signals. A permanently red R CMD check
+# stops meaning "the code is broken"; a green one that tolerated 32 failing
+# tests would be a lie. This workflow carries the red instead, and says why.
+#
+# THIS JOB IS EXPECTED TO FAIL. It is not broken, and it must NOT be muted,
+# skipped, given continue-on-error, or have its exit code translated to get a
+# clean dashboard. It goes green when
+# pop/conservative/new_consultation/per_entering is estimated from longitudinal
+# all-payer OUTPATIENT claims per the pre-registered estimator in
+# docs/INCIDENT_ENTRY_ESTIMAND.md -- and by nothing else.
+#
+# ---------------------------------------------------------------------------
+# DO NOT MAKE THIS A REQUIRED BRANCH-PROTECTION CHECK while exit 1 is the
+# intended state. A required check that is designed to fail is a repository
+# that can never merge.
+#
+# As of 2026-08-16 `main` has NO branch protection, so this is moot -- but it
+# will not stay moot. Whoever enables protection should require the checks that
+# establish CODE CORRECTNESS:
+#
+#     R-CMD-check
+#     full testthat suite
+#     test-coverage
+#     leak guard
+#     blocking Layer-1 / Layer-2 infrastructure
+#
+# and leave THIS one required-off. It answers a different question -- is the
+# canonical model scientifically publishable -- and is intentionally unresolved
+# while the APCD-dependent blocker exists.
+#
+# Reconsider making it required once the incident-entry parameter is resolved.
+# At that point exit 0 becomes the expected state and a red job means a real
+# regression, which IS worth blocking on.
+# ---------------------------------------------------------------------------
+
+on:
+  schedule:
+    - cron: '32 10 * * *'   # 03:32 MST, after the nightly
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    # Only when something that could change the answer moves.
+    paths:
+      - 'inst/extdata/pathway/**'
+      - 'R/demand-**'
+      - 'config/calibration_targets.yml'
+      - 'docs/INCIDENT_ENTRY_ESTIMAND.md'
+      - '.github/scripts/assert-canonical-science.R'
+
+name: scientific-readiness
+
+permissions:
+  contents: read
+
+jobs:
+  canonical:
+    name: canonical configuration is scientifically runnable
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
+      _R_CHECK_FORCE_SUGGESTS_: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::pkgload, any::testthat
+          dependencies: '"hard"'
+
+      - name: Canonical POP run must be scientifically valid
+        run: Rscript .github/scripts/assert-canonical-science.R | tee -a "$GITHUB_STEP_SUMMARY"
