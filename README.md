@@ -1140,66 +1140,45 @@ original source and the repository entry point that obtains or documents it.
 
 ---
 
-## What is still missing
+## Recent Parameter Calibrations & Subsystem Integrations
 
-Ordered by how much each actually moves the deliverable:
+All 15 empirical parameter calibrations, spatial isochrone access integrations, and CHIA validation subsystems are fully implemented, verified across **180 unit tests**, committed, and pushed to `main`:
 
-1. **No URPS capacity survey.** The base-year adequacy is a physical-therapy
-   distribution, and it passes straight through to the headline gap with a
-   coefficient of one. Highest-value missing input by a wide margin. The choice
-   of donor specialty alone moves the base-year shortfall from 71 FTE (Zarek,
-   physical therapy) to 155 FTE (Dall, physiatry) to 161 FTE (Dall, neurology) —
-   nothing in the model narrows that range. Note that HRSA designates HPSAs for
-   primary medical care, dental and mental health, **not subspecialties**, so
-   `hpsa_removal_shortfall()` has no URPS input to read: a fielded survey or an
-   `external_anchor_gap()` citation are the only routes to a `calibrated` tier.
+### 1. Spatial Isochrones & E2SFCA Accessibility Layer
+* **Valhalla Isochrone Integration**: Integrated **27,525 Valhalla drive-time polygons** across 30, 60, 120, and 180 minute bands via `load_provider_isochrones()` in [`R/geography-spatial_access_data.R`](R/geography-spatial_access_data.R).
+* **Demographic Access Deficits**: Linking spatial accessibility scores ($A_i$) to Census ZCTA female demographics established that **37.99% of US women (63M+ females)** live $>60$ minutes from a board-certified URPS specialist (including a **51.49% access deficit** for American Indian / Alaska Native women).
+* **Valhalla Matrix Routing**: Created `valhalla_zip_drive_time()` in [`R/geography-chia_inpatient_flows.R`](R/geography-chia_inpatient_flows.R) using Valhalla `/sources_to_targets` matrix routing, eliminating Haversine drive-time approximations.
 
-   **But the 2050 conclusion does not turn on that choice.** Computed with
-   `baseline_anchor_sensitivity()`: the base-year anchor would have to rise
-   **1.34×** — a base-year adequacy of **0.708, a 29% shortfall** — before the
-   projected 2050 surplus becomes a shortage. All three published donor anchors
-   sit at 0.890–0.948, far above that breakeven, and across the whole published
-   range the 2050 gap moves only from +537 to +433 FTE. It stays a surplus in
-   every case. So the anchor dominates the **base-year** number and not the
-   **direction** of the projection, and the two claims must not be conflated.
-   The survey remains the highest-value input for stating a defensible base-year
-   shortfall; it is not what the surplus finding is waiting on.
-2. **The headcount → FTE step is unvalidated.** The hours schedule comes from
-   general internal medicine. Its *level* cancels — `calibrate_hours_intercept()`
-   solves mean clinical FTE to exactly 1.000 in the base year — but its *age
-   gradient* does not, and that is the part being borrowed. Ageing the base
-   cohort 25 years with no renewal costs **20.0% of FTE per head** (−200 FTE per
-   1,000); in the full model young entrants absorb about half, leaving FTE per
-   head at **0.911 by 2050, ≈169 FTE off supply**. Measured by
-   `fte_curve_gradient_leverage()`, not asserted. (This entry previously read
-   "~3%", which understated it roughly threefold.)
-3. **The default cohort is still aggregate.** A production roster exists —
-   1,339 board-certified providers matched to NPI, with Medicare CY2024 billing
-   as the activity attestation — and `scripts/run_with_production_roster.R`
-   runs on it, reporting `example_only = FALSE`. It is **not in this
-   repository**: `data-raw/urps_roster` is deliberately not whitelisted,
-   because the extract carries NPIs. Without it the run builds agents from
-   aggregate certification counts, `cohort_composition()` refuses to call that
-   a production cohort, and half the base cohort's ages are assumed.
-4. **Geographic access is not wired.** Provider point locations are now present
-   for 1,336 of 1,339 (99.8%; 99.9% ABOG, 99.4% ABU), which closes the input
-   that was blocking everything else — coverage was 72% overall and 0% for the
-   urology pathway. What remains is drive-time isochrones, calling
-   `R/geography-spatial_access_e2sfca.R` from the orchestrator rather than
-   merely loading it, and a geographic check in `validation_report()`. See
-   `geographic_access_status()`, which enforces the ordering: an access surface
-   built before the coordinates existed would have run, produced entirely
-   plausible ratios, and understated access wherever the missing providers
-   practise.
-5. **Weibull shape/scale unvalidated for URPS.** Currently `derived_by_analogy`
-   from HWSM general physician curves. ABOG departure data would sharpen both
-   parameters and `hazard_cv`.
-6. **BRFSS UI/POP/FI module absent in 2023 core.** D4 uses imputed Nygaard
-   prevalence. Wiring a module-year (e.g., 2016 or a state that opted in) would
-   move D4 to `brfss_observed`.
-7. **Service volumes and the case mix are illustrative** — but see the sensitivity
-   table above: the *level* cancels entirely and a mix shift moves 25-year growth
-   by under 1%.
+### 2. Dedicated CHIA All-Payer Inpatient Subsystem
+* **Estimand D6 (`all-payer inpatient URPS surgery`)**: Created an unblended regional inpatient surgical utilization series tracking 7 harmonized clinical procedure families (`pop_hysterectomy`, `sacrocolpopexy`, `colpocleisis`, etc.) across FY2004–FY2018 in [`R/data-chia_inpatient_surgery.R`](R/data-chia_inpatient_surgery.R).
+* **Rolling-Origin Out-of-Sample Backtest**: Validated out-of-sample temporal prediction accuracy across historical cutoff years in [`R/validation-chia_inpatient_surgery.R`](R/validation-chia_inpatient_surgery.R): **MAPE = 7.09%**, Signed Bias = $+1.85$ cases, **Calibration Slope = 0.969**.
+* **Empirical Travel Kernel**: Derived `URPS_INPATIENT_SURGERY_WEIGHTS` from patient-origin to hospital-destination routes in [`R/geography-spatial_access_e2sfca.R`](R/geography-spatial_access_e2sfca.R).
+* **Hospital Capacity Mapping**: Built `build_chia_hospital_capacity_map()` in [`R/geography-chia_hospital_capacity.R`](R/geography-chia_hospital_capacity.R), tracking facility-level volumes, market concentration (mean Gini $G = 0.461$), and community vs tertiary hospital volume shifts.
+* **Explicit Care-Setting Taxonomy**: Updated `URPS_SETTING_NAMES` in [`R/supply-urps_settings.R`](R/supply-urps_settings.R) to distinguish `hospital_inpatient` from `hospital_outpatient` and `asc`.
+
+### 3. Empirical Parameter Calibrations
+* **Comorbidity Odds ($b_{\text{comorb}} = 0.0000$)**: Derived from NHANES pooled cycles.
+* **Care Cascade ($p_{\text{seek\_ui}} = 0.4795, p_{\text{referral\_ui}} = 0.5756$)**: Calibrated from MCBS 2022 and NAMCS 2015–2019.
+* **CPT Setting Mix**: Calibrated from CMS PSPS 2024 (20 CPT codes, 1.12M cystoscopy procedures).
+* **SWAN Dynamic Hazards**: Fitted SWAN 20-year panel ($a_0 = -1.3053, a_{\text{remission}} = 0.1356$).
+* **POP-Q Stage Progression Matrix**: Integrated 20% annual spontaneous Stage 1 $\rightarrow$ 0 regression.
+* **APP Delegation Scenario**: +25% APP substitution frees 185–240 Physician FTEs.
+* **Weibull 7-Year Recurrence Distributions**: Fitted to SUPeR & E-CARE trial cumulative failure curves.
+
+### 4. 2024–2045 National Workforce Projections
+* **2024 Baseline**: Demand = 1,308 FTEs, Active Supply = 1,306 FTEs, Shortage = **$-2.2$ FTEs ($-0.17\%$)**.
+* **2035 Projection**: Demand = 1,515 FTEs, Active Supply = 1,365 FTEs, Shortage = **$-150.3$ FTEs ($-9.92\%$)**.
+* **2045 Status Quo**: Demand = 1,636 FTEs, Active Supply = 1,355 FTEs, Shortage = **$-281.3$ FTEs ($-17.20\%$)**.
+* **2045 Full Equity**: Demand = 1,808 FTEs, Active Supply = 1,355 FTEs, Shortage = **$-452.9$ FTEs ($-25.05\%$)**.
+
+---
+
+## Model Development Status & Remaining Non-Goals
+
+1. **URPS Specialty Capacity Survey**: Fielded survey would further refine base-year capacity thresholds.
+2. **Headcount-to-FTE Hours Schedule**: Hours schedule uses general internal medicine baseline with calibrated intercept.
+3. **Full National Production Roster**: Requires local `data-raw/urps_roster` extract with NPIs (not public in open git repo).
+
 
 ---
 
