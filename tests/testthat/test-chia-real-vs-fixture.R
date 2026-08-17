@@ -63,6 +63,11 @@ test_that("DuckDB schema-faithful query path executes accurately on mock DuckDB 
   expect_equal(attr(obs, "source_kind"), "observed")
   expect_equal(sum(obs$inpatient_cases), 4)
   expect_true(all(obs$female_population > 0))
+  expect_true(nzchar(attr(obs, "population_source")))
+  expect_true(nzchar(attr(obs, "population_vintage")))
+  expect_true(nzchar(attr(obs, "population_definition")))
+  expect_true(nzchar(attr(obs, "population_sha256")))
+
 })
 
 test_that("assert_estimand_boundary forbids using D6 for total surgical volume or national FTE", {
