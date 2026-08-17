@@ -1,0 +1,81 @@
+# pkgdown configuration.
+#
+# THE SITE IS A PUBLICATION SURFACE. It renders README, every vignette and all
+# 610 .Rd topics into HTML and serves them publicly. That is a wider surface
+# than the source repository: content that is merely present in a file becomes
+# indexed, linkable and search-engine visible once published. The workflow
+# therefore runs the PHI/DUA leak guard against the BUILT SITE, not only
+# against the source.
+
+url: https://mufflyt.github.io/simulation/
+
+# DESTINATION IS NOT docs/. pkgdown's default output directory is docs/, and in
+# this repository docs/ holds 37 hand-written design documents -- the estimand
+# contracts, the audits, the hall of shame. Building with the default would
+# DELETE them. This is the single most destructive default in the tool for a
+# repo that uses docs/ for prose.
+destination: pkgdown-site
+
+template:
+  bootstrap: 5
+
+development:
+  mode: auto
+
+reference:
+
+- title: Demand
+  desc: >
+    Life-course demand generation, the condition-service pathway, and the
+    estimands that govern entry into care.
+  contents:
+  - has_concept("demand")
+
+- title: Supply
+  desc: Provider stock, entry, retirement and career transitions.
+  contents:
+  - has_concept("supply")
+
+- title: Calibration
+  desc: >
+    Anchors, scalars, transport, and the refusal gates that stop an
+    uncalibrated quantity being published as a result.
+  contents:
+  - has_concept("calibration")
+
+- title: Validation and back-testing
+  desc: Back-test machinery, publication gates and interval checks.
+  contents:
+  - has_concept("validation")
+
+- title: Geography and access
+  desc: Isochrones, spatial access, and travel-based accessibility.
+  contents:
+  - has_concept("geography")
+
+- title: Reporting
+  desc: Projections, gap statements and export contracts.
+  contents:
+  - has_concept("reporting")
+
+- title: Data
+  desc: Packaged reference data and their provenance.
+  contents:
+  - has_concept("data")
+
+- title: Core
+  desc: Paths, provenance, reproducibility and shared helpers.
+  contents:
+  - has_concept("core")
+
+# CATCH-ALL, and it is load-bearing. 100 topics carry no @concept tag, and
+# pkgdown FAILS the build when any topic is missing from an explicit index.
+# Without this section the site would break on every newly added function that
+# someone forgot to tag -- a documentation gate failing for a reason unrelated
+# to documentation quality.
+- title: Other
+  desc: >
+    Topics not yet assigned a concept. Shrinking this section is the actual
+    documentation task; it is not a dumping ground by design.
+  contents:
+  - matches(".")

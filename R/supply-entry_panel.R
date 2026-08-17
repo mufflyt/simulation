@@ -54,13 +54,12 @@ ENTRY_EVIDENCE_SOURCES <- data.frame(
 #' Default location of the 84 GB credentials/claims database
 #'
 #' @details
-#' RESOLVED, NOT HARDCODED. This was
-#' `"/Volumes/MufflySamsung 1 1/DuckDB/nber_my_duckdb.duckdb"` -- a literal that
-#' encoded a macOS remount artifact. The same physical drive appears in this
-#' repository under THREE names (`MufflySamsung`, `MufflySamsung 1`,
-#' `MufflySamsung 1 1`) because macOS appends a counter when a volume is
-#' remounted while an earlier mount is stale. Any one of them is wrong on some
-#' boot.
+#' RESOLVED, NOT HARDCODED. This was previously a literal path into a removable
+#' research volume, and it encoded a macOS remount artifact: when a volume is
+#' mounted while an earlier mount is stale, macOS appends a counter to the
+#' name, so the same physical drive appeared in this repository under three
+#' different names. Any one of them is wrong on some boot -- the literal that
+#' was committed pointed at a directory that did not exist.
 #'
 #' `researchpaths::resolve_duckdb()` globs the volume name, validates existence
 #' and file size, refuses an ambiguous match rather than picking one, honours an

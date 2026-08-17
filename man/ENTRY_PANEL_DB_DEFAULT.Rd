@@ -13,6 +13,24 @@ ENTRY_PANEL_DB_DEFAULT
 \description{
 Default location of the 84 GB credentials/claims database
 }
+\details{
+RESOLVED, NOT HARDCODED. This was previously a literal path into a removable
+research volume, and it encoded a macOS remount artifact: when a volume is
+mounted while an earlier mount is stale, macOS appends a counter to the
+name, so the same physical drive appeared in this repository under three
+different names. Any one of them is wrong on some boot -- the literal that
+was committed pointed at a directory that did not exist.
+
+\code{researchpaths::resolve_duckdb()} globs the volume name, validates existence
+and file size, refuses an ambiguous match rather than picking one, honours an
+explicit \code{URPS_NBER_DUCKDB} override, and -- critically -- never opens or
+creates anything during discovery. DuckDB CREATES an empty database when
+asked to connect to a missing path, so a stale literal does not fail loudly;
+it silently yields an empty database and every downstream count becomes zero.
+
+Returns \code{NA_character_} when the drive is absent, so callers can skip rather
+than erroring at load time.
+}
 \seealso{
 Other entry panel: 
 \code{\link{ENTRY_EVIDENCE_SOURCES}},

@@ -1,0 +1,159 @@
+# PKGDOWN SITE.
+#
+# THE SITE IS A PUBLICATION SURFACE, and that is the whole reason this workflow
+# is more than `pkgdown::build_site()`.
+#
+# The site renders README, both vignettes and all 610 .Rd topics into HTML and
+# serves them from GitHub Pages. Content that merely SITS in a source file
+# becomes indexed, linkable and search-visible once published. This repository
+# is public and works alongside DUA-restricted data, so the leak guard runs
+# against the BUILT SITE as well as the source: a path, identifier or extract
+# that survives into rendered HTML has been published, whatever the source
+# scan said.
+#
+# BUILD ON PR, DEPLOY ONLY FROM main. A pull request gets the build and every
+# check, and no ability to publish -- so a fork PR cannot cause a deploy.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'R/**'
+      - 'man/**'
+      - 'vignettes/**'
+      - 'README.md'
+      - '_pkgdown.yml'
+      - 'DESCRIPTION'
+      - '.github/workflows/pkgdown.yaml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+name: pkgdown
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pkgdown-${{ github.ref }}
+  cancel-in-progress: true
+
+# Every `run:` uses bash WITH pipefail. GitHub's default is `bash -e {0}`, and a
+# pipeline's exit status is its LAST command's -- which once let a gate print
+# its refusal and still report success. See the note in nightly.yaml.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: build site (and scan what it publishes)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
+      _R_CHECK_FORCE_SUGGESTS_: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+
+      # BEFORE setup-r-dependencies -- its pandoc-needs check resolves Suggests
+      # and cannot reach the private mufflyaccess; pandoc on PATH short-circuits
+      # it. Enforced by test-repo-hygiene.R.
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::pkgdown, any::knitr, any::rmarkdown, local::.
+          dependencies: '"hard"'
+
+      # The reference index must cover every topic. 100 topics carry no
+      # @concept, so _pkgdown.yml ends with a catch-all; if that is ever
+      # removed, this fails FIRST with a clear reason rather than the site
+      # build failing later with a list of orphaned topics.
+      - name: Reference index covers every topic
+        run: Rscript -e 'pkgdown::check_pkgdown(".")'
+
+      - name: Build site
+        run: Rscript -e 'pkgdown::build_site(".", preview = FALSE, install = FALSE, new_process = FALSE)'
+
+      # ------------------------------------------------------------------
+      # THE REPOSITORY-SPECIFIC CHECK. Everything above is ordinary pkgdown.
+      # ------------------------------------------------------------------
+      - name: Leak guard on the BUILT SITE
+        run: |
+          # The source scan already ran in pr-gates. This scans the rendered
+          # output, because rendering AGGREGATES: a restricted path quoted in a
+          # roxygen comment, a vignette chunk echoing a file location, or an
+          # example printing a data frame all become published HTML. Scanning
+          # only sources answers a different question.
+          test -d pkgdown-site || { echo "::error::no pkgdown-site/ -- the site did not build"; exit 1; }
+
+          fail=0
+
+          # Removable research drives and personal paths. These reached library
+          # code before (a dead /Volumes/MufflySamsung path), so they can
+          # certainly reach documentation.
+          if grep -rInE '/Volumes/|/Users/[a-z]|C:\\\\Users' pkgdown-site/ \
+               --include='*.html' --include='*.js' --include='*.json' \
+               | grep -v 'schema.org' | head -20 | grep .; then
+            echo "::error::the built site publishes a personal or removable-drive path"
+            fail=1
+          fi
+
+          # RESTRICTED PATH COMPONENTS, not dataset names.
+          #
+          # The distinction is deliberate and was calibrated against a real
+          # false positive. `chia_cadr` appeared in five rendered pages via
+          # "@param db Path to chia_cadr.duckdb" -- a parameter description.
+          # A FILENAME says which dataset a function expects, and this
+          # repository already documents its CHIA use publicly in the README
+          # and docs/. A PATH says where restricted data sits on a specific
+          # machine, which is not disclosed anywhere and should not be.
+          #
+          # Flagging dataset names would make this gate noisy on legitimate API
+          # documentation, and a noisy gate gets ignored -- the failure mode
+          # this repository has already recorded more than once.
+          for pat in 'MufflySamsung' 'phi_local' 'cuff_study'; do
+            if grep -rIl "$pat" pkgdown-site/ --include='*.html' | head -5 | grep .; then
+              echo "::error::the built site publishes a restricted path component: $pat"
+              fail=1
+            fi
+          done
+
+          # An NPI is ten digits; a rendered example that printed a real roster
+          # would expose one. Deliberately narrow to avoid matching years,
+          # counts and CPT codes.
+          if grep -rInE '\b(npi|NPI)[^0-9]{0,12}[0-9]{10}\b' pkgdown-site/ --include='*.html' \
+               | head -10 | grep .; then
+            echo "::error::the built site appears to publish an NPI"
+            fail=1
+          fi
+
+          if [ "$fail" -eq 0 ]; then
+            echo "built site carries no restricted path, source name or identifier"
+          fi
+          exit $fail
+
+      - name: Upload site artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pkgdown-site
+
+  # Separate job so the build/scan above cannot deploy anything on a PR.
+  deploy:
+    name: deploy to GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
