@@ -42,10 +42,22 @@
 load_urps_roster <- function(path = "data-raw/urps_roster/urps_roster_2026-07-22.csv",
                              in_baseline_only = TRUE) {
   if (!file.exists(path)) {
-    stop("URPS roster not found at '", path, "'. It is derived in mufflyt/cliff ",
-         "(abog_all_urps_ENRICHED / abu_all_urps_ENRICHED).", call. = FALSE)
+    candidate_paths <- c(
+      file.path(getwd(), "..", "cliff", "data", "abog_all_urps_ENRICHED_2026-07-22.csv"),
+      file.path("/Users/tmuffly/cliff", "data", "abog_all_urps_ENRICHED_2026-07-22.csv"),
+      file.path(getwd(), "..", "cliff", "data", "abu_all_urps_ENRICHED_2026-07-22.csv"),
+      file.path("/Users/tmuffly/cliff", "data", "abu_all_urps_ENRICHED_2026-07-22.csv")
+    )
+    found <- candidate_paths[file.exists(candidate_paths)]
+    if (length(found) > 0) {
+      path <- found[1]
+    } else {
+      stop("URPS roster not found at '", path, "'. It is derived in mufflyt/cliff ",
+           "(abog_all_urps_ENRICHED / abu_all_urps_ENRICHED).", call. = FALSE)
+    }
   }
   r <- utils::read.csv(path, colClasses = c(npi = "character"), stringsAsFactors = FALSE)
+
   if (isTRUE(in_baseline_only)) {
     r <- r[r$in_model_baseline %in% c(TRUE, "TRUE", "True"), , drop = FALSE]
   }
