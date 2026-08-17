@@ -1,31 +1,31 @@
-# AI (fecal incontinence) DEFINITIVE-TREATMENT EVIDENCE REGISTER
+# AI (fecal incontinence) TREATMENT EVIDENCE REGISTER
 #
-# THERE IS NO SINGLE SNM-VERSUS-SPHINCTEROPLASTY SHARE, and none may be added.
-# p_snm + p_sphincteroplasty DOES NOT equal 1: many women with FI receive
-# neither, and the two do not have identical indications. SNM is a first-line
-# surgical option with or without a sphincter defect; sphincteroplasty is for
-# selected patients with an external anal sphincter defect. Forcing a split
-# would invent a competition between treatments whose eligibility sets differ.
+# THERE IS NO SINGLE SNM-VERSUS-SPHINCTEROPLASTY SHARE. p_snm +
+# p_sphincteroplasty DOES NOT equal 1: many women with FI receive neither, and
+# the two do not share an eligibility set. Each treatment gets its OWN rate
+# against a STATED denominator.
 #
-# Each treatment therefore gets its OWN rate against a STATED denominator:
+# TREATMENT CATEGORIES ARE NOT MUTUALLY EXCLUSIVE. The five modality rates below
+# sum to 0.103 against an any-treatment rate of 0.096 -- an excess of +0.007,
+# consistent with women receiving more than one category. They must NOT be
+# treated as a partition.
 #
-#   p_snm             = P(SNM implant        | AI/FI care population)
-#   p_sphincteroplasty = P(sphincteroplasty  | AI/FI care population,
-#                          additionally repair-eligible anatomy if modelled)
+# RATES ARE RECORDED, NOT RECONSTRUCTED COUNTS. The accessible text reports
+# percentages, not exact modality numerators. Multiplying a rounded percentage
+# by the denominator would fabricate a numerator with false precision, so
+# observed_n is left EMPTY for the modality rows.
 #
-# A conditional fraction P(SNM | SNM or sphincteroplasty) may be DERIVED
-# secondarily as N_snm / (N_snm + N_sph). It must never be the primary pathway
-# probability.
-#
-# INDICATION LINKAGE IS MANDATORY FOR SNM. A bare SNM CPT count is INVALID as a
-# fecal-incontinence quantity: the same implantation codes are used for urinary
-# urgency/OAB and retention, so the codes are not indication-specific.
-# Sphincteroplasty is procedurally cleaner.
-#
-# canonical_compatible is FALSE by default. An empty value means the field has
-# not been established and must not be filled by inference.
-treatment,denominator,age_group,calendar_period,geography,source,claims_definition,indication_specific,value,uncertainty,transportability,canonical_compatible,notes
-snm,AI/FI care population,65+,2010-2018,national (5% Medicare sample),"Halani et al 2025 AJOG, national 5% Medicare sample",CPT-identified SNM among women with FI diagnosis codes,unverified,,,"older women only; Medicare FFS; pre-2019",FALSE,"BENCHMARK / TAXONOMY VALIDATION. Study separately identifies PFPT-biofeedback, SNM, sphincteroplasty, PTNS and other anal procedures -- independently corroborating that PTNS belongs with conservative treatment rather than as the definitive AI procedure. Procedure-specific rates not yet extracted; do NOT convert to a canonical probability before extracting the DENOMINATOR alongside the numerator."
-sphincteroplasty,AI/FI care population,65+,2010-2018,national (5% Medicare sample),"Halani et al 2025 AJOG, national 5% Medicare sample",CPT-identified sphincteroplasty among women with FI diagnosis codes,unverified,,,"older women only; Medicare FFS; pre-2019",FALSE,"BENCHMARK. Same extraction caveat as the snm row."
-snm,"patients treated with SNM or sphincteroplasty",all treated,2011-2014,New York State,"Xu et al, population-based New York",,unverified,,,"NON-TRANSPORTABLE to 2026 national: single state, 2011-2014 era",FALSE,"TEMPORAL/CONTEXT EVIDENCE ONLY. Demonstrates sphincteroplasty utilization DECLINED after SNM became available in the US -- direction and era effect, 621 treated patients. Must NOT be used as a current national treatment share. Its denominator is also the CONDITIONAL one (treated with either), not the AI/FI care population."
-sphincteroplasty,"patients treated with SNM or sphincteroplasty",all treated,2011-2014,New York State,"Xu et al, population-based New York",,unverified,,,"NON-TRANSPORTABLE to 2026 national",FALSE,"TEMPORAL/CONTEXT EVIDENCE ONLY. Same caveats as the paired snm row."
+# canonical_compatible is FALSE throughout. The published denominator is
+# CLAIMS-DIAGNOSED FI AMONG OLDER MEDICARE WOMEN, which is not the model's
+# "persistent treatment-requiring AI" state. Transport must be explicit.
+treatment,quantity,denominator,denominator_n,observed_n,value,age_group,calendar_period,geography,source,indication_specific,mutually_exclusive,canonical_compatible,notes
+any_studied_treatment,P(any studied treatment | FI diagnosis),women age 65+ with FI diagnosis,33010,3160,0.096,65+,2010-2018,national (5% Medicare sample),"Halani et al, AJOG 2025",diagnosis-cohort,NA,FALSE,"ONLY 9.6% OF WOMEN WITH A CLAIMS FI DIAGNOSIS RECEIVED ANY STUDIED TREATMENT over a median ~2.5 y follow-up, and receipt varied with age, dual eligibility, poverty, comorbidity and race. This is strong direct evidence that claims-observed treatment is a REALIZED-CARE transition under access, NOT a latent-need probability."
+snm,P(SNM | FI diagnosis),women age 65+ with FI diagnosis,33010,,0.024,65+,2010-2018,national (5% Medicare sample),"Halani et al, AJOG 2025",diagnosis-cohort; modality not indication-verified here,FALSE,FALSE,"Denominator is claims-diagnosed FI, not the modelled persistent treatment-requiring AI state. Do NOT insert as the canonical SNM pathway probability without explicit transport."
+sphincteroplasty,P(sphincteroplasty | FI diagnosis),women age 65+ with FI diagnosis,33010,,0.004,65+,2010-2018,national (5% Medicare sample),"Halani et al, AJOG 2025",diagnosis-cohort,FALSE,FALSE,"Same denominator caveat as the snm row."
+ptns,P(PTNS | FI diagnosis),women age 65+ with FI diagnosis,33010,,0.009,65+,2010-2018,national (5% Medicare sample),"Halani et al, AJOG 2025",diagnosis-cohort,FALSE,FALSE,"CONSERVATIVE/NONDEFINITIVE. Recorded here because the source treats it as a distinct category from SNM and sphincteroplasty -- independent corroboration that PTNS does not belong in the definitive-procedure state."
+pfpt_biofeedback,P(PFPT/biofeedback | FI diagnosis),women age 65+ with FI diagnosis,33010,,0.001,65+,2010-2018,national (5% Medicare sample),"Halani et al, AJOG 2025",diagnosis-cohort,FALSE,FALSE,"CONSERVATIVE. Strikingly low at 0.1%, which is itself a finding about realized care rather than about need."
+anal_procedures,P(anal procedures | FI diagnosis),women age 65+ with FI diagnosis,33010,,0.065,65+,2010-2018,national (5% Medicare sample),"Halani et al, AJOG 2025",diagnosis-cohort; heterogeneous category,FALSE,FALSE,"The LARGEST category at 6.5% and heterogeneous in content. Its composition must be resolved before any of it is treated as definitive AI surgery."
+snm,P(SNM | received SNM or sphincteroplasty),patients receiving SNM or sphincteroplasty,,,0.857,65+,2010-2018,national (5% Medicare sample),"DERIVED from Halani et al rates: 0.024/(0.024+0.004)",derived,NA,FALSE,"DESCRIPTIVE CONDITIONAL TREATMENT MIX, NOT A PATHWAY PROBABILITY. Its denominator is the wrong one for a primary transition, and it is derived from two non-exclusive category rates. Recorded so the SNM-dominant mix is visible, never to be inserted."
+snm,P(permanent implant | SNM stage 1),FI patients undergoing SNM stage 1,621,495,0.797,all treated,2011-2014,New York State,"Xu et al, Dis Colon Rectum 2018",FI-specific stage-1 cohort,NA,FALSE,"TEST-TO-IMPLANT TRANSITION. A real pathway state the model currently lacks: progression from SNM test to permanent implant is well below 100%, so the test phase must not be collapsed into the implant state. Non-transportable as a national 2026 value (single state, 2011-2014)."
+snm,P(revision/replacement/explant | permanent implant),FI patients completing SNM stage 2,495,32,0.065,all treated,2011-2014,New York State,"Xu et al, Dis Colon Rectum 2018",FI-specific,NA,FALSE,"DEVICE-MAINTENANCE WORKLOAD, structurally distinct from recurrent FI care. Demonstrates implanted SNM generates subsequent procedural workload that is NOT clinical recurrence. Must never populate a recurrence kernel."
+sphincteroplasty,temporal trend,,,,,all treated,2011-2014,New York State,"Xu et al, Dis Colon Rectum 2018",,NA,FALSE,"QUALITATIVE/TEMPORAL ONLY. Sphincteroplasty utilization DECLINED as SNM adoption increased. Establishes that treatment mix is NOT stationary, so any mix parameter requires era stratification. No value recorded because none is transportable."
