@@ -5,8 +5,24 @@
 # structures byte-identical to the pre-registry hardcoded lists. The gate
 # assert_publishable_demand_coefficients() must apply the canonical calibration contract.
 
-# Rebuild the exact pre-registry structures as the regression baseline.
+# The regression baseline. b0 and bage are the PREVALENCE-ANCHORED values;
+# every other coefficient is unchanged from the pre-registry structure.
+#
+# These moved deliberately: the previous intercept and slope produced POP
+# prevalence 5.6x above published symptomatic values. This fixture is still a
+# drift guard -- it just guards the current contract rather than the superseded
+# one. The pre-anchoring numbers live in .expected_placeholder() below, so a
+# silent revert is still detectable in both directions.
 .expected_risk <- function() {
+  mk <- function(b0, bvag, bage, bysl, bbmi, bhyst, bmeno, bcomorb)
+    list(b0 = b0, bvag = bvag, bage = bage, bysl = bysl,
+         bbmi = bbmi, bhyst = bhyst, bmeno = bmeno, bcomorb = bcomorb)
+  list(status = "prevalence_anchored",
+       ui  = mk(-2.1952, 0.18, 0.2504, 0.05, 0.12, 0.10, 0.25, 0.15),
+       pop = mk(-5.0063, 0.42, 0.1662, 0.08, 0.08, 0.45, 0.20, 0.05),
+       ai  = mk(-3.7295, 0.22, 0.2138, 0.04, 0.06, 0.05, 0.10, 0.20))
+}
+.expected_placeholder <- function() {
   mk <- function(b0, bvag, bage, bysl, bbmi, bhyst, bmeno, bcomorb)
     list(b0 = b0, bvag = bvag, bage = bage, bysl = bysl,
          bbmi = bbmi, bhyst = bhyst, bmeno = bmeno, bcomorb = bcomorb)
@@ -42,8 +58,25 @@ test_that("registry reconstructs the pathway params byte-identically", {
 })
 
 test_that("the bespoke status strings survive (meta$status keys off them)", {
-  expect_identical(urpssim:::lifecourse_risk_params()$status, "placeholder_uncalibrated")
+  expect_identical(urpssim:::lifecourse_risk_params()$status, "prevalence_anchored")
   expect_identical(lifecourse_risk_params_cited()$status, "obstetric_literature_anchored")
+  expect_identical(lifecourse_risk_params_placeholder()$status, "placeholder_uncalibrated")
+})
+
+test_that("the superseded placeholders remain reachable and unchanged", {
+  # Kept so the before/after comparison stays reproducible, and so a silent
+  # revert to the pre-anchoring values is detectable.
+  expect_identical(lifecourse_risk_params_placeholder(), .expected_placeholder())
+})
+
+test_that("anchoring moved ONLY b0 and bage", {
+  now <- urpssim:::lifecourse_risk_params(); was <- lifecourse_risk_params_placeholder()
+  for (cond in c("ui", "pop", "ai")) {
+    for (keep in c("bvag", "bysl", "bbmi", "bhyst", "bmeno", "bcomorb")) {
+      expect_identical(now[[cond]][[keep]], was[[cond]][[keep]])
+    }
+    expect_false(isTRUE(all.equal(now[[cond]]$b0, was[[cond]]$b0)))
+  }
 })
 
 test_that("the registry is well-formed and uses only canonical tiers", {

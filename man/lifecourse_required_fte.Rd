@@ -51,6 +51,7 @@ Other lifecourse:
 \code{\link{lifecourse_demand_estimand}()},
 \code{\link{lifecourse_demand_trajectory}()},
 \code{\link{lifecourse_risk_params_cited}()},
+\code{\link{lifecourse_risk_params_placeholder}()},
 \code{\link{simulate_lifecourse_demand}()}
 }
 \concept{demand}

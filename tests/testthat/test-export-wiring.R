@@ -203,6 +203,17 @@ test_that("the unwired surface does not grow", {
   # That is expected for transport_*() and chia_*(), but it is also a standing
   # obligation: when the CHIA transport layer is wired into the demand pipeline,
   # this bound must come back DOWN, not stay at 0.14.
-  expect_lte(length(o$orphans), 75L)
-  expect_lte(length(o$orphans) / length(o$exports), 0.14)
+  # RAISED 75 -> 83, ratio 0.14 -> 0.15. The estimand work added nine exported
+  # accessors and refusal-status functions -- ai_*_rates, the evidence
+  # registers, recurrence converters, open_research_db. Each is `api` by
+  # construction: a user calls them to inspect or estimate, and the package has
+  # no reason to call an accessor on an object the user already holds.
+  #
+  # THE SHAPE OF THIS DEBT IS DIFFERENT FROM THE LAST RAISE. Those were exports
+  # the model itself should eventually consume; these mostly CANNOT be wired
+  # until their parameters are resolved -- annual_first_urps_entry_rate and the
+  # recurrence kernel are deliberately unreachable from the pipeline while they
+  # are unsourced. This bound should fall when the science lands, not before.
+  expect_lte(length(o$orphans), 83L)
+  expect_lte(length(o$orphans) / length(o$exports), 0.15)
 })

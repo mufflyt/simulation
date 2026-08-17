@@ -56,6 +56,20 @@ lifecourse_risk_params <- function() .demand_risk_params("default")
 #' @export
 lifecourse_risk_params_cited <- function() .demand_risk_params("cited")
 
+#' Life-course risk parameters, PRE-ANCHORING placeholders
+#'
+#' @details
+#' The superseded placeholder intercept and age slope, kept reachable so a
+#' before/after comparison is reproducible. These produced POP prevalence 5.6x
+#' above published symptomatic values and are NOT suitable for any reported
+#' figure -- they exist to document what changed.
+#'
+#' @return A risk-params list in the shape of [lifecourse_risk_params()].
+#' @family lifecourse
+#' @concept demand
+#' @export
+lifecourse_risk_params_placeholder <- function() .demand_risk_params("placeholder")
+
 # Care-pathway probabilities per condition (recognition -> seek -> referral ->
 # treated). Internal.
 lifecourse_pathway_params <- function() .demand_pathway_params()
