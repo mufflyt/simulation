@@ -43,6 +43,12 @@ provider_supply <- provider_iso |>
   dplyr::distinct(coord_id) |>
   dplyr::mutate(provider_id = coord_id, supply = 1.0) # 1.0 FTE per active provider location
 
+# Apply physician-level Medicaid acceptance filter if SIMULATION_INSURANCE is set to Medicaid
+ins_type <- Sys.getenv("SIMULATION_INSURANCE", unset = "Commercial")
+provider_supply <- filter_supply_by_insurance(provider_supply, insurance = ins_type)
+cat("Applied insurance filter (", ins_type, "): Total effective provider supply =", round(sum(provider_supply$supply), 1), "FTEs\n")
+
+
 cat("Building E2SFCA membership matrix across full provider set (", nrow(provider_supply), "providers )...\n")
 
 # Use full sf spatial point-in-polygon overlay if sf is available, else full grid
