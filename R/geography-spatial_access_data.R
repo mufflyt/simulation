@@ -123,9 +123,16 @@ build_access_membership <- function(iso_sf, tracts,
     assertthat::assert_that(all(c("demand_id", "lon", "lat") %in% names(tracts)))
     sf::st_as_sf(as.data.frame(tracts), coords = c("lon", "lat"), crs = crs)
   }
-  # Align CRS, then assign each point the attributes of any polygon containing it.
+  # Align CRS, repair invalid geometries, and assign each point the attributes of any polygon containing it.
   iso_al <- sf::st_transform(iso_sf, sf::st_crs(pts))
-  joined <- sf::st_join(pts, iso_al[c(provider_col, band_col)], join = sf::st_within)
+
+  old_s2 <- sf::sf_use_s2()
+  on.exit(sf::sf_use_s2(old_s2), add = TRUE)
+  sf::sf_use_s2(FALSE)
+
+  iso_valid <- tryCatch(sf::st_make_valid(iso_al), error = function(e) iso_al)
+  joined <- sf::st_join(pts, iso_valid[c(provider_col, band_col)], join = sf::st_within)
+
 
   out <- sf::st_drop_geometry(joined)
   out <- out[!is.na(out[[provider_col]]), , drop = FALSE]
