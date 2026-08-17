@@ -184,12 +184,17 @@ build_chia_inpatient_urps_series <- function(
       source_dataset = "CHIA_MASSACHUSETTS_HDD_CASEMIX",
       source_years = paste0(min_year, "-", max_year),
       calibration_status = "observed_regional",
+      population_source = attr(pop, "population_source"),
+      population_vintage = attr(pop, "population_vintage"),
+      population_definition = attr(pop, "population_definition"),
+      population_sha256 = attr(pop, "population_sha256"),
       input_hash = digest::digest(res),
       query_hash = digest::digest(sql_query),
       config_hash = digest::digest(list(min_year, max_year, mode)),
       created_at = base::format(base::Sys.time(), "%Y-%m-%d %H:%M:%S")
     )
   } else {
+
     res <- fixture_chia_d6(min_year = min_year, max_year = max_year)
   }
 
