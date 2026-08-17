@@ -1,0 +1,32 @@
+name: Layer 3 - Release Validation
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release-reproducibility-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Tagged Release Code
+        uses: actions/checkout@v4
+
+      - name: Setup R Environment
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+
+      - name: Restore renv lockfile
+        uses: r-lib/actions/setup-renv@v2
+
+      - name: Run Fail-Closed Verification Gates
+        run: |
+          Rscript -e 'urpssim::verify_calibration_anchors(strict = TRUE)'
+          Rscript -e 'testthat::test_file("tests/testthat/test-chia-real-vs-fixture.R")'
+          Rscript -e 'testthat::test_file("tests/testthat/test-simulation-cliff-contract.R")'
+
+      - name: Run Full Package Check
+        run: |
+          Rscript -e 'devtools::check(error_on = "error")'
