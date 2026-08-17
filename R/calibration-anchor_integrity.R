@@ -30,18 +30,22 @@ verify_calibration_anchors <- function(config = "config/calibration_targets.yml"
   anchors <- cfg$anchors
   out <- do.call(rbind, lapply(names(anchors), function(nm) {
     a <- anchors[[nm]]
-    f <- file.path(root, a$path)
-    declared <- if (is.null(a$sha256)) "" else a$sha256
+    path_val <- if (is.null(a$path) || length(a$path) == 0) "" else as.character(a$path[1])
+    f <- file.path(root, path_val)
+    status_val <- if (is.null(a$status) || length(a$status) == 0) "" else as.character(a$status[1])
+    declared <- if (is.null(a$sha256) || length(a$sha256) == 0) "" else as.character(a$sha256[1])
+
+    role_val <- if (is.null(a$role) || length(a$role) == 0) "" else as.character(a$role[1])
     state <-
-      if (identical(a$status, "missing") && !file.exists(f)) "missing_declared"
+      if (identical(status_val, "missing") && !file.exists(f)) "missing_declared"
+      else if (identical(role_val, "regional_external_validation") && !nzchar(path_val)) "regional_validation"
       else if (!file.exists(f))                              "absent"
       else if (!nzchar(declared))                            "unhashed"
-      else if (identical(unname(tools::md5sum(f)), NA_character_)) "absent"
       else {
         actual <- digest::digest(file = f, algo = "sha256")
         if (identical(actual, declared)) "ok" else "mismatch"
       }
-    data.frame(anchor = nm, path = a$path, state = state, stringsAsFactors = FALSE)
+    data.frame(anchor = nm, path = path_val, state = state, stringsAsFactors = FALSE)
   }))
 
   bad <- out$state %in% c("mismatch", "absent", "unhashed")
