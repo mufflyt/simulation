@@ -1,0 +1,23 @@
+# RECURRENCE EVIDENCE REGISTER
+#
+# One row per candidate recurrence parameter. kernel_compatible is FALSE BY
+# DEFAULT and may only become TRUE when the row's endpoint IS the modelled
+# late demand-generating recurrent-care episode AND its measure_type converts
+# to g_k without reinterpretation. See docs/RECURRENCE_ENDPOINT_CONTRACT.md.
+#
+# measure_type is constrained to:
+#   discrete_hazard                    -> build_recurrence_kernel()
+#   cumulative_incidence               -> recurrence_mass_from_cumulative()
+#   first_recurrence_probability_mass  -> direct
+#   repeat_treatment_rate              -> NO ROUTE. A retreatment proportion is
+#                                         not recurrence.
+#   unsupported_or_unknown             -> NO ROUTE.
+#
+# An empty value means the field has not been established. It does NOT mean the
+# field is inapplicable, and it must not be filled by inference.
+condition,index_treatment,parameter,value,current_use,source,source_population,endpoint,followup,measure_type,competing_risk_method,first_or_repeated_event,kernel_compatible,incompatibility_reason
+pop,,followup_p_advance,0.12,annual recurrence hazard,"expert judgement; SUPeR/E-CARE retreatment curves",,"composite/anatomic/retreatment - not the modelled recurrent-care episode","multi-year (E-CARE failure accrues through 7 y)",unsupported_or_unknown,,,FALSE,"A multi-year CUMULATIVE observation is used to license an ANNUAL rate. Implies 29.1% cumulative reoperation by 7 years. Index treatment unspecified, and SUPeR/E-CARE studied different operations with different failure definitions."
+pop,,recurrence_per_entering,0.40,share of recurrences undergoing reoperation,expert judgement,,reoperation after recurrence,,repeat_treatment_rate,,,FALSE,"Not a recurrence rate. May later belong on P(repeat operation | recurrent-care episode), DOWNSTREAM of g_k, never inside it."
+ui,,followup_p_advance,0.08,annual recurrence hazard,expert judgement,,,,unsupported_or_unknown,,,FALSE,"No source beyond expert judgement. Index treatment unspecified; symptom recurrence and repeat surgery diverge substantially in long-term MUS series."
+ui,,recurrence_per_entering,0.35,share of recurrences undergoing reoperation,expert judgement,,reoperation after recurrence,,repeat_treatment_rate,,,FALSE,"Not a recurrence rate. Downstream of g_k."
+ai,,followup_p_advance,0.10,annual recurrence hazard,expert judgement,,,,unsupported_or_unknown,,,FALSE,"BLOCKED at a more basic level: the modelled AI index treatment is ptns, which is not a definitive procedure. Recurrence after definitive treatment is undefined. Sacral neuromodulation and sphincteroplasty are absent from URPS_CPT_BASKET."
