@@ -67,7 +67,7 @@ load_provider_isochrones <- function(artifacts_dir = isochrone_source_dir(),
   single_file <- file.path(artifacts_dir, "provider_isochrones.rds")
   if (file.exists(single_file)) {
     df <- readRDS(single_file)
-    dt <- if ("drive_time" %in% names(df)) df$drive_time else df$isochrone_minutes
+    dt <- if ("drive_time" %in% names(df)) df$drive_time else if ("drive_time_minutes" %in% names(df)) df$drive_time_minutes else df$isochrone_minutes
     cid <- if ("coord_id" %in% names(df)) df$coord_id else df$npi
 
     df$drive_time <- as.integer(dt)
