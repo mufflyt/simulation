@@ -49,17 +49,35 @@ load_tract_demand <- function(mode = resolve_reproducibility_mode()) {
 #' @family spatial access data
 #' @concept geography
 #' @export
-load_provider_isochrones <- function(artifacts_dir = Sys.getenv("ISOCHRONES_ARTIFACTS_DIR", ""),
+load_provider_isochrones <- function(artifacts_dir = isochrone_source_dir(),
                                      bands = c(30L, 60L, 120L, 180L)) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("load_provider_isochrones() needs the 'sf' package (Suggests).", call. = FALSE)
   }
+  if (is.na(artifacts_dir) || !nzchar(artifacts_dir) || !dir.exists(artifacts_dir)) {
+    artifacts_dir <- Sys.getenv("ISOCHRONES_ARTIFACTS_DIR", "")
+  }
   if (!nzchar(artifacts_dir) || !dir.exists(artifacts_dir)) {
     stop(sprintf(paste0("Provider isochrone artifacts not found (dir = '%s'). These are large ",
-                        "external files; set ISOCHRONES_ARTIFACTS_DIR or pass artifacts_dir ",
-                        "pointing at isochrones_{band}min_consolidated.rds."), artifacts_dir),
+                        "external files; set ISOCHRONES_ARTIFACTS_DIR or config/paths.local.yml."), artifacts_dir),
          call. = FALSE)
   }
+
+  # Option A: Single consolidated file (provider_isochrones.rds)
+  single_file <- file.path(artifacts_dir, "provider_isochrones.rds")
+  if (file.exists(single_file)) {
+    df <- readRDS(single_file)
+    dt <- if ("drive_time" %in% names(df)) df[["drive_time"]] else df[["isochrone_minutes"]]
+    cid <- if ("coord_id" %in% names(df)) df[["coord_id"]] else df[["npi"]]
+
+    df[["drive_time"]] <- as.integer(dt)
+    df[["coord_id"]] <- as.character(cid)
+
+    keep <- !is.na(df[["drive_time"]]) & df[["drive_time"]] %in% bands
+    return(df[keep, , drop = FALSE])
+  }
+
+  # Option B: Multi-file band structure (isochrones_{band}min_consolidated.rds)
   pieces <- lapply(bands, function(b) {
     f <- file.path(artifacts_dir, sprintf("isochrones_%dmin_consolidated.rds", b))
     if (!file.exists(f)) {
