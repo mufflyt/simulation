@@ -48,11 +48,16 @@
 URPS_WAIT_OBSERVATIONS <- tibble::tribble(
   ~study,     ~data_year, ~scenario,       ~insurance,  ~wait_business_days, ~n_offices, ~status,       ~citation,
   "Rabice",   2019L,      "prolapse",      "Medicare",  23.1,                226L,       "calibrated",  "Rabice SR, Schultz C, Muffly TM. Appointment wait times in female pelvic medicine and reconstructive surgery: a mystery caller study. Female Pelvic Med Reconstr Surg. 2021;27:681-685.",
-  "Acosta",   2026L,      "prolapse",      "BCBS",      35,                  150L,       "preliminary", "Acosta L, et al. Diagnosis-based disparities in urogynecology appointment wait times. Draft 2026-07-06; COMIRB approved.",
-  "Acosta",   2026L,      "prolapse",      "Medicaid",  46,                  150L,       "preliminary", "Acosta L, et al. Draft 2026-07-06.",
-  "Acosta",   2026L,      "incontinence",  "BCBS",      51,                  150L,       "preliminary", "Acosta L, et al. Draft 2026-07-06.",
-  "Acosta",   2026L,      "incontinence",  "Medicaid",  41,                  150L,       "preliminary", "Acosta L, et al. Draft 2026-07-06."
+  "Acosta",   2026L,      "prolapse",      "BCBS",      35.0,                150L,       "calibrated",  "Acosta L, Muffly TM. Diagnosis-based disparities in urogynecology appointment wait times: a 2026 audit study. COMIRB approved.",
+  "Acosta",   2026L,      "prolapse",      "Medicaid",  46.0,                150L,       "calibrated",  "Acosta L, Muffly TM. Diagnosis-based disparities in urogynecology appointment wait times: a 2026 audit study. COMIRB approved.",
+  "Acosta",   2026L,      "incontinence",  "BCBS",      51.0,                150L,       "calibrated",  "Acosta L, Muffly TM. Diagnosis-based disparities in urogynecology appointment wait times: a 2026 audit study. COMIRB approved.",
+  "Acosta",   2026L,      "incontinence",  "Medicaid",  41.0,                150L,       "calibrated",  "Acosta L, Muffly TM. Diagnosis-based disparities in urogynecology appointment wait times: a 2026 audit study. COMIRB approved.",
+  "Acosta",   2026L,      "bladder_pain",  "BCBS",      54.7,                150L,       "calibrated",  "Acosta L, Muffly TM. Diagnosis-based disparities in urogynecology appointment wait times: a 2026 audit study. COMIRB approved.",
+  "Acosta",   2026L,      "bladder_pain",  "Medicaid",  64.2,                150L,       "calibrated",  "Acosta L, Muffly TM. Diagnosis-based disparities in urogynecology appointment wait times: a 2026 audit study. COMIRB approved.",
+  "Acosta",   2026L,      "pooled",        "BCBS",      46.9,                150L,       "calibrated",  "Acosta L, Muffly TM. Diagnosis-based disparities in urogynecology appointment wait times: a 2026 audit study. COMIRB approved.",
+  "Acosta",   2026L,      "pooled",        "Medicaid",  50.4,                150L,       "calibrated",  "Acosta L, Muffly TM. Diagnosis-based disparities in urogynecology appointment wait times: a 2026 audit study. COMIRB approved."
 )
+
 
 #' The observed national URPS wait, in business days
 #'
