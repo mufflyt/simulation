@@ -242,6 +242,24 @@ departure_hazard <- function(age,
   pmin(pmax(h, 0), 1)
 }
 
+#' Clinical FTE Effort Decay Function FTE(age)
+#'
+#' @return A tibble with `age_group`, `min_age`, `max_age`, `fte_multiplier`, `clinical_hrs_per_week`, and `source`.
+#' @family provider lifecycle
+#' @concept supply
+#' @export
+provider_fte_decay_curve <- function() {
+  tibble::tribble(
+    ~age_group, ~min_age, ~max_age, ~fte_multiplier, ~clinical_hrs_per_week, ~source,
+    "< 58",      28,       57,       1.000,           37.20,                  "Dall 2021 / AMA Physician Survey",
+    "58-61",     58,       61,       0.940,           34.97,                  "Dall 2021 / AMA Physician Survey",
+    "62-64",     62,       64,       0.850,           31.62,                  "Dall 2021 / AMA Physician Survey",
+    "65-67",     65,       67,       0.720,           26.78,                  "Dall 2021 / AMA Physician Survey",
+    "68-71",     68,       71,       0.580,           21.58,                  "Dall 2021 / AMA Physician Survey",
+    "72+",       72,       89,       0.420,           15.62,                  "Dall 2021 / AMA Physician Survey"
+  )
+}
+
 #' Shift the retirement schedule earlier or later on the age axis
 #'
 #' The retirement scenarios in every Dall-family paper are expressed as "retire
