@@ -68,11 +68,43 @@
 demand_transition_registry <- function() {
   # -- Disease-state log-odds (placeholder set). Compact wide block mirrors the
   #    original coefficient set exactly; melted to one row per (condition, param).
+  # b0 AND bage ARE PREVALENCE-ANCHORED. The superseded placeholders were
+  #
+  #   ui  b0 -1.60  bage 0.35
+  #   pop b0 -2.40  bage 0.30
+  #   ai  b0 -2.90  bage 0.25
+  #
+  # and they produced POP prevalence 5.6x above published SYMPTOMATIC values
+  # (population-weighted 24.3% vs 4.4%), including 59.7% among women 75+ -- a
+  # figure closer to exam-detected POP-Q stage >=2, which is largely
+  # asymptomatic, than to a bulge a woman reports. Since treated = prevalence x
+  # cascade, that error propagated straight into procedure volume and accounted
+  # for most of the 8.51x prolapse overstatement.
+  #
+  # The values below are the output of calibrate_lifecourse_prevalence()
+  # against Nygaard 2008 / Wu 2014 (UI, POP) and Whitehead 2009 / Bharucha 2005
+  # (FI), stored as literals rather than recomputed per call: an optim() on
+  # every accessor would be slow, and stored numbers can be read and audited.
+  # Reproduce with lifecourse_risk_params_prevalence_anchored().
+  #
+  # EVERY OTHER COEFFICIENT IS UNCHANGED, including the cited bvag (Hendrix WHI
+  # / Mant Oxford-FPA) and bbmi (Giri 2017). The scenario levers act through
+  # those, so replacing the risk model wholesale would have matched prevalence
+  # and destroyed every scenario the model exists to run.
   risk_wide <- tibble::tribble(
-    ~condition,  ~b0,  ~bvag, ~bage, ~bysl, ~bbmi, ~bhyst, ~bmeno, ~bcomorb,
-    "ui",      -1.60,  0.18,  0.35,  0.05,  0.12,   0.10,   0.25,     0.15,
-    "pop",     -2.40,  0.42,  0.30,  0.08,  0.08,   0.45,   0.20,     0.05,
-    "ai",      -2.90,  0.22,  0.25,  0.04,  0.06,   0.05,   0.10,     0.20
+    ~condition,  ~b0,   ~bvag, ~bage,  ~bysl, ~bbmi, ~bhyst, ~bmeno, ~bcomorb,
+    "ui",      -2.1952,  0.18,  0.2504, 0.05,  0.12,   0.10,   0.25,     0.15,
+    "pop",     -5.0063,  0.42,  0.1662, 0.08,  0.08,   0.45,   0.20,     0.05,
+    "ai",      -3.7295,  0.22,  0.2138, 0.04,  0.06,   0.05,   0.10,     0.20
+  )
+
+  # The superseded placeholder intercept/slope, kept reachable and auditable
+  # rather than deleted. Retrieved with lifecourse_risk_params_placeholder().
+  placeholder_wide <- tibble::tribble(
+    ~condition,  ~b0,  ~bage,
+    "ui",      -1.60,  0.35,
+    "pop",     -2.40,  0.30,
+    "ai",      -2.90,  0.25
   )
   # -- Care-pathway probabilities (placeholder set).
   path_wide <- tibble::tribble(
@@ -96,13 +128,41 @@ demand_transition_registry <- function() {
     do.call(rbind, rows)
   }
   risk_note <- function(p) if (p == "bvag") "primary exposure term (cited override available)" else ""
+
+  # b0 and bage are no longer placeholders; their tier and source must say so,
+  # or the registry would misreport the model's own provenance.
+  .anchor_risk_rows <- function(d) {
+    i <- d$param %in% c("b0", "bage") & d$stage == "disease_state"
+    d$calibration_tier[i] <- "solved"
+    d$source[i] <- paste0(
+      "calibrated to published SYMPTOMATIC prevalence: Nygaard 2008 JAMA / ",
+      "Wu 2014 (UI, POP), Whitehead 2009 / Bharucha 2005 (FI); ",
+      "reproduce with lifecourse_risk_params_prevalence_anchored()")
+    d$notes[i] <- paste0(
+      "SOLVED, not measured: b0 and bage were chosen so the cohort matches ",
+      "published age-banded symptomatic prevalence. Fit is imperfect by ",
+      "band (achieved/target ~0.49-1.31), which indicates the remaining ",
+      "covariate structure is also mis-specified -- see ",
+      "calibrate_lifecourse_prevalence().")
+    d
+  }
   path_note <- function(p) switch(p,
     p_treated = "treatment preference given eligible (eligibility split into the treatment_eligibility stage)",
     recognition = "symptom recognition (pre-severity)",
     p_seek = "base care-seeking; reweighted by the symptom_severity stage (seek_mult_*)",
     "")
 
-  default_rows <- rbind(melt(risk_wide, risk_note), melt(path_wide, path_note))
+  default_rows <- rbind(.anchor_risk_rows(melt(risk_wide, risk_note)),
+                        melt(path_wide, path_note))
+
+  # The superseded placeholder intercept/slope, as an explicit variant.
+  placeholder_rows <- melt(placeholder_wide, function(p) "")
+  placeholder_rows$variant <- "placeholder"
+  placeholder_rows$notes <- paste0(
+    "SUPERSEDED. The pre-anchoring placeholder, kept reachable for comparison ",
+    "and reproducibility. Produced POP prevalence 5.6x above published ",
+    "symptomatic values.")
+  default_rows <- rbind(default_rows, placeholder_rows)
 
   # -- Symptom-severity distribution (the un-collapsed stage 3) + severity-specific
   #    care-seeking multipliers. UI shares are anchored to the Sandvik instrument
@@ -251,12 +311,12 @@ lifecourse_eligibility_params <- function() {
 
 # Effective (condition, param, value, tier) for a variant: default rows, with the
 # cited overrides overlaid when variant == "cited".
-.demand_effective <- function(variant = c("default", "cited")) {
+.demand_effective <- function(variant = c("default", "cited", "placeholder")) {
   variant <- match.arg(variant)
   reg <- demand_transition_registry()
   base <- reg[reg$variant == "default", c("condition", "param", "value", "calibration_tier")]
-  if (variant == "cited") {
-    ov <- reg[reg$variant == "cited", c("condition", "param", "value", "calibration_tier")]
+  if (variant %in% c("cited", "placeholder")) {
+    ov <- reg[reg$variant == variant, c("condition", "param", "value", "calibration_tier")]
     key <- function(d) paste(d$condition, d$param)
     idx <- match(key(ov), key(base))
     base$value[idx] <- ov$value
@@ -266,7 +326,7 @@ lifecourse_eligibility_params <- function() {
 }
 
 # Reconstruct the nested risk-params list (identical structure to the original).
-.demand_risk_params <- function(variant = c("default", "cited")) {
+.demand_risk_params <- function(variant = c("default", "cited", "placeholder")) {
   variant <- match.arg(variant)
   eff <- .demand_effective(variant)
   eff <- eff[eff$param %in% .DEMAND_RISK_PARAM_ORDER, ]
@@ -275,7 +335,10 @@ lifecourse_eligibility_params <- function() {
     vals <- v$value[match(.DEMAND_RISK_PARAM_ORDER, v$param)]
     stats::setNames(as.list(vals), .DEMAND_RISK_PARAM_ORDER)
   }
-  status <- if (variant == "cited") "obstetric_literature_anchored" else "placeholder_uncalibrated"
+  status <- switch(variant,
+                   cited = "obstetric_literature_anchored",
+                   placeholder = "placeholder_uncalibrated",
+                   "prevalence_anchored")
   c(list(status = status),
     stats::setNames(lapply(.DEMAND_CONDITION_ORDER, one_condition), .DEMAND_CONDITION_ORDER))
 }
