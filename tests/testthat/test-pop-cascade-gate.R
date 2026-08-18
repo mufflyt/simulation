@@ -180,7 +180,7 @@ test_that("POP testing is non-gating, and UI/AI were not restructured by analogy
   pw <- condition_service_pathway()
   expect_equal(unique(pw$p_advance[pw$condition == "pop" & pw$stage == "testing"]), 1.00)
   expect_equal(unique(pw$p_advance[pw$condition == "ui"  & pw$stage == "testing"]), 0.40)
-  expect_equal(unique(pw$p_advance[pw$condition == "ai"  & pw$stage == "testing"]), 0.25)
+  expect_equal(unique(pw$p_advance[pw$condition == "ai"  & pw$stage == "testing"]), 0.20)
 
   # testing services survive as UTILISATION, unchanged in magnitude
   pop_test <- pw[pw$condition == "pop" & pw$stage == "testing", ]

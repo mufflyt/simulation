@@ -159,9 +159,6 @@ test_that("care_engagement_visits() REFUSES a split whose decomposition does not
 })
 
 test_that("the unsourced-parameter gate reports without being fatal", {
-  # Gate 4 is provenance, not arithmetic, and is FALSE today by design. It must
-  # stay visible without blocking, or the module cannot be used at all while
-  # the sourcing question is open.
   sp <- split_care_engagement(care_engaged = 1000, incident_share = 0.25)
   expect_message(
     care_engagement_visits(sp, first_year_followup_rate = 1.2,

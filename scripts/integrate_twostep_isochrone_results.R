@@ -18,7 +18,7 @@ cat("=================================================================\n")
 cat("LINKING /twostep E2SFCA ACCESS RESULTS TO /simulation\n")
 cat("=================================================================\n\n")
 
-twostep_csv <- "/Users/tmuffly/twostep/data/step_4_access_by_group.csv"
+twostep_csv <- file.path(Sys.getenv("HOME"), "twostep", "data", "step_4_access_by_group.csv")
 cat("Reading /twostep pre-calculated accessibility data:", twostep_csv, "\n")
 
 if (file.exists(twostep_csv)) {

@@ -29,6 +29,7 @@ Imports:
     digest,
     dplyr (>= 1.1.0),
     duckdb,
+    httr2,
     jsonlite,
     MASS,
     purrr,

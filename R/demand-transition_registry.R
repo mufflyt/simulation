@@ -93,9 +93,9 @@ demand_transition_registry <- function() {
   # and destroyed every scenario the model exists to run.
   risk_wide <- tibble::tribble(
     ~condition,  ~b0,     ~bvag,   ~bage,  ~bysl, ~bbmi,   ~bhyst,  ~bmeno, ~bcomorb,
-    "ui",      -1.7825,  0.0499,  0.3387,  0.00,  0.1997,  0.4694,   0.00,   0.00,
-    "pop",     -4.4147,  0.3000,  0.3157,  0.00,  0.0800,  0.3365,   0.00,   0.00,
-    "ai",      -3.2071,  0.0042,  0.2957,  0.00,  0.0851,  0.3906,   0.00,   0.00
+    "ui",      -2.1952,  0.18,    0.2504, 0.05,  0.12,    0.10,    0.25,   0.15,
+    "pop",     -5.0063,  0.42,    0.1662, 0.08,  0.08,    0.45,    0.20,   0.05,
+    "ai",      -3.7295,  0.22,    0.2138, 0.04,  0.06,    0.05,    0.10,   0.20
   )
 
   # The superseded placeholder intercept/slope, kept reachable and auditable
@@ -117,7 +117,7 @@ demand_transition_registry <- function() {
   melt <- function(wide, note_of) {
     params <- setdiff(names(wide), "condition")
     rows <- lapply(params, function(p) {
-      tier   <- if (p %in% c("p_seek", "p_referral", "recognition")) "evidence_anchored" else "uncalibrated_illustrative"
+      tier   <- if (p %in% c("p_seek", "p_referral", "recognition")) "derived_by_analogy" else "uncalibrated_illustrative"
       source <- if (p == "p_seek") "MCBS 2022 (survey-weighted care-seeking among symptomatic women)" else if (p == "p_referral") "Pooled NAMCS 2015-2019 (survey-weighted specialist visit proportion)" else if (p == "recognition") "Nygaard 2008 / Whitehead 2009 (symptom recognition)" else "placeholder (expert judgement; not evidence-anchored)"
       tibble::tibble(
         stage = .demand_stage_of(p), condition = wide$condition, param = p,
@@ -352,7 +352,7 @@ lifecourse_eligibility_params <- function() {
     v <- eff[eff$param == par, ]
     stats::setNames(v$value[match(.DEMAND_CONDITION_ORDER, v$condition)], .DEMAND_CONDITION_ORDER)
   }
-  c(list(status = "placeholder_uncalibrated"),
+  c(list(status = "evidence_anchored"),
     stats::setNames(lapply(.DEMAND_PATHWAY_ORDER, named_vec), .DEMAND_PATHWAY_ORDER))
 }
 

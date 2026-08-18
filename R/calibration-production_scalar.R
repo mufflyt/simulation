@@ -88,7 +88,7 @@ calibration_state <- function(config_path = "config/calibration_targets.yml") {
   rows <- base::lapply(base::names(cfg$anchors), function(nm) {
     a <- cfg$anchors[[nm]]
     review <- a$clinical_review %||% base::list()
-    present <- base::file.exists(a$path)
+    present <- !base::is.null(a$path) && base::file.exists(a$path)
     hashed  <- base::nzchar(base::as.character(a$sha256 %||% ""))
     tibble::tibble(
       anchor              = nm,

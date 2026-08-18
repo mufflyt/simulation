@@ -1,0 +1,6 @@
+"case_name","age","sex","retirement_probability","career_change_probability","expected_probability_exit_any"
+"zero_hazard_all_causes",45,"female",0,0,0.001295
+"low_hazard_early_career",38,"male",0.002,0.015,0.018151
+"moderate_hazard_midcareer",55,"female",0.03,0.005,0.037593
+"high_hazard_late_career",72,"male",0.35,0.001,0.363146
+"extreme_hazard_terminal_age",89,"female",0.8,0,0.809753

@@ -2,41 +2,20 @@
 % Please edit documentation in R/supply-fraher_agent_supply.R
 \name{initialize_urps_agents}
 \alias{initialize_urps_agents}
-\title{Initialize URPS Physician Agent Population}
+\title{Initialize URPS Provider Agent Cohort}
 \usage{
-initialize_urps_agents(
-  roster_source = "mufflyaccess",
-  duckdb_path = NULL,
-  reference_year = 2023L,
-  max_age = 70L,
-  verbose = TRUE
-)
+initialize_urps_agents(n = 1306L, max_age = 70L, verbose = TRUE)
 }
 \arguments{
-\item{roster_source}{Character. "mufflyaccess" or "isochrones_duckdb".}
+\item{n}{Initial count of agents (default: 1306).}
 
-\item{duckdb_path}{Character or NULL.}
+\item{max_age}{Maximum age at baseline (default: 70L).}
 
-\item{reference_year}{Integer. Default: 2023L.}
-
-\item{max_age}{Integer. Default: 70L per Fraher criterion.}
-
-\item{verbose}{Logical. Default: TRUE.}
+\item{verbose}{Logical print message.}
 }
 \value{
-Data frame with one row per physician.
+Tibble of initialized provider agents.
 }
 \description{
-Initialize URPS Physician Agent Population
+Initialize URPS Provider Agent Cohort
 }
-\examples{
-\dontrun{
-# Reproducible synthetic roster (no external data required):
-agents <- initialize_urps_agents(roster_source = "mufflyaccess", verbose = FALSE)
-head(agents)
-# Advance one simulated year against an age x sex exit-hazard table:
-# advance_urps_agents() is archived in inst/archive/supply.R.
-}
-}
-\concept{fraher agent supply}
-\concept{supply}

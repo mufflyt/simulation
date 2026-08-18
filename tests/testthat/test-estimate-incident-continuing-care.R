@@ -14,22 +14,22 @@ test_that("estimate_incident_continuing_care.R script exists and has valid synta
   expect_false(inherits(parsed, "error"))
 })
 
-test_that("care_engagement_params returns evidence_anchored parameters", {
+test_that("care_engagement_params returns requires_source for unanchored utilization parameters", {
   params <- care_engagement_params()
   expect_s3_class(params, "data.frame")
   expect_equal(nrow(params), 4L)
 
-  expect_true(all(params$calibration_status %in% c("evidence_anchored", "definitional")))
+  expect_equal(sum(params$calibration_status == "requires_source"), 3L)
   inc <- dplyr::filter(params, parameter == "incident_share")
-  expect_equal(inc$value, 0.3104)
+  expect_true(is.na(inc$value))
 
   fy <- dplyr::filter(params, parameter == "first_year_followup_rate")
-  expect_equal(fy$value, 1.4820)
+  expect_true(is.na(fy$value))
 })
 
 test_that("split_care_engagement decomposes stock into incident and continuing care", {
   stock <- FROZEN_CARE_ENGAGED
-  split <- split_care_engagement(stock)
+  split <- split_care_engagement(stock, incident_share = 0.3104)
 
   expect_s3_class(split, "data.frame")
   expect_equal(nrow(split), 3L)
@@ -46,11 +46,10 @@ test_that("split_care_engagement decomposes stock into incident and continuing c
   expect_equal(unname(pop_row$newly_entering_care / pop_row$care_engaged), 0.2850)
 })
 
-test_that("assert_care_engagement_gates passes Gate 4 when parameters are evidence_anchored", {
-  split <- split_care_engagement(FROZEN_CARE_ENGAGED)
-  visits <- care_engagement_visits(split)
+test_that("assert_care_engagement_gates reports Gate 4 while parameters require source", {
+  split <- split_care_engagement(FROZEN_CARE_ENGAGED, incident_share = 0.3104)
+  visits <- care_engagement_visits(split, first_year_followup_rate = 1.4820, annual_followup_rate = 1.1250)
 
   gates <- assert_care_engagement_gates(split, visits)
-  expect_true(all(gates$passed, na.rm = TRUE))
-  expect_true(gates$passed[4])
+  expect_false(gates$passed[4])
 })
