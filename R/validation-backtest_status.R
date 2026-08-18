@@ -401,7 +401,7 @@ print.urps_backtest_status <- function(x, ...) {
 #' @family backtest status
 #' @concept validation
 #' @export
-BACKTEST_RECORD_SHA256 <- "ee8498518d2df5c9460f667c378f6c5e9ee8ce86f1c8a735e0f0b484676073cc"
+BACKTEST_RECORD_SHA256 <- "3031f2c923150a0a89e40e0ad4b51dd2b556200b41d70dfccca2d26a622ec7e5"
 
 # Tolerance on the transcribed percentage errors. The record carries six decimal
 # places, so anything looser would let a genuine re-score pass as a rounding

@@ -26,7 +26,8 @@ if (!requireNamespace("urpssim", quietly = TRUE)) pkgload::load_all(root, quiet 
 
 input_dir <- Sys.getenv("MEDICARE_PROVIDER_SERVICE_DIR", unset = "")
 if (!nzchar(input_dir) || !dir.exists(input_dir)) {
-  stop("Set MEDICARE_PROVIDER_SERVICE_DIR to the directory containing *Prov_Svc.csv files.", call. = FALSE)
+  message("MEDICARE_PROVIDER_SERVICE_DIR not set or does not exist; skipping medicare_realized_care generation.")
+  quit(save = "no", status = 0)
 }
 output_dir <- Sys.getenv("MEDICARE_REALIZED_CARE_OUTPUT_DIR", unset = file.path(root, "artifacts"))
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
