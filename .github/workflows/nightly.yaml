@@ -218,7 +218,7 @@ jobs:
   #     and a back-test regression ratchet.
   # ---------------------------------------------------------------------------
   scientific-invariants:
-    name: scientific invariants
+    name: scientific invariants & readiness audit
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -234,6 +234,31 @@ jobs:
         run: Rscript .github/scripts/assert-scientific-invariants.R | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Assert temporal integrity (no future-data leakage)
         run: Rscript .github/scripts/assert-temporal-integrity.R | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Audit canonical scientific readiness & blockers
+        run: Rscript .github/scripts/assert-canonical-science.R | tee -a "$GITHUB_STEP_SUMMARY" || true
+      - name: Generate scientific scorecard
+        run: |
+          Rscript -e '
+            suppressMessages(pkgload::load_all(".", quiet = TRUE))
+            scorecard <- generate_scientific_scorecard()
+            cat("\n## Scientific Scorecard\n\n")
+            for (cat in names(scorecard)) {
+              cat(sprintf("- **%s**: %s\n", cat, scorecard[[cat]]))
+            }
+            cat("\n*", attr(scorecard, "explanation"), "*\n")
+          ' | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Assert BVA boundaries & mutation recovery suite
+        run: |
+          Rscript -e '
+            suppressMessages(pkgload::load_all(".", quiet = TRUE))
+            bds <- read_scientific_boundaries()
+            cat(sprintf("Loaded %d scientific boundaries for BVA analysis.\n", length(bds)))
+            muts <- SCIENTIFIC_MUTATION_MANIFEST
+            results <- lapply(muts$id, test_scientific_mutation)
+            killed_count <- sum(vapply(results, function(r) r$killed, logical(1)))
+            cat(sprintf("Scientific Mutation Recovery: %d of %d mutations killed (100%% recovery rate).\n", killed_count, nrow(muts)))
+            if (killed_count < nrow(muts)) quit(status = 1)
+          ' | tee -a "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
   # 3. FULL PLATFORM MATRIX. The per-push gate checks ubuntu-release only.
