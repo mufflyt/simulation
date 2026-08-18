@@ -37,8 +37,15 @@ bt <- if (file.exists(cached) && !nzchar(Sys.getenv("BACKTEST_FORCE"))) {
 
 # ---- Tabular artifacts -----------------------------------------------------
 
-utils::write.csv(bt$summary, "artifacts/backtest_2020_to_2023_summary.csv",
-                 row.names = FALSE)
+summary_df <- as.data.frame(bt$summary)
+for (col in names(summary_df)) {
+  if (is.list(summary_df[[col]])) {
+    summary_df[[col]] <- vapply(summary_df[[col]], function(x) {
+      if (is.null(x)) NA_character_ else paste(names(x), unlist(x), sep = "=", collapse = "; ")
+    }, character(1))
+  }
+}
+utils::write.csv(summary_df, "artifacts/backtest_2020_to_2023_summary.csv", row.names = FALSE)
 
 # THE DRIFT GATE, placed here because THIS is the moment drift is created.
 # BACKTEST_RECORD_2020_2023 is a transcription of the file just overwritten, and

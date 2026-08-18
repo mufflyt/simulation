@@ -35,9 +35,9 @@ output_path <- Sys.getenv(
   file.path(root, "figures", "medicare_sling_workload_index.png")
 )
 
-if (!file.exists(cache_path)) {
-  stop("Medicare sling cache not found: ", cache_path,
-       "\nSet MEDICARE_SLING_CACHE to the provider_volume.rds location.", call. = FALSE)
+if (is.na(cache_path) || !file.exists(cache_path)) {
+  message("Medicare sling cache not present; skipping medicare_sling_workload_index.png generation.")
+  quit(save = "no", status = 0)
 }
 dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
 

@@ -13,33 +13,33 @@ Care-seeking events:           299
 Weighted care-seeking rate:    3.331% of adult women per year
 
 Estimated care-seeking multipliers (reference = 1.0):
-  Insurance        Private       1.000  [0.728, 1.272]  identified=FALSE
-  Insurance        Public        0.533  [0.000, 1.189]  identified=FALSE
-  Insurance        Uninsured     1.144  [0.000, 3.349]  identified=FALSE
-  Income (% FPL)   >=400%        1.000  [0.728, 1.272]  identified=FALSE
-  Income (% FPL)   200-399%      1.016  [0.666, 1.365]  identified=FALSE
-  Income (% FPL)   100-199%      1.165  [0.615, 1.716]  identified=FALSE
-  Income (% FPL)   <100%         0.592  [0.281, 0.903]  identified=TRUE
-  Race / ethnicity White (NH)    1.000  [0.728, 1.272]  identified=FALSE
-  Race / ethnicity Hispanic      0.780  [0.428, 1.132]  identified=FALSE
-  Race / ethnicity Black (NH)    0.354  [0.179, 0.530]  identified=TRUE
-  Race / ethnicity Asian (NH)    0.438  [0.084, 0.792]  identified=TRUE
-  Race / ethnicity Other (NH)    0.933  [0.194, 1.672]  identified=FALSE
+  Insurance        Private       1.000  [0.721, 1.279]  identified=FALSE
+  Insurance        Public        1.214  [0.756, 1.671]  identified=FALSE
+  Insurance        Uninsured     0.562  [0.000, 1.253]  identified=FALSE
+  Income (% FPL)   >=400%        1.000  [0.721, 1.279]  identified=FALSE
+  Income (% FPL)   200-399%      0.979  [0.608, 1.350]  identified=FALSE
+  Income (% FPL)   100-199%      0.992  [0.513, 1.470]  identified=FALSE
+  Income (% FPL)   <100%         0.464  [0.188, 0.740]  identified=TRUE
+  Race / ethnicity White (NH)    1.000  [0.721, 1.279]  identified=FALSE
+  Race / ethnicity Hispanic      0.765  [0.422, 1.109]  identified=FALSE
+  Race / ethnicity Black (NH)    0.351  [0.176, 0.525]  identified=TRUE
+  Race / ethnicity Asian (NH)    0.433  [0.079, 0.787]  identified=TRUE
+  Race / ethnicity Other (NH)    0.939  [0.194, 1.684]  identified=FALSE
 
 Comorbidity gradient at the reference woman:
-   0 conditions: p_seek 0.0195  visits_if_seek 1.402  expected 0.0274
-   1 conditions: p_seek 0.0226  visits_if_seek 1.473  expected 0.0332
-   2 conditions: p_seek 0.0261  visits_if_seek 1.546  expected 0.0403
-   3 conditions: p_seek 0.0301  visits_if_seek 1.624  expected 0.0488
-   4 conditions: p_seek 0.0347  visits_if_seek 1.705  expected 0.0591
-   5 conditions: p_seek 0.0399  visits_if_seek 1.791  expected 0.0715
-   6 conditions: p_seek 0.0460  visits_if_seek 1.881  expected 0.0865
-   7 conditions: p_seek 0.0529  visits_if_seek 1.975  expected 0.1045
-   8 conditions: p_seek 0.0608  visits_if_seek 2.074  expected 0.1261
-   9 conditions: p_seek 0.0698  visits_if_seek 2.178  expected 0.1519
-  10 conditions: p_seek 0.0799  visits_if_seek 2.287  expected 0.1828
-  11 conditions: p_seek 0.0915  visits_if_seek 2.402  expected 0.2197
-  12 conditions: p_seek 0.1045  visits_if_seek 2.522  expected 0.2635
+   0 conditions: p_seek 0.0193  visits_if_seek 1.352  expected 0.0261
+   1 conditions: p_seek 0.0223  visits_if_seek 1.419  expected 0.0316
+   2 conditions: p_seek 0.0256  visits_if_seek 1.489  expected 0.0382
+   3 conditions: p_seek 0.0295  visits_if_seek 1.563  expected 0.0461
+   4 conditions: p_seek 0.0340  visits_if_seek 1.640  expected 0.0557
+   5 conditions: p_seek 0.0390  visits_if_seek 1.722  expected 0.0672
+   6 conditions: p_seek 0.0448  visits_if_seek 1.807  expected 0.0810
+   7 conditions: p_seek 0.0515  visits_if_seek 1.897  expected 0.0976
+   8 conditions: p_seek 0.0590  visits_if_seek 1.991  expected 0.1175
+   9 conditions: p_seek 0.0676  visits_if_seek 2.089  expected 0.1412
+  10 conditions: p_seek 0.0773  visits_if_seek 2.193  expected 0.1695
+  11 conditions: p_seek 0.0882  visits_if_seek 2.302  expected 0.2031
+  12 conditions: p_seek 0.1006  visits_if_seek 2.416  expected 0.2430
 
 Figures: figures/meps_care_seeking_multipliers.png,
          figures/meps_care_seeking_comorbidity.png

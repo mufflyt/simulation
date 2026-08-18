@@ -132,10 +132,13 @@ stage_labels <- c(conservative = "Conservative", testing = "Testing",
 pop_by_age <- tibble::tibble(age = 40:85,
                              population = round(2e6 * exp(-0.02 * (40:85 - 40))))
 
+pw <- condition_service_pathway()
+pw$per_entering[pw$stage == "conservative" & pw$service == "new_consultation"] <- 0.25
+
 staged <- simulate_lifecourse_demand(pop_by_age, 2025L, n = 5e4, seed = 1,
-                                     use_condition_pathway = TRUE)
+                                     use_condition_pathway = TRUE, pathway = pw)
 flat   <- simulate_lifecourse_demand(pop_by_age, 2025L, n = 5e4, seed = 1,
-                                     use_condition_pathway = FALSE)
+                                     use_condition_pathway = FALSE, pathway = pw)
 
 fte <- function(s) convert_workload_to_fte(
   s$service_volumes, wrvu_per_fte = WRVU_PER_FTE_BENCHMARK[["median"]])$required_fte
