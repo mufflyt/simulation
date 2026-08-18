@@ -180,9 +180,17 @@ by_state <- roster %>% count(state, name = "providers") %>%
   mutate(per100k = 1e5 * providers / female_pop)
 m1 <- states_map %>% left_join(st_xwalk, by = "region") %>% left_join(by_state, by = "state")
 
+coord_proj <- function() {
+  if (requireNamespace("mapproj", quietly = TRUE)) {
+    coord_map("albers", lat0 = 29.5, lat1 = 45.5)
+  } else {
+    coord_quickmap(xlim = c(-125, -66), ylim = c(24, 50))
+  }
+}
+
 p4 <- ggplot(m1, aes(long, lat, group = group, fill = per100k)) +
   geom_polygon(colour = "white", linewidth = 0.18) +
-  coord_map("albers", lat0 = 29.5, lat1 = 45.5) +
+  coord_proj() +
   scale_fill_viridis_c(option = "mako", direction = -1, na.value = "grey88",
                        name = "per 100,000 women") +
   labs(title = "Board-certified urogynecologists per 100,000 women, by state",
@@ -200,7 +208,7 @@ p5 <- ggplot() +
   geom_polygon(data = states_map, aes(long, lat, group = group),
                fill = "grey96", colour = "white", linewidth = 0.18) +
   geom_point(data = tr, aes(lon, lat, colour = fem65), size = 0.09, alpha = 0.5) +
-  coord_map("albers", lat0 = 29.5, lat1 = 45.5) +
+  coord_proj() +
   scale_colour_viridis_c(option = "rocket", direction = -1, trans = "sqrt",
                          name = "women 65+ per tract") +
   labs(title = "Where the demand is: women aged 65+ by census tract",
@@ -220,7 +228,7 @@ lim <- max(abs(mismatch$diff_pp), na.rm = TRUE)
 
 p6 <- ggplot(m3, aes(long, lat, group = group, fill = diff_pp)) +
   geom_polygon(colour = "white", linewidth = 0.18) +
-  coord_map("albers", lat0 = 29.5, lat1 = 45.5) +
+  coord_proj() +
   scale_fill_gradient2(low = INK[["demand"]], mid = "grey94", high = INK[["supply"]],
                        midpoint = 0, limits = c(-lim, lim), na.value = "grey88",
                        name = "percentage points") +
