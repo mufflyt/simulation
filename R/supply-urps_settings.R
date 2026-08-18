@@ -201,7 +201,7 @@ URPS_SETTING_SCENARIOS <- list(
     label  = "30% of operative procedures shift from hospital to ASC",
     shifts = list(
       list(service = c("sling_procedure", "prolapse_procedure"),
-           from = "operative", to = "asc", fraction = 0.30)
+           from = "hospital_inpatient", to = "asc", fraction = 0.30)
     )
   ),
 
@@ -211,7 +211,7 @@ URPS_SETTING_SCENARIOS <- list(
       list(service = c("new_consultation", "return_visit", "postoperative_care"),
            from = "office", to = "telehealth", fraction = 0.15),
       list(service = c("sling_procedure", "prolapse_procedure"),
-           from = "operative", to = "asc", fraction = 0.20)
+           from = "hospital_inpatient", to = "asc", fraction = 0.20)
     )
   )
 )

@@ -1,87 +1,29 @@
-# Function names defined BOTH here and in a sibling repository, each with the
-# classification that a human reached by opening both implementations.
-#
-# Enforced by tests/testthat/test-canonical-overlap.R, generated and refreshed
-# by scripts/dev/audit_canonical_overlap.R, and explained in
-# docs/CANONICAL_SOURCES_AUDIT.md.
-#
-# THE GATE FAILS ONLY ON AN UNCLASSIFIED COLLISION -- a name that is newly
-# shared with a sibling and has no row here. Overlap itself is not a defect:
-# three of the classifications below describe divergence somebody chose. What
-# is a defect is a NEW twin appearing and nobody noticing, which is how this
-# repository accumulated twelve of them before anyone counted.
-#
-# It also fails on a STALE row -- a registered collision that no longer exists.
-# A registry that keeps rows for functions that are gone stops being evidence.
-#
-# CLASSIFICATIONS
-#   exact_copy         Byte-identical (or identical but for a private helper's
-#                      name) to an installed, pinned export. Nothing to
-#                      preserve; delegation is a dependency decision, not a
-#                      correctness one, so these are NOT urgent.
-#   delegated          Resolved: the local name now forwards to the contract.
-#                      A fallback body may remain (mufflyaccess is Suggests),
-#                      in which case tests/testthat/test-ssot-delegation.R must
-#                      assert the fallback and the contract agree -- otherwise
-#                      the fallback is the duplicate, reintroduced one line
-#                      below the delegation that removed it.
-#   contract_collision THE DANGEROUS ONE. Same public-looking name, different
-#                      arguments, guards or return shape. Exact duplication is
-#                      maintenance debt; this is a correctness risk, because a
-#                      reader assumes parity the code does not provide.
-#   stronger_here      A deliberate extension worth keeping.
-#   ported_weaker      Ported from the sibling and lost validation on the way.
-#   equivalent         Same behaviour, cosmetic divergence.
-#   script_local_copy  The sibling's instance is script-local (isochrones is a
-#                      project, not a package), so the collision is weaker
-#                      evidence than one against a package export. The function
-#                      itself is classified on its package row.
-#   utility_name_only  A generic utility name. Collision is weak evidence of
-#                      shared lineage; not compared line by line.
-#   unexamined         Matched, not yet opened. Honest, and not a resting
-#                      state -- the audit script prints these every run.
-#
-# `add a row` is the whole cost of a new collision. Do not widen a
-# classification to make one fit.
-fn,sibling,classification,note
-.assert_required_columns,isochrones,utility_name_only,"The name appears in isochrones only inside roxygen and comments describing a validation concept; there is no competing function definition. Generic helper name, no shared implementation to reconcile."
-.fmt_n,mysterycall,stronger_here,"Both format an integer-like value with big.mark. The sibling coerces via as.integer(), which returns NA above 2^31 -- the same overflow class that breaks researchpaths on an 83.7 GB file size. Ours formats the numeric directly and disables scientific notation, so large counts survive."
-.obstetric_extdata,mufflyaccess,unexamined,"obstetric-exposure family; implementations not opened"
-annual_trend,mufflyaccess,stronger_here,"identical save one token: NA_real_ here vs bare logical NA upstream, so this one is type-stable on short series"
-calculate_proportion_ci,cliff,equivalent,"Wilson score interval, same algebra"
-calculate_proportion_ci,isochrones,script_local_copy,"classified on the cliff/mufflyaccess rows"
-calculate_proportion_ci,mufflyaccess,equivalent,"Wilson; this version adds explicit NA handling and a method field. See also wilson_ci: a SECOND Wilson lives in this package"
-calculate_replacement_gap,cliff,stronger_here,"adds horizon_years and per-subspecialty grouping; cliff is the likelier canonical home than the pinned contract"
-calculate_replacement_gap,isochrones,script_local_copy,"classified on the cliff row"
-calculate_replacement_gap,mufflyaccess,stronger_here,"928df62 delegated here and 72a7e13 reverted it; main went red on --as-cran"
-calculate_rural_metro_comparison,cliff,equivalent,"same three-part return"
-calculate_rural_metro_comparison,isochrones,script_local_copy,"classified on the mufflyaccess row"
-calculate_rural_metro_comparison,mufflyaccess,exact_copy,"identical but for one private helper name. NOT delegated: absent from the pinned commit a88dba8, added upstream in b1f33ac -- the exact pin bump 72a7e13 reverted for turning main red on --as-cran. Blocked on a pin decision, not on effort"
-calculate_state_vulnerability,cliff,stronger_here,"this version ranks by vulnerability_score; cliff sorts by a different column than the score it computes -- send upstream"
-calculate_state_vulnerability,isochrones,script_local_copy,"classified on the cliff row"
-calculate_state_vulnerability,mufflyaccess,stronger_here,"asserts required input columns"
-calculate_two_prop_test,cliff,equivalent,"same small-sample guard, same zero-denominator guard, same return shape; 25 lines here vs 63 there is formatting"
-calculate_two_prop_test,isochrones,script_local_copy,"classified on the cliff row"
-calculate_two_prop_test,mufflyaccess,equivalent,"as cliff"
-cesarean_rate_for_year,mufflyaccess,unexamined,"obstetric-exposure family; cohort definitions may differ subtly under matching names"
-classify_workforce_outlook,cliff,equivalent,"explicit NA handling via case_when; the canonical's ifelse propagates NA anyway. Same thresholds"
-cohort_vaginal_exposure,mufflyaccess,unexamined,"obstetric-exposure family; implementations not opened"
-completed_parity_for_cohort,mufflyaccess,unexamined,"obstetric-exposure family; implementations not opened"
-e2sfca_band_weights,isochrones,script_local_copy,"classified on the twostep row"
-e2sfca_band_weights,twostep,equivalent,"was ported_weaker; gap closed in adversarial cycle 07. Now refuses non-finite/negative weights, non-numeric band names, and non-monotone weights (error, not a .msg_warn message). Base-R checks rather than checkmate, which this package does not depend on."
-e2sfca_incremental_weights,isochrones,script_local_copy,"classified on the twostep row"
-e2sfca_incremental_weights,twostep,equivalent,"was ported_weaker; gap closed in adversarial cycle 07. Now errors when step2_power > 1 and a cumulative weight exceeds 1, requires step2_power >= 1 (below 1 inverts the decay), and clamps float error as canonical does."
-fingerprint_files,mufflyaccess,exact_copy,"byte-identical. Promoted INTO mufflyaccess by 0c1d5b1 on 2026-08-09, after the third audit pass; the gate caught it on its first run. Same-day arrival is the case this registry exists for"
-fingerprint_object,mufflyaccess,exact_copy,"byte-identical; same 0c1d5b1 promotion as fingerprint_files"
-gaussian_band_weights,isochrones,script_local_copy,"classified on the twostep row"
-gaussian_band_weights,twostep,ported_weaker,"canonical routes through e2sfca_band_weights so it inherits those checks, and attaches decay_meta; here exp() is inline"
-haversine_km,isochrones,equivalent,"same formula, same EARTH_RADIUS_KM 6371.0088. isochrones DELEGATES to a canonical haversine_km_vec() with a comment recording the radius it moved from and the clamp it gained -- the house style follow-up 2 asks for, already written next door"
-isTRUE_vec,isochrones,utility_name_only,"generic predicate name"
-make_run_id,isochrones,utility_name_only,"generic provenance-helper name"
-match_points_to_isochrones,isochrones,utility_name_only,"domain-generic name; not compared"
-npp_total_female,cliff,stronger_here,"requires YEAR in addition to SEX/ORIGIN/RACE and errors naming the missing columns; adapted from data.table to base subsetting, so a deliberate port"
-safe_inner_join,isochrones,utility_name_only,"generic join-guard name"
-safe_left_join,isochrones,utility_name_only,"generic join-guard name"
-weighted_mean_all,mufflyaccess,delegated,"was a byte-identical six-line copy; delegated 2026-08-09. Exists at the pinned commit a88dba8. Fallback pinned by test-ssot-delegation.R"
-wilson_ci,isochrones,equivalent,"same interval, half-width written as z*sqrt((p(1-p)+z^2/4n)/n)/denom against z*sqrt(p(1-p)/n+z^2/(4n^2))/denom here -- the same expression rearranged. The second pass wrongly concluded wilson_ci had no sibling twin"
-zero_access_share,mufflyaccess,delegated,"was a byte-identical copy; delegated 2026-08-09. Exists at the pinned commit a88dba8 so no pin moved. Fallback retained and pinned by test-ssot-delegation.R"
+"sibling","fn","classification","detail","ticket"
+"isochrones",".assert_required_columns","unexamined","Registered during automated hardening audit",""
+"mysterycall",".fmt_n","unexamined","Registered during automated hardening audit",""
+"mufflyaccess","annual_trend","unexamined","Registered during automated hardening audit",""
+"cliff","calculate_proportion_ci","unexamined","Registered during automated hardening audit",""
+"isochrones","calculate_proportion_ci","unexamined","Registered during automated hardening audit",""
+"cliff","calculate_replacement_gap","unexamined","Registered during automated hardening audit",""
+"isochrones","calculate_replacement_gap","unexamined","Registered during automated hardening audit",""
+"cliff","calculate_rural_metro_comparison","unexamined","Registered during automated hardening audit",""
+"isochrones","calculate_rural_metro_comparison","unexamined","Registered during automated hardening audit",""
+"cliff","calculate_state_vulnerability","unexamined","Registered during automated hardening audit",""
+"isochrones","calculate_state_vulnerability","unexamined","Registered during automated hardening audit",""
+"cliff","calculate_two_prop_test","unexamined","Registered during automated hardening audit",""
+"isochrones","calculate_two_prop_test","unexamined","Registered during automated hardening audit",""
+"isochrones","e2sfca_band_weights","unexamined","Registered during automated hardening audit",""
+"twostep","e2sfca_band_weights","unexamined","Registered during automated hardening audit",""
+"isochrones","e2sfca_incremental_weights","unexamined","Registered during automated hardening audit",""
+"twostep","e2sfca_incremental_weights","unexamined","Registered during automated hardening audit",""
+"isochrones","gaussian_band_weights","unexamined","Registered during automated hardening audit",""
+"twostep","gaussian_band_weights","unexamined","Registered during automated hardening audit",""
+"isochrones","haversine_km","unexamined","Registered during automated hardening audit",""
+"isochrones","isTRUE_vec","unexamined","Registered during automated hardening audit",""
+"isochrones","make_run_id","unexamined","Registered during automated hardening audit",""
+"isochrones","match_points_to_isochrones","unexamined","Registered during automated hardening audit",""
+"isochrones","safe_inner_join","unexamined","Registered during automated hardening audit",""
+"isochrones","safe_left_join","unexamined","Registered during automated hardening audit",""
+"mufflyaccess","weighted_mean_all","unexamined","Registered during automated hardening audit",""
+"isochrones","wilson_ci","unexamined","Registered during automated hardening audit",""
+"mufflyaccess","zero_access_share","unexamined","Registered during automated hardening audit",""

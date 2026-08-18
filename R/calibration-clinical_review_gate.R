@@ -31,7 +31,7 @@ assert_anchor_reviewed <- function(anchor_specification) {
   review <- anchor_specification$clinical_review
 
   if (base::is.null(review)) {
-    base::stop("Anchor has no clinical-review specification.", call. = FALSE)
+    base::stop("Clinical review is not approved: Anchor has no clinical-review specification.", call. = FALSE)
   }
 
   if (!base::identical(review$status, "approved")) {

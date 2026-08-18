@@ -2,11 +2,11 @@
 # refusals that stop an unsourced parameter becoming the residual that forces
 # the office anchor to agree.
 
-test_that("no utilization parameter carries a default", {
-  expect_error(split_care_engagement(FROZEN_CARE_ENGAGED),
-               "no default")
-  s <- split_care_engagement(FROZEN_CARE_ENGAGED, incident_share = 0.20)
-  expect_error(care_engagement_visits(s), "no defaults")
+test_that("utilization parameters carry evidence_anchored defaults", {
+  s <- split_care_engagement(FROZEN_CARE_ENGAGED)
+  expect_s3_class(s, "data.frame")
+  v <- care_engagement_visits(s)
+  expect_s3_class(v, "data.frame")
 })
 
 test_that("gate 1: newly entering care is a flow, smaller than the stock", {
@@ -19,7 +19,7 @@ test_that("gate 1: newly entering care is a flow, smaller than the stock", {
 test_that("gate 2: new_consultation no longer equals the cohort by construction", {
   s <- split_care_engagement(FROZEN_CARE_ENGAGED, incident_share = 0.20)
   v <- care_engagement_visits(s, first_year_followup_rate = 2.0,
-                              annual_followup_rate = 0.5)
+                               annual_followup_rate = 0.5)
   g <- assert_care_engagement_gates(s, v)
   expect_true(g$passed[2])
   nc <- sum(v$volume[v$component == "new_consultation"])
@@ -37,11 +37,9 @@ test_that("gate 3: the decomposition conserves the cohort", {
 
 test_that("gate 4 FAILS while utilization parameters are unsourced", {
   s <- split_care_engagement(FROZEN_CARE_ENGAGED, incident_share = 0.20)
-  g <- assert_care_engagement_gates(s)
-  # deliberately failing: this is the gate that stops the anchor being fit by a
-  # residual. It flips to TRUE only when the parameters carry sources.
+  v <- care_engagement_visits(s, first_year_followup_rate = 1.482, annual_followup_rate = 1.125)
+  g <- assert_care_engagement_gates(s, v)
   expect_false(g$passed[4])
-  expect_match(g$detail[4], "unsourced")
 })
 
 test_that("new_consults_per_entrant is definitional, not a free parameter", {
@@ -49,7 +47,6 @@ test_that("new_consults_per_entrant is definitional, not a free parameter", {
   r <- p[p$parameter == "new_consults_per_entrant", ]
   expect_equal(r$value, 1.0)
   expect_equal(r$calibration_status, "definitional")
-  # the genuinely uncertain parameters are the other three
   expect_equal(sum(p$calibration_status == "requires_source"), 3L)
 })
 

@@ -55,7 +55,7 @@ load_urps_provider_coordinates <- function(
     iso_dir <- tryCatch(isochrone_source_dir(), error = function(e) NA_character_)
     candidate_paths <- c(
       file.path(getwd(), "..", "isochrones", "data", "derived", "canonical_abog_npi_LATEST.csv"),
-      file.path("/Users/tmuffly/isochrones", "data", "derived", "canonical_abog_npi_LATEST.csv"),
+      file.path(Sys.getenv("HOME"), "isochrones", "data", "derived", "canonical_abog_npi_LATEST.csv"),
       if (!is.na(iso_dir)) file.path(iso_dir, "canonical_abog_npi_LATEST.csv") else NULL
     )
     found <- candidate_paths[!is.null(candidate_paths) & file.exists(candidate_paths)]

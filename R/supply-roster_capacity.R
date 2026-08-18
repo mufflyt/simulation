@@ -44,9 +44,9 @@ load_urps_roster <- function(path = "data-raw/urps_roster/urps_roster_2026-07-22
   if (!file.exists(path)) {
     candidate_paths <- c(
       file.path(getwd(), "..", "cliff", "data", "abog_all_urps_ENRICHED_2026-07-22.csv"),
-      file.path("/Users/tmuffly/cliff", "data", "abog_all_urps_ENRICHED_2026-07-22.csv"),
+      file.path(Sys.getenv("HOME"), "cliff", "data", "abog_all_urps_ENRICHED_2026-07-22.csv"),
       file.path(getwd(), "..", "cliff", "data", "abu_all_urps_ENRICHED_2026-07-22.csv"),
-      file.path("/Users/tmuffly/cliff", "data", "abu_all_urps_ENRICHED_2026-07-22.csv")
+      file.path(Sys.getenv("HOME"), "cliff", "data", "abu_all_urps_ENRICHED_2026-07-22.csv")
     )
     found <- candidate_paths[file.exists(candidate_paths)]
     if (length(found) > 0) {

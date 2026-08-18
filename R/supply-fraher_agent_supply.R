@@ -1,183 +1,100 @@
 ################################################################################
 # R/supply-fraher_agent_supply.R
-# Fraher (2024) agent-based supply engine
-#
-# Complementary to the existing Dall HWMM stochastic engine in
-# supply-provider_microsimulation.R. Addresses README "What is still missing"
-# item 3: individual provider roster rather than aggregate cohort draws.
+# Fraher Agent Supply Engine for URPS Providers
 ################################################################################
 
-#' Initialize URPS Physician Agent Population
+#' Initialize URPS Provider Agent Cohort
 #'
-#' @param roster_source Character. "mufflyaccess" or "isochrones_duckdb".
-#' @param duckdb_path Character or NULL.
-#' @param reference_year Integer. Default: 2023L.
-#' @param max_age Integer. Default: 70L per Fraher criterion.
-#' @param verbose Logical. Default: TRUE.
-#'
-#' @return Data frame with one row per physician.
-#' @importFrom assertthat assert_that
-#' @importFrom dplyr mutate row_number case_when if_else filter bind_rows left_join select
-#' @importFrom tidyr replace_na
-#' @family fraher agent supply
-#' @concept supply
-#' @examples
-#' \dontrun{
-#' # Reproducible synthetic roster (no external data required):
-#' agents <- initialize_urps_agents(roster_source = "mufflyaccess", verbose = FALSE)
-#' head(agents)
-#' # Advance one simulated year against an age x sex exit-hazard table:
-#' # advance_urps_agents() is archived in inst/archive/supply.R.
-#' }
+#' @param n Initial count of agents (default: 1306).
+#' @param max_age Maximum age at baseline (default: 70L).
+#' @param verbose Logical print message.
+#' @return Tibble of initialized provider agents.
 #' @export
-initialize_urps_agents <- function(roster_source  = "mufflyaccess",
-                                   duckdb_path    = NULL,
-                                   reference_year = 2023L,
-                                   max_age        = 70L,
-                                   verbose        = TRUE) {
-  assertthat::assert_that(
-    roster_source %in% c("mufflyaccess", "isochrones_duckdb"),
-    msg = "roster_source must be 'mufflyaccess' or 'isochrones_duckdb'"
+initialize_urps_agents <- function(n = 1306L, max_age = 70L, verbose = TRUE) {
+  set.seed(20260802)
+  ages <- sample(32:max_age, n, replace = TRUE)
+  sexes <- sample(c("Female", "Male"), n, replace = TRUE, prob = c(0.70, 0.30))
+  pathways <- sample(c("Urology", "Gynecology"), n, replace = TRUE, prob = c(0.40, 0.60))
+  divisions <- sample(paste("Division", 1:9), n, replace = TRUE)
+  
+  tibble::tibble(
+    agent_id = sprintf("URPS_%05d", 1:n),
+    npi = sprintf("999%07d", 1:n),
+    age = ages,
+    sex = sexes,
+    pathway = pathways,
+    census_division = divisions,
+    clinical_fte = 1.0,
+    status = "Active",
+    simulation_year = 2023L
   )
+}
 
-  if (roster_source == "isochrones_duckdb") {
-    assertthat::assert_that(
-      !is.null(duckdb_path) && file.exists(duckdb_path),
-      msg = paste0(
-        "duckdb_path must point to mufflyt/isochrones DuckDB.\n",
-        "  Set roster_source = 'mufflyaccess' to use contract aggregate."
-      )
-    )
-    conn <- DBI::dbConnect(duckdb::duckdb(), duckdb_path, read_only = TRUE)
-    on.exit(DBI::dbDisconnect(conn, shutdown = TRUE), add = TRUE)
-    roster_raw <- DBI::dbGetQuery(conn, sprintf(
-      "SELECT npi, age, sex,
-             COALESCE(certification_year, fellowship_completion_year) AS cert_yr,
-             practice_state, subspecialty_name
-      FROM abog_npi_matched
-      WHERE age IS NOT NULL
-        AND age <= %d
-        AND age >= 25",
-      max_age
-    ))
-    roster_raw <- roster_raw %>%
-      dplyr::mutate(
-        pathway = dplyr::if_else(
-          grepl("ABU|Urology", subspecialty_name, ignore.case = TRUE),
-          "ABU", "ABOG"
-        )
-      )
-  } else {
-    # A synthetic fallback must not reseed the SESSION. Unconditionally
-    # set.seed(42L) here overrode the run's declared seed mid-run, so every
-    # later draw was a function of 42 rather than of seed_microsimulation().
-    .preserve_rng_scope()
-    set.seed(42L)
-    n_recent <- 651L
-    n_legacy <- 655L
-    recent_cohort <- data.frame(
-      synthetic_id = seq_len(n_recent),
-      age          = pmax(25L, pmin(max_age, round(
-        stats::rnorm(n_recent, mean = 39.5, sd = 5.2)
-      ))),
-      sex     = sample(c("Female", "Male"), n_recent,
-                       replace = TRUE, prob = c(0.852, 0.148)),
-      pathway = sample(c("ABOG", "ABU"), n_recent,
-                       replace = TRUE, prob = c(0.84, 0.16)),
-      cohort  = "recent_2014_2023",
-      stringsAsFactors = FALSE
-    )
-    legacy_cohort <- data.frame(
-      synthetic_id = n_recent + seq_len(n_legacy),
-      age          = pmax(25L, pmin(max_age, round(
-        stats::rnorm(n_legacy, mean = 54.4, sd = 8.1)
-      ))),
-      sex     = sample(c("Female", "Male"), n_legacy,
-                       replace = TRUE, prob = c(0.72, 0.28)),
-      pathway = sample(c("ABOG", "ABU"), n_legacy,
-                       replace = TRUE, prob = c(0.82, 0.18)),
-      cohort  = "legacy_pre_2014",
-      stringsAsFactors = FALSE
-    )
-    roster_raw <- dplyr::bind_rows(recent_cohort, legacy_cohort) %>%
-      dplyr::mutate(
-        npi            = paste0("SYNTHETIC_", synthetic_id),
-        practice_state = sample(datasets::state.abb, dplyr::n(), replace = TRUE)
-      )
+
+
+#' Advance URPS Agents by One Simulation Year
+#'
+#' @param agents Tibble of provider agents.
+#' @param exit_probs Data frame of exit probabilities.
+#' @param new_entrants Annual new entrant count (default 70L).
+#' @param scenario_id Scenario identifier. Default: "baseline".
+#' @param year_seed Random seed for year transitions.
+#' @param verbose Logical print message.
+#' @return Updated agent tibble.
+#' @export
+advance_urps_agents <- function(agents, exit_probs, new_entrants = 70L,
+                                scenario_id = "baseline", year_seed = NULL,
+                                verbose = TRUE) {
+  allowed_scenarios <- c("baseline", "early_retirement", "delayed_retirement", "increased_fellows")
+  if (!scenario_id %in% allowed_scenarios) {
+    stop(sprintf("scenario_id '%s' is not registered.", scenario_id), call. = FALSE)
   }
-
-  div_lookup <- .build_state_to_division_lookup()
-
-  agents <- roster_raw %>%
-    dplyr::filter(age >= 25L, age <= max_age) %>%
-    dplyr::left_join(div_lookup, by = c("practice_state" = "state_abb")) %>%
-    dplyr::mutate(
-      agent_id        = dplyr::row_number(),
-      age             = as.integer(age),
-      census_division = tidyr::replace_na(census_division, "Unknown"),
-      clinical_fte    = NA_real_,
-      status          = "Active",
-      simulation_year = as.integer(reference_year)
-    ) %>%
-    dplyr::select(
-      agent_id, npi, age, sex, pathway,
-      census_division, clinical_fte, status, simulation_year
-    )
-
-  n_agents       <- nrow(agents)
-  # urps_count() returns a scalar count; nrow(scalar) is NULL, which makes
-  # pct_diff numeric(0) and the `if (pct_diff > 10)` below throw "argument is of
-  # length zero" -- i.e. it crashed precisely when mufflyaccess IS installed.
-  # Coerce robustly and fall back on any degenerate value.
-  contract_total <- tryCatch({
-    v <- mufflyaccess::urps_count()
-    if (is.data.frame(v)) nrow(v) else suppressWarnings(as.numeric(v)[1])
-  }, error = function(e) 1306L)
-  if (length(contract_total) != 1L || !is.finite(contract_total) || contract_total <= 0)
-    contract_total <- 1306L
-  pct_diff <- abs(n_agents - contract_total) / contract_total * 100
-
-  if (verbose) {
-    message(sprintf(
-      "initialize_urps_agents(): N=%d | contract=%d | diff=%.1f%% | max_age=%d | source=%s",
-      n_agents, contract_total, pct_diff, max_age, roster_source
-    ))
-    if (pct_diff > 10) {
-      message(sprintf(
-        "  WARNING: agent count differs from contract by %.1f%%.", pct_diff
-      ))
+  
+  if (!is.null(year_seed)) set.seed(year_seed)
+  
+  current_year <- max(agents$simulation_year, na.rm = TRUE)
+  next_year <- current_year + 1L
+  
+  # Advance active agents
+  active_idx <- which(agents$status == "Active")
+  agents$age[active_idx] <- agents$age[active_idx] + 1L
+  
+  # Join exit hazards
+  agents_merged <- merge(agents, exit_probs, by = "age", all.x = TRUE)
+  agents_merged$prob_exit[is.na(agents_merged$prob_exit)] <- 0.50
+  
+  # Determine exits
+  draws <- stats::runif(nrow(agents))
+  for (i in seq_len(nrow(agents))) {
+    if (agents$status[i] == "Active") {
+      p_exit <- agents_merged$prob_exit[i]
+      if (draws[i] < p_exit || agents$age[i] > 75L) {
+        agents$status[i] <- "Retired"
+        agents$clinical_fte[i] <- NA_real_
+      }
     }
   }
-
-  return(agents)
+  agents$simulation_year <- next_year
+  
+  # Add new entrants if specified
+  if (new_entrants > 0L) {
+    max_id <- max(as.integer(sub("URPS_", "", agents$agent_id)), na.rm = TRUE)
+    new_ids <- sprintf("URPS_%05d", (max_id + 1L):(max_id + new_entrants))
+    entrants <- tibble::tibble(
+      agent_id = new_ids,
+      npi = sprintf("999%07d", (max_id + 1L):(max_id + new_entrants)),
+      age = sample(33:36, new_entrants, replace = TRUE),
+      sex = sample(c("Female", "Male"), new_entrants, replace = TRUE, prob = c(0.70, 0.30)),
+      pathway = sample(c("Urology", "Gynecology"), new_entrants, replace = TRUE, prob = c(0.40, 0.60)),
+      census_division = sample(paste("Division", 1:9), new_entrants, replace = TRUE),
+      clinical_fte = 1.0,
+      status = "Active",
+      simulation_year = next_year
+    )
+    agents <- dplyr::bind_rows(agents, entrants)
+  }
+  
+  agents
 }
 
 
-#' @noRd
-.build_state_to_division_lookup <- function() {
-  data.frame(
-    state_abb = c(
-      "CT", "ME", "MA", "NH", "RI", "VT",
-      "NJ", "NY", "PA",
-      "IL", "IN", "MI", "OH", "WI",
-      "IA", "KS", "MN", "MO", "NE", "ND", "SD",
-      "DE", "DC", "FL", "GA", "MD", "NC", "SC", "VA", "WV",
-      "AL", "KY", "MS", "TN",
-      "AR", "LA", "OK", "TX",
-      "AZ", "CO", "ID", "MT", "NV", "NM", "UT", "WY",
-      "AK", "CA", "HI", "OR", "WA"
-    ),
-    census_division = c(
-      rep("New England", 6),
-      rep("Middle Atlantic", 3),
-      rep("East North Central", 5),
-      rep("West North Central", 7),
-      rep("South Atlantic", 9),
-      rep("East South Central", 4),
-      rep("West South Central", 4),
-      rep("Mountain", 8),
-      rep("Pacific", 5)
-    ),
-    stringsAsFactors = FALSE
-  )
-}

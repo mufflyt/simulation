@@ -175,7 +175,8 @@ load_namcs_pooled <- function(path = "data-raw/namcs/namcs_pooled_2015_2019.rds"
   if (!file.exists(path)) {
     stop(
       "NAMCS pooled file not found at '", path, "'.\n",
-      "Run data-raw/namcs/02-namcs_multiyear_acquire.R to create it."
+      "Run data-raw/namcs/02-namcs_multiyear_acquire.R to create it.",
+      call. = FALSE
     )
   }
   readRDS(path)
