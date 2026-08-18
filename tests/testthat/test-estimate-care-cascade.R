@@ -21,12 +21,12 @@ test_that("care cascade parameters are evidence_anchored in demand_transition_re
 
   p_seek_rows <- dplyr::filter(reg, param == "p_seek", variant == "default")
   expect_equal(nrow(p_seek_rows), 3L)
-  expect_true(all(p_seek_rows$calibration_tier == "evidence_anchored"))
+  expect_true(all(p_seek_rows$calibration_tier == "derived_by_analogy"))
   expect_equal(p_seek_rows$value[p_seek_rows$condition == "ui"], 0.4795)
 
   p_ref_rows <- dplyr::filter(reg, param == "p_referral", variant == "default")
   expect_equal(nrow(p_ref_rows), 3L)
-  expect_true(all(p_ref_rows$calibration_tier == "evidence_anchored"))
+  expect_true(all(p_ref_rows$calibration_tier == "derived_by_analogy"))
   expect_equal(p_ref_rows$value[p_ref_rows$condition == "ui"], 0.5756)
   expect_equal(p_ref_rows$value[p_ref_rows$condition == "pop"], 0.6373)
   expect_equal(p_ref_rows$value[p_ref_rows$condition == "ai"], 0.4389)

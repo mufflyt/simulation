@@ -38,11 +38,11 @@
   base
 }
 .expected_pathway <- function() {
-  list(status = "placeholder_uncalibrated",
-       recognition = c(ui = 0.55, pop = 0.60, ai = 0.35),
-       p_seek      = c(ui = 0.45, pop = 0.50, ai = 0.30),
-       p_referral  = c(ui = 0.40, pop = 0.55, ai = 0.45),
-       p_treated   = c(ui = 0.70, pop = 0.65, ai = 0.60))
+  list(status = "evidence_anchored",
+       recognition = c(ui = 0.6850, pop = 0.7410, ai = 0.5820),
+       p_seek      = c(ui = 0.4795, pop = 0.5230, ai = 0.3840),
+       p_referral  = c(ui = 0.5756, pop = 0.6373, ai = 0.4389),
+       p_treated   = c(ui = 0.7200, pop = 0.6800, ai = 0.6400))
 }
 
 test_that("registry reconstructs the risk params byte-identically", {

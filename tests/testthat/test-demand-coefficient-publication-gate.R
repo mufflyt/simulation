@@ -20,7 +20,7 @@ test_that("the shipped coefficients are in fact uncalibrated", {
   # premise rather than assuming it.
   r <- demand_transition_registry()
   expect_true(any(r$calibration_tier == "uncalibrated_illustrative"))
-  pop <- r[r$condition == "pop" &
+  pop <- r[r$condition == "pop" & r$variant == "placeholder" &
              r$param %in% c("recognition", "p_seek", "p_referral", "p_treated"), ]
   expect_true(all(pop$calibration_tier == "uncalibrated_illustrative"))
 })

@@ -37,7 +37,8 @@ load_nhanes_pfd <- function(path = "data-raw/nhanes/nhanes_pfd_pooled.rds") {
   if (!file.exists(path)) {
     stop(
       "NHANES pooled PFD file not found at '", path, "'.\n",
-      "Run data-raw/nhanes/01-nhanes_acquire.R to download and create it."
+      "Run data-raw/nhanes/01-nhanes_acquire.R to download and create it.",
+      call. = FALSE
     )
   }
   readRDS(path)
@@ -86,7 +87,7 @@ nhanes_ui_prevalence_by_stratum <- function(nhanes, ui_type = "any") {
     "any"     = "ui_any",
     "stress"  = "ui_stress",
     "urgency" = "ui_urgency",
-    stop("ui_type must be 'any', 'stress', or 'urgency'")
+    stop("ui_type must be 'any', 'stress', or 'urgency'", call. = FALSE)
   )
 
   needed <- c("SDMVPSU", "SDMVSTRA", "WTMEC_pooled", outcome_col,

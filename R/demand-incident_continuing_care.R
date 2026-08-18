@@ -35,11 +35,11 @@
 #' @export
 care_engagement_params <- function() {
   tibble::tribble(
-    ~parameter,                 ~value,  ~source,                                                        ~confidence, ~calibration_status,
-    "incident_share",            0.3104, "Medicare Part B / MCBS 2022 longitudinal cohort tracking", "high",      "evidence_anchored",
-    "new_consults_per_entrant",  1.0,    "definitional (1 consult per new entrant)",                    "high",      "definitional",
-    "first_year_followup_rate",  1.4820, "NAMCS 2015-19 / MCBS 12-month PFD initial follow-up visits",   "medium",    "evidence_anchored",
-    "annual_followup_rate",      1.1250, "Medicare Part B pessary/incontinence annual maintenance",     "medium",    "evidence_anchored")
+    ~parameter,                 ~value,     ~source,                                                         ~confidence, ~calibration_status,
+    "incident_share",            NA_real_,  "uncalibrated initial value; requires empirical cohort source",  "low",       "requires_source",
+    "new_consults_per_entrant",  1.0,       "definitional (1 consult per new entrant)",                     "high",      "definitional",
+    "first_year_followup_rate",  NA_real_,  "uncalibrated initial value; requires empirical cohort source",  "low",       "requires_source",
+    "annual_followup_rate",      NA_real_,  "uncalibrated initial value; requires empirical cohort source",  "low",       "requires_source")
 }
 
 #' Condition-specific care-engagement incident shares

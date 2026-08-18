@@ -158,9 +158,9 @@ load_precomputed_twostep_access <- function(
     twostep_dir = file.path(getwd(), "..", "twostep")) {
   candidate_paths <- c(
     file.path(twostep_dir, "artifacts", "2sfca", "spatial_outcomes", "spatial_outcomes_2020.csv"),
-    file.path("/Users/tmuffly/twostep", "artifacts", "2sfca", "spatial_outcomes", "spatial_outcomes_2020.csv"),
+    file.path(Sys.getenv("HOME"), "twostep", "artifacts", "2sfca", "spatial_outcomes", "spatial_outcomes_2020.csv"),
     file.path(twostep_dir, "data", "step_4_access_by_group.csv"),
-    file.path("/Users/tmuffly/twostep", "data", "step_4_access_by_group.csv")
+    file.path(Sys.getenv("HOME"), "twostep", "data", "step_4_access_by_group.csv")
   )
   found <- candidate_paths[file.exists(candidate_paths)]
   if (length(found) == 0L) {
