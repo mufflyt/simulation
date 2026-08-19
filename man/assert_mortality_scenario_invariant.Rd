@@ -4,13 +4,21 @@
 \alias{assert_mortality_scenario_invariant}
 \title{Assert Mortality Invariance Across Scenarios}
 \usage{
-assert_mortality_scenario_invariant(df)
+assert_mortality_scenario_invariant(
+  mortality_schedule_baseline,
+  mortality_schedule_scenario,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{df}{Data frame of mortality schedule.}
+\item{mortality_schedule_baseline}{Data frame baseline schedule.}
+
+\item{mortality_schedule_scenario}{Data frame scenario schedule.}
+
+\item{verbose}{Logical print message.}
 }
 \value{
-Logical TRUE if scenario invariant.
+Logical TRUE if invariant.
 }
 \description{
 Assert Mortality Invariance Across Scenarios

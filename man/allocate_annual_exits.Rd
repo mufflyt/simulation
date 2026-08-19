@@ -4,15 +4,27 @@
 \alias{allocate_annual_exits}
 \title{Allocate Annual Competing Exits for Provider Roster}
 \usage{
-allocate_annual_exits(agents, year)
+allocate_annual_exits(
+  provider_roster,
+  mortality_schedule,
+  retirement_probability_column = "retirement_probability",
+  career_change_probability_column = "career_change_probability",
+  verbose = TRUE
+)
 }
 \arguments{
-\item{agents}{Roster data frame of providers with age, sex, active status.}
+\item{provider_roster}{Data frame of providers.}
 
-\item{year}{Integer projection year.}
+\item{mortality_schedule}{Data frame of mortality schedule.}
+
+\item{retirement_probability_column}{Name of retirement hazard column.}
+
+\item{career_change_probability_column}{Name of career change hazard column.}
+
+\item{verbose}{Logical print message.}
 }
 \value{
-Data frame of updated agents with competing exit status (retired, deceased, career_change, active).
+Data frame with allocated exit probabilities.
 }
 \description{
 Allocate Annual Competing Exits for Provider Roster

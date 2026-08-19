@@ -4,15 +4,21 @@
 \alias{net_retirement_probability}
 \title{Net Retirement Probability Accounting for Competing Mortality Risk}
 \usage{
-net_retirement_probability(gross_ret_prob, mort_prob)
+net_retirement_probability(
+  all_cause_exit_probability,
+  annual_death_probability,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{gross_ret_prob}{Numeric gross retirement probability.}
+\item{all_cause_exit_probability}{Numeric vector of all-cause exit probabilities.}
 
-\item{mort_prob}{Numeric mortality probability (qx).}
+\item{annual_death_probability}{Numeric vector of death probabilities.}
+
+\item{verbose}{Logical print message.}
 }
 \value{
-Numeric net retirement probability.
+Numeric vector of net retirement probabilities.
 }
 \description{
 Net Retirement Probability Accounting for Competing Mortality Risk

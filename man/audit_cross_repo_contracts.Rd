@@ -14,10 +14,20 @@ A list with \code{available}, \code{passed}, \code{pin_usable}, and
 \description{
 Checks two independent repo-boundary contracts: \code{\link[=mufflyaccess_build]{mufflyaccess_build()}}
 (the installed \code{mufflyaccess} package matches its pinned commit and export
-list) and \verb{test-simulation-cliff-contract.R} (the access-surface schema
+list) and \code{test-simulation-cliff-contract.R} (the access-surface schema
 contract, "Scientific Hardening Section 12 P1"). Both must hold, since a
 state named in the plural is not satisfied by only one of its two
 boundaries.
+}
+\seealso{
+Other scorecard:
+\code{\link[=audit_adversarial]{audit_adversarial()}},
+\code{\link[=audit_canonical_readiness]{audit_canonical_readiness()}},
+\code{\link[=audit_known_truth_recovery]{audit_known_truth_recovery()}},
+\code{\link[=audit_semantics]{audit_semantics()}},
+\code{\link[=audit_software]{audit_software()}},
+\code{\link[=audit_source_mutation]{audit_source_mutation()}},
+\code{\link[=generate_scientific_scorecard]{generate_scientific_scorecard()}}
 }
 \concept{scorecard}
 \concept{testing}

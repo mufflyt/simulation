@@ -28,6 +28,7 @@ surgery using CHIA D6 series data with population at risk as offset.
 \seealso{
 Other chia inpatient surgery:
 \code{\link[=build_chia_inpatient_urps_series]{build_chia_inpatient_urps_series()}},
+\code{\link[=chia_casemix_con]{chia_casemix_con()}},
 \code{\link[=fixture_chia_d6]{fixture_chia_d6()}},
 \code{\link[=ma_female_population_by_year_age_band]{ma_female_population_by_year_age_band()}},
 \code{\link[=validate_chia_inpatient_demand]{validate_chia_inpatient_demand()}}
