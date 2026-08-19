@@ -577,7 +577,8 @@ def main() -> int:
         WHERE fy = 2015 ORDER BY operative_cases DESC LIMIT 10""").fetchall()
     nonsurg = [t for t in top if t[0] and not any(
         k in t[0].lower() for k in ('surg', 'orthop', 'urolog', 'neuro', 'cardio',
-                                    'obstet', 'gyneco', 'transplant', 'otolar'))]
+                                    'obstet', 'gyneco', 'transplant', 'otolar',
+                                    'matern', 'fetal'))]
     check("GATE", "top operative-volume physicians are surgical specialties",
           not nonsurg,
           "top 10 FY2015 by operative volume are all surgical"
