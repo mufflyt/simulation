@@ -22,6 +22,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import re
 import sys
 import time
 import urllib.error
@@ -142,6 +143,15 @@ def main() -> int:
     ap.add_argument("--dest", required=True, type=pathlib.Path)
     ap.add_argument("--include", nargs="*", default=None,
                     help="only these extensions, e.g. --include .mdb .csv")
+    ap.add_argument("--match", default=None,
+                    help="case-insensitive regex on the relative path; only "
+                         "matching files are pulled. Combines with --include "
+                         "(both must pass). Mirrors load_tabular.py's --match, "
+                         "for selecting specific files out of an extension "
+                         "class that is mostly noise -- e.g. the reference/"
+                         "crosswalk CSVs and legacy R scripts sitting beside "
+                         "hundreds of duplicate CSV re-exports of the same "
+                         "'.mdb' tables.")
     ap.add_argument("--list-only", action="store_true")
     args = ap.parse_args()
 
@@ -151,6 +161,9 @@ def main() -> int:
         wanted = {e.lower() for e in args.include}
         files = [f for f in files
                  if pathlib.PurePosixPath(f["name"]).suffix.lower() in wanted]
+    if args.match:
+        pat = re.compile(args.match, re.I)
+        files = [f for f in files if pat.search(f["_rel"])]
     files.sort(key=lambda f: f["size"])
 
     total = sum(f["size"] for f in files)

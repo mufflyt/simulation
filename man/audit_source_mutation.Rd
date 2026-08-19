@@ -10,11 +10,21 @@ audit_source_mutation()
 A list with \code{available} and, when available, \code{passed}.
 }
 \description{
-Runs \verb{test-source-mutation-engine.R} in-process ("Layer 2C" in
+Runs \code{test-source-mutation-engine.R} in-process ("Layer 2C" in
 .github/workflows/source-mutation.yaml). Distinct from the
 \code{SCIENTIFIC_MUTATION_MANIFEST} / \code{\link[=test_scientific_mutation]{test_scientific_mutation()}} boundary
 suite the nightly workflow invokes directly, which is BVA-adjacent rather
 than this state's namesake gate.
+}
+\seealso{
+Other scorecard:
+\code{\link[=audit_adversarial]{audit_adversarial()}},
+\code{\link[=audit_canonical_readiness]{audit_canonical_readiness()}},
+\code{\link[=audit_cross_repo_contracts]{audit_cross_repo_contracts()}},
+\code{\link[=audit_known_truth_recovery]{audit_known_truth_recovery()}},
+\code{\link[=audit_semantics]{audit_semantics()}},
+\code{\link[=audit_software]{audit_software()}},
+\code{\link[=generate_scientific_scorecard]{generate_scientific_scorecard()}}
 }
 \concept{scorecard}
 \concept{testing}

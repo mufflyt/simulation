@@ -8,8 +8,8 @@ chia_casemix_con(duckdb_path = .chia_duckdb_default())
 }
 \arguments{
 \item{duckdb_path}{Path to the DuckDB. Default resolves via
-\code{.chia_duckdb_default()} (env var \code{URPS_CHIA_DUCKDB}, else a glob for the
-\code{MufflySamsung*} volume).}
+\code{\link[=.chia_duckdb_default]{.chia_duckdb_default()}} (env var \code{URPS_CHIA_DUCKDB}, else a glob for the
+\verb{MufflySamsung*} volume).}
 }
 \value{
 An open \code{DBIConnection}.
@@ -30,9 +30,17 @@ NOTE: as of this writing the database holds only the RAW per-year tables
 and related functions query are a separate, more involved layer (physician
 attribution, era-column normalisation across the 2004-2018 schema drift,
 procedure classification) that is not yet built -- see
-\verb{scripts/chia/test_chia.py} for the intended shape. Querying those views
+\code{scripts/chia/test_chia.py} for the intended shape. Querying those views
 before that layer exists will fail with "view does not exist", not
 silently return nothing.
+}
+\seealso{
+Other chia inpatient surgery:
+\code{\link[=build_chia_inpatient_urps_series]{build_chia_inpatient_urps_series()}},
+\code{\link[=fit_inpatient_surgery_rate_model]{fit_inpatient_surgery_rate_model()}},
+\code{\link[=fixture_chia_d6]{fixture_chia_d6()}},
+\code{\link[=ma_female_population_by_year_age_band]{ma_female_population_by_year_age_band()}},
+\code{\link[=validate_chia_inpatient_demand]{validate_chia_inpatient_demand()}}
 }
 \concept{chia inpatient surgery}
 \concept{demand}

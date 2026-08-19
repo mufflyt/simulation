@@ -10,7 +10,7 @@ audit_software()
 A list with \code{available} and, when available, \code{passed} and \code{text}.
 }
 \description{
-Runs \verb{scripts/ci/check_suite.R} as a subprocess -- the full testthat suite
+Runs \code{scripts/ci/check_suite.R} as a subprocess -- the full testthat suite
 from the repository root (so source-tree-only gates actually execute,
 unlike inside R CMD check's sandbox), failing on any test failure OR any
 undeclared skip against tests/skip-budget.csv.
@@ -18,6 +18,16 @@ undeclared skip against tests/skip-budget.csv.
 \details{
 EXPENSIVE: several minutes (2000+ tests). Not run by
 \code{\link[=generate_scientific_scorecard]{generate_scientific_scorecard()}} unless called with \code{deep = TRUE}.
+}
+\seealso{
+Other scorecard:
+\code{\link[=audit_adversarial]{audit_adversarial()}},
+\code{\link[=audit_canonical_readiness]{audit_canonical_readiness()}},
+\code{\link[=audit_cross_repo_contracts]{audit_cross_repo_contracts()}},
+\code{\link[=audit_known_truth_recovery]{audit_known_truth_recovery()}},
+\code{\link[=audit_semantics]{audit_semantics()}},
+\code{\link[=audit_source_mutation]{audit_source_mutation()}},
+\code{\link[=generate_scientific_scorecard]{generate_scientific_scorecard()}}
 }
 \concept{scorecard}
 \concept{testing}

@@ -16,5 +16,15 @@ Generates a synthetic supply world with a known true entry rate
 synthetic data, no external dependency, deterministic given its default
 seed.
 }
+\seealso{
+Other scorecard:
+\code{\link[=audit_adversarial]{audit_adversarial()}},
+\code{\link[=audit_canonical_readiness]{audit_canonical_readiness()}},
+\code{\link[=audit_cross_repo_contracts]{audit_cross_repo_contracts()}},
+\code{\link[=audit_semantics]{audit_semantics()}},
+\code{\link[=audit_software]{audit_software()}},
+\code{\link[=audit_source_mutation]{audit_source_mutation()}},
+\code{\link[=generate_scientific_scorecard]{generate_scientific_scorecard()}}
+}
 \concept{scorecard}
 \concept{testing}
