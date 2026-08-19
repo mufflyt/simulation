@@ -125,6 +125,9 @@ isochrone_source_dir <- function() {
     root <- y$isochrones_root
     if (!is.null(root) && nzchar(root)) return(path.expand(root))
   }
+  fallback <- path.expand("~/isochrones/artifacts/isochrones")
+  if (dir.exists(fallback)) return(fallback)
+
   NA_character_
 }
 
