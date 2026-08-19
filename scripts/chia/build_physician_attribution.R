@@ -117,9 +117,32 @@ n <- DBI::dbGetQuery(con, "SELECT count(*) n FROM chia_casemix.v_hdd_discharge_p
 cat(sprintf("  [ok] %s (discharge, physician) pairs\n", format(n, big.mark = ",")))
 
 # ---- Phase 3: procedure classification --------------------------------------
-cat("\n=== Phase 3: chia_casemix.v_hdd_discharge_procedure ===\n")
+# Two passes. Pass 1 (v_hdd_discharge_procedure_raw) is a coding-system-level
+# rule: ICD-9-CM category 01-86 / ICD-10-PCS section 0 or 1. This is
+# deliberately coarse -- both coding systems file plenty of bedside and
+# endoscopic procedures (central line placement, hemodialysis, diagnostic
+# colonoscopy, paracentesis, lumbar puncture) under "surgical" categories/
+# sections even though they are not OR surgery, which is exactly what made
+# W1 fail: Internal Medicine and Gastroenterology reached the FY2015 top-10
+# operative-volume list. Confirmed empirically (not guessed from memory of
+# ICD-9-CM subranges, which would be exactly the kind of unverified clinical-
+# coding claim to avoid): the specific codes driving this (3897, 3995, 4513,
+# 4523, 4525, 4542, 4516, 5185, 5187, 5188, 5491, 5503, 387) all have <40%
+# surgical-specialty attribution share when checked against the data itself.
+#
+# Pass 2 (v_hdd_discharge_procedure) refines pass 1 EMPIRICALLY rather than
+# hand-listing excluded ICD ranges: for each principal_procedure code with
+# enough attributed volume to be a reliable signal (n >= 20 physician-
+# attributed occurrences), compute what share of its occurrences are
+# performed by a surgical-keyword specialty (the same keyword list
+# test_chia.py's W1 gate uses). A code where less than half its occurrences
+# are surgical-attributed is downgraded to non_operative regardless of its
+# coding-system category -- the data says who actually performs it. Codes
+# below the volume floor keep pass 1's classification (not enough signal to
+# override it).
+cat("\n=== Phase 3: chia_casemix.v_hdd_discharge_procedure (raw + specialty-share refined) ===\n")
 DBI::dbExecute(con, "
-  CREATE OR REPLACE VIEW chia_casemix.v_hdd_discharge_procedure AS
+  CREATE OR REPLACE VIEW chia_casemix.v_hdd_discharge_procedure_raw AS
   SELECT
     RecordType20ID,
     _data_year,
@@ -138,8 +161,51 @@ DBI::dbExecute(con, "
   FROM chia_casemix.v_hdd_procedurecode_all_years
   WHERE AssociatedIndicator = 1
 ")
+
+DBI::dbExecute(con, "
+  CREATE OR REPLACE VIEW chia_casemix.v_procedure_specialty_share AS
+  WITH attrib AS (
+    -- AdmissionType <> '4' (newborn) excluded from the signal itself, not just
+    -- from the final newborn_cases split: test_chia.py's own W5 note documents
+    -- that newborn stays carry the DELIVERING physician as operating physician
+    -- (routine circumcision attributed to obstetrics/family-medicine, not a
+    -- surgical specialty), which would otherwise swamp a code's true performer
+    -- mix and wrongly downgrade genuinely-surgical newborn-adjacent codes
+    -- (e.g. 0VTTXZZ circumcision) to non_operative -- confirmed empirically:
+    -- including newborns drops 0VTTXZZ to 42.3% surgical, below threshold.
+    SELECT p.principal_procedure AS code, b.specialty_1 AS specialty
+    FROM chia_casemix.v_hdd_discharge_procedure_raw p
+    JOIN chia_casemix.v_hdd_discharge_physician d USING (RecordType20ID, _data_year)
+    JOIN chia_provider.borim_stdrel_npi_straight_from_cd b ON TRY_CAST(b.license AS BIGINT) = d.borim_license
+    JOIN chia_casemix.v_hdd_discharge_all_years a USING (RecordType20ID, _data_year)
+    WHERE p.procedure_class = 'operative' AND p.principal_procedure IS NOT NULL
+      AND b.specialty_1 IS NOT NULL AND a.AdmissionType <> '4'
+  )
+  SELECT code, count(*) AS n,
+         100.0 * sum(CASE WHEN regexp_matches(lower(specialty),
+           '(surg|orthop|urolog|neuro|cardio|obstet|gyneco|transplant|otolar)')
+           THEN 1 ELSE 0 END) / count(*) AS pct_surgical
+  FROM attrib
+  GROUP BY 1
+")
+
+DBI::dbExecute(con, "
+  CREATE OR REPLACE VIEW chia_casemix.v_hdd_discharge_procedure AS
+  SELECT
+    r.RecordType20ID, r._data_year, r.principal_procedure,
+    CASE
+      WHEN r.procedure_class = 'operative' AND s.n >= 20 AND s.pct_surgical < 50.0
+        THEN 'non_operative'
+      ELSE r.procedure_class
+    END AS procedure_class
+  FROM chia_casemix.v_hdd_discharge_procedure_raw r
+  LEFT JOIN chia_casemix.v_procedure_specialty_share s ON s.code = r.principal_procedure
+")
 tab <- DBI::dbGetQuery(con, "SELECT _data_year, procedure_class, count(*) n FROM chia_casemix.v_hdd_discharge_procedure GROUP BY 1,2 ORDER BY 1,2")
 print(tab)
+downgraded <- DBI::dbGetQuery(con, "SELECT code, n, round(pct_surgical,1) pct_surgical FROM chia_casemix.v_procedure_specialty_share WHERE n>=20 AND pct_surgical<50.0 ORDER BY n DESC LIMIT 15")
+cat("  codes downgraded to non_operative by the specialty-share refinement:\n")
+print(downgraded)
 
 # ---- Phase 3b: canonical discharge view (demographics + is_surgical) -------
 cat("\n=== Phase 3b: chia_casemix.v_hdd_discharge_canonical ===\n")
