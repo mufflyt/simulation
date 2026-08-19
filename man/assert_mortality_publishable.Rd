@@ -2,16 +2,20 @@
 % Please edit documentation in R/supply-provider_mortality.R
 \name{assert_mortality_publishable}
 \alias{assert_mortality_publishable}
-\title{Assert Mortality Schedule is Publishable and Evidence-Anchored}
+\title{Assert Mortality Schedule is Publishable}
 \usage{
-assert_mortality_publishable(df)
+assert_mortality_publishable(mortality_schedule, strict = TRUE, verbose = TRUE)
 }
 \arguments{
-\item{df}{Data frame produced by build_mortality_schedule.}
+\item{mortality_schedule}{Data frame mortality schedule.}
+
+\item{strict}{Logical strict mode.}
+
+\item{verbose}{Logical print message.}
 }
 \value{
 Logical TRUE if publishable.
 }
 \description{
-Assert Mortality Schedule is Publishable and Evidence-Anchored
+Assert Mortality Schedule is Publishable
 }

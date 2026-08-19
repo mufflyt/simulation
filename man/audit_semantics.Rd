@@ -10,9 +10,19 @@ audit_semantics()
 A list with \code{available} and, when available, \code{passed}.
 }
 \description{
-Runs \verb{test-estimand-semantic-contracts.R} and
-\verb{test-hall-of-shame-regressions.R} in-process ("Layer 2B" in
+Runs \code{test-estimand-semantic-contracts.R} and
+\code{test-hall-of-shame-regressions.R} in-process ("Layer 2B" in
 .github/workflows/scientific-semantic.yaml).
+}
+\seealso{
+Other scorecard:
+\code{\link[=audit_adversarial]{audit_adversarial()}},
+\code{\link[=audit_canonical_readiness]{audit_canonical_readiness()}},
+\code{\link[=audit_cross_repo_contracts]{audit_cross_repo_contracts()}},
+\code{\link[=audit_known_truth_recovery]{audit_known_truth_recovery()}},
+\code{\link[=audit_software]{audit_software()}},
+\code{\link[=audit_source_mutation]{audit_source_mutation()}},
+\code{\link[=generate_scientific_scorecard]{generate_scientific_scorecard()}}
 }
 \concept{scorecard}
 \concept{testing}

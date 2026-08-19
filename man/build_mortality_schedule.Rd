@@ -4,13 +4,27 @@
 \alias{build_mortality_schedule}
 \title{Build Provider Mortality Schedule by Age and Sex}
 \usage{
-build_mortality_schedule(base_year = 2023L)
+build_mortality_schedule(
+  life_table_path = NULL,
+  physician_mortality_ratio = 0.7,
+  ratio_evidence = "Kiang MV et al. JAMA Intern Med 2023.",
+  max_age = 90L,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{base_year}{Integer base year for life table. Default: 2023L.}
+\item{life_table_path}{Path to life table or NULL.}
+
+\item{physician_mortality_ratio}{Standardized mortality ratio for physicians.}
+
+\item{ratio_evidence}{Citation or evidence source string.}
+
+\item{max_age}{Maximum age (default 90L).}
+
+\item{verbose}{Logical print message.}
 }
 \value{
-Data frame of age, sex, qx (annual mortality probability), calibration_tier.
+Data frame of mortality schedule by age and sex.
 }
 \description{
 Build Provider Mortality Schedule by Age and Sex

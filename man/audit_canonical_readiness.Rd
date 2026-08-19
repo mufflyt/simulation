@@ -8,14 +8,24 @@ audit_canonical_readiness()
 }
 \value{
 A list with \code{available} (whether the gate script could be found
-  and run), \code{status} (its exit code: 0 runnable, 1 known blocker, 2
-  unexpected/infrastructure failure), and \code{text} (its combined stdout).
+and run), \code{status} (its exit code: 0 runnable, 1 known blocker, 2
+unexpected/infrastructure failure), and \code{text} (its combined stdout).
 }
 \description{
 Runs \code{.github/scripts/assert-canonical-science.R} as a subprocess and
 reports its exit status, exactly as the nightly CI job and
 test-readiness-protocol.R do. This is the SAME gate, not a re-derived
 approximation of it -- see the "WHY A SUBPROCESS" note in this file.
+}
+\seealso{
+Other scorecard:
+\code{\link[=audit_adversarial]{audit_adversarial()}},
+\code{\link[=audit_cross_repo_contracts]{audit_cross_repo_contracts()}},
+\code{\link[=audit_known_truth_recovery]{audit_known_truth_recovery()}},
+\code{\link[=audit_semantics]{audit_semantics()}},
+\code{\link[=audit_software]{audit_software()}},
+\code{\link[=audit_source_mutation]{audit_source_mutation()}},
+\code{\link[=generate_scientific_scorecard]{generate_scientific_scorecard()}}
 }
 \concept{scorecard}
 \concept{testing}

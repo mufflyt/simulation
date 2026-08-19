@@ -29,5 +29,15 @@ has no in-process or subprocess equivalent at all (it is a from-scratch
 renv restore plus system-library install, CI-only by construction) and is
 always \code{NOT_ELIGIBLE}.
 }
+\seealso{
+Other scorecard:
+\code{\link[=audit_adversarial]{audit_adversarial()}},
+\code{\link[=audit_canonical_readiness]{audit_canonical_readiness()}},
+\code{\link[=audit_cross_repo_contracts]{audit_cross_repo_contracts()}},
+\code{\link[=audit_known_truth_recovery]{audit_known_truth_recovery()}},
+\code{\link[=audit_semantics]{audit_semantics()}},
+\code{\link[=audit_software]{audit_software()}},
+\code{\link[=audit_source_mutation]{audit_source_mutation()}}
+}
 \concept{scorecard}
 \concept{testing}

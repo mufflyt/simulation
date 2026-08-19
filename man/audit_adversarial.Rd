@@ -19,5 +19,15 @@ default) as subprocesses.
 EXPENSIVE and world-count dependent. Not run by
 \code{\link[=generate_scientific_scorecard]{generate_scientific_scorecard()}} unless called with \code{deep = TRUE}.
 }
+\seealso{
+Other scorecard:
+\code{\link[=audit_canonical_readiness]{audit_canonical_readiness()}},
+\code{\link[=audit_cross_repo_contracts]{audit_cross_repo_contracts()}},
+\code{\link[=audit_known_truth_recovery]{audit_known_truth_recovery()}},
+\code{\link[=audit_semantics]{audit_semantics()}},
+\code{\link[=audit_software]{audit_software()}},
+\code{\link[=audit_source_mutation]{audit_source_mutation()}},
+\code{\link[=generate_scientific_scorecard]{generate_scientific_scorecard()}}
+}
 \concept{scorecard}
 \concept{testing}
