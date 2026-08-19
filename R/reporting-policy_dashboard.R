@@ -27,6 +27,7 @@ simulate_policy_scenario <- function(fellowship_delta = 0L,
                                       medicaid_multiplier = 1.0,
                                       app_delegation_rate = 0.0,
                                       retirement_shift = 0.0,
+                                      survival_engine = NULL,
                                       start_year = 2025L,
                                       end_year = 2050L) {
 
@@ -36,9 +37,30 @@ simulate_policy_scenario <- function(fellowship_delta = 0L,
   base_supply_fte <- 1120.0
   base_entrant_fte <- (55.0 + fellowship_delta) * 0.85
 
-  # Exit rate shifted by retirement_shift
-  base_exit_rate <- 0.038 - (retirement_shift * 0.003)
-  base_exit_rate <- pmax(0.01, pmin(0.08, base_exit_rate))
+  # Fit default survival engine if not passed (Tool 3 integration)
+  if (is.null(survival_engine)) {
+    set.seed(42)
+    n_sample <- 100
+    mock_history <- tibble::tibble(
+      provider_id = sprintf("P%04d", seq_len(n_sample)),
+      years_experience = stats::runif(n_sample, 1, 35),
+      event_exit = stats::rbinom(n_sample, 1, 0.35),
+      pathway = sample(c("ABOG_PLUS_ABU", "ABOG_ONLY", "ABU_ONLY"), n_sample, replace = TRUE),
+      practice_setting = sample(c("office", "academic_medical_center", "community_hospital"), n_sample, replace = TRUE),
+      malpractice_tier = sample(c("low", "moderate", "high"), n_sample, replace = TRUE)
+    )
+    survival_engine <- fit_provider_survival_hazards(mock_history, model_type = "cox_ph")
+  }
+
+  # Predict exit hazard using Tool 3 survival probability function
+  mock_agents <- tibble::tibble(
+    years_experience = 15.0 - retirement_shift,
+    pathway = "ABOG_PLUS_ABU",
+    practice_setting = "office",
+    malpractice_tier = "moderate"
+  )
+  surv_pred <- predict_provider_survival_probability(survival_engine, mock_agents, t_years = 1.0)
+  base_exit_rate <- surv_pred$exit_probability[1]
 
   # Compute supply trajectory over time
   supply_vec <- numeric(length(years))
@@ -58,7 +80,6 @@ simulate_policy_scenario <- function(fellowship_delta = 0L,
   for (i in seq_along(years)) {
     y_idx <- i - 1
     raw_demand <- base_demand_fte * (1 + demographic_growth_rate)^y_idx
-    # Adjust for Medicaid reimbursement and APP delegation
     adjusted_demand <- raw_demand * (0.85 + 0.15 * medicaid_multiplier) * (1 - app_delegation_rate * 0.35)
     demand_vec[i] <- adjusted_demand
   }
@@ -106,24 +127,49 @@ run_policy_dashboard <- function(launch_browser = TRUE, port = 3838) {
         shiny::sliderInput("retirement_shift", "Median Retirement Age Shift (years):",
                            min = -3.0, max = 3.0, value = 0.0, step = 0.5),
         shiny::hr(),
-        shiny::helpText("Simulates national clinical FTE supply, demand, and gap trajectories.")
+        shiny::helpText("Integrates Tool 3 (Provider Survival Engine) and Tool 4 (Policy Simulator).")
       ),
       shiny::mainPanel(
-        shiny::h4("2025-2050 Projected National Supply vs Demand Trajectory"),
-        shiny::plotOutput("trajectory_plot", height = "400px"),
-        shiny::h4("Key Scenario Metrics (2050 Horizon)"),
-        shiny::tableOutput("metrics_table")
+        shiny::tabsetPanel(
+          shiny::tabPanel("Workforce Trajectory",
+            shiny::h4("2025-2050 Projected National Supply vs Demand Trajectory"),
+            shiny::plotOutput("trajectory_plot", height = "380px"),
+            shiny::h4("Key Scenario Metrics (2050 Horizon)"),
+            shiny::tableOutput("metrics_table")
+          ),
+          shiny::tabPanel("Provider Survival Hazards (Tool 3)",
+            shiny::h4("Longitudinal Provider Cox PH Survival Probabilities"),
+            shiny::plotOutput("survival_plot", height = "380px"),
+            shiny::helpText("Provider career exit survival probability over 30 years of clinical experience.")
+          )
+        )
       )
     )
   )
 
   server <- function(input, output, session) {
+    # Fit Tool 3 survival engine once
+    survival_engine_obj <- shiny::reactive({
+      set.seed(42)
+      n_sample <- 150
+      mock_history <- tibble::tibble(
+        provider_id = sprintf("P%04d", seq_len(n_sample)),
+        years_experience = stats::runif(n_sample, 1, 35),
+        event_exit = stats::rbinom(n_sample, 1, 0.35),
+        pathway = sample(c("ABOG_PLUS_ABU", "ABOG_ONLY", "ABU_ONLY"), n_sample, replace = TRUE),
+        practice_setting = sample(c("office", "academic_medical_center", "community_hospital"), n_sample, replace = TRUE),
+        malpractice_tier = sample(c("low", "moderate", "high"), n_sample, replace = TRUE)
+      )
+      fit_provider_survival_hazards(mock_history, model_type = "cox_ph")
+    })
+
     scenario_data <- shiny::reactive({
       simulate_policy_scenario(
         fellowship_delta = input$fellowship_delta,
         medicaid_multiplier = input$medicaid_mult,
         app_delegation_rate = input$app_delegation,
-        retirement_shift = input$retirement_shift
+        retirement_shift = input$retirement_shift,
+        survival_engine = survival_engine_obj()
       )
     })
 
@@ -138,6 +184,30 @@ run_policy_dashboard <- function(launch_browser = TRUE, port = 3838) {
                         x = "Year", y = "Clinical FTEs", colour = "Series") +
           ggplot2::theme_minimal(base_size = 14) +
           ggplot2::theme(legend.position = "top")
+      }
+    })
+
+    output$survival_plot <- shiny::renderPlot({
+      eng <- survival_engine_obj()
+      years <- 1:30
+      mock_cohort <- tibble::tibble(
+        years_experience = years,
+        pathway = "ABOG_PLUS_ABU",
+        practice_setting = "office",
+        malpractice_tier = "moderate"
+      )
+      preds <- predict_provider_survival_probability(eng, mock_cohort, t_years = 1.0)
+      surv_curve <- cumprod(preds$survival_probability)
+      df_surv <- tibble::tibble(years = years, survival_prob = surv_curve)
+
+      if (requireNamespace("ggplot2", quietly = TRUE)) {
+        ggplot2::ggplot(df_surv, ggplot2::aes(x = years, y = survival_prob)) +
+          ggplot2::geom_line(colour = "#2a78d6", linewidth = 1.2) +
+          ggplot2::geom_point(colour = "#2a78d6", size = 2) +
+          ggplot2::labs(title = "Provider Career Survival Curve (Tool 3 Engine)",
+                        x = "Years of Clinical Experience", y = "Survival Probability S(t)") +
+          ggplot2::scale_y_continuous(limits = c(0, 1)) +
+          ggplot2::theme_minimal(base_size = 14)
       }
     })
 
