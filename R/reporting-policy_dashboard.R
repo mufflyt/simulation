@@ -27,6 +27,10 @@ simulate_policy_scenario <- function(fellowship_delta = 0L,
                                       medicaid_multiplier = 1.0,
                                       app_delegation_rate = 0.0,
                                       retirement_shift = 0.0,
+                                      asc_shift_rate = 0.0,
+                                      telehealth_expansion = 0.0,
+                                      part_time_rate = 0.0,
+                                      pop_growth_multiplier = 1.0,
                                       survival_engine = NULL,
                                       start_year = 2025L,
                                       end_year = 2050L) {
@@ -34,8 +38,13 @@ simulate_policy_scenario <- function(fellowship_delta = 0L,
   years <- start_year:end_year
 
   # Baseline 2025 supply = 1,306 providers (~1,120 FTEs)
-  base_supply_fte <- 1120.0
-  base_entrant_fte <- (55.0 + fellowship_delta) * 0.85
+  # Part-time rate reduces effective FTE yield per provider (0.65 FTE for part-time share)
+  fte_per_provider <- 0.85 * (1 - part_time_rate * 0.35)
+  base_supply_fte <- 1120.0 * (1 - part_time_rate * 0.35)
+  base_entrant_fte <- (55.0 + fellowship_delta) * fte_per_provider
+
+  # ASC shift increases effective surgical productivity by up to +15%
+  productivity_boost <- 1.0 + (asc_shift_rate * 0.15)
 
   # Fit default survival engine if not passed (Tool 3 integration)
   if (is.null(survival_engine)) {
@@ -66,21 +75,23 @@ simulate_policy_scenario <- function(fellowship_delta = 0L,
   supply_vec <- numeric(length(years))
   curr_supply <- base_supply_fte
   for (i in seq_along(years)) {
-    supply_vec[i] <- curr_supply
+    supply_vec[i] <- curr_supply * productivity_boost
     exits <- curr_supply * base_exit_rate
     entrants <- base_entrant_fte
     curr_supply <- curr_supply - exits + entrants
   }
 
-  # Demand trajectory: demographic growth + Medicaid care-seeking multiplier - APP delegation
+  # Demand trajectory: demographic growth * pop_growth_multiplier + Medicaid multiplier - APP delegation - telehealth efficiency
   base_demand_fte <- 1450.0
-  demographic_growth_rate <- 0.012 # 1.2% annual growth in female 65+ population
+  demographic_growth_rate <- 0.012 * pop_growth_multiplier # 1.2% base annual growth in female 65+ population
 
   demand_vec <- numeric(length(years))
   for (i in seq_along(years)) {
     y_idx <- i - 1
     raw_demand <- base_demand_fte * (1 + demographic_growth_rate)^y_idx
-    adjusted_demand <- raw_demand * (0.85 + 0.15 * medicaid_multiplier) * (1 - app_delegation_rate * 0.35)
+    adjusted_demand <- raw_demand * (0.85 + 0.15 * medicaid_multiplier) *
+                       (1 - app_delegation_rate * 0.35) *
+                       (1 - telehealth_expansion * 0.10)
     demand_vec[i] <- adjusted_demand
   }
 
@@ -100,7 +111,8 @@ simulate_policy_scenario <- function(fellowship_delta = 0L,
 #' @description
 #' Launches an interactive Shiny web application for simulating workforce policy
 #' scenarios (fellowship expansion, Medicaid multipliers, APP delegation,
-#' retirement shifts) and rendering 2025-2050 supply-demand gap trajectories.
+#' retirement shifts, ASC migration, telehealth adoption, part-time work,
+#' demographic growth multipliers) and rendering 2025-2050 supply-demand gap trajectories.
 #'
 #' @param launch_browser If `TRUE`, opens the dashboard in the default browser.
 #' @param port Network port to listen on (default 3838).
@@ -117,17 +129,25 @@ run_policy_dashboard <- function(launch_browser = TRUE, port = 3838) {
     shiny::titlePanel("URPS Workforce Policy Intervention Simulator (2025-2050)"),
     shiny::sidebarLayout(
       shiny::sidebarPanel(
-        shiny::h4("Policy Intervention Levers"),
-        shiny::sliderInput("fellowship_delta", "Fellowship Graduates Expansion (+/- per yr):",
+        shiny::h4("Policy Intervention Levers (8 Total)"),
+        shiny::sliderInput("fellowship_delta", "1. Fellowship Graduates Expansion (+/- per yr):",
                            min = -15, max = 50, value = 0, step = 5),
-        shiny::sliderInput("medicaid_mult", "Medicaid Reimbursement Multiplier:",
+        shiny::sliderInput("medicaid_mult", "2. Medicaid Reimbursement Multiplier:",
                            min = 0.50, max = 1.50, value = 1.0, step = 0.05),
-        shiny::sliderInput("app_delegation", "APP Task Delegation Rate (% conservative):",
+        shiny::sliderInput("app_delegation", "3. APP Task Delegation Rate (% conservative):",
                            min = 0.0, max = 0.30, value = 0.0, step = 0.05),
-        shiny::sliderInput("retirement_shift", "Median Retirement Age Shift (years):",
+        shiny::sliderInput("retirement_shift", "4. Median Retirement Age Shift (years):",
                            min = -3.0, max = 3.0, value = 0.0, step = 0.5),
+        shiny::sliderInput("asc_shift", "5. Surgical ASC Outpatient Migration Rate (%):",
+                           min = 0.0, max = 0.50, value = 0.0, step = 0.05),
+        shiny::sliderInput("telehealth_exp", "6. Telehealth Adoption & Capacity Expansion (%):",
+                           min = 0.0, max = 0.25, value = 0.0, step = 0.05),
+        shiny::sliderInput("part_time", "7. Late-Career Part-Time Transition Rate (%):",
+                           min = 0.0, max = 0.30, value = 0.0, step = 0.05),
+        shiny::sliderInput("pop_growth_mult", "8. Census Female 65+ Growth Multiplier:",
+                           min = 0.80, max = 1.50, value = 1.0, step = 0.05),
         shiny::hr(),
-        shiny::helpText("Integrates Tool 3 (Provider Survival Engine) and Tool 4 (Policy Simulator).")
+        shiny::helpText("Simulates 8 interactive policy levers with Tool 3 Cox PH Survival Engine.")
       ),
       shiny::mainPanel(
         shiny::tabsetPanel(
@@ -148,7 +168,6 @@ run_policy_dashboard <- function(launch_browser = TRUE, port = 3838) {
   )
 
   server <- function(input, output, session) {
-    # Fit Tool 3 survival engine once
     survival_engine_obj <- shiny::reactive({
       set.seed(42)
       n_sample <- 150
@@ -169,6 +188,10 @@ run_policy_dashboard <- function(launch_browser = TRUE, port = 3838) {
         medicaid_multiplier = input$medicaid_mult,
         app_delegation_rate = input$app_delegation,
         retirement_shift = input$retirement_shift,
+        asc_shift_rate = input$asc_shift,
+        telehealth_expansion = input$telehealth_exp,
+        part_time_rate = input$part_time,
+        pop_growth_multiplier = input$pop_growth_mult,
         survival_engine = survival_engine_obj()
       )
     })
@@ -180,7 +203,7 @@ run_policy_dashboard <- function(launch_browser = TRUE, port = 3838) {
           ggplot2::geom_line(ggplot2::aes(y = supply_fte, colour = "Supply FTE"), linewidth = 1.2) +
           ggplot2::geom_line(ggplot2::aes(y = demand_fte, colour = "Demand FTE"), linewidth = 1.2, linetype = "dashed") +
           ggplot2::scale_colour_manual(values = c("Supply FTE" = "#2a78d6", "Demand FTE" = "#eb6834")) +
-          ggplot2::labs(title = "Projected URPS Clinical FTE Supply vs Demand",
+          ggplot2::labs(title = "Projected URPS Clinical FTE Supply vs Demand (8-Lever Scenario)",
                         x = "Year", y = "Clinical FTEs", colour = "Series") +
           ggplot2::theme_minimal(base_size = 14) +
           ggplot2::theme(legend.position = "top")

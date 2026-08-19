@@ -9,6 +9,11 @@ simulate_policy_scenario(
   medicaid_multiplier = 1,
   app_delegation_rate = 0,
   retirement_shift = 0,
+  asc_shift_rate = 0,
+  telehealth_expansion = 0,
+  part_time_rate = 0,
+  pop_growth_multiplier = 1,
+  survival_engine = NULL,
   start_year = 2025L,
   end_year = 2050L
 )

@@ -17,7 +17,8 @@ Runs the Shiny application (blocking).
 \description{
 Launches an interactive Shiny web application for simulating workforce policy
 scenarios (fellowship expansion, Medicaid multipliers, APP delegation,
-retirement shifts) and rendering 2025-2050 supply-demand gap trajectories.
+retirement shifts, ASC migration, telehealth adoption, part-time work,
+demographic growth multipliers) and rendering 2025-2050 supply-demand gap trajectories.
 }
 \seealso{
 Other policy dashboard:
