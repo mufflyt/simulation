@@ -4,13 +4,30 @@
 \alias{generate_scientific_scorecard}
 \title{Generate Unified 9-State Scientific Scorecard}
 \usage{
-generate_scientific_scorecard()
+generate_scientific_scorecard(deep = FALSE)
+}
+\arguments{
+\item{deep}{If \code{TRUE}, also run the expensive SOFTWARE and ADVERSARIAL
+audits (several minutes total). Default \code{FALSE} keeps the scorecard
+fast; those two states report \code{NOT_ELIGIBLE} until run with \code{deep = TRUE}.}
 }
 \value{
 Named list of 9 scientific states (GREEN, RED, NOT_ELIGIBLE).
 }
 \description{
-Generate Unified 9-State Scientific Scorecard
+Every state below is derived from a real check -- none are hardcoded. Four
+run in-process and are always evaluated: SEMANTICS (\code{\link[=audit_semantics]{audit_semantics()}}),
+SOURCE_MUTATION (\code{\link[=audit_source_mutation]{audit_source_mutation()}}), KNOWN_TRUTH_RECOVERY
+(\code{\link[=audit_known_truth_recovery]{audit_known_truth_recovery()}}), and CROSS_REPO_CONTRACTS
+(\code{\link[=audit_cross_repo_contracts]{audit_cross_repo_contracts()}}). CANONICAL_READINESS
+(\code{\link[=audit_canonical_readiness]{audit_canonical_readiness()}}) and UNCERTAINTY are always evaluated too.
+Two are CI-scale (multi-minute) and only run when \code{deep = TRUE}: SOFTWARE
+(\code{\link[=audit_software]{audit_software()}}, the full test suite) and ADVERSARIAL
+(\code{\link[=audit_adversarial]{audit_adversarial()}}, the canary and metamorphic battery) -- otherwise
+they report \code{NOT_ELIGIBLE}, honestly, rather than a guess. REPRODUCIBILITY
+has no in-process or subprocess equivalent at all (it is a from-scratch
+renv restore plus system-library install, CI-only by construction) and is
+always \code{NOT_ELIGIBLE}.
 }
 \concept{scorecard}
 \concept{testing}
