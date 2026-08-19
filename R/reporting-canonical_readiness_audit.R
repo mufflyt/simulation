@@ -19,15 +19,19 @@
 #' `NA_character_` when running from an installed package with no source tree
 #' available, so callers can degrade gracefully instead of misreporting.
 #'
-#' @return Path to the repository root, or `NA_character_`.
+#' Shared by every scorecard audit_*() function that needs to shell out to a
+#' `.github/scripts/` or `scripts/` gate -- defined once here rather than per
+#' file, so it cannot drift into two different resolutions of "the repo root".
+#'
+#' @return Absolute path to the repository root, or `NA_character_`.
 #' @keywords internal
-.canonical_gate_repo_root <- function() {
+.repo_source_root <- function() {
   candidates <- c(".", "..", file.path("..", ".."),
                   file.path("..", "..", ".."), file.path("..", "..", "..", ".."))
   for (p in candidates) {
     if (file.exists(file.path(p, "DESCRIPTION")) &&
         dir.exists(file.path(p, ".github"))) {
-      return(p)
+      return(normalizePath(p, mustWork = TRUE))
     }
   }
   NA_character_
@@ -47,7 +51,7 @@
 #' @concept testing
 #' @export
 audit_canonical_readiness <- function() {
-  root <- .canonical_gate_repo_root()
+  root <- .repo_source_root()
   gate <- if (is.na(root)) NA_character_ else
     file.path(root, ".github", "scripts", "assert-canonical-science.R")
 

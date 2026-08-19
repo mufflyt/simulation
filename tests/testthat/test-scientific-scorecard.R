@@ -1,9 +1,45 @@
-test_that("generate_scientific_scorecard reports 9 distinct states, all GREEN when calibrated", {
+test_that("generate_scientific_scorecard reports 9 distinct states", {
   card <- generate_scientific_scorecard()
   expect_equal(length(card), 9)
-  expect_equal(card$SOFTWARE, "GREEN")
-  expect_equal(card$SEMANTICS, "GREEN")
+  expect_setequal(names(card),
+                  c("SOFTWARE", "REPRODUCIBILITY", "SEMANTICS", "ADVERSARIAL",
+                    "SOURCE_MUTATION", "KNOWN_TRUTH_RECOVERY", "UNCERTAINTY",
+                    "CROSS_REPO_CONTRACTS", "CANONICAL_READINESS"))
   expect_equal(card$UNCERTAINTY, "GREEN")
+})
+
+test_that("REPRODUCIBILITY is always NOT_ELIGIBLE: no in-process equivalent exists", {
+  # It is a from-scratch renv::restore() plus system-library install in a
+  # throwaway library (~90 min in CI) -- not something an R function can run
+  # inline. Reporting anything else here would be exactly the "checks an
+  # unrelated proxy" bug this scorecard was fixed to stop making.
+  card <- generate_scientific_scorecard()
+  expect_equal(card$REPRODUCIBILITY, "NOT_ELIGIBLE")
+})
+
+test_that("SOFTWARE and ADVERSARIAL are NOT_ELIGIBLE by default, not silently GREEN", {
+  # Both are CI-scale (a full 2000+-test suite run, and a mutation/metamorphic
+  # battery) and are gated behind deep = TRUE so the scorecard stays fast by
+  # default. NOT_ELIGIBLE, not a guessed GREEN, is the honest default state.
+  card <- generate_scientific_scorecard(deep = FALSE)
+  expect_equal(card$SOFTWARE, "NOT_ELIGIBLE")
+  expect_equal(card$ADVERSARIAL, "NOT_ELIGIBLE")
+})
+
+test_that("the four cheap in-process audits agree with the scorecard's derived states", {
+  # Pinned against the real audit_*() functions rather than a hardcoded value,
+  # so this tracks whatever they actually report instead of assuming GREEN.
+  skip_on_cran()
+  card <- generate_scientific_scorecard()
+
+  state_of <- function(audit) {
+    if (!isTRUE(audit$available)) "NOT_ELIGIBLE" else if (isTRUE(audit$passed)) "GREEN" else "RED"
+  }
+
+  expect_equal(card$SEMANTICS, state_of(audit_semantics()))
+  expect_equal(card$SOURCE_MUTATION, state_of(audit_source_mutation()))
+  expect_equal(card$KNOWN_TRUTH_RECOVERY, state_of(audit_known_truth_recovery()))
+  expect_equal(card$CROSS_REPO_CONTRACTS, state_of(audit_cross_repo_contracts()))
 })
 
 test_that("CANONICAL_READINESS reflects the REAL canonical-readiness gate, not a proxy", {
