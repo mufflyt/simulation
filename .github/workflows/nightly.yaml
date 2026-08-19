@@ -266,6 +266,30 @@ jobs:
             cat(sprintf("Scientific Mutation Recovery: %d of %d mutations killed (%.0f%% recovery rate).\n", killed_count, nrow(muts), 100 * killed_count / nrow(muts)))
             if (killed_count < nrow(muts)) quit(status = 1)
           ' | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Audit CHIA physician-attribution database (test_chia.py)
+        # The CHIA Case Mix DuckDB is 10GB+ on a personal external drive and
+        # is not, and will not be, present on a GitHub-hosted runner -- this
+        # step skips cleanly there today. It exists so the audit runs for
+        # real the moment the data IS reachable (a self-hosted runner with
+        # the drive attached, or a manual workflow_dispatch with
+        # URPS_CHIA_DUCKDB set), rather than needing to be wired up from
+        # scratch at that point. See scripts/chia/test_chia.py's own
+        # docstring: exit code is 1 if any GATE fails.
+        #
+        # KNOWN, PRE-EXISTING GAP, not a regression: test_chia.py currently
+        # errors (not a clean GATE failure) on its revenue-code checks,
+        # which need a `ref` schema this repo's CADR build has never
+        # populated -- a separate workstream from the physician-attribution
+        # work (R/data-chia_physician_attribution.R) this step is meant to
+        # cover. Narrowing test_chia.py's own scope, or building the ref
+        # schema, is future work, not something to paper over here.
+        run: |
+          DB="${URPS_CHIA_DUCKDB:-/Volumes/MufflySamsung/DuckDB/chia_cadr.duckdb}"
+          if [ ! -f "$DB" ]; then
+            echo "SKIP: CHIA Case Mix DuckDB not present at $DB (expected on GitHub-hosted runners)." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 scripts/chia/test_chia.py --db "$DB" | tee -a "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
   # 3. FULL PLATFORM MATRIX. The per-push gate checks ubuntu-release only.
