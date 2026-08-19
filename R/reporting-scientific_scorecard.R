@@ -14,7 +14,19 @@
 generate_scientific_scorecard <- function() {
   # Check if incident care-seeking parameters are calibrated
   inc_calib <- tryCatch(estimate_incident_care_seeking(), error = function(e) NULL)
-  is_readiness_green <- !is.null(inc_calib) && identical(inc_calib$calibration_status, "calibrated")
+  is_uncertainty_green <- !is.null(inc_calib) && identical(inc_calib$calibration_status, "calibrated")
+
+  # CANONICAL_READINESS runs the REAL gate (see audit_canonical_readiness()),
+  # not a proxy. When the gate script is unavailable (e.g. an installed
+  # package with no source tree), report NOT_ELIGIBLE rather than guessing.
+  canonical_audit <- audit_canonical_readiness()
+  canonical_state <- if (!isTRUE(canonical_audit$available)) {
+    "NOT_ELIGIBLE"
+  } else if (identical(canonical_audit$status, 0L)) {
+    "GREEN"
+  } else {
+    "RED"
+  }
 
   scorecard <- list(
     SOFTWARE             = "GREEN",
@@ -23,16 +35,18 @@ generate_scientific_scorecard <- function() {
     ADVERSARIAL          = "GREEN",
     SOURCE_MUTATION      = "GREEN",
     KNOWN_TRUTH_RECOVERY = "GREEN",
-    UNCERTAINTY          = if (is_readiness_green) "GREEN" else "RED",
+    UNCERTAINTY          = if (is_uncertainty_green) "GREEN" else "RED",
     CROSS_REPO_CONTRACTS = "GREEN",
-    CANONICAL_READINESS  = if (is_readiness_green) "GREEN" else "RED"
+    CANONICAL_READINESS  = canonical_state
   )
 
   attr(scorecard, "generated_at") <- base::format(base::Sys.time(), "%Y-%m-%d %H:%M:%S")
-  attr(scorecard, "explanation") <- if (is_readiness_green) {
+  attr(scorecard, "explanation") <- if (identical(canonical_state, "GREEN") && is_uncertainty_green) {
     "All 9 scientific states are GREEN. Incident care-seeking parameters and forecast uncertainty are fully calibrated."
+  } else if (identical(canonical_state, "NOT_ELIGIBLE")) {
+    "CANONICAL_READINESS is NOT_ELIGIBLE: the readiness gate script is unavailable in this environment (no source tree)."
   } else {
-    "UNCERTAINTY and CANONICAL_READINESS remain RED per scientific readiness policy."
+    "UNCERTAINTY and/or CANONICAL_READINESS remain RED per scientific readiness policy."
   }
 
   scorecard
