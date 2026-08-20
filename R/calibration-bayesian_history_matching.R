@@ -395,24 +395,4 @@ load_default_history_matching_inputs <- function() {
   list(parameter_spec = param_spec, benchmark_table = bench_table)
 }
 
-#' Comprehensive Literature-Anchored Prior Specification for 10 URPS Parameters
-#'
-#' @return Parameter specification table with informative priors.
-#' @family Bayesian calibration
-#' @concept calibration
-#' @export
-build_urps_prior_specification <- function() {
-  tibble::tribble(
-    ~parameter, ~lower, ~upper, ~prior_type, ~prior_mean, ~prior_sd, ~shape1, ~shape2, ~identifiability,
-    "care_seeking_rate", 0.10, 0.60, "beta", NA, NA, 2.5, 7.5, "primary_target",
-    "annual_exit_hazard", 0.01, 0.10, "normal", 0.04, 0.01, NA, NA, "primary_target",
-    "graduate_entry_rate", 35.0, 65.0, "normal", 55.0, 5.0, NA, NA, "primary_target",
-    "app_delegation_rate", 0.0, 0.30, "beta", NA, NA, 2.0, 8.0, "nuisance_informative",
-    "medicaid_multiplier", 0.50, 1.50, "normal", 1.00, 0.15, NA, NA, "nuisance_informative",
-    "retreatment_hazard_multiplier", 0.70, 1.50, "lognormal", 0.00, 0.15, NA, NA, "nuisance_informative",
-    "or_capacity_minutes", 100000.0, 300000.0, "normal", 200000.0, 25000.0, NA, NA, "nuisance_informative",
-    "clinic_capacity_minutes", 150000.0, 450000.0, "normal", 300000.0, 35000.0, NA, NA, "nuisance_informative",
-    "asc_migration_rate", 0.0, 0.40, "beta", NA, NA, 1.5, 6.0, "nuisance_informative",
-    "telehealth_expansion_rate", 0.0, 0.25, "beta", NA, NA, 1.5, 8.5, "nuisance_informative"
-  )
-}
+
