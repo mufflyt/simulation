@@ -70,6 +70,20 @@
 
   old_wd <- setwd(root)
   on.exit(setwd(old_wd), add = TRUE)
+
+  # check_suite.R's skip-budget audit assumes NOT_CRAN is set (GitHub Actions
+  # sets it automatically via r-lib/actions; a local interactive session
+  # usually does not). Without it, skip_on_cran() fires everywhere, and the
+  # budget -- which expects only a handful of "On CRAN" skips -- reports a
+  # spurious over-budget failure with nothing to do with the actual suite.
+  # Set explicitly so this audit gives the same signal locally as in CI,
+  # rather than depending on an ambient env var. Harmless for scripts that
+  # don't read it (the adversarial scripts).
+  old_not_cran <- Sys.getenv("NOT_CRAN", unset = NA)
+  Sys.setenv(NOT_CRAN = "true")
+  on.exit(if (is.na(old_not_cran)) Sys.unsetenv("NOT_CRAN")
+          else Sys.setenv(NOT_CRAN = old_not_cran), add = TRUE)
+
   out <- suppressWarnings(
     system2(file.path(R.home("bin"), "Rscript"), script,
             stdout = TRUE, stderr = TRUE))
