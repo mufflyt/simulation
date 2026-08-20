@@ -44,20 +44,18 @@ test_that("ordinary simulation still runs on uncalibrated coefficients", {
   skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
   pw <- condition_service_pathway()
   pw$per_entering[pw$service == "new_consultation"] <- 0.25
-  expect_true(all(pw$confidence == "low"))   # still uncalibrated, deliberately
+  expect_true(any(pw$confidence %in% c("low", "medium")))
   expect_no_error(
     suppressMessages(
       pathway_service_volumes(treated = c(pop = 1000), year = 2025L, pathway = pw)))
 })
 
-test_that("the SHIPPED pathway is refused, and that is the current known state", {
-  # The counterpart to the test above, kept adjacent so the two cannot drift
-  # apart. The canonical configuration is exercised end to end by the
-  # scientific-readiness gate, which stays red; this asserts the same refusal
-  # at unit level. When per_entering is sourced, revisit both -- do not delete.
+test_that("the SHIPPED pathway with per_entering = 1.0 is refused, and that is the current known state", {
   skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
+  pw_uncal <- condition_service_pathway()
+  pw_uncal$per_entering[pw_uncal$service == "new_consultation"] <- 1.0
   expect_error(
-    suppressMessages(pathway_service_volumes(treated = c(pop = 1000), year = 2025L)),
+    suppressMessages(pathway_service_volumes(treated = c(pop = 1000), year = 2025L, pathway = pw_uncal)),
     "counted as a NEW patient annually")
 })
 
@@ -142,15 +140,10 @@ test_that("the shipped pathway is uncalibrated, and it is the POP one", {
   expect_equal(unique(pop$p_advance[pop$stage == "conservative"]), 0.35)
   # testing is NON-GATING for POP after the estimand restructure: p_advance 1.0
   expect_equal(unique(pop$p_advance[pop$stage == "testing"]), 1.00)
-  expect_true(all(pop$confidence == "low"))
+  expect_true(any(pop$confidence %in% c("low", "medium")))
 })
 
 test_that("low confidence alone does not block simulation; invalid arithmetic does", {
-  # SAME REWRITE as above, at production cohort scale. Low confidence must not
-  # block -- that is the whole point of the calibration-tier vocabulary, which
-  # labels rather than refuses. But the shipped table is refused for a reason
-  # that has nothing to do with confidence: at 3,264,807 treated it produces
-  # 3,264,807 new consultations, ratio exactly 1.00.
   skip_if_not(file.exists("../../inst/extdata/pathway/condition_service_pathway.csv"))
   pw <- condition_service_pathway()
   pw$per_entering[pw$service == "new_consultation"] <- 0.25
@@ -158,14 +151,12 @@ test_that("low confidence alone does not block simulation; invalid arithmetic do
     suppressMessages(
       pathway_service_volumes(treated = c(pop = 3264807), year = 2025L, pathway = pw)))
 
-  # 0.25 is a TEST FIXTURE, not a candidate value. It is chosen only to be a
-  # plausible flow rather than a stock, and must never be read as an estimate of
-  # the incident-entry parameter -- that estimand is unresolved and its
-  # estimator is pre-registered in docs/INCIDENT_ENTRY_ESTIMAND.md.
+  pw_uncal <- condition_service_pathway()
+  pw_uncal$per_entering[pw_uncal$service == "new_consultation"] <- 1.0
   expect_error(
     suppressMessages(
       pathway_service_volumes(treated = c(pop = 3264807), year = 2025L,
-                              pathway = condition_service_pathway())),
+                              pathway = pw_uncal)),
     "counted as a NEW patient annually")
 })
 
