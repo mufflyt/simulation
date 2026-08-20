@@ -32,4 +32,9 @@ Numeric vector of probabilities in \link{0, 1}.
 \description{
 Predict individual physician Medicaid acceptance probability
 }
+\seealso{
+Other supply:
+\code{\link[=lookup_state_medicaid_fee_ratio]{lookup_state_medicaid_fee_ratio()}},
+\code{\link[=medicaid_medicare_fee_index_table]{medicaid_medicare_fee_index_table()}}
+}
 \concept{supply}

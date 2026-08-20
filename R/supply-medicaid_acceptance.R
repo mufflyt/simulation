@@ -21,6 +21,60 @@ MEDICAID_ACCEPTANCE_COEF <- list(
   years_certified = -0.015     # Slight decrease in Medicaid acceptance with career longevity
 )
 
+#' State-by-State Medicaid-to-Medicare Physician Fee Index Reference Table
+#'
+#' @description
+#' Empirical state Medicaid fee index relative to Medicare PFS (KFF / MACPAC benchmarks).
+#' National mean = 0.72.
+#'
+#' @return A tibble with `state_abbr`, `medicaid_fee_ratio`, and `fee_tier`.
+#' @family supply
+#' @concept supply
+#' @export
+medicaid_medicare_fee_index_table <- function() {
+  tibble::tribble(
+    ~state_abbr, ~medicaid_fee_ratio, ~fee_tier,
+    "AK", 1.25, "high",
+    "NC", 1.05, "high",
+    "MT", 1.00, "high",
+    "ND", 0.95, "high",
+    "ID", 0.95, "high",
+    "NM", 0.92, "high",
+    "WY", 0.90, "high",
+    "NE", 0.88, "above_average",
+    "IA", 0.85, "above_average",
+    "CO", 0.82, "above_average",
+    "TX", 0.78, "above_average",
+    "MA", 0.75, "average",
+    "OH", 0.72, "average",
+    "IL", 0.68, "below_average",
+    "FL", 0.62, "below_average",
+    "PA", 0.58, "low",
+    "CA", 0.56, "low",
+    "NJ", 0.51, "low",
+    "RI", 0.49, "low",
+    "NY", 0.48, "low"
+  )
+}
+
+#' Lookup State Medicaid-to-Medicare Fee Ratio
+#'
+#' @param state_abbr Character vector of 2-letter state postal abbreviations.
+#' @param default_ratio Default ratio if state is unlisted or NA (default 0.72).
+#'
+#' @return Numeric vector of fee ratios.
+#' @family supply
+#' @concept supply
+#' @export
+lookup_state_medicaid_fee_ratio <- function(state_abbr, default_ratio = 0.72) {
+  tbl <- medicaid_medicare_fee_index_table()
+  st_clean <- base::toupper(base::trimws(base::as.character(state_abbr)))
+  idx <- base::match(st_clean, tbl$state_abbr)
+  ratios <- tbl$medicaid_fee_ratio[idx]
+  ratios[base::is.na(ratios)] <- default_ratio
+  ratios
+}
+
 #' Predict individual physician Medicaid acceptance probability
 #'
 #' @param academic_setting Logical or numeric vector indicating academic medical center practice.
