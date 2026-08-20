@@ -25,6 +25,7 @@ Generate Latin Hypercube Sampling (LHS) Parameter Design
 }
 \seealso{
 Other Bayesian calibration:
+\code{\link[=build_urps_prior_specification]{build_urps_prior_specification()}},
 \code{\link[=calibrate_bayesian_history_matching]{calibrate_bayesian_history_matching()}},
 \code{\link[=compute_implausibility_metric]{compute_implausibility_metric()}},
 \code{\link[=fit_gp_emulator]{fit_gp_emulator()}},
