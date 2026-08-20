@@ -17,10 +17,5 @@ Regional HRR workforce supply, demand, balance gap, and shortage status.
 \description{
 Implements HRSA 5-step spatial balance aggregation across 306 Hospital Referral Regions (HRRs).
 }
-\seealso{
-Other HRSA simulation:
-\code{\link[=apply_hrsa_insurance_demand_multipliers]{apply_hrsa_insurance_demand_multipliers()}},
-\code{\link[=predict_hrsa_demographic_fte]{predict_hrsa_demographic_fte()}}
-}
 \concept{HRSA simulation}
 \concept{geography}
