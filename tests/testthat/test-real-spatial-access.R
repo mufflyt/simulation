@@ -51,3 +51,43 @@ test_that("load_provider_isochrones fails closed when the external artifact is a
   expect_error(load_provider_isochrones(artifacts_dir = tempfile()),
                "not found|Missing isochrone")
 })
+
+test_that("load_provider_isochrones unions polygon fragments for the same provider-band only", {
+  skip_if_not(has_sf(), "sf not installed")
+
+  poly <- function(cx, cy) {
+    sf::st_polygon(list(rbind(c(cx, cy), c(cx + 1, cy), c(cx + 1, cy + 1),
+                              c(cx, cy + 1), c(cx, cy))))
+  }
+  # P1/30min split into two adjacent (touching, non-overlapping) fragments --
+  # the shape a drive-time band crossing a coastline or state boundary
+  # produces from Valhalla. P2/30min and P1/60min are single fragments and
+  # must be left alone: unioning must never cross providers or bands.
+  df <- sf::st_sf(
+    coord_id   = c("P1", "P1", "P2", "P1"),
+    drive_time = c(30L, 30L, 30L, 60L),
+    geometry   = sf::st_sfc(poly(0, 0), poly(1, 0), poly(10, 10), poly(0, 0)),
+    crs = 4326
+  )
+
+  tmp_dir <- tempfile("iso_test_")
+  dir.create(tmp_dir)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+  saveRDS(df, file.path(tmp_dir, "provider_isochrones.rds"))
+
+  out <- load_provider_isochrones(artifacts_dir = tmp_dir, bands = c(30L, 60L),
+                                  verify_checksums = FALSE)
+
+  key <- paste(out$coord_id, out$drive_time)
+  expect_equal(sort(unique(key)), sort(c("P1 30", "P1 60", "P2 30")))
+  expect_equal(anyDuplicated(key), 0L)  # the two P1/30 fragments collapsed to one row
+
+  p1_30 <- out[out$coord_id == "P1" & out$drive_time == 30L, ]
+  expect_equal(nrow(p1_30), 1L)
+  p2_30 <- out[out$coord_id == "P2" & out$drive_time == 30L, ]
+  # Unioned area (two adjacent 1x1 fragments) should be roughly double a
+  # single untouched fragment's area -- proof this is a real union, not a
+  # silent pick-one-and-drop-the-other.
+  expect_equal(as.numeric(sf::st_area(p1_30)) / as.numeric(sf::st_area(p2_30)),
+              2, tolerance = 0.05)
+})
