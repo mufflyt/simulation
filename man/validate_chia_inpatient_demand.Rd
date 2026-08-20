@@ -31,7 +31,8 @@ Other chia inpatient surgery:
 \code{\link[=chia_casemix_con]{chia_casemix_con()}},
 \code{\link[=fit_inpatient_surgery_rate_model]{fit_inpatient_surgery_rate_model()}},
 \code{\link[=fixture_chia_d6]{fixture_chia_d6()}},
-\code{\link[=ma_female_population_by_year_age_band]{ma_female_population_by_year_age_band()}}
+\code{\link[=ma_female_population_by_year_age_band]{ma_female_population_by_year_age_band()}},
+\code{\link[=validate_chia_vs_medicare_ffs]{validate_chia_vs_medicare_ffs()}}
 }
 \concept{chia inpatient surgery}
 \concept{validation}
