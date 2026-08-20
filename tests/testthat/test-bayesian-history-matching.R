@@ -47,8 +47,18 @@ test_that("calibrate_bayesian_history_matching executes waves and projects 2025-
   )
 
   expect_type(res, "list")
-  expect_named(res, c("wave_history", "posterior_parameters", "projections", "projection_summary", "saved_files"))
+  expect_named(res, c("wave_history", "posterior_parameters", "projections", "projection_summary", "ess", "saved_files"))
   expect_s3_class(res$posterior_parameters, "tbl_df")
   expect_s3_class(res$projection_summary, "tbl_df")
+  expect_true(res$ess > 0)
   expect_true(all(res$projection_summary$year %in% 2025:2050))
+})
+
+test_that("build_urps_prior_specification constructs 10-parameter literature prior table", {
+  spec <- build_urps_prior_specification()
+
+  expect_s3_class(spec, "tbl_df")
+  expect_equal(nrow(spec), 10L)
+  expect_true("identifiability" %in% names(spec))
+  expect_true("nuisance_informative" %in% spec$identifiability)
 })
