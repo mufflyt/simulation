@@ -47,6 +47,7 @@ within non-implausible parameter space (NROY), and full-simulator 2025-2050 post
 }
 \seealso{
 Other Bayesian calibration:
+\code{\link[=build_urps_prior_specification]{build_urps_prior_specification()}},
 \code{\link[=compute_implausibility_metric]{compute_implausibility_metric()}},
 \code{\link[=fit_gp_emulator]{fit_gp_emulator()}},
 \code{\link[=generate_lhs_parameter_design]{generate_lhs_parameter_design()}},

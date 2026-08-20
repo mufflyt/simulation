@@ -19,6 +19,7 @@ Fit Gaussian Process (GP) Emulator for Simulator Output
 }
 \seealso{
 Other Bayesian calibration:
+\code{\link[=build_urps_prior_specification]{build_urps_prior_specification()}},
 \code{\link[=calibrate_bayesian_history_matching]{calibrate_bayesian_history_matching()}},
 \code{\link[=compute_implausibility_metric]{compute_implausibility_metric()}},
 \code{\link[=generate_lhs_parameter_design]{generate_lhs_parameter_design()}},
