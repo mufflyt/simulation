@@ -22,9 +22,11 @@ Other Bayesian calibration:
 \code{\link[=build_urps_prior_specification]{build_urps_prior_specification()}},
 \code{\link[=calibrate_bayesian_history_matching]{calibrate_bayesian_history_matching()}},
 \code{\link[=compute_implausibility_metric]{compute_implausibility_metric()}},
+\code{\link[=draw_urps_prior_parameters]{draw_urps_prior_parameters()}},
 \code{\link[=fit_gp_emulator]{fit_gp_emulator()}},
 \code{\link[=generate_lhs_parameter_design]{generate_lhs_parameter_design()}},
-\code{\link[=load_default_history_matching_inputs]{load_default_history_matching_inputs()}}
+\code{\link[=load_default_history_matching_inputs]{load_default_history_matching_inputs()}},
+\code{\link[=validate_urps_prior_specification]{validate_urps_prior_specification()}}
 }
 \concept{Bayesian calibration}
 \concept{calibration}

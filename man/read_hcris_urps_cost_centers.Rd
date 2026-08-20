@@ -26,6 +26,7 @@ numeric file in R.
 Other provider geography:
 \code{\link[=add_returning_providers]{add_returning_providers()}},
 \code{\link[=add_ultrasound_confirmation]{add_ultrasound_confirmation()}},
+\code{\link[=aggregate_hrr_workforce_balance]{aggregate_hrr_workforce_balance()}},
 \code{\link[=apply_provider_migration_matrix]{apply_provider_migration_matrix()}},
 \code{\link[=assign_entrant_geography]{assign_entrant_geography()}},
 \code{\link[=attach_hospital_capability_master]{attach_hospital_capability_master()}},
@@ -50,8 +51,10 @@ Other provider geography:
 \code{\link[=read_hcris_hospital_reports]{read_hcris_hospital_reports()}},
 \code{\link[=simulate_provider_relocation]{simulate_provider_relocation()}},
 \code{\link[=solve_provider_entry_equilibrium]{solve_provider_entry_equilibrium()}},
+\code{\link[=summarize_hrr_workforce_balance]{summarize_hrr_workforce_balance()}},
 \code{\link[=supply_per_capita]{supply_per_capita()}},
 \code{\link[=urps_required_hospital_capabilities]{urps_required_hospital_capabilities()}},
+\code{\link[=validate_hrr_reference]{validate_hrr_reference()}},
 \code{\link[=validate_migration_matrix]{validate_migration_matrix()}}
 }
 \concept{geography}
