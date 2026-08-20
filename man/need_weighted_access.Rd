@@ -23,12 +23,18 @@ geographies also carry disproportionate need. This weights the access ratio
 \seealso{
 Other demand:
 \code{\link[=accessible_need_vs_capacity]{accessible_need_vs_capacity()}},
+\code{\link[=apply_hrsa_insurance_demand_multipliers]{apply_hrsa_insurance_demand_multipliers()}},
+\code{\link[=apply_insurance_mix_demand_multiplier]{apply_insurance_mix_demand_multiplier()}},
 \code{\link[=demand_by_travel_band]{demand_by_travel_band()}},
+\code{\link[=draw_insurance_demand_multipliers]{draw_insurance_demand_multipliers()}},
 \code{\link[=generate_obstetric_lifecourse_cohort]{generate_obstetric_lifecourse_cohort()}},
 \code{\link[=geographic_demand_summary]{geographic_demand_summary()}},
+\code{\link[=insurance_demand_multiplier_spec]{insurance_demand_multiplier_spec()}},
 \code{\link[=isochrone_demand_from_tracts]{isochrone_demand_from_tracts()}},
+\code{\link[=normalize_urps_insurance]{normalize_urps_insurance()}},
 \code{\link[=predict_pelvic_floor_disease_trajectory]{predict_pelvic_floor_disease_trajectory()}},
-\code{\link[=tract_need_from_population]{tract_need_from_population()}}
+\code{\link[=tract_need_from_population]{tract_need_from_population()}},
+\code{\link[=validate_insurance_demand_multipliers]{validate_insurance_demand_multipliers()}}
 }
 \concept{demand}
 \concept{geography}
