@@ -13,13 +13,20 @@ build_chia_hdd_discharge_physician_view(con)
 \code{con}, invisibly.
 }
 \description{
-Melts the 15 \code{OperatingPhysician*} columns on
+Melts the 15 \verb{OperatingPhysician*} columns on
 \code{chia_casemix.v_hdd_discharge_all_years} into one row per (discharge,
-physician) pair via \code{UNION ALL} (not \code{UNPIVOT} -- DuckDB v1.5.2 loses an
+physician) pair via \verb{UNION ALL} (not \code{UNPIVOT} -- DuckDB v1.5.2 loses an
 UNPIVOT-based view's column list on catalog reload; confirmed empirically).
 Values are read as raw BORIM license numbers, not decrypted via a FIPA
 crosswalk: verified empirically that the 2015-2018 files (unlike the
 2004-2014 era) already carry plain license numbers.
+}
+\seealso{
+Other chia physician attribution:
+\code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
+\code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_discharge_procedure_views()}},
+\code{\link[=build_chia_physician_attribution]{build_chia_physician_attribution()}},
+\code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}}
 }
 \concept{chia physician attribution}
 \concept{supply}

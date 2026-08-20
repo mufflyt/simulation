@@ -4,7 +4,11 @@
 \alias{build_chia_hdd_discharge_procedure_views}
 \title{Build the procedure-classification views (raw + specialty-share refined)}
 \usage{
-build_chia_hdd_discharge_procedure_views(con, min_n = 20, surgical_share_threshold = 50)
+build_chia_hdd_discharge_procedure_views(
+  con,
+  min_n = 20,
+  surgical_share_threshold = 50
+)
 }
 \arguments{
 \item{con}{Open, writable DuckDB connection.}
@@ -41,6 +45,13 @@ genuinely-surgical newborn-adjacent codes (e.g. circumcision) if left in.
 Requires \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}} to have been run
 first (joins against \code{chia_casemix.v_hdd_discharge_physician}) and a
 \code{chia_provider.borim_stdrel_npi_straight_from_cd} table to exist.
+}
+\seealso{
+Other chia physician attribution:
+\code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
+\code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
+\code{\link[=build_chia_physician_attribution]{build_chia_physician_attribution()}},
+\code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}}
 }
 \concept{chia physician attribution}
 \concept{supply}
