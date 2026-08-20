@@ -1,37 +1,72 @@
-test_that("medicaid_medicare_fee_index_table returns state fee ratios", {
-  tbl <- medicaid_medicare_fee_index_table()
-  expect_s3_class(tbl, "tbl_df")
-  expect_true(all(c("state_abbr", "medicaid_fee_ratio", "fee_tier") %in% names(tbl)))
-  expect_true(nrow(tbl) > 0)
+test_that("academic coefficient reproduces OR 3.42", {
+  coef_spec <- medicaid_acceptance_coefficients()
+
+  expect_equal(
+    exp(coef_spec$academic_setting),
+    3.42,
+    tolerance = 1e-12
+  )
 })
 
-test_that("lookup_state_medicaid_fee_ratio resolves state ratios and default", {
-  ratios <- lookup_state_medicaid_fee_ratio(c("AK", "NY", "XX"))
-  expect_equal(ratios, c(1.25, 0.48, 0.72))
+test_that("HOPD coefficient reproduces OR 2.15", {
+  coef_spec <- medicaid_acceptance_coefficients()
+
+  expect_equal(
+    exp(coef_spec$hospital_outpatient),
+    2.15,
+    tolerance = 1e-12
+  )
 })
 
-test_that("predict_medicaid_acceptance matches Acosta 2026 empirical benchmarks", {
-  # Private office in average fee state (0.72) -> ~24.0%
-  p_priv <- predict_medicaid_acceptance(academic_setting = FALSE, hospital_outpatient = FALSE, medicaid_fee_ratio = 0.72)
-  expect_true(p_priv > 0.20 && p_priv < 0.30)
+test_that("fee ratio increase of 0.20 reproduces OR 1.85", {
+  coef_spec <- medicaid_acceptance_coefficients()
 
-  # Academic medical center alone -> ~52.0%
-  p_acad <- predict_medicaid_acceptance(academic_setting = TRUE, hospital_outpatient = FALSE, medicaid_fee_ratio = 0.72)
-  expect_true(p_acad > 0.45 && p_acad < 0.60)
+  implied_or <- exp(coef_spec$medicaid_fee_ratio * 0.20)
 
-  # Academic hospital outpatient department (HOD) -> ~70.1%
-  p_acad_hod <- predict_medicaid_acceptance(academic_setting = TRUE, hospital_outpatient = TRUE, medicaid_fee_ratio = 0.72)
-  expect_true(p_acad_hod > 0.65 && p_acad_hod < 0.80)
+  expect_equal(
+    implied_or,
+    1.85,
+    tolerance = 1e-12
+  )
 
-  # Academic setting increases acceptance relative to private office
-  expect_true(p_acad > p_priv)
+  expect_equal(
+    coef_spec$medicaid_fee_ratio,
+    log(1.85) / 0.20,
+    tolerance = 1e-12
+  )
 })
 
-test_that("filter_supply_by_insurance scales Medicaid supply FTEs", {
-  supply <- tibble::tibble(provider_id = "P1", supply = 1.0, academic_setting = TRUE)
-  res_comm <- filter_supply_by_insurance(supply, insurance = "Commercial")
-  expect_equal(res_comm$supply, 1.0)
+test_that("2024 KFF state fee ratios are reproduced", {
+  ratio_vector <- lookup_state_medicaid_fee_ratio(c("AK", "NY", "NC", "CA", "CO"))
 
-  res_med <- filter_supply_by_insurance(supply, insurance = "Medicaid", probabilistic = TRUE)
-  expect_true(res_med$supply < 1.0 && res_med$supply > 0.5)
+  expect_equal(
+    ratio_vector,
+    c(1.30, 0.76, 0.82, 0.67, 0.83)
+  )
+})
+
+test_that("expected Medicaid FTE cannot exceed clinical FTE", {
+  fixture_tbl <- tibble::tibble(
+    provider_id = c("A", "B"),
+    supply = c(1.0, 0.8),
+    academic_setting = c(TRUE, FALSE)
+  )
+
+  access_tbl <- filter_supply_by_insurance(
+    provider_supply = fixture_tbl,
+    insurance = "Medicaid",
+    mode = "expected_capacity"
+  )
+
+  expect_true(
+    all(access_tbl$insurance_accessible_fte <= access_tbl$clinical_fte)
+  )
+})
+
+test_that("attach_state_medicaid_fee_policy attaches state ratios", {
+  prov <- tibble::tibble(provider_id = "P1", state_abbr = "CO", supply = 1.0)
+  attached <- attach_state_medicaid_fee_policy(prov, year = 2024L)
+
+  expect_s3_class(attached, "tbl_df")
+  expect_equal(attached$medicaid_fee_ratio[1], 0.83)
 })

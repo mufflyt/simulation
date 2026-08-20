@@ -2,24 +2,44 @@
 % Please edit documentation in R/supply-medicaid_acceptance.R
 \name{lookup_state_medicaid_fee_ratio}
 \alias{lookup_state_medicaid_fee_ratio}
-\title{Lookup State Medicaid-to-Medicare Fee Ratio}
+\title{Look up a state Medicaid-to-Medicare fee ratio}
 \usage{
-lookup_state_medicaid_fee_ratio(state_abbr, default_ratio = 0.72)
+lookup_state_medicaid_fee_ratio(
+  state_abbr,
+  year = 2024L,
+  fee_component = "all_services",
+  fee_ratio_tbl = medicaid_medicare_fee_index_table(),
+  policy_override_tbl = NULL,
+  missing_action = base::c("national", "error")
+)
 }
 \arguments{
-\item{state_abbr}{Character vector of 2-letter state postal abbreviations.}
+\item{state_abbr}{State postal abbreviation.}
 
-\item{default_ratio}{Default ratio if state is unlisted or NA (default 0.72).}
+\item{year}{Policy year.}
+
+\item{fee_component}{One of \code{all_services}, \code{obstetric_care},
+or \code{other_services}.}
+
+\item{fee_ratio_tbl}{State-year fee table.}
+
+\item{policy_override_tbl}{Optional scenario table with
+\code{state_abbr}, \code{year}, and \code{medicaid_fee_ratio}.}
+
+\item{missing_action}{Either \code{national} or \code{error}.}
 }
 \value{
-Numeric vector of fee ratios.
+Numeric vector of Medicaid-to-Medicare fee ratios.
 }
 \description{
-Lookup State Medicaid-to-Medicare Fee Ratio
+Look up a state Medicaid-to-Medicare fee ratio
 }
 \seealso{
 Other supply:
+\code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
+\code{\link[=medicaid_acceptance_coefficients]{medicaid_acceptance_coefficients()}},
 \code{\link[=medicaid_medicare_fee_index_table]{medicaid_medicare_fee_index_table()}},
 \code{\link[=predict_medicaid_acceptance]{predict_medicaid_acceptance()}}
 }
+\concept{access}
 \concept{supply}
