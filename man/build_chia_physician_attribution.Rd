@@ -22,5 +22,12 @@ Orchestrates \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hd
 \code{chia_provider.borim_stdrel_npi_straight_from_cd} to already exist on
 \code{con}.
 }
+\seealso{
+Other chia physician attribution:
+\code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
+\code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
+\code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_discharge_procedure_views()}},
+\code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}}
+}
 \concept{chia physician attribution}
 \concept{supply}

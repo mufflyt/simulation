@@ -17,5 +17,12 @@ Requires \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_di
 \code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_discharge_procedure_views()}}, and
 \code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}} to have been run first.
 }
+\seealso{
+Other chia physician attribution:
+\code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
+\code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
+\code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_discharge_procedure_views()}},
+\code{\link[=build_chia_physician_attribution]{build_chia_physician_attribution()}}
+}
 \concept{chia physician attribution}
 \concept{supply}

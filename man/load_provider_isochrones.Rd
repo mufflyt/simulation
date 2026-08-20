@@ -39,6 +39,7 @@ implementation): a single consolidated \code{provider_isochrones.rds} (Option
 A), else per-band \verb{isochrones_\{band\}min_consolidated.rds} files via
 \code{\link[=ISOCHRONE_BAND_FILE]{ISOCHRONE_BAND_FILE()}} (Option B). Both paths now share the same
 post-load discipline:
+
 \enumerate{
 \item When \code{verify_checksums} is \code{TRUE} (default), \code{\link[=assert_canonical_isochrones]{assert_canonical_isochrones()}}
 checks \code{artifacts_dir} against the pinned run registry and SHA-256

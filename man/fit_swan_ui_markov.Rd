@@ -23,7 +23,7 @@ parity, hysterectomy, and hormone therapy.
 \details{
 This is a first-order, time-inhomogeneous Markov model:
 
-P(S\link{t + 1} | S\link{t}, X\link{t})
+P(S[t + 1] | S[t], X[t])
 
 where S has five states: none, slight, moderate, severe, and very
 severe.
