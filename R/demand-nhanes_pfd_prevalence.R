@@ -20,9 +20,14 @@
 #   Nygaard et al. (2008) JAMA 300(11):1311-1316 (NHANES UI prevalence).
 #   Wu et al. (2014) Am J Obstet Gynecol (pelvic floor disorders in US women).
 #   NCHS (2024) NHANES 2021-2023 Public Use Data.
-
-library(dplyr)
-library(survey)
+#
+# NOTE: this file uses dplyr:: and survey:: fully namespaced throughout; it must
+# NOT call library() at file scope. Those calls run at package load time (a
+# global-state side effect the source-safety gate forbids) and hard-fail the
+# installed package when survey -- a Suggests, not an Import -- is absent, which
+# is what broke R CMD check ("Error in library(survey): there is no package
+# called 'survey'"). survey's functions are reached via survey:: with a
+# requireNamespace() check at the call sites that need it.
 
 # ---- Load and prepare NHANES data -------------------------------------------
 
@@ -83,6 +88,10 @@ load_nhanes_pfd <- function(path = "data-raw/nhanes/nhanes_pfd_pooled.rds") {
 #'   `prevalence` (weighted proportion with UI), `se` (standard error).
 #' @export
 nhanes_ui_prevalence_by_stratum <- function(nhanes, ui_type = "any") {
+  if (!requireNamespace("survey", quietly = TRUE))
+    stop("nhanes_ui_prevalence_by_stratum() needs the 'survey' package ",
+         "(a Suggests) for the complex-sample design; install it to run this.",
+         call. = FALSE)
   outcome_col <- switch(ui_type,
     "any"     = "ui_any",
     "stress"  = "ui_stress",
