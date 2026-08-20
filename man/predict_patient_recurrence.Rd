@@ -27,7 +27,8 @@ unobserved anatomic or symptomatic recurrence.
 }
 \seealso{
 Other retreatment survival:
-\code{\link[=fit_recurrence_survival_models]{fit_recurrence_survival_models()}}
+\code{\link[=fit_recurrence_survival_models]{fit_recurrence_survival_models()}},
+\code{\link[=load_default_retreatment_model]{load_default_retreatment_model()}}
 }
 \concept{demand}
 \concept{retreatment survival}
