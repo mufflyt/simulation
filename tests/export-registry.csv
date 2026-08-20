@@ -99,6 +99,7 @@
 "first_entry_rate_status","api"
 "fit_fellowship_conversion","api"
 "fit_prevalence_consistent_psa","api"
+"fit_swan_ui_markov","api"
 "generate_obstetric_lifecourse_cohort","api"
 "hazard_shrinkage_summary","api"
 "hwsm_retirement_hazard_table","api"
