@@ -31,11 +31,23 @@ Other provider geography:
 \code{\link[=apply_provider_migration_matrix]{apply_provider_migration_matrix()}},
 \code{\link[=assign_entrant_geography]{assign_entrant_geography()}},
 \code{\link[=benchmark_density_shortfall]{benchmark_density_shortfall()}},
+\code{\link[=build_provider_location_choice_sets]{build_provider_location_choice_sets()}},
+\code{\link[=build_provider_location_events]{build_provider_location_events()}},
+\code{\link[=calibrate_provider_migration_hazard]{calibrate_provider_migration_hazard()}},
+\code{\link[=feasible_provider_location_set]{feasible_provider_location_set()}},
+\code{\link[=fit_provider_location_choice_model]{fit_provider_location_choice_model()}},
+\code{\link[=flag_urps_hospital_feasibility]{flag_urps_hospital_feasibility()}},
 \code{\link[=historical_placement_shares]{historical_placement_shares()}},
 \code{\link[=migration_hazard]{migration_hazard()}},
 \code{\link[=migration_matrix_from_moves]{migration_matrix_from_moves()}},
 \code{\link[=opportunity_placement_shares]{opportunity_placement_shares()}},
-\code{\link[=supply_per_capita]{supply_per_capita()}}
+\code{\link[=predict_provider_location_probabilities]{predict_provider_location_probabilities()}},
+\code{\link[=prepare_nber_physician_year_locations]{prepare_nber_physician_year_locations()}},
+\code{\link[=provider_location_choice_variables]{provider_location_choice_variables()}},
+\code{\link[=simulate_provider_relocation]{simulate_provider_relocation()}},
+\code{\link[=solve_provider_entry_equilibrium]{solve_provider_entry_equilibrium()}},
+\code{\link[=supply_per_capita]{supply_per_capita()}},
+\code{\link[=urps_required_hospital_capabilities]{urps_required_hospital_capabilities()}}
 }
 \concept{geography}
 \concept{provider geography}
