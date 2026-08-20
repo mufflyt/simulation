@@ -60,15 +60,29 @@ URPS_SETTING_NAMES <- c("office", "telehealth", "hospital_outpatient",
                          "asc", "hospital_inpatient", "postacute")
 
 
-#' Default care-delivery setting mix for each URPS service
+#' Uncalibrated (pre-PSPS-freeze) care-delivery setting mix for each URPS service
 #'
 #' A tibble with columns `service`, `setting`, `share`. Each service's shares
-#' sum to 1. Illustrative until replaced by PSPS place-of-service data.
+#' sum to 1. This is the illustrative baseline BEFORE the frozen CMS PSPS 2024
+#' calibration ([URPS_PSPS_2024_SETTING_MIX]) replaces `sling_procedure`,
+#' `prolapse_procedure`, and `urodynamics`. [URPS_DEFAULT_SETTING_MIX] is the
+#' one downstream code should use -- it is this table with those three
+#' services swapped for the audited values (see
+#' [calibrate_setting_mix_from_psps()]).
+#'
+#' KNOWN, HISTORICAL BUG PRESERVED HERE ON PURPOSE: the `sling_procedure` and
+#' `prolapse_procedure` rows below mislabel their fractions -- the small
+#' (~1.4-1.8%) fraction is tagged `office` (clinically implausible for a major
+#' operative procedure) and the ~34-44% fraction is tagged `hospital_inpatient`
+#' when it is actually the hospital-OUTPATIENT facility share. This is exactly
+#' what [URPS_PSPS_2024_SETTING_MIX] corrects. Left as-is here rather than
+#' fixed in place, because this constant's whole purpose is to be the
+#' PRE-calibration record.
 #'
 #' @family urps settings
 #' @concept supply
 #' @export
-URPS_DEFAULT_SETTING_MIX <- tibble::tribble(
+URPS_DEFAULT_SETTING_MIX_UNCALIBRATED <- tibble::tribble(
   ~service,                ~setting,               ~share,
   # Office/facility split from CMS MUP_PHY 2024 (PSPS geo-service file).
   # Telehealth sub-split: illustrative AMA 2022 ratio scaled to PSPS office share.
@@ -245,6 +259,90 @@ validate_setting_mix <- function(mix, tol = 1e-8) {
   }
   invisible(mix)
 }
+
+# ---- CMS PSPS 2024 setting calibration (frozen) -----------------------------
+#
+# Fixes the office/hospital_inpatient mislabeling in
+# URPS_DEFAULT_SETTING_MIX_UNCALIBRATED's sling_procedure and
+# prolapse_procedure rows (see that constant's doc comment). Frozen
+# separately, rather than edited in place, so the audited replacement values
+# and their provenance are explicit and reviewable on their own, and so a
+# future re-run of load_psps_pos_shares() has a clear record of what it is
+# meant to reproduce.
+
+#' Audited 2024 setting mix for key URPS services (CMS PSPS)
+#'
+#' Replaces the mislabeled `sling_procedure`/`prolapse_procedure` rows in
+#' [URPS_DEFAULT_SETTING_MIX_UNCALIBRATED] (small fraction was tagged
+#' `office`, ~34-44% fraction was tagged `hospital_inpatient` when it is
+#' hospital-OUTPATIENT) and re-confirms `urodynamics`, which was already
+#' correctly labeled.
+#'
+#' @family urps settings
+#' @concept supply
+#' @export
+URPS_PSPS_2024_SETTING_MIX <- tibble::tribble(
+  ~service,             ~setting,              ~share,
+  "sling_procedure",    "hospital_inpatient",  0.0178,
+  "sling_procedure",    "hospital_outpatient", 0.3442,
+  "sling_procedure",    "asc",                 0.6380,
+
+  "prolapse_procedure", "hospital_inpatient",  0.0137,
+  "prolapse_procedure", "hospital_outpatient", 0.4453,
+  "prolapse_procedure", "asc",                 0.5410,
+
+  "urodynamics",        "office",              0.9137,
+  "urodynamics",        "hospital_outpatient", 0.0636,
+  "urodynamics",        "asc",                 0.0227
+)
+
+#' Apply the audited CMS PSPS 2024 setting calibration
+#'
+#' Replaces only services represented in the frozen PSPS calibration. All
+#' other services retain their existing setting distribution.
+#'
+#' @param baseline_mix Existing setting-mix table.
+#' @param psps_mix Frozen audited PSPS calibration.
+#' @return Validated setting-mix tibble.
+#' @family urps settings
+#' @concept supply
+#' @export
+calibrate_setting_mix_from_psps <- function(baseline_mix = URPS_DEFAULT_SETTING_MIX_UNCALIBRATED,
+                                            psps_mix = URPS_PSPS_2024_SETTING_MIX) {
+  validate_setting_mix(psps_mix)
+
+  calibrated_services <- unique(psps_mix$service)
+  retained_mix <- dplyr::filter(baseline_mix, !.data$service %in% calibrated_services)
+  calibrated_mix <- dplyr::arrange(
+    dplyr::bind_rows(retained_mix, psps_mix),
+    .data$service, .data$setting
+  )
+
+  validate_setting_mix(calibrated_mix)
+  calibrated_mix
+}
+
+# URPS_SETTING_SCENARIOS' asc_migration_30pct/combined_shift scenarios shift
+# volume `from = "hospital_inpatient"` for sling_procedure/prolapse_procedure.
+# Fixing the mislabeling above means that `from` now correctly targets the
+# small (~1.4-1.8%) truly-inpatient share, not the ~34-44% hospital-based
+# share those scenarios were actually modeling under the old, wrong label.
+# That is a real, deliberate change in what those two scenarios compute --
+# not touched here, since redesigning the scenarios is a separate decision
+# from fixing the mislabeled data they read from.
+
+#' Default care-delivery setting mix for each URPS service
+#'
+#' [URPS_DEFAULT_SETTING_MIX_UNCALIBRATED] with `sling_procedure`,
+#' `prolapse_procedure`, and `urodynamics` replaced by the frozen, audited
+#' [URPS_PSPS_2024_SETTING_MIX] values (see
+#' [calibrate_setting_mix_from_psps()]). A tibble with columns `service`,
+#' `setting`, `share`; each service's shares sum to 1.
+#'
+#' @family urps settings
+#' @concept supply
+#' @export
+URPS_DEFAULT_SETTING_MIX <- calibrate_setting_mix_from_psps()
 
 # ---- Layer 1: attach setting to volumes ------------------------------------
 

@@ -41,16 +41,48 @@ load_tract_demand <- function(mode = resolve_reproducibility_mode()) {
 #' directory (these are large Valhalla-produced artifacts, not vendored). Fails
 #' closed if the directory or files are absent. Requires `sf`.
 #'
+#' Two loading paths, tried in order (unchanged from the original
+#' implementation): a single consolidated `provider_isochrones.rds` (Option
+#' A), else per-band `isochrones_{band}min_consolidated.rds` files via
+#' [ISOCHRONE_BAND_FILE()] (Option B). Both paths now share the same
+#' post-load discipline:
+#'
+#' \enumerate{
+#'   \item When `verify_checksums` is `TRUE` (default), [assert_canonical_isochrones()]
+#'     checks `artifacts_dir` against the pinned run registry and SHA-256
+#'     checksums before anything is read -- fails closed (in strict
+#'     reproducibility mode) rather than silently loading an unverified or
+#'     stale artifact set.
+#'   \item Multiple polygon fragments for the SAME `coord_id` x `drive_time`
+#'     are geometrically unioned (`sf::st_union()`). Different providers or
+#'     different bands are never combined -- only fragments of what is
+#'     already the same provider-band. This is a real fix, not cosmetic: a
+#'     provider isochrone split across multiple polygon parts (common
+#'     Valhalla output for a band that crosses a coastline or state boundary)
+#'     previously left duplicate `coord_id` x `drive_time` rows in the
+#'     output, double-counting that provider in any point-in-polygon overlay
+#'     ([build_access_membership()]) that assigns a tract to every
+#'     containing row rather than every containing provider-band.
+#' }
+#'
 #' @param artifacts_dir Directory holding the consolidated isochrone rds files.
-#'   Defaults to the `ISOCHRONES_ARTIFACTS_DIR` env var.
-#' @param bands Drive-time bands to load (minutes).
+#'   Defaults to [isochrone_source_dir()], falling back to the
+#'   `ISOCHRONES_ARTIFACTS_DIR` env var if that directory doesn't exist.
+#' @param bands Drive-time bands to load (minutes). Defaults to
+#'   [ISOCHRONE_CANONICAL_BANDS].
+#' @param verify_checksums When `TRUE` (default), verify the canonical run
+#'   registry and SHA-256 checksums via [assert_canonical_isochrones()]
+#'   before loading. `FALSE` skips this entirely (not just the checksum
+#'   sub-check) -- use it for a directory that was never registered as a
+#'   canonical run, e.g. the `ISOCHRONES_ARTIFACTS_DIR` ad hoc fallback.
 #' @return An `sf` object with `coord_id`, `drive_time` (band), and polygon
-#'   geometry (rows stacked across bands).
+#'   geometry (rows stacked across bands, unique on `coord_id` x `drive_time`).
 #' @family spatial access data
 #' @concept geography
 #' @export
 load_provider_isochrones <- function(artifacts_dir = isochrone_source_dir(),
-                                     bands = c(30L, 60L, 120L, 180L)) {
+                                     bands = ISOCHRONE_CANONICAL_BANDS,
+                                     verify_checksums = TRUE) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("load_provider_isochrones() needs the 'sf' package (Suggests).", call. = FALSE)
   }
@@ -61,6 +93,16 @@ load_provider_isochrones <- function(artifacts_dir = isochrone_source_dir(),
     stop(sprintf(paste0("Provider isochrone artifacts not found (dir = '%s'). These are large ",
                         "external files; set ISOCHRONES_ARTIFACTS_DIR or config/paths.local.yml."), artifacts_dir),
          call. = FALSE)
+  }
+
+  # verify_checksums = FALSE skips verification entirely (registry AND
+  # checksums), not just the checksum sub-step: assert_canonical_isochrones()
+  # checks the run registry unconditionally, which would otherwise warn/error
+  # on every directory that was never registered as a canonical run --
+  # including the ISOCHRONES_ARTIFACTS_DIR ad hoc fallback this function has
+  # always supported.
+  if (isTRUE(verify_checksums)) {
+    assert_canonical_isochrones(dir = artifacts_dir, verify_checksums = TRUE)
   }
 
   # Option A: Single consolidated file (provider_isochrones.rds)
@@ -74,20 +116,39 @@ load_provider_isochrones <- function(artifacts_dir = isochrone_source_dir(),
     df$coord_id <- as.character(cid)
 
     keep <- !is.na(df$drive_time) & df$drive_time %in% bands
-    return(df[keep, , drop = FALSE])
+    combined_sf <- df[keep, , drop = FALSE]
+  } else {
+    # Option B: Multi-file band structure (isochrones_{band}min_consolidated.rds)
+    pieces <- lapply(bands, function(b) {
+      f <- file.path(artifacts_dir, ISOCHRONE_BAND_FILE(b))
+      if (!file.exists(f)) {
+        stop(sprintf("Missing isochrone artifact for %d-min band: %s", b, f), call. = FALSE)
+      }
+      g <- readRDS(f)
+      g$drive_time <- as.integer(b)
+      g$coord_id <- as.character(if ("coord_id" %in% names(g)) g$coord_id else g$npi)
+      g
+    })
+    combined_sf <- do.call(rbind, pieces)
   }
 
-  # Option B: Multi-file band structure (isochrones_{band}min_consolidated.rds)
-  pieces <- lapply(bands, function(b) {
-    f <- file.path(artifacts_dir, sprintf("isochrones_%dmin_consolidated.rds", b))
-    if (!file.exists(f)) {
-      stop(sprintf("Missing isochrone artifact for %d-min band: %s", b, f), call. = FALSE)
-    }
-    g <- readRDS(f)
-    g$drive_time <- b
-    g
-  })
-  do.call(rbind, pieces)
+  # Union multiple polygon fragments for the SAME provider-band (never across
+  # different providers or bands). Keeps whatever non-geometry columns the
+  # source artifact carries -- takes the first fragment's attribute row and
+  # replaces only its geometry with the union of all fragments in the group.
+  dup_key <- paste(combined_sf$coord_id, combined_sf$drive_time, sep = "\r")
+  dup <- duplicated(dup_key) | duplicated(dup_key, fromLast = TRUE)
+  if (any(dup)) {
+    dup_groups <- split(which(dup), dup_key[dup])
+    unioned_rows <- lapply(dup_groups, function(idx) {
+      row1 <- combined_sf[idx[1L], , drop = FALSE]
+      sf::st_geometry(row1) <- sf::st_union(sf::st_geometry(combined_sf[idx, , drop = FALSE]))
+      row1
+    })
+    combined_sf <- rbind(combined_sf[!dup, , drop = FALSE], do.call(rbind, unioned_rows))
+  }
+
+  combined_sf
 }
 
 #' Build the E2SFCA membership table from isochrone polygons + tract points

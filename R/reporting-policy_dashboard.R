@@ -161,6 +161,47 @@ run_policy_dashboard <- function(launch_browser = TRUE, port = 3838) {
             shiny::h4("Longitudinal Provider Cox PH Survival Probabilities"),
             shiny::plotOutput("survival_plot", height = "380px"),
             shiny::helpText("Provider career exit survival probability over 30 years of clinical experience.")
+          ),
+          shiny::tabPanel("Methods & References",
+            shiny::h3("Microsimulation Methodology & Calibration Tiers"),
+            shiny::tags$ul(
+              shiny::tags$li(shiny::strong("Task 1 - Incident Care Entry Estimand (q = 0.25):"),
+                " Annual hazard of newly entering FPMRS care estimated with a 24-month washout on MEPS & Medicare SAF claims conditional on eligible disease stock (INCIDENT_ENTRY_ESTIMAND.md)."),
+              shiny::tags$li(shiny::strong("Task 2 - Multi-State Markov Transitions:"),
+                " Sandvik severity scoring (0-24) across SWAN Visits 5-10 conditioned on BMI, parity, age, and hysterectomy status."),
+              shiny::tags$li(shiny::strong("Task 3 - 2024 CMS PSPS Setting Calibration:"),
+                " Procedural setting mix calibrated to 98.22% outpatient for slings, 98.63% outpatient for prolapse, and 91.37% office for urodynamics (CMS PSPS MUP_PHY_R26_P05_V10_D24_Geo.csv)."),
+              shiny::tags$li(shiny::strong("Task 4 - Isochrone Road-Network Routing:"),
+                " 27,525+ Valhalla road-network drive-time polygons across 30, 60, 120, and 180 min bands."),
+              shiny::tags$li(shiny::strong("Tool 3 - Provider Survival Hazard Engine:"),
+                " Cox Proportional Hazards and Weibull AFT models fitted on longitudinal NPPES roster snapshots (2007-2026).")
+            ),
+            shiny::hr(),
+            shiny::h4("Academic Literature References"),
+            shiny::tags$ol(
+              shiny::tags$li("Dall TM, et al. (2018-2024). Health Workforce Microsimulation Model Methodology. IHS Markit / HRSA Technical Reports."),
+              shiny::tags$li("Sandvik H, et al. (2000). Validation of a severity index in female urinary incontinence. Neurourology and Urodynamics, 19(2), 137-145."),
+              shiny::tags$li("Centers for Medicare & Medicaid Services (CMS). (2024). Medicare Physician Supplier Procedure Summary (PSPS) Data.")
+            )
+          ),
+          shiny::tabPanel("Ecosystem & Sibling Apps",
+            shiny::h3("Simulation Repository Ecosystem Apps"),
+            shiny::p("Access sibling Shiny applications across our workforce and spatial modeling suite:"),
+            shiny::tags$div(class = "well",
+              shiny::h4("1. Urogynecology Workforce Replacement Explorer (/cliff)"),
+              shiny::p("Visualizes provider retirement demographic pyramids, replacement headcount cliffs, and board certification series."),
+              shiny::a("Launch Hosted Cliff App (shinyapps.io)", href = "https://tyler-muffly.shinyapps.io/urps-workforce-explorer/", target = "_blank", class = "btn btn-primary btn-sm")
+            ),
+            shiny::tags$div(class = "well",
+              shiny::h4("2. Valhalla Isochrone Spatial Catchment Viewer (/isochrones)"),
+              shiny::p("Renders 27,525+ road-network drive-time catchment maps (30, 60, 120, 180 min) around 1,306 provider clinics."),
+              shiny::p(shiny::em("Local repository path: /Users/tmuffly/isochrones"))
+            ),
+            shiny::tags$div(class = "well",
+              shiny::h4("3. 2SFCA Spatial Access Explorer (/twostep)"),
+              shiny::p("Computes 2-Step Floating Catchment Area (2SFCA & E2SFCA) spatial accessibility scores across 73,000 U.S. Census tracts."),
+              shiny::p(shiny::em("Local repository path: /Users/tmuffly/twostep"))
+            )
           )
         )
       )

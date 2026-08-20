@@ -6,23 +6,56 @@
 \usage{
 load_provider_isochrones(
   artifacts_dir = isochrone_source_dir(),
-  bands = c(30L, 60L, 120L, 180L)
+  bands = ISOCHRONE_CANONICAL_BANDS,
+  verify_checksums = TRUE
 )
 }
 \arguments{
 \item{artifacts_dir}{Directory holding the consolidated isochrone rds files.
-Defaults to the \code{ISOCHRONES_ARTIFACTS_DIR} env var.}
+Defaults to \code{\link[=isochrone_source_dir]{isochrone_source_dir()}}, falling back to the
+\code{ISOCHRONES_ARTIFACTS_DIR} env var if that directory doesn't exist.}
 
-\item{bands}{Drive-time bands to load (minutes).}
+\item{bands}{Drive-time bands to load (minutes). Defaults to
+\link{ISOCHRONE_CANONICAL_BANDS}.}
+
+\item{verify_checksums}{When \code{TRUE} (default), verify the canonical run
+registry and SHA-256 checksums via \code{\link[=assert_canonical_isochrones]{assert_canonical_isochrones()}}
+before loading. \code{FALSE} skips this entirely (not just the checksum
+sub-check) -- use it for a directory that was never registered as a
+canonical run, e.g. the \code{ISOCHRONES_ARTIFACTS_DIR} ad hoc fallback.}
 }
 \value{
 An \code{sf} object with \code{coord_id}, \code{drive_time} (band), and polygon
-geometry (rows stacked across bands).
+geometry (rows stacked across bands, unique on \code{coord_id} x \code{drive_time}).
 }
 \description{
 Reads \verb{isochrones_\{band\}min_consolidated.rds} polygon sets from a local
 directory (these are large Valhalla-produced artifacts, not vendored). Fails
 closed if the directory or files are absent. Requires \code{sf}.
+}
+\details{
+Two loading paths, tried in order (unchanged from the original
+implementation): a single consolidated \code{provider_isochrones.rds} (Option
+A), else per-band \verb{isochrones_\{band\}min_consolidated.rds} files via
+\code{\link[=ISOCHRONE_BAND_FILE]{ISOCHRONE_BAND_FILE()}} (Option B). Both paths now share the same
+post-load discipline:
+\enumerate{
+\item When \code{verify_checksums} is \code{TRUE} (default), \code{\link[=assert_canonical_isochrones]{assert_canonical_isochrones()}}
+checks \code{artifacts_dir} against the pinned run registry and SHA-256
+checksums before anything is read -- fails closed (in strict
+reproducibility mode) rather than silently loading an unverified or
+stale artifact set.
+\item Multiple polygon fragments for the SAME \code{coord_id} x \code{drive_time}
+are geometrically unioned (\code{sf::st_union()}). Different providers or
+different bands are never combined -- only fragments of what is
+already the same provider-band. This is a real fix, not cosmetic: a
+provider isochrone split across multiple polygon parts (common
+Valhalla output for a band that crosses a coastline or state boundary)
+previously left duplicate \code{coord_id} x \code{drive_time} rows in the
+output, double-counting that provider in any point-in-polygon overlay
+(\code{\link[=build_access_membership]{build_access_membership()}}) that assigns a tract to every
+containing row rather than every containing provider-band.
+}
 }
 \seealso{
 Other spatial access data:
