@@ -265,7 +265,7 @@ calibrate_bayesian_history_matching <- function(
     }
   }
 
-  # Step 2: Joint Posterior Importance Sampling from NROY Region
+  # Step 2: Joint Bayesian Posterior Importance Sampling from NROY Region
   base::message("\n--- Phase 2: Joint Bayesian Posterior Importance Sampling ---")
   final_wave <- wave_results[[n_waves]]
   final_nroy_design <- final_wave$design[final_wave$nroy_mask, ]
@@ -276,10 +276,35 @@ calibrate_bayesian_history_matching <- function(
     final_nroy_design <- final_wave$design[top_indices, ]
   }
 
+  # Calculate informative prior log-densities if prior columns present
+  compute_prior_log_density <- function(design_df, spec_df) {
+    log_p <- base::numeric(base::nrow(design_df))
+    if (!"prior_type" %in% names(spec_df)) return(log_p)
+
+    for (r in base::seq_len(base::nrow(spec_df))) {
+      p_row <- spec_df[r, ]
+      p_name <- p_row$parameter
+      p_vals <- design_df[[p_name]]
+      p_type <- if (base::is.na(p_row$prior_type)) "uniform" else p_row$prior_type
+
+      if (p_type == "normal" && "prior_mean" %in% names(p_row) && "prior_sd" %in% names(p_row)) {
+        log_p <- log_p + stats::dnorm(p_vals, mean = p_row$prior_mean, sd = p_row$prior_sd, log = TRUE)
+      } else if (p_type == "lognormal" && "prior_mean" %in% names(p_row) && "prior_sd" %in% names(p_row)) {
+        log_p <- log_p + stats::dlnorm(p_vals, meanlog = p_row$prior_mean, sdlog = p_row$prior_sd, log = TRUE)
+      }
+    }
+    log_p
+  }
+
+  prior_log_densities <- compute_prior_log_density(final_nroy_design, parameter_spec)
+  prior_weights <- base::exp(prior_log_densities - base::max(prior_log_densities, na.rm = TRUE))
+  prior_weights <- prior_weights / base::sum(prior_weights, na.rm = TRUE)
+
   posterior_indices <- base::sample(
     base::seq_len(base::nrow(final_nroy_design)),
     size = base::min(n_posterior_draws, base::nrow(final_nroy_design)),
-    replace = TRUE
+    replace = TRUE,
+    prob = prior_weights
   )
   posterior_draws <- final_nroy_design[posterior_indices, ]
 
