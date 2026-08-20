@@ -56,6 +56,7 @@ anatomic or symptomatic recurrence, so \code{retreatment} must not be renamed
 }
 \seealso{
 Other retreatment survival:
+\code{\link[=load_default_retreatment_model]{load_default_retreatment_model()}},
 \code{\link[=predict_patient_recurrence]{predict_patient_recurrence()}}
 }
 \concept{demand}
