@@ -195,12 +195,12 @@ run_policy_dashboard <- function(launch_browser = TRUE, port = 3838) {
             shiny::tags$div(class = "well",
               shiny::h4("2. Valhalla Isochrone Spatial Catchment Viewer (/isochrones)"),
               shiny::p("Renders 27,525+ road-network drive-time catchment maps (30, 60, 120, 180 min) around 1,306 provider clinics."),
-              shiny::p(shiny::em("Local repository path: /Users/tmuffly/isochrones"))
+              shiny::p(shiny::em("Local repository path: ~/isochrones"))
             ),
             shiny::tags$div(class = "well",
               shiny::h4("3. 2SFCA Spatial Access Explorer (/twostep)"),
               shiny::p("Computes 2-Step Floating Catchment Area (2SFCA & E2SFCA) spatial accessibility scores across 73,000 U.S. Census tracts."),
-              shiny::p(shiny::em("Local repository path: /Users/tmuffly/twostep"))
+              shiny::p(shiny::em("Local repository path: ~/twostep"))
             )
           )
         )
