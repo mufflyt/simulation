@@ -2,7 +2,7 @@
 % Please edit documentation in R/supply-medicaid_acceptance.R
 \name{predict_medicaid_acceptance}
 \alias{predict_medicaid_acceptance}
-\title{Predict individual physician Medicaid acceptance probability}
+\title{Predict physician Medicaid acceptance}
 \usage{
 predict_medicaid_acceptance(
   academic_setting = FALSE,
@@ -10,31 +10,48 @@ predict_medicaid_acceptance(
   medicaid_fee_ratio = 0.72,
   svi = 0.5,
   years_certified = 10,
-  coef = MEDICAID_ACCEPTANCE_COEF
+  coef = MEDICAID_ACCEPTANCE_COEF,
+  probability_bounds = base::c(0.05, 0.95)
 )
 }
 \arguments{
-\item{academic_setting}{Logical or numeric vector indicating academic medical center practice.}
+\item{academic_setting}{Logical or 0/1.}
 
-\item{hospital_outpatient}{Logical or numeric vector indicating HOD setting.}
+\item{hospital_outpatient}{Logical or 0/1.}
 
-\item{medicaid_fee_ratio}{State Medicaid-to-Medicare fee ratio (default 0.72 national avg).}
+\item{medicaid_fee_ratio}{State Medicaid-to-Medicare fee ratio.}
 
-\item{svi}{Social Vulnerability Index of practice ZIP (0.0 to 1.0, default 0.50).}
+\item{svi}{Social Vulnerability Index in \link{0, 1}.}
 
-\item{years_certified}{Years since board certification (default 10).}
+\item{years_certified}{Years since board certification.}
 
-\item{coef}{Model coefficient list; defaults to \link{MEDICAID_ACCEPTANCE_COEF}.}
+\item{coef}{Logistic coefficient specification.}
+
+\item{probability_bounds}{Optional lower and upper probability bounds.}
 }
 \value{
-Numeric vector of probabilities in \link{0, 1}.
+Numeric acceptance probability.
 }
 \description{
-Predict individual physician Medicaid acceptance probability
+Predicts the probability that a physician/practice accepts a new
+Medicaid patient.
+
+The model is:
+
+logit(P_i) =
+beta_0 +
+beta_A * academic_i +
+beta_H * hospital_outpatient_i +
+beta_R * (fee_ratio_i - fee_reference) +
+beta_S * (SVI_i - SVI_reference) +
+beta_Y * (years_i - years_reference)
 }
 \seealso{
 Other supply:
+\code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
 \code{\link[=lookup_state_medicaid_fee_ratio]{lookup_state_medicaid_fee_ratio()}},
+\code{\link[=medicaid_acceptance_coefficients]{medicaid_acceptance_coefficients()}},
 \code{\link[=medicaid_medicare_fee_index_table]{medicaid_medicare_fee_index_table()}}
 }
+\concept{access}
 \concept{supply}

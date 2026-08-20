@@ -2,29 +2,44 @@
 % Please edit documentation in R/supply-medicaid_acceptance.R
 \name{filter_supply_by_insurance}
 \alias{filter_supply_by_insurance}
-\title{Filter provider supply table by insurance type for E2SFCA spatial access}
+\title{Apply insurance acceptance to provider capacity}
 \usage{
 filter_supply_by_insurance(
   provider_supply,
   insurance = "Commercial",
-  probabilistic = TRUE
+  supply_col = "supply",
+  mode = base::c("expected_capacity", "stochastic_acceptance", "threshold"),
+  seed = NULL
 )
 }
 \arguments{
-\item{provider_supply}{Provider supply table with \code{provider_id}, \code{supply} (FTEs),
-and optional \code{academic_setting}, \code{hospital_outpatient}, \code{medicaid_fee_ratio}, \code{svi}.}
+\item{provider_supply}{Provider supply table.}
 
-\item{insurance}{Insurance filter: \code{"Commercial"}, \code{"Medicare"}, or \code{"Medicaid"}.}
+\item{insurance}{Insurance category.}
 
-\item{probabilistic}{If TRUE, scales supply by $P(\text{accepts\_medicaid})$; if FALSE, uses binary draw/threshold.}
+\item{supply_col}{FTE/capacity column.}
+
+\item{mode}{Medicaid acceptance implementation.}
+
+\item{seed}{Optional random seed.}
 }
 \value{
-Filtered or scaled provider supply table ready for \code{\link[=compute_e2sfca_access]{compute_e2sfca_access()}}.
+Provider supply with insurance-accessible FTE.
 }
 \description{
-For commercial / Medicare patients, all active providers contribute full FTE capacity.
-For Medicaid patients, provider capacity is scaled by individual Medicaid acceptance probability
-or binary acceptance threshold, simulating the 42.1\% Medicaid access bottleneck.
+Converts clinical provider FTE into insurance-accessible provider FTE.
+
+For Medicaid:
+
+expected-capacity mode:
+
+\code{effective_fte_i = clinical_fte_i * P(accept_i)}
+
+stochastic mode:
+
+\code{accept_i ~ Bernoulli(P(accept_i))}
+
+\code{effective_fte_i = clinical_fte_i * accept_i}
 }
 \concept{geography}
 \concept{spatial access}
