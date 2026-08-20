@@ -291,6 +291,12 @@ calibrate_bayesian_history_matching <- function(
         log_p <- log_p + stats::dnorm(p_vals, mean = p_row$prior_mean, sd = p_row$prior_sd, log = TRUE)
       } else if (p_type == "lognormal" && "prior_mean" %in% names(p_row) && "prior_sd" %in% names(p_row)) {
         log_p <- log_p + stats::dlnorm(p_vals, meanlog = p_row$prior_mean, sdlog = p_row$prior_sd, log = TRUE)
+      } else if (p_type == "beta" && "shape1" %in% names(p_row) && "shape2" %in% names(p_row)) {
+        norm_val <- (p_vals - p_row$lower) / base::pmax(p_row$upper - p_row$lower, 1e-6)
+        norm_val <- base::pmin(base::pmax(norm_val, 1e-4), 1 - 1e-4)
+        log_p <- log_p + stats::dbeta(norm_val, shape1 = p_row$shape1, shape2 = p_row$shape2, log = TRUE)
+      } else if (p_type == "gamma" && "shape" %in% names(p_row) && "rate" %in% names(p_row)) {
+        log_p <- log_p + stats::dgamma(p_vals, shape = p_row$shape, rate = p_row$rate, log = TRUE)
       }
     }
     log_p
@@ -299,6 +305,13 @@ calibrate_bayesian_history_matching <- function(
   prior_log_densities <- compute_prior_log_density(final_nroy_design, parameter_spec)
   prior_weights <- base::exp(prior_log_densities - base::max(prior_log_densities, na.rm = TRUE))
   prior_weights <- prior_weights / base::sum(prior_weights, na.rm = TRUE)
+
+  # Kish's Effective Sample Size (ESS) diagnostic
+  ess <- (base::sum(prior_weights)^2) / base::sum(prior_weights^2)
+  base::message("Phase 2 Importance Sampling Effective Sample Size (ESS): ", base::round(ess, 1), " / ", base::nrow(final_nroy_design))
+  if (ess < 0.10 * base::nrow(final_nroy_design)) {
+    base::message("Warning: Low ESS indicates prior-emulator discrepancy; consider broadening informative priors.")
+  }
 
   posterior_indices <- base::sample(
     base::seq_len(base::nrow(final_nroy_design)),
@@ -354,6 +367,7 @@ calibrate_bayesian_history_matching <- function(
     posterior_parameters = posterior_draws,
     projections = projection_table,
     projection_summary = projection_summary,
+    ess = ess,
     saved_files = saved_files
   )
 }
@@ -366,10 +380,10 @@ calibrate_bayesian_history_matching <- function(
 #' @export
 load_default_history_matching_inputs <- function() {
   param_spec <- tibble::tribble(
-    ~parameter, ~lower, ~upper,
-    "care_seeking_rate", 0.10, 0.60,
-    "annual_exit_hazard", 0.01, 0.10,
-    "graduate_entry_rate", 35.0, 65.0
+    ~parameter, ~lower, ~upper, ~prior_type, ~prior_mean, ~prior_sd, ~shape1, ~shape2,
+    "care_seeking_rate", 0.10, 0.60, "beta", NA, NA, 2.5, 7.5,
+    "annual_exit_hazard", 0.01, 0.10, "normal", 0.04, 0.01, NA, NA,
+    "graduate_entry_rate", 35.0, 65.0, "normal", 55.0, 5.0, NA, NA
   )
 
   bench_table <- tibble::tribble(
@@ -379,4 +393,26 @@ load_default_history_matching_inputs <- function() {
   )
 
   list(parameter_spec = param_spec, benchmark_table = bench_table)
+}
+
+#' Comprehensive Literature-Anchored Prior Specification for 10 URPS Parameters
+#'
+#' @return Parameter specification table with informative priors.
+#' @family Bayesian calibration
+#' @concept calibration
+#' @export
+build_urps_prior_specification <- function() {
+  tibble::tribble(
+    ~parameter, ~lower, ~upper, ~prior_type, ~prior_mean, ~prior_sd, ~shape1, ~shape2, ~identifiability,
+    "care_seeking_rate", 0.10, 0.60, "beta", NA, NA, 2.5, 7.5, "primary_target",
+    "annual_exit_hazard", 0.01, 0.10, "normal", 0.04, 0.01, NA, NA, "primary_target",
+    "graduate_entry_rate", 35.0, 65.0, "normal", 55.0, 5.0, NA, NA, "primary_target",
+    "app_delegation_rate", 0.0, 0.30, "beta", NA, NA, 2.0, 8.0, "nuisance_informative",
+    "medicaid_multiplier", 0.50, 1.50, "normal", 1.00, 0.15, NA, NA, "nuisance_informative",
+    "retreatment_hazard_multiplier", 0.70, 1.50, "lognormal", 0.00, 0.15, NA, NA, "nuisance_informative",
+    "or_capacity_minutes", 100000.0, 300000.0, "normal", 200000.0, 25000.0, NA, NA, "nuisance_informative",
+    "clinic_capacity_minutes", 150000.0, 450000.0, "normal", 300000.0, 35000.0, NA, NA, "nuisance_informative",
+    "asc_migration_rate", 0.0, 0.40, "beta", NA, NA, 1.5, 6.0, "nuisance_informative",
+    "telehealth_expansion_rate", 0.0, 0.25, "beta", NA, NA, 1.5, 8.5, "nuisance_informative"
+  )
 }
