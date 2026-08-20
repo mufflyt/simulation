@@ -2,20 +2,27 @@
 % Please edit documentation in R/supply-medicaid_acceptance.R
 \name{medicaid_medicare_fee_index_table}
 \alias{medicaid_medicare_fee_index_table}
-\title{State-by-State Medicaid-to-Medicare Physician Fee Index Reference Table}
+\title{Medicaid-to-Medicare physician fee index}
 \usage{
 medicaid_medicare_fee_index_table()
 }
 \value{
-A tibble with \code{state_abbr}, \code{medicaid_fee_ratio}, and \code{fee_tier}.
+One row per state plus District of Columbia.
 }
 \description{
-Empirical state Medicaid fee index relative to Medicare PFS (KFF / MACPAC benchmarks).
-National mean = 0.72.
+2024 KFF / Urban Institute Medicaid-to-Medicare physician fee
+index. Ratios compare Medicaid FFS physician fees with Medicare
+physician fees for comparable services.
+
+Tennessee has no Medicaid fee-for-service program and therefore has
+no directly comparable fee index.
 }
 \seealso{
 Other supply:
+\code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
 \code{\link[=lookup_state_medicaid_fee_ratio]{lookup_state_medicaid_fee_ratio()}},
+\code{\link[=medicaid_acceptance_coefficients]{medicaid_acceptance_coefficients()}},
 \code{\link[=predict_medicaid_acceptance]{predict_medicaid_acceptance()}}
 }
+\concept{access}
 \concept{supply}
