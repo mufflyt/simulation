@@ -21,9 +21,7 @@ augment_app_productivity_evidence(
 Productivity rows with empirical evidence columns added.
 }
 \description{
-Positive APP billing is evidence of capability. Absence is never converted
-to ineligibility because incident-to billing and cell suppression hide APP
-work. The original clinical eligibility field therefore remains unchanged.
+Add claims evidence to APP productivity eligibility inputs
 }
 \seealso{
 Other data:
