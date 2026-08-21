@@ -1,7 +1,8 @@
 test_that("predict_hrsa_demographic_fte computes age and gender curves correctly", {
   res <- predict_hrsa_demographic_fte(
     age = c(35, 45, 60, 35, 45, 60),
-    gender = c("female", "female", "female", "male", "male", "male")
+    gender = c("female", "female", "female", "male", "male", "male"),
+    return_components = TRUE
   )
 
   expect_s3_class(res, "tbl_df")
@@ -11,7 +12,12 @@ test_that("predict_hrsa_demographic_fte computes age and gender curves correctly
 })
 
 test_that("apply_hrsa_insurance_demand_multipliers scales baseline demand", {
-  base_demand <- tibble::tibble(year = 2025:2030, age_band = "65-74", base_demand = 1000)
+  base_demand <- tibble::tibble(
+    year = 2025:2030,
+    age_band = "65-74",
+    baseline_demand = 1000,
+    insurance = "medicare"
+  )
   adj <- apply_hrsa_insurance_demand_multipliers(base_demand)
 
   expect_s3_class(adj, "tbl_df")
@@ -22,8 +28,9 @@ test_that("apply_hrsa_insurance_demand_multipliers scales baseline demand", {
 test_that("aggregate_hrr_workforce_balance aggregates regional supply and demand", {
   roster <- tibble::tibble(hrr_code = c("HRR01", "HRR01", "HRR02"), fte = c(1.0, 0.8, 1.0))
   demand <- tibble::tibble(hrr_code = c("HRR01", "HRR02", "HRR03"), hrr_name = c("Boston", "Worcester", "Springfield"), demand_fte = c(2.5, 1.0, 3.0))
+  hrr_ref <- tibble::tibble(hrr_code = c("HRR01", "HRR02", "HRR03"), hrr_name = c("Boston", "Worcester", "Springfield"), state = c("MA", "MA", "MA"))
 
-  bal <- aggregate_hrr_workforce_balance(roster, demand)
+  bal <- aggregate_hrr_workforce_balance(roster, demand, hrr_ref, expected_hrr_n = 3L)
 
   expect_s3_class(bal, "tbl_df")
   expect_equal(nrow(bal), 3L)
