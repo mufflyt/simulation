@@ -1,0 +1,6 @@
+metric,value
+cohort_encounters,3
+encounters_with_hdd_service,3
+encounters_without_hdd_service,0
+service_lines,4
+unparsed_revenue_codes,0

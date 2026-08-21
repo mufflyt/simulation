@@ -1,0 +1,15 @@
+code_family,analytic_label,interpretation
+010x-019x,room_board,Hospital revenue-center evidence.
+020x-021x,special_care,Hospital revenue-center evidence.
+030x-031x,laboratory,Hospital revenue-center evidence.
+032x-035x,imaging,Hospital revenue-center evidence.
+036x,operating_room,Hospital revenue-center evidence.
+037x,anesthesia,Hospital revenue-center evidence.
+045x,emergency_department,Hospital revenue-center evidence.
+049x,ambulatory_surgery_cost_center,Ambulatory-surgery cost-center evidence on an HIDD encounter; not proof the encounter was outpatient.
+050x,outpatient_services,Hospital revenue-center evidence.
+051x,clinic,Hospital revenue-center evidence.
+052x,freestanding_clinic,Hospital revenue-center evidence.
+071x,recovery_room,Hospital revenue-center evidence.
+0761,treatment_room,Hospital revenue-center evidence.
+0762,observation,Observation-service evidence on an HIDD encounter; not proof the encounter remained observation-only.

@@ -41,7 +41,6 @@ Other urps settings:
 \code{\link[=apply_setting_scenario]{apply_setting_scenario()}},
 \code{\link[=apply_setting_shift]{apply_setting_shift()}},
 \code{\link[=calibrate_setting_mix_from_psps]{calibrate_setting_mix_from_psps()}},
-\code{\link[=prolapse_setting_mix]{prolapse_setting_mix()}},
 \code{\link[=setting_scenario_summary]{setting_scenario_summary()}},
 \code{\link[=split_volumes_by_setting]{split_volumes_by_setting()}},
 \code{\link[=validate_setting_mix]{validate_setting_mix()}},

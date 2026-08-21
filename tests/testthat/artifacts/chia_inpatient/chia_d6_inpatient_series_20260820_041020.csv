@@ -1,0 +1,5 @@
+year,age_band,procedure_family,inpatient_cases,female_population,rate_per_100k
+2015,18-49,pop_hysterectomy,1,1450000,0.06896551724137931
+2015,50-64,sacrocolpopexy,1,720000,0.1388888888888889
+2015,65-74,apical_suspension,1,380000,0.2631578947368421
+2015,75+,colpocleisis,1,290000,0.3448275862068965
