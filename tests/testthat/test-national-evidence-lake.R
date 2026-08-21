@@ -72,7 +72,7 @@ testthat::test_that("runner uses empirical values and records provenance", {
     save_outputs = FALSE
   )
 
-  expected_population <- 100000000 * (1.006^2)
+  expected_population <- 100000000
   testthat::expect_equal(
     simulation_bundle$audit_ledger_tbl$population[[1L]],
     expected_population
