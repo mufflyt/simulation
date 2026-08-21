@@ -47,6 +47,8 @@ Imports:
     tidyr,
     tools,
     utils,
+    DiceKriging,
+    lhs,
     yaml
 Suggests:
     researchpaths,
