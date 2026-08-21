@@ -75,7 +75,10 @@ regression when sufficient historical information is available.
 }
 \seealso{
 Other supply:
+\code{\link[=acgme_procedural_minimums]{acgme_procedural_minimums()}},
+\code{\link[=acgme_program_requirements]{acgme_program_requirements()}},
 \code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
+\code{\link[=build_cpt_acgme_incidence_matrix]{build_cpt_acgme_incidence_matrix()}},
 \code{\link[=default_case_mix_parameters]{default_case_mix_parameters()}},
 \code{\link[=default_entrant_parameters]{default_entrant_parameters()}},
 \code{\link[=default_region_probabilities]{default_region_probabilities()}},
@@ -85,6 +88,7 @@ Other supply:
 \code{\link[=practice_economics_defaults]{practice_economics_defaults()}},
 \code{\link[=practice_economics_evidence]{practice_economics_evidence()}},
 \code{\link[=predict_medicaid_acceptance]{predict_medicaid_acceptance()}},
+\code{\link[=simulate_acgme_fellowship_capacity]{simulate_acgme_fellowship_capacity()}},
 \code{\link[=simulate_entrant_characteristics]{simulate_entrant_characteristics()}},
 \code{\link[=simulate_practice_economics]{simulate_practice_economics()}}
 }
