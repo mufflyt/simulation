@@ -1,10 +1,3 @@
-# Provider Productivity Measurement Engine --------------------------------
-#
-# Measures work RVUs per clinical FTE directly—no adequacy or required-FTE anchor.
-# Prioritizes actual operative minutes, followed by published durations, then CMS physician-time estimates.
-# Records the source and proportion of supplemented operative time.
-# Adjusts for nonlinear age, sex, academic status, rurality, APP support, case mix, years since fellowship, and calendar year.
-
 #' Build a provider-year urogynecology productivity panel
 #'
 #' Creates measured annual productivity outcomes without using an adequacy,
@@ -24,8 +17,6 @@
 #' @param work_rvu Work-RVU column name.
 #' @param actual_minutes Actual operative-minute column name.
 #' @return A provider-year tibble ready for productivity modeling.
-#' @family workload to fte
-#' @concept demand
 #' @export
 build_provider_year_productivity_panel <- function(
     provider_year,
@@ -79,7 +70,7 @@ build_provider_year_productivity_panel <- function(
 
   service_panel <- services |>
     dplyr::mutate(
-      year = base::as.integer(base::format(base::as.Date(.data[[service_date]]), "%Y")),
+      year = lubridate::year(.data[[service_date]]),
       cpt_join = base::as.character(.data[[cpt]]),
       work_rvu_value = base::as.numeric(.data[[work_rvu]]),
       actual_minutes_value = base::as.numeric(.data[[actual_minutes]])
@@ -308,8 +299,6 @@ build_provider_year_productivity_panel <- function(
 #' @param provider_id Provider identifier column name.
 #' @param include_year_effect Include calendar-year fixed effects.
 #' @return A list containing the mixed model, analysis panel, and diagnostics.
-#' @family workload to fte
-#' @concept demand
 #' @export
 fit_provider_productivity_model <- function(
     panel,
@@ -437,8 +426,6 @@ fit_provider_productivity_model <- function(
 #' @param new_provider_year Provider-year covariates to predict.
 #' @param include_provider_effect Include known provider random effects.
 #' @return Input rows with median expected capacity and a residual interval.
-#' @family workload to fte
-#' @concept demand
 #' @export
 predict_provider_capacity <- function(
     model_bundle,
@@ -478,8 +465,6 @@ predict_provider_capacity <- function(
 #' @param directory Destination directory.
 #' @param prefix Filename prefix.
 #' @return Named character vector of exact saved paths.
-#' @family workload to fte
-#' @concept demand
 #' @export
 save_provider_productivity_artifacts <- function(
     model_bundle,

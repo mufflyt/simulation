@@ -17,18 +17,3 @@ County market tibble with policy variables.
 \description{
 Apply county-level policy changes
 }
-\seealso{
-Other geography:
-\code{\link[=aggregate_geography_markets]{aggregate_geography_markets()}},
-\code{\link[=build_geography_utilities]{build_geography_utilities()}},
-\code{\link[=calculate_destination_probabilities]{calculate_destination_probabilities()}},
-\code{\link[=calculate_patient_destination_probabilities]{calculate_patient_destination_probabilities()}},
-\code{\link[=default_destination_choice_coefficients]{default_destination_choice_coefficients()}},
-\code{\link[=draw_provider_locations]{draw_provider_locations()}},
-\code{\link[=predict_patient_destination_choice]{predict_patient_destination_choice()}},
-\code{\link[=save_geography_artifacts]{save_geography_artifacts()}},
-\code{\link[=solve_endogenous_geography]{solve_endogenous_geography()}},
-\code{\link[=update_county_market]{update_county_market()}},
-\code{\link[=validate_geography_inputs]{validate_geography_inputs()}}
-}
-\concept{geography}
