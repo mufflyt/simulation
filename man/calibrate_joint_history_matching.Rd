@@ -64,3 +64,4 @@ Other calibration:
 \code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}}
 }
 \concept{calibration}
+\concept{history matching}
