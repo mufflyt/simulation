@@ -31,6 +31,7 @@ Other supply:
 \code{\link[=acgme_procedural_minimums]{acgme_procedural_minimums()}},
 \code{\link[=acgme_program_requirements]{acgme_program_requirements()}},
 \code{\link[=build_cpt_acgme_incidence_matrix]{build_cpt_acgme_incidence_matrix()}},
+\code{\link[=build_empirical_entrant_parameters]{build_empirical_entrant_parameters()}},
 \code{\link[=compound_growth_rate]{compound_growth_rate()}},
 \code{\link[=default_case_mix_parameters]{default_case_mix_parameters()}},
 \code{\link[=default_entrant_parameters]{default_entrant_parameters()}},

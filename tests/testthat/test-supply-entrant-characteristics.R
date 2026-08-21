@@ -31,3 +31,46 @@ test_that("simulate_joint_entrant_characteristics samples historical profiles jo
   expect_equal(nrow(res$entrants), 97L)
   expect_true(all(c("initial_clinical_fte", "academic", "case_mix_office") %in% names(res$entrants)))
 })
+
+test_that("build_empirical_entrant_parameters calibrates empirical parameters and handles strict mode", {
+  counts <- tibble::tibble(
+    cohort_year = 2025:2028,
+    n_entrants = c(20L, 22L, 25L, 30L)
+  )
+
+  # Non-strict mode when provider profiles are absent
+  res_nonstrict <- build_empirical_entrant_parameters(
+    cohort_counts = counts,
+    strict = FALSE,
+    seed = 123L
+  )
+
+  expect_true(is.list(res_nonstrict))
+  expect_named(res_nonstrict, c("parameters", "evidence_registry", "acgme_series", "summary_sentence", "saved_path"))
+  expect_true("prob_female" %in% names(res_nonstrict$parameters))
+
+  # Strict mode fails closed when age/FTE distributions are absent
+  expect_error(
+    build_empirical_entrant_parameters(cohort_counts = counts, strict = TRUE),
+    "No empirical `age_at_entry` distribution is available"
+  )
+
+  # With valid provider profiles
+  profiles <- tibble::tibble(
+    entry_year = 2020:2024,
+    age_at_entry = c(32, 34, 35, 33, 36),
+    initial_clinical_fte = c(0.85, 0.90, 0.80, 0.88, 0.92),
+    academic = c(1, 0, 1, 0, 1)
+  )
+  # Duplicate profiles to reach minimum count
+  profiles_large <- dplyr::bind_rows(lapply(1:4, function(i) profiles))
+
+  res_strict <- build_empirical_entrant_parameters(
+    cohort_counts = counts,
+    provider_profiles = profiles_large,
+    strict = TRUE,
+    seed = 456L
+  )
+  expect_true(is.list(res_strict))
+  expect_true(res_strict$parameters$age_mean[1] > 30)
+})
