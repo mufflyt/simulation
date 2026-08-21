@@ -49,9 +49,14 @@ beta_Y * (years_i - years_reference)
 \seealso{
 Other supply:
 \code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
+\code{\link[=default_case_mix_parameters]{default_case_mix_parameters()}},
+\code{\link[=default_entrant_parameters]{default_entrant_parameters()}},
+\code{\link[=default_region_probabilities]{default_region_probabilities()}},
 \code{\link[=lookup_state_medicaid_fee_ratio]{lookup_state_medicaid_fee_ratio()}},
 \code{\link[=medicaid_acceptance_coefficients]{medicaid_acceptance_coefficients()}},
-\code{\link[=medicaid_medicare_fee_index_table]{medicaid_medicare_fee_index_table()}}
+\code{\link[=medicaid_medicare_fee_index_table]{medicaid_medicare_fee_index_table()}},
+\code{\link[=simulate_entrant_characteristics]{simulate_entrant_characteristics()}},
+\code{\link[=simulate_joint_entrant_characteristics]{simulate_joint_entrant_characteristics()}}
 }
 \concept{access}
 \concept{supply}
