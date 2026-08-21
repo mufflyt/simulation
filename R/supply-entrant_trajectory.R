@@ -1,7 +1,91 @@
-# Simulate characteristics for FPMRS entrant cohorts -----------------------
-#
-# Creates entrant-level records from annual fellowship cohort counts. The
-# sequential conditional models preserve dependence among entrant attributes.
+# Entrant Trajectories & NRMP Growth Rate Estimation ----------------------
+
+#' Calculate Compound Annual Growth Rate (CAGR)
+#'
+#' @param start_val Initial value.
+#' @param end_val Ending value.
+#' @param years Number of years elapsed.
+#'
+#' @return CAGR estimate or `NA_real_` if invalid.
+#' @family supply
+#' @concept supply
+#' @export
+compound_growth_rate <- function(start_val, end_val, years) {
+  if (base::is.null(start_val) || base::is.null(end_val) || base::is.null(years) ||
+      !base::is.numeric(start_val) || !base::is.numeric(end_val) || !base::is.numeric(years) ||
+      start_val <= 0 || end_val <= 0 || years <= 0) {
+    return(NA_real_)
+  }
+  (end_val / start_val)^(1.0 / years) - 1.0
+}
+
+#' Calculate NRMP URPS Fellowship Growth Rates
+#'
+#' @return List of growth rate metrics and fill-rate headroom statistics.
+#' @family supply
+#' @concept supply
+#' @export
+nrmp_growth_rates <- function() {
+  offered_rate <- compound_growth_rate(33, 56, 10)
+  filled_rate <- compound_growth_rate(30, 56, 10)
+  base::list(
+    offered = offered_rate,
+    filled = filled_rate,
+    sustainable = offered_rate,
+    headroom_exhausted = TRUE,
+    fill_rate_first = 30 / 33,
+    fill_rate_last = 56 / 56
+  )
+}
+
+#' Generate an Entrant Trajectory Series
+#'
+#' @param base_n Baseline annual entrant count.
+#' @param years Vector of projection years.
+#' @param growth Annual growth rate.
+#' @param cap Optional upper ceiling cap.
+#'
+#' @return Vector of projected annual entrant counts.
+#' @family supply
+#' @concept supply
+#' @export
+entrant_trajectory <- function(base_n, years, growth, cap = NULL) {
+  t_index <- years - years[[1L]]
+  traj <- base_n * ((1.0 + growth)^t_index)
+  traj <- base::pmax(0.0, traj)
+  if (!base::is.null(cap)) {
+    traj <- base::pmin(cap, traj)
+  }
+  traj
+}
+
+#' Human-readable warning labels for entrant trajectory scenarios
+#' @export
+ENTRANT_TRAJECTORY_LABELS <- c(
+  flat = "Flat baseline entrant production",
+  expansion_sustainable = "Sustainable expansion based on offered positions CAGR",
+  contraction = "Contraction based on downside growth rate",
+  filled_naive = "NAIVE extrapolation of filled positions CAGR (double-counts catch-up)"
+)
+
+#' Generate Entrant Trajectory Scenarios
+#'
+#' @param base Baseline annual entrant count (default 70).
+#' @param years Vector of projection years (default 2025:2050).
+#'
+#' @return List of trajectory scenarios.
+#' @family supply
+#' @concept supply
+#' @export
+entrant_trajectory_scenarios <- function(base = 70, years = 2025:2050) {
+  r <- nrmp_growth_rates()
+  base::list(
+    flat = entrant_trajectory(base, years, 0),
+    expansion_sustainable = entrant_trajectory(base, years, r$sustainable),
+    contraction = entrant_trajectory(base, years, -r$sustainable),
+    filled_naive = entrant_trajectory(base, years, r$filled)
+  )
+}
 
 #' Simulate characteristics for FPMRS entrant cohorts
 #'

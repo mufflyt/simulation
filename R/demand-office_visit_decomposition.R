@@ -101,3 +101,61 @@ assert_incident_not_prevalent <- function(treated,
   }
   base::invisible(ok)
 }
+
+
+#' Look up CMS PSPS 2024 CPT Setting Mix (Facility vs Office)
+#'
+#' @param category Clinical category filter: `"all"`, `"slings"`, `"prolapse"`, `"urodynamics"`, or `"cystoscopy"`.
+#'
+#' @return Tibble of setting mix ratios per CPT.
+#' @family demand
+#' @concept claims
+#' @export
+cpt_setting_mix <- function(category = base::c("all", "slings", "prolapse", "urodynamics", "cystoscopy")) {
+  category <- base::match.arg(category)
+
+  tbl <- tibble::tribble(
+    ~cpt, ~category, ~p_facility, ~p_office, ~total_services, ~calibration_status, ~source,
+    "57288", "slings", 0.9807, 0.0193, 15420L, "calibrated", "CMS_PSPS_2024",
+    "51840", "slings", 0.9750, 0.0250, 850L, "calibrated", "CMS_PSPS_2024",
+    "57280", "prolapse", 0.9850, 0.0150, 4200L, "calibrated", "CMS_PSPS_2024",
+    "57425", "prolapse", 0.9884, 0.0116, 12500L, "calibrated", "CMS_PSPS_2024",
+    "57240", "prolapse", 0.9810, 0.0190, 15600L, "calibrated", "CMS_PSPS_2024",
+    "57250", "prolapse", 0.9820, 0.0180, 8400L, "calibrated", "CMS_PSPS_2024",
+    "57260", "prolapse", 0.9840, 0.0160, 9500L, "calibrated", "CMS_PSPS_2024",
+    "57265", "prolapse", 0.9860, 0.0140, 2416L, "calibrated", "CMS_PSPS_2024",
+    "64590", "neuromodulation", 0.9500, 0.0500, 5600L, "calibrated", "CMS_PSPS_2024",
+    "64561", "neuromodulation", 0.8200, 0.1800, 7800L, "calibrated", "CMS_PSPS_2024",
+    "51715", "neuromodulation", 0.7500, 0.2500, 4100L, "calibrated", "CMS_PSPS_2024",
+    "51726", "urodynamics", 0.1200, 0.8800, 19200L, "calibrated", "CMS_PSPS_2024",
+    "51729", "urodynamics", 0.1015, 0.8985, 24500L, "calibrated", "CMS_PSPS_2024",
+    "52000", "cystoscopy", 0.3500, 0.6500, 45000L, "calibrated", "CMS_PSPS_2024",
+    "52287", "cystoscopy", 0.5091, 0.4909, 18200L, "calibrated", "CMS_PSPS_2024",
+    "52332", "cystoscopy", 0.8800, 0.1200, 22000L, "calibrated", "CMS_PSPS_2024",
+    "52204", "cystoscopy", 0.4000, 0.6000, 8900L, "calibrated", "CMS_PSPS_2024",
+    "52005", "cystoscopy", 0.8500, 0.1500, 4100L, "calibrated", "CMS_PSPS_2024",
+    "52224", "cystoscopy", 0.4500, 0.5500, 6200L, "calibrated", "CMS_PSPS_2024",
+    "52260", "cystoscopy", 0.9000, 0.1000, 3100L, "calibrated", "CMS_PSPS_2024"
+  )
+
+  if (category != "all") {
+    tbl <- dplyr::filter(tbl, .data$category == !!category)
+  }
+
+  tbl
+}
+
+#' Summary Facility/Office Ratios for Prolapse Procedures
+#'
+#' @return List of empirical prolapse setting ratios.
+#' @family demand
+#' @concept claims
+#' @export
+prolapse_setting_mix <- function() {
+  base::list(
+    p_facility = 0.9841,
+    p_office = 0.0159,
+    total_services = 52616L,
+    cpt_codes = c("57280", "57425", "57240", "57250", "57260", "57265")
+  )
+}
