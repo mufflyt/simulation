@@ -202,3 +202,5 @@
 "summarize_hrr_workforce_balance","api"
 "urps_cadr_specialty_codes","api"
 "validate_chia_vs_medicare_ffs","api"
+"summarise_provider_routing","api"
+"urps_routing_bounds","api"
