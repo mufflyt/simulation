@@ -2,7 +2,7 @@
 % Please edit documentation in R/core-run_end_to_end_simulation.R
 \name{run_end_to_end_simulation}
 \alias{run_end_to_end_simulation}
-\title{Run Master URPS Workforce & Demand Simulation End-to-End}
+\title{Run the coupled URPS workforce and demand simulation}
 \usage{
 run_end_to_end_simulation(
   start_year = 2025L,
@@ -12,48 +12,83 @@ run_end_to_end_simulation(
   fellowship_entrants = 55L,
   app_delegation_rate = 0.15,
   medicaid_fee_ratio = 0.75,
+  geography_engine = c("hrr_balance", "county_endogenous"),
+  entrant_engine = c("parametric", "joint_donor_sampling"),
+  productivity_engine = c("benchmark", "lmer_fitted"),
+  county_market_tbl = NULL,
+  entrant_donor_pool = NULL,
+  productivity_panel = NULL,
+  productivity_model = NULL,
+  geography_solver = solve_endogenous_geography,
+  entrant_simulator = simulate_joint_entrant_characteristics,
+  productivity_fitter = fit_provider_productivity_model,
+  productivity_predictor = NULL,
+  geography_control = base::list(),
   evidence_db = NULL,
   empirical_parameters = NULL,
+  seed = 20260821L,
   save_outputs = TRUE,
   output_dir = "artifacts/end_to_end"
 )
 }
 \arguments{
-\item{start_year}{Simulation start year (default 2025).}
+\item{start_year}{First simulation year.}
 
-\item{end_year}{Simulation end year (default 2035).}
+\item{end_year}{Last simulation year.}
 
-\item{n_agents}{Number of microsimulation patient agents.}
+\item{n_agents}{Number of patient agents.}
 
-\item{initial_provider_count}{Number of baseline provider records.}
+\item{initial_provider_count}{Baseline number of providers.}
 
-\item{fellowship_entrants}{Annual ACGME fellowship graduate entrants.}
+\item{fellowship_entrants}{Annual number of fellowship graduates.}
 
-\item{app_delegation_rate}{APP task delegation fraction (0 to 0.30).}
+\item{app_delegation_rate}{APP delegation fraction.}
 
-\item{medicaid_fee_ratio}{National/state Medicaid fee index ratio; default
-is 0.75.}
+\item{medicaid_fee_ratio}{Medicaid-to-Medicare fee ratio.}
 
-\item{evidence_db}{Optional national evidence DuckDB path. Empirical values
-found in \code{model.parameter_estimates} replace matching demonstration inputs.}
+\item{geography_engine}{Geography engine name.}
 
-\item{empirical_parameters}{Optional named numeric vector. This takes
-precedence over \code{evidence_db} and matching function arguments.}
+\item{entrant_engine}{Entrant engine name.}
 
-\item{save_outputs}{Logical; whether to write CSV audit outputs to disk.}
+\item{productivity_engine}{Productivity engine name.}
 
-\item{output_dir}{Directory for timestamped CSV output artifacts.}
+\item{county_market_tbl}{County-year market inputs for endogenous geography.}
+
+\item{entrant_donor_pool}{Historical entrant profiles used as donors.}
+
+\item{productivity_panel}{Provider-year productivity training panel.}
+
+\item{productivity_model}{Optional already-fitted productivity model.}
+
+\item{geography_solver}{Function used for endogenous geography.}
+
+\item{entrant_simulator}{Function used for joint entrant sampling.}
+
+\item{productivity_fitter}{Function used to fit productivity.}
+
+\item{productivity_predictor}{Optional custom prediction function.}
+
+\item{geography_control}{Named list passed to the geography solver.}
+
+\item{evidence_db}{Optional national evidence DuckDB path.}
+
+\item{empirical_parameters}{Optional named numeric vector of empirical parameters.}
+
+\item{seed}{Master random seed.}
+
+\item{save_outputs}{Whether to save timestamped CSV files.}
+
+\item{output_dir}{Directory for saved CSV files.}
 }
 \value{
-A named list containing \code{audit_ledger_tbl}, \code{annual_hrr_balance},
-\code{final_provider_cohort}, and \code{simulation_config}.
+A named list containing the audit ledger, spatial balances,
+provider cohort, engine diagnostics, fitted productivity model, and
+simulation configuration.
 }
 \description{
-Executes the single-source-of-truth end-to-end longitudinal simulation across
-all 8 coupled annual event sequence steps.
-
-Enforces conservation identities across every transition:
-\code{served_patients_n + unserved_delayed_n == appointment_requests_n}.
+Runs the eight-step annual microsimulation and optionally couples the
+endogenous county geography, joint entrant donor, and fitted productivity
+engines. Supports empirical parameter overrides via National Evidence DuckDB.
 }
 \concept{core}
 \concept{simulation pipeline}
