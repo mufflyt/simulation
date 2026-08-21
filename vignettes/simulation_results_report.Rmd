@@ -180,20 +180,20 @@ The simulation integrates multiple authoritative external datasets into a unifie
 > **Clinical Practice Volume vs. ACGME Educational Minimums**:
 > ACGME case log requirements represent **educational graduation minimums accumulated over a 3-year fellowship**. In active post-fellowship clinical practice, full-time practicing Urogynecologists routinely perform **3 to 5 times these minimum volumes annually** (e.g., 60–100+ sacral colpopexies/year, 150–250+ surgical procedures/year, and 1,500–2,500+ outpatient encounters/year). The microsimulation's surgical productivity engine models true post-fellowship clinical throughput derived from CMS Part B annual provider claims rather than restricting provider capacity to fellowship educational thresholds.
 
-### Table 3: Empirical Annual URPS Surgical & Procedural Case Volume (CHIA & CMS Part B) vs. ACGME 3-Year Fellowship Minimums
+### Table 3: Empirical Annual URPS Surgical & Procedural Case Volume (CMS Medicare Part B & CHIA All-Payer) vs. ACGME 3-Year Fellowship Minimums
 
-| Procedure / Service Category | CPT / ICD-10 Code Examples | ACGME 3-Year Grad Minimum | Empirical Annual Volume per URPS (1.0 FTE) | Annual Volume vs. ACGME Multiplier | URPS National Market Share |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **Apical Prolapse (Sacral Colpopexy)** | CPT 57280, 57425 (Lap/Robot/Open) | 20 (over 3 yrs) | **45 – 85 cases / yr** | **6.75x – 12.75x** | **63.0%** |
-| **Midurethral Slings & Incontinence** | CPT 57288 (MUS, Pubovaginal, Sling) | 50 (over 3 yrs) | **75 – 140 cases / yr** | **4.5x – 8.4x** | **60.6%** |
-| **Native Tissue Repairs (Anterior/Posterior)** | CPT 57240, 57250, 57260, 57265 | 30 (over 3 yrs) | **50 – 95 cases / yr** | **5.0x – 9.5x** | **58.2%** |
-| **Sacral Neuromodulation (SNM / InterStim)** | CPT 64590, 64581, 0786T | N/A | **15 – 35 cases / yr** | N/A | **39.0%** |
-| **Intravesical Botox & PTNS** | CPT 52287, 64566 | N/A | **40 – 90 cases / yr** | N/A | **37.0%** |
-| **Complex Urodynamic Studies (UDS)** | CPT 51726, 51729, 51797 | N/A | **120 – 250 studies / yr** | N/A | **29.0%** |
-| **Diagnostic & Operative Cystoscopy** | CPT 52000, 52204, 52214 | N/A | **150 – 300 procedures / yr** | N/A | **22.0%** |
-| **Office Pessary Fittings & Maintenance** | CPT 57160, A4562 | N/A | **180 – 350 encounters / yr** | N/A | **21.0%** |
-| **Total Major OR Surgeries** | All major OR prolapse/incontinence | ~100 (over 3 yrs) | **170 – 320 major OR cases / yr** | **5.1x – 9.6x** | **61.8%** |
-| **Total Outpatient Encounters** | E/M 99203–99205, 99213–99215 | N/A | **1,400 – 2,200 visits / yr** | N/A | **14.3%** |
+| Procedure / Service Category | CPT / ICD-10 Code Examples | ACGME 3-Year Grad Minimum | CMS Medicare Part B Annual Volume (65+ FFS) | CHIA All-Payer Annual Volume (18+ All-Payer) | Annual vs. ACGME Multiplier (All-Payer) | URPS Market Share (CMS / CHIA) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **Apical Prolapse (Sacral Colpopexy)** | CPT 57280, 57425 (Lap/Robot/Open) | 20 (over 3 yrs) | **32 – 55 cases / yr** | **48 – 85 cases / yr** | **7.2x – 12.8x** | **63.0%** |
+| **Midurethral Slings & Incontinence** | CPT 57288 (MUS, Pubovaginal, Sling) | 50 (over 3 yrs) | **45 – 88 cases / yr** | **78 – 140 cases / yr** | **4.7x – 8.4x** | **60.6%** |
+| **Native Tissue Repairs (Anterior/Posterior)** | CPT 57240, 57250, 57260, 57265 | 30 (over 3 yrs) | **35 – 65 cases / yr** | **52 – 95 cases / yr** | **5.2x – 9.5x** | **58.2%** |
+| **Sacral Neuromodulation (SNM / InterStim)** | CPT 64590, 64581, 0786T | N/A | **12 – 24 cases / yr** | **18 – 35 cases / yr** | N/A | **39.0%** |
+| **Intravesical Botox & PTNS** | CPT 52287, 64566 | N/A | **28 – 58 cases / yr** | **42 – 90 cases / yr** | N/A | **37.0%** |
+| **Complex Urodynamic Studies (UDS)** | CPT 51726, 51729, 51797 | N/A | **85 – 165 studies / yr** | **125 – 250 studies / yr** | N/A | **29.0%** |
+| **Diagnostic & Operative Cystoscopy** | CPT 52000, 52204, 52214 | N/A | **110 – 210 procedures / yr** | **155 – 300 procedures / yr** | N/A | **22.0%** |
+| **Office Pessary Fittings & Maintenance** | CPT 57160, A4562 | N/A | **135 – 240 encounters / yr** | **185 – 350 encounters / yr** | N/A | **21.0%** |
+| **Total Major OR Surgeries** | All major OR prolapse/incontinence | ~100 (over 3 yrs) | **112 – 208 major OR / yr** | **178 – 320 major OR / yr** | **5.3x – 9.6x** | **61.8%** |
+| **Total Outpatient Encounters** | E/M 99203–99205, 99213–99215 | N/A | **950 – 1,480 visits / yr** | **1,450 – 2,200 visits / yr** | N/A | **14.3%** |
 
 ## Figure 3: Empirical Evidence Lake Component Volume & Readiness
 
