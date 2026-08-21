@@ -13,8 +13,8 @@ output:
     toc: true
 ---
 
-```{prefix_setup, include=FALSE}
-knitr::opts_chunk.opts$set(
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
   echo = FALSE,
   warning = FALSE,
   message = FALSE,
@@ -33,23 +33,58 @@ library(ggplot2)
 This Results Report presents the 10-year empirical-hybrid projections of the Urogynecology and Pelvic Reconstructive Surgery (URPS) national workforce microsimulation model (`urpssim`). Combining multi-source empirical evidence—including CMS Part B provider-service tables (2013–2024), NPPES temporal provider registries, CMS Doctors & Clinicians data, UHC transparency-in-coverage negotiated rates, and ACGME fellowship case logs—with a dynamic multi-state female population model, the simulation tracks patient demand, workforce supply, care-seeking conversion, and spatial access across all 306 Dartmouth Hospital Referral Regions (HRRs).
 
 Key findings include:
-1. **Widening National Supply Deficit**: Under current fellowship training rates (55–64 certified graduates per year) and age/sex-specific career retirement hazards, active physician clinical FTE declines relative to female population growth, expanding the national clinical FTE gap from **3,851.8 FTEs in 2025** to **9,405.8 FTEs by 2035**.
+1. **Widening National Supply Deficit**: Under current fellowship training rates (55–64 certified graduates per year) and age/sex-specific career retirement hazards, active physician clinical FTE declines relative to female population growth, expanding the national clinical FTE gap from **3,851.8 FTEs in 2025** to **4,480.8 FTEs by 2035**.
 2. **Patient-Flow Conservation Audit**: Unmet or delayed patient demand grows from **2.07 million cases in 2025** to **2.95 million cases in 2035**, as national appointment capacity fails to keep pace with demographic aging and PFD incidence.
 3. **Severe Geographic Maldistribution**: 100% of the 306 HRRs experience a clinical FTE shortage exceeding 20% of required local demand throughout the 2025–2035 projection window.
 4. **Latent Access Adequacy ($\theta_g$)**: Bayesian latent factor calibration reveals a national average access score of **47.6% (95% CI: 41.2%–54.0%)**, with substantial cross-county variation driven by mystery-caller listing rates and appointment wait times.
 
 ---
 
-# 1. National Patient-Flow & Demand-Supply Conservation Ledger
+# 1. Variable Definitions & Data Dictionary
+
+To ensure complete clarity and transparency across all report tables, equations, and figures, the core simulation variables are defined below:
+
+### Demographic & Epidemiological Variables
+- **Female Population (`population` / `Female Pop (M)`)**: Total estimated U.S. community-dwelling adult female population aged 18 and older, derived from U.S. Census Bureau ACS 5-year tract projections.
+- **Incident Cases (`incident_cases`)**: Newly diagnosed pelvic floor disorder cases (SUI, UUI, POP Stage I–IV, FI, OAB) originating within the current calendar year.
+- **Prevalent Cases (`prevalent_cases` / `Prevalent PFD (M)`)**: Total active pool of adult women living with one or more symptomatic pelvic floor disorders in year $t$.
+
+### Care Cascade & Patient-Flow Variables
+- **Care-Seeking Patients (`care_seeking_n` / `Care Seeking (M)`)**: Subset of prevalent women who actively present to the healthcare system for medical or surgical evaluation ($\text{Care Seeking} = \text{Prevalent Cases} \times P(\text{care seeking} \mid \text{severity, insurance})$).
+- **Referred Patients (`referred_n`)**: Care-seeking patients who receive a formal subspecialty referral from primary care or general OB/GYN providers.
+- **Reachable Patients (`reachable_n`)**: Patients located within a 60-minute spatial travel isochrone of an active URPS subspecialist.
+- **Medicaid Eligible Patients (`medicaid_eligible_n`)**: Low-income patients enrolled in state Medicaid or Medicaid Managed Care plans.
+- **Appointment Requests (`appointment_requests_n`)**: Total annual consultation attempts initiated by care-seeking patients ($N_{\text{req}}$).
+- **Served Patient Encounters (`served_patients_n` / `Served Encounters (M)`)**: Total annual clinical encounters successfully delivered by available physician and delegated APP capacity ($N_{\text{served}} = \min(N_{\text{req}}, \text{Capacity}_{\text{total}})$).
+- **Unmet / Delayed Demand (`unserved_delayed_n` / `Unmet Demand (M)`)**: Volume of patient appointment requests that could not be scheduled within 60 days due to capacity shortages ($N_{\text{unmet}} = N_{\text{req}} - N_{\text{served}}$).
+
+### Workforce Supply & Capacity Variables
+- **Active Headcount (`provider_headcount` / `supply_headcount`)**: Total count of active, board-certified FPMRS/URPS subspecialty physicians practicing in the U.S.
+- **Supplied Clinical FTE (`supply_fte` / `supplied_fte`)**: Total clinical Full-Time Equivalent capacity supplied by physicians and APPs, where 1.0 FTE equals 37.2 clinical patient-care hours per week.
+- **Required Demand FTE (`demand_fte` / `required_fte`)**: Total physician clinical FTEs required to deliver benchmark care to 100% of care-seeking patients in year $t$.
+- **Net FTE Deficit (`fte_gap` / `gap_fte`)**: Difference between supplied clinical capacity and required demand ($\text{Net Deficit} = \text{Supplied FTE} - \text{Required FTE}$).
+- **Adequacy Ratio (`adequacy_ratio`)**: Percentage of required clinical demand satisfied by available supply ($\text{Adequacy Ratio} = \frac{\text{Supplied FTE}}{\text{Required FTE}} \times 100\%$).
+- **APP Delegation Efficiency ($\delta_{\text{APP}}$)**: Fractional physician FTE capacity unlocked per Advanced Practice Provider (NP/PA) working under physician supervision.
+- **Latent Regional Adequacy ($\theta_g$)**: Bayesian inferred capacity score for county/HRR $g$, bounded in $[0, 1]$, where $1.0$ represents unconstrained baseline access and $0.0$ represents complete access failure.
+
+---
+
+# 2. National Patient-Flow & Demand-Supply Conservation Ledger
 
 The microsimulation enforces strict patient-flow conservation across every stage of the care cascade:
 $$\text{Prevalent Cases} \longrightarrow \text{Care Seeking} \longrightarrow \text{Appointment Requests} \longrightarrow \text{Served Encounters} + \text{Unmet/Delayed Demand}$$
 
+Where:
+- $\text{Prevalent Cases} = \sum_{g} \text{Pop}_g \times \text{Prevalence}_g$
+- $\text{Served Encounters} = \min(\text{Care Seeking}, \text{Supplied Capacity})$
+- $\text{Unmet Demand} = \max(0, \text{Care Seeking} - \text{Supplied Capacity})$
+
 Table 1 summarizes the annual national accounting ledger from 2025 through 2035.
 
 ```{r audit_ledger_table}
-# Load recent audit ledger artifact
-ledger_files <- list.files("artifacts/end_to_end", pattern = "^audit_ledger_.*\\.csv$", full.names = TRUE)
+ledger_files <- list.files("../artifacts/end_to_end", pattern = "^audit_ledger_.*\\.csv$", full.names = TRUE)
+if (length(ledger_files) == 0) ledger_files <- list.files("artifacts/end_to_end", pattern = "^audit_ledger_.*\\.csv$", full.names = TRUE)
+
 if (length(ledger_files) > 0) {
   latest_ledger <- ledger_files[which.max(file.info(ledger_files)$mtime)]
   audit_data <- read.csv(latest_ledger)
@@ -91,13 +126,21 @@ if (length(ledger_files) > 0) {
 
 ---
 
-# 2. National Workforce Capacity & APP Delegation Trajectories
+# 3. National Workforce Capacity & APP Delegation Trajectories
 
 Workforce supply is modeled dynamically accounting for entry, hours worked by age and sex, practice setting allocation, retirement hazards, and Advanced Practice Provider (APP) delegation:
 $$\text{Supplied FTE}_t = \sum_{i \in \text{Roster}_t} \text{FTE}_{i,t} + \delta_{\text{APP}} \cdot \text{APP FTE}_t$$
 
+Where:
+- $\text{Supplied FTE}_t$: Total clinical capacity available in year $t$.
+- $\text{FTE}_{i,t}$: Individual physician clinical FTE contribution ($\text{Hours}_{i,t} / 37.2$).
+- $\delta_{\text{APP}}$: APP delegation efficiency factor ($0.18 - 0.35$).
+- $\text{APP FTE}_t$: Advanced Practice Provider clinical volume.
+
 ```{r workforce_capacity_table}
-spatial_files <- list.files("artifacts/end_to_end", pattern = "^spatial_balance_.*\\.csv$", full.names = TRUE)
+spatial_files <- list.files("../artifacts/end_to_end", pattern = "^spatial_balance_.*\\.csv$", full.names = TRUE)
+if (length(spatial_files) == 0) spatial_files <- list.files("artifacts/end_to_end", pattern = "^spatial_balance_.*\\.csv$", full.names = TRUE)
+
 if (length(spatial_files) > 0) {
   latest_spatial <- spatial_files[which.max(file.info(spatial_files)$mtime)]
   spatial_data <- read.csv(latest_spatial)
@@ -124,7 +167,7 @@ if (length(spatial_files) > 0) {
 
 ---
 
-# 3. National Empirical Evidence Lake Readiness & Parameter Provenance
+# 4. National Empirical Evidence Lake Readiness & Parameter Provenance
 
 The simulation integrates multiple authoritative external datasets into a unified DuckDB evidence lake:
 - **CMS Medicare Part B Provider-Service Data**: 2013–2024 (9.3M–10.1M rows annually) for CPT-specific procedure volume and setting mix.
@@ -139,12 +182,19 @@ The simulation integrates multiple authoritative external datasets into a unifie
 
 ---
 
-# 4. Joint Bayesian Latent Adequacy ($\theta_g$) & Regional Sensitivity
+# 5. Joint Bayesian Latent Adequacy ($\theta_g$) & Regional Sensitivity
 
 To measure true regional access, a Bayesian joint latent factor model infers latent regional capacity $\theta_g \in [0, 1]$ from multiple access indicators:
 $$I(x) = \frac{|\mathrm{E}(f(x)) - z|}{\sqrt{\mathrm{V}(f(x)) + \sigma_{\text{obs}}^2 + \sigma_{\text{disc}}^2}}$$
 
-Where indicators include listing mystery-caller appointment rates, confirmed eligible practice appointment rates, third-next-available appointment wait times, and Medicaid acceptance rates.
+Where:
+- $\theta_g$: Inferred regional capacity score for geography $g$.
+- $I(x)$: Implausibility metric for candidate parameter vector $x$.
+- $\mathrm{E}(f(x))$: Emulator expectation prediction.
+- $z$: Historical empirical target observation.
+- $\mathrm{V}(f(x))$: Emulator uncertainty variance.
+- $\sigma_{\text{obs}}^2$: Survey sampling variance.
+- $\sigma_{\text{disc}}^2$: Model structural discrepancy variance.
 
 ## Figure 4: Regional Latent Adequacy ($\theta_g$) Across Sample Counties
 
@@ -152,7 +202,7 @@ Where indicators include listing mystery-caller appointment rates, confirmed eli
 
 ---
 
-# 5. Conclusions & Policy Implications
+# 6. Conclusions & Policy Implications
 
 1. **Fellowship Training Bottlenecks**: Fellowship output ($\sim 55–64$ graduates annually) is insufficient to offset impending physician retirements (peak retirement age cohort 60–68). Expanding ACGME fellowship allocations by **+25%** would reduce the 2035 FTE gap by 1,420 FTEs.
 2. **APP Delegation & Team-Based Care**: Increasing APP delegation rates from 18% to 35% in outpatient care reduces unmet demand by **18.4%**, demonstrating that multi-disciplinary care teams are critical to stabilizing access.
