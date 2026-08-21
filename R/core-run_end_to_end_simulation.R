@@ -369,8 +369,23 @@ run_end_to_end_simulation <- function(
       )
     }
 
-    delivered_services <- served_patients * 2.15
-    wrvu_total <- served_patients * 18.50
+    # Route served patient demand through condition-service-provider routing pathway
+    treated_counts <- base::c(
+      ui = served_patients * 0.45,
+      pop = served_patients * 0.35,
+      ai = served_patients * 0.20
+    )
+    routed_services <- pathway_provider_service_volumes(
+      treated = treated_counts,
+      year = simulation_year,
+      prior_only = "apply"
+    )
+    urps_services <- urps_routed_service_volumes(routed_services)
+    
+    # Calculate delivered services, wRVUs, and required FTE from routed URPS service volumes
+    delivered_services <- base::sum(urps_services$provider_volume, na.rm = TRUE)
+    # 8.60 average wRVU per routed URPS procedural/consultative service
+    wrvu_total <- delivered_services * 8.60
     physician_minutes <- wrvu_total * 42
     required_fte <- wrvu_total / 1400
     fte_gap <- supplied_fte - required_fte
