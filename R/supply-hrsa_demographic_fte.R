@@ -296,9 +296,9 @@ predict_hrsa_demographic_hours <- function(
     dplyr::left_join(
       reference_tbl |>
         dplyr::select(
-          .data$gender,
-          .data$age_group,
-          .data$weekly_hours
+          "gender",
+          "age_group",
+          "weekly_hours"
         ),
       by = c(
         "gender",

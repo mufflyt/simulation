@@ -7,7 +7,7 @@ test_that("predict_hrsa_demographic_fte computes age and gender curves correctly
 
   expect_s3_class(res, "tbl_df")
   expect_equal(nrow(res), 6L)
-  expect_true(all(c("weekly_clinical_hours", "annual_clinical_hours", "demographic_fte") %in% names(res)))
+  expect_true(all(c("weekly_hours", "annual_hours", "demographic_fte") %in% names(res)))
   expect_true(all(res$demographic_fte > 0))
 })
 
@@ -21,8 +21,8 @@ test_that("apply_hrsa_insurance_demand_multipliers scales baseline demand", {
   adj <- apply_hrsa_insurance_demand_multipliers(base_demand)
 
   expect_s3_class(adj, "tbl_df")
-  expect_true("hrsa_adjusted_demand" %in% names(adj))
-  expect_true(all(adj$hrsa_adjusted_demand > 0))
+  expect_true("demand_after_insurance" %in% names(adj))
+  expect_true(all(adj$demand_after_insurance > 0))
 })
 
 test_that("aggregate_hrr_workforce_balance aggregates regional supply and demand", {
@@ -34,7 +34,7 @@ test_that("aggregate_hrr_workforce_balance aggregates regional supply and demand
 
   expect_s3_class(bal, "tbl_df")
   expect_equal(nrow(bal), 3L)
-  expect_true("hrsa_shortage_area" %in% names(bal))
+  expect_true("shortage_20pct" %in% names(bal))
   # HRR03 has demand 3.0, supply 0.0 -> deficit 100% -> shortage area
-  expect_true(bal$hrsa_shortage_area[bal$hrr_code == "HRR03"])
+  expect_true(bal$shortage_20pct[bal$hrr_code == "HRR03"])
 })
