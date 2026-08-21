@@ -1,0 +1,7 @@
+source_id,year,file_path,file_format,required,source_url,sha256
+cms_provider_service,2023,raw/cms/provider_service_2023.csv,csv,TRUE,https://data.cms.gov/provider-summary-by-type-of-service/medicare-physician-other-practitioners/medicare-physician-other-practitioners-by-provider-and-service,
+nppes,2026,raw/nppes/nppes_2026.csv,csv,TRUE,https://download.cms.gov/nppes/NPI_Files.html,
+doctors_clinicians,2026,raw/cms/doctors_clinicians_2026.csv,csv,TRUE,https://data.cms.gov/provider-data/dataset/mj5m-pzi6,
+acs_pums,2024,raw/census/acs_pums_2024.csv,csv,TRUE,https://www.census.gov/programs-surveys/acs/microdata.html,
+acs_migration,2022,raw/census/acs_migration_2022.csv,csv,FALSE,https://www.census.gov/programs-surveys/acs/data/data-tables.html,
+meps,2023,raw/meps/meps_hc251_2023.csv,csv,TRUE,https://meps.ahrq.gov/mepsweb/data_stats/download_data_files_detail.jsp?cboPufNumber=HC-251,
