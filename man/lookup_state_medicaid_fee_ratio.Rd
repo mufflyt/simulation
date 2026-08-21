@@ -42,9 +42,12 @@ Other supply:
 \code{\link[=default_region_probabilities]{default_region_probabilities()}},
 \code{\link[=medicaid_acceptance_coefficients]{medicaid_acceptance_coefficients()}},
 \code{\link[=medicaid_medicare_fee_index_table]{medicaid_medicare_fee_index_table()}},
+\code{\link[=practice_economics_defaults]{practice_economics_defaults()}},
+\code{\link[=practice_economics_evidence]{practice_economics_evidence()}},
 \code{\link[=predict_medicaid_acceptance]{predict_medicaid_acceptance()}},
 \code{\link[=simulate_entrant_characteristics]{simulate_entrant_characteristics()}},
-\code{\link[=simulate_joint_entrant_characteristics]{simulate_joint_entrant_characteristics()}}
+\code{\link[=simulate_joint_entrant_characteristics]{simulate_joint_entrant_characteristics()}},
+\code{\link[=simulate_practice_economics]{simulate_practice_economics()}}
 }
 \concept{access}
 \concept{supply}

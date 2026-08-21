@@ -21,13 +21,10 @@ estimate_app_ratio_scenario(
 \item{minimum_physicians}{Minimum physician headcount in included practices.}
 }
 \value{
-A one-row tibble with mean (SD), median (p25, p75), and the bounded
-scenario ratio.
+A one-row tibble with mean (SD), median (p25, p75), and the bounded scenario ratio.
 }
 \description{
-Converts the distribution of observed practice headcount ratios into a
-sensitivity value, bounded by a separately supplied policy ceiling. It does
-not reinterpret a directory headcount as clinical FTE or as state law.
+Estimate an evidence-informed APP ratio scenario
 }
 \seealso{
 Other data:

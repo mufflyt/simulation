@@ -11,8 +11,7 @@ read_app_skill_mix_evidence(
 )
 }
 \arguments{
-\item{duckdb_path}{DuckDB built by
-\code{build_app_skill_mix_evidence_duckdb()}.}
+\item{duckdb_path}{DuckDB built by \code{build_app_skill_mix_evidence_duckdb()}.}
 
 \item{output_schema}{Derived evidence schema.}
 
