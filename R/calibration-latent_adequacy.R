@@ -148,9 +148,10 @@ fit_latent_adequacy_calibration <- function(
 
   raw_appt_rate <- appts / attempts
   waits <- if ("wait_days" %in% names(county_data)) county_data$wait_days else base::rep(30.0, n_counties)
-  raw_wait_score <- base::pmax(0, 1.0 - (waits / 60.0))
 
-  estimated_theta <- 0.60 * raw_appt_rate + 0.40 * raw_wait_score
+  estimated_theta_appt <- (raw_appt_rate - 0.10) / 0.70
+  estimated_theta_wait <- (60.0 - waits) / 45.0
+  estimated_theta <- 0.60 * estimated_theta_appt + 0.40 * estimated_theta_wait
   estimated_theta <- base::pmin(0.98, base::pmax(0.02, estimated_theta))
 
   pop_weights <- if ("female_population" %in% names(county_data)) county_data$female_population else base::rep(1.0, n_counties)

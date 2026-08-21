@@ -1,0 +1,4 @@
+year,procedure_family,n_encounters,n_with_revenue,pct_with_revenue,n_or_036x,pct_or_036x,n_strong_inpatient_or,pct_strong_inpatient_or,n_anesthesia_037x,pct_anesthesia_037x,n_recovery_071x,pct_recovery_071x,n_inpatient_bed,pct_inpatient_bed,n_ambulatory_049x,pct_ambulatory_049x,n_observation_0762,pct_observation_0762,n_ed_045x,pct_ed_045x,los_mean,los_sd,los_median,los_p25,los_p75
+2015,pop_hysterectomy,1,1,100,1,100,1,100,0,0,0,0,1,100,0,0,0,0,0,0,2,NA,2,2,2
+2016,pop_hysterectomy,1,1,100,1,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,NA,2,2,2
+2017,prolapse_repair,1,1,100,0,0,0,0,0,0,0,0,0,0,1,100,0,0,0,0,1,NA,1,1,1
