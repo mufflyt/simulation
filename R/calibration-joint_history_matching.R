@@ -1,8 +1,4 @@
-# Joint History Matching Calibration Engine ------------------------------
-#
-# Identifies parameter combinations consistent with multiple historical targets using
-# Gaussian-process emulators and wave-based history matching.
-# Explicitly labeled as a non_implausible_ensemble, NOT a posterior distribution sample.
+# Joint History Matching & Gaussian Process Emulation -----------------------
 
 #' Joint Bayesian history matching with Gaussian-process emulators
 #'
@@ -29,7 +25,7 @@
 #'   runs, target diagnostics, wave diagnostics, emulator diagnostics, and
 #'   metadata. The ensemble is not a posterior sample.
 #' @family calibration
-#' @concept calibration
+#' @concept history matching
 #' @export
 calibrate_joint_history_matching <- function(
     parameter_spec,
@@ -110,8 +106,8 @@ calibrate_joint_history_matching <- function(
   }
 
   parameter_count <- base::nrow(parameter_spec)
-  initial_runs <- if (base::is.null(initial_runs)) base::max(10L * parameter_count, 200L) else initial_runs
-  new_runs_per_wave <- if (base::is.null(new_runs_per_wave)) base::max(2L * parameter_count, 50L) else new_runs_per_wave
+  initial_runs <- .urps_null_or(initial_runs, base::max(10L * parameter_count, 200L))
+  new_runs_per_wave <- .urps_null_or(new_runs_per_wave, base::max(2L * parameter_count, 50L))
   base::message(
     "Inputs: ", parameter_count, " parameters; ",
     base::nrow(historical_targets), " joint historical targets; ",
@@ -315,8 +311,6 @@ calibrate_joint_history_matching <- function(
   analysis_bundle
 }
 
-
-
 check_columns <- function(table_input, required, object_name) {
   absent <- base::setdiff(required, base::names(table_input))
   if (base::length(absent) > 0L) {
@@ -357,7 +351,7 @@ transform_parameters <- function(parameter_table, parameter_spec) {
 }
 
 run_simulator_design <- function(parameter_runs, parameter_spec,
-                                  historical_targets, simulator) {
+                                 historical_targets, simulator) {
   purrr::map_dfr(
     base::seq_len(base::nrow(parameter_runs)),
     function(run_index) {
@@ -395,7 +389,7 @@ run_simulator_design <- function(parameter_runs, parameter_spec,
 }
 
 fit_target_emulators <- function(training_wide, parameter_spec,
-                                  historical_targets) {
+                                 historical_targets) {
   training_matrix <- transform_parameters(training_wide, parameter_spec)
   fitted_models <- purrr::map(
     historical_targets$target_id,
@@ -432,8 +426,8 @@ fit_target_emulators <- function(training_wide, parameter_spec,
 }
 
 score_joint_implausibility <- function(candidate_parameters, fitted_models,
-                                        parameter_spec, historical_targets,
-                                        implausibility_rank) {
+                                       parameter_spec, historical_targets,
+                                       implausibility_rank) {
   candidate_matrix <- transform_parameters(
     candidate_parameters,
     parameter_spec
@@ -480,7 +474,7 @@ score_joint_implausibility <- function(candidate_parameters, fitted_models,
 }
 
 select_maximin_points <- function(candidate_parameters, parameter_spec,
-                                   selected_count) {
+                                  selected_count) {
   scaled_candidates <- candidate_parameters |>
     dplyr::select(dplyr::all_of(parameter_spec$parameter)) |>
     dplyr::mutate(
