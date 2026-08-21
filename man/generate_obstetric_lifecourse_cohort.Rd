@@ -30,6 +30,7 @@ Other demand:
 \code{\link[=apply_insurance_mix_demand_multiplier]{apply_insurance_mix_demand_multiplier()}},
 \code{\link[=demand_by_travel_band]{demand_by_travel_band()}},
 \code{\link[=draw_insurance_demand_multipliers]{draw_insurance_demand_multipliers()}},
+\code{\link[=estimate_urogynecology_service_share]{estimate_urogynecology_service_share()}},
 \code{\link[=geographic_demand_summary]{geographic_demand_summary()}},
 \code{\link[=insurance_demand_multiplier_spec]{insurance_demand_multiplier_spec()}},
 \code{\link[=isochrone_demand_from_tracts]{isochrone_demand_from_tracts()}},

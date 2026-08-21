@@ -7,7 +7,11 @@
 run_end_to_end_simulation(
   start_year = 2025L,
   end_year = 2035L,
-  n_agents = 500L,
+  n_agents = 1000L,
+  initial_provider_count = 1200L,
+  fellowship_entrants = 55L,
+  app_delegation_rate = 0.15,
+  medicaid_fee_ratio = 0.75,
   save_outputs = TRUE,
   output_dir = "artifacts/end_to_end"
 )
@@ -19,16 +23,28 @@ run_end_to_end_simulation(
 
 \item{n_agents}{Number of microsimulation patient agents.}
 
-\item{save_outputs}{Logical; whether to write CSV outputs to disk.}
+\item{initial_provider_count}{Number of baseline provider records.}
+
+\item{fellowship_entrants}{Annual ACGME fellowship graduate entrants.}
+
+\item{app_delegation_rate}{APP task delegation fraction (0 to 0.30).}
+
+\item{medicaid_fee_ratio}{National/state Medicaid fee index ratio (default 0.75).}
+
+\item{save_outputs}{Logical; whether to write CSV audit outputs to disk.}
 
 \item{output_dir}{Directory for timestamped CSV output artifacts.}
 }
 \value{
-A named list of end-to-end simulation results.
+A named list containing \code{audit_ledger_tbl}, \code{annual_hrr_balance},
+\code{final_provider_cohort}, and \code{simulation_config}.
 }
 \description{
-Executes the complete end-to-end simulation pipeline across all 6 core modules
-and returns a comprehensive summary list.
+Executes the single-source-of-truth end-to-end longitudinal simulation across
+all 8 coupled annual event sequence steps.
+
+Enforces conservation identities across every transition:
+\code{served_patients_n + unserved_delayed_n == appointment_requests_n}.
 }
 \concept{core}
 \concept{simulation pipeline}
