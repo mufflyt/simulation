@@ -369,8 +369,8 @@ assess_horizon_change <- function(score_panel, model_cols = character()) {
     ) |>
     dplyr::summarise(crps = base::mean(.data$crps), .groups = "drop") |>
     tidyr::pivot_wider(
-      names_from = .data$horizon,
-      values_from = .data$crps,
+      names_from = "horizon",
+      values_from = "crps",
       names_prefix = "h_"
     )
   short_col <- base::paste0("h_", shortest)
