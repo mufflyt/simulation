@@ -59,9 +59,13 @@ Other calibration:
 \code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
 \code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
 \code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
+\code{\link[=example_sbc_prior]{example_sbc_prior()}},
+\code{\link[=example_sbc_simulator]{example_sbc_simulator()}},
 \code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}},
 \code{\link[=generate_synthetic_adequacy_data]{generate_synthetic_adequacy_data()}},
-\code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}}
+\code{\link[=make_joint_history_matcher_adapter]{make_joint_history_matcher_adapter()}},
+\code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}},
+\code{\link[=run_joint_history_matcher_sbc]{run_joint_history_matcher_sbc()}}
 }
 \concept{calibration}
 \concept{history matching}
