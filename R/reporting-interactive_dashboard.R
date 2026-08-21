@@ -10,7 +10,7 @@
 #' @param launch_browser Logical; if TRUE (default), automatically opens the browser.
 #'
 #' @return Runs the Shiny application.
-#' @family ui
+#' @family reporting
 #' @concept dashboard
 #' @export
 run_workbench <- function(port = NULL, launch_browser = TRUE) {
