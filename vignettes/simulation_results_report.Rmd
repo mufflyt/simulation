@@ -184,58 +184,59 @@ The simulation integrates multiple authoritative external datasets into a unifie
 
 # 5. Joint Bayesian Latent Adequacy ($\theta_g$) & Regional Sensitivity
 
-### Conceptual Framework: Why Access Adequacy is "Latent"
-Healthcare access adequacy cannot be accurately measured by raw physician headcount alone. Count-based density metrics ignore spatial travel barriers, appointment availability, clinic eligibility filtering, and insurance acceptance. In `urpssim`, true access capacity is modeled as a **latent regional parameter** $\theta_g \in [0, 1]$ for each geography/county $g$:
+### 🍽️ The Restaurant Reservation Analogy for Latent Access ($\theta_g$)
+Imagine trying to determine how easy it is to get a dinner table in a city (**Healthcare Access Adequacy $\theta_g$**). You cannot simply count the number of restaurants listed on Google Maps (**Physician Headcount**), because many listed numbers are disconnected, closed, don't take your reservation app, or have 3-month waitlists!
+
+To find the true, hidden **Kitchen Throughput Capacity ($\theta_g$)**, you combine 4 clues:
+
+1. **Calling Google Map Numbers (Listing Denominator)**: You dial 100 directory phone numbers. Disconnected lines, closed locations, and clinics not taking new patients fail immediately. Only **52.3%** connect to a real reservation desk. This is **Patient-Experienced Access**.
+2. **Walking Up to Open Tables (Eligible Denominator)**: If you bypass broken phone numbers and walk directly into an open, active clinic, **95.3%** can seat you. This is **Physical Clinic Capacity**. *(Relying only on open clinics overestimates real patient access by +43 percentage points!)*
+3. **Wait List Duration (Wait Time in Days)**: In high-capacity cities ($\theta_g = 85\%$), you wait 15 minutes (15 days for an appointment). In low-capacity cities ($\theta_g = 20\%$), you wait 3 hours (55+ days for an appointment!).
+4. **Voucher Acceptance (Medicaid Acceptance Rate)**: Does the clinic accept public coverage vouchers? In low-access regions, only **20%** accept Medicaid.
+
+The **Joint Bayesian Model** combines all 4 clues into a single latent score $\theta_g \in [0, 1]$ for every county.
+
+---
+
+## Figure 4: The Restaurant Reservation Analogy vs. Healthcare Latent Adequacy ($\theta_g$)
+
+![Figure 4: The Restaurant Reservation Analogy vs. Healthcare Latent Adequacy](../artifacts/figures/fig_analogy_restaurant_vs_healthcare.png)
+
+---
+
+### Conceptual Framework & Measurement Equations
+In `urpssim`, true access capacity is modeled as a **latent regional parameter** $\theta_g \in [0, 1]$ for each geography/county $g$:
 
 $$\theta_g \sim \text{Beta}(\alpha, \beta), \quad \theta_g \in [0, 1]$$
 
-Where:
-- $\theta_g = 1.0$: Unconstrained baseline healthcare access (same-week appointments, 100% Medicaid acceptance, minimal travel).
-- $\theta_g = 0.0$: Severe access breakdown ($>60$ day wait times, total provider refusal, extreme travel distance).
-
-### Measurement Equations for Access Indicators
 The latent score $\theta_g$ is inferred simultaneously from four observed empirical access indicators through measurement equations:
 
 1. **Mystery Caller Listing Appointment Success ($A_{\text{listing}, g}$)**:
    $$A_{\text{listing}, g} \sim \text{Binomial}(N_g, \, 0.10 + 0.70 \cdot \theta_g)$$
-   *Captures real-world patient experience when calling listed phone numbers in public directories (historical mean: 52.3%).*
 
 2. **Confirmed Eligible Practice Appointment Success ($A_{\text{eligible}, g}$)**:
    $$A_{\text{eligible}, g} \sim \text{Binomial}(N_g, \, 0.60 + 0.38 \cdot \theta_g)$$
-   *Captures practice availability once disconnected, non-practicing, or ineligible listings are filtered out (historical mean: 95.3%).*
 
 3. **New Patient Appointment Wait Time ($W_g$, in days)**:
    $$W_g \sim \text{Normal}(60.0 - 45.0 \cdot \theta_g, \, \sigma_w^2)$$
-   *Inversely maps appointment wait time (days) to capacity. Regions with $\theta_g = 0.80$ average 24-day wait times, whereas $\theta_g = 0.20$ average 51-day wait times.*
 
 4. **Medicaid Acceptance Rate ($M_g$)**:
    $$M_g \sim \text{Binomial}(N_g, \, 0.15 + 0.55 \cdot \theta_g)$$
-   *Reflects the probability that an active URPS practice accepts new Medicaid patients (national mean: 42.1%).*
 
 ### Bayesian History Matching & Implausibility Metric
-To efficiently calibrate $\theta_g$ across high-dimensional parameter spaces without full MCMC computational bottlenecks, the model uses multi-wave **Gaussian Process (GP) emulators** with a ranked **Implausibility Metric ($I(x)$)**:
-
 $$I(x) = \frac{|\mathrm{E}(f(x)) - z|}{\sqrt{\mathrm{V}(f(x)) + \sigma_{\text{obs}}^2 + \sigma_{\text{disc}}^2}}$$
 
-Where:
-- $I(x)$: Implausibility score for candidate parameter vector $x$. Candidates with $I(x) > 3.0$ are rejected as implausible.
-- $\mathrm{E}(f(x))$: Gaussian Process emulator expected prediction for access indicator $f(x)$.
-- $z$: Historical empirical benchmark target observation.
-- $\mathrm{V}(f(x))$: Emulator prediction uncertainty variance.
-- $\sigma_{\text{obs}}^2$: Empirical survey measurement error variance.
-- $\sigma_{\text{disc}}^2$: Structural model discrepancy variance.
+---
+
+## Figure 5: Joint Bayesian Latent Adequacy ($\theta_g$) Measurement & Regional Sensitivity
+
+![Figure 5: Joint Bayesian Latent Adequacy Measurement Equations & Regional Sensitivity Analysis](../artifacts/figures/fig_latent_adequacy_explanation.png)
 
 ---
 
-## Figure 4: Joint Bayesian Latent Adequacy ($\theta_g$) Measurement & Regional Sensitivity
+## Figure 6: Regional Latent Adequacy Scores ($\theta_g$) Across Sample Counties
 
-![Figure 4: Joint Bayesian Latent Adequacy Measurement Equations & Regional Sensitivity Analysis](../artifacts/figures/fig_latent_adequacy_explanation.png)
-
----
-
-## Figure 5: Regional Latent Adequacy Scores ($\theta_g$) Across Sample Counties
-
-![Figure 5: Joint Bayesian Latent Adequacy Scores Across Counties with 95% Credible Intervals](../artifacts/figures/fig4_latent_adequacy_recovery.png)
+![Figure 6: Joint Bayesian Latent Adequacy Scores Across Counties with 95% Credible Intervals](../artifacts/figures/fig4_latent_adequacy_recovery.png)
 
 ---
 
