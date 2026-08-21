@@ -1,17 +1,9 @@
-# County-level Endogenous Provider Geography & Spatial Equilibrium -------
-#
-# Solves county-level provider destination choices using a conditional logit framework
-# coupled with iterative fixed-point supply-demand equilibrium.
-
 #' Validate inputs for the endogenous geography model
 #'
 #' @param providers Provider-level tibble.
 #' @param markets County-year market tibble.
 #' @param choice_set Provider-county choice-set tibble.
 #' @return Invisibly returns TRUE.
-#' @family geography
-#' @concept geography
-#' @export
 validate_geography_inputs <- function(providers, markets, choice_set) {
   base::message("Validating endogenous geography inputs.")
 
@@ -99,9 +91,6 @@ validate_geography_inputs <- function(providers, markets, choice_set) {
 #' @param markets One-year county market tibble.
 #' @param policy_shocks Optional tibble of county-year shocks.
 #' @return County market tibble with policy variables.
-#' @family geography
-#' @concept geography
-#' @export
 apply_geography_policy <- function(markets, policy_shocks = NULL) {
   base::message("Applying county-level geography policy inputs.")
 
@@ -159,9 +148,6 @@ apply_geography_policy <- function(markets, policy_shocks = NULL) {
 #'
 #' @param utility_table Provider-destination utility tibble.
 #' @return Utility tibble with conditional-logit probabilities.
-#' @family geography
-#' @concept geography
-#' @export
 calculate_destination_probabilities <- function(utility_table) {
   base::message("Calculating provider destination probabilities.")
 
@@ -204,9 +190,6 @@ calculate_destination_probabilities <- function(utility_table) {
 #' @param choice_set Provider-county choice-set tibble.
 #' @param coefficients Named numeric vector of utility coefficients.
 #' @return Provider-county utility and probability tibble.
-#' @family geography
-#' @concept geography
-#' @export
 build_geography_utilities <- function(
     providers,
     markets,
@@ -268,9 +251,6 @@ build_geography_utilities <- function(
 #' @param markets One-year county market tibble.
 #' @param accessibility Optional county-to-county E2SFCA weight tibble.
 #' @return Updated county market tibble.
-#' @family geography
-#' @concept geography
-#' @export
 update_county_market <- function(
     probability_table,
     markets,
@@ -380,8 +360,6 @@ update_county_market <- function(
 #' @param max_iterations Maximum fixed-point iterations.
 #' @param damping Weight placed on the newly calculated demand rate.
 #' @return Named list containing county markets and choice probabilities.
-#' @family geography
-#' @concept geography
 #' @export
 solve_endogenous_geography <- function(
     providers,
@@ -536,8 +514,6 @@ solve_endogenous_geography <- function(
 #' @param probability_table Provider-county probability tibble.
 #' @param seed Integer random-number seed.
 #' @return One realized county per provider.
-#' @family geography
-#' @concept geography
 #' @export
 draw_provider_locations <- function(probability_table, seed) {
   base::message("Drawing realized provider locations with seed ", seed, ".")
@@ -564,8 +540,6 @@ draw_provider_locations <- function(probability_table, seed) {
 #'
 #' @param county_markets Solved county market tibble.
 #' @return Named list with state and national summaries.
-#' @family geography
-#' @concept geography
 #' @export
 aggregate_geography_markets <- function(county_markets) {
   base::message("Aggregating county markets to state and national levels.")
@@ -618,8 +592,6 @@ aggregate_geography_markets <- function(county_markets) {
 #' @param directory Existing destination directory.
 #' @param prefix Filename prefix.
 #' @return Invisibly returns exact saved paths.
-#' @family geography
-#' @concept geography
 #' @export
 save_geography_artifacts <- function(
     geography_model,
