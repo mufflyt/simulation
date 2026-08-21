@@ -180,6 +180,77 @@ provenance, the right one does. `ISOCHRONE_REFUSED_ARTIFACTS` records every
 rejected candidate *with its reason*, so a refusal is a decision on the record
 rather than an omission someone later "fixes".
 
+### 4. Comprehensive Supply & Demand Module Flowcharts
+
+#### Demand Pipeline Flowchart
+
+```mermaid
+graph TD
+    classDef dem fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#01579b;
+    classDef proc fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20;
+    classDef outp fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100;
+
+    POP["Step 1: Census and ACS Female Microdata<br/>demand-synthetic_county_population.R"] :::dem --> EPID["Step 2: Epidemiological Baseline Anchors<br/>NHANES and JAMA/AOG Prevalence<br/>demand-nhanes_pfd_prevalence.R"] :::dem
+
+    EPID --> TRAJ["Step 3: Dynamic Multistate Trajectories<br/>SWAN Longitudinal Markov Chain<br/>demand-swan_incontinence_markov.R"] :::proc
+
+    TRAJ --> RECUR["Step 4: Incidence and Recurrence Hazards<br/>Weibull Post-Surgical Recurrence<br/>demand-recurrence_convolution.R"] :::proc
+
+    RECUR --> SEEK["Step 5: Care-Seeking and Referral Filter<br/>Medicaid Fee Ratio and SVI Barriers<br/>demand-care_engagement_flows.R"] :::proc
+
+    SEEK --> PATH["Step 6: Condition-to-Service Translation<br/>UI / POP / AI to CPT Procedures<br/>demand-condition_service_pathway.R"] :::proc
+
+    PATH --> DECOMP["Step 7: Setting and Office Decomposition<br/>HOPD / ASC / Office CPT Mix<br/>demand-office_visit_decomposition.R"] :::proc
+
+    DECOMP --> ROUTE["Step 8: Empirical Provider Routing<br/>CMS Part B / NPPES / Board Roster<br/>demand-provider_routing.R"] :::proc
+
+    ROUTE --> RVU["Step 9: URPS Work RVU and FTE Conversion<br/>CPT wRVUs to Required URPS FTEs<br/>demand-deconstruct_workload_rvus.R"] :::outp
+```
+
+#### Supply Pipeline Flowchart
+
+```mermaid
+graph TD
+    classDef sup fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c;
+    classDef proc fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20;
+    classDef outp fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100;
+
+    ENT["NRMP and ACGME Entrant Series<br/>Fellowship Graduates 55-64/year<br/>supply-entrant_trajectory.R"] :::sup --> CONV["Fellowship Conversion and Roster Ingestion<br/>FPMRS Taxonomy and Board Validation<br/>supply-fellowship_conversion.R"] :::sup
+
+    CONV --> SETT["Practice Setting and Location Assignment<br/>Academic / HOPD / Private Mix<br/>supply-urps_settings.R"] :::proc
+
+    SETT --> APP["APP Skill-Mix Delegation Extender<br/>NP/PA Clinical Capacity Multiplier<br/>supply-delegation_evidence.R"] :::proc
+
+    APP --> MED["Medicaid Acceptance Decision Engine<br/>Fee-Ratio and SVI Logistic Acceptance<br/>supply-medicaid_acceptance.R"] :::proc
+
+    MED --> HAZ["Aging, Attrition and Retirement Hazards<br/>Weibull Attrition and SWAN Hazards<br/>supply-retirement_hazard.R"] :::proc
+
+    HAZ --> PROD["Mixed-Effects Surgical Productivity<br/>fitted log-capacity ~ ns(age) + (1|NPI)<br/>demand-measure_provider_productivity.R"] :::proc
+
+    PROD --> FTE["Active Clinical Supply FTE Roster<br/>Total Available URPS Clinical FTE<br/>supply-workload_to_fte.R"] :::outp
+```
+
+#### Integration & Clearing Engine Flowchart
+
+```mermaid
+graph TD
+    classDef in fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1;
+    classDef core fill:#ffe0b2,stroke:#e65100,stroke-width:2px,color:#bf360c;
+    classDef rep fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20;
+
+    DEM["Demand Pipeline<br/>Required Demand FTEs and Cases"] :::in --> CORE["Master Simulation Engine<br/>core-run_end_to_end_simulation.R"] :::core
+    SUP["Supply Pipeline<br/>Supplied Physician FTEs and Capacity"] :::in --> CORE
+
+    CORE --> SPAT["Enhanced 2-Step Floating Catchment 2SFCA<br/>Isochrones and Patient Destination Choice<br/>geography-spatial_access_e2sfca.R"] :::core
+
+    SPAT --> LAT["Joint Bayesian Latent Access Adequacy theta_g<br/>Mystery-Caller and Wait Time Calibration<br/>calibration-latent_adequacy.R"] :::core
+
+    LAT --> HRR["HRR Workforce Balance and Shortage Audit<br/>306 Hospital Referral Regions >=20% Deficit<br/>geography-hrr_workforce_balance.R"] :::core
+
+    HRR --> OUT1["10-Year Patient-Flow Ledger<br/>Served vs. Delayed Unmet Demand<br/>reporting-baseline_gap.R"] :::rep
+    HRR --> OUT2["Publication Figures with 95% CIs<br/>Figures 1-5 and Report HTML<br/>vignettes/simulation_results_report.Rmd"] :::rep
+```
+
 ---
 
 ## Where the supply is, and where the demand is

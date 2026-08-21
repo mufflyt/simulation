@@ -1,0 +1,127 @@
+---
+title: "Technical Appendix: URPS Microsimulation Architecture & Module Flowcharts"
+author: "URPS Microsimulation Research Group"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+# Technical Appendix: System Architecture & Module Interconnections
+
+This technical appendix documents the complete modular workflow for both the **Demand Subsystem** and **Supply Subsystem**, as well as the overarching **Spatial Access & Clearing Engine** of the `urpssim` R package.
+
+---
+
+# 1. Demand Subsystem Architecture
+
+The demand pipeline generates individual-level female population cohorts, applies age- and risk-stratified epidemiological anchors, simulates longitudinal disease stage transitions and recurrence cascades, applies care-seeking and financial accessibility filters, translates condition-level demand into CPT-coded procedures, routes services empirically across provider specialties via a Dirichlet model, and computes required clinical physician FTEs ($\text{wRVUs} / 1,400$).
+
+```{mermaid}
+graph TD
+    classDef dem fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#01579b;
+    classDef proc fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20;
+    classDef outp fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100;
+
+    POP["Step 1: Census and ACS Female Microdata<br/>demand-synthetic_county_population.R"] :::dem --> EPID["Step 2: Epidemiological Baseline Anchors<br/>NHANES and JAMA/AOG Prevalence<br/>demand-nhanes_pfd_prevalence.R"] :::dem
+
+    EPID --> TRAJ["Step 3: Dynamic Multistate Trajectories<br/>SWAN Longitudinal Markov Chain<br/>demand-swan_incontinence_markov.R"] :::proc
+
+    TRAJ --> RECUR["Step 4: Incidence and Recurrence Hazards<br/>Weibull Post-Surgical Recurrence<br/>demand-recurrence_convolution.R"] :::proc
+
+    RECUR --> SEEK["Step 5: Care-Seeking and Referral Filter<br/>Medicaid Fee Ratio and SVI Barriers<br/>demand-care_engagement_flows.R"] :::proc
+
+    SEEK --> PATH["Step 6: Condition-to-Service Translation<br/>UI / POP / AI to CPT Procedures<br/>demand-condition_service_pathway.R"] :::proc
+
+    PATH --> DECOMP["Step 7: Setting and Office Decomposition<br/>HOPD / ASC / Office CPT Mix<br/>demand-office_visit_decomposition.R"] :::proc
+
+    DECOMP --> ROUTE["Step 8: Empirical Provider Routing<br/>CMS Part B / NPPES / Board Roster<br/>demand-provider_routing.R"] :::proc
+
+    ROUTE --> RVU["Step 9: URPS Work RVU and FTE Conversion<br/>CPT wRVUs to Required URPS FTEs<br/>demand-deconstruct_workload_rvus.R"] :::outp
+```
+
+### Module Responsibilities:
+- `R/demand-synthetic_county_population.R`: Builds 84,400 Census-tract female population cells (ages 20–100+).
+- `R/demand-nhanes_pfd_prevalence.R`: Anchors age-, parity-, and race-stratified prevalence rates (Nygaard et al. JAMA 2008; Wu et al. Obstet Gynecol 2014).
+- `R/demand-swan_incontinence_markov.R`: Models longitudinal disease stage progression over 10-year simulation horizons.
+- `R/demand-recurrence_convolution.R`: Calculates post-operative surgical recurrence and retreatment hazard rates.
+- `R/demand-care_engagement_flows.R`: Applies care-seeking conversion factors ($\sim 38.0\%$ care-seeking, $\sim 42.0\%$ referral).
+- `R/demand-condition_service_pathway.R`: Translates treated patient counts into 11 distinct CPT procedure/encounter categories.
+- `R/demand-provider_routing.R`: Fits empirical Dirichlet routing probabilities from CMS Part B claims to divide service volumes among URPS, General OB/GYN, General Urology, APPs, PFPT, and Primary Care.
+- `R/demand-deconstruct_workload_rvus.R`: Converts routed URPS service volumes into total required clinical FTEs.
+
+---
+
+# 2. Supply Subsystem Architecture
+
+The supply pipeline models individual physician careers from fellowship graduate entry through board certification, practice setting location, Advanced Practice Provider (APP) task-sharing delegation, Medicaid participation decisions, age/sex career retirement hazards, and mixed-effects surgical productivity.
+
+```{mermaid}
+graph TD
+    classDef sup fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c;
+    classDef proc fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20;
+    classDef outp fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100;
+
+    ENT["NRMP and ACGME Entrant Series<br/>Fellowship Graduates 55-64/year<br/>supply-entrant_trajectory.R"] :::sup --> CONV["Fellowship Conversion and Roster Ingestion<br/>FPMRS Taxonomy and Board Validation<br/>supply-fellowship_conversion.R"] :::sup
+
+    CONV --> SETT["Practice Setting and Location Assignment<br/>Academic / HOPD / Private Mix<br/>supply-urps_settings.R"] :::proc
+
+    SETT --> APP["APP Skill-Mix Delegation Extender<br/>NP/PA Clinical Capacity Multiplier<br/>supply-delegation_evidence.R"] :::proc
+
+    APP --> MED["Medicaid Acceptance Decision Engine<br/>Fee-Ratio and SVI Logistic Acceptance<br/>supply-medicaid_acceptance.R"] :::proc
+
+    MED --> HAZ["Aging, Attrition and Retirement Hazards<br/>Weibull Attrition and SWAN Hazards<br/>supply-retirement_hazard.R"] :::proc
+
+    HAZ --> PROD["Mixed-Effects Surgical Productivity<br/>fitted log-capacity ~ ns(age) + (1|NPI)<br/>demand-measure_provider_productivity.R"] :::proc
+
+    PROD --> FTE["Active Clinical Supply FTE Roster<br/>Total Available URPS Clinical FTE<br/>supply-workload_to_fte.R"] :::outp
+```
+
+### Module Responsibilities:
+- `R/supply-entrant_trajectory.R`: Simulates annual fellowship graduate entrant trajectories (55–64 certified graduates/year).
+- `R/supply-fellowship_conversion.R`: Validates ABOG/ABU board certification status and NPPES FPMRS taxonomy credentials.
+- `R/supply-urps_settings.R`: Assigns practice settings (Academic Health Center, Hospital Outpatient Department, Private Practice).
+- `R/supply-delegation_evidence.R`: Models APP (Nurse Practitioner / Physician Assistant) clinical task-sharing capacity extension ($+7.5\%$ effective throughput).
+- `R/supply-medicaid_acceptance.R`: Evaluates provider Medicaid acceptance using fee-ratio logistic equations ($\text{OR} = 1.85$ per $+0.20$ fee ratio).
+- `R/supply-retirement_hazard.R`: Implements age- and sex-specific Weibull career retirement hazard functions.
+- `R/demand-measure_provider_productivity.R`: Fits mixed-effects natural cubic spline models (`lmer`) predicting annual wRVU output per clinical FTE.
+- `R/supply-workload_to_fte.R`: Aggregates active physician clinical FTEs into national and regional supply tables.
+
+---
+
+# 3. Integration & Spatial Clearing Engine
+
+The integration engine merges the Demand and Supply pipelines, performing spatial accessibility clearing via Enhanced 2-Step Floating Catchment Area (2SFCA) methods, calibrating Joint Bayesian Latent Access ($\theta_g$), and conducting 10-year national patient-flow audit ledgers.
+
+```{mermaid}
+graph TD
+    classDef in fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1;
+    classDef core fill:#ffe0b2,stroke:#e65100,stroke-width:2px,color:#bf360c;
+    classDef rep fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20;
+
+    DEM["Demand Pipeline<br/>Required Demand FTEs and Cases"] :::in --> CORE["Master Simulation Engine<br/>core-run_end_to_end_simulation.R"] :::core
+    SUP["Supply Pipeline<br/>Supplied Physician FTEs and Capacity"] :::in --> CORE
+
+    CORE --> SPAT["Enhanced 2-Step Floating Catchment 2SFCA<br/>Isochrones and Patient Destination Choice<br/>geography-spatial_access_e2sfca.R"] :::core
+
+    SPAT --> LAT["Joint Bayesian Latent Access Adequacy theta_g<br/>Mystery-Caller and Wait Time Calibration<br/>calibration-latent_adequacy.R"] :::core
+
+    LAT --> HRR["HRR Workforce Balance and Shortage Audit<br/>306 Hospital Referral Regions >=20% Deficit<br/>geography-hrr_workforce_balance.R"] :::core
+
+    HRR --> OUT1["10-Year Patient-Flow Ledger<br/>Served vs. Delayed Unmet Demand<br/>reporting-baseline_gap.R"] :::rep
+    HRR --> OUT2["Publication Figures with 95% CIs<br/>Figures 1-5 and Report HTML<br/>vignettes/simulation_results_report.Rmd"] :::rep
+```
+
+### Module Responsibilities:
+- `R/core-run_end_to_end_simulation.R`: Manages the master 10-year time-stepping simulation loop (2025–2035).
+- `R/geography-spatial_access_e2sfca.R`: Solves multi-catchment drive-time isochrones and spatial accessibility ratios.
+- `R/calibration-latent_adequacy.R`: Estimates latent patient access ($\theta_g$) by combining phone listing reachability ($52.3\%$), eligible walk-in access ($95.3\%$), wait times (15–55 days), and Medicaid acceptance.
+- `R/geography-hrr_workforce_balance.R`: Evaluates local supply-demand equilibrium across all 306 Dartmouth Hospital Referral Regions (HRRs).
+- `R/reporting-baseline_gap.R`: Compiles audit ledgers tracking total served encounters vs. delayed/unmet patient demand.
