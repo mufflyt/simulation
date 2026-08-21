@@ -555,18 +555,21 @@ apply_provider_routing <- function(
   has_evidence_status <- "evidence_status" %in% base::colnames(routing)
 
   res <- service_volume |>
-    dplyr::inner_join(routing, by = "service", relationship = "many-to-many") |>
+    dplyr::inner_join(routing, by = "service", relationship = "many-to-many")
+
+  if (prior_only == "unresolved") {
+    res <- res |>
+      dplyr::mutate(
+        is_prior = if (has_evidence_status) .data$evidence_status == "prior_only" else TRUE,
+        provider_group = ifelse(.data$is_prior, "unresolved", .data$provider_group)
+      ) |>
+      dplyr::select(-dplyr::any_of("is_prior"))
+  }
+
+  res |>
     dplyr::mutate(
-      provider_group = ifelse(
-        prior_only == "unresolved" &
-          (if (has_evidence_status) .data$evidence_status == "prior_only" else TRUE),
-        "unresolved",
-        .data$provider_group
-      ),
       provider_volume = .data$volume * .data[[prob_col]]
     )
-
-  res
 }
 
 #' Route condition pathway demand to provider-specific service volumes
