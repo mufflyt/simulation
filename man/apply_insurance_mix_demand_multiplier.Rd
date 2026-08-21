@@ -42,6 +42,8 @@ synthetic persons.
 Other demand:
 \code{\link[=accessible_need_vs_capacity]{accessible_need_vs_capacity()}},
 \code{\link[=apply_hrsa_insurance_demand_multipliers]{apply_hrsa_insurance_demand_multipliers()}},
+\code{\link[=build_county_synthetic_female_population]{build_county_synthetic_female_population()}},
+\code{\link[=default_pfd_transition_models]{default_pfd_transition_models()}},
 \code{\link[=demand_by_travel_band]{demand_by_travel_band()}},
 \code{\link[=draw_insurance_demand_multipliers]{draw_insurance_demand_multipliers()}},
 \code{\link[=estimate_urogynecology_service_share]{estimate_urogynecology_service_share()}},
@@ -52,6 +54,8 @@ Other demand:
 \code{\link[=need_weighted_access]{need_weighted_access()}},
 \code{\link[=normalize_urps_insurance]{normalize_urps_insurance()}},
 \code{\link[=predict_pelvic_floor_disease_trajectory]{predict_pelvic_floor_disease_trajectory()}},
+\code{\link[=simulate_pfd_trajectories]{simulate_pfd_trajectories()}},
+\code{\link[=summarize_county_pfd_burden]{summarize_county_pfd_burden()}},
 \code{\link[=tract_need_from_population]{tract_need_from_population()}},
 \code{\link[=validate_insurance_demand_multipliers]{validate_insurance_demand_multipliers()}}
 }
