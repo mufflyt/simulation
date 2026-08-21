@@ -1,0 +1,8 @@
+source_id,path,table,source_uri
+patient_od,data-restricted/patient_od.csv,patient_od,RESTRICTED_LOCAL_INPUT
+cms_dac,data-raw/patient_choice/cms_doctors_clinicians.csv,cms_dac,https://data.cms.gov/provider-data/dataset/mj5m-pzi6
+nppes,data-raw/patient_choice/nppes.csv,nppes,https://download.cms.gov/nppes/NPI_Files.html
+acs,data-raw/patient_choice/acs_origin_covariates.csv,acs_origins,https://api.census.gov/data.html
+access_surveys,data-raw/patient_choice/access_survey_priors.csv,access_survey_priors,NHIS_MEPS_NHTS_PUBLIC_USE
+cms_geo,data-raw/patient_choice/cms_geographic_variation.csv,cms_geo,https://data.cms.gov/summary-statistics-on-use-and-payments/medicare-geographic-comparisons
+context,data-raw/patient_choice/context_geographies.csv,context_geographies,AHRF_PLACES_SVI_RUCA_PUBLIC_USE
