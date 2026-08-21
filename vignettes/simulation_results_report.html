@@ -2578,107 +2578,6 @@ ul.task-list{list-style: none;}
 
 
 
-<style type="text/css">
-code {
-white-space: pre;
-}
-.sourceCode {
-overflow: visible;
-}
-</style>
-<style type="text/css" data-origin="pandoc">
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-{ counter-reset: source-line 0; }
-pre.numberSource code > span
-{ position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-{ content: counter(source-line);
-position: relative; left: -1em; text-align: right; vertical-align: baseline;
-border: none; display: inline-block;
--webkit-touch-callout: none; -webkit-user-select: none;
--khtml-user-select: none; -moz-user-select: none;
--ms-user-select: none; user-select: none;
-padding: 0 4px; width: 4em;
-color: #aaaaaa;
-}
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
-div.sourceCode
-{ background-color: #f8f8f8; }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
-code span.al { color: #ef2929; } 
-code span.an { color: #8f5902; font-weight: bold; font-style: italic; } 
-code span.at { color: #204a87; } 
-code span.bn { color: #0000cf; } 
-code span.cf { color: #204a87; font-weight: bold; } 
-code span.ch { color: #4e9a06; } 
-code span.cn { color: #8f5902; } 
-code span.co { color: #8f5902; font-style: italic; } 
-code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } 
-code span.do { color: #8f5902; font-weight: bold; font-style: italic; } 
-code span.dt { color: #204a87; } 
-code span.dv { color: #0000cf; } 
-code span.er { color: #a40000; font-weight: bold; } 
-code span.ex { } 
-code span.fl { color: #0000cf; } 
-code span.fu { color: #204a87; font-weight: bold; } 
-code span.im { } 
-code span.in { color: #8f5902; font-weight: bold; font-style: italic; } 
-code span.kw { color: #204a87; font-weight: bold; } 
-code span.op { color: #ce5c00; font-weight: bold; } 
-code span.ot { color: #8f5902; } 
-code span.pp { color: #8f5902; font-style: italic; } 
-code span.sc { color: #ce5c00; font-weight: bold; } 
-code span.ss { color: #4e9a06; } 
-code span.st { color: #4e9a06; } 
-code span.va { color: #000000; } 
-code span.vs { color: #4e9a06; } 
-code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } 
-</style>
-<script>
-// apply pandoc div.sourceCode style to pre.sourceCode instead
-(function() {
-  var sheets = document.styleSheets;
-  for (var i = 0; i < sheets.length; i++) {
-    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
-    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    var j = 0;
-    while (j < rules.length) {
-      var rule = rules[j];
-      // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
-        j++;
-        continue;
-      }
-      var style = rule.style.cssText;
-      // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') {
-        j++;
-        continue;
-      }
-      // replace div.sourceCode by a pre.sourceCode rule
-      sheets[i].deleteRule(j);
-      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
-    }
-  }
-})();
-</script>
 
 
 
@@ -2866,7 +2765,7 @@ Deficit</strong>: Under current fellowship training rates (55–64
 certified graduates per year) and age/sex-specific career retirement
 hazards, active physician clinical FTE declines relative to female
 population growth, expanding the national clinical FTE gap from
-<strong>3,851.8 FTEs in 2025</strong> to <strong>9,405.8 FTEs by
+<strong>3,851.8 FTEs in 2025</strong> to <strong>4,480.8 FTEs by
 2035</strong>. 2. <strong>Patient-Flow Conservation Audit</strong>:
 Unmet or delayed patient demand grows from <strong>2.07 million cases in
 2025</strong> to <strong>2.95 million cases in 2035</strong>, as
@@ -2881,51 +2780,273 @@ cross-county variation driven by mystery-caller listing rates and
 appointment wait times.</p>
 <hr />
 </div>
+<div id="variable-definitions-data-dictionary" class="section level1">
+<h1>1. Variable Definitions &amp; Data Dictionary</h1>
+<p>To ensure complete clarity and transparency across all report tables,
+equations, and figures, the core simulation variables are defined
+below:</p>
+<div id="demographic-epidemiological-variables" class="section level3">
+<h3>Demographic &amp; Epidemiological Variables</h3>
+<ul>
+<li><strong>Female Population (<code>population</code> /
+<code>Female Pop (M)</code>)</strong>: Total estimated U.S.
+community-dwelling adult female population aged 18 and older, derived
+from U.S. Census Bureau ACS 5-year tract projections.</li>
+<li><strong>Incident Cases (<code>incident_cases</code>)</strong>: Newly
+diagnosed pelvic floor disorder cases (SUI, UUI, POP Stage I–IV, FI,
+OAB) originating within the current calendar year.</li>
+<li><strong>Prevalent Cases (<code>prevalent_cases</code> /
+<code>Prevalent PFD (M)</code>)</strong>: Total active pool of adult
+women living with one or more symptomatic pelvic floor disorders in year
+<span class="math inline">\(t\)</span>.</li>
+</ul>
+</div>
+<div id="care-cascade-patient-flow-variables" class="section level3">
+<h3>Care Cascade &amp; Patient-Flow Variables</h3>
+<ul>
+<li><strong>Care-Seeking Patients (<code>care_seeking_n</code> /
+<code>Care Seeking (M)</code>)</strong>: Subset of prevalent women who
+actively present to the healthcare system for medical or surgical
+evaluation (<span class="math inline">\(\text{Care Seeking} =
+\text{Prevalent Cases} \times P(\text{care seeking} \mid \text{severity,
+insurance})\)</span>).</li>
+<li><strong>Referred Patients (<code>referred_n</code>)</strong>:
+Care-seeking patients who receive a formal subspecialty referral from
+primary care or general OB/GYN providers.</li>
+<li><strong>Reachable Patients (<code>reachable_n</code>)</strong>:
+Patients located within a 60-minute spatial travel isochrone of an
+active URPS subspecialist.</li>
+<li><strong>Medicaid Eligible Patients
+(<code>medicaid_eligible_n</code>)</strong>: Low-income patients
+enrolled in state Medicaid or Medicaid Managed Care plans.</li>
+<li><strong>Appointment Requests
+(<code>appointment_requests_n</code>)</strong>: Total annual
+consultation attempts initiated by care-seeking patients (<span class="math inline">\(N_{\text{req}}\)</span>).</li>
+<li><strong>Served Patient Encounters (<code>served_patients_n</code> /
+<code>Served Encounters (M)</code>)</strong>: Total annual clinical
+encounters successfully delivered by available physician and delegated
+APP capacity (<span class="math inline">\(N_{\text{served}} =
+\min(N_{\text{req}}, \text{Capacity}_{\text{total}})\)</span>).</li>
+<li><strong>Unmet / Delayed Demand (<code>unserved_delayed_n</code> /
+<code>Unmet Demand (M)</code>)</strong>: Volume of patient appointment
+requests that could not be scheduled within 60 days due to capacity
+shortages (<span class="math inline">\(N_{\text{unmet}} = N_{\text{req}}
+- N_{\text{served}}\)</span>).</li>
+</ul>
+</div>
+<div id="workforce-supply-capacity-variables" class="section level3">
+<h3>Workforce Supply &amp; Capacity Variables</h3>
+<ul>
+<li><strong>Active Headcount (<code>provider_headcount</code> /
+<code>supply_headcount</code>)</strong>: Total count of active,
+board-certified FPMRS/URPS subspecialty physicians practicing in the
+U.S.</li>
+<li><strong>Supplied Clinical FTE (<code>supply_fte</code> /
+<code>supplied_fte</code>)</strong>: Total clinical Full-Time Equivalent
+capacity supplied by physicians and APPs, where 1.0 FTE equals 37.2
+clinical patient-care hours per week.</li>
+<li><strong>Required Demand FTE (<code>demand_fte</code> /
+<code>required_fte</code>)</strong>: Total physician clinical FTEs
+required to deliver benchmark care to 100% of care-seeking patients in
+year <span class="math inline">\(t\)</span>.</li>
+<li><strong>Net FTE Deficit (<code>fte_gap</code> /
+<code>gap_fte</code>)</strong>: Difference between supplied clinical
+capacity and required demand (<span class="math inline">\(\text{Net
+Deficit} = \text{Supplied FTE} - \text{Required FTE}\)</span>).</li>
+<li><strong>Adequacy Ratio (<code>adequacy_ratio</code>)</strong>:
+Percentage of required clinical demand satisfied by available supply
+(<span class="math inline">\(\text{Adequacy Ratio} =
+\frac{\text{Supplied FTE}}{\text{Required FTE}} \times
+100\%\)</span>).</li>
+<li><strong>APP Delegation Efficiency (<span class="math inline">\(\delta_{\text{APP}}\)</span>)</strong>: Fractional
+physician FTE capacity unlocked per Advanced Practice Provider (NP/PA)
+working under physician supervision.</li>
+<li><strong>Latent Regional Adequacy (<span class="math inline">\(\theta_g\)</span>)</strong>: Bayesian inferred
+capacity score for county/HRR <span class="math inline">\(g\)</span>,
+bounded in <span class="math inline">\([0, 1]\)</span>, where <span class="math inline">\(1.0\)</span> represents unconstrained baseline
+access and <span class="math inline">\(0.0\)</span> represents complete
+access failure.</li>
+</ul>
+<hr />
+</div>
+</div>
 <div id="national-patient-flow-demand-supply-conservation-ledger" class="section level1">
-<h1>1. National Patient-Flow &amp; Demand-Supply Conservation
+<h1>2. National Patient-Flow &amp; Demand-Supply Conservation
 Ledger</h1>
 <p>The microsimulation enforces strict patient-flow conservation across
 every stage of the care cascade: <span class="math display">\[\text{Prevalent Cases} \longrightarrow \text{Care
 Seeking} \longrightarrow \text{Appointment Requests} \longrightarrow
 \text{Served Encounters} + \text{Unmet/Delayed Demand}\]</span></p>
+<p>Where: - <span class="math inline">\(\text{Prevalent Cases} =
+\sum_{g} \text{Pop}_g \times \text{Prevalence}_g\)</span> - <span class="math inline">\(\text{Served Encounters} = \min(\text{Care
+Seeking}, \text{Supplied Capacity})\)</span> - <span class="math inline">\(\text{Unmet Demand} = \max(0, \text{Care Seeking}
+- \text{Supplied Capacity})\)</span></p>
 <p>Table 1 summarizes the annual national accounting ledger from 2025
 through 2035.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Load recent audit ledger artifact</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>ledger_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">&quot;artifacts/end_to_end&quot;</span>, <span class="at">pattern =</span> <span class="st">&quot;^audit_ledger_.*</span><span class="sc">\\</span><span class="st">.csv$&quot;</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(ledger_files) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  latest_ledger <span class="ot">&lt;-</span> ledger_files[<span class="fu">which.max</span>(<span class="fu">file.info</span>(ledger_files)<span class="sc">$</span>mtime)]</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  audit_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(latest_ledger)</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  </span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  display_tbl <span class="ot">&lt;-</span> audit_data <span class="sc">%&gt;%</span></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>    <span class="fu">select</span>(</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>      <span class="at">Year =</span> year,</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>      <span class="st">`</span><span class="at">Female Pop (M)</span><span class="st">`</span> <span class="ot">=</span> population,</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>      <span class="st">`</span><span class="at">Prevalent PFD (M)</span><span class="st">`</span> <span class="ot">=</span> prevalent_cases,</span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>      <span class="st">`</span><span class="at">Care Seeking (M)</span><span class="st">`</span> <span class="ot">=</span> care_seeking_n,</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>      <span class="st">`</span><span class="at">Served Encounters (M)</span><span class="st">`</span> <span class="ot">=</span> served_patients_n,</span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>      <span class="st">`</span><span class="at">Unmet Demand (M)</span><span class="st">`</span> <span class="ot">=</span> unserved_delayed_n,</span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>      <span class="st">`</span><span class="at">Required FTE</span><span class="st">`</span> <span class="ot">=</span> required_fte,</span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>      <span class="st">`</span><span class="at">Supplied FTE</span><span class="st">`</span> <span class="ot">=</span> supplied_fte,</span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>      <span class="st">`</span><span class="at">FTE Deficit</span><span class="st">`</span> <span class="ot">=</span> fte_gap,</span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>      <span class="st">`</span><span class="at">Adequacy Ratio</span><span class="st">`</span> <span class="ot">=</span> adequacy_ratio</span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>      <span class="st">`</span><span class="at">Female Pop (M)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.2f M&quot;</span>, <span class="st">`</span><span class="at">Female Pop (M)</span><span class="st">`</span> <span class="sc">/</span> <span class="fl">1e6</span>),</span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a>      <span class="st">`</span><span class="at">Prevalent PFD (M)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.2f M&quot;</span>, <span class="st">`</span><span class="at">Prevalent PFD (M)</span><span class="st">`</span> <span class="sc">/</span> <span class="fl">1e6</span>),</span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>      <span class="st">`</span><span class="at">Care Seeking (M)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.2f M&quot;</span>, <span class="st">`</span><span class="at">Care Seeking (M)</span><span class="st">`</span> <span class="sc">/</span> <span class="fl">1e6</span>),</span>
-<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a>      <span class="st">`</span><span class="at">Served Encounters (M)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.2f M&quot;</span>, <span class="st">`</span><span class="at">Served Encounters (M)</span><span class="st">`</span> <span class="sc">/</span> <span class="fl">1e6</span>),</span>
-<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a>      <span class="st">`</span><span class="at">Unmet Demand (M)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.2f M&quot;</span>, <span class="st">`</span><span class="at">Unmet Demand (M)</span><span class="st">`</span> <span class="sc">/</span> <span class="fl">1e6</span>),</span>
-<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a>      <span class="st">`</span><span class="at">Required FTE</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.1f&quot;</span>, <span class="st">`</span><span class="at">Required FTE</span><span class="st">`</span>),</span>
-<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a>      <span class="st">`</span><span class="at">Supplied FTE</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.1f&quot;</span>, <span class="st">`</span><span class="at">Supplied FTE</span><span class="st">`</span>),</span>
-<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a>      <span class="st">`</span><span class="at">FTE Deficit</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.1f&quot;</span>, <span class="st">`</span><span class="at">FTE Deficit</span><span class="st">`</span>),</span>
-<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a>      <span class="st">`</span><span class="at">Adequacy Ratio</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.1f%%&quot;</span>, <span class="st">`</span><span class="at">Adequacy Ratio</span><span class="st">`</span> <span class="sc">*</span> <span class="dv">100</span>)</span>
-<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a>    )</span>
-<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a>  </span>
-<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(display_tbl, <span class="at">caption =</span> <span class="st">&quot;Table 1: 10-Year National URPS Demand, Supply, and Patient-Flow Ledger (2025–2035)&quot;</span>)</span>
-<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;Audit ledger artifact pending generation.&quot;</span>)</span>
-<span id="cb1-35"><a href="#cb1-35" tabindex="-1"></a>}</span></code></pre></div>
-<pre><code>## Audit ledger artifact pending generation.</code></pre>
+<table>
+<caption>Table 1: 10-Year National URPS Demand, Supply, and Patient-Flow
+Ledger (2025–2035)</caption>
+<colgroup>
+<col width="3%" />
+<col width="10%" />
+<col width="12%" />
+<col width="11%" />
+<col width="14%" />
+<col width="11%" />
+<col width="8%" />
+<col width="8%" />
+<col width="8%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">Year</th>
+<th align="left">Female Pop (M)</th>
+<th align="left">Prevalent PFD (M)</th>
+<th align="left">Care Seeking (M)</th>
+<th align="left">Served Encounters (M)</th>
+<th align="left">Unmet Demand (M)</th>
+<th align="left">Required FTE</th>
+<th align="left">Supplied FTE</th>
+<th align="left">FTE Deficit</th>
+<th align="left">Adequacy Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2025</td>
+<td align="left">127.57 M</td>
+<td align="left">31.26 M</td>
+<td align="left">11.88 M</td>
+<td align="left">1.78 M</td>
+<td align="left">2.07 M</td>
+<td align="left">23530.4</td>
+<td align="left">1021.0</td>
+<td align="left">-22509.3</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="even">
+<td align="right">2026</td>
+<td align="left">128.34 M</td>
+<td align="left">31.57 M</td>
+<td align="left">12.00 M</td>
+<td align="left">1.68 M</td>
+<td align="left">2.21 M</td>
+<td align="left">22225.0</td>
+<td align="left">964.4</td>
+<td align="left">-21260.6</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="odd">
+<td align="right">2027</td>
+<td align="left">129.11 M</td>
+<td align="left">31.89 M</td>
+<td align="left">12.12 M</td>
+<td align="left">1.58 M</td>
+<td align="left">2.35 M</td>
+<td align="left">20928.5</td>
+<td align="left">908.1</td>
+<td align="left">-20020.4</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="even">
+<td align="right">2028</td>
+<td align="left">129.88 M</td>
+<td align="left">32.21 M</td>
+<td align="left">12.24 M</td>
+<td align="left">1.53 M</td>
+<td align="left">2.45 M</td>
+<td align="left">20171.7</td>
+<td align="left">875.3</td>
+<td align="left">-19296.4</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="odd">
+<td align="right">2029</td>
+<td align="left">130.66 M</td>
+<td align="left">32.54 M</td>
+<td align="left">12.36 M</td>
+<td align="left">1.45 M</td>
+<td align="left">2.56 M</td>
+<td align="left">19214.4</td>
+<td align="left">833.8</td>
+<td align="left">-18380.6</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="even">
+<td align="right">2030</td>
+<td align="left">131.45 M</td>
+<td align="left">32.86 M</td>
+<td align="left">12.49 M</td>
+<td align="left">1.41 M</td>
+<td align="left">2.66 M</td>
+<td align="left">18585.1</td>
+<td align="left">806.4</td>
+<td align="left">-17778.7</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="odd">
+<td align="right">2031</td>
+<td align="left">132.24 M</td>
+<td align="left">33.19 M</td>
+<td align="left">12.61 M</td>
+<td align="left">1.38 M</td>
+<td align="left">2.73 M</td>
+<td align="left">18244.4</td>
+<td align="left">791.7</td>
+<td align="left">-17452.8</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="even">
+<td align="right">2032</td>
+<td align="left">133.03 M</td>
+<td align="left">33.52 M</td>
+<td align="left">12.74 M</td>
+<td align="left">1.38 M</td>
+<td align="left">2.78 M</td>
+<td align="left">18191.5</td>
+<td align="left">789.4</td>
+<td align="left">-17402.2</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="odd">
+<td align="right">2033</td>
+<td align="left">133.83 M</td>
+<td align="left">33.86 M</td>
+<td align="left">12.87 M</td>
+<td align="left">1.37 M</td>
+<td align="left">2.82 M</td>
+<td align="left">18136.8</td>
+<td align="left">787.0</td>
+<td align="left">-17349.8</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="even">
+<td align="right">2034</td>
+<td align="left">134.63 M</td>
+<td align="left">34.20 M</td>
+<td align="left">12.99 M</td>
+<td align="left">1.34 M</td>
+<td align="left">2.90 M</td>
+<td align="left">17763.1</td>
+<td align="left">770.8</td>
+<td align="left">-16992.4</td>
+<td align="left">4.3%</td>
+</tr>
+<tr class="odd">
+<td align="right">2035</td>
+<td align="left">135.44 M</td>
+<td align="left">34.54 M</td>
+<td align="left">13.12 M</td>
+<td align="left">1.34 M</td>
+<td align="left">2.95 M</td>
+<td align="left">17724.6</td>
+<td align="left">769.1</td>
+<td align="left">-16955.5</td>
+<td align="left">4.3%</td>
+</tr>
+</tbody>
+</table>
 <div id="figure-1-patient-flow-conservation-audit-ledger-trajectory" class="section level2">
 <h2>Figure 1: Patient-Flow &amp; Conservation Audit Ledger
 Trajectory</h2>
@@ -2938,32 +3059,131 @@ Demand-Supply Conservation Ledger (2025-2035)</div>
 </div>
 </div>
 <div id="national-workforce-capacity-app-delegation-trajectories" class="section level1">
-<h1>2. National Workforce Capacity &amp; APP Delegation
+<h1>3. National Workforce Capacity &amp; APP Delegation
 Trajectories</h1>
 <p>Workforce supply is modeled dynamically accounting for entry, hours
 worked by age and sex, practice setting allocation, retirement hazards,
 and Advanced Practice Provider (APP) delegation: <span class="math display">\[\text{Supplied FTE}_t = \sum_{i \in
 \text{Roster}_t} \text{FTE}_{i,t} + \delta_{\text{APP}} \cdot \text{APP
 FTE}_t\]</span></p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>spatial_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">&quot;artifacts/end_to_end&quot;</span>, <span class="at">pattern =</span> <span class="st">&quot;^spatial_balance_.*</span><span class="sc">\\</span><span class="st">.csv$&quot;</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(spatial_files) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  latest_spatial <span class="ot">&lt;-</span> spatial_files[<span class="fu">which.max</span>(<span class="fu">file.info</span>(spatial_files)<span class="sc">$</span>mtime)]</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  spatial_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(latest_spatial)</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  </span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  wf_summary <span class="ot">&lt;-</span> spatial_data <span class="sc">%&gt;%</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="fu">group_by</span>(year) <span class="sc">%&gt;%</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>    <span class="fu">summarize</span>(</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>      <span class="st">`</span><span class="at">Headcount</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sum</span>(provider_headcount, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>      <span class="st">`</span><span class="at">Supplied FTE</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="fu">sum</span>(supply_fte, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="dv">1</span>),</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>      <span class="st">`</span><span class="at">Required FTE</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="fu">sum</span>(demand_fte, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="dv">1</span>),</span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>      <span class="st">`</span><span class="at">Net Gap FTE</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="fu">sum</span>(gap_fte, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="dv">1</span>),</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>      <span class="st">`</span><span class="at">Shortage HRRs (≥20%)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%d / %d (%.0f%%)&quot;</span>, <span class="fu">sum</span>(shortage_20pct, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="fu">n</span>(), <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(shortage_20pct, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>      <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>    )</span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  </span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(wf_summary, <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Year&quot;</span>, <span class="st">&quot;Physician Headcount&quot;</span>, <span class="st">&quot;Supplied FTE&quot;</span>, <span class="st">&quot;Required Demand FTE&quot;</span>, <span class="st">&quot;Net FTE Deficit&quot;</span>, <span class="st">&quot;Shortage HRRs (≥20%)&quot;</span>),</span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>               <span class="at">caption =</span> <span class="st">&quot;Table 2: Annual National Workforce Headcount, Clinical FTE, and Spatial Shortage Metrics&quot;</span>)</span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>}</span></code></pre></div>
+<p>Where: - <span class="math inline">\(\text{Supplied FTE}_t\)</span>:
+Total clinical capacity available in year <span class="math inline">\(t\)</span>. - <span class="math inline">\(\text{FTE}_{i,t}\)</span>: Individual physician
+clinical FTE contribution (<span class="math inline">\(\text{Hours}_{i,t} / 37.2\)</span>). - <span class="math inline">\(\delta_{\text{APP}}\)</span>: APP delegation
+efficiency factor (<span class="math inline">\(0.18 - 0.35\)</span>). -
+<span class="math inline">\(\text{APP FTE}_t\)</span>: Advanced Practice
+Provider clinical volume.</p>
+<table>
+<caption>Table 2: Annual National Workforce Headcount, Clinical FTE, and
+Spatial Shortage Metrics</caption>
+<colgroup>
+<col width="5%" />
+<col width="21%" />
+<col width="13%" />
+<col width="21%" />
+<col width="16%" />
+<col width="22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">Year</th>
+<th align="right">Physician Headcount</th>
+<th align="right">Supplied FTE</th>
+<th align="right">Required Demand FTE</th>
+<th align="right">Net FTE Deficit</th>
+<th align="left">Shortage HRRs (≥20%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2025</td>
+<td align="right">1200</td>
+<td align="right">1021.0</td>
+<td align="right">23530</td>
+<td align="right">-22509</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="even">
+<td align="right">2026</td>
+<td align="right">1123</td>
+<td align="right">964.4</td>
+<td align="right">22225</td>
+<td align="right">-21261</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="odd">
+<td align="right">2027</td>
+<td align="right">1048</td>
+<td align="right">908.1</td>
+<td align="right">20928</td>
+<td align="right">-20020</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="even">
+<td align="right">2028</td>
+<td align="right">999</td>
+<td align="right">875.3</td>
+<td align="right">20172</td>
+<td align="right">-19296</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="odd">
+<td align="right">2029</td>
+<td align="right">940</td>
+<td align="right">833.8</td>
+<td align="right">19214</td>
+<td align="right">-18381</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="even">
+<td align="right">2030</td>
+<td align="right">899</td>
+<td align="right">806.4</td>
+<td align="right">18585</td>
+<td align="right">-17779</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="odd">
+<td align="right">2031</td>
+<td align="right">872</td>
+<td align="right">791.7</td>
+<td align="right">18244</td>
+<td align="right">-17453</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="even">
+<td align="right">2032</td>
+<td align="right">859</td>
+<td align="right">789.4</td>
+<td align="right">18192</td>
+<td align="right">-17402</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="odd">
+<td align="right">2033</td>
+<td align="right">848</td>
+<td align="right">787.0</td>
+<td align="right">18137</td>
+<td align="right">-17350</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="even">
+<td align="right">2034</td>
+<td align="right">824</td>
+<td align="right">770.8</td>
+<td align="right">17763</td>
+<td align="right">-16992</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+<tr class="odd">
+<td align="right">2035</td>
+<td align="right">813</td>
+<td align="right">769.1</td>
+<td align="right">17725</td>
+<td align="right">-16956</td>
+<td align="left">306 / 306 (100%)</td>
+</tr>
+</tbody>
+</table>
 <div id="figure-2-national-urps-workforce-capacity-vs.-demand-growth" class="section level2">
 <h2>Figure 2: National URPS Workforce Capacity vs. Demand Growth</h2>
 <div class="float">
@@ -2975,7 +3195,7 @@ vs. Demand FTE Growth (2025-2035)</div>
 </div>
 </div>
 <div id="national-empirical-evidence-lake-readiness-parameter-provenance" class="section level1">
-<h1>3. National Empirical Evidence Lake Readiness &amp; Parameter
+<h1>4. National Empirical Evidence Lake Readiness &amp; Parameter
 Provenance</h1>
 <p>The simulation integrates multiple authoritative external datasets
 into a unified DuckDB evidence lake: - <strong>CMS Medicare Part B
@@ -3002,15 +3222,20 @@ Component Volume &amp; Readiness</div>
 </div>
 </div>
 <div id="joint-bayesian-latent-adequacy-theta_g-regional-sensitivity" class="section level1">
-<h1>4. Joint Bayesian Latent Adequacy (<span class="math inline">\(\theta_g\)</span>) &amp; Regional Sensitivity</h1>
+<h1>5. Joint Bayesian Latent Adequacy (<span class="math inline">\(\theta_g\)</span>) &amp; Regional Sensitivity</h1>
 <p>To measure true regional access, a Bayesian joint latent factor model
 infers latent regional capacity <span class="math inline">\(\theta_g \in
 [0, 1]\)</span> from multiple access indicators: <span class="math display">\[I(x) = \frac{|\mathrm{E}(f(x)) -
 z|}{\sqrt{\mathrm{V}(f(x)) + \sigma_{\text{obs}}^2 +
 \sigma_{\text{disc}}^2}}\]</span></p>
-<p>Where indicators include listing mystery-caller appointment rates,
-confirmed eligible practice appointment rates, third-next-available
-appointment wait times, and Medicaid acceptance rates.</p>
+<p>Where: - <span class="math inline">\(\theta_g\)</span>: Inferred
+regional capacity score for geography <span class="math inline">\(g\)</span>. - <span class="math inline">\(I(x)\)</span>: Implausibility metric for candidate
+parameter vector <span class="math inline">\(x\)</span>. - <span class="math inline">\(\mathrm{E}(f(x))\)</span>: Emulator expectation
+prediction. - <span class="math inline">\(z\)</span>: Historical
+empirical target observation. - <span class="math inline">\(\mathrm{V}(f(x))\)</span>: Emulator uncertainty
+variance. - <span class="math inline">\(\sigma_{\text{obs}}^2\)</span>:
+Survey sampling variance. - <span class="math inline">\(\sigma_{\text{disc}}^2\)</span>: Model structural
+discrepancy variance.</p>
 <div id="figure-4-regional-latent-adequacy-theta_g-across-sample-counties" class="section level2">
 <h2>Figure 4: Regional Latent Adequacy (<span class="math inline">\(\theta_g\)</span>) Across Sample Counties</h2>
 <div class="float">
@@ -3022,7 +3247,7 @@ Estimates Across Counties</div>
 </div>
 </div>
 <div id="conclusions-policy-implications" class="section level1">
-<h1>5. Conclusions &amp; Policy Implications</h1>
+<h1>6. Conclusions &amp; Policy Implications</h1>
 <ol style="list-style-type: decimal">
 <li><strong>Fellowship Training Bottlenecks</strong>: Fellowship output
 (<span class="math inline">\(\sim 55–64\)</span> graduates annually) is
