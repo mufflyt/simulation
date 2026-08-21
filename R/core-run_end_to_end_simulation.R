@@ -72,7 +72,7 @@ run_end_to_end_simulation <- function(
     empirical_parameters <- read_urps_empirical_parameters(evidence_db)
   }
   if (base::is.null(empirical_parameters)) {
-    empirical_parameters <- base::setNames(base::numeric(), base::character())
+    empirical_parameters <- stats::setNames(base::numeric(), base::character())
   }
 
   empirical_value <- function(parameter, fallback) {
