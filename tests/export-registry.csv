@@ -217,3 +217,7 @@
 "policy_migration_source_catalog","api"
 "provider_career_source_registry","api"
 "simulate_policy_migration_scenarios","api"
+"augment_adequacy_from_duckdb","api"
+"build_adequacy_geographic_features","api"
+"fit_empirical_adequacy_glm","api"
+"summarize_policy_migration_scenarios","api"
