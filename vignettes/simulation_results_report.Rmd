@@ -177,6 +177,9 @@ The simulation integrates multiple authoritative external datasets into a unifie
 - **[ACGME Case Logs](https://www.acgme.org/specialties/obstetrics-and-gynecology/)**: 2025 graduate procedural minimums (e.g., $\ge 20$ sacral colpopexies, $\ge 50$ incontinence procedures).
 - **Epidemiological Anchors**: [Nygaard et al. (JAMA 2008)](https://doi.org/10.1001/jama.300.11.1311) and [Wu et al. (Obstet Gynecol 2014)](https://doi.org/10.1097/AOG.0000000000000186) for age-specific PFD prevalence curves; [HRSA Health Workforce Simulation Model (HWMM)](https://bhw.hrsa.gov/data-research/projecting-health-workforce-supply-demand) for population cell structures.
 
+> **Clinical Practice Volume vs. ACGME Educational Minimums**:
+> ACGME case log requirements represent **educational graduation minimums accumulated over a 3-year fellowship**. In active post-fellowship clinical practice, full-time practicing Urogynecologists routinely perform **3 to 5 times these minimum volumes annually** (e.g., 60–100+ sacral colpopexies/year, 150–250+ surgical procedures/year, and 1,500–2,500+ outpatient encounters/year). The microsimulation's surgical productivity engine models true post-fellowship clinical throughput derived from CMS Part B annual provider claims rather than restricting provider capacity to fellowship educational thresholds.
+
 ## Figure 3: Empirical Evidence Lake Component Volume & Readiness
 
 ![Figure 3: National Empirical Evidence Lake Component Volume & Readiness](../artifacts/figures/fig3_evidence_lake_readiness.png)
