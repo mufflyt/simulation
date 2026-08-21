@@ -33,10 +33,10 @@ library(ggplot2)
 This Results Report presents the 10-year empirical-hybrid projections of the Urogynecology and Pelvic Reconstructive Surgery (URPS) national workforce microsimulation model (`urpssim`). Combining multi-source empirical evidence—including CMS Part B provider-service tables (2013–2024), NPPES temporal provider registries, CMS Doctors & Clinicians data, UHC transparency-in-coverage negotiated rates, and ACGME fellowship case logs—with a dynamic multi-state female population model, the simulation tracks patient demand, workforce supply, care-seeking conversion, and spatial access across all 306 Dartmouth Hospital Referral Regions (HRRs).
 
 Key findings include:
-1. **Widening National Supply Deficit**: Under current fellowship training rates (55–64 certified graduates per year) and age/sex-specific career retirement hazards, active physician clinical FTE declines relative to female population growth, expanding the national clinical FTE gap from **3,851.8 FTEs in 2025** to **4,480.8 FTEs by 2035**.
-2. **Patient-Flow Conservation Audit**: Unmet or delayed patient demand grows from **2.07 million cases in 2025** to **2.95 million cases in 2035**, as national appointment capacity fails to keep pace with demographic aging and PFD incidence.
-3. **Severe Geographic Maldistribution**: 100% of the 306 HRRs experience a clinical FTE shortage exceeding 20% of required local demand throughout the 2025–2035 projection window.
-4. **Latent Access Adequacy ($\theta_g$)**: Bayesian latent factor calibration reveals a national average access score of **47.6% (95% CI: 41.2%–54.0%)**, with substantial cross-county variation driven by mystery-caller listing rates and appointment wait times.
+- **Widening National Supply Deficit**: Under current fellowship training rates (55–64 certified graduates per year) and age/sex-specific career retirement hazards, active physician clinical FTE declines relative to female population growth, expanding the national clinical FTE gap from **3,851.8 FTEs in 2025** to **4,480.8 FTEs by 2035**.
+- **Patient-Flow Conservation Audit**: Unmet or delayed patient demand grows from **2.07 million cases in 2025** to **2.95 million cases in 2035**, as national appointment capacity fails to keep pace with demographic aging and PFD incidence.
+- **Severe Geographic Maldistribution**: 100% of the 306 HRRs experience a clinical FTE shortage exceeding 20% of required local demand throughout the 2025–2035 projection window.
+- **Latent Access Adequacy ($\theta_g$)**: Bayesian latent factor calibration reveals a national average access score of **47.6% (95% CI: 41.2%–54.0%)**, with substantial cross-county variation driven by mystery-caller listing rates and appointment wait times.
 
 ---
 
