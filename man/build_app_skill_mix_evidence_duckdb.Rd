@@ -30,10 +30,7 @@ build_app_skill_mix_evidence_duckdb(
 A tibble containing row counts for every derived table.
 }
 \description{
-Reuses the repository's existing 2013--2024 Medicare Part B table and
-longitudinal NPPES tables. Doctors & Clinicians may already be a DuckDB table
-or may be supplied as the existing DAC CSV. Only URPS-relevant summaries are
-materialized; the source tables are never duplicated.
+Build URPS APP evidence tables inside an existing DuckDB
 }
 \seealso{
 Other data:
