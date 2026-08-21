@@ -33,7 +33,9 @@ Supports dual denominator analysis (\code{listing} vs \code{eligible}).
 Other calibration:
 \code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
 \code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
+\code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
 \code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
-\code{\link[=generate_synthetic_adequacy_data]{generate_synthetic_adequacy_data()}}
+\code{\link[=generate_synthetic_adequacy_data]{generate_synthetic_adequacy_data()}},
+\code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}}
 }
 \concept{calibration}

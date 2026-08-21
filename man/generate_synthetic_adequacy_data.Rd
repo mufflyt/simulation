@@ -21,7 +21,9 @@ Simulate Synthetic Recovery Data for Latent Adequacy Validation
 Other calibration:
 \code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
 \code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
+\code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
 \code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
-\code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}}
+\code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}},
+\code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}}
 }
 \concept{calibration}
