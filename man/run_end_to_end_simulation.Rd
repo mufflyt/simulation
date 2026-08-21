@@ -12,6 +12,8 @@ run_end_to_end_simulation(
   fellowship_entrants = 55L,
   app_delegation_rate = 0.15,
   medicaid_fee_ratio = 0.75,
+  evidence_db = NULL,
+  empirical_parameters = NULL,
   save_outputs = TRUE,
   output_dir = "artifacts/end_to_end"
 )
@@ -29,7 +31,14 @@ run_end_to_end_simulation(
 
 \item{app_delegation_rate}{APP task delegation fraction (0 to 0.30).}
 
-\item{medicaid_fee_ratio}{National/state Medicaid fee index ratio (default 0.75).}
+\item{medicaid_fee_ratio}{National/state Medicaid fee index ratio; default
+is 0.75.}
+
+\item{evidence_db}{Optional national evidence DuckDB path. Empirical values
+found in \code{model.parameter_estimates} replace matching demonstration inputs.}
+
+\item{empirical_parameters}{Optional named numeric vector. This takes
+precedence over \code{evidence_db} and matching function arguments.}
 
 \item{save_outputs}{Logical; whether to write CSV audit outputs to disk.}
 
