@@ -31,6 +31,8 @@ Supports dual denominator analysis (\code{listing} vs \code{eligible}).
 }
 \seealso{
 Other calibration:
+\code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
+\code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
 \code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
 \code{\link[=generate_synthetic_adequacy_data]{generate_synthetic_adequacy_data()}}
 }

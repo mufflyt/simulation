@@ -19,6 +19,8 @@ Simulate Synthetic Recovery Data for Latent Adequacy Validation
 }
 \seealso{
 Other calibration:
+\code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
+\code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
 \code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
 \code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}}
 }
