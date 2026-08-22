@@ -47,8 +47,6 @@ Imports:
     tidyr,
     tools,
     utils,
-    DiceKriging,
-    lhs,
     withr,
     yaml
 Suggests:
@@ -56,9 +54,11 @@ Suggests:
     arrow,
     blme,
     covr,
+    DiceKriging,
     duckplyr,
     flexsurv,
     future.apply,
+    lhs,
     lme4,
     ggplot2,
     knitr,
