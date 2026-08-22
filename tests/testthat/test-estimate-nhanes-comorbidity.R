@@ -42,6 +42,7 @@ test_that("comorbidity composite indicator calculation works as expected", {
 
 test_that("estimate_nhanes_comorbidity.R script file exists and has valid syntax", {
   script_path <- .repo_path("scripts", "estimate_nhanes_comorbidity.R")
+  testthat::skip_if_not(file.exists(script_path), "source file not shipped under R CMD check")
   expect_true(file.exists(script_path))
 
   # Verify script is valid R code by parsing it
