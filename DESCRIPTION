@@ -42,6 +42,7 @@ Imports:
     splines,
     stats,
     survival,
+    survey,
     shiny,
     tibble,
     tidyr,
@@ -68,7 +69,6 @@ Suggests:
     rmarkdown,
     rprojroot,
     sf,
-    survey,
     testthat (>= 3.0.0),
     withr,
     zipcodeR

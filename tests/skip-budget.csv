@@ -45,3 +45,9 @@ reason_pattern,max_tests,why
 "NHANES UI prevalence artifact not built",3,"data-raw/nhanes/nhanes_ui_prevalence_by_age.rds is generated from downloaded NHANES cycles; *.rds is gitignored. The UI prevalence contract gates run where it has been built."
 "nhanesA package not available",2,"test-ui-nygaard-replication.R replicates Nygaard 2005-2006 by DOWNLOADING NHANES cycles at test time. Deliberately NOT added to the workflow install list: it is network-dependent, and the frozen reproduction path must not fetch data at runtime. Distinct from the 'not installed' row, which is budgeted 0 to detect install regressions."
 "archived surfaces not reachable",1,"test-access-ascertainment.R:171 needs an archived access surface that is generated, not committed. PRE-EXISTING (present on main) and it does not fire in CI, where the ascertainment artifact is absent for a different declared reason -- but it went dark undeclared on developer machines, which is exactly what this file exists to prevent."
+"MCBS microdata not present",1,"Downloaded survey microdata, not in git."
+"NAMCS microdata not present",1,"Downloaded survey microdata, not in git."
+"CMS PSPS 2024 raw file not present",1,"Downloaded CMS extract, not in git."
+"NHANES UI microdata file not present",1,"Downloaded survey microdata, not in git."
+"NHANES AI microdata file not present",1,"Downloaded survey microdata, not in git."
+
