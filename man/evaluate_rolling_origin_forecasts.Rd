@@ -18,7 +18,7 @@ evaluate_rolling_origin_forecasts(
   n_draws = 2000L,
   interval_level = 0.95,
   log_score_method = c("kernel", "gaussian"),
-  density_floor = 0.000000000001,
+  density_floor = 1e-12,
   seed = 20260821L,
   evidence_registry = NULL,
   save_path = NULL

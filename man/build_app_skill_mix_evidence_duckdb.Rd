@@ -36,7 +36,11 @@ Build URPS APP evidence tables inside an existing DuckDB
 Other data:
 \code{\link[=augment_app_productivity_evidence]{augment_app_productivity_evidence()}},
 \code{\link[=estimate_app_ratio_scenario]{estimate_app_ratio_scenario()}},
+\code{\link[=ingest_ipums_microdata]{ingest_ipums_microdata()}},
+\code{\link[=ingest_lodes_commute_flows]{ingest_lodes_commute_flows()}},
 \code{\link[=inventory_app_evidence_duckdb]{inventory_app_evidence_duckdb()}},
+\code{\link[=ipums_lodes_source_catalog]{ipums_lodes_source_catalog()}},
+\code{\link[=open_ipums_lodes_duckdb]{open_ipums_lodes_duckdb()}},
 \code{\link[=read_app_skill_mix_evidence]{read_app_skill_mix_evidence()}}
 }
 \concept{data}

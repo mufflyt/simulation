@@ -47,10 +47,10 @@ Imports:
     tidyr,
     tools,
     utils,
-    DiceKriging,
-    lhs,
     yaml
 Suggests:
+    DiceKriging,
+    lhs,
     researchpaths,
     arrow,
     blme,

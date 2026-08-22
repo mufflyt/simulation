@@ -6,7 +6,7 @@
 \usage{
 project_urps_demand(
   cells,
-  us_female_pop = 138000000,
+  us_female_pop = 1.38e+08,
   care_seeking_rate = 0.25,
   referral_rate = 0.5,
   access_scenario = c("status_quo", "insurance_equity", "income_equity", "full_equity"),

@@ -13,7 +13,7 @@ national_older_female_population_by_state(
 }
 \value{
 Tibble: \code{state} (2-letter abbreviation), \code{state_fips},
-  \code{older_female_population}, \code{share} (fraction of the national total).
+\code{older_female_population}, \code{share} (fraction of the national total).
 }
 \description{
 Real state population weights for allocating national-aggregate simulation

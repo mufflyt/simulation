@@ -4,7 +4,7 @@
 \alias{assert_care_engagement_gates}
 \title{Acceptance gates for the incident/continuing decomposition}
 \usage{
-assert_care_engagement_gates(split, visits = NULL, tolerance = 0.00000001)
+assert_care_engagement_gates(split, visits = NULL, tolerance = 1e-08)
 }
 \arguments{
 \item{split}{Output of \code{\link[=split_care_engagement]{split_care_engagement()}}.}
