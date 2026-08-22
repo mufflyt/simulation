@@ -31,6 +31,7 @@ jobs:
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::testthat, any::sf, any::survey, any::zipcodeR, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          dependencies: '"hard"'
 
       - name: Execute Boundary-Value Analysis Unit Tests
         run: |
