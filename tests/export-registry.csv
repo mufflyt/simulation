@@ -185,7 +185,6 @@
 "load_default_history_matching_inputs","api"
 "predict_hrsa_demographic_fte","api"
 "predict_patient_destination_choice","api"
-"predict_provider_capacity","api"
 "prepare_nber_physician_year_locations","api"
 "read_hcris_hospital_reports","api"
 "read_hcris_urps_cost_centers","api"

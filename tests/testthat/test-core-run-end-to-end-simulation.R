@@ -283,3 +283,109 @@ test_that("an implausible practice-economics result warns rather than passing si
     "plausibility bound"
   )
 })
+
+# productivity_engine = "lmer_fitted" was never exercised end-to-end before
+# this fix -- three independent bugs (log-scale predictions treated as
+# already-exponentiated, the model_bundle passed to stats::predict() instead
+# of its $model, and provider_cohort missing most required predictor
+# columns) meant it errored or silently corrupted patient-flow conservation
+# by roughly an order of magnitude. This synthetic panel mirrors
+# scripts/run_full_urps_microsimulation_demo.R's mock panel shape.
+.lmer_fitted_test_panel <- function() {
+  set.seed(42)
+  n_obs <- 60
+  tibble::tibble(
+    provider_id = sprintf("P%02d", rep(1:15, each = 4)),
+    year = rep(2021:2024, times = 15),
+    clinical_fte = 1.0,
+    clinical_hours_week = 40,
+    age = stats::runif(n_obs, 35, 65),
+    sex = sample(c("F", "M"), n_obs, replace = TRUE),
+    academic = sample(c("Academic", "Private"), n_obs, replace = TRUE),
+    rural = sample(c("Urban", "Rural"), n_obs, replace = TRUE),
+    years_since_fellowship = stats::runif(n_obs, 1, 30),
+    app_support_rate = stats::runif(n_obs, 0, 0.3),
+    surgical_wrvu_share = stats::runif(n_obs, 0.1, 0.6),
+    office_procedure_share = stats::runif(n_obs, 0.1, 0.4),
+    new_visit_share = stats::runif(n_obs, 0.1, 0.3),
+    wrvu_per_clinical_fte = stats::runif(n_obs, 3000, 8000),
+    encounters_per_clinical_fte = stats::runif(n_obs, 1000, 3000),
+    wrvu_per_clinical_hour = stats::runif(n_obs, 2, 5)
+  )
+}
+
+test_that("productivity_engine = lmer_fitted runs end-to-end and conserves patient flow", {
+  panel <- .lmer_fitted_test_panel()
+  sim_res <- run_end_to_end_simulation(
+    start_year = 2025L,
+    end_year = 2026L,
+    n_agents = 100L,
+    initial_provider_count = 100L,
+    fellowship_entrants = 5L,
+    save_outputs = FALSE,
+    productivity_engine = "lmer_fitted",
+    productivity_panel = panel,
+    productivity_fitter = function(p) {
+      fit_provider_productivity_model(
+        panel = p, outcome = "encounters_per_clinical_fte",
+        include_year_effect = FALSE
+      )
+    }
+  )
+
+  audit <- sim_res$audit_ledger_tbl
+  expect_equal(nrow(audit), 2L)
+  expect_true(all(is.finite(audit$served_patients_n)))
+  expect_true(all(audit$served_patients_n > 0))
+  expect_equal(
+    audit$served_patients_n + audit$unserved_delayed_n,
+    audit$appointment_requests_n,
+    tolerance = 1e-6
+  )
+})
+
+test_that("lmer_fitted refuses a wRVU-scale outcome as patient capacity", {
+  panel <- .lmer_fitted_test_panel()
+  expect_error(
+    run_end_to_end_simulation(
+      start_year = 2025L,
+      end_year = 2025L,
+      n_agents = 100L,
+      initial_provider_count = 50L,
+      fellowship_entrants = 5L,
+      save_outputs = FALSE,
+      productivity_engine = "lmer_fitted",
+      productivity_panel = panel,
+      productivity_fitter = function(p) {
+        fit_provider_productivity_model(
+          panel = p, outcome = "wrvu_per_clinical_fte",
+          include_year_effect = FALSE
+        )
+      }
+    ),
+    "encounters_per_clinical_fte"
+  )
+})
+
+test_that("lmer_fitted's default path labels itself synthetic-fit at runtime", {
+  panel <- .lmer_fitted_test_panel()
+  expect_message(
+    run_end_to_end_simulation(
+      start_year = 2025L,
+      end_year = 2025L,
+      n_agents = 100L,
+      initial_provider_count = 50L,
+      fellowship_entrants = 5L,
+      save_outputs = FALSE,
+      productivity_engine = "lmer_fitted",
+      productivity_panel = panel,
+      productivity_fitter = function(p) {
+        fit_provider_productivity_model(
+          panel = p, outcome = "encounters_per_clinical_fte",
+          include_year_effect = FALSE
+        )
+      }
+    ),
+    "SYNTHETIC-FIT"
+  )
+})
