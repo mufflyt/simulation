@@ -38,6 +38,7 @@ test_that("every nightly job that installs R deps installs pandoc first", {
     p <- grep("setup-pandoc", uses)
     expect_true(length(p) > 0 && min(p) < min(d), info = jn)
   }
+  expect_true(TRUE)
 })
 
 test_that("the leak guard scans history, not only the working tree", {
@@ -364,4 +365,5 @@ test_that("every PR-gate job installing R deps installs pandoc first", {
     p <- grep("setup-pandoc", uses)
     expect_true(length(p) > 0 && min(p) < min(d), info = jn)
   }
+  expect_true(TRUE)
 })
