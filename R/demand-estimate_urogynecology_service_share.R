@@ -110,7 +110,7 @@ estimate_urogynecology_service_share <- function(
       hcpcs = stringr::str_to_upper(
         stringr::str_trim(base::as.character(.data$hcpcs))
       ),
-      year = lubridate::year(.data$service_date)
+      year = base::as.integer(base::format(base::as.Date(.data$service_date), "%Y"))
     )
 
   if (!"is_primary" %in% base::names(npi_taxonomy)) {

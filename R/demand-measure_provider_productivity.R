@@ -70,7 +70,7 @@ build_provider_year_productivity_panel <- function(
 
   service_panel <- services |>
     dplyr::mutate(
-      year = lubridate::year(.data[[service_date]]),
+      year = base::as.integer(base::format(base::as.Date(.data[[service_date]]), "%Y")),
       cpt_join = base::as.character(.data[[cpt]]),
       work_rvu_value = base::as.numeric(.data[[work_rvu]]),
       actual_minutes_value = base::as.numeric(.data[[actual_minutes]])
