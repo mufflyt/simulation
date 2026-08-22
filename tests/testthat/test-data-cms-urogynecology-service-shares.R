@@ -89,8 +89,12 @@ test_that("CMS builder closes suppression accounting and computes bounds", {
   expect_equal(row$upper_bound, 70 / 90)
   expect_equal(row$observed_cell_share, 30 / 50)
   expect_equal(row$capture_share, 60 / 100)
-  expect_equal(evidence$aggregate_bounds$lower_bound, 30 / 90)
-  expect_equal(evidence$aggregate_bounds$upper_bound, 70 / 90)
+
+  primary <- evidence$aggregate_bounds |>
+    dplyr::filter(.data$aggregate == "Tier A (primary, female-specific)")
+  expect_equal(base::nrow(primary), 1L)
+  expect_equal(primary$lower_bound, 30 / 90)
+  expect_equal(primary$upper_bound, 70 / 90)
 })
 
 
