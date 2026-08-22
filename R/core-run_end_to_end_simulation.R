@@ -781,6 +781,30 @@ run_end_to_end_simulation <- function(
           )
         )
 
+      # EXTERNAL PLAUSIBILITY CONTEXT, not an internal-consistency alarm and
+      # never a calibration target: compares modeled compensation capacity
+      # against MedPAC's real, cited surgical-specialty compensation median
+      # (FPMRS/urogyn falls under MedPAC's "surgical" grouping, which
+      # explicitly includes OB/GYN and urology). Reported via message(), not
+      # warning() -- disagreeing with an external benchmark is a different
+      # kind of signal than the internal accounting alarms below.
+      surgical_benchmark <- physician_compensation_plausibility(
+        practice_draws$physician_compensation_capacity
+      ) |>
+        dplyr::filter(.data$benchmark_name == "surgical")
+      practice_diagnostic_row$pct_of_medpac_surgical_benchmark <-
+        surgical_benchmark$pct_of_benchmark
+      practice_diagnostic_row$medpac_plausibility_band <-
+        surgical_benchmark$plausibility_band
+      base::message(
+        "practice-economics year ", simulation_year,
+        ": modeled physician compensation capacity is ",
+        surgical_benchmark$plausibility_band,
+        " vs. MedPAC's $496,000 surgical-specialty median (",
+        base::sprintf("%.1f%%", surgical_benchmark$pct_of_benchmark),
+        " of benchmark)."
+      )
+
       # FAIL-LOUD PLAUSIBILITY ALARMS, not calibration targets: these warn
       # (never silently adjust an input) when the composed cost/revenue
       # model produces an implausible headline result, so a wrong number

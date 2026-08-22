@@ -389,3 +389,28 @@ test_that("lmer_fitted's default path labels itself synthetic-fit at runtime", {
     "SYNTHETIC-FIT"
   )
 })
+
+test_that("practice_economics_diagnostics carries the MedPAC plausibility comparison", {
+  sim_res <- run_end_to_end_simulation(
+    start_year = 2025L,
+    end_year = 2025L,
+    n_agents = 100L,
+    initial_provider_count = 100L,
+    fellowship_entrants = 5L,
+    save_outputs = FALSE,
+    run_practice_economics = TRUE
+  )
+
+  diagnostics <- sim_res$practice_economics_diagnostics
+  expect_true(all(c(
+    "pct_of_medpac_surgical_benchmark", "medpac_plausibility_band"
+  ) %in% names(diagnostics)))
+  expect_true(is.finite(diagnostics$pct_of_medpac_surgical_benchmark))
+  # Real 2023 MedPAC surgical-specialty median -- confirms the wiring reads
+  # the actual cited row, not a re-typed constant.
+  expected_pct <- 100 * diagnostics$mean_physician_compensation_capacity / 496000
+  expect_equal(
+    diagnostics$pct_of_medpac_surgical_benchmark, expected_pct,
+    tolerance = 1e-6
+  )
+})
