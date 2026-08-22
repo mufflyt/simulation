@@ -1,0 +1,79 @@
+name: service-share-validation
+
+on:
+  pull_request:
+    paths:
+      - "R/**"
+      - "tests/testthat/**"
+      - "scripts/calibration/**"
+      - "scripts/validation/07_service_share_calibration_validation.R"
+      - "docs/PRESPEC_URPS_SHARE.md"
+      - ".github/workflows/service-share-validation.yml"
+  workflow_dispatch:
+    inputs:
+      run_real_data:
+        description: "Run mounted CMS/CHIA validation on urps-real-data runner"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  portable-r-cmd-check:
+    name: Portable R CMD check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+
+  real-data-service-share-validation:
+    name: Mounted CMS + CHIA validation
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.run_real_data == true
+    runs-on: [self-hosted, linux, x64, urps-real-data]
+    timeout-minutes: 120
+    env:
+      URPS_SERVICE_SHARE_EVENTS: ${{ vars.URPS_SERVICE_SHARE_EVENTS }}
+      URPS_CALIBRATED_SERVICE_SHARE_BUNDLE: ${{ vars.URPS_CALIBRATED_SERVICE_SHARE_BUNDLE }}
+      URPS_CMS_SERVICE_SHARE_EVIDENCE: ${{ vars.URPS_CMS_SERVICE_SHARE_EVIDENCE }}
+      URPS_CHIA_SERVICE_SHARE_EVIDENCE: ${{ vars.URPS_CHIA_SERVICE_SHARE_EVIDENCE }}
+      URPS_SERVICE_SHARE_VALIDATION_DIR: artifacts/service_share_validation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: check
+      - name: Verify mounted evidence paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$URPS_SERVICE_SHARE_EVENTS"
+          test -f "$URPS_CALIBRATED_SERVICE_SHARE_BUNDLE"
+          test -f "$URPS_CMS_SERVICE_SHARE_EVIDENCE"
+          test -f "$URPS_CHIA_SERVICE_SHARE_EVIDENCE"
+      - name: Run real-data validation
+        run: Rscript scripts/validation/07_service_share_calibration_validation.R
+      - name: Upload validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-share-real-data-validation
+          path: artifacts/service_share_validation
+          if-no-files-found: error
