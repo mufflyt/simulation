@@ -170,6 +170,179 @@ export_dpmm_demand_contract <- function(dpmm_results,
 }
 
 # =============================================================================
+# Isochrone drive-time access SURFACE exporter (the upstream half of cliff's seam)
+# =============================================================================
+# The demand-contract exporters above ship the demand denominators. This ships the
+# geographic ACCESS side: the tract-level E2SFCA drive-time access surface, whose
+# distance decay (sigma) and wait response (wait_scale) are fitted and, when the
+# leave-one-region-out holdout passes, geographically validated by the isochrone
+# access-response pipeline (R/calibration-isochrone_access_response.R). cliff's
+# Module D v2 consumes it via read_access_surface() (cliff/R/access_surface.R).
+#
+# It emits one row per demand tract (demand_id/access/population + access_scaled/
+# n_providers) with the fit provenance stamped on every row (sigma, wait_scale,
+# isochrone_run_id, calibration_status), plus a JSON manifest -- the same shape as
+# the demand contracts, so the downstream provenance/gating story is identical.
+
+ACCESS_SURFACE_CONTRACT_VERSION <- "0.1.0"
+
+# Statuses under which the surface is a VALIDATED contract; anything weaker
+# requires allow_unvalidated = TRUE, mirroring the demand exporters' refusal to
+# ship uncalibrated numbers by default.
+ACCESS_SURFACE_VALIDATED_STATUS <- c("fitted_and_geographically_validated",
+                                     "calibrated")
+
+.access_surface_frame <- function(access) {
+  if (is.list(access) && !is.data.frame(access) && isFALSE(access$resolved)) {
+    stop("export_access_surface(): geographic access is unresolved (",
+         if (!is.null(access$reason)) access$reason else "no reason given", ").",
+         call. = FALSE)
+  }
+  df <- if (is.list(access) && !is.data.frame(access) && !is.null(access$access))
+    access$access else access
+  if (!is.data.frame(df)) {
+    stop("export_access_surface(): `access` must be a run_geographic_access() / ",
+         "compute_e2sfca_access() result or its `access` data frame.", call. = FALSE)
+  }
+  miss <- setdiff(c("demand_id", "access", "population"), names(df))
+  if (length(miss)) {
+    stop("export_access_surface(): access surface missing column(s): ",
+         paste(miss, collapse = ", "), ".", call. = FALSE)
+  }
+  df
+}
+
+#' Export the tract-level drive-time access surface as a downstream contract
+#'
+#' @description Ships the E2SFCA drive-time access surface (one row per demand
+#'   tract) as a versioned CSV + JSON manifest for downstream consumers (cliff's
+#'   Module D v2). The distance-decay `sigma` and wait-response `wait_scale` fitted
+#'   by the isochrone access-response pipeline are stamped on every row alongside
+#'   the `isochrone_run_id` and the `calibration_status`, so the consumer gates on
+#'   provenance exactly as it does for the demand contracts.
+#'
+#' @param access A [run_geographic_access()] result (resolved), a
+#'   [compute_e2sfca_access()] result, or a per-tract access data frame with at
+#'   least `demand_id`, `access`, `population` (and optionally `access_scaled`,
+#'   `n_providers`).
+#' @param output_directory Directory to write into (created if missing).
+#' @param sigma_fit Optional [fit_decay_sigma()] result; supplies `sigma` and
+#'   `wait_scale` (and, absent `calibration_status`, its status).
+#' @param capacity Optional [capacity_status_with_isochrone_response()] result;
+#'   supplies the object `calibration_status` (preferred over `sigma_fit`'s).
+#' @param isochrone_run_id Provenance id of the isochrone run the surface was
+#'   built on (e.g. `ISOCHRONE_CANONICAL_RUN_ID`). Default `NA`.
+#' @param model_version Version string stamped on every row + the manifest.
+#'   Default `ACCESS_SURFACE_CONTRACT_VERSION`.
+#' @param calibration_status Override the provenance status. When `NULL` (default)
+#'   it is taken from `capacity`, then `sigma_fit`, then `"assumed_illustrative"`.
+#' @param allow_unvalidated Emit a surface whose response is not geographically
+#'   validated. Default `FALSE`: the export is refused unless `calibration_status`
+#'   is `"fitted_and_geographically_validated"` (or `"calibrated"`), so an
+#'   un-transportable fit does not silently reach downstream as a contract.
+#' @param verbose Log progress. Default `TRUE`.
+#' @return (invisibly) a list with `csv_path`, `manifest_path`, and the tidy `data`.
+#' @family export access surface
+#' @concept reporting
+#' @export
+export_access_surface <- function(access,
+                                  output_directory,
+                                  sigma_fit = NULL,
+                                  capacity = NULL,
+                                  isochrone_run_id = NA_character_,
+                                  model_version = ACCESS_SURFACE_CONTRACT_VERSION,
+                                  calibration_status = NULL,
+                                  allow_unvalidated = FALSE,
+                                  verbose = TRUE) {
+  surf <- .access_surface_frame(access)
+
+  sigma      <- if (!is.null(sigma_fit)) sigma_fit$sigma else NA_real_
+  wait_scale <- if (!is.null(sigma_fit)) sigma_fit$wait_scale else NA_real_
+  status <- calibration_status
+  if (is.null(status)) {
+    status <- if (!is.null(capacity) && !is.null(capacity$calibration_status))
+      capacity$calibration_status
+    else if (!is.null(sigma_fit) && !is.null(sigma_fit$calibration_status))
+      sigma_fit$calibration_status
+    else "assumed_illustrative"
+  }
+
+  # Fail closed before dir.create(), like the demand exporters: a surface whose
+  # response did not transport out-of-sample must not reach a downstream consumer
+  # as a contract unless the caller explicitly declares it exploratory.
+  if (!isTRUE(status %in% ACCESS_SURFACE_VALIDATED_STATUS) &&
+      !isTRUE(allow_unvalidated)) {
+    stop("export_access_surface(): calibration_status is '", status, "', not ",
+         "geographically validated. Pass allow_unvalidated = TRUE to emit an ",
+         "exploratory surface that downstream consumers must gate on.",
+         call. = FALSE)
+  }
+
+  if (!dir.exists(output_directory)) dir.create(output_directory, recursive = TRUE)
+
+  has <- function(nm) nm %in% names(surf)
+  tidy <- data.frame(
+    model              = "ISO_ACCESS",
+    model_version      = model_version,
+    calibration_status = status,
+    geography          = "tract",
+    demand_id          = as.character(surf$demand_id),
+    access             = as.numeric(surf$access),
+    access_scaled      = if (has("access_scaled")) as.numeric(surf$access_scaled) else NA_real_,
+    n_providers        = if (has("n_providers")) as.integer(surf$n_providers) else NA_integer_,
+    population         = as.numeric(surf$population),
+    isochrone_run_id   = as.character(isochrone_run_id),
+    sigma              = sigma,
+    wait_scale         = wait_scale,
+    stringsAsFactors   = FALSE
+  )
+  tidy <- tidy[order(tidy$demand_id), , drop = FALSE]
+
+  csv_path <- file.path(output_directory,
+                        sprintf("access_surface_v%s.csv", model_version))
+  utils::write.csv(tidy, csv_path, row.names = FALSE)
+
+  csv_hash <- tryCatch(unname(tools::md5sum(csv_path)), error = function(e) NA_character_)
+  manifest <- list(
+    artifact             = basename(csv_path),
+    model                = "ISO_ACCESS",
+    model_version        = model_version,
+    calibration_status   = status,
+    generated_at         = as.character(Sys.time()),
+    geography            = "tract",
+    isochrone_run_id     = as.character(isochrone_run_id),
+    sigma                = sigma,
+    wait_scale           = wait_scale,
+    n_tracts             = nrow(tidy),
+    total_population     = sum(tidy$population, na.rm = TRUE),
+    csv_md5              = csv_hash,
+    source_model_file    = "R/calibration-isochrone_access_response.R",
+    contract_reference   = "isochrone access-response pipeline (simulation #103-#105)",
+    downstream_consumers = c("cliff"),
+    notes = paste("Tract-level E2SFCA drive-time access surface. sigma/wait_scale",
+                  "are the fitted decay + wait response; calibration_status reads",
+                  "'fitted_and_geographically_validated' only when the leave-one-",
+                  "region-out holdout passed. Downstream (cliff Module D v2) must",
+                  "gate on calibration_status.")
+  )
+  manifest_path <- file.path(output_directory,
+                             sprintf("access_surface_v%s_manifest.json", model_version))
+  if (requireNamespace("jsonlite", quietly = TRUE)) {
+    jsonlite::write_json(manifest, manifest_path, auto_unbox = TRUE, pretty = TRUE, null = "null")
+  } else {
+    writeLines(paste(names(unlist(manifest)), unlist(manifest), sep = ": "), manifest_path)
+  }
+
+  if (verbose) {
+    msg <- sprintf("Wrote access surface v%s (%d tracts, %s): %s",
+                   model_version, nrow(tidy), status, csv_path)
+    if (exists(".msg_info", mode = "function")) .msg_info(msg) else message(msg)
+  }
+
+  invisible(list(csv_path = csv_path, manifest_path = manifest_path, data = tidy))
+}
+
+# =============================================================================
 # HDMM life-course demand contract (tiers 5-6: care-seeking + procedural)
 # =============================================================================
 # The DPMM exporter above serves tiers 3-4 (prevalence / symptomatic). The

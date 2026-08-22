@@ -8,6 +8,7 @@ build_urps_exit_hazard(
   cliff_duckdb_path = NULL,
   cliff_ageband_csv = system.file("extdata", "provider_year",
     "retirement_hazard_by_ageband.csv", package = "urpssim"),
+  require_calibrated = FALSE,
   min_confidence = 0.6,
   smooth = TRUE,
   scale_shift = 0,
@@ -19,10 +20,18 @@ build_urps_exit_hazard(
 only when \code{cliff_ageband_csv} is unavailable.}
 
 \item{cliff_ageband_csv}{Character path to the cliff exposure-based age-band
-hazard CSV (columns \code{age_band}, \code{person_years}, \code{events},
-\code{annual_hazard}). Defaults to the vendored copy under
-\code{inst/extdata/provider_year}; set to \code{NULL} to force the
-DuckDB/Weibull path.}
+hazard CSV (columns \code{age_band}, \code{person_years}, \code{events}, \code{annual_hazard}).
+Defaults to the vendored copy under \code{inst/extdata/provider_year}; set to
+\code{NULL} to force the DuckDB/Weibull path.}
+
+\item{require_calibrated}{Logical; if TRUE, error instead of silently
+returning the \code{derived_by_analogy} Weibull fallback. Every fallback path
+otherwise yields a well-formed 102-row curve with \code{n_events = 0}, which is
+indistinguishable from success unless the caller inspects \code{source}. Set
+this whenever a downstream result depends on the hazard actually being
+fitted to observed data. It also catches the partial case, where a per-sex
+fallback leaves analogy rows inside a result still labelled \code{calibrated}.
+Default FALSE, so existing callers are unaffected.}
 
 \item{min_confidence}{Minimum cliff confidence score to include. Default 0.60.}
 
@@ -41,13 +50,6 @@ Named list: \code{exit_probs} (data frame), \code{source}, \code{n_events},
 \description{
 Returns a per-age exit probability table. Its consumer,
 \code{advance_urps_agents()}, is archived in inst/archive/supply.R.
-The default fallback uses the Weibull survival curves from
-\code{\link[=urps_weibull_exit_probs]{urps_weibull_exit_probs()}} (derived-by-analogy from HWSM Exhibits 17–18),
-replacing the previous coarse step function.  When a cliff DuckDB is
-available, a Gompertz model is fitted to observed departure events and
-returned at the \code{calibrated} tier.
-}
-\details{
 By default the calibrated source is the cliff pipeline's exposure-based
 age-band hazard (person-years at risk and departure events per age band,
 vendored under \code{inst/extdata/provider_year}), expanded to a per-age curve at
@@ -55,10 +57,11 @@ the \code{calibrated} tier with Poisson exposure-based uncertainty. This is a re
 age-conditional hazard (a risk set), preferred over both the events-only
 DuckDB Gompertz fit and the Weibull analogy. Sparse zero-event bands (the
 70+ band has 0 events in 16 person-years) fall back to the Weibull analogy
-for those ages, floored at the highest observed-band hazard so retirement risk
-never falls with age. When the age-band file is absent and a cliff DuckDB is
-supplied, a Gompertz model is fitted to observed departure events; otherwise
-the Weibull survival curves are used.
+for those ages rather than asserting no retirement. When the age-band file is
+absent and a cliff DuckDB is supplied, a Gompertz model is fitted to observed
+departure events; otherwise the Weibull survival curves from
+\code{\link[=urps_weibull_exit_probs]{urps_weibull_exit_probs()}} (derived-by-analogy from HWSM Exhibits 17–18) are
+used.
 }
 \concept{retirement hazard}
 \concept{supply}

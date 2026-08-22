@@ -1,0 +1,206 @@
+# LAYER 2 — SCIENTIFIC ADVERSARIAL VALIDATION
+#
+# Layer 1 (nightly.yaml) proves the repository WORKS. This proves it is hard to
+# FOOL. It does not replace Layer 1 and must not be merged into it: a green
+# Layer 1 with a red Layer 2 is a meaningful, interpretable state.
+#
+#   Layer 1  software / reproducibility  -- does everything execute correctly?
+#   Layer 2  scientific adversarial      -- is the system difficult to fool?
+#   Layer 3  release validation          -- can the result be frozen and
+#                                           independently reproduced?  (not built)
+#
+# SCHEDULE. Nightly at 03:47 MST (10:47 UTC), thirty minutes after Layer 1 so
+# the two do not contend for runners. The deep run is Sundays 04:47 MST and is
+# deliberately allowed to be computationally excessive.
+#
+# COVERAGE. docs/LAYER2_ADVERSARIAL_COVERAGE.md maps every section of the
+# specification to implemented / not-applicable / deferred, with a reason for
+# each. Large parts of the spec describe a RECORD-LINKAGE system this repository
+# does not contain; those are recorded as not-applicable rather than stubbed.
+
+on:
+  schedule:
+    - cron: '47 10 * * *'      # nightly  03:47 MST
+    - cron: '47 11 * * 0'      # weekly   04:47 MST Sunday (deep run)
+  workflow_dispatch:
+    inputs:
+      deep:
+        description: 'Run the deep campaign (many more randomized worlds)'
+        type: boolean
+        default: false
+
+name: scientific-adversarial
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adversarial-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  R_KEEP_PKG_SOURCE: yes
+  _R_CHECK_FORCE_SUGGESTS_: false
+  GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
+  MUFFLYACCESS_PIN: mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+  R_EXTRA_PKGS: any::testthat, any::pkgload, any::knitr, any::rmarkdown, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4, any::flexsurv
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # A / AZ. CANARY MUTATIONS -- testing the tests.
+  # Each canary must be killed by its NAMED detector (spec A3). A generic crash
+  # does not count, or one over-eager assertion makes the suite look stronger
+  # than it is.
+  # ---------------------------------------------------------------------------
+  canaries:
+    name: scientific canary mutations
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}
+          dependencies: '"hard"'
+      - name: Every canary must die by its named detector
+        run: Rscript .github/scripts/adversarial/canaries.R | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: adversarial-canaries
+          path: artifacts/adversarial/
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # B-E, P, Q, T, U, V, W, AF-AL. PROPERTY / METAMORPHIC / CONTROL BATTERY.
+  # ---------------------------------------------------------------------------
+  metamorphic:
+    name: property, metamorphic and control battery
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}
+          dependencies: '"hard"'
+      - name: Run the battery
+        env:
+          # The weekly deep run explores far more of the space (spec BF).
+          ADV_WORLDS: ${{ (github.event.schedule == '47 11 * * 0' || inputs.deep) && '5000' || '300' }}
+        run: Rscript .github/scripts/adversarial/metamorphic.R | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: adversarial-metamorphic
+          path: artifacts/adversarial/
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # F. INDEPENDENT REFERENCE IMPLEMENTATIONS + the Layer-1 invariant battery,
+  # re-run here so a Layer-2 failure is self-contained and diagnosable.
+  # ---------------------------------------------------------------------------
+  reference:
+    name: independent reference implementations
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}
+          dependencies: '"hard"'
+      - name: Reference engine, mass balance and back-test ratchet
+        run: Rscript .github/scripts/assert-scientific-invariants.R | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Temporal traps and estimand-match audit (spec S / gate 14)
+        run: Rscript .github/scripts/assert-temporal-integrity.R | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # BG. SCIENTIFIC ROBUSTNESS SCORECARD. Missing or skipped adversarial jobs
+  # cannot masquerade as a pass.
+  # ---------------------------------------------------------------------------
+  scorecard:
+    name: scientific robustness scorecard
+    runs-on: ubuntu-latest
+    needs: [canaries, metamorphic, reference]
+    if: always()
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scorecard
+        run: |
+          {
+            echo "## SCIENTIFIC ADVERSARIAL VALIDATION"
+            echo
+            echo "| gate | result |"
+            echo "|---|---|"
+            echo "| canary mutations (testing the tests) | ${{ needs.canaries.result }} |"
+            echo "| property / metamorphic / controls | ${{ needs.metamorphic.result }} |"
+            echo "| independent reference implementations | ${{ needs.reference.result }} |"
+            echo
+            echo "Layer 1 proves the repository works. Layer 2 proves it is hard to fool."
+            echo "Coverage of the specification: docs/LAYER2_ADVERSARIAL_COVERAGE.md"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Every adversarial gate must have actually RUN
+        run: |
+          fail=0
+          check() {
+            case "$2" in
+              success) echo "  OK       $1" ;;
+              *)       echo "::error::ADVERSARIAL GATE DID NOT PASS: $1 (result=$2)"; fail=1 ;;
+            esac
+          }
+          check "canary mutations"      "${{ needs.canaries.result }}"
+          check "metamorphic battery"   "${{ needs.metamorphic.result }}"
+          check "reference implementations" "${{ needs.reference.result }}"
+          exit $fail
+      - name: Open or update the adversarial tracking issue
+        if: ${{ always() && (needs.canaries.result != 'success' || needs.metamorphic.result != 'success' || needs.reference.result != 'success') }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const rows = {
+              'canary mutations': '${{ needs.canaries.result }}',
+              'metamorphic battery': '${{ needs.metamorphic.result }}',
+              'reference implementations': '${{ needs.reference.result }}',
+            };
+            const failed = Object.entries(rows).filter(([, v]) => v !== 'success').map(([k]) => k);
+            const body = [
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              `**Failing:** ${failed.join(', ')}`,
+              '',
+              '| gate | result |', '|---|---|',
+              ...Object.entries(rows).map(([k, v]) => `| ${k} | ${v} |`),
+              '',
+              failed.includes('canary mutations')
+                ? '> A surviving canary means the VALIDATION SYSTEM regressed, not necessarily the model. The tests can no longer distinguish the correct model from a meaningfully wrong one.'
+                : '> A scientific invariant failed. Check the failure class in the artifact before assuming it is a code defect.',
+            ].join('\n');
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'adversarial',
+            });
+            if (existing.data.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.data[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: 'Scientific adversarial validation failing', body,
+                labels: ['adversarial'],
+              });
+            }
