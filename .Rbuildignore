@@ -21,3 +21,7 @@
 ^Makefile$
 ^\.githooks$
 ^inst/archive$
+^vignettes/simulation_results_report\.Rmd$
+^vignettes/simulation_results_report\.html$
+^vignettes/technical_appendix_architecture_flowcharts\.Rmd$
+^vignettes/technical_appendix_architecture_flowcharts\.html$
