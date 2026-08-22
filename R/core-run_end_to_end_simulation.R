@@ -696,7 +696,22 @@ run_end_to_end_simulation <- function(
           ),
           mean_revenue_per_wrvu = base::sum(practice_draws$gross_revenue) /
             base::sum(practice_draws$annual_wrvu),
+          mean_break_even_wrvu_per_fte = base::mean(
+            practice_draws$break_even_wrvu_per_fte, na.rm = TRUE
+          ),
+          mean_required_revenue_per_wrvu = base::mean(
+            practice_draws$required_revenue_per_wrvu, na.rm = TRUE
+          ),
           mean_operating_income = base::mean(practice_draws$operating_income),
+          # Legacy alias, identical arithmetic to mean_operating_income --
+          # see the file-level comment above on why this is the primary
+          # name going forward: there is no physician-compensation line
+          # item anywhere in this cost model, so a negative value means
+          # modeled professional revenue does not cover nonphysician
+          # practice costs, before the physician is paid at all.
+          mean_physician_compensation_capacity = base::mean(
+            practice_draws$physician_compensation_capacity
+          ),
           # Two distinct estimands, kept separate rather than assumed equal:
           # the sum-based aggregate margin (national revenue-weighted) and
           # the distributional mean-of-per-practice-median margin (equal

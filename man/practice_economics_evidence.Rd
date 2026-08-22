@@ -7,12 +7,25 @@
 practice_economics_evidence()
 }
 \value{
-A tibble with source, estimand, value, unit, status, and use.
+A tibble with source, estimand, value, lower, upper, unit, year,
+evidence_quality, status, and use.
 }
 \description{
 Rabice and Lizeth are kept as separate estimands: Rabice measured Medicare
 appointment obtainment, while Lizeth measured Medicaid refusal among calls
 with a definite response. Neither directly observes practice profit.
+
+Every parameter \code{\link[=simulate_practice_economics]{simulate_practice_economics()}} draws from carries real
+provenance here -- \code{lower}/\code{upper} (the actual distributional bounds the
+simulator uses, not an invented range), \code{year}, and \code{evidence_quality}
+(\code{"high"}: official regulatory/administrative rate or a real survey at
+NCHS reliability; \code{"medium"}: literature-derived, cross-check-only, or a
+small-but-usable fielded sample; \code{"low"}: single-site, preliminary, or
+below a reliability floor; \code{"uncited"}: no external source at all --
+currently overhead, malpractice, APP compensation, and all four payer
+collection rates). The revenue side (conversion factors, payer mix) is
+materially better sourced than the cost side; this table makes that
+asymmetry visible rather than treating every input as equally solid.
 }
 \seealso{
 Other supply:
