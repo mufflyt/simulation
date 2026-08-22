@@ -19,8 +19,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # See R-CMD-check.yaml: the default GITHUB_TOKEN cannot read the private
-      # mufflyaccess repo, and pak fails the job during dependency resolution.
       GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
 
     steps:
@@ -29,9 +27,7 @@ jobs:
       - name: Require the private-dependency token
         run: |
           if [ -z "${{ secrets.MUFFLYACCESS_PAT }}" ]; then
-            echo "::error::MUFFLYACCESS_PAT secret is not set. Add a fine-grained PAT" \
-                 "with Contents:Read on mufflyt/mufflyaccess as the repo secret" \
-                 "MUFFLYACCESS_PAT."
+            echo "::error::MUFFLYACCESS_PAT secret is not set."
             exit 1
           fi
 
@@ -39,36 +35,24 @@ jobs:
         with:
           use-public-rspm: true
 
-      # Install pandoc BEFORE setup-r-dependencies. That action's internal
-      # "does this package need pandoc?" check resolves pak::pkg_deps(".",
-      # dependencies = "all"), which includes Suggests and so tries to find
-      # mysterycall -- a GitHub-only Suggests deliberately kept out of Remotes
-      # (its GLMM graph conflicts with the pinned lme4/blme). With pandoc already
-      # on PATH that check short-circuits and never resolves Suggests, so the
-      # unreachable mysterycall no longer fails the job.
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          # mufflyaccess is pinned to the same commit as DESCRIPTION and
-          # R/core-contract_pin -- see R-CMD-check.yaml for why a bare repo spec
-          # is not good enough. It IS installable here: this job requires
-          # MUFFLYACCESS_PAT above.
           extra-packages: any::testthat, any::pkgload, any::dplyr, any::tibble, any::tidyr, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4, any::ranger, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
-          # Suggests are not resolved wholesale (mufflyaccess is private and pak
-          # fails the job on it); the reachable ones are named above.
           dependencies: '"hard"'
 
-      # THIS JOB RUNS THE WHOLE SUITE, not just the structural guards, and it is
-      # not redundant with R-CMD-check. Check runs tests inside <pkg>.Rcheck/,
-      # where config/, artifacts/ and data-raw/ are absent, so every gate that
-      # looks for the repository root skips itself -- including the frozen
-      # back-test record drift gate and the mufflyaccess contract pin. Here the
-      # source tree is present, so those gates actually execute.
-      #
-      # It also enforces tests/skip-budget.csv, which is the only thing that can
-      # tell a skipped gate from a passing one.
       - name: Full suite from the repository root, with the skip budget
         env:
           NOT_CRAN: "true"
-        run: Rscript scripts/ci/check_suite.R
+        run: |
+          set -o pipefail
+          Rscript scripts/ci/check_suite.R 2>&1 | tee repo-hygiene.log
+
+      - name: Upload baseline repo-hygiene diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-repo-hygiene-diagnostic
+          path: repo-hygiene.log
+          if-no-files-found: error
