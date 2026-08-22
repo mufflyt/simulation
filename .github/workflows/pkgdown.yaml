@@ -58,6 +58,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pkgdown loads dependency namespaces while autolinking code in the .Rd
+      # topics (downlit resolves `pkg::fun` by loading pkg). The sf/terra
+      # geospatial stack pulls in `units`, whose units.so cannot load without
+      # libudunits2, so build_reference() dies on the first geospatial topic
+      # (load_provider_isochrones.Rd) with "libudunits2.so.0: cannot open shared
+      # object file". setup-r-dependencies does not install these system
+      # libraries here, so install them before anything loads a namespace.
+      - name: Install geospatial system libraries (sf/terra/units)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgdal-dev libgeos-dev libproj-dev libudunits2-dev
+
       - uses: r-lib/actions/setup-r@v2
         with: { r-version: release, use-public-rspm: true }
 

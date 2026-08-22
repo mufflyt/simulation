@@ -1,0 +1,95 @@
+# Machine-Readable Scientific Boundary Registry (Layer 2E BVA)
+# ---------------------------------------------------------------------------
+# Enforces exact boundary behaviors across all scientific thresholds.
+
+version: "1.0.0"
+
+boundaries:
+  drive_time_30:
+    domain: geography
+    variable: drive_minutes
+    threshold: 30.0
+    unit: minutes
+    left_inclusive: true
+    expected:
+      below: "00-30"
+      exact: "00-30"
+      above: "31-60"
+    severity: S4
+
+  drive_time_60:
+    domain: geography
+    variable: drive_minutes
+    threshold: 60.0
+    unit: minutes
+    left_inclusive: true
+    expected:
+      below: "31-60"
+      exact: "31-60"
+      above: "61-120"
+    severity: S4
+
+  drive_time_120:
+    domain: geography
+    variable: drive_minutes
+    threshold: 120.0
+    unit: minutes
+    left_inclusive: true
+    expected:
+      below: "61-120"
+      exact: "61-120"
+      above: "121-180"
+    severity: S4
+
+  drive_time_180:
+    domain: geography
+    variable: drive_minutes
+    threshold: 180.0
+    unit: minutes
+    left_inclusive: true
+    expected:
+      below: "121-180"
+      exact: "121-180"
+      above: ">180"
+    severity: S4
+
+  probability_lower:
+    domain: transition
+    variable_class: probability
+    threshold: 0.0
+    expected:
+      below: error
+      exact: valid
+      above: valid
+    severity: S5
+
+  probability_upper:
+    domain: transition
+    variable_class: probability
+    threshold: 1.0
+    expected:
+      below: valid
+      exact: valid
+      above: error
+    severity: S5
+
+  supply_demand_balance:
+    domain: adequacy
+    variable: gap
+    threshold: 0.0
+    expected:
+      below: shortage
+      exact: balanced
+      above: surplus
+    severity: S5
+
+  hospital_capability_threshold:
+    domain: capability
+    variable: annual_volume
+    threshold: 5.0
+    unit: cases_per_year
+    expected:
+      below: incapable
+      exact: capable
+      above: capable
+    severity: S5

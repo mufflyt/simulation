@@ -36,7 +36,7 @@
 #'
 #' @param duckdb_path Path to the DuckDB. Default resolves via
 #'   [.chia_duckdb_default()] (env var `URPS_CHIA_DUCKDB`, else a glob for the
-#'   `MufflySamsung*` volume).
+#'   configured external data volume).
 #' @return An open `DBIConnection`.
 #' @family chia inpatient surgery
 #' @concept demand
