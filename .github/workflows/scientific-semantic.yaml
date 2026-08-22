@@ -27,6 +27,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev
 
+      - name: Setup Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
       - name: Restore dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
