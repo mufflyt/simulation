@@ -40,13 +40,30 @@
 #'   [national_older_female_population_by_state()]; when the database has no
 #'   ingested evidence, the module degrades gracefully to its declared prior
 #'   (see [calibrate_legislative_relocation()]) rather than a no-op.
+#' @param run_practice_economics Whether to run [simulate_practice_economics()]
+#'   each year against a practice-tbl bridged from `provider_cohort`. `FALSE`
+#'   (default) skips the step entirely -- zero behavior change. Each active
+#'   provider becomes one practice-year: `annual_wrvu` allocates that year's
+#'   national `wrvu_total` by each provider's share of `supplied_fte`,
+#'   `practice_setting` derives from `academic_setting`/`hospital_outpatient`
+#'   (`academic`/`hospital_employed`/`independent`), `app_fte` is
+#'   `fte * app_delegation_rate` -- documented proxies, not real per-provider
+#'   data (this runner has no real provider-level wRVU or APP headcount).
+#' @param practice_payer_mix Optional payer-mix tibble (the shape
+#'   [practice_payer_mix_defaults()] returns), applied uniformly to every
+#'   provider-practice. Computed via [practice_payer_mix_defaults()] when
+#'   `NULL` and `run_practice_economics = TRUE`.
+#' @param practice_economics_draws Monte Carlo draws per practice-year passed
+#'   to [simulate_practice_economics()]; kept below its 500-draw default to
+#'   bound runtime at full provider-cohort scale.
 #' @param seed Master random seed.
 #' @param save_outputs Whether to save timestamped CSV files.
 #' @param output_dir Directory for saved CSV files.
 #'
 #' @return A named list containing the audit ledger, spatial balances,
 #'   provider cohort, engine diagnostics, fitted productivity model, policy
-#'   migration diagnostics/summary, and simulation configuration.
+#'   migration diagnostics/summary, practice economics diagnostics, and
+#'   simulation configuration.
 #' @family simulation pipeline
 #' @concept core
 #' @export
@@ -74,6 +91,9 @@ run_end_to_end_simulation <- function(
     empirical_parameters = NULL,
     policy_migration_scenario = "baseline",
     policy_evidence_db = NULL,
+    run_practice_economics = FALSE,
+    practice_payer_mix = NULL,
+    practice_economics_draws = 100L,
     seed = 20260821L,
     save_outputs = TRUE,
     output_dir = "artifacts/end_to_end") {
@@ -294,6 +314,11 @@ run_end_to_end_simulation <- function(
       policy_relocation_calibration$method, " (empirical = ",
       policy_relocation_calibration$empirical, ")."
     )
+  }
+
+  practice_economics_diagnostic_rows <- base::vector("list", base::length(years))
+  if (run_practice_economics && base::is.null(practice_payer_mix)) {
+    practice_payer_mix <- practice_payer_mix_defaults(include_crosscheck = FALSE)
   }
 
   for (year_index in base::seq_along(years)) {
@@ -615,6 +640,129 @@ run_end_to_end_simulation <- function(
       productivity_engine = productivity_engine
     )
 
+    if (run_practice_economics) {
+      practice_tbl <- active_providers |>
+        dplyr::transmute(
+          practice_id = .data$provider_id,
+          year = simulation_year,
+          clinical_fte = .data$fte,
+          annual_wrvu = wrvu_total * .data$fte / supplied_fte,
+          medicare_share = practice_payer_mix$medicare_share,
+          medicaid_share = practice_payer_mix$medicaid_share,
+          commercial_share = practice_payer_mix$commercial_share,
+          self_pay_share = practice_payer_mix$self_pay_share,
+          practice_setting = dplyr::case_when(
+            .data$academic_setting ~ "academic",
+            .data$hospital_outpatient ~ "hospital_employed",
+            TRUE ~ "independent"
+          ),
+          app_fte = .data$fte * app_delegation_rate
+        )
+      practice_result <- simulate_practice_economics(
+        practice_tbl,
+        draws = practice_economics_draws,
+        seed = seed + year_index
+      )
+      practice_draws <- practice_result$draws
+      # Exact cost-component decomposition (verified by accounting identity
+      # in tests/testthat/test-supply-practice-economics.R): operating_cost
+      # == clinical_fte*(overhead_per_fte + malpractice_per_fte) +
+      # app_fte*app_compensation. There is NO physician-compensation line
+      # item anywhere in this cost model -- mean_operating_income is money
+      # available to compensate the physician BEFORE they are paid, not a
+      # true bottom-line practice profit. A negative value does not mean
+      # cash losses in the ordinary sense; it means the composed overhead +
+      # malpractice + APP-labor cost exceeds wRVU-proxy revenue before
+      # physician pay is even considered.
+      practice_diagnostic_row <- practice_result$summary |>
+        dplyr::summarise(
+          year = simulation_year,
+          n_practices = dplyr::n(),
+          mean_wrvu_per_fte = base::sum(practice_tbl$annual_wrvu) /
+            base::sum(practice_tbl$clinical_fte),
+          mean_revenue_per_fte = base::mean(
+            practice_draws$gross_revenue / practice_draws$clinical_fte
+          ),
+          mean_expense_per_fte = base::mean(
+            practice_draws$operating_cost / practice_draws$clinical_fte
+          ),
+          mean_overhead_per_fte = base::mean(practice_draws$overhead_per_fte),
+          mean_malpractice_per_fte = base::mean(
+            practice_draws$malpractice_per_fte
+          ),
+          mean_app_labor_per_fte = base::mean(
+            practice_draws$app_fte * practice_draws$app_compensation /
+              practice_draws$clinical_fte
+          ),
+          mean_revenue_per_wrvu = base::sum(practice_draws$gross_revenue) /
+            base::sum(practice_draws$annual_wrvu),
+          mean_operating_income = base::mean(practice_draws$operating_income),
+          # Two distinct estimands, kept separate rather than assumed equal:
+          # the sum-based aggregate margin (national revenue-weighted) and
+          # the distributional mean-of-per-practice-median margin (equal
+          # weight per practice regardless of size).
+          aggregate_operating_margin =
+            (base::sum(practice_draws$gross_revenue) -
+              base::sum(practice_draws$operating_cost)) /
+              base::sum(practice_draws$gross_revenue),
+          mean_operating_margin = base::mean(
+            .data$median_operating_margin, na.rm = TRUE
+          ),
+          mean_loss_probability = base::mean(
+            .data$loss_probability, na.rm = TRUE
+          ),
+          mean_acquisition_probability = base::mean(
+            .data$acquisition_probability, na.rm = TRUE
+          ),
+          mean_cash_pay_probability = base::mean(
+            .data$cash_pay_probability, na.rm = TRUE
+          )
+        )
+
+      # FAIL-LOUD PLAUSIBILITY ALARMS, not calibration targets: these warn
+      # (never silently adjust an input) when the composed cost/revenue
+      # model produces an implausible headline result, so a wrong number
+      # cannot pass through unnoticed the way -56% margins / 99.98% loss
+      # probability did on the first wiring pass. See R/supply-
+      # practice_economics.R's overhead assumption -- "User-specified
+      # scenario"/"assumption" status, the one cost input with no external
+      # citation -- as the most likely thing to revisit if these fire.
+      if (base::isTRUE(practice_diagnostic_row$mean_operating_margin < -0.25)) {
+        base::warning(
+          "run_end_to_end_simulation(): year ", simulation_year,
+          " practice-economics mean operating margin is ",
+          base::sprintf("%.1f%%", 100 * practice_diagnostic_row$mean_operating_margin),
+          " (< -25% plausibility bound). This is a fail-loud alarm about the",
+          " composed revenue/cost model, not a claim the simulation is wrong;",
+          " see practice_economics_diagnostics for the revenue/expense",
+          " decomposition.",
+          call. = FALSE
+        )
+      }
+      if (base::isTRUE(practice_diagnostic_row$mean_loss_probability > 0.90)) {
+        base::warning(
+          "run_end_to_end_simulation(): year ", simulation_year,
+          " practice-economics loss probability is ",
+          base::sprintf("%.1f%%", 100 * practice_diagnostic_row$mean_loss_probability),
+          " (> 90% plausibility bound).",
+          call. = FALSE
+        )
+      }
+      if (base::isTRUE(practice_diagnostic_row$mean_revenue_per_wrvu < 15 ||
+          practice_diagnostic_row$mean_revenue_per_wrvu > 100)) {
+        base::warning(
+          "run_end_to_end_simulation(): year ", simulation_year,
+          " realized revenue per wRVU is $",
+          base::sprintf("%.2f", practice_diagnostic_row$mean_revenue_per_wrvu),
+          ", outside the [$15, $100] plausibility bound around real Medicare",
+          " conversion factors (~$33-34/RVU).",
+          call. = FALSE
+        )
+      }
+
+      practice_economics_diagnostic_rows[[year_index]] <- practice_diagnostic_row
+    }
+
     provider_cohort <- provider_cohort |>
       dplyr::mutate(
         age = .data$age + 1,
@@ -731,6 +879,9 @@ run_end_to_end_simulation <- function(
   policy_migration_diagnostics <- dplyr::bind_rows(
     policy_migration_diagnostic_rows
   )
+  practice_economics_diagnostics <- dplyr::bind_rows(
+    practice_economics_diagnostic_rows
+  )
   base::message("Combined annual audit, balance, and diagnostic tables.")
 
   simulation_bundle <- base::list(
@@ -752,6 +903,7 @@ run_end_to_end_simulation <- function(
     fitted_productivity_model = fitted_productivity_model,
     policy_migration_diagnostics = policy_migration_diagnostics,
     policy_migration_summary_tbl = policy_migration_summary_tbl,
+    practice_economics_diagnostics = practice_economics_diagnostics,
     simulation_config = base::list(
       start_year = start_year,
       end_year = end_year,
@@ -767,7 +919,9 @@ run_end_to_end_simulation <- function(
       evidence_db = evidence_db,
       empirical_parameter_names = base::names(empirical_parameters),
       policy_migration_scenario = policy_migration_scenario,
-      policy_evidence_db = policy_evidence_db
+      policy_evidence_db = policy_evidence_db,
+      run_practice_economics = run_practice_economics,
+      practice_economics_draws = practice_economics_draws
     ),
     empirical_parameter_provenance = base::attr(
       empirical_parameters,
