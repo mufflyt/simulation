@@ -47,6 +47,7 @@ Imports:
     utils,
     DiceKriging,
     lhs,
+    withr,
     yaml
 Suggests:
     researchpaths,
@@ -70,7 +71,6 @@ Suggests:
     shiny,
     survey,
     testthat (>= 3.0.0),
-    withr,
     zipcodeR
 Config/testthat/edition: 3
 VignetteBuilder: knitr

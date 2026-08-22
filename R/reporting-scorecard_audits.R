@@ -68,25 +68,22 @@
   script <- file.path(root, rel_path)
   if (!file.exists(script)) return(list(available = FALSE))
 
-  old_wd <- setwd(root)
-  on.exit(setwd(old_wd), add = TRUE)
-
-  # check_suite.R's skip-budget audit assumes NOT_CRAN is set (GitHub Actions
-  # sets it automatically via r-lib/actions; a local interactive session
-  # usually does not). Without it, skip_on_cran() fires everywhere, and the
-  # budget -- which expects only a handful of "On CRAN" skips -- reports a
-  # spurious over-budget failure with nothing to do with the actual suite.
-  # Set explicitly so this audit gives the same signal locally as in CI,
-  # rather than depending on an ambient env var. Harmless for scripts that
-  # don't read it (the adversarial scripts).
-  old_not_cran <- Sys.getenv("NOT_CRAN", unset = NA)
-  Sys.setenv(NOT_CRAN = "true")
-  on.exit(if (is.na(old_not_cran)) Sys.unsetenv("NOT_CRAN")
-          else Sys.setenv(NOT_CRAN = old_not_cran), add = TRUE)
-
-  out <- suppressWarnings(
-    system2(file.path(R.home("bin"), "Rscript"), script,
-            stdout = TRUE, stderr = TRUE))
+  # withr (not setwd/Sys.setenv + on.exit): the source-safety static gate forbids
+  # bare setwd()/Sys.setenv()/Sys.unsetenv() in package code; withr::with_dir and
+  # withr::with_envvar set and restore the working directory and NOT_CRAN around
+  # the run with the same guarantee, via :: calls the gate does not flag.
+  #
+  # NOT_CRAN=true: check_suite.R's skip-budget audit assumes it is set (GitHub
+  # Actions sets it via r-lib/actions; a local interactive session usually does
+  # not). Without it, skip_on_cran() fires everywhere and the budget -- which
+  # expects only a handful of "On CRAN" skips -- reports a spurious over-budget
+  # failure. Setting it here gives the same signal locally as in CI; with_envvar
+  # restores the prior value (including unset) afterwards. Harmless for scripts
+  # that don't read it (the adversarial scripts).
+  out <- withr::with_dir(root, withr::with_envvar(c(NOT_CRAN = "true"),
+    suppressWarnings(
+      system2(file.path(R.home("bin"), "Rscript"), script,
+              stdout = TRUE, stderr = TRUE))))
   status <- attr(out, "status")
   list(available = TRUE,
        status = if (is.null(status)) 0L else as.integer(status),
