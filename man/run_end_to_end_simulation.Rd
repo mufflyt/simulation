@@ -26,6 +26,8 @@ run_end_to_end_simulation(
   geography_control = base::list(),
   evidence_db = NULL,
   empirical_parameters = NULL,
+  policy_migration_scenario = "baseline",
+  policy_evidence_db = NULL,
   seed = 20260821L,
   save_outputs = TRUE,
   output_dir = "artifacts/end_to_end"
@@ -74,6 +76,20 @@ run_end_to_end_simulation(
 
 \item{empirical_parameters}{Optional named numeric vector of empirical parameters.}
 
+\item{policy_migration_scenario}{One of \code{"baseline"} (default, an identity
+transform -- zero behavior change), \code{"observed_migration"},
+\code{"migration_stress"}, \code{"legislative_climate"}, or \code{"combined_stress"}.
+See \code{\link[=simulate_policy_migration_scenarios]{simulate_policy_migration_scenarios()}}. Ignored unless
+\code{policy_evidence_db} is also supplied.}
+
+\item{policy_evidence_db}{Optional path to a policy migration DuckDB (see
+\code{\link[=open_policy_migration_duckdb]{open_policy_migration_duckdb()}}). \code{NULL} (default) skips the
+state-migration/legislative-policy step entirely. State-year allocation
+uses real ACS population shares from
+\code{\link[=national_older_female_population_by_state]{national_older_female_population_by_state()}}; when the database has no
+ingested evidence, the module degrades gracefully to its declared prior
+(see \code{\link[=calibrate_legislative_relocation]{calibrate_legislative_relocation()}}) rather than a no-op.}
+
 \item{seed}{Master random seed.}
 
 \item{save_outputs}{Whether to save timestamped CSV files.}
@@ -82,8 +98,8 @@ run_end_to_end_simulation(
 }
 \value{
 A named list containing the audit ledger, spatial balances,
-provider cohort, engine diagnostics, fitted productivity model, and
-simulation configuration.
+provider cohort, engine diagnostics, fitted productivity model, policy
+migration diagnostics/summary, and simulation configuration.
 }
 \description{
 Runs the eight-step annual microsimulation and optionally couples the
