@@ -12,7 +12,7 @@ build_county_synthetic_female_population(
   end_year,
   persons_per_county = 1000L,
   max_iterations = 500L,
-  tolerance = 0.000001,
+  tolerance = 1e-06,
   trim_quantiles = c(0.005, 0.995),
   seed = 20260821L,
   save_directory = NULL

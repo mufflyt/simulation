@@ -10,7 +10,7 @@ compute_e2sfca_access(
   demand,
   weights = E2SFCA_DEFAULT_WEIGHTS,
   step2_power = 1,
-  per_capita_scale = 100000
+  per_capita_scale = 1e+05
 )
 }
 \arguments{

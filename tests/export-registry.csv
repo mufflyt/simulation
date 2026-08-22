@@ -222,3 +222,7 @@
 "example_sbc_simulator","api"
 "make_joint_history_matcher_adapter","api"
 "run_joint_history_matcher_sbc","api"
+"ingest_ipums_microdata","api"
+"ingest_lodes_commute_flows","api"
+"ipums_lodes_source_catalog","api"
+"open_ipums_lodes_duckdb","api"
