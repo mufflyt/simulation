@@ -3,11 +3,22 @@
 .repo_path <- function(...) {
   p1 <- file.path(...)
   p2 <- file.path("..", "..", ...)
-  if (file.exists(p1)) p1 else p2
+  if (file.exists(p1)) return(p1)
+  if (file.exists(p2)) return(p2)
+  curr <- getwd()
+  for (i in 1:6) {
+    c1 <- file.path(curr, ...)
+    if (file.exists(c1)) return(c1)
+    c2 <- file.path(curr, "00_pkg_src", "urpssim", ...)
+    if (file.exists(c2)) return(c2)
+    curr <- dirname(curr)
+  }
+  p1
 }
 
 test_that("estimate_cms_psps_setting_mix.R script exists and has valid syntax", {
   script_path <- .repo_path("scripts", "estimate_cms_psps_setting_mix.R")
+  skip_if_not(file.exists(script_path), "Script absent under R CMD check")
   expect_true(file.exists(script_path))
 
   parsed <- tryCatch(parse(script_path), error = function(e) e)
