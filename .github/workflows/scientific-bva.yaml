@@ -18,6 +18,16 @@ jobs:
         with:
           r-version: 'release'
 
+      # renv::restore() install-tests every locked package, including terra (via
+      # the tigris/sf geospatial stack). setup-renv does NOT install system
+      # libraries the way setup-r-dependencies does, so terra.so fails to load
+      # with "libproj.so.25: cannot open shared object file" unless the PROJ/GDAL/
+      # GEOS/udunits system libraries are present. Install them before restore.
+      - name: Install geospatial system libraries (terra/sf)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgdal-dev libgeos-dev libproj-dev libudunits2-dev
+
       - name: Restore renv lockfile
         uses: r-lib/actions/setup-renv@v2
 
