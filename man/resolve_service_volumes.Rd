@@ -4,12 +4,20 @@
 \alias{resolve_service_volumes}
 \title{Resolve service volumes using calibrated claims file or fallback}
 \usage{
-resolve_service_volumes(demand_long, path = NULL)
+resolve_service_volumes(
+  demand_long,
+  path = NULL,
+  mode = resolve_reproducibility_mode()
+)
 }
 \arguments{
 \item{demand_long}{Demand table.}
 
 \item{path}{Path to claims service volume CSV file.}
+
+\item{mode}{Reproducibility mode (\code{"strict"} or \code{"relaxed"}), threaded to
+\code{\link[=claims_service_volumes]{claims_service_volumes()}} so a strict run fails on an incomplete basket
+rather than silently warning. Defaults to \code{\link[=resolve_reproducibility_mode]{resolve_reproducibility_mode()}}.}
 }
 \value{
 Table of service volumes.
