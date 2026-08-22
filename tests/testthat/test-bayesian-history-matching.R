@@ -59,6 +59,6 @@ test_that("build_urps_prior_specification constructs 10-parameter literature pri
 
   expect_s3_class(spec, "tbl_df")
   expect_equal(nrow(spec), 10L)
-  expect_true("identifiability" %in% names(spec))
-  expect_true("nuisance_informative" %in% spec$identifiability)
+  expect_true("evidence_tier" %in% names(spec))
+  expect_true("scenario_assumption" %in% spec$evidence_tier)
 })
