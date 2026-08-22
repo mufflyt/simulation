@@ -10,7 +10,20 @@ practice_economics_defaults()
 A named list of simulation inputs.
 }
 \description{
-Default uncertain inputs for practice economics
+\code{app_compensation_mean} is now built from two real, separately-declared
+components rather than one uncited number: BLS OEWS May 2025 mean base
+wages for nurse practitioners ($137,300, SOC 29-1171) and physician
+assistants ($141,280, SOC 29-1071), averaged, then grossed up by a real
+BLS employer-benefits load factor (\code{app_benefits_load_factor}, from BLS
+Employer Costs for Employee Compensation, June 2024, healthcare and
+social assistance industry: wages/salaries are 70.4\% of total employer
+compensation cost, i.e. total cost = wages / 0.704). Both the base wage
+and the load factor are exposed in the returned list, not folded silently
+into one number -- see \code{\link[=practice_economics_evidence]{practice_economics_evidence()}} for the citations.
+\code{app_compensation_sd}'s RELATIVE uncertainty (previously 15000/145000,
+about 10.3\%) is carried over onto the new mean; BLS OEWS reports a
+national mean and percentile bands, not a usable individual-level SD, so
+this specific figure remains an assumption, not a BLS number.
 }
 \seealso{
 Other supply:

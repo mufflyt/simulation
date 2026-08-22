@@ -22,10 +22,20 @@ simulator uses, not an invented range), \code{year}, and \code{evidence_quality}
 NCHS reliability; \code{"medium"}: literature-derived, cross-check-only, or a
 small-but-usable fielded sample; \code{"low"}: single-site, preliminary, or
 below a reliability floor; \code{"uncited"}: no external source at all --
-currently overhead, malpractice, APP compensation, and all four payer
-collection rates). The revenue side (conversion factors, payer mix) is
-materially better sourced than the cost side; this table makes that
-asymmetry visible rather than treating every input as equally solid.
+currently overhead, malpractice, and all four payer collection rates).
+The revenue side (conversion factors, payer mix) is materially better
+sourced than the cost side; this table makes that asymmetry visible
+rather than treating every input as equally solid. APP compensation was
+uncited until real BLS OEWS wage data and a real BLS ECEC benefits load
+factor replaced it (see the rows below) -- overhead and malpractice
+remain the largest uncited cost inputs.
+
+Also carries three MedPAC physician/APP compensation figures as an
+external PLAUSIBILITY benchmark for \code{physician_compensation_capacity}
+(see \code{\link[=physician_compensation_plausibility]{physician_compensation_plausibility()}}) -- these are reference
+points to check whether modeled compensation capacity overlaps a
+plausible real-world range, never a calibration target this model is
+tuned to reproduce.
 }
 \seealso{
 Other supply:
