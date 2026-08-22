@@ -433,6 +433,19 @@ run_end_to_end_simulation <- function(
     } else {
       base::message("Predicting fitted provider capacity for ",
         simulation_year, ".")
+      if (!base::is.function(productivity_predictor)) {
+        base::message(
+          "NOTE: productivity_engine = \"lmer_fitted\" with no custom ",
+          "productivity_predictor uses .lmer_fitted_predictor_bridge(), ",
+          "which fills sex/rural/app_support_rate/case-mix-share with ",
+          "fixed placeholder constants (provider_cohort has no real ",
+          "per-provider data for them). This is a SYNTHETIC-FIT capacity ",
+          "path -- fit_provider_productivity_model()'s trained data is not ",
+          "empirical unless a real, non-mock productivity_panel was ",
+          "supplied. Treat these results as a mechanism demonstration, ",
+          "not an empirical estimate."
+        )
+      }
       if (base::is.function(productivity_predictor)) {
         predicted_capacity <- productivity_predictor(
           fitted_productivity_model,
@@ -440,11 +453,45 @@ run_end_to_end_simulation <- function(
           simulation_year
         )
       } else {
-        predicted_capacity <- stats::predict(
-          fitted_productivity_model,
-          newdata = active_providers,
-          allow.new.levels = TRUE
+        # fitted_productivity_model is a model_bundle (list: model,
+        # analysis_panel, diagnostics, outcome, formula), not a bare lme4
+        # fit -- stats::predict() on the bundle itself does not dispatch to
+        # predict.merMod() and would error before reaching a prediction.
+        # predict_provider_capacity() (R/demand-measure_provider_productivity.R)
+        # is the correct, pre-existing wrapper: it extracts $model,
+        # predicts on the model's log(outcome) scale, and exponentiates --
+        # calling stats::predict() directly here previously returned raw
+        # log-scale values as if they were already annual_patient_capacity.
+        bridged_providers <- .lmer_fitted_predictor_bridge(active_providers)
+        predicted_panel <- predict_provider_capacity(
+          fitted_productivity_model, bridged_providers
         )
+        # UNIT CHECK, not a formality: the model_bundle's outcome can be
+        # wrvu_per_clinical_fte or wrvu_per_clinical_hour -- workload
+        # measures, not a patient headcount -- and treating either as
+        # annual_patient_capacity would silently corrupt the patient-flow
+        # conservation identity downstream by roughly an order of
+        # magnitude. Only encounters_per_clinical_fte means "patient
+        # capacity" in this runner's units.
+        if (!base::identical(
+          predicted_panel$capacity_outcome[[1]], "encounters_per_clinical_fte"
+        )) {
+          base::stop(
+            "run_end_to_end_simulation(): fitted_productivity_model was ",
+            "fit on outcome = '", predicted_panel$capacity_outcome[[1]],
+            "', not 'encounters_per_clinical_fte'. Re-fit with ",
+            "fit_provider_productivity_model(outcome = ",
+            "\"encounters_per_clinical_fte\") -- a wRVU-scale outcome is ",
+            "not a patient headcount and must not be used as ",
+            "annual_patient_capacity.",
+            call. = FALSE
+          )
+        }
+        predicted_capacity <- predicted_panel |>
+          dplyr::transmute(
+            provider_id = .data$provider_id,
+            predicted_capacity = .data$predicted_capacity
+          )
       }
       if (base::is.data.frame(predicted_capacity)) {
         capacity_columns <- base::intersect(
@@ -1005,4 +1052,43 @@ run_end_to_end_simulation <- function(
 #' @keywords internal
 .urps_null_or <- function(left, right) {
   if (base::is.null(left)) right else left
+}
+
+#' Bridge provider_cohort onto fit_provider_productivity_model()'s predictors
+#'
+#' `productivity_engine = "lmer_fitted"` was never exercised end-to-end:
+#' `provider_cohort` has none of `sex`, `academic` (a factor, not the boolean
+#' `academic_setting` it actually carries), `rural`, `app_support_rate`,
+#' `surgical_wrvu_share`, `office_procedure_share`, `new_visit_share`, or
+#' `years_since_fellowship` that the model formula needs -- calling
+#' `stats::predict()` with `newdata = active_providers` errored before ever
+#' reaching prediction. Two columns are REAL, not fabricated:
+#' `academic` (a relabeling of the existing `academic_setting` boolean) and
+#' `years_since_fellowship` (`years_certified` -- the same construct for a
+#' fellowship-trained subspecialty). The rest have no real per-provider
+#' source anywhere in this cohort and are fixed, documented placeholders,
+#' not per-provider data -- this bridge exists to make the path RUNNABLE,
+#' not to claim it is empirically grounded. Every synthetic value is a
+#' single repository-wide constant, chosen to match this exact package's own
+#' synthetic demo panel (`scripts/run_full_urps_microsimulation_demo.R`)
+#' rather than an unrelated guess.
+#'
+#' @param active_providers Tibble of active providers from `provider_cohort`.
+#' @return `active_providers` with the model's required predictor columns
+#'   added.
+#' @keywords internal
+.lmer_fitted_predictor_bridge <- function(active_providers) {
+  active_providers |>
+    dplyr::mutate(
+      academic = base::ifelse(.data$academic_setting, "Academic", "Private"),
+      years_since_fellowship = .data$years_certified,
+      # PLACEHOLDER CONSTANTS, not per-provider data -- provider_cohort has
+      # no real sex, rurality, or case-mix information at all.
+      sex = "F",
+      rural = "Urban",
+      app_support_rate = 0.15,
+      surgical_wrvu_share = 0.35,
+      office_procedure_share = 0.25,
+      new_visit_share = 0.20
+    )
 }
