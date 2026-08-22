@@ -7,8 +7,7 @@
 # PATH RESOLUTION REUSES .chia_duckdb_default() (R/calibration-transport_to_national.R)
 # rather than a second resolver: that one already exists, is already used by
 # four call sites, and is more robust than a naive config-key lookup -- it
-# globs the volume name (this physical drive mounts as "MufflySamsung",
-# "MufflySamsung 1", "MufflySamsung 1 1" depending on remount history) and
+# globs the volume name (external physical data drive) and
 # refuses a suspiciously small file rather than silently opening/creating an
 # empty stub DuckDB. A second, weaker resolver here would be exactly the kind
 # of drifting duplicate this repository's own conventions warn against.
@@ -36,7 +35,7 @@
 #'
 #' @param duckdb_path Path to the DuckDB. Default resolves via
 #'   [.chia_duckdb_default()] (env var `URPS_CHIA_DUCKDB`, else a glob for the
-#'   `MufflySamsung*` volume).
+#'   external data volume).
 #' @return An open `DBIConnection`.
 #' @family chia inpatient surgery
 #' @concept demand
