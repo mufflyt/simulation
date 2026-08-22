@@ -27,8 +27,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev
 
-      - name: Restore renv lockfile
-        uses: r-lib/actions/setup-renv@v2
+      - name: Restore dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::testthat, any::sf, any::survey, any::zipcodeR, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
 
       - name: Execute Boundary-Value Analysis Unit Tests
         run: |
