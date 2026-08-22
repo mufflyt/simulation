@@ -663,7 +663,7 @@ claims_service_volumes <- function(
 #'
 #' @return Table of service volumes.
 #' @keywords internal
-resolve_service_volumes <- function(demand_long, path = NULL) {
+resolve_service_volumes <- function(demand_long, path = NULL, mode = NULL) {
   fallback <- example_service_volumes(demand_long)
   if (!base::is.null(path) && base::file.exists(path)) {
     claims_csv <- readr::read_csv(path, show_col_types = FALSE)
