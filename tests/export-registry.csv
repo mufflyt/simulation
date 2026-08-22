@@ -194,7 +194,6 @@
 "save_provider_productivity_artifacts","api"
 "simulate_acgme_fellowship_capacity","api"
 "simulate_entrant_characteristics","api"
-"simulate_practice_economics","api"
 "simulate_provider_relocation","api"
 "summarize_county_pfd_burden","api"
 "summarize_hrr_workforce_balance","api"
