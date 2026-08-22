@@ -245,9 +245,9 @@ run_one_sbc_replicate <- function(replicate_id, replicate_seed,
   )
 }
 
-`%||%` <- function(left, right) {
-  if (base::is.null(left)) right else left
-}
+# `%||%` is imported from rlang (see urpssim-package.R / NAMESPACE); defining it
+# locally here shadowed that import and made behaviour depend on attach order,
+# which the repo-hygiene operator guard forbids.
 
 require_sbc_columns <- function(table, columns, label) {
   missing_columns <- base::setdiff(columns, base::names(table))
