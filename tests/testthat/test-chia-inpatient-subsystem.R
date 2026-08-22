@@ -13,6 +13,7 @@ test_that("CHIA inpatient subsystem files exist and parse cleanly", {
     .repo_path("R", "validation-chia_inpatient_surgery.R"),
     .repo_path("R", "geography-chia_inpatient_flows.R")
   )
+  testthat::skip_if_not(all(file.exists(files)), "source file not shipped under R CMD check")
   for (f in files) {
     expect_true(file.exists(f), info = paste("File missing:", f))
     parsed <- tryCatch(parse(f), error = function(e) e)

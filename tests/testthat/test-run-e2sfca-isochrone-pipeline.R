@@ -8,6 +8,7 @@
 
 test_that("run_e2sfca_isochrone_pipeline.R script exists and has valid syntax", {
   script_path <- .repo_path("scripts", "run_e2sfca_isochrone_pipeline.R")
+  testthat::skip_if_not(file.exists(script_path), "source file not shipped under R CMD check")
   expect_true(file.exists(script_path))
 
   parsed <- tryCatch(parse(script_path), error = function(e) e)

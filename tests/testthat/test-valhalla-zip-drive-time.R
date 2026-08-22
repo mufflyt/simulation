@@ -8,6 +8,7 @@
 
 test_that("R/geography-chia_inpatient_flows.R script exists and has valid syntax", {
   script_path <- .repo_path("R", "geography-chia_inpatient_flows.R")
+  testthat::skip_if_not(file.exists(script_path), "source file not shipped under R CMD check")
   expect_true(file.exists(script_path))
 
   parsed <- tryCatch(parse(script_path), error = function(e) e)
