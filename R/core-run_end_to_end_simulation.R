@@ -28,13 +28,25 @@
 #' @param geography_control Named list passed to the geography solver.
 #' @param evidence_db Optional national evidence DuckDB path.
 #' @param empirical_parameters Optional named numeric vector of empirical parameters.
+#' @param policy_migration_scenario One of `"baseline"` (default, an identity
+#'   transform -- zero behavior change), `"observed_migration"`,
+#'   `"migration_stress"`, `"legislative_climate"`, or `"combined_stress"`.
+#'   See [simulate_policy_migration_scenarios()]. Ignored unless
+#'   `policy_evidence_db` is also supplied.
+#' @param policy_evidence_db Optional path to a policy migration DuckDB (see
+#'   [open_policy_migration_duckdb()]). `NULL` (default) skips the
+#'   state-migration/legislative-policy step entirely. State-year allocation
+#'   uses real ACS population shares from
+#'   [national_older_female_population_by_state()]; when the database has no
+#'   ingested evidence, the module degrades gracefully to its declared prior
+#'   (see [calibrate_legislative_relocation()]) rather than a no-op.
 #' @param seed Master random seed.
 #' @param save_outputs Whether to save timestamped CSV files.
 #' @param output_dir Directory for saved CSV files.
 #'
 #' @return A named list containing the audit ledger, spatial balances,
-#'   provider cohort, engine diagnostics, fitted productivity model, and
-#'   simulation configuration.
+#'   provider cohort, engine diagnostics, fitted productivity model, policy
+#'   migration diagnostics/summary, and simulation configuration.
 #' @family simulation pipeline
 #' @concept core
 #' @export
@@ -60,6 +72,8 @@ run_end_to_end_simulation <- function(
     geography_control = base::list(),
     evidence_db = NULL,
     empirical_parameters = NULL,
+    policy_migration_scenario = "baseline",
+    policy_evidence_db = NULL,
     seed = 20260821L,
     save_outputs = TRUE,
     output_dir = "artifacts/end_to_end") {
@@ -67,6 +81,13 @@ run_end_to_end_simulation <- function(
   geography_engine <- base::match.arg(geography_engine)
   entrant_engine <- base::match.arg(entrant_engine)
   productivity_engine <- base::match.arg(productivity_engine)
+  policy_migration_scenario <- base::match.arg(
+    policy_migration_scenario,
+    c(
+      "baseline", "observed_migration", "migration_stress",
+      "legislative_climate", "combined_stress"
+    )
+  )
 
   if (!base::is.null(evidence_db) && base::is.null(empirical_parameters)) {
     empirical_parameters <- read_urps_empirical_parameters(evidence_db)
@@ -188,9 +209,92 @@ run_end_to_end_simulation <- function(
   audit_rows <- base::vector("list", base::length(years))
   spatial_balance_rows <- base::vector("list", base::length(years))
   engine_diagnostic_rows <- base::vector("list", base::length(years))
+  policy_migration_diagnostic_rows <- base::vector("list", base::length(years))
 
   base_population_2025 <- empirical_value("female_population_20plus", 132500000)
   fellowship_entrants <- empirical_value("annual_fellowship_entrants", fellowship_entrants)
+
+  # Policy migration operates at state-year granularity; this runner is
+  # national-aggregate. Build the state-year bridge and calibrate the
+  # relocation response ONCE from a multi-year panel (mirroring
+  # `fitted_productivity_model` above) rather than per year, since a
+  # single-year slice never has the year-over-year variation
+  # `calibrate_legislative_relocation()` needs to move off its prior.
+  policy_migration_active <- !base::identical(policy_migration_scenario, "baseline") &&
+    !base::is.null(policy_evidence_db)
+  policy_migration_year_multipliers <- NULL
+  policy_migration_summary_tbl <- NULL
+  policy_relocation_calibration <- NULL
+  if (policy_migration_active) {
+    base::message(
+      "Policy migration scenario: ", policy_migration_scenario, "."
+    )
+    state_population_shares <- national_older_female_population_by_state()
+    state_crosswalk <- state_population_shares |>
+      dplyr::select(.data$state, .data$state_fips)
+    initial_provider_fte_total <- base::sum(provider_cohort$fte, na.rm = TRUE)
+
+    policy_state_year_baseline <- purrr::map_dfr(years, function(policy_year) {
+      year_population <- base_population_2025 * 1.006^(policy_year - 2025L)
+      year_prevalent_cases <- year_population *
+        (0.245 + 0.001 * (policy_year - 2025L))
+      state_population_shares |>
+        dplyr::transmute(
+          state = .data$state,
+          year = policy_year,
+          female_older_population = .data$share * year_population,
+          pfd_demand = .data$share * year_prevalent_cases,
+          # Provider FTE is allocated by population share, not real
+          # state-level provider geography (`state_abbr` stays a
+          # placeholder "US" cohort-wide) -- a documented proxy.
+          provider_fte = .data$share * initial_provider_fte_total,
+          # Entrants-as-applications proxy: the runner has no separate
+          # fellowship-applications figure.
+          fellowship_applications = .data$share * fellowship_entrants
+        )
+    })
+
+    policy_migration_con <- open_policy_migration_duckdb(policy_evidence_db)
+    base::on.exit(
+      DBI::dbDisconnect(policy_migration_con, shutdown = TRUE),
+      add = TRUE
+    )
+    policy_evidence <- build_policy_migration_evidence(
+      policy_migration_con,
+      state_crosswalk
+    )
+    policy_relocation_calibration <- calibrate_legislative_relocation(
+      state_year_history = policy_state_year_baseline,
+      evidence = policy_evidence
+    )
+    policy_simulated <- simulate_policy_migration_scenarios(
+      policy_state_year_baseline,
+      evidence = policy_evidence,
+      scenario = policy_migration_scenario,
+      seed = seed,
+      calibration = policy_relocation_calibration
+    )
+    policy_migration_summary_tbl <- summarize_policy_migration_scenarios(
+      policy_simulated
+    )
+    policy_migration_year_multipliers <- policy_simulated |>
+      dplyr::group_by(.data$year) |>
+      dplyr::summarise(
+        demand_multiplier = base::sum(.data$pfd_demand_scenario) /
+          base::sum(.data$pfd_demand),
+        provider_multiplier = base::sum(.data$provider_fte_scenario) /
+          base::sum(.data$provider_fte),
+        application_multiplier = base::sum(
+          .data$fellowship_applications_scenario
+        ) / base::sum(.data$fellowship_applications),
+        .groups = "drop"
+      )
+    base::message(
+      "Policy migration relocation calibration: ",
+      policy_relocation_calibration$method, " (empirical = ",
+      policy_relocation_calibration$empirical, ")."
+    )
+  }
 
   for (year_index in base::seq_along(years)) {
     simulation_year <- years[[year_index]]
@@ -203,6 +307,23 @@ run_end_to_end_simulation <- function(
     incidence_rate <- 0.022
     prevalent_cases <- population_total * prevalence_rate
     incident_cases <- population_total * incidence_rate
+
+    policy_demand_multiplier <- 1
+    policy_provider_multiplier <- 1
+    policy_application_multiplier <- 1
+    if (policy_migration_active) {
+      year_multiplier_row <- policy_migration_year_multipliers |>
+        dplyr::filter(.data$year == simulation_year)
+      if (base::nrow(year_multiplier_row) == 1L) {
+        policy_demand_multiplier <- year_multiplier_row$demand_multiplier
+        policy_provider_multiplier <- year_multiplier_row$provider_multiplier
+        policy_application_multiplier <-
+          year_multiplier_row$application_multiplier
+      }
+      prevalent_cases <- prevalent_cases * policy_demand_multiplier
+      incident_cases <- incident_cases * policy_demand_multiplier
+    }
+
     care_seeking_count <- prevalent_cases * 0.380
     referred_count <- care_seeking_count * 0.420
 
@@ -509,7 +630,9 @@ run_end_to_end_simulation <- function(
     ) == 1L
     provider_cohort$active[exits] <- FALSE
 
-    entrant_count <- base::as.integer(fellowship_entrants)
+    entrant_count <- base::as.integer(base::round(
+      fellowship_entrants * policy_application_multiplier
+    ))
     if (entrant_engine == "parametric") {
       new_entrants <- tibble::tibble(
         provider_id = base::sprintf(
@@ -580,6 +703,23 @@ run_end_to_end_simulation <- function(
       geography_iterations = geography_iterations,
       geography_converged = geography_converged
     )
+    policy_migration_diagnostic_rows[[year_index]] <- tibble::tibble(
+      year = simulation_year,
+      policy_migration_active = policy_migration_active,
+      demand_multiplier = policy_demand_multiplier,
+      provider_multiplier = policy_provider_multiplier,
+      application_multiplier = policy_application_multiplier,
+      relocation_empirical = if (policy_migration_active) {
+        policy_relocation_calibration$empirical
+      } else {
+        NA
+      },
+      relocation_method = if (policy_migration_active) {
+        policy_relocation_calibration$method
+      } else {
+        NA_character_
+      }
+    )
     base::message("Completed year ", simulation_year,
       ": served ", scales::comma(base::round(served_patients)),
       "; delayed ", scales::comma(base::round(unserved_delayed)), ".")
@@ -588,6 +728,9 @@ run_end_to_end_simulation <- function(
   audit_ledger_tbl <- dplyr::bind_rows(audit_rows)
   annual_spatial_balance <- dplyr::bind_rows(spatial_balance_rows)
   engine_diagnostics <- dplyr::bind_rows(engine_diagnostic_rows)
+  policy_migration_diagnostics <- dplyr::bind_rows(
+    policy_migration_diagnostic_rows
+  )
   base::message("Combined annual audit, balance, and diagnostic tables.")
 
   simulation_bundle <- base::list(
@@ -607,6 +750,8 @@ run_end_to_end_simulation <- function(
     final_provider_cohort = provider_cohort,
     engine_diagnostics = engine_diagnostics,
     fitted_productivity_model = fitted_productivity_model,
+    policy_migration_diagnostics = policy_migration_diagnostics,
+    policy_migration_summary_tbl = policy_migration_summary_tbl,
     simulation_config = base::list(
       start_year = start_year,
       end_year = end_year,
@@ -620,7 +765,9 @@ run_end_to_end_simulation <- function(
       productivity_engine = productivity_engine,
       seed = seed,
       evidence_db = evidence_db,
-      empirical_parameter_names = base::names(empirical_parameters)
+      empirical_parameter_names = base::names(empirical_parameters),
+      policy_migration_scenario = policy_migration_scenario,
+      policy_evidence_db = policy_evidence_db
     ),
     empirical_parameter_provenance = base::attr(
       empirical_parameters,

@@ -1,3 +1,76 @@
+#' National older-female population share by state (ACS 2023)
+#'
+#' Real state population weights for allocating national-aggregate simulation
+#' totals across states, so [simulate_policy_migration_scenarios()] (which
+#' operates at state-year granularity) can be driven from
+#' [run_end_to_end_simulation()]'s national-aggregate per-year loop. Reads
+#' the vendored ACS table B01001 (sex by age) extract and sums the female
+#' 55-and-over variables -- B01001_041 (55-59) through B01001_049 (85+),
+#' confirmed against `tidycensus::load_variables(2023, "acs5")` labels, not
+#' assumed from memory of the ACS variable-code scheme.
+#'
+#' @param acs_path Path to the vendored ACS sex-by-age-by-state extract.
+#'
+#' @return Tibble: `state` (2-letter abbreviation), `state_fips`,
+#'   `older_female_population`, `share` (fraction of the national total).
+#' @concept core
+#' @export
+national_older_female_population_by_state <- function(
+    acs_path = "data-raw/acs/acs5_2023_sex_by_age_state.rds") {
+  if (!base::file.exists(acs_path)) {
+    # data-raw/ is source-tree-only (like .github/), so a relative default
+    # only resolves when the working directory is the repo root. testthat
+    # runs test files from tests/testthat/, not the root -- fall back to
+    # the same repo-root resolver the scorecard audits use.
+    root <- .repo_source_root()
+    if (!base::is.na(root)) {
+      acs_path <- base::file.path(root, acs_path)
+    }
+  }
+  if (!base::file.exists(acs_path)) {
+    base::stop(
+      "national_older_female_population_by_state(): file not found: ",
+      acs_path, call. = FALSE
+    )
+  }
+  raw <- base::readRDS(acs_path)
+  older_female_vars <- base::sprintf("B01001_0%02d", 41:49)
+  by_state <- raw |>
+    dplyr::filter(.data$variable %in% older_female_vars) |>
+    dplyr::group_by(.data$GEOID, .data$NAME) |>
+    dplyr::summarise(
+      older_female_population = base::sum(.data$estimate),
+      .groups = "drop"
+    )
+  # base R's state.name/state.abb cover the 50 states only; ACS state tables
+  # also carry DC and Puerto Rico under their own GEOIDs.
+  abbreviation <- base::ifelse(
+    by_state$NAME == "District of Columbia", "DC",
+    base::ifelse(
+      by_state$NAME == "Puerto Rico", "PR",
+      state.abb[base::match(by_state$NAME, state.name)]
+    )
+  )
+  out <- tibble::tibble(
+    state = abbreviation,
+    state_fips = base::as.character(by_state$GEOID),
+    older_female_population = by_state$older_female_population
+  ) |>
+    dplyr::filter(!base::is.na(.data$state)) |>
+    dplyr::mutate(
+      share = .data$older_female_population /
+        base::sum(.data$older_female_population)
+    ) |>
+    dplyr::arrange(.data$state)
+  base::message(
+    "national_older_female_population_by_state(): ",
+    base::nrow(out), " states, ",
+    scales::comma(base::sum(out$older_female_population)),
+    " total female 55+."
+  )
+  out
+}
+
 #' Build a model-ready state-year policy and migration panel
 #'
 #' Combines six independent evidence arms staged by the policy DuckDB loader.
