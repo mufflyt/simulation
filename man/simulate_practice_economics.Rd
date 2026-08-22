@@ -9,7 +9,8 @@ simulate_practice_economics(
   draws = 1000L,
   seed = 20260821L,
   inputs = practice_economics_defaults(),
-  rvu_basis = base::c("work_rvu_proxy", "payment_rvu")
+  rvu_basis = base::c("work_rvu_proxy", "payment_rvu"),
+  overhead_by_setting = NULL
 )
 }
 \arguments{
@@ -25,9 +26,23 @@ columns, \code{practice_setting}, and \code{app_fte}. Optional columns are
 \item{inputs}{Named list from \code{\link[=practice_economics_defaults]{practice_economics_defaults()}}.}
 
 \item{rvu_basis}{Either \code{work_rvu_proxy} or \code{payment_rvu}.}
+
+\item{overhead_by_setting}{Optional tibble from
+\code{\link[=practice_overhead_by_setting]{practice_overhead_by_setting()}} (or the same shape). \code{NULL} (default)
+draws overhead from the flat \code{inputs$overhead_*} range for every
+practice, exactly as before this parameter existed -- zero behavior
+change unless a caller opts in with real setting-specific bounds.}
 }
 \value{
-A list with draws, summaries, evidence, and a summary sentence.
+A list with draws, summaries, evidence, and a summary sentence. The
+draws and summary tibbles carry both the legacy \code{operating_income}/
+\code{operating_margin} columns and their renamed primary-estimand aliases,
+\code{net_revenue_before_physician_compensation}/
+\code{physician_compensation_capacity} -- there is no physician-compensation
+line item in this cost model, so a negative value means modeled
+professional revenue does not cover nonphysician practice costs, before
+the physician is paid at all. Also carries \code{break_even_wrvu_per_fte} and
+\code{required_revenue_per_wrvu} (per-draw) and their per-practice-year means.
 }
 \description{
 Produces payer-specific collected professional revenue, operating cost,

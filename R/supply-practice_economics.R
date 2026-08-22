@@ -7,60 +7,119 @@
 #' appointment obtainment, while Lizeth measured Medicaid refusal among calls
 #' with a definite response. Neither directly observes practice profit.
 #'
-#' @return A tibble with source, estimand, value, unit, status, and use.
+#' Every parameter [simulate_practice_economics()] draws from carries real
+#' provenance here -- `lower`/`upper` (the actual distributional bounds the
+#' simulator uses, not an invented range), `year`, and `evidence_quality`
+#' (`"high"`: official regulatory/administrative rate or a real survey at
+#' NCHS reliability; `"medium"`: literature-derived, cross-check-only, or a
+#' small-but-usable fielded sample; `"low"`: single-site, preliminary, or
+#' below a reliability floor; `"uncited"`: no external source at all --
+#' currently overhead, malpractice, APP compensation, and all four payer
+#' collection rates). The revenue side (conversion factors, payer mix) is
+#' materially better sourced than the cost side; this table makes that
+#' asymmetry visible rather than treating every input as equally solid.
+#'
+#' @return A tibble with source, estimand, value, lower, upper, unit, year,
+#'   evidence_quality, status, and use.
 #' @family supply
 #' @concept economics
 #' @export
 practice_economics_evidence <- function() {
   base::message("[practice-economics] Building evidence registry.")
   evidence_tbl <- tibble::tribble(
-    ~source, ~estimand, ~value, ~unit, ~status, ~use,
-    "CMS 2026 PFS final rule", "non-QP conversion factor", 33.40,
-    "USD per RVU", "final_rule", "Medicare revenue",
-    "CMS 2026 PFS final rule", "QP conversion factor", 33.57,
-    "USD per RVU", "final_rule", "Medicare revenue",
-    "CMS QPP", "maximum negative MIPS adjustment", -0.09,
-    "proportion", "statutory_bound", "sensitivity bound",
+    ~source, ~estimand, ~value, ~lower, ~upper, ~unit, ~year,
+    ~evidence_quality, ~status, ~use,
+
+    "CMS 2026 PFS final rule", "non-QP conversion factor", 33.40, NA_real_,
+    NA_real_, "USD per RVU", "2026", "high", "final_rule", "Medicare revenue",
+
+    "CMS 2026 PFS final rule", "QP conversion factor", 33.57, NA_real_,
+    NA_real_, "USD per RVU", "2026", "high", "final_rule", "Medicare revenue",
+
+    "CMS QPP", "maximum negative MIPS adjustment", -0.09, NA_real_, NA_real_,
+    "proportion", "2026", "high", "statutory_bound", "sensitivity bound",
+
     "KFF review of physician payments", "commercial payment ratio", 1.43,
-    "ratio to Medicare", "literature_mean", "commercial prior median",
-    "KFF review of physician payments", "commercial ratio lower", 1.18,
-    "ratio to Medicare", "literature_range", "commercial prior bound",
-    "KFF review of physician payments", "commercial ratio upper", 1.79,
-    "ratio to Medicare", "literature_range", "commercial prior bound",
+    1.18, 1.79, "ratio to Medicare", NA_character_, "medium",
+    "literature_mean", "commercial prior",
+
+    "User-specified scenario", "base overhead", 330000, 280000, 380000,
+    "2026 USD per clinical FTE", NA_character_, "uncited", "assumption",
+    "cost prior -- NO EXTERNAL CITATION, see practice_overhead_by_setting()",
+
+    "User-specified scenario", "malpractice premium (lognormal, median/5th/95th)",
+    45000, 25726, 78713, "2026 USD per clinical FTE", NA_character_,
+    "uncited", "assumption", "cost prior -- NO EXTERNAL CITATION",
+
+    "User-specified scenario", "APP compensation (normal, mean/5th/95th)",
+    145000, 120327, 169673, "2026 USD per APP FTE", NA_character_,
+    "uncited", "assumption", "cost prior -- NO EXTERNAL CITATION",
+
+    "User-specified scenario", "Medicare collection rate", 0.98, NA_real_,
+    NA_real_, "proportion", NA_character_, "uncited", "assumption",
+    "collection rate -- NO EXTERNAL CITATION",
+
+    "User-specified scenario", "Medicaid collection rate", 0.94, NA_real_,
+    NA_real_, "proportion", NA_character_, "uncited", "assumption",
+    "collection rate -- NO EXTERNAL CITATION",
+
+    "User-specified scenario", "commercial collection rate", 0.96, NA_real_,
+    NA_real_, "proportion", NA_character_, "uncited", "assumption",
+    "collection rate -- NO EXTERNAL CITATION",
+
+    "User-specified scenario", "self-pay collection rate", 0.72, NA_real_,
+    NA_real_, "proportion", NA_character_, "uncited", "assumption",
+    "collection rate -- NO EXTERNAL CITATION",
+
     "Lizeth/Acosta 2026", "Medicaid acceptance, definite responses", 0.77,
-    "proportion", "preliminary", "access validation only, superseded below",
+    NA_real_, NA_real_, "proportion", "2026", "low", "preliminary",
+    "access validation only, superseded below",
+
     "Rabice et al. 2021", "Medicare appointment obtained", 226 / 427,
-    "proportion", "peer_reviewed", "access validation only",
-    "User-specified scenario", "base overhead lower", 280000,
-    "2026 USD per clinical FTE", "assumption", "cost prior bound",
-    "User-specified scenario", "base overhead upper", 380000,
-    "2026 USD per clinical FTE", "assumption", "cost prior bound",
+    NA_real_, NA_real_, "proportion", "2021", "medium", "peer_reviewed",
+    "access validation only",
+
     "NAMCS 2015-2019 pooled, URPS-filtered", "Medicare share of URPS visits",
-    0.5586, "proportion", "survey_derived", "payer mix default",
+    0.5586, NA_real_, NA_real_, "proportion", "2015-2019", "high",
+    "survey_derived", "payer mix default",
+
     "NAMCS 2015-2019 pooled, URPS-filtered", "Medicaid share of URPS visits",
-    0.0468, "proportion", "survey_derived", "payer mix default",
+    0.0468, NA_real_, NA_real_, "proportion", "2015-2019", "high",
+    "survey_derived", "payer mix default",
+
     "NAMCS 2015-2019 pooled, URPS-filtered", "commercial share of URPS visits",
-    0.3939, "proportion", "survey_derived", "payer mix default",
+    0.3939, NA_real_, NA_real_, "proportion", "2015-2019", "high",
+    "survey_derived", "payer mix default",
+
     "NAMCS 2015-2019 pooled, URPS-filtered", "self-pay share of URPS visits",
-    0.0008, "proportion", "survey_derived_unreliable", "payer mix default",
+    0.0008, NA_real_, NA_real_, "proportion", "2015-2019", "low",
+    "survey_derived_unreliable", "payer mix default",
+
     "AHRQ 3P-RD Physician Geographic PUF (13 states)",
     "Medicare share of government-payer claims volume, all specialties",
-    0.5873, "proportion", "administrative_crosscheck",
-    "payer mix cross-check only, not blended",
+    0.5873, NA_real_, NA_real_, "proportion", "2019-2020", "medium",
+    "administrative_crosscheck", "payer mix cross-check only, not blended",
+
     "CHIA Case Mix, FY2015-2018 pooled (female adults, non-newborn)",
-    "Medicare share of government-payer discharges",
-    0.7315, "proportion", "administrative_crosscheck",
-    "payer mix cross-check only, not blended",
+    "Medicare share of government-payer discharges", 0.7315, NA_real_,
+    NA_real_, "proportion", "2015-2018", "medium",
+    "administrative_crosscheck", "payer mix cross-check only, not blended",
+
     "Lizeth national URPS mystery-caller study, 2026 (estimate_lizeth_access_anchor(), by_insurance)",
-    "Blue Cross Blue Shield appointment obtainment, n=64 calls/47 physicians", 0.8906,
-    "proportion", "fielded", "acceptance validation only, not a revenue share",
+    "Blue Cross Blue Shield appointment obtainment, n=64 calls/47 physicians",
+    0.8906, NA_real_, NA_real_, "proportion", "2026", "medium", "fielded",
+    "acceptance validation only, not a revenue share",
+
     "Lizeth national URPS mystery-caller study, 2026 (estimate_lizeth_access_anchor(), by_insurance)",
     "Medicaid appointment obtainment, n=74 calls/58 physicians, supersedes preliminary 0.77 above (p=0.020 vs BCBS)",
-    0.7162, "proportion", "fielded", "acceptance validation only, not a revenue share"
+    0.7162, NA_real_, NA_real_, "proportion", "2026", "medium", "fielded",
+    "acceptance validation only, not a revenue share"
   )
   base::message(
     "[practice-economics] Registered ", base::nrow(evidence_tbl),
-    " evidence and assumption rows."
+    " evidence and assumption rows (",
+    base::sum(evidence_tbl$evidence_quality == "uncited"),
+    " with no external citation)."
   )
   evidence_tbl
 }
@@ -96,16 +155,63 @@ practice_economics_defaults <- function() {
   )
 }
 
+#' Setting-specific practice overhead structure (legacy scenario)
+#'
+#' @description
+#' The single overhead range in [practice_economics_defaults()]
+#' ($280k-380k/FTE, `status = "assumption"`, no external citation) is applied
+#' identically to every `practice_setting`. Real independent, hospital-
+#' employed, academic, and safety-net practices have materially different
+#' nonphysician cost structures, but this repository has no sourced,
+#' setting-specific overhead data yet -- building setting-specific
+#' DISTRIBUTIONS from nothing would just be a more elaborate guess.
+#'
+#' This function exists so [simulate_practice_economics()] has a real
+#' plumbing point for that data once it is sourced (real
+#' MGMA/AMGA-style practice-cost benchmarks by setting), without silently
+#' recalibrating anything today: every setting currently maps to the SAME
+#' `$280k/$330k/$380k` triple, `status = "legacy_scenario"`, so passing this
+#' table's output as `overhead_by_setting` to [simulate_practice_economics()]
+#' changes nothing about today's numbers -- only the setting-specific
+#' plumbing is new.
+#'
+#' @return Tibble: `practice_setting`, `overhead_lower`, `overhead_mode`,
+#'   `overhead_upper`, `source`, `status`.
+#' @concept economics
+#' @export
+practice_overhead_by_setting <- function() {
+  tibble::tribble(
+    ~practice_setting, ~overhead_lower, ~overhead_mode, ~overhead_upper,
+    ~source, ~status,
+    "independent", 280000, 330000, 380000,
+    "User-specified scenario", "legacy_scenario",
+    "hospital_employed", 280000, 330000, 380000,
+    "User-specified scenario", "legacy_scenario",
+    "academic", 280000, 330000, 380000,
+    "User-specified scenario", "legacy_scenario",
+    "safety_net", 280000, 330000, 380000,
+    "User-specified scenario", "legacy_scenario"
+  )
+}
+
 .practice_triangular <- function(size, lower, mode, upper) {
   random_u <- stats::runif(size)
-  split_point <- (mode - lower) / (upper - lower)
+  # degenerate = lower == upper (a fixed value, e.g. a sensitivity-decomposition
+  # scenario pinning overhead to a single number): (mode-lower)/(upper-lower)
+  # is 0/0 without this guard, propagating NaN into every downstream dollar.
+  degenerate <- (upper - lower) == 0
+  split_point <- base::ifelse(degenerate, 0, (mode - lower) / (upper - lower))
   base::ifelse(
-    random_u < split_point,
-    lower + base::sqrt(
-      random_u * (upper - lower) * (mode - lower)
-    ),
-    upper - base::sqrt(
-      (1 - random_u) * (upper - lower) * (upper - mode)
+    degenerate,
+    lower,
+    base::ifelse(
+      random_u < split_point,
+      lower + base::sqrt(
+        random_u * (upper - lower) * (mode - lower)
+      ),
+      upper - base::sqrt(
+        (1 - random_u) * (upper - lower) * (upper - mode)
+      )
     )
   )
 }
@@ -141,6 +247,122 @@ practice_economics_defaults <- function() {
   base::invisible(TRUE)
 }
 
+#' One-at-a-time sensitivity decomposition for practice economics
+#'
+#' @description
+#' Holds every assumption at baseline except one, sets that one family to a
+#' single favorable alternative, and reports how much of the baseline
+#' shortfall to break-even (`0 - physician_compensation_capacity`) closing
+#' just that one lever would explain. Answers "is this a productivity
+#' problem, a reimbursement problem, or a cost-model problem?" rather than
+#' leaving six confounded assumptions inside one margin number.
+#'
+#' Each lever's alternative is a single, named, defensible value -- not a
+#' search for whatever number makes the practice profitable:
+#' \describe{
+#'   \item{revenue_realization}{All four payer collection rates set to 1.0
+#'     (perfect billing/collections) instead of `inputs$*_collection`.}
+#'   \item{wrvu_productivity}{`annual_wrvu` per FTE raised to
+#'     `WRVU_PER_FTE_BENCHMARK[["high"]]` instead of the supplied value.}
+#'   \item{overhead}{Overhead fixed at `inputs$overhead_lower` instead of
+#'     drawn from the triangular distribution.}
+#'   \item{malpractice}{Malpractice fixed at the 10th percentile of its
+#'     lognormal distribution instead of drawn.}
+#'   \item{app_intensity}{`app_fte` set to 0 (no APP cost) instead of the
+#'     supplied value.}
+#'   \item{payer_mix}{Payer mix set to 100% commercial (this model's
+#'     highest-paying payer) instead of the supplied mix.}
+#' }
+#'
+#' @param practice_tbl Baseline practice-tbl, as for
+#'   [simulate_practice_economics()].
+#' @param inputs Named list from [practice_economics_defaults()].
+#' @param draws Monte Carlo draws per scenario.
+#' @param seed Reproducible random seed (same seed reused per scenario so
+#'   differences reflect the perturbation, not draw noise).
+#'
+#' @return Tibble: `assumption_family`, `baseline_physician_compensation_capacity`,
+#'   `perturbed_physician_compensation_capacity`, `delta`,
+#'   `pct_of_shortfall_closed` (`NA` when the baseline is already
+#'   break-even or better).
+#' @concept economics
+#' @export
+practice_economics_sensitivity_decomposition <- function(
+    practice_tbl,
+    inputs = practice_economics_defaults(),
+    draws = 1000L,
+    seed = 20260821L) {
+  capacity_of <- function(tbl, inputs_arg) {
+    base::mean(
+      simulate_practice_economics(
+        tbl, draws = draws, seed = seed, inputs = inputs_arg
+      )$draws$physician_compensation_capacity
+    )
+  }
+  baseline_capacity <- capacity_of(practice_tbl, inputs)
+  shortfall <- -baseline_capacity
+
+  perfect_collection_inputs <- inputs
+  perfect_collection_inputs$medicare_collection <- 1
+  perfect_collection_inputs$medicaid_collection <- 1
+  perfect_collection_inputs$commercial_collection <- 1
+  perfect_collection_inputs$self_pay_collection <- 1
+
+  high_wrvu_tbl <- practice_tbl |>
+    dplyr::mutate(
+      annual_wrvu = WRVU_PER_FTE_BENCHMARK[["high"]] * .data$clinical_fte
+    )
+
+  low_overhead_inputs <- inputs
+  low_overhead_inputs$overhead_mode <- inputs$overhead_lower
+  low_overhead_inputs$overhead_upper <- inputs$overhead_lower
+
+  malpractice_p10 <- stats::qlnorm(
+    0.10, base::log(inputs$malpractice_median),
+    base::sqrt(base::log1p(inputs$malpractice_cv^2))
+  )
+  low_malpractice_inputs <- inputs
+  low_malpractice_inputs$malpractice_median <- malpractice_p10
+  low_malpractice_inputs$malpractice_cv <- 1e-6
+
+  no_app_tbl <- practice_tbl |> dplyr::mutate(app_fte = 0)
+
+  commercial_only_tbl <- practice_tbl |>
+    dplyr::mutate(
+      medicare_share = 0, medicaid_share = 0,
+      commercial_share = 1, self_pay_share = 0
+    )
+
+  scenarios <- base::list(
+    revenue_realization = base::list(
+      tbl = practice_tbl, inputs = perfect_collection_inputs
+    ),
+    wrvu_productivity = base::list(tbl = high_wrvu_tbl, inputs = inputs),
+    overhead = base::list(tbl = practice_tbl, inputs = low_overhead_inputs),
+    malpractice = base::list(
+      tbl = practice_tbl, inputs = low_malpractice_inputs
+    ),
+    app_intensity = base::list(tbl = no_app_tbl, inputs = inputs),
+    payer_mix = base::list(tbl = commercial_only_tbl, inputs = inputs)
+  )
+
+  results <- purrr::imap_dfr(scenarios, function(scenario, family_name) {
+    perturbed_capacity <- capacity_of(scenario$tbl, scenario$inputs)
+    tibble::tibble(
+      assumption_family = family_name,
+      baseline_physician_compensation_capacity = baseline_capacity,
+      perturbed_physician_compensation_capacity = perturbed_capacity,
+      delta = perturbed_capacity - baseline_capacity,
+      pct_of_shortfall_closed = if (shortfall > 0) {
+        100 * (perturbed_capacity - baseline_capacity) / shortfall
+      } else {
+        NA_real_
+      }
+    )
+  })
+  results |> dplyr::arrange(dplyr::desc(.data$delta))
+}
+
 #' Simulate URPS practice economics and structural transitions
 #'
 #' @description
@@ -157,6 +379,11 @@ practice_economics_defaults <- function() {
 #' @param seed Reproducible random seed.
 #' @param inputs Named list from [practice_economics_defaults()].
 #' @param rvu_basis Either `work_rvu_proxy` or `payment_rvu`.
+#' @param overhead_by_setting Optional tibble from
+#'   [practice_overhead_by_setting()] (or the same shape). `NULL` (default)
+#'   draws overhead from the flat `inputs$overhead_*` range for every
+#'   practice, exactly as before this parameter existed -- zero behavior
+#'   change unless a caller opts in with real setting-specific bounds.
 #'
 #' @return A list with draws, summaries, evidence, and a summary sentence.
 #' @family supply
@@ -167,7 +394,8 @@ simulate_practice_economics <- function(
     draws = 1000L,
     seed = 20260821L,
     inputs = practice_economics_defaults(),
-    rvu_basis = base::c("work_rvu_proxy", "payment_rvu")) {
+    rvu_basis = base::c("work_rvu_proxy", "payment_rvu"),
+    overhead_by_setting = NULL) {
   rvu_basis <- base::match.arg(rvu_basis)
   .practice_check_inputs(practice_tbl)
   if (!base::is.numeric(draws) || base::length(draws) != 1L ||
@@ -209,6 +437,39 @@ simulate_practice_economics <- function(
     dplyr::left_join(prepared_tbl, by = "practice_row")
   base::message("[practice-economics] Expanded Monte Carlo practice panel.")
 
+  # Overhead bounds default to the flat inputs$overhead_* range for every
+  # row (today's exact behavior). Supplying overhead_by_setting overrides
+  # those bounds per practice_setting -- see practice_overhead_by_setting().
+  expanded_tbl$overhead_lower <- inputs$overhead_lower
+  expanded_tbl$overhead_mode <- inputs$overhead_mode
+  expanded_tbl$overhead_upper <- inputs$overhead_upper
+  if (!base::is.null(overhead_by_setting)) {
+    setting_bounds <- overhead_by_setting |>
+      dplyr::select(
+        "practice_setting", "overhead_lower", "overhead_mode", "overhead_upper"
+      )
+    expanded_tbl <- expanded_tbl |>
+      dplyr::select(
+        -"overhead_lower", -"overhead_mode", -"overhead_upper"
+      ) |>
+      dplyr::left_join(setting_bounds, by = "practice_setting")
+    if (base::anyNA(expanded_tbl$overhead_mode)) {
+      base::stop(
+        "overhead_by_setting is missing bounds for practice_setting ",
+        "value(s): ", base::paste(
+          base::unique(
+            expanded_tbl$practice_setting[base::is.na(expanded_tbl$overhead_mode)]
+          ),
+          collapse = ", "
+        ),
+        call. = FALSE
+      )
+    }
+    base::message(
+      "[practice-economics] Applied setting-specific overhead bounds."
+    )
+  }
+
   draw_count <- base::nrow(expanded_tbl)
   commercial_sd <- (base::log(inputs$commercial_ratio_upper) -
     base::log(inputs$commercial_ratio_lower)) / (2 * 1.96)
@@ -226,8 +487,8 @@ simulate_practice_economics <- function(
         draw_count, base::log(inputs$commercial_ratio_median), commercial_sd
       ),
       overhead_per_fte = .practice_triangular(
-        draw_count, inputs$overhead_lower, inputs$overhead_mode,
-        inputs$overhead_upper
+        draw_count, .data$overhead_lower, .data$overhead_mode,
+        .data$overhead_upper
       ),
       malpractice_per_fte = stats::rlnorm(
         draw_count, base::log(inputs$malpractice_median),
@@ -261,10 +522,44 @@ simulate_practice_economics <- function(
       operating_cost = .data$clinical_fte *
         (.data$overhead_per_fte + .data$malpractice_per_fte) +
         .data$app_fte * .data$app_compensation,
+      # PRIMARY ESTIMAND. There is no physician-compensation line item
+      # anywhere in this cost model -- operating_cost is entirely overhead +
+      # malpractice + APP labor. `operating_income`/`operating_margin`
+      # (below) named that quantity in a way readers could mistake for
+      # ordinary bottom-line practice profit. nonphysician_operating_cost /
+      # net_revenue_before_physician_compensation / physician_compensation_
+      # capacity are the SAME arithmetic, renamed so a negative value has an
+      # unambiguous reading: modeled professional revenue does not cover
+      # nonphysician practice costs, before the physician is paid at all.
+      # operating_income/operating_margin are kept as deprecated aliases.
+      nonphysician_operating_cost = .data$operating_cost,
+      net_revenue_before_physician_compensation =
+        .data$gross_revenue - .data$operating_cost,
+      physician_compensation_capacity =
+        .data$gross_revenue - .data$operating_cost,
       operating_income = .data$gross_revenue - .data$operating_cost,
       operating_margin = dplyr::if_else(
         .data$gross_revenue > 0,
         .data$operating_income / .data$gross_revenue, -Inf
+      ),
+      # BREAK-EVEN DIAGNOSTICS. More interpretable than a margin percentage:
+      # how many wRVU/FTE the practice would need to realize (at its ACTUAL
+      # realized $/wRVU rate) to cover nonphysician cost alone, and what
+      # $/wRVU rate it would need (at its ACTUAL wRVU/FTE) to do the same.
+      nonphysician_cost_per_fte = .data$operating_cost / .data$clinical_fte,
+      realized_revenue_per_wrvu = dplyr::if_else(
+        .data$annual_wrvu > 0, .data$gross_revenue / .data$annual_wrvu, NA_real_
+      ),
+      annual_wrvu_per_fte = .data$annual_wrvu / .data$clinical_fte,
+      break_even_wrvu_per_fte = dplyr::if_else(
+        .data$realized_revenue_per_wrvu > 0,
+        .data$nonphysician_cost_per_fte / .data$realized_revenue_per_wrvu,
+        NA_real_
+      ),
+      required_revenue_per_wrvu = dplyr::if_else(
+        .data$annual_wrvu_per_fte > 0,
+        .data$nonphysician_cost_per_fte / .data$annual_wrvu_per_fte,
+        NA_real_
       ),
       acquisition_probability = dplyr::if_else(
         .data$practice_setting == "independent",
@@ -297,6 +592,21 @@ simulate_practice_economics <- function(
     dplyr::summarise(
       mean_gross_revenue = base::mean(.data$gross_revenue),
       sd_gross_revenue = stats::sd(.data$gross_revenue),
+      mean_nonphysician_operating_cost = base::mean(
+        .data$nonphysician_operating_cost
+      ),
+      mean_net_revenue_before_physician_compensation = base::mean(
+        .data$net_revenue_before_physician_compensation
+      ),
+      mean_physician_compensation_capacity = base::mean(
+        .data$physician_compensation_capacity
+      ),
+      mean_break_even_wrvu_per_fte = base::mean(
+        .data$break_even_wrvu_per_fte, na.rm = TRUE
+      ),
+      mean_required_revenue_per_wrvu = base::mean(
+        .data$required_revenue_per_wrvu, na.rm = TRUE
+      ),
       median_operating_margin = stats::median(.data$operating_margin),
       p25_operating_margin = stats::quantile(
         .data$operating_margin, 0.25, names = FALSE
@@ -328,12 +638,20 @@ simulate_practice_economics <- function(
   )
   summary_sentence <- base::paste0(
     base::sprintf(
-      "From %s to %s, mean median operating margin %s from %.1f%% to %.1f%%; ",
+      "From %s to %s, mean median operating margin %s from %.1f%% to %.1f%%",
       first_year, last_year, direction, 100 * first_margin, 100 * last_margin
     ),
+    " (this margin is BEFORE physician compensation -- see",
+    " physician_compensation_capacity, not a bottom-line practice profit); ",
     "the ending-year mean gross revenue was $",
     scales::comma(base::round(base::mean(
       summary_tbl$mean_gross_revenue[summary_tbl$year == last_year]
+    ))),
+    " per practice-year, mean physician compensation capacity $",
+    scales::comma(base::round(base::mean(
+      summary_tbl$mean_physician_compensation_capacity[
+        summary_tbl$year == last_year
+      ]
     ))),
     " per practice-year."
   )

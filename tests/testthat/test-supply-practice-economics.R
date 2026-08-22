@@ -163,3 +163,165 @@ test_that("practice-economics plausibility alarms fire on implausible results", 
   expect_lt(margin, -0.25)
   expect_gt(loss_probability, 0.90)
 })
+
+test_that("net_revenue_before_physician_compensation / physician_compensation_capacity are aliases of operating_income", {
+  mix <- practice_payer_mix_defaults(include_crosscheck = FALSE)
+  practice_tbl <- tibble::tibble(
+    practice_id = "P1", year = 2026L, clinical_fte = 1, annual_wrvu = 7110,
+    medicare_share = mix$medicare_share, medicaid_share = mix$medicaid_share,
+    commercial_share = mix$commercial_share, self_pay_share = mix$self_pay_share,
+    practice_setting = "independent", app_fte = 0.15
+  )
+  result <- simulate_practice_economics(practice_tbl, draws = 500L, seed = 1L)
+  d <- result$draws
+
+  expect_equal(d$net_revenue_before_physician_compensation, d$operating_income)
+  expect_equal(d$physician_compensation_capacity, d$operating_income)
+  expect_equal(d$nonphysician_operating_cost, d$operating_cost)
+
+  # The renamed summary columns are also present, not just the raw draws.
+  summary_names <- names(result$summary)
+  expect_true(all(c(
+    "mean_net_revenue_before_physician_compensation",
+    "mean_physician_compensation_capacity",
+    "mean_nonphysician_operating_cost",
+    "mean_break_even_wrvu_per_fte",
+    "mean_required_revenue_per_wrvu"
+  ) %in% summary_names))
+})
+
+test_that("break_even_wrvu_per_fte and required_revenue_per_wrvu are internally consistent", {
+  mix <- practice_payer_mix_defaults(include_crosscheck = FALSE)
+  practice_tbl <- tibble::tibble(
+    practice_id = "P1", year = 2026L, clinical_fte = 1, annual_wrvu = 7110,
+    medicare_share = mix$medicare_share, medicaid_share = mix$medicaid_share,
+    commercial_share = mix$commercial_share, self_pay_share = mix$self_pay_share,
+    practice_setting = "independent", app_fte = 0.15
+  )
+  result <- simulate_practice_economics(practice_tbl, draws = 2000L, seed = 1L)
+  d <- result$draws
+
+  # Definitional identities, not approximations.
+  expect_equal(
+    d$nonphysician_cost_per_fte, d$nonphysician_operating_cost / d$clinical_fte
+  )
+  expect_equal(
+    d$break_even_wrvu_per_fte,
+    d$nonphysician_cost_per_fte / d$realized_revenue_per_wrvu
+  )
+  expect_equal(
+    d$required_revenue_per_wrvu,
+    d$nonphysician_cost_per_fte / d$annual_wrvu_per_fte
+  )
+
+  # At the realized $/wRVU rate, a practice producing exactly its own
+  # break-even wRVU/FTE has zero physician compensation capacity.
+  at_break_even <- practice_tbl |>
+    dplyr::mutate(annual_wrvu = mean(d$break_even_wrvu_per_fte) * clinical_fte)
+  break_even_result <- simulate_practice_economics(
+    at_break_even, draws = 2000L, seed = 1L
+  )
+  expect_lt(
+    abs(mean(break_even_result$draws$physician_compensation_capacity)),
+    0.05 * mean(d$gross_revenue)
+  )
+})
+
+test_that("practice_economics_evidence has real provenance, not just point values", {
+  evidence_tbl <- practice_economics_evidence()
+
+  expect_true(all(c(
+    "lower", "upper", "year", "evidence_quality"
+  ) %in% names(evidence_tbl)))
+  expect_true(all(
+    evidence_tbl$evidence_quality %in% c("high", "medium", "low", "uncited")
+  ))
+
+  # The overhead, malpractice, APP compensation, and all four collection
+  # rates must be visibly uncited -- the whole point of this table.
+  uncited <- dplyr::filter(evidence_tbl, .data$evidence_quality == "uncited")
+  expect_gte(nrow(uncited), 7L)
+  expect_true(any(grepl("overhead", uncited$estimand, ignore.case = TRUE)))
+  expect_true(any(grepl("malpractice", uncited$estimand, ignore.case = TRUE)))
+  expect_true(any(grepl(
+    "APP compensation", uncited$estimand, fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "collection rate", uncited$estimand, fixed = TRUE
+  )))
+
+  # The commercial ratio and overhead rows now carry real lower/upper bounds
+  # (matching the exact distributional bounds the simulator draws from),
+  # collapsed from the old two-separate-rows layout into one row each.
+  commercial_row <- dplyr::filter(
+    evidence_tbl, .data$estimand == "commercial payment ratio"
+  )
+  expect_equal(commercial_row$lower, 1.18)
+  expect_equal(commercial_row$upper, 1.79)
+})
+
+test_that("overhead_by_setting reproduces the flat default exactly, and setting-specific bounds change results", {
+  mix <- practice_payer_mix_defaults(include_crosscheck = FALSE)
+  practice_tbl <- tibble::tibble(
+    practice_id = "P1", year = 2026L, clinical_fte = 1, annual_wrvu = 7110,
+    medicare_share = mix$medicare_share, medicaid_share = mix$medicaid_share,
+    commercial_share = mix$commercial_share, self_pay_share = mix$self_pay_share,
+    practice_setting = "independent", app_fte = 0.15
+  )
+  baseline <- simulate_practice_economics(practice_tbl, draws = 2000L, seed = 1L)
+  legacy_default <- simulate_practice_economics(
+    practice_tbl, draws = 2000L, seed = 1L,
+    overhead_by_setting = practice_overhead_by_setting()
+  )
+  expect_equal(baseline$draws$operating_cost, legacy_default$draws$operating_cost)
+
+  low_overhead_setting <- practice_overhead_by_setting() |>
+    dplyr::mutate(
+      overhead_lower = 50000, overhead_mode = 50000, overhead_upper = 50000
+    )
+  cheaper <- simulate_practice_economics(
+    practice_tbl, draws = 2000L, seed = 1L,
+    overhead_by_setting = low_overhead_setting
+  )
+  expect_true(
+    mean(cheaper$draws$physician_compensation_capacity) >
+      mean(baseline$draws$physician_compensation_capacity)
+  )
+
+  expect_error(
+    simulate_practice_economics(
+      practice_tbl, draws = 500L,
+      overhead_by_setting = dplyr::filter(
+        practice_overhead_by_setting(), practice_setting != "independent"
+      )
+    ),
+    "missing bounds"
+  )
+})
+
+test_that("sensitivity decomposition identifies wRVU productivity as the dominant lever", {
+  mix <- practice_payer_mix_defaults(include_crosscheck = FALSE)
+  practice_tbl <- tibble::tibble(
+    practice_id = "P1", year = 2026L, clinical_fte = 1, annual_wrvu = 7110,
+    medicare_share = mix$medicare_share, medicaid_share = mix$medicaid_share,
+    commercial_share = mix$commercial_share, self_pay_share = mix$self_pay_share,
+    practice_setting = "independent", app_fte = 0.15
+  )
+  decomposition <- practice_economics_sensitivity_decomposition(
+    practice_tbl, draws = 2000L, seed = 1L
+  )
+
+  expect_equal(nrow(decomposition), 6L)
+  expect_setequal(decomposition$assumption_family, c(
+    "revenue_realization", "wrvu_productivity", "overhead",
+    "malpractice", "app_intensity", "payer_mix"
+  ))
+  expect_true(all(is.finite(decomposition$delta)))
+  # Every lever should IMPROVE compensation capacity relative to baseline
+  # (each alternative is chosen to be favorable) -- delta must be positive.
+  expect_true(all(decomposition$delta > 0))
+  # Ranked descending by delta -- wRVU productivity is the largest lever at
+  # these baseline values (raising to WRVU_PER_FTE_BENCHMARK[["high"]] alone
+  # closes more than the other five levers each).
+  expect_equal(decomposition$assumption_family[[1]], "wrvu_productivity")
+})
