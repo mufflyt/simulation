@@ -237,18 +237,34 @@ test_that("practice_economics_evidence has real provenance, not just point value
     evidence_tbl$evidence_quality %in% c("high", "medium", "low", "uncited")
   ))
 
-  # The overhead, malpractice, APP compensation, and all four collection
-  # rates must be visibly uncited -- the whole point of this table.
+  # Overhead, malpractice, and all four collection rates must be visibly
+  # uncited -- the whole point of this table. APP compensation is NO LONGER
+  # uncited (real BLS OEWS wages + a real BLS ECEC load factor replaced it)
+  # -- confirm it left the uncited set rather than merely asserting nothing
+  # about it.
   uncited <- dplyr::filter(evidence_tbl, .data$evidence_quality == "uncited")
-  expect_gte(nrow(uncited), 7L)
+  expect_gte(nrow(uncited), 6L)
   expect_true(any(grepl("overhead", uncited$estimand, ignore.case = TRUE)))
   expect_true(any(grepl("malpractice", uncited$estimand, ignore.case = TRUE)))
   expect_true(any(grepl(
-    "APP compensation", uncited$estimand, fixed = TRUE
-  )))
-  expect_true(any(grepl(
     "collection rate", uncited$estimand, fixed = TRUE
   )))
+  expect_false(any(grepl(
+    "APP compensation", uncited$estimand, fixed = TRUE
+  )))
+
+  # The real BLS OEWS/ECEC rows exist and are cited (not "uncited").
+  bls_rows <- dplyr::filter(
+    evidence_tbl, grepl("^BLS ", .data$source)
+  )
+  expect_equal(nrow(bls_rows), 3L)
+  expect_true(all(bls_rows$evidence_quality == "high"))
+
+  # The MedPAC benchmark rows exist, are clearly non-calibrating, and match
+  # physician_compensation_benchmarks()'s values exactly.
+  medpac_rows <- dplyr::filter(evidence_tbl, .data$status == "external_benchmark")
+  expect_equal(nrow(medpac_rows), 3L)
+  expect_true(all(grepl("NOT a calibration target", medpac_rows$use, fixed = TRUE)))
 
   # The commercial ratio and overhead rows now carry real lower/upper bounds
   # (matching the exact distributional bounds the simulator draws from),
@@ -385,4 +401,69 @@ test_that("practice_economics_elasticity reports standardized, comparable elasti
   expect_true(commercial_pct10$elasticity_low > 0)
 
   expect_true(all(!elasticity$unstable_baseline))
+})
+
+test_that("APP compensation is built from real BLS wages and a real BLS load factor", {
+  inputs <- practice_economics_defaults()
+
+  expect_equal(inputs$app_base_wage_np, 137300)
+  expect_equal(inputs$app_base_wage_pa, 141280)
+  expect_equal(inputs$app_benefits_load_factor, 1 / 0.704)
+
+  # The derived mean is an exact, auditable formula, not a re-typed number.
+  expected_mean <- mean(c(137300, 141280)) * (1 / 0.704)
+  expect_equal(inputs$app_compensation_mean, expected_mean)
+  expect_gt(inputs$app_compensation_mean, 145000)  # real cost > the old guess
+})
+
+test_that("physician_compensation_benchmarks reads the real MedPAC rows", {
+  benchmarks <- physician_compensation_benchmarks()
+
+  expect_setequal(
+    benchmarks$benchmark_name, c("all_specialties", "surgical", "app")
+  )
+  expect_equal(
+    benchmarks$value[benchmarks$benchmark_name == "all_specialties"], 352000
+  )
+  expect_equal(
+    benchmarks$value[benchmarks$benchmark_name == "surgical"], 496000
+  )
+  expect_equal(benchmarks$value[benchmarks$benchmark_name == "app"], 138000)
+})
+
+test_that("physician_compensation_plausibility compares without calibrating", {
+  # A clearly positive, plausible physician-level capacity should land in
+  # the plausible band against the physician benchmarks -- but NOT against
+  # the much-lower APP benchmark, since $400k is a physician-scale figure.
+  plausible <- physician_compensation_plausibility(
+    rep(400000, 100)
+  )
+  expect_match(
+    plausible$plausibility_band[plausible$benchmark_name == "surgical"],
+    "plausible range"
+  )
+  expect_match(
+    plausible$plausibility_band[plausible$benchmark_name == "all_specialties"],
+    "plausible range"
+  )
+  expect_match(
+    plausible$plausibility_band[plausible$benchmark_name == "app"],
+    "implausibly high"
+  )
+  expect_equal(
+    plausible$pct_of_benchmark[plausible$benchmark_name == "surgical"],
+    100 * 400000 / 496000
+  )
+
+  # A negative capacity (this model's actual current baseline) must be
+  # flagged non-positive against every benchmark, not silently ratio'd.
+  implausible <- physician_compensation_plausibility(rep(-130000, 100))
+  expect_true(all(grepl("non-positive", implausible$plausibility_band)))
+
+  # The function performs no side effects on any input -- confirm
+  # practice_economics_defaults() is unaffected by having called this.
+  before <- practice_economics_defaults()
+  physician_compensation_plausibility(rep(100000, 10))
+  after <- practice_economics_defaults()
+  expect_equal(before, after)
 })

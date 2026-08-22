@@ -14,10 +14,20 @@
 #' NCHS reliability; `"medium"`: literature-derived, cross-check-only, or a
 #' small-but-usable fielded sample; `"low"`: single-site, preliminary, or
 #' below a reliability floor; `"uncited"`: no external source at all --
-#' currently overhead, malpractice, APP compensation, and all four payer
-#' collection rates). The revenue side (conversion factors, payer mix) is
-#' materially better sourced than the cost side; this table makes that
-#' asymmetry visible rather than treating every input as equally solid.
+#' currently overhead, malpractice, and all four payer collection rates).
+#' The revenue side (conversion factors, payer mix) is materially better
+#' sourced than the cost side; this table makes that asymmetry visible
+#' rather than treating every input as equally solid. APP compensation was
+#' uncited until real BLS OEWS wage data and a real BLS ECEC benefits load
+#' factor replaced it (see the rows below) -- overhead and malpractice
+#' remain the largest uncited cost inputs.
+#'
+#' Also carries three MedPAC physician/APP compensation figures as an
+#' external PLAUSIBILITY benchmark for `physician_compensation_capacity`
+#' (see [physician_compensation_plausibility()]) -- these are reference
+#' points to check whether modeled compensation capacity overlaps a
+#' plausible real-world range, never a calibration target this model is
+#' tuned to reproduce.
 #'
 #' @return A tibble with source, estimand, value, lower, upper, unit, year,
 #'   evidence_quality, status, and use.
@@ -51,9 +61,24 @@ practice_economics_evidence <- function() {
     45000, 25726, 78713, "2026 USD per clinical FTE", NA_character_,
     "uncited", "assumption", "cost prior -- NO EXTERNAL CITATION",
 
-    "User-specified scenario", "APP compensation (normal, mean/5th/95th)",
-    145000, 120327, 169673, "2026 USD per APP FTE", NA_character_,
-    "uncited", "assumption", "cost prior -- NO EXTERNAL CITATION",
+    "BLS OEWS May 2025, SOC 29-1171", "nurse practitioner mean base wage",
+    137300, NA_real_, NA_real_, "2025 USD per FTE", "2025", "high",
+    "administrative_survey", "APP compensation base wage component",
+
+    "BLS OEWS May 2025, SOC 29-1071", "physician assistant mean base wage",
+    141280, NA_real_, NA_real_, "2025 USD per FTE", "2025", "high",
+    "administrative_survey", "APP compensation base wage component",
+
+    "BLS Employer Costs for Employee Compensation, June 2024, healthcare and social assistance industry",
+    "employer benefits load factor (1 / wage share of total comp, 70.4%)",
+    1 / 0.704, NA_real_, NA_real_, "ratio, total comp to base wage", "2024",
+    "high", "administrative_survey",
+    "APP compensation load factor -- kept separate from base wage, not buried",
+
+    "Derived: mean(NP, PA) x load factor -- see practice_economics_defaults()",
+    "APP compensation (normal, mean/5th/95th)", 197855, 164189, 231522,
+    "2026 USD per APP FTE", "2025", "medium", "derived_from_bls",
+    "cost prior -- mean/load factor are real BLS figures, SD is an assumption",
 
     "User-specified scenario", "Medicare collection rate", 0.98, NA_real_,
     NA_real_, "proportion", NA_character_, "uncited", "assumption",
@@ -113,7 +138,23 @@ practice_economics_evidence <- function() {
     "Lizeth national URPS mystery-caller study, 2026 (estimate_lizeth_access_anchor(), by_insurance)",
     "Medicaid appointment obtainment, n=74 calls/58 physicians, supersedes preliminary 0.77 above (p=0.020 vs BCBS)",
     0.7162, NA_real_, NA_real_, "proportion", "2026", "medium", "fielded",
-    "acceptance validation only, not a revenue share"
+    "acceptance validation only, not a revenue share",
+
+    "MedPAC March 2025 Report to Congress, Ch. 4 (SullivanCotter Physician Compensation and Productivity Survey, 2024)",
+    "median physician compensation, all specialties", 352000, NA_real_,
+    NA_real_, "2023 USD", "2023", "high", "external_benchmark",
+    "physician-compensation plausibility benchmark, NOT a calibration target",
+
+    "MedPAC March 2025 Report to Congress, Ch. 4 (SullivanCotter Physician Compensation and Productivity Survey, 2024)",
+    "median physician compensation, surgical specialties (incl. OB/GYN, urology)",
+    496000, NA_real_, NA_real_, "2023 USD", "2023", "high",
+    "external_benchmark",
+    "physician-compensation plausibility benchmark, NOT a calibration target",
+
+    "MedPAC March 2025 Report to Congress, Ch. 4 (SullivanCotter Physician Compensation and Productivity Survey, 2024)",
+    "median advanced practice provider (NP/PA) compensation", 138000,
+    NA_real_, NA_real_, "2023 USD", "2023", "high", "external_benchmark",
+    "physician-compensation plausibility benchmark, NOT a calibration target"
   )
   base::message(
     "[practice-economics] Registered ", base::nrow(evidence_tbl),
@@ -126,12 +167,33 @@ practice_economics_evidence <- function() {
 
 #' Default uncertain inputs for practice economics
 #'
+#' @description
+#' `app_compensation_mean` is now built from two real, separately-declared
+#' components rather than one uncited number: BLS OEWS May 2025 mean base
+#' wages for nurse practitioners ($137,300, SOC 29-1171) and physician
+#' assistants ($141,280, SOC 29-1071), averaged, then grossed up by a real
+#' BLS employer-benefits load factor (`app_benefits_load_factor`, from BLS
+#' Employer Costs for Employee Compensation, June 2024, healthcare and
+#' social assistance industry: wages/salaries are 70.4% of total employer
+#' compensation cost, i.e. total cost = wages / 0.704). Both the base wage
+#' and the load factor are exposed in the returned list, not folded silently
+#' into one number -- see [practice_economics_evidence()] for the citations.
+#' `app_compensation_sd`'s RELATIVE uncertainty (previously 15000/145000,
+#' about 10.3%) is carried over onto the new mean; BLS OEWS reports a
+#' national mean and percentile bands, not a usable individual-level SD, so
+#' this specific figure remains an assumption, not a BLS number.
+#'
 #' @return A named list of simulation inputs.
 #' @family supply
 #' @concept economics
 #' @export
 practice_economics_defaults <- function() {
   base::message("[practice-economics] Loading default uncertain inputs.")
+  app_base_wage_np <- 137300
+  app_base_wage_pa <- 141280
+  app_base_wage_mean <- base::mean(base::c(app_base_wage_np, app_base_wage_pa))
+  app_benefits_load_factor <- 1 / 0.704
+  app_compensation_mean <- app_base_wage_mean * app_benefits_load_factor
   base::list(
     medicare_conversion_factor = 33.40,
     qp_conversion_factor = 33.57,
@@ -143,8 +205,12 @@ practice_economics_defaults <- function() {
     overhead_upper = 380000,
     malpractice_median = 45000,
     malpractice_cv = 0.35,
-    app_compensation_mean = 145000,
-    app_compensation_sd = 15000,
+    app_base_wage_np = app_base_wage_np,
+    app_base_wage_pa = app_base_wage_pa,
+    app_benefits_load_factor = app_benefits_load_factor,
+    app_compensation_mean = app_compensation_mean,
+    app_compensation_sd = app_compensation_mean *
+      (15000 / 145000),
     medicare_collection = 0.98,
     medicaid_collection = 0.94,
     commercial_collection = 0.96,
@@ -668,6 +734,82 @@ practice_economics_elasticity <- function(
   }
 
   dplyr::bind_rows(rows)
+}
+
+#' MedPAC physician/APP compensation benchmarks
+#'
+#' @description
+#' Extracts the three `external_benchmark` rows from
+#' [practice_economics_evidence()] (MedPAC March 2025 Report to Congress,
+#' Ch. 4, citing SullivanCotter's 2024 survey, 2023 compensation data) as a
+#' small lookup tibble, so [physician_compensation_plausibility()] and any
+#' other caller read the same cited numbers rather than a second copy.
+#'
+#' @return Tibble: `benchmark_name` (`"all_specialties"`, `"surgical"`,
+#'   `"app"`), `value` (2023 USD).
+#' @concept economics
+#' @export
+physician_compensation_benchmarks <- function() {
+  evidence_tbl <- practice_economics_evidence()
+  benchmark_rows <- evidence_tbl |>
+    dplyr::filter(.data$status == "external_benchmark")
+  tibble::tibble(
+    benchmark_name = base::c("all_specialties", "surgical", "app"),
+    value = base::c(
+      benchmark_rows$value[
+        base::grepl("all specialties", benchmark_rows$estimand)
+      ],
+      benchmark_rows$value[
+        base::grepl("surgical specialties", benchmark_rows$estimand)
+      ],
+      benchmark_rows$value[
+        base::grepl("advanced practice provider", benchmark_rows$estimand)
+      ]
+    )
+  )
+}
+
+#' Physician-compensation plausibility check (benchmark, not calibration target)
+#'
+#' @description
+#' Reports whether modeled `physician_compensation_capacity` overlaps a
+#' plausible real-world range implied by [physician_compensation_benchmarks()]
+#' -- it does not adjust any input, and nothing in this package feeds this
+#' comparison back into `practice_economics_defaults()` or any simulation
+#' parameter. The banding (implausibly low / plausible range / implausibly
+#' high) is a documented heuristic (50%-150% of the benchmark), not a
+#' statistical test -- MedPAC publishes a median, not a distribution this
+#' model's compensation-capacity draws could be formally tested against.
+#'
+#' @param physician_compensation_capacity Numeric vector of
+#'   `physician_compensation_capacity` draws (or their mean), as produced by
+#'   [simulate_practice_economics()].
+#' @param benchmarks Tibble from [physician_compensation_benchmarks()];
+#'   recomputed when `NULL`.
+#'
+#' @return Tibble: `benchmark_name`, `benchmark_value`,
+#'   `modeled_compensation_capacity`, `pct_of_benchmark`, `plausibility_band`.
+#' @concept economics
+#' @export
+physician_compensation_plausibility <- function(
+    physician_compensation_capacity, benchmarks = NULL) {
+  if (base::is.null(benchmarks)) benchmarks <- physician_compensation_benchmarks()
+  modeled_capacity <- base::mean(physician_compensation_capacity, na.rm = TRUE)
+
+  benchmarks |>
+    dplyr::mutate(
+      modeled_compensation_capacity = modeled_capacity,
+      pct_of_benchmark = 100 * modeled_capacity / .data$value,
+      plausibility_band = dplyr::case_when(
+        modeled_capacity <= 0 ~
+          "non-positive (model implies unpayable compensation)",
+        .data$pct_of_benchmark < 50 ~ "implausibly low (<50% of benchmark)",
+        .data$pct_of_benchmark <= 150 ~
+          "plausible range (50-150% of benchmark)",
+        TRUE ~ "implausibly high (>150% of benchmark)"
+      )
+    ) |>
+    dplyr::rename(benchmark_value = "value")
 }
 
 #' Simulate URPS practice economics and structural transitions
