@@ -25,8 +25,15 @@ differences reflect the perturbation, not draw noise).}
 \value{
 Tibble: \code{assumption_family}, \code{baseline_physician_compensation_capacity},
 \code{perturbed_physician_compensation_capacity}, \code{delta},
-\code{pct_of_shortfall_closed} (\code{NA} when the baseline is already
-break-even or better).
+\code{counterfactual_shortfall_closed_pct} (\code{NA} when the baseline is
+already break-even or better). Named deliberately as a COUNTERFACTUAL
+percentage -- how much of the shortfall THIS ONE arbitrary favorable
+value would close, holding everything else fixed -- not a variance
+attribution or a causal decomposition. The six levers' alternatives
+differ in magnitude and their effects can overlap, so the values do not
+partition 100\% of anything; a lever showing 137.8\% does not mean it
+"explains" 137.8\% of the problem, only that its one chosen alternative
+value, alone, would over-close the shortfall.
 }
 \description{
 Holds every assumption at baseline except one, sets that one family to a

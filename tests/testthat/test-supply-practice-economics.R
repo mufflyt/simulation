@@ -324,4 +324,65 @@ test_that("sensitivity decomposition identifies wRVU productivity as the dominan
   # these baseline values (raising to WRVU_PER_FTE_BENCHMARK[["high"]] alone
   # closes more than the other five levers each).
   expect_equal(decomposition$assumption_family[[1]], "wrvu_productivity")
+
+  # Renamed to make clear this is a counterfactual, not a variance/causal
+  # attribution -- the six values can (and here do) sum past 100%.
+  expect_true(
+    "counterfactual_shortfall_closed_pct" %in% names(decomposition)
+  )
+  expect_false("pct_of_shortfall_closed" %in% names(decomposition))
+})
+
+test_that("practice_economics_elasticity reports standardized, comparable elasticities", {
+  mix <- practice_payer_mix_defaults(include_crosscheck = FALSE)
+  practice_tbl <- tibble::tibble(
+    practice_id = "P1", year = 2026L, clinical_fte = 1, annual_wrvu = 7110,
+    medicare_share = mix$medicare_share, medicaid_share = mix$medicaid_share,
+    commercial_share = mix$commercial_share, self_pay_share = mix$self_pay_share,
+    practice_setting = "independent", app_fte = 0.15
+  )
+  elasticity <- practice_economics_elasticity(
+    practice_tbl, draws = 1000L, seed = 1L
+  )
+
+  expect_setequal(elasticity$input_name, c(
+    "overhead", "malpractice", "app_compensation", "commercial_ratio",
+    "medicare_collection", "medicaid_collection", "commercial_collection",
+    "self_pay_collection"
+  ))
+  # payer_mix and the practice_tbl-level inputs (annual_wrvu, app_fte) are
+  # deliberately excluded -- compositional/no declared distribution.
+  expect_false("payer_mix" %in% elasticity$input_name)
+  expect_false("annual_wrvu" %in% elasticity$input_name)
+  expect_false("app_fte" %in% elasticity$input_name)
+
+  # p25_p75 exists only for the four inputs with a declared distribution --
+  # the four flat collection rates get pct10 only.
+  p25p75_inputs <- elasticity$input_name[
+    elasticity$perturbation_type == "p25_p75"
+  ]
+  expect_setequal(
+    p25p75_inputs,
+    c("overhead", "malpractice", "app_compensation", "commercial_ratio")
+  )
+
+  # Overhead enters the cost formula linearly, so its pct10 low/high
+  # elasticities must match closely (same seed, same relationship).
+  overhead_pct10 <- dplyr::filter(
+    elasticity, input_name == "overhead", perturbation_type == "pct10"
+  )
+  expect_equal(
+    overhead_pct10$elasticity_low, overhead_pct10$elasticity_high,
+    tolerance = 0.01
+  )
+  expect_true(overhead_pct10$elasticity_low < 0)  # more overhead -> worse
+
+  # Commercial ratio and collection rates raise revenue -> positive
+  # elasticity (more of either improves compensation capacity).
+  commercial_pct10 <- dplyr::filter(
+    elasticity, input_name == "commercial_ratio", perturbation_type == "pct10"
+  )
+  expect_true(commercial_pct10$elasticity_low > 0)
+
+  expect_true(all(!elasticity$unstable_baseline))
 })

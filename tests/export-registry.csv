@@ -225,3 +225,4 @@
 "ipums_lodes_source_catalog","api"
 "open_ipums_lodes_duckdb","api"
 "practice_economics_sensitivity_decomposition","api"
+"practice_economics_elasticity","api"
