@@ -1,0 +1,6 @@
+metric,value
+n_evaluations,56
+mape_percent,6.842771137314335
+signed_bias_cases,-0.5262780041977433
+rmse_cases,13.217124263457581
+calibration_slope,1.0167827715754731

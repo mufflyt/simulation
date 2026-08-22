@@ -7,7 +7,7 @@
 lifecourse_risk_params_prevalence_anchored(
   n = 40000L,
   seed = 20260817L,
-  pop_by_age = data.frame(age = 18:90, population = 100000)
+  pop_by_age = data.frame(age = 18:90, population = 1e+05)
 )
 }
 \arguments{

@@ -10,7 +10,7 @@ solve_provider_entry_equilibrium(
   n_entrants,
   competition_neighbors_tbl = NULL,
   entrant_fte = 1,
-  tolerance = 0.00000001,
+  tolerance = 1e-08,
   max_iterations = 200L,
   damping = 0.5
 )

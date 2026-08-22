@@ -21,8 +21,6 @@
 #   Wu et al. (2014) Am J Obstet Gynecol (pelvic floor disorders in US women).
 #   NCHS (2024) NHANES 2021-2023 Public Use Data.
 
-library(dplyr)
-library(survey)
 
 # ---- Load and prepare NHANES data -------------------------------------------
 

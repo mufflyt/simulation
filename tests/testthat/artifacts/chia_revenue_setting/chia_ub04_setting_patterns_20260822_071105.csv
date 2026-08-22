@@ -1,0 +1,4 @@
+year,procedure_family,care_setting_evidence,n_encounters,pct_encounters
+2015,pop_hysterectomy,hospital_or_plus_inpatient_bed,1,100
+2016,pop_hysterectomy,hospital_or_revenue_only,1,100
+2017,prolapse_repair,ambulatory_surgery_revenue_on_hidd,1,100
