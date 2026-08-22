@@ -162,10 +162,12 @@ service_share_routing_for_year <- function(
     dplyr::group_by(.data$service) |>
     dplyr::summarise(
       first_year = base::min(.data$year),
-      evidence_year = base::max(.data$year[.data$year <= year],
-        na.rm = TRUE
-      ),
       has_past_evidence = base::any(.data$year <= year),
+      evidence_year = dplyr::if_else(
+        .data$has_past_evidence,
+        base::max(.data$year[.data$year <= year]),
+        NA_integer_
+      ),
       .groups = "drop"
     )
   if (base::any(!coverage$has_past_evidence)) {
@@ -349,14 +351,16 @@ allocate_urps_workload_to_active_providers <- function(
     dplyr::filter(base::is.finite(.data$fte), .data$fte > 0)
   total_fte <- base::sum(active$fte)
   if (!base::is.finite(total_fte) || total_fte <= 0) {
-    base::stop("No positive active clinical FTE available for workload.",
+    base::stop(
+      "No positive active clinical FTE available for workload.",
       call. = FALSE
     )
   }
   if (!base::is.numeric(total_urps_wrvu) ||
       base::length(total_urps_wrvu) != 1L ||
       !base::is.finite(total_urps_wrvu) || total_urps_wrvu < 0) {
-    base::stop("total_urps_wrvu must be finite and nonnegative.",
+    base::stop(
+      "total_urps_wrvu must be finite and nonnegative.",
       call. = FALSE
     )
   }
@@ -371,7 +375,8 @@ allocate_urps_workload_to_active_providers <- function(
     )
   error <- base::sum(out$annual_wrvu) - total_urps_wrvu
   if (base::abs(error) > base::max(1e-8, total_urps_wrvu * 1e-12)) {
-    base::stop("Provider-level URPS work-RVU allocation failed to close.",
+    base::stop(
+      "Provider-level URPS work-RVU allocation failed to close.",
       call. = FALSE
     )
   }
