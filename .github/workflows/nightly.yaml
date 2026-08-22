@@ -407,6 +407,40 @@ jobs:
             cat("PASS: seeded pathway volumes reproduce exactly\n")
             cat(sprintf("digest: %s\n", digest::digest(a)))
           '
+      - name: Practice economics reproduces exactly and stays finite
+        # simulate_practice_economics() draws its own Monte Carlo uncertainty
+        # (overhead, malpractice, commercial ratio, transition probabilities)
+        # on top of the pipeline's existing stochastic steps -- a new source
+        # of randomness this job's premise ("one seed gives one answer") had
+        # not yet covered. run_practice_economics defaults to FALSE, so this
+        # is the only nightly check that exercises the opt-in path at all.
+        run: |
+          Rscript -e '
+            suppressMessages(pkgload::load_all(".", quiet = TRUE))
+            one <- function() {
+              run_end_to_end_simulation(
+                start_year = 2025L, end_year = 2026L,
+                n_agents = 100L, initial_provider_count = 100L,
+                fellowship_entrants = 5L, save_outputs = FALSE,
+                run_practice_economics = TRUE, seed = 20260821L
+              )$practice_economics_diagnostics
+            }
+            a <- one(); b <- one()
+            if (!isTRUE(all.equal(a, b))) {
+              cat("::error::identical seeds produced different practice-economics diagnostics\n")
+              quit(status = 1)
+            }
+            stopifnot(
+              nrow(a) == 2L,
+              all(a$n_practices > 0),
+              all(is.finite(a$mean_operating_margin)),
+              all(a$mean_loss_probability >= 0 & a$mean_loss_probability <= 1),
+              all(a$mean_acquisition_probability >= 0 & a$mean_acquisition_probability <= 1),
+              all(a$mean_cash_pay_probability >= 0 & a$mean_cash_pay_probability <= 1)
+            )
+            cat("PASS: practice economics diagnostics reproduce exactly and stay in-bounds\n")
+            cat(sprintf("digest: %s\n", digest::digest(a)))
+          '
 
   # ---------------------------------------------------------------------------
   # 6. COVERAGE, LINT, DOCS. Reporting rather than correctness, hence nightly.

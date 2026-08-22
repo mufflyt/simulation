@@ -28,6 +28,9 @@ run_end_to_end_simulation(
   empirical_parameters = NULL,
   policy_migration_scenario = "baseline",
   policy_evidence_db = NULL,
+  run_practice_economics = FALSE,
+  practice_payer_mix = NULL,
+  practice_economics_draws = 100L,
   seed = 20260821L,
   save_outputs = TRUE,
   output_dir = "artifacts/end_to_end"
@@ -90,6 +93,25 @@ uses real ACS population shares from
 ingested evidence, the module degrades gracefully to its declared prior
 (see \code{\link[=calibrate_legislative_relocation]{calibrate_legislative_relocation()}}) rather than a no-op.}
 
+\item{run_practice_economics}{Whether to run \code{\link[=simulate_practice_economics]{simulate_practice_economics()}}
+each year against a practice-tbl bridged from \code{provider_cohort}. \code{FALSE}
+(default) skips the step entirely -- zero behavior change. Each active
+provider becomes one practice-year: \code{annual_wrvu} allocates that year's
+national \code{wrvu_total} by each provider's share of \code{supplied_fte},
+\code{practice_setting} derives from \code{academic_setting}/\code{hospital_outpatient}
+(\code{academic}/\code{hospital_employed}/\code{independent}), \code{app_fte} is
+\code{fte * app_delegation_rate} -- documented proxies, not real per-provider
+data (this runner has no real provider-level wRVU or APP headcount).}
+
+\item{practice_payer_mix}{Optional payer-mix tibble (the shape
+\code{\link[=practice_payer_mix_defaults]{practice_payer_mix_defaults()}} returns), applied uniformly to every
+provider-practice. Computed via \code{\link[=practice_payer_mix_defaults]{practice_payer_mix_defaults()}} when
+\code{NULL} and \code{run_practice_economics = TRUE}.}
+
+\item{practice_economics_draws}{Monte Carlo draws per practice-year passed
+to \code{\link[=simulate_practice_economics]{simulate_practice_economics()}}; kept below its 500-draw default to
+bound runtime at full provider-cohort scale.}
+
 \item{seed}{Master random seed.}
 
 \item{save_outputs}{Whether to save timestamped CSV files.}
@@ -99,7 +121,8 @@ ingested evidence, the module degrades gracefully to its declared prior
 \value{
 A named list containing the audit ledger, spatial balances,
 provider cohort, engine diagnostics, fitted productivity model, policy
-migration diagnostics/summary, and simulation configuration.
+migration diagnostics/summary, practice economics diagnostics, and
+simulation configuration.
 }
 \description{
 Runs the eight-step annual microsimulation and optionally couples the

@@ -151,6 +151,15 @@ URPS_ICD9_PREFIXES <- c(
 #' @export
 load_namcs_2019 <- function(path = "data-raw/namcs/namcs2019_clean.rds") {
   if (!file.exists(path)) {
+    # data-raw/ is source-tree-only, so a relative default only resolves
+    # when the working directory is the repo root -- not true when this is
+    # reached via testthat (tests/testthat/) or another package's working
+    # directory. Falls back to the same repo-root resolver used by
+    # national_older_female_population_by_state() for the identical issue.
+    root <- .repo_source_root()
+    if (!is.na(root)) path <- file.path(root, path)
+  }
+  if (!file.exists(path)) {
     stop(
       "NAMCS 2019 cleaned file not found at '", path, "'.\n",
       "Run data-raw/namcs/01-namcs_acquire.R to create it.",
@@ -172,6 +181,11 @@ load_namcs_2019 <- function(path = "data-raw/namcs/namcs2019_clean.rds") {
 #' @return Tibble with 59,700 rows (4 years combined).
 #' @export
 load_namcs_pooled <- function(path = "data-raw/namcs/namcs_pooled_2015_2019.rds") {
+  if (!file.exists(path)) {
+    # See load_namcs_2019()'s comment on the same fallback.
+    root <- .repo_source_root()
+    if (!is.na(root)) path <- file.path(root, path)
+  }
   if (!file.exists(path)) {
     stop(
       "NAMCS pooled file not found at '", path, "'.\n",
