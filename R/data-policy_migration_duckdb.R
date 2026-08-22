@@ -392,31 +392,63 @@ ingest_irs_migration <- function(
     "returns", "exemptions", "adjusted_gross_income"
   )
   .policy_require_columns(flows, required, "IRS migration")
-  normalized <- flows |>
-    dplyr::transmute(
-      year = base::as.integer(.data$year),
-      origin_state_fips = stringr::str_pad(
-        base::as.character(.data$origin_state_fips), 2L, pad = "0"
-      ),
-      destination_state_fips = stringr::str_pad(
-        base::as.character(.data$destination_state_fips), 2L, pad = "0"
-      ),
-      returns = base::as.numeric(.data$returns),
-      exemptions = base::as.numeric(.data$exemptions),
-      adjusted_gross_income = base::as.numeric(
-        .data$adjusted_gross_income
+  has_county <- all(c("origin_county_fips", "destination_county_fips") %in% base::names(flows))
+  if (has_county) {
+    normalized <- flows |>
+      dplyr::transmute(
+        year = base::as.integer(.data$year),
+        origin_state_fips = stringr::str_pad(
+          base::as.character(.data$origin_state_fips), 2L, pad = "0"
+        ),
+        destination_state_fips = stringr::str_pad(
+          base::as.character(.data$destination_state_fips), 2L, pad = "0"
+        ),
+        origin_county_fips = stringr::str_pad(
+          base::as.character(.data$origin_county_fips), 5L, pad = "0"
+        ),
+        destination_county_fips = stringr::str_pad(
+          base::as.character(.data$destination_county_fips), 5L, pad = "0"
+        ),
+        returns = base::as.numeric(.data$returns),
+        exemptions = base::as.numeric(.data$exemptions),
+        adjusted_gross_income = base::as.numeric(
+          .data$adjusted_gross_income
+        )
+      ) |>
+      dplyr::filter(
+        !base::is.na(.data$returns),
+        .data$returns >= 0,
+        .data$exemptions >= 0
       )
-    ) |>
-    dplyr::filter(
-      !base::is.na(.data$returns),
-      .data$returns >= 0,
-      .data$exemptions >= 0
-    )
+    key_cols <- c("year", "origin_county_fips", "destination_county_fips")
+  } else {
+    normalized <- flows |>
+      dplyr::transmute(
+        year = base::as.integer(.data$year),
+        origin_state_fips = stringr::str_pad(
+          base::as.character(.data$origin_state_fips), 2L, pad = "0"
+        ),
+        destination_state_fips = stringr::str_pad(
+          base::as.character(.data$destination_state_fips), 2L, pad = "0"
+        ),
+        returns = base::as.numeric(.data$returns),
+        exemptions = base::as.numeric(.data$exemptions),
+        adjusted_gross_income = base::as.numeric(
+          .data$adjusted_gross_income
+        )
+      ) |>
+      dplyr::filter(
+        !base::is.na(.data$returns),
+        .data$returns >= 0,
+        .data$exemptions >= 0
+      )
+    key_cols <- c("year", "origin_state_fips", "destination_state_fips")
+  }
   .policy_upsert_table(
     connection,
     "irs_migration_flows",
     normalized,
-    c("year", "origin_state_fips", "destination_state_fips")
+    key_cols
   )
   .policy_record_source(
     connection,
