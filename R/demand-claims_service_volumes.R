@@ -660,14 +660,18 @@ claims_service_volumes <- function(
 #'
 #' @param demand_long Demand table.
 #' @param path Path to claims service volume CSV file.
+#' @param mode Reproducibility mode (`"strict"` or `"relaxed"`), threaded to
+#'   [claims_service_volumes()] so a strict run fails on an incomplete basket
+#'   rather than silently warning. Defaults to [resolve_reproducibility_mode()].
 #'
 #' @return Table of service volumes.
 #' @keywords internal
-resolve_service_volumes <- function(demand_long, path = NULL) {
+resolve_service_volumes <- function(demand_long, path = NULL,
+                                    mode = resolve_reproducibility_mode()) {
   fallback <- example_service_volumes(demand_long)
   if (!base::is.null(path) && base::file.exists(path)) {
     claims_csv <- readr::read_csv(path, show_col_types = FALSE)
-    claims_service_volumes(claims_csv, fallback = fallback)
+    claims_service_volumes(claims_csv, fallback = fallback, mode = mode)
   } else {
     fallback
   }
