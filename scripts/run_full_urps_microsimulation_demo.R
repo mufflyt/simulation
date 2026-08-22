@@ -116,6 +116,39 @@ base::message(base::sprintf(
   100 * adequacy_fit$national_adequacy
 ))
 
+# Step 4 (opt-in, not run by default): Policy migration scenario ------------
+#
+# run_end_to_end_simulation()'s default `policy_migration_scenario =
+# "baseline"` above is an identity transform, so Steps 1-3 see no behavior
+# change from the policy migration module. To see it drive real national
+# multipliers, open a policy evidence DuckDB, ingest whatever public
+# ACS/IRS/NPPES/LawAtlas evidence is available, and pass a non-baseline
+# scenario. Left as a manual, commented block because it (a) opens a
+# separate DuckDB round-trip on every demo run and (b) with no evidence
+# ingested, the module still runs but degrades to its declared prior --
+# nothing to demonstrate without at least one ingest call first.
+#
+# policy_evidence_db <- file.path(evidence_dir, "urps_policy_migration_demo.duckdb")
+# policy_con <- open_policy_migration_duckdb(policy_evidence_db, overwrite = TRUE)
+# # ingest_lawatlas_policies(policy_con, my_lawatlas_extract)
+# # ingest_acs_pums_migration(policy_con, my_acs_pums_extract, year = 2024L)
+# DBI::dbDisconnect(policy_con, shutdown = TRUE)
+#
+# sim_res_policy <- run_end_to_end_simulation(
+#   start_year = 2025L,
+#   end_year = 2035L,
+#   n_agents = 1000L,
+#   initial_provider_count = 1200L,
+#   fellowship_entrants = 55L,
+#   app_delegation_rate = 0.15,
+#   medicaid_fee_ratio = 0.75,
+#   evidence_db = evidence_db,
+#   policy_migration_scenario = "combined_stress",
+#   policy_evidence_db = policy_evidence_db
+# )
+# base::message("Policy migration diagnostics:")
+# base::print(sim_res_policy$policy_migration_diagnostics)
+
 base::message("\n=============================================================")
 base::message(" DEMONSTRATION EXECUTED SUCCESSFULLY")
 base::message("=============================================================")
