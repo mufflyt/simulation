@@ -103,7 +103,7 @@ jobs:
           # so the spatial-access guards, the MEPS care-seeking guards and the
           # coordinate address screen had never run in CI. A skipped gate and a
           # passing gate look identical in the summary line.
-          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          extra-packages: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4, any::ranger, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
           # mufflyaccess (Suggests) is a private repo the CI token cannot
           # reach, so Suggests are not resolved wholesale; the reachable ones
           # are named above and tests needing mufflyaccess skip themselves.

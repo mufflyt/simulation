@@ -8,6 +8,7 @@ build_urps_exit_hazard(
   cliff_duckdb_path = NULL,
   cliff_ageband_csv = system.file("extdata", "provider_year",
     "retirement_hazard_by_ageband.csv", package = "urpssim"),
+  require_calibrated = FALSE,
   min_confidence = 0.6,
   smooth = TRUE,
   scale_shift = 0,
@@ -22,6 +23,14 @@ only when \code{cliff_ageband_csv} is unavailable.}
 hazard CSV (columns \code{age_band}, \code{person_years}, \code{events}, \code{annual_hazard}).
 Defaults to the vendored copy under \code{inst/extdata/provider_year}; set to
 \code{NULL} to force the DuckDB/Weibull path.}
+\item{require_calibrated}{Logical; if TRUE, error instead of silently
+returning the \code{derived_by_analogy} Weibull fallback. Every fallback path
+otherwise yields a well-formed 102-row curve with \code{n_events = 0}, which is
+indistinguishable from success unless the caller inspects \code{source}. Set
+this whenever a downstream result depends on the hazard actually being
+fitted to observed data. It also catches the partial case, where a per-sex
+fallback leaves analogy rows inside a result still labelled \code{calibrated}.
+Default FALSE, so existing callers are unaffected.}
 
 \item{min_confidence}{Minimum cliff confidence score to include. Default 0.60.}
 

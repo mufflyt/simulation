@@ -14,11 +14,31 @@
 #' @export
 read_estimand_registry <- function(path = "config/estimands.yml") {
   if (!file.exists(path)) {
-    # Fallback path for package execution
-    path <- system.file("config", "estimands.yml", package = "urpssim")
+    # Traverse upwards or check 00_pkg_src under R CMD check
+    curr <- getwd()
+    found <- FALSE
+    for (i in 1:6) {
+      cand <- file.path(curr, "config", "estimands.yml")
+      if (file.exists(cand)) {
+        path <- cand
+        found <- TRUE
+        break
+      }
+      src_cand <- file.path(curr, "00_pkg_src", "urpssim", "config", "estimands.yml")
+      if (file.exists(src_cand)) {
+        path <- src_cand
+        found <- TRUE
+        break
+      }
+      curr <- dirname(curr)
+    }
+    if (!found) {
+      path <- system.file("config", "estimands.yml", package = "urpssim")
+    }
   }
-  if (!file.exists(path) && file.exists("../../config/estimands.yml")) {
-    path <- "../../config/estimands.yml"
+
+  if (!file.exists(path)) {
+    stop(sprintf("read_estimand_registry(): Cannot locate estimands config file at '%s'.", path), call. = FALSE)
   }
 
   cfg <- yaml::read_yaml(path)
