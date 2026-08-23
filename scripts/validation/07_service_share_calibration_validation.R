@@ -71,7 +71,9 @@ simulation <- run_end_to_end_simulation(
   service_share_bundle = bundle,
   service_share_draw = base::min(bundle$share_draws$draw_id),
   run_practice_economics = TRUE,
-  practice_economics_draws = 25L,
+  # simulate_practice_economics() refuses draws < 100 -- a deliberate guard
+  # against Monte Carlo intervals too small to be statistically meaningful.
+  practice_economics_draws = 100L,
   seed = bundle$config$seed,
   save_outputs = FALSE
 )

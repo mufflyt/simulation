@@ -130,75 +130,9 @@ valid_pathway <- function(pathway = condition_service_pathway()) {
     )
 }
 
-# Full routing fixture for service_share_routing_for_year() /
-# allocate_urps_service_workload() -- lives here (not in
-# test-core-service-share-engine.R, which originally defined it) so it is
-# available regardless of which service-share test file testthat runs
-# first; test-core-run-end-to-end-service-shares.R sorts alphabetically
-# before test-core-service-share-engine.R and needs this fixture too.
-service_share_full_routing_fixture <- function() {
-  services <- c(
-    "sling_procedure",
-    "prolapse_surgery",
-    "sacral_neuromodulation",
-    "botox_injection",
-    "ptns_procedure",
-    "urodynamics",
-    "pessary_fitting",
-    "cystoscopy",
-    "bladder_instillation",
-    "new_consultation",
-    "return_visit"
-  )
-  shares <- tibble::tribble(
-    ~provider_group, ~share,
-    "urps", 0.50,
-    "app", 0.20,
-    "general_obgyn", 0.30
-  )
-  draw_tbl <- tidyr::crossing(
-    service = services,
-    year = 2024L,
-    draw_id = 1L,
-    condition = "all",
-    shares
-  ) |>
-    dplyr::mutate(
-      source_draw_id = 1L,
-      cell_events = 100,
-      selected_alpha = 2
-    )
-
-  base::list(
-    share_draws = draw_tbl,
-    selected_alpha = tibble::tibble(
-      service = services,
-      holdout_year = 2024L,
-      selected_alpha = 2,
-      log_score = -100,
-      holdout_events = 100,
-      cross_entropy = 1
-    ),
-    holdout_scores = tibble::tibble(
-      service = services,
-      holdout_year = 2024L,
-      alpha = 2,
-      log_score = -100,
-      holdout_events = 100,
-      cross_entropy = 1
-    ),
-    source_fit = base::list(
-      cms = tibble::tibble(),
-      chia = tibble::tibble(),
-      draw_weights = tibble::tibble(draw_id = 1L, weight = 1)
-    ),
-    provenance = base::list(events_sha256 = "fixture"),
-    config = base::list(
-      seed = 1L,
-      draws = 1L,
-      projection_policy = "carry_forward_latest",
-      provider_groups = provider_routing_groups()
-    ),
-    valid = TRUE
-  )
-}
+# service_share_full_routing_fixture() lives in helper-service-share.R
+# (single source of truth: derives its service list from
+# service_share_required_routing_services() instead of a second hardcoded
+# copy). All helper-*.R files load before any test-*.R file regardless of
+# alphabetical order among the helpers, so test-core-run-end-to-end-
+# service-shares.R and test-core-service-share-engine.R both see it.
