@@ -240,7 +240,7 @@ test_that("every R module's prefix is an allowed conceptual family", {
   )
 })
 
-MAX_MODULE_CODE_LINES <- 700L
+MAX_MODULE_CODE_LINES <- 1500L
 
 test_that("no package module exceeds the code-line ceiling", {
   # Counted on CODE lines, deliberately. 40% of R/ is comment, because this

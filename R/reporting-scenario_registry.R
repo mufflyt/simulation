@@ -76,15 +76,17 @@ supply_scenario_registry <- function(baseline_entrants = 55, prefer_ssot = TRUE)
 #' @concept reporting
 #' @export
 local_supply_scenario_registry <- function(baseline_entrants = 55) {
+  sq <- list(
+    label = "Status quo",
+    entrants = baseline_entrants,
+    retirement_shift_years = 0,
+    hours_multiplier = 1.00,
+    conversion = 1.00,
+    source = "HWSM scenarios: current data on entrants, hours, retirement"
+  )
   list(
-    status_quo = list(
-      label = "Status quo",
-      entrants = baseline_entrants,
-      retirement_shift_years = 0,
-      hours_multiplier = 1.00,
-      conversion = 1.00,
-      source = "HWSM scenarios: current data on entrants, hours, retirement"
-    ),
+    status_quo = sq,
+    baseline = sq,
     graduates_plus_10 = list(
       label = "10% more graduates",
       entrants = round(baseline_entrants * 1.10),

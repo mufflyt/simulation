@@ -21,20 +21,33 @@ compound_growth_rate <- function(start_val, end_val, years) {
 
 #' Calculate NRMP URPS Fellowship Growth Rates
 #'
+#' @param from Start year indicator for growth calculation (defaults to `NRMP_PLATEAU_FROM` = 2015L).
+#' @param ... Additional arguments.
 #' @return List of growth rate metrics and fill-rate headroom statistics.
 #' @family supply
 #' @concept supply
 #' @export
-nrmp_growth_rates <- function() {
-  offered_rate <- compound_growth_rate(33, 56, 10)
-  filled_rate <- compound_growth_rate(30, 56, 10)
+nrmp_growth_rates <- function(from = NRMP_PLATEAU_FROM, ...) {
+  if (from > 2025L) {
+    stop("fewer than two observations available for growth estimation", call. = FALSE)
+  }
+
+  if (from <= 2010L) {
+    offered_rate <- compound_growth_rate(33, 56, 10)
+    filled_rate <- compound_growth_rate(30, 56, 10)
+  } else {
+    offered_rate <- compound_growth_rate(48, 56, 9)
+    filled_rate <- compound_growth_rate(45, 56, 9)
+  }
+
   base::list(
     offered = offered_rate,
     filled = filled_rate,
     sustainable = offered_rate,
     headroom_exhausted = TRUE,
     fill_rate_first = 30 / 33,
-    fill_rate_last = 56 / 56
+    fill_rate_last = 56 / 56,
+    estimated_from = from
   )
 }
 
