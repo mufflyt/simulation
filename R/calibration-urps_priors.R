@@ -81,7 +81,8 @@ URPS_PRIOR_SPEC_VERSION <- "1.0.0"
     concentration,
     source,
     evidence_tier,
-    rationale) {
+    rationale,
+    identifiability = "nuisance_informative") {
 
   shapes <- .beta_shapes_from_mean(
     mean = mean,
@@ -99,6 +100,7 @@ URPS_PRIOR_SPEC_VERSION <- "1.0.0"
     prior_sd = NA_real_,
     shape1 = shapes[["shape1"]],
     shape2 = shapes[["shape2"]],
+    identifiability = identifiability,
     source = source,
     evidence_tier = evidence_tier,
     rationale = rationale
@@ -122,7 +124,8 @@ URPS_PRIOR_SPEC_VERSION <- "1.0.0"
     sdlog,
     source,
     evidence_tier,
-    rationale) {
+    rationale,
+    identifiability = "nuisance_informative") {
 
   if (median <= 0 ||
       sdlog <= 0) {
@@ -141,6 +144,7 @@ URPS_PRIOR_SPEC_VERSION <- "1.0.0"
     prior_sd = sdlog,
     shape1 = NA_real_,
     shape2 = NA_real_,
+    identifiability = identifiability,
     source = source,
     evidence_tier = evidence_tier,
     rationale = rationale
@@ -422,6 +426,7 @@ build_urps_prior_specification <- function() {
       .data$prior_sd,
       .data$shape1,
       .data$shape2,
+      .data$identifiability,
       .data$source,
       .data$evidence_tier,
       .data$rationale,

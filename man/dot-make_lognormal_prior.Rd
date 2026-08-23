@@ -12,7 +12,8 @@
   sdlog,
   source,
   evidence_tier,
-  rationale
+  rationale,
+  identifiability = "nuisance_informative"
 )
 }
 \description{

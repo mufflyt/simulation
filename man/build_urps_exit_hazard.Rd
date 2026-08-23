@@ -23,6 +23,7 @@ only when \code{cliff_ageband_csv} is unavailable.}
 hazard CSV (columns \code{age_band}, \code{person_years}, \code{events}, \code{annual_hazard}).
 Defaults to the vendored copy under \code{inst/extdata/provider_year}; set to
 \code{NULL} to force the DuckDB/Weibull path.}
+
 \item{require_calibrated}{Logical; if TRUE, error instead of silently
 returning the \code{derived_by_analogy} Weibull fallback. Every fallback path
 otherwise yields a well-formed 102-row curve with \code{n_events = 0}, which is

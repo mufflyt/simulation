@@ -169,13 +169,27 @@ test_that("the resolver's blind spots are known and bounded", {
   # function argument, or from a loop variable is NOT resolved -- it is counted
   # here instead of being silently treated as fine.
   #
-  # Today exactly one read is unresolvable: 03's PRODUCTIVITY_REPORT, which is
-  # assigned inside a block that picks the first of four candidate extensions
-  # present on disk. That is legitimate and its candidates are all under
-  # data-raw/productivity/.
+  # Two reads are unresolvable for reasons that are legitimate, not sloppy:
+  #   - 03's PRODUCTIVITY_REPORT is assigned inside a block that picks the
+  #     first of four candidate extensions present on disk. Its candidates
+  #     are all under data-raw/productivity/.
+  #   - 04's SPEC_FILE is file.path(ARCHIVE_DIR, ...), where ARCHIVE_DIR is
+  #     Sys.getenv("CADR_DIR", unset = "data-raw/cadr") -- an environment
+  #     override, not a literal.
+  # 07_service_share_calibration_validation.R adds six more of the same
+  # ARCHIVE_DIR shape: its `paths` come from Sys.getenv() lookups over
+  # URPS_SERVICE_SHARE_EVENTS / URPS_CALIBRATED_SERVICE_SHARE_BUNDLE /
+  # URPS_CMS_SERVICE_SHARE_EVIDENCE / URPS_CHIA_SERVICE_SHARE_EVIDENCE, which
+  # exist so the real-data validation run points at CI-mounted PUFs that are
+  # never committed to the repo. Hardcoding them as top-level constants would
+  # defeat the point -- the script already fails closed with
+  # file.exists()-checked, named env vars when nothing is mounted (see
+  # "Verify mounted evidence paths" in service-share-validation.yml), so this
+  # indirection is deliberate, not a missed guarantee.
   #
-  # This asserts the count does not GROW. A new unresolvable read is a new hole
-  # in the guarantee, and it should cost a deliberate edit here.
+  # This asserts the count does not GROW BEYOND today's known, justified set.
+  # A new unresolvable read past this bound is a new hole in the guarantee,
+  # and it should cost a deliberate edit here.
   scripts <- validation_scripts()
   skip_if(length(scripts) == 0L, "repository root not reachable")
 
@@ -185,14 +199,14 @@ test_that("the resolver's blind spots are known and bounded", {
       if (is.null(r$path))
         unresolved <- c(unresolved, sprintf("%s: %s(%s)", basename(f), r$fn, r$expr))
 
-  if (length(unresolved) > 2L)
+  if (length(unresolved) > 8L)
     fail(paste0(
       "Reads whose path the resolver cannot evaluate statically:\n  ",
       paste(unresolved, collapse = "\n  "),
       "\nEach is a gap in the classification guarantee. Prefer a top-level ",
       "constant; if the indirection is genuinely needed, raise this bound ",
       "deliberately and say why."))
-  expect_lte(length(unresolved), 2L)
+  expect_lte(length(unresolved), 8L)
 })
 
 test_that("no validation script mentions a non-canonical artifact by name", {

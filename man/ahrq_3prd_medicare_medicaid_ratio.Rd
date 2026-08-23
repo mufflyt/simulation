@@ -21,8 +21,7 @@ Reads the vendored AHRQ 3P-RD Physician Geographic summary (see
 \code{data-raw/ahrq_3prd/01-ahrq_3prd_acquire.R}) and computes the national,
 claims-volume-weighted share of combined Medicare+Medicaid claims volume
 that is Medicare, across all 325 ZIP3 areas in the 13-state 3P-RD sample.
-}
-\details{
+
 This is real, cited AHRQ administrative-claims data, but the
 \code{physician_geographic} file cannot be filtered to a physician specialty
 (its payer columns are pre-aggregated across every physician in each
@@ -34,4 +33,11 @@ sample does not reflect). \strong{This function's result is reported only as
 an independent cross-check value; \code{\link[=practice_payer_mix_defaults]{practice_payer_mix_defaults()}} does
 not use it to adjust the NAMCS-derived shares.}
 }
+\seealso{
+Other practice economics:
+\code{\link[=chia_medicare_medicaid_ratio]{chia_medicare_medicaid_ratio()}},
+\code{\link[=namcs_urps_payer_mix]{namcs_urps_payer_mix()}},
+\code{\link[=practice_payer_mix_defaults]{practice_payer_mix_defaults()}}
+}
+\concept{practice economics}
 \concept{supply}

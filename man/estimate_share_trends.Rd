@@ -5,12 +5,8 @@
 \title{Estimate grouped-binomial annual trends}
 \usage{
 estimate_share_trends(shares)
-
-estimate_share_trends(shares)
 }
 \description{
-Estimate grouped-binomial annual trends
-
 Estimate grouped-binomial annual trends
 }
 \keyword{internal}
