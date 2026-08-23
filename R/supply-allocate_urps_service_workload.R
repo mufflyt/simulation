@@ -7,7 +7,10 @@
 #'
 #' @param service_demand Data frame with `service`, `condition`, and `demand_services`.
 #' @param provider_cohort Tibble of active providers (`rendering_npi`, `is_active`, `provider_type`).
-#' @param share_draws Compositional share draws from [draw_compositional_service_shares()].
+#' @param share_draws Compositional share draws from
+#'   [draw_service_share_composition()]. Required -- generating a default
+#'   draw here would need calibrate_service_share_model()'s real `events`
+#'   argument, which this function has no source for.
 #' @param rvu_table Work RVU lookup table. Defaults to `CMS_WORK_RVU`.
 #'
 #' @return A list containing `allocated_workload`, `provider_summary`, and `accounting_audit`.
@@ -17,13 +20,9 @@
 allocate_urps_service_workload <- function(
     service_demand,
     provider_cohort,
-    share_draws = NULL,
+    share_draws,
     rvu_table = CMS_WORK_RVU) {
   base::message("Allocating URPS service workload among active providers.")
-
-  if (base::is.null(share_draws)) {
-    share_draws <- draw_compositional_service_shares(n_draws = 1L)
-  }
 
   active_providers <- provider_cohort |>
     dplyr::filter(.data$is_active == TRUE | dplyr::coalesce(.data$status, "") == "active")
@@ -34,7 +33,7 @@ allocate_urps_service_workload <- function(
   # Join service demand with share draws
   demand_with_shares <- service_demand |>
     dplyr::left_join(
-      share_draws |> dplyr::filter(.data$draw == 1L),
+      share_draws |> dplyr::filter(.data$draw_id == 1L),
       by = c("service", "condition"),
       relationship = "many-to-many"
     ) |>

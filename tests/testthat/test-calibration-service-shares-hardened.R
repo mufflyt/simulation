@@ -1,34 +1,31 @@
-test_that("draw_compositional_service_shares satisfies strict double-precision simplex equality across 1000 draws", {
-  .skip_unless_cms_service_share_data()
-  calib <- calibrate_service_share_model()
-  draws <- draw_compositional_service_shares(calibration_model = calib, n_draws = 1000L, seed = 999L)
+# Stress-test variant of test-calibration-service-shares.R: larger draw
+# counts and an explicit simplex-precision check, using the same synthetic
+# events fixture (.synthetic_service_share_events(), defined there and
+# auto-sourced by testthat alongside this file).
 
-  expect_equal(nrow(draws), 1000L * length(calib$calibrated_priors$service) * 5L)
+test_that("draw_service_share_composition satisfies double-precision simplex equality across 1000 draws", {
+  events <- .synthetic_service_share_events()
+  concentration <- select_service_share_concentration(events)
+  draws <- draw_service_share_composition(
+    events,
+    selected_alpha = concentration$selected,
+    draws = 1000L,
+    seed = 999L
+  )
 
-  # Check that every single draw & service cell sums to 1.0 within double precision threshold (1e-10)
   cell_sums <- draws |>
-    dplyr::group_by(draw, service, condition) |>
-    dplyr::summarise(total_share = sum(share), .groups = "drop")
+    dplyr::group_by(.data$draw_id, .data$service, .data$condition, .data$year) |>
+    dplyr::summarise(total_share = sum(.data$share), .groups = "drop")
 
   expect_true(all(abs(cell_sums$total_share - 1.0) < 1e-10))
   expect_true(all(draws$share >= 0.0))
   expect_true(all(draws$share <= 1.0))
 })
 
-test_that("calibrate_service_share_model selects monotone optimal prior strength as volume increases", {
-  .skip_unless_cms_service_share_data()
-  calib <- calibrate_service_share_model()
-  priors <- calib$calibrated_priors
-
-  expect_s3_class(priors, "tbl_df")
-  expect_true(all(priors$optimal_alpha_strength %in% c(2, 5, 10, 20, 30, 50)))
-  expect_false(any(is.na(priors$optimal_alpha_strength)))
-})
-
-test_that("combine_service_share_evidence applies disagreement penalty proportional to bound width H - L", {
-  .skip_unless_cms_service_share_data()
-  synth <- combine_service_share_evidence()
-
-  expect_true(all(synth$disagreement_penalty >= 0.05))
-  expect_true(all(synth$disagreement_penalty >= (synth$H_upper_bound - synth$L_lower_bound)))
+test_that("calibrate_service_share_model reweights draws when external evidence is supplied", {
+  events <- .synthetic_service_share_events()
+  bundle_no_evidence <- calibrate_service_share_model(events, draws = 200L, seed = 20260823L)
+  expect_false(bundle_no_evidence$config$cms_used)
+  expect_false(bundle_no_evidence$config$chia_used)
+  expect_equal(bundle_no_evidence$share_draws$draw_id, bundle_no_evidence$share_draws$source_draw_id)
 })

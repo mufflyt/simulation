@@ -99,7 +99,9 @@
 #' @param alpha_grid Positive candidate concentrations.
 #'
 #' @return A list with `selected` and candidate `scores` tables.
-#' @keywords internal
+#' @family calibration
+#' @concept model
+#' @export
 select_service_share_concentration <- function(
     events,
     alpha_grid = base::c(0.5, 1, 2, 5, 10, 20, 50, 100)) {
@@ -238,7 +240,9 @@ select_service_share_concentration <- function(
 #' @param seed Random seed.
 #'
 #' @return Long tibble of joint provider-share draws.
-#' @keywords internal
+#' @family calibration
+#' @concept model
+#' @export
 draw_service_share_composition <- function(
     events,
     selected_alpha,
@@ -277,18 +281,26 @@ draw_service_share_composition <- function(
     dplyr::distinct(.data$service, .data$condition, .data$year)
 
   purrr::pmap_dfr(cells, function(service, condition, year) {
+    # !!service/!!condition/!!year (not bare service/condition/year): the
+    # closure's own arguments are shadowed by counts/service_priors/
+    # selected_alpha's OWN same-named columns inside dplyr's data mask, so
+    # `.data$service == service` silently compares the column to itself
+    # (always TRUE) instead of to this cell's value -- confirmed with a
+    # minimal repro: filter(.data$x == x) inside a function(x) returns every
+    # row, not just the matching ones. Unquoting forces the closure
+    # argument's value to be substituted before the data mask ever sees it.
     cell <- counts |>
       dplyr::filter(
-        .data$service == service,
-        .data$condition == condition,
-        .data$year == year
+        .data$service == !!service,
+        .data$condition == !!condition,
+        .data$year == !!year
       ) |>
       .service_share_complete_cell(groups)
     prior <- service_priors |>
-      dplyr::filter(.data$service == service) |>
+      dplyr::filter(.data$service == !!service) |>
       dplyr::arrange(base::match(.data$provider_group, groups))
     alpha_row <- selected_alpha |>
-      dplyr::filter(.data$service == service)
+      dplyr::filter(.data$service == !!service)
     if (base::nrow(alpha_row) != 1L) {
       base::stop(
         "Expected one selected alpha for service: ", service, ".",
@@ -491,7 +503,9 @@ draw_service_share_composition <- function(
 #' @param seed Master random seed.
 #'
 #' @return A validated service-share calibration bundle.
-#' @keywords internal
+#' @family calibration
+#' @concept model
+#' @export
 calibrate_service_share_model <- function(
     events,
     cms_evidence = NULL,
@@ -597,7 +611,9 @@ calibrate_service_share_model <- function(
 #' @param tolerance Tolerance on compositional sums.
 #'
 #' @return `TRUE`, invisibly.
-#' @keywords internal
+#' @family calibration
+#' @concept model
+#' @export
 validate_service_share_bundle <- function(bundle, tolerance = 1e-8) {
   required_bundle <- base::c(
     "share_draws", "selected_alpha", "holdout_scores", "source_fit",
