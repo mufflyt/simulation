@@ -61,6 +61,19 @@ if (base::length(missing_inputs) > 0L) {
   )
 }
 
+cms_sha_guard <- base::getFromNamespace(
+  ".cms_verify_canonical_sha256",
+  "urpssim"
+)
+cms_sha_guard(
+  provider_path,
+  "cms_mup_phy_2024_prov_svc"
+)
+cms_sha_guard(
+  geography_path,
+  "cms_mup_phy_2024_geo"
+)
+
 observed_roster_sha <- digest::digest(
   file = roster_path,
   algo = "sha256"
