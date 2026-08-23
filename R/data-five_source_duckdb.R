@@ -268,11 +268,17 @@ ingest_five_source_file <- function(
 #' @return Invisibly returns `TRUE`.
 #' @keywords internal
 create_empirical_model_tables <- function(connection) {
-  raw_tables <- DBI::dbListObjects(
+  # DBI::dbListObjects()$table returns a list of Id S4 objects, not plain
+  # strings -- as.character() on an Id does not extract the table name (it
+  # stringifies the whole S4 object, e.g. "new(\"Id\", name = c(table =
+  # \"cms_provider_service_2023\"))"), which silently broke every downstream
+  # source_id/year match and made create_source_union_view() skip every
+  # source as "not available." information_schema.tables gives plain
+  # character table names directly.
+  table_names <- DBI::dbGetQuery(
     connection,
-    DBI::Id(schema = "raw")
-  )$table
-  table_names <- base::as.character(raw_tables)
+    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'raw'"
+  )$table_name
   source_table_map <- tibble::tibble(
     table_name = table_names
   ) |>
