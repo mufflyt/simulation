@@ -237,20 +237,23 @@ test_that("practice_economics_evidence has real provenance, not just point value
     evidence_tbl$evidence_quality %in% c("high", "medium", "low", "uncited")
   ))
 
-  # Overhead, malpractice, and all four collection rates must be visibly
-  # uncited -- the whole point of this table. APP compensation is NO LONGER
-  # uncited (real BLS OEWS wages + a real BLS ECEC load factor replaced it)
-  # -- confirm it left the uncited set rather than merely asserting nothing
-  # about it.
+  # Overhead and all four collection rates must be visibly uncited -- the
+  # whole point of this table. APP compensation and malpractice are NO
+  # LONGER uncited (real BLS OEWS wages + a real BLS ECEC load factor
+  # replaced APP compensation; real AMA/MLM 2024 OB/GYN premium data
+  # replaced malpractice) -- confirm both left the uncited set rather than
+  # merely asserting nothing about them.
   uncited <- dplyr::filter(evidence_tbl, .data$evidence_quality == "uncited")
-  expect_gte(nrow(uncited), 6L)
+  expect_gte(nrow(uncited), 5L)
   expect_true(any(grepl("overhead", uncited$estimand, ignore.case = TRUE)))
-  expect_true(any(grepl("malpractice", uncited$estimand, ignore.case = TRUE)))
   expect_true(any(grepl(
     "collection rate", uncited$estimand, fixed = TRUE
   )))
   expect_false(any(grepl(
     "APP compensation", uncited$estimand, fixed = TRUE
+  )))
+  expect_false(any(grepl(
+    "malpractice", uncited$estimand, ignore.case = TRUE
   )))
 
   # The real BLS OEWS/ECEC rows exist and are cited (not "uncited").
@@ -259,6 +262,17 @@ test_that("practice_economics_evidence has real provenance, not just point value
   )
   expect_equal(nrow(bls_rows), 3L)
   expect_true(all(bls_rows$evidence_quality == "high"))
+
+  # The real AMA/MLM malpractice row exists, is cited, and is explicit
+  # about its real limitation (a 7-state data-availability sample, not a
+  # national random sample).
+  malpractice_row <- dplyr::filter(
+    evidence_tbl, grepl("malpractice", .data$estimand, ignore.case = TRUE)
+  )
+  expect_equal(nrow(malpractice_row), 1L)
+  expect_equal(malpractice_row$evidence_quality, "medium")
+  expect_true(grepl("Medical Liability Monitor", malpractice_row$source, fixed = TRUE))
+  expect_true(grepl("not a national random sample", malpractice_row$use, fixed = TRUE))
 
   # The MedPAC benchmark rows exist, are clearly non-calibrating, and match
   # physician_compensation_benchmarks()'s values exactly.
@@ -414,6 +428,37 @@ test_that("APP compensation is built from real BLS wages and a real BLS load fac
   expected_mean <- mean(c(137300, 141280)) * (1 / 0.704)
   expect_equal(inputs$app_compensation_mean, expected_mean)
   expect_gt(inputs$app_compensation_mean, 145000)  # real cost > the old guess
+})
+
+test_that("malpractice premium is the real median/CV of seven real 2024 OB/GYN state premiums", {
+  inputs <- practice_economics_defaults()
+
+  expect_equal(length(inputs$malpractice_state_premiums_2024), 7L)
+  expect_setequal(
+    names(inputs$malpractice_state_premiums_2024),
+    c(
+      "California", "Connecticut", "Florida", "Illinois", "New Jersey",
+      "New York", "Pennsylvania"
+    )
+  )
+  expect_equal(
+    unname(inputs$malpractice_state_premiums_2024["Florida"]), 243988
+  )
+  expect_equal(
+    unname(inputs$malpractice_state_premiums_2024["California"]), 49804
+  )
+
+  # The derived median/CV are an exact, auditable formula over the real
+  # state values, not re-typed numbers.
+  expected_median <- median(inputs$malpractice_state_premiums_2024)
+  expected_cv <- sd(inputs$malpractice_state_premiums_2024) / expected_median
+  expect_equal(inputs$malpractice_median, expected_median)
+  expect_equal(inputs$malpractice_cv, expected_cv)
+
+  # Real OB/GYN premiums are dramatically higher than the old uncited
+  # $45,000 guess -- this replacement makes the modeled shortfall WORSE,
+  # not better, which is the honest outcome of using real data.
+  expect_gt(inputs$malpractice_median, 100000)
 })
 
 test_that("physician_compensation_benchmarks reads the real MedPAC rows", {
