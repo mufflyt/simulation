@@ -5,12 +5,8 @@
 \title{Normalize ICD diagnosis strings}
 \usage{
 normalize_diagnosis(code)
-
-normalize_diagnosis(code)
 }
 \description{
-Normalize ICD diagnosis strings
-
 Normalize ICD diagnosis strings
 }
 \keyword{internal}

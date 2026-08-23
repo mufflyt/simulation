@@ -41,5 +41,5 @@ Formula:
 demand_visits\link{stratum, year} =
 prevalence\link{stratum} × population\link{stratum, year} × care_seeking_rate
 
-demand_fte\link{year} = sum(demand_visits\link{year}) × fte_fraction / visits_per_fte
+demand_fte\link[lubridate:year]{year} = sum(demand_visits\link[lubridate:year]{year}) × fte_fraction / visits_per_fte
 }

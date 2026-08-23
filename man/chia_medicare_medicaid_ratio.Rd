@@ -21,8 +21,7 @@ connector already established in R/data-chia_casemix_duckdb.R -- nothing
 about CHIA's discharge-level data is vendored into this repo) for the
 Medicare-to-Medicaid share of combined government-payer inpatient
 discharges among female adults, excluding newborn admissions.
-}
-\details{
+
 Like \code{\link[=ahrq_3prd_medicare_medicaid_ratio]{ahrq_3prd_medicare_medicaid_ratio()}}, this is real, cited
 administrative data with real construct limitations: it is Massachusetts-
 only, acute-inpatient-only (URPS practice revenue is mostly office-based),
@@ -33,4 +32,11 @@ function's result is reported only as an independent cross-check value;
 \code{\link[=practice_payer_mix_defaults]{practice_payer_mix_defaults()}} does not use it to adjust the
 NAMCS-derived shares.}
 }
+\seealso{
+Other practice economics:
+\code{\link[=ahrq_3prd_medicare_medicaid_ratio]{ahrq_3prd_medicare_medicaid_ratio()}},
+\code{\link[=namcs_urps_payer_mix]{namcs_urps_payer_mix()}},
+\code{\link[=practice_payer_mix_defaults]{practice_payer_mix_defaults()}}
+}
+\concept{practice economics}
 \concept{supply}

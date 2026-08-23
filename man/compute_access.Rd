@@ -10,7 +10,7 @@ compute_access(
   demand,
   method = c("E2SFCA", "M2SFCA"),
   weights = E2SFCA_DEFAULT_WEIGHTS,
-  per_capita_scale = 1e+05
+  per_capita_scale = 100000
 )
 }
 \arguments{

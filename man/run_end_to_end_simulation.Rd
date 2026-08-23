@@ -31,6 +31,9 @@ run_end_to_end_simulation(
   run_practice_economics = FALSE,
   practice_payer_mix = NULL,
   practice_economics_draws = 100L,
+  service_share_engine = c("legacy_matrix", "calibrated"),
+  service_share_bundle = NULL,
+  service_share_draw = NULL,
   seed = 20260821L,
   save_outputs = TRUE,
   output_dir = "artifacts/end_to_end"

@@ -8,7 +8,7 @@ predictive_log_score(
   draws,
   observed,
   method = c("kernel", "gaussian"),
-  density_floor = 1e-12
+  density_floor = 0.000000000001
 )
 }
 \description{

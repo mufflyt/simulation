@@ -5,12 +5,8 @@
 \title{Validate required columns}
 \usage{
 validate_columns(table, required_columns, table_name)
-
-validate_columns(table, required_columns, table_name)
 }
 \description{
-Validate required columns
-
 Validate required columns
 }
 \keyword{internal}

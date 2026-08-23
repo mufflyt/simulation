@@ -4,12 +4,14 @@
 \alias{resolve_service_volumes}
 \title{Resolve service volumes using calibrated claims file or fallback}
 \usage{
-resolve_service_volumes(demand_long, path = NULL)
+resolve_service_volumes(demand_long, path = NULL, mode = NULL)
 }
 \arguments{
 \item{demand_long}{Demand table.}
 
 \item{path}{Path to claims service volume CSV file.}
+
+\item{mode}{Reserved compatibility argument.}
 }
 \value{
 Table of service volumes.
