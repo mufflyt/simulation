@@ -57,7 +57,8 @@ test_that("CMS accounting identity is validated independently", {
   cms$service_bounds$M <- 39
   expect_error(
     validate_cms_service_share_accounting(cms),
-    "T = U + O + N + M"
+    "T = U + O + N + M",
+    fixed = TRUE
   )
 })
 
