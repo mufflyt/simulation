@@ -1,0 +1,27 @@
+ACS 2023 5-Year — female population by age, by state (vendored extract)
+Generated: 2026-08-23
+Survey: acs5 | Year: 2023 | Table: B01001 | Variables: B01001_026..049 (female)
+Rows: 1,248 | States: 52 (50 + DC + PR)
+Total female 55+ (B01001_041..049): 53,176,352
+md5: e08e0078e75b1f4f571c2df087412a47
+
+WHY THIS CSV EXISTS ALONGSIDE THE .rds, AND WHY IT LIVES IN inst/extdata
+data-raw/ is .Rbuildignore'd and *.rds is .gitignore'd -- the latter is a
+deliberate PHI/DUA control the nightly leak-guard job asserts is still in
+place. So the .rds produced by scripts/data_acquisition/02_download_acs.R
+can never reach CI, and every test touching
+national_older_female_population_by_state() errored there. This CSV carries
+the identical columns (GEOID, NAME, variable, estimate, moe) and is read as
+a fallback when the .rds is absent. It is a published Census SUMMARY table,
+not microdata: no individual records, no DUA.
+
+Regenerate: scripts/data_acquisition/02_download_acs.R writes the .rds;
+national_older_female_population_by_state() reads either.
+API key: https://api.census.gov/data/key_signup.html | DUA required: NO
+
+LOCATION. This file ships in inst/extdata, not in data-raw beside the
+acquisition script. data-raw/ is .Rbuildignore'd, so anything under it is
+absent from the installed package -- which is exactly what R CMD check runs
+its tests against. A vendored fallback placed there is unreachable in the one
+environment it exists to serve; it passes under pkgload::load_all() from the
+repo root and fails the moment the package is checked properly.

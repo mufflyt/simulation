@@ -1,0 +1,48 @@
+NAMCS URPS payer mix — derived 4-row aggregate (vendored)
+Generated: 2026-08-23
+Source: National Ambulatory Medical Care Survey Public Use File, NCHS/CDC
+Files:  pooled 2015, 2016, 2018, 2019 (2017 is absent from the CDC FTP)
+Pooled visits parsed: 59,700 (matches load_namcs_pooled()'s documented count)
+Weight: PATWT | Population: female, age 18+, URPS-flagged diagnosis
+md5: 16b0e8331bbf23dd3473ebf20d23aeb3
+
+Upstream SHA-256 of the CDC source archives:
+  namcs2015.zip  228e1e198d8b276f75fab539ec58a951f2fa550cd66e73d5d9f2eb5a0f7facce
+  namcs2016.zip  175d6e7a44d27edd007a70a3e2e754111df02e5411243a96acf35fb336d7fb80
+  namcs2018.zip  cff9bce0f1c6274a9c66622173e70c68128466e8d66656667dfd4d959eb6f59a
+  namcs2019.zip  2c0a3ea0ce1e50564b1b43f2aace9cf31e026b41d274b3222920ec6e14df7397
+
+ftp.cdc.gov now serves a certificate chaining to an Entrust root that current
+CA bundles distrust, so the archives could not be fetched over a verifying
+TLS chain. Integrity was established instead by content: the 2019 archive
+extracts to a file byte-identical (sha256
+2516b2b2ea679be52d012352deed74d00047f4fa2c0a8086872296cacbcd478b) to
+data-raw/nhamcs/namcs2019, which has been committed to this repository since
+2026-08-04. Re-verify that equality before trusting a re-download.
+
+WHY THIS CSV EXISTS, AND WHY IT LIVES IN inst/extdata
+This is the output of namcs_urps_payer_mix() -- an AGGREGATE of four payer
+tiers, never microdata. The pooled .rds it derives from is ~2 MB and cannot
+be committed (*.rds is .gitignore'd as a PHI/DUA control asserted by the
+nightly leak-guard job), and data-raw/ is .Rbuildignore'd, so CI has no way
+to reach the microdata. namcs_urps_payer_mix() falls back to this file when
+the pooled .rds is absent, which keeps the 13 practice-economics and
+end-to-end tests running against the real cited shares instead of erroring.
+
+Reproduces three properties documented independently elsewhere in the repo:
+  - Medicare:Medicaid within the government bucket = 92.3% : 7.7%
+    (R/supply-practice_payer_mix.R header says "~92%/8%")
+  - Uninsured rests on a single unweighted record, below NAMCS_MIN_RECORDS
+    (= 30), so reliable = FALSE (asserted in test-practice-payer-mix.R)
+  - shares sum to exactly 1 after dropping the 'Other' tier
+
+Regenerate: Rscript data-raw/namcs/02-namcs_multiyear_acquire.R, then
+  namcs_urps_payer_mix() |> readr::write_csv("inst/extdata/namcs_urps_payer_mix.csv")
+DUA required: NO (NCHS public-use file)
+
+LOCATION. This file ships in inst/extdata, not in data-raw beside the
+acquisition script. data-raw/ is .Rbuildignore'd, so anything under it is
+absent from the installed package -- which is exactly what R CMD check runs
+its tests against. A vendored fallback placed there is unreachable in the one
+environment it exists to serve; it passes under pkgload::load_all() from the
+repo root and fails the moment the package is checked properly.

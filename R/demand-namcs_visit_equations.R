@@ -171,6 +171,31 @@ load_namcs_2019 <- function(path = "data-raw/namcs/namcs2019_clean.rds") {
 
 # ---- Visit filtering --------------------------------------------------------
 
+# Resolve the pooled NAMCS path against the source root. The result is the
+# path that SHOULD hold the file; it may not exist, and the caller decides
+# what that means.
+#
+# Split out of load_namcs_pooled() so that callers which can DEGRADE when the
+# microdata is absent (namcs_urps_payer_mix(), which falls back to a vendored
+# aggregate) can ask "is it there?" without catching an error to find out.
+# Catching would have conflated "absent" -- routine, and true in CI by
+# construction -- with "present but unreadable", which is a real fault that
+# must stay loud.
+#
+# DEFINED ABOVE load_namcs_pooled()'s roxygen block ON PURPOSE. Sitting between
+# that block and its function made roxygen bind the block -- @export included --
+# to THIS function instead: load_namcs_pooled() silently lost its export and an
+# internal dot-function gained one. A plain # comment does not break the
+# association; only distance does.
+.namcs_pooled_path <- function(path = "data-raw/namcs/namcs_pooled_2015_2019.rds") {
+  if (!file.exists(path)) {
+    # See load_namcs_2019()'s comment on the same fallback.
+    root <- .repo_source_root()
+    if (!is.na(root)) path <- file.path(root, path)
+  }
+  path
+}
+
 #' Load the cleaned pooled NAMCS file (2015, 2016, 2018, 2019)
 #'
 #' Reads the RDS produced by `data-raw/namcs/02-namcs_multiyear_acquire.R`.
@@ -180,12 +205,9 @@ load_namcs_2019 <- function(path = "data-raw/namcs/namcs2019_clean.rds") {
 #' @param path Path to the pooled RDS file.
 #' @return Tibble with 59,700 rows (4 years combined).
 #' @export
+
 load_namcs_pooled <- function(path = "data-raw/namcs/namcs_pooled_2015_2019.rds") {
-  if (!file.exists(path)) {
-    # See load_namcs_2019()'s comment on the same fallback.
-    root <- .repo_source_root()
-    if (!is.na(root)) path <- file.path(root, path)
-  }
+  path <- .namcs_pooled_path(path)
   if (!file.exists(path)) {
     stop(
       "NAMCS pooled file not found at '", path, "'.\n",
