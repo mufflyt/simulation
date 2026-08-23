@@ -18,8 +18,7 @@ employed, academic, and safety-net practices have materially different
 nonphysician cost structures, but this repository has no sourced,
 setting-specific overhead data yet -- building setting-specific
 DISTRIBUTIONS from nothing would just be a more elaborate guess.
-}
-\details{
+
 This function exists so \code{\link[=simulate_practice_economics]{simulate_practice_economics()}} has a real
 plumbing point for that data once it is sourced (real
 MGMA/AMGA-style practice-cost benchmarks by setting), without silently

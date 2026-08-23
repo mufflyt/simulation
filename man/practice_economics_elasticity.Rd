@@ -24,7 +24,17 @@ practice_economics_elasticity(
 differences reflect the perturbation, not draw noise).}
 
 \item{pct_perturbation}{Symmetric perturbation fraction for the \code{pct10}
-scheme (default \code{0.10}).}
+scheme (default \code{0.10}).
+
+\code{elasticity_low}/\code{elasticity_high} are not forced to be equal, even for
+an input (like \code{overhead}) that enters the cost formula linearly: the
+same \code{seed} is reused across scenarios so differences reflect the
+perturbation rather than fresh draw noise, but pinning one input to a
+fixed value changes how many random draws the OTHER stochastic inputs
+consume from the same seeded stream, so a few-percent low/high asymmetry
+on an otherwise-linear input is expected Monte Carlo artifact, not a
+sign of real nonlinearity -- a large asymmetry (multiples, not a few
+percent) is the signal worth investigating.}
 }
 \value{
 Tibble: \code{input_name}, \code{perturbation_type} (\code{"pct10"}/\code{"p25_p75"}),
@@ -39,10 +49,9 @@ scale, since a bigger counterfactual shift on one input isn't the same
 claim as a bigger underlying sensitivity. This function reports the
 standard elasticity, \verb{(pct change in physician_compensation_capacity) / (pct change in the input)}, for the model's continuous, distributionally-
 declared inputs only.
-}
-\details{
+
 \code{payer_mix} is excluded: it is compositional (four shares summing to 1,
-not a single scalar that moves by "+-10\%"). \code{annual_wrvu}/\code{app_fte} are
+not a single scalar that moves by "+-10\\%"). \code{annual_wrvu}/\code{app_fte} are
 excluded too: they are \code{practice_tbl} fields with no uncertainty
 distribution declared for them in this model -- see
 \code{\link[=practice_economics_sensitivity_decomposition]{practice_economics_sensitivity_decomposition()}}'s \code{wrvu_productivity}/
@@ -67,15 +76,5 @@ Elasticity on a near-zero or sign-changing baseline
 denominator inflates the ratio, and a perturbation that crosses zero
 makes "percent change" discontinuous) -- \code{unstable_baseline} flags this
 rather than reporting a number that looks precise but isn't.
-
-\code{elasticity_low}/\code{elasticity_high} are not forced to be equal, even for
-an input (like \code{overhead}) that enters the cost formula linearly: the
-same \code{seed} is reused across scenarios so differences reflect the
-perturbation rather than fresh draw noise, but pinning one input to a
-fixed value changes how many random draws the OTHER stochastic inputs
-consume from the same seeded stream, so a few-percent low/high asymmetry
-on an otherwise-linear input is expected Monte Carlo artifact, not a
-sign of real nonlinearity -- a large asymmetry (multiples, not a few
-percent) is the signal worth investigating.
 }
 \concept{economics}
