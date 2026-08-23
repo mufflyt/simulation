@@ -1,4 +1,5 @@
 test_that("draw_compositional_service_shares satisfies strict double-precision simplex equality across 1000 draws", {
+  .skip_unless_cms_service_share_data()
   calib <- calibrate_service_share_model()
   draws <- draw_compositional_service_shares(calibration_model = calib, n_draws = 1000L, seed = 999L)
 
@@ -15,6 +16,7 @@ test_that("draw_compositional_service_shares satisfies strict double-precision s
 })
 
 test_that("calibrate_service_share_model selects monotone optimal prior strength as volume increases", {
+  .skip_unless_cms_service_share_data()
   calib <- calibrate_service_share_model()
   priors <- calib$calibrated_priors
 
@@ -24,6 +26,7 @@ test_that("calibrate_service_share_model selects monotone optimal prior strength
 })
 
 test_that("combine_service_share_evidence applies disagreement penalty proportional to bound width H - L", {
+  .skip_unless_cms_service_share_data()
   synth <- combine_service_share_evidence()
 
   expect_true(all(synth$disagreement_penalty >= 0.05))

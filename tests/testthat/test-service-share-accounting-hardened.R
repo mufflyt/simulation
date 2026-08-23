@@ -1,4 +1,5 @@
 test_that("allocate_urps_service_workload enforces total service volume conservation across 100 random allocations", {
+  .skip_unless_cms_service_share_data()
   service_registry <- build_urogynecology_service_registry()
   taxonomy_registry <- build_urogynecology_provider_taxonomy_registry()
   share_draws <- draw_compositional_service_shares(n_draws = 10L, seed = 123L)
@@ -30,6 +31,7 @@ test_that("allocate_urps_service_workload enforces total service volume conserva
 })
 
 test_that("allocate_urps_service_workload assigns zero wRVU to inactive or retired providers", {
+  .skip_unless_cms_service_share_data()
   service_demand <- tibble::tibble(
     service = "Midurethral sling",
     condition = "Pelvic Floor Disorder",

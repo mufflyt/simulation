@@ -21,18 +21,18 @@ calibrate_service_share_model <- function(
   base::message("Calibrating service share model via empirical Bayes log score optimization.")
 
   if (base::is.null(cms_evidence)) {
-    cms_evidence <- build_cms_service_share_evidence()
+    cms_evidence <- default_cms_service_share_evidence()
   }
   if (base::is.null(chia_evidence)) {
     chia_evidence <- build_chia_service_share_evidence()
   }
 
-  service_shares <- cms_evidence$service_shares
+  service_shares <- cms_evidence$service_bounds
 
   calibrated_priors <- service_shares |>
     dplyr::group_by(.data$service) |>
     dplyr::summarise(
-      observed_total = base::sum(.data$T_total_services, na.rm = TRUE),
+      observed_total = base::sum(.data$T_s, na.rm = TRUE),
       optimal_alpha_strength = candidate_priors[base::which.min(base::abs(candidate_priors - base::sqrt(.data$observed_total)))],
       .groups = "drop"
     )
@@ -106,11 +106,16 @@ draw_compositional_service_shares <- function(
 combine_service_share_evidence <- function(
     cms_evidence = NULL,
     chia_evidence = NULL) {
-  if (base::is.null(cms_evidence)) cms_evidence <- build_cms_service_share_evidence()
+  if (base::is.null(cms_evidence)) cms_evidence <- default_cms_service_share_evidence()
   if (base::is.null(chia_evidence)) chia_evidence <- build_chia_service_share_evidence()
 
-  cms_tbl <- cms_evidence$service_shares |>
-    dplyr::select("service", "L_lower_bound", "H_upper_bound", "midpoint_share")
+  cms_tbl <- cms_evidence$service_bounds |>
+    dplyr::transmute(
+      .data$service,
+      L_lower_bound = .data$lower_bound,
+      H_upper_bound = .data$upper_bound,
+      midpoint_share = (.data$lower_bound + .data$upper_bound) / 2
+    )
 
   chia_tbl <- chia_evidence$setting_shares |>
     dplyr::group_by(.data$service) |>

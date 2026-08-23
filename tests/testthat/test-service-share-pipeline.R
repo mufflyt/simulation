@@ -1,8 +1,9 @@
 test_that("service share pipeline runs end to end cleanly", {
+  .skip_unless_cms_service_share_data()
   service_registry <- build_urogynecology_service_registry()
   taxonomy_registry <- build_urogynecology_provider_taxonomy_registry()
 
-  cms_evidence <- build_cms_service_share_evidence(service_registry = service_registry, taxonomy_registry = taxonomy_registry)
+  cms_evidence <- default_cms_service_share_evidence()
   chia_evidence <- build_chia_service_share_evidence(service_registry = service_registry, taxonomy_registry = taxonomy_registry)
 
   calib <- calibrate_service_share_model(cms_evidence = cms_evidence, chia_evidence = chia_evidence)

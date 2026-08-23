@@ -69,6 +69,137 @@
 }
 
 
+#' Paths to the real CMS service-share inputs, honoring env-var overrides
+#'
+#' The single source of truth for where
+#' [build_cms_service_share_evidence()]'s default inputs live on disk.
+#' Extracted from `scripts/calibration/build_cms_urogynecology_service_share_evidence.R`
+#' (which used to be the only place these paths were written down) so that
+#' [default_cms_service_share_evidence()] and the script stay in sync instead
+#' of drifting the way the same path list drifted across the old claim-line
+#' test fixtures once this function moved to real CMS PUF inputs.
+#'
+#' @return Named character vector of file paths: `provider_service`,
+#'   `geography_service`, `roster`, `provider_type_map`.
+#' @keywords internal
+.cms_service_share_input_paths <- function() {
+  base::c(
+    provider_service = Sys.getenv(
+      "URPS_CMS_PROVIDER_SERVICE",
+      file.path("data-raw", "cms_psps", "PHY_R26_P05_V10_D24_Prov_Svc.csv")
+    ),
+    geography_service = Sys.getenv(
+      "URPS_CMS_GEOGRAPHY_SERVICE",
+      file.path("data-raw", "cms_psps", "MUP_PHY_R26_P05_V10_D24_Geo.csv")
+    ),
+    roster = Sys.getenv(
+      "URPS_LINKAGE_ROSTER_2024",
+      file.path("data-raw", "urps_roster", "urps_linkage_roster_2024.csv")
+    ),
+    provider_type_map = Sys.getenv(
+      "URPS_CMS_PROVIDER_TYPE_MAP",
+      file.path("scripts", "validation", "mappings", "cms_provider_type_class.csv")
+    )
+  )
+}
+
+
+#' Build CMS service-share evidence from the real default inputs on disk
+#'
+#' [calibrate_service_share_model()]'s `cms_evidence = NULL` fallback used to
+#' call [build_cms_service_share_evidence()] with zero arguments, which can
+#' never succeed -- that function is deliberately fail-closed with no default
+#' data (real Medicare data or nothing, never a silent placeholder). This is
+#' the loading step the standalone calibration script always had; factored out
+#' here so the library function's default path actually does what its own
+#' `cms_evidence = NULL` signature implies, and fails with a clear "which
+#' file is missing" message instead of a confusing multi-frame stack trace
+#' from deep inside `.cms_require_columns()`.
+#'
+#' Does NOT verify the frozen roster SHA-256 the standalone script checks --
+#' that is a publication-provenance guard, not a precondition for the
+#' function to run, and duplicating it here would be a second copy of the
+#' pin to drift out of sync with the script's.
+#'
+#' @return Same shape as [build_cms_service_share_evidence()].
+#' @keywords internal
+default_cms_service_share_evidence <- function() {
+  paths <- .cms_service_share_input_paths()
+  missing <- paths[!base::file.exists(paths)]
+  if (base::length(missing) > 0L) {
+    base::stop(
+      "No cms_evidence supplied and the real default CMS service-share ",
+      "input(s) are not present:\n  ",
+      base::paste(base::names(missing), "->", missing, collapse = "\n  "),
+      "\nSupply cms_evidence explicitly, or place the real files at the ",
+      "path(s) above (or point URPS_CMS_PROVIDER_SERVICE / ",
+      "URPS_CMS_GEOGRAPHY_SERVICE / URPS_LINKAGE_ROSTER_2024 / ",
+      "URPS_CMS_PROVIDER_TYPE_MAP at them).",
+      call. = FALSE
+    )
+  }
+
+  registry <- urogynecology_service_share_registry()
+  hcpcs_keep <- registry$hcpcs
+
+  provider_service <- readr::read_csv(
+    paths[["provider_service"]],
+    col_select = dplyr::all_of(base::c(
+      "Rndrng_NPI", "Rndrng_Prvdr_Type", "HCPCS_Cd", "Tot_Srvcs"
+    )),
+    show_col_types = FALSE,
+    progress = FALSE
+  ) |>
+    dplyr::filter(.data$HCPCS_Cd %in% hcpcs_keep)
+
+  geography_service <- readr::read_csv(
+    paths[["geography_service"]],
+    col_select = dplyr::all_of(base::c(
+      "Rndrng_Prvdr_Geo_Lvl", "HCPCS_Cd", "Tot_Srvcs"
+    )),
+    show_col_types = FALSE,
+    progress = FALSE
+  ) |>
+    dplyr::filter(
+      .data$Rndrng_Prvdr_Geo_Lvl == "National",
+      .data$HCPCS_Cd %in% hcpcs_keep
+    )
+
+  roster <- readr::read_csv(
+    paths[["roster"]],
+    show_col_types = FALSE,
+    progress = FALSE
+  )
+  if (!"npi" %in% base::names(roster)) {
+    npi_candidate <- base::intersect(
+      base::names(roster),
+      base::c("NPI", "rendering_npi", "Rndrng_NPI")
+    )
+    if (base::length(npi_candidate) != 1L) {
+      base::stop("Linkage roster must contain an `npi` column.", call. = FALSE)
+    }
+    roster <- roster |>
+      dplyr::rename(npi = dplyr::all_of(npi_candidate[[1L]]))
+  }
+
+  provider_type_map <- readr::read_csv(
+    paths[["provider_type_map"]],
+    comment = "#",
+    show_col_types = FALSE,
+    progress = FALSE
+  )
+
+  build_cms_service_share_evidence(
+    provider_service = provider_service,
+    geography_service = geography_service,
+    roster = roster,
+    provider_type_map = provider_type_map,
+    service_registry = registry,
+    workload = urps_service_workload()
+  )
+}
+
+
 #' Build CMS partial-identification evidence for URPS service shares
 #'
 #' Reproduces the frozen 2024 Medicare FFS estimand in

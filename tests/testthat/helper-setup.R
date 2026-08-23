@@ -78,3 +78,27 @@ valid_pathway <- function(pathway = condition_service_pathway()) {
   pathway$per_entering[pathway$service == "new_consultation"] <- 0.25
   pathway
 }
+
+# ---------------------------------------------------------------------------
+# The default CMS service-share pipeline (calibrate_service_share_model() and
+# everything built on it: combine_service_share_evidence(),
+# draw_compositional_service_shares(), allocate_urps_service_workload(), ...)
+# is deliberately fail-closed: it only runs against the real 2024 CMS
+# Provider-and-Service / Geography PUFs plus a frozen linkage roster, never a
+# silent placeholder. Those raw files are not vendored (they are large real
+# CMS extracts, fetched by scripts/data_acquisition/), so on a checkout that
+# does not have them this whole family of tests has nothing to exercise.
+# Skip with a reason rather than error -- an error here reads as "the
+# calibration pipeline is broken," when the real state is "the machine
+# running this test does not have the 2024 CMS PUFs downloaded."
+.skip_unless_cms_service_share_data <- function() {
+  paths <- urpssim:::.cms_service_share_input_paths()
+  missing <- names(paths)[!file.exists(paths)]
+  skip_if(
+    length(missing) > 0,
+    paste0(
+      "real CMS service-share input(s) not present: ",
+      paste(missing, collapse = ", ")
+    )
+  )
+}
