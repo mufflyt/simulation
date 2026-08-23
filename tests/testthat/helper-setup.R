@@ -78,3 +78,78 @@ valid_pathway <- function(pathway = condition_service_pathway()) {
   pathway$per_entering[pathway$service == "new_consultation"] <- 0.25
   pathway
 }
+
+# ---------------------------------------------------------------------------
+# The default CMS service-share pipeline (calibrate_service_share_model() and
+# everything built on it: combine_service_share_evidence(),
+# draw_compositional_service_shares(), allocate_urps_service_workload(), ...)
+# is deliberately fail-closed: it only runs against the real 2024 CMS
+# Provider-and-Service / Geography PUFs plus a frozen linkage roster, never a
+# silent placeholder. Those raw files are not vendored (they are large real
+# CMS extracts, fetched by scripts/data_acquisition/), so on a checkout that
+# does not have them this whole family of tests has nothing to exercise.
+# Skip with a reason rather than error -- an error here reads as "the
+# calibration pipeline is broken," when the real state is "the machine
+# running this test does not have the 2024 CMS PUFs downloaded."
+.skip_unless_cms_service_share_data <- function() {
+  paths <- urpssim:::.cms_service_share_input_paths()
+  missing <- names(paths)[!file.exists(paths)]
+  skip_if(
+    length(missing) > 0,
+    paste0(
+      "real CMS service-share input(s) not present: ",
+      paste(missing, collapse = ", ")
+    )
+  )
+}
+
+# run_end_to_end_simulation(..., run_practice_economics = TRUE) calibrates
+# payer mix from namcs_urps_payer_mix(), which fails closed against the
+# real pooled NAMCS RDS (data-raw/namcs/namcs_pooled_2015_2019.rds) rather
+# than a placeholder. That file is *.rds-gitignored (large real survey
+# extract, see data-raw/namcs/02-namcs_multiyear_acquire.R), so it is
+# never present on a fresh CI checkout even though it is vendored locally.
+# testthat::test_file() runs with the working directory set to
+# tests/testthat/, not the repo root (see test-practice-payer-mix.R's
+# .pooled_namcs_path()), so both relative forms must be checked.
+.skip_unless_namcs_pooled_data <- function() {
+  rel <- "data-raw/namcs/namcs_pooled_2015_2019.rds"
+  skip_if_not(
+    file.exists(rel) || file.exists(file.path("..", "..", rel)),
+    paste0("real pooled NAMCS input not present: ", rel)
+  )
+}
+
+# calibrate_service_share_model()'s real API requires an `events` argument
+# (real per-service/condition/year/provider_group compositional event
+# counts) with at least two years per service for its leave-latest-year-out
+# concentration selection. This fixture is synthetic (not real CMS/CHIA
+# data) but schema-valid: two services, two years each, so the held-out
+# cross-validation the function performs has something real to score. Lives
+# here (not in test-calibration-service-shares.R) so it is available
+# regardless of which service-share test file testthat runs first.
+.synthetic_service_share_events <- function() {
+  groups <- provider_routing_groups()
+  tidyr::crossing(
+    service = c("sling_procedure", "pessary_care"),
+    condition = "Pelvic Floor Disorder",
+    year = c(2022L, 2023L),
+    provider_group = groups
+  ) |>
+    dplyr::mutate(
+      service_events = dplyr::case_when(
+        provider_group == "urps" ~ 40,
+        provider_group == "general_obgyn" ~ 30,
+        provider_group == "general_urology" ~ 15,
+        provider_group == "app" ~ 10,
+        TRUE ~ 5
+      )
+    )
+}
+
+# service_share_full_routing_fixture() lives in helper-service-share.R
+# (single source of truth: derives its service list from
+# service_share_required_routing_services() instead of a second hardcoded
+# copy). All helper-*.R files load before any test-*.R file regardless of
+# alphabetical order among the helpers, so test-core-run-end-to-end-
+# service-shares.R and test-core-service-share-engine.R both see it.

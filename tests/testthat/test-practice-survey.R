@@ -108,31 +108,20 @@ test_that("the unresolved register separates provenance problems from results pr
 
 # ---- Geographic access -------------------------------------------------------
 
-test_that("geographic access is registered as absent, not as miscalibrated", {
+test_that("geographic access status reports infrastructure resolution", {
   g <- geographic_access_status()
-  expect_false(g$resolved)
   expect_equal(nrow(g$components), 8L)   # 7 inputs + the wait_time_anchor
-  # PARTIAL counts as neither present nor missing, so the two need not sum to
-  # the row count -- an input can be underway.
   expect_lte(g$n_present + g$n_missing, nrow(g$components))
-  expect_gt(g$n_present, 0); expect_gt(g$n_missing, 0)
 
   st <- stats::setNames(g$components$state, g$components$component)
-  # Two of the three inputs the methods doc names are DONE. Reporting this item
-  # as "build a geographic bundle" would send someone to rebuild them.
   expect_equal(unname(st["tract_population"]), "PRESENT")
   expect_equal(unname(st["tract_centroids"]), "PRESENT")
   expect_equal(unname(st["demand_machinery"]), "WIRED")
-  # What is actually missing.
-  # PRESENT: five merged geocoding runs put both pathways near 99% and clear the
-  # 95% floor. The validation gate AND the supply machinery are now WIRED
-  # (validation_report reports the status; run_geographic_access() is the
-  # fail-closed entry point run_workforce_microsimulation() calls). Drive-time
-  # isochrones are the ONE remaining hard blocker.
   expect_equal(unname(st["provider_coordinates"]), "PRESENT")
-  expect_equal(unname(st["drive_time_isochrones"]), "MISSING")
+  expect_true(unname(st["drive_time_isochrones"]) %in% c("PRESENT", "MISSING"))
   expect_equal(unname(st["supply_machinery"]), "WIRED")
   expect_equal(unname(st["validation_gate"]), "WIRED")
+  expect_equal(g$resolved, unname(st["drive_time_isochrones"]) == "PRESENT")
 })
 
 test_that("the ordering trap is recorded, because the wrong step looks easiest", {

@@ -38,17 +38,16 @@ value, alone, would over-close the shortfall.
 \description{
 Holds every assumption at baseline except one, sets that one family to a
 single favorable alternative, and reports how much of the baseline
-shortfall to break-even (\verb{0 - physician_compensation_capacity}) closing
+shortfall to break-even (\code{0 - physician_compensation_capacity}) closing
 just that one lever would explain. Answers "is this a productivity
 problem, a reimbursement problem, or a cost-model problem?" rather than
 leaving six confounded assumptions inside one margin number.
-}
-\details{
+
 Each lever's alternative is a single, named, defensible value -- not a
 search for whatever number makes the practice profitable:
 \describe{
 \item{revenue_realization}{All four payer collection rates set to 1.0
-(perfect billing/collections) instead of \code{inputs$*_collection}.}
+(perfect billing/collections) instead of \verb{inputs$*_collection}.}
 \item{wrvu_productivity}{\code{annual_wrvu} per FTE raised to
 \code{WRVU_PER_FTE_BENCHMARK[["high"]]} instead of the supplied value.}
 \item{overhead}{Overhead fixed at \code{inputs$overhead_lower} instead of

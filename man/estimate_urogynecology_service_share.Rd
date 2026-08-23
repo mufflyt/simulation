@@ -17,20 +17,6 @@ estimate_urogynecology_service_share(
   unknown_provider = "Unknown / unmapped",
   save_directory = NULL
 )
-
-estimate_urogynecology_service_share(
-  claims,
-  npi_taxonomy,
-  taxonomy_crosswalk = example_taxonomy_crosswalk,
-  service_rules = example_service_rules,
-  condition_rules = example_condition_rules,
-  practice_affiliation = NULL,
-  prior_strength = 20,
-  confidence_level = 0.95,
-  minimum_cell_services = 30L,
-  unknown_provider = "Unknown / unmapped",
-  save_directory = NULL
-)
 }
 \arguments{
 \item{claims}{Claim-line tibble.}
@@ -58,30 +44,14 @@ estimate_urogynecology_service_share(
 \value{
 A named list containing shares, trends, classified claims,
 exclusions, and a dynamic summary sentence.
-
-A named list containing shares, trends, classified claims,
-exclusions, and a dynamic summary sentence.
 }
 \description{
 Estimates
 \deqn{\pi_{scgt}=P(G=g\mid S=s,C=c,T=t)}
 from claim-level rendering NPIs. Sparse cells are stabilized with an
 empirical Dirichlet prior learned separately within each service.
-
-Estimates
-\deqn{\pi_{scgt}=P(G=g\mid S=s,C=c,T=t)}
-from claim-level rendering NPIs. Sparse cells are stabilized with an
-empirical Dirichlet prior learned separately within each service.
 }
 \details{
-Required columns in \code{claims} are \code{claim_id}, \code{service_date},
-\code{rendering_npi}, \code{hcpcs}, and one or more diagnosis columns beginning with
-\code{dx}. Required columns in \code{npi_taxonomy} are \code{rendering_npi} and
-\code{taxonomy_code}. Required columns in \code{taxonomy_crosswalk} are
-\code{taxonomy_code} and \code{provider_type}. Required columns in \code{service_rules}
-are \code{hcpcs} and \code{service}. Required columns in \code{condition_rules} are
-\code{dx_prefix} and \code{condition}.
-
 Required columns in \code{claims} are \code{claim_id}, \code{service_date},
 \code{rendering_npi}, \code{hcpcs}, and one or more diagnosis columns beginning with
 \code{dx}. Required columns in \code{npi_taxonomy} are \code{rendering_npi} and
@@ -97,13 +67,14 @@ Other demand:
 \code{\link[=apply_insurance_mix_demand_multiplier]{apply_insurance_mix_demand_multiplier()}},
 \code{\link[=build_county_synthetic_female_population]{build_county_synthetic_female_population()}},
 \code{\link[=claims_service_volumes]{claims_service_volumes()}},
+\code{\link[=classify_pelvic_floor_condition]{classify_pelvic_floor_condition()}},
+\code{\link[=classify_pelvic_floor_service]{classify_pelvic_floor_service()}},
+\code{\link[=classify_rendering_provider]{classify_rendering_provider()}},
+\code{\link[=collapse_claims_to_service_events]{collapse_claims_to_service_events()}},
 \code{\link[=cpt_setting_mix]{cpt_setting_mix()}},
 \code{\link[=default_pfd_transition_models]{default_pfd_transition_models()}},
 \code{\link[=demand_by_travel_band]{demand_by_travel_band()}},
 \code{\link[=draw_insurance_demand_multipliers]{draw_insurance_demand_multipliers()}},
-\code{\link{example_condition_rules}},
-\code{\link{example_service_rules}},
-\code{\link{example_taxonomy_crosswalk}},
 \code{\link[=generate_obstetric_lifecourse_cohort]{generate_obstetric_lifecourse_cohort()}},
 \code{\link[=geographic_demand_summary]{geographic_demand_summary()}},
 \code{\link[=insurance_demand_multiplier_spec]{insurance_demand_multiplier_spec()}},

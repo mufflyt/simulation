@@ -30,4 +30,11 @@ dropping \code{Other} (worker's comp, other government payers, no-charge/
 charity -- none of which map cleanly onto the four-way split) and
 renormalizing the rest to sum to 1.
 }
+\seealso{
+Other practice economics:
+\code{\link[=ahrq_3prd_medicare_medicaid_ratio]{ahrq_3prd_medicare_medicaid_ratio()}},
+\code{\link[=chia_medicare_medicaid_ratio]{chia_medicare_medicaid_ratio()}},
+\code{\link[=practice_payer_mix_defaults]{practice_payer_mix_defaults()}}
+}
+\concept{practice economics}
 \concept{supply}

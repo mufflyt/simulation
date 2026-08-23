@@ -8,7 +8,7 @@ lifecourse_demand_trajectory_ci(
   pop_by_age_year,
   years = sort(unique(pop_by_age_year$year)),
   scenario = "baseline",
-  n = 1e+05,
+  n = 100000,
   n_draws = 200L,
   probs = c(0.025, 0.5, 0.975),
   seed = NULL,

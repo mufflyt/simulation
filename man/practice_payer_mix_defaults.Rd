@@ -30,4 +30,11 @@ input \code{\link[=simulate_practice_economics]{simulate_practice_economics()}} 
 for comparison only -- see those functions' docstrings for why neither is
 blended in.
 }
+\seealso{
+Other practice economics:
+\code{\link[=ahrq_3prd_medicare_medicaid_ratio]{ahrq_3prd_medicare_medicaid_ratio()}},
+\code{\link[=chia_medicare_medicaid_ratio]{chia_medicare_medicaid_ratio()}},
+\code{\link[=namcs_urps_payer_mix]{namcs_urps_payer_mix()}}
+}
+\concept{practice economics}
 \concept{supply}
