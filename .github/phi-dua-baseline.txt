@@ -15,4 +15,10 @@
 #
 # Draining this backlog means routing those paths through R/core-paths.R
 # (config/paths.yml) instead of hardcoding them.
-high=60
+#
+# 2026-08-23: fell to 55 as a side effect of the CHIA runtime-artifact
+# remediation (removing 480 tracked files under tests/testthat/artifacts/
+# chia_*/ also removed some HIGH absolute-personal-path matches inside them),
+# not a deliberate personal-path fix. Tightened per the scanner's own
+# instruction rather than left stale.
+high=55
