@@ -1,4 +1,5 @@
 test_that("allocate_urps_service_workload passes all critical accounting identities", {
+  .skip_unless_cms_service_share_data()
   service_demand <- tibble::tibble(
     service = c("Midurethral sling", "Pessary fitting"),
     condition = "Pelvic Floor Disorder",

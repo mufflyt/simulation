@@ -1,4 +1,5 @@
 test_that("draw_compositional_service_shares enforces simplex constraints sum(share) == 1", {
+  .skip_unless_cms_service_share_data()
   draws <- draw_compositional_service_shares(n_draws = 20)
 
   expect_s3_class(draws, "tbl_df")
