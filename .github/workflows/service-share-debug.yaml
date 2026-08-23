@@ -1,0 +1,65 @@
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+name: service-share-debug
+
+permissions: read-all
+
+jobs:
+  service-share:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
+      NOT_CRAN: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require the private-dependency token
+        run: |
+          if [ -z "${{ secrets.MUFFLYACCESS_PAT }}" ]; then
+            echo "::error::MUFFLYACCESS_PAT secret is not set."
+            exit 1
+          fi
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::testthat, any::pkgload, any::dplyr, any::tibble, any::tidyr, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4, any::ranger, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          dependencies: '"hard"'
+
+      - name: Run service-share tests with detailed reporter
+        run: |
+          set -o pipefail
+          Rscript - <<'RSCRIPT' 2>&1 | tee service-share-debug.log
+          suppressWarnings(suppressMessages(pkgload::load_all(".", quiet = TRUE)))
+          files <- list.files(
+            "tests/testthat",
+            pattern = "^test-.*service.share.*\\.R$",
+            full.names = TRUE
+          )
+          cat("Service-share test files:\n  ", paste(files, collapse = "\n  "), "\n")
+          failed <- FALSE
+          for (file in files) {
+            cat("\n===== ", file, " =====\n", sep = "")
+            result <- testthat::test_file(file, reporter = "summary")
+            frame <- as.data.frame(result)
+            if (any(frame$failed > 0 | frame$error)) failed <- TRUE
+          }
+          if (failed) quit(status = 1L)
+          RSCRIPT
+
+      - name: Upload detailed service-share log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-share-debug-log
+          path: service-share-debug.log
+          if-no-files-found: error
