@@ -189,8 +189,10 @@ run_one_sbc_replicate <- function(replicate_id, replicate_seed,
       calibration <- calibrator_adapter(targets, calibration_seed)
       validate_calibration_result(calibration, parameter_names)
       ensemble <- tibble::as_tibble(calibration$ensemble)
-      weights <- calibration$weights %||%
+      weights <- rlang::`%||%`(
+        calibration$weights,
         base::rep(1 / base::nrow(ensemble), base::nrow(ensemble))
+      )
       rank_kind <- if (base::is.null(calibration$weights)) {
         "history_matching_diagnostic"
       } else {
@@ -243,10 +245,6 @@ run_one_sbc_replicate <- function(replicate_id, replicate_seed,
       )
     }
   )
-}
-
-`%||%` <- function(left, right) {
-  if (base::is.null(left)) right else left
 }
 
 require_sbc_columns <- function(table, columns, label) {

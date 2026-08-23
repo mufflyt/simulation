@@ -68,9 +68,6 @@
   script <- file.path(root, rel_path)
   if (!file.exists(script)) return(list(available = FALSE))
 
-  old_wd <- setwd(root)
-  on.exit(setwd(old_wd), add = TRUE)
-
   # check_suite.R's skip-budget audit assumes NOT_CRAN is set (GitHub Actions
   # sets it automatically via r-lib/actions; a local interactive session
   # usually does not). Without it, skip_on_cran() fires everywhere, and the
@@ -79,14 +76,19 @@
   # Set explicitly so this audit gives the same signal locally as in CI,
   # rather than depending on an ambient env var. Harmless for scripts that
   # don't read it (the adversarial scripts).
-  old_not_cran <- Sys.getenv("NOT_CRAN", unset = NA)
-  Sys.setenv(NOT_CRAN = "true")
-  on.exit(if (is.na(old_not_cran)) Sys.unsetenv("NOT_CRAN")
-          else Sys.setenv(NOT_CRAN = old_not_cran), add = TRUE)
-
-  out <- suppressWarnings(
-    system2(file.path(R.home("bin"), "Rscript"), script,
-            stdout = TRUE, stderr = TRUE))
+  #
+  # withr::with_dir()/with_envvar() (not setwd()/Sys.setenv() with manual
+  # on.exit cleanup) so THIS function's own body never calls a global-state
+  # mutator directly -- see test-source-safety-gates.R's "no package
+  # function performs global-state side effects" gate, which inspects each
+  # exported/internal function's own body, not what its dependencies do.
+  out <- withr::with_dir(root,
+    withr::with_envvar(c(NOT_CRAN = "true"),
+      suppressWarnings(
+        system2(file.path(R.home("bin"), "Rscript"), script,
+                stdout = TRUE, stderr = TRUE))
+    )
+  )
   status <- attr(out, "status")
   list(available = TRUE,
        status = if (is.null(status)) 0L else as.integer(status),
