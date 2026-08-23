@@ -7,7 +7,7 @@
 allocate_urps_service_workload(
   service_demand,
   provider_cohort,
-  share_draws = NULL,
+  share_draws,
   rvu_table = CMS_WORK_RVU
 )
 }
@@ -16,7 +16,10 @@ allocate_urps_service_workload(
 
 \item{provider_cohort}{Tibble of active providers (\code{rendering_npi}, \code{is_active}, \code{provider_type}).}
 
-\item{share_draws}{Compositional share draws from \code{\link[=draw_compositional_service_shares]{draw_compositional_service_shares()}}.}
+\item{share_draws}{Compositional share draws from \code{\link[=draw_service_share_composition]{draw_service_share_composition()}}.
+Required -- generating a default draw here would need
+calibrate_service_share_model()'s real \code{events} argument, which this
+function has no source for.}
 
 \item{rvu_table}{Work RVU lookup table. Defaults to \code{CMS_WORK_RVU}.}
 }

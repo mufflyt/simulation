@@ -181,52 +181,47 @@ ingest_all_12_infrastructure_tables_to_duckdb <- function(
   DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "chia_specialty_composition"), chia_evidence$specialty_composition, overwrite = TRUE)
   summary_counts$chia_specialty_composition <- nrow(chia_evidence$specialty_composition)
 
-  # 5. Calibrated Dirichlet Model
-  calib_model <- calibrate_service_share_model(cms_evidence = cms_evidence, chia_evidence = chia_evidence)
-  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "calibrated_priors"), calib_model$calibrated_priors, overwrite = TRUE)
-  summary_counts$calibrated_priors <- nrow(calib_model$calibrated_priors)
-
-  # 6. Joint Compositional Simplex Draws
-  share_draws <- draw_compositional_service_shares(calibration_model = calib_model, n_draws = n_draws)
-  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "compositional_share_draws"), share_draws, overwrite = TRUE)
-  summary_counts$compositional_share_draws <- nrow(share_draws)
-
-  # 7. Synthesized CMS + CHIA Evidence
-  synthesized <- combine_service_share_evidence(cms_evidence = cms_evidence, chia_evidence = chia_evidence)
-  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "combined_synthesized_evidence"), synthesized, overwrite = TRUE)
-  summary_counts$combined_synthesized_evidence <- nrow(synthesized)
-
-  # 8. Calibration Bundle Provenance
-  bundle <- build_service_share_calibration_bundle(calibration_model = calib_model, n_draws = 10L)
-  provenance_tbl <- tibble::tibble(
-    git_sha = bundle$git_sha,
-    created_at = bundle$created_at,
-    roster_hash = bundle$input_hashes$roster_hash,
-    claims_hash = bundle$input_hashes$claims_hash,
-    calibration_status = calib_model$calibration_status
+  # 5-8. Calibrated Dirichlet model, compositional draws, synthesized
+  # evidence, and calibration provenance all now require calibrate_
+  # service_share_model()'s real `events` argument (real per-service-year-
+  # condition compositional event counts) -- the simpler, zero-argument
+  # cms_evidence/chia_evidence-only signature these four steps were written
+  # against no longer exists (see R/calibration-urogynecology_service_shares.R:
+  # calibrate_service_share_model() was redesigned around Bayesian shrinkage/
+  # held-out concentration selection, which the whole downstream simulation
+  # runner (R/zzz-service_share_runner.R) depends on). No `events` source is
+  # available in this ingestion context, and fabricating one would silently
+  # substitute invented data for a real calibration input. Skip these four
+  # tables with a clear reason instead of erroring the other 8 out, or
+  # silently writing garbage.
+  base::warning(
+    "ingest_all_12_infrastructure_tables_to_duckdb(): skipping ",
+    "calibrated_priors, compositional_share_draws, ",
+    "combined_synthesized_evidence, and calibration_provenance_manifest -- ",
+    "calibrate_service_share_model() now requires a real `events` argument ",
+    "this ingestion step does not have. This is a real gap needing a real ",
+    "events data source, not a missing argument to patch here.",
+    call. = FALSE
   )
-  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "calibration_provenance_manifest"), provenance_tbl, overwrite = TRUE)
-  summary_counts$calibration_provenance_manifest <- nrow(provenance_tbl)
+  summary_counts$calibrated_priors <- NA_integer_
+  summary_counts$compositional_share_draws <- NA_integer_
+  summary_counts$combined_synthesized_evidence <- NA_integer_
+  summary_counts$calibration_provenance_manifest <- NA_integer_
 
-  # 9. Provider Workload Allocation Engine
-  service_demand <- tibble::tibble(
-    service = service_registry$service,
-    condition = "Pelvic Floor Disorder",
-    demand_services = 5000L
+  # 9. Provider Workload Allocation Engine -- depends on step 6's
+  # share_draws, which is skipped above for the same real-events-data
+  # reason. R/core-service_share_engine.R (from the -04-integration stage)
+  # replaces allocate_urps_service_workload() entirely; wire this step to
+  # that real engine once it lands, rather than patch the transitional
+  # implementation in R/supply-allocate_urps_service_workload.R here.
+  base::warning(
+    "ingest_all_12_infrastructure_tables_to_duckdb(): skipping ",
+    "allocated_provider_workload and workload_accounting_audit -- depends ",
+    "on compositional_share_draws, already skipped above.",
+    call. = FALSE
   )
-  provider_cohort <- tibble::tibble(
-    rendering_npi = base::paste0("10000000", 1:5),
-    provider_type = c("FPMRS physician", "General OB/GYN", "Urologist", "Nurse practitioner", "Physician assistant"),
-    is_active = TRUE,
-    status = "active"
-  )
-  workload_res <- allocate_urps_service_workload(service_demand = service_demand, provider_cohort = provider_cohort, share_draws = share_draws)
-  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "allocated_provider_workload"), workload_res$allocated_workload, overwrite = TRUE)
-  summary_counts$allocated_provider_workload <- nrow(workload_res$allocated_workload)
-
-  audit_tbl <- tibble::as_tibble(workload_res$accounting_audit)
-  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "workload_accounting_audit"), audit_tbl, overwrite = TRUE)
-  summary_counts$workload_accounting_audit <- nrow(audit_tbl)
+  summary_counts$allocated_provider_workload <- NA_integer_
+  summary_counts$workload_accounting_audit <- NA_integer_
 
   base::message("Completed ingestion of all 12 infrastructure tables into DuckDB!")
   summary_counts

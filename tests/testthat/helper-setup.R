@@ -102,3 +102,30 @@ valid_pathway <- function(pathway = condition_service_pathway()) {
     )
   )
 }
+
+# calibrate_service_share_model()'s real API requires an `events` argument
+# (real per-service/condition/year/provider_group compositional event
+# counts) with at least two years per service for its leave-latest-year-out
+# concentration selection. This fixture is synthetic (not real CMS/CHIA
+# data) but schema-valid: two services, two years each, so the held-out
+# cross-validation the function performs has something real to score. Lives
+# here (not in test-calibration-service-shares.R) so it is available
+# regardless of which service-share test file testthat runs first.
+.synthetic_service_share_events <- function() {
+  groups <- provider_routing_groups()
+  tidyr::crossing(
+    service = c("sling_procedure", "pessary_care"),
+    condition = "Pelvic Floor Disorder",
+    year = c(2022L, 2023L),
+    provider_group = groups
+  ) |>
+    dplyr::mutate(
+      service_events = dplyr::case_when(
+        provider_group == "urps" ~ 40,
+        provider_group == "general_obgyn" ~ 30,
+        provider_group == "general_urology" ~ 15,
+        provider_group == "app" ~ 10,
+        TRUE ~ 5
+      )
+    )
+}
