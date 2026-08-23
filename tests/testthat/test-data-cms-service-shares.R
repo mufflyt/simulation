@@ -23,6 +23,38 @@ test_that("build_cms_service_share_evidence calculates valid suppression bounds 
   expect_type(res$provenance$provider_service_sha256, "character")
 })
 
+testthat::test_that(
+  "CMS frozen source checker rejects SHA-256 drift",
+  {
+    source_path <- base::tempfile(fileext = ".csv")
+    config_path <- base::tempfile(fileext = ".yml")
+    base::writeLines("not the frozen CMS source", source_path)
+    yaml::write_yaml(
+      base::list(
+        sources = base::list(
+          cms_test_source = base::list(
+            path = source_path,
+            sha256 = base::paste(base::rep("0", 64L), collapse = "")
+          )
+        )
+      ),
+      config_path
+    )
+    base::on.exit(base::unlink(source_path), add = TRUE)
+    base::on.exit(base::unlink(config_path), add = TRUE)
+
+    testthat::expect_error(
+      .cms_verify_canonical_sha256(
+        source_path,
+        "cms_test_source",
+        config_path = config_path
+      ),
+      "SHA-256 mismatch",
+      fixed = TRUE
+    )
+  }
+)
+
 test_that("wRVU weighted shares sum to 1 within each service", {
   skip(paste(
     "build_cms_service_share_evidence() has no wrvu_shares output.",
