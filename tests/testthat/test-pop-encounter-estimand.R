@@ -9,6 +9,11 @@ test_that("the encounter view deduplicates, and family sums would not", {
   skip_if(!file.exists(.db), "CHIA case-mix database not attached")
   con <- DBI::dbConnect(duckdb::duckdb(), .db, read_only = TRUE)
   on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+  
+  has_view <- tryCatch({
+    DBI::dbExistsTable(con, DBI::Id(schema = "chia_casemix", table = "v_pop_encounters"))
+  }, error = function(e) FALSE)
+  skip_if(!has_view, "chia_casemix.v_pop_encounters view not built in DuckDB")
 
   d <- DBI::dbGetQuery(con, "
     SELECT _data_year AS fy, count(*) AS encounters,

@@ -191,7 +191,7 @@ test_that("the local registry version cannot collide with the SSOT version", {
 
 test_that("scenario registries are contract-checked", {
   reg <- local_supply_scenario_registry()
-  no_sq <- reg[setdiff(names(reg), "status_quo")]
+  no_sq <- reg[setdiff(names(reg), c("status_quo", "baseline"))]
   expect_error(validate_scenario_registry(no_sq, "supply"), "reference scenario")
 
   incomplete <- reg
