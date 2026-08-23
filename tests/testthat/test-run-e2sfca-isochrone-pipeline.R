@@ -1,9 +1,9 @@
 # Unit tests for end-to-end E2SFCA real isochrone pipeline (Steps 1 - 4)
 
 .repo_path <- function(...) {
-  p1 <- file.path(...)
-  p2 <- file.path("..", "..", ...)
-  if (file.exists(p1)) p1 else p2
+  root <- .source_tree_root()
+  if (length(root) == 0) root <- ".."
+  file.path(root[1], ...)
 }
 
 test_that("run_e2sfca_isochrone_pipeline.R script exists and has valid syntax", {

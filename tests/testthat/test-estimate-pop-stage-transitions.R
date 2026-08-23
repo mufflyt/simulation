@@ -1,9 +1,9 @@
 # Unit tests for POP-Q stage transition hazards
 
 .repo_path <- function(...) {
-  p1 <- file.path(...)
-  p2 <- file.path("..", "..", ...)
-  if (file.exists(p1)) p1 else p2
+  root <- .source_tree_root()
+  if (length(root) == 0) root <- ".."
+  file.path(root[1], ...)
 }
 
 test_that("estimate_pop_stage_transitions.R script exists and has valid syntax", {

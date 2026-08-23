@@ -1,9 +1,9 @@
 # Unit tests for export_access_surface (spatial access contract exporter)
 
 .repo_path <- function(...) {
-  p1 <- file.path(...)
-  p2 <- file.path("..", "..", ...)
-  if (file.exists(p1)) p1 else p2
+  root <- .source_tree_root()
+  if (length(root) == 0) root <- ".."
+  file.path(root[1], ...)
 }
 
 test_that("export_access_surface requires valid columns and fails closed on unvalidated status", {

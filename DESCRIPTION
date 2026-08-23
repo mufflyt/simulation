@@ -48,6 +48,7 @@ Imports:
     tidyr,
     tools,
     utils,
+    withr,
     yaml
 Suggests:
     DiceKriging,
@@ -57,20 +58,22 @@ Suggests:
     blme,
     covr,
     flexsurv,
+    future.apply,
     lme4,
     ggplot2,
     knitr,
+    lubridate,
     MASS,
     mufflyaccess,
     nhanesA,
     mysterycall,
     pkgload,
     rcmdcheck,
+    readxl,
     rmarkdown,
     rprojroot,
     sf,
     testthat (>= 3.0.0),
-    withr,
     zipcodeR
 Config/testthat/edition: 3
 VignetteBuilder: knitr
