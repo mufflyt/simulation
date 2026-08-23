@@ -564,6 +564,13 @@ build_provider_location_choice_sets <- function(
 #' @concept geography
 #' @export
 fit_provider_location_choice_model <- function(choice_tbl) {
+  if (!requireNamespace("survival", quietly = TRUE)) {
+    base::stop("Package 'survival' is required for provider location choice model fitting.", call. = FALSE)
+  }
+  strata <- survival::strata
+  coxph <- survival::coxph
+  Surv <- survival::Surv
+
   required_cols <- c("choice_id", "chosen", "event_type", "log_unmet_demand_30", "payer_mix_log_ratio", "hospital_system_score", "log_competition_30")
   missing_cols <- base::setdiff(required_cols, base::names(choice_tbl))
 

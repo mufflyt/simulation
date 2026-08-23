@@ -5711,6 +5711,42 @@
       "Author": "Gavin Rozzi [aut, cre] (<https://orcid.org/0000-0002-9969-8175>)",
       "Maintainer": "Gavin Rozzi <gr@gavinrozzi.com>",
       "Repository": "CRAN"
+    },
+    "duckplyr": {
+      "Package": "duckplyr",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "ranger": {
+      "Package": "ranger",
+      "Version": "0.17.0",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "shiny": {
+      "Package": "shiny",
+      "Version": "1.10.0",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "future.apply": {
+      "Package": "future.apply",
+      "Version": "1.11.3",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "readxl": {
+      "Package": "readxl",
+      "Version": "1.4.3",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "lubridate": {
+      "Package": "lubridate",
+      "Version": "1.9.4",
+      "Source": "Repository",
+      "Repository": "CRAN"
     }
   }
 }

@@ -94,6 +94,9 @@ run_end_to_end_simulation <- function(
     run_practice_economics = FALSE,
     practice_payer_mix = NULL,
     practice_economics_draws = 100L,
+    service_share_engine = c("legacy_matrix", "calibrated"),
+    service_share_bundle = NULL,
+    service_share_draw = NULL,
     seed = 20260821L,
     save_outputs = TRUE,
     output_dir = "artifacts/end_to_end") {
@@ -101,6 +104,7 @@ run_end_to_end_simulation <- function(
   geography_engine <- base::match.arg(geography_engine)
   entrant_engine <- base::match.arg(entrant_engine)
   productivity_engine <- base::match.arg(productivity_engine)
+  service_share_engine <- base::match.arg(service_share_engine)
   policy_migration_scenario <- base::match.arg(
     policy_migration_scenario,
     c(

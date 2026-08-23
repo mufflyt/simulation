@@ -5,12 +5,8 @@
 \title{Build a dynamic summary sentence}
 \usage{
 build_share_summary(shares, trends)
-
-build_share_summary(shares, trends)
 }
 \description{
-Build a dynamic summary sentence
-
 Build a dynamic summary sentence
 }
 \keyword{internal}

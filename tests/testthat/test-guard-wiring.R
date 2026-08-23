@@ -37,9 +37,9 @@ test_that("the incident/prevalent invariant REFUSES when every prevalent patient
 })
 
 test_that("pathway_service_volumes() -- the PUBLIC path -- cannot bypass the invariant", {
-  # THE POINT OF THIS FILE. The guard must be unreachable-around, not merely
-  # present. This is also the state the SHIPPED table is in: ratio exactly 1.00.
-  expect_error(pathway_service_volumes(treated = c(pop = 1000), year = 2025L),
+  pw <- condition_service_pathway()
+  pw$per_entering[pw$service == "new_consultation"] <- 1.0
+  expect_error(pathway_service_volumes(treated = c(pop = 1000), year = 2025L, pathway = pw),
                "counted as a NEW patient annually")
 })
 

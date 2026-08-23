@@ -4,7 +4,12 @@
 \alias{nrmp_growth_rates}
 \title{Calculate NRMP URPS Fellowship Growth Rates}
 \usage{
-nrmp_growth_rates()
+nrmp_growth_rates(from = NRMP_PLATEAU_FROM, ...)
+}
+\arguments{
+\item{from}{Start year indicator for growth calculation (defaults to \code{NRMP_PLATEAU_FROM} = 2015L).}
+
+\item{...}{Additional arguments.}
 }
 \value{
 List of growth rate metrics and fill-rate headroom statistics.
@@ -16,6 +21,7 @@ Calculate NRMP URPS Fellowship Growth Rates
 Other supply:
 \code{\link[=acgme_procedural_minimums]{acgme_procedural_minimums()}},
 \code{\link[=acgme_program_requirements]{acgme_program_requirements()}},
+\code{\link[=allocate_urps_service_workload]{allocate_urps_service_workload()}},
 \code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
 \code{\link[=build_cpt_acgme_incidence_matrix]{build_cpt_acgme_incidence_matrix()}},
 \code{\link[=build_empirical_entrant_parameters]{build_empirical_entrant_parameters()}},
