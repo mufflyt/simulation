@@ -35,6 +35,15 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
+          # "Portable" means no secrets required: this job has no
+          # MUFFLYACCESS_PAT, so it cannot resolve mysterycall (a GitHub-only
+          # Suggests deliberately kept out of Remotes -- see
+          # test-repo-hygiene.R's "no function is defined twice" guard
+          # comment above the setup-pandoc-ordering test) or private
+          # mufflyaccess. dependencies: "hard" skips Suggests resolution
+          # entirely instead of failing the whole job on an unreachable one;
+          # tests gated on those packages skip themselves with a reason.
+          dependencies: '"hard"'
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true

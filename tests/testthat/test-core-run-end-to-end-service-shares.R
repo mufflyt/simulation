@@ -75,6 +75,7 @@ test_that("calibrated shares reach workload FTE and provider-year allocation", {
 
 
 test_that("calibrated practice economics receives provider-level URPS wRVU", {
+  .skip_unless_namcs_pooled_data()
   bundle <- service_share_full_routing_fixture()
   result <- suppressWarnings(run_end_to_end_simulation(
     start_year = 2025L,
