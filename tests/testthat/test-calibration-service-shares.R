@@ -1,25 +1,45 @@
-test_that("calibrate_service_share_model fits optimal prior strengths", {
-  .skip_unless_cms_service_share_data()
-  calib <- calibrate_service_share_model()
-  expect_type(calib, "list")
-  expect_true(all(c("calibrated_priors", "cms_evidence", "chia_evidence", "calibration_status") %in% names(calib)))
+test_that("calibrate_service_share_model fits held-out concentrations from real events", {
+  events <- .synthetic_service_share_events()
+  bundle <- calibrate_service_share_model(events, draws = 20L)
 
-  priors <- calib$calibrated_priors
-  expect_s3_class(priors, "tbl_df")
-  expect_true(all(priors$optimal_alpha_strength > 0))
-})
-
-test_that("combine_service_share_evidence synthesizes CMS and CHIA evidence", {
-  .skip_unless_cms_service_share_data()
-  synth <- combine_service_share_evidence()
-  expect_s3_class(synth, "tbl_df")
-  expect_true(all(c("service", "L_lower_bound", "H_upper_bound", "midpoint_share", "disagreement_penalty") %in% names(synth)))
-})
-
-test_that("build_service_share_calibration_bundle creates auditable provenance bundle", {
-  .skip_unless_cms_service_share_data()
-  bundle <- build_service_share_calibration_bundle(n_draws = 10)
   expect_type(bundle, "list")
-  expect_true(all(c("share_draws", "summary", "cms_fit", "chia_fit", "calibration", "evidence_registry", "input_hashes", "created_at") %in% names(bundle)))
-  expect_gt(nrow(bundle$share_draws), 0)
+  expect_true(all(c(
+    "share_draws", "selected_alpha", "holdout_scores",
+    "source_fit", "provenance", "config", "valid"
+  ) %in% names(bundle)))
+  expect_true(bundle$valid)
+  expect_true(all(bundle$selected_alpha$selected_alpha > 0))
+})
+
+test_that("draw_service_share_composition produces a valid compositional simplex", {
+  events <- .synthetic_service_share_events()
+  concentration <- select_service_share_concentration(events)
+  draws <- draw_service_share_composition(
+    events,
+    selected_alpha = concentration$selected,
+    draws = 50L,
+    seed = 20260823L
+  )
+
+  cell_sums <- draws |>
+    dplyr::group_by(.data$draw_id, .data$service, .data$condition, .data$year) |>
+    dplyr::summarise(total_share = sum(.data$share), .groups = "drop")
+
+  expect_true(all(abs(cell_sums$total_share - 1.0) < 1e-8))
+  expect_true(all(draws$share >= 0))
+  expect_true(all(draws$share <= 1))
+})
+
+test_that("calibrate_service_share_model is reproducible given the same seed", {
+  events <- .synthetic_service_share_events()
+  bundle1 <- calibrate_service_share_model(events, draws = 20L, seed = 42L)
+  bundle2 <- calibrate_service_share_model(events, draws = 20L, seed = 42L)
+
+  expect_equal(bundle1$share_draws$share, bundle2$share_draws$share)
+})
+
+test_that("validate_service_share_bundle accepts a real calibrated bundle", {
+  events <- .synthetic_service_share_events()
+  bundle <- calibrate_service_share_model(events, draws = 20L)
+  expect_true(validate_service_share_bundle(bundle))
 })

@@ -11,19 +11,22 @@ Example synthetic target simulator
 }
 \seealso{
 Other calibration:
-\code{\link[=build_service_share_calibration_bundle]{build_service_share_calibration_bundle()}},
 \code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
 \code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
 \code{\link[=calibrate_service_share_model]{calibrate_service_share_model()}},
-\code{\link[=combine_service_share_evidence]{combine_service_share_evidence()}},
 \code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
-\code{\link[=draw_compositional_service_shares]{draw_compositional_service_shares()}},
+\code{\link[=classify_chia_service_share_events]{classify_chia_service_share_events()}},
+\code{\link[=compare_chia_to_cms_service_share_evidence]{compare_chia_to_cms_service_share_evidence()}},
 \code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
 \code{\link[=example_sbc_prior]{example_sbc_prior()}},
 \code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}},
 \code{\link[=generate_synthetic_adequacy_data]{generate_synthetic_adequacy_data()}},
 \code{\link[=make_joint_history_matcher_adapter]{make_joint_history_matcher_adapter()}},
 \code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}},
-\code{\link[=run_joint_history_matcher_sbc]{run_joint_history_matcher_sbc()}}
+\code{\link[=read_chia_service_share_events]{read_chia_service_share_events()}},
+\code{\link[=run_joint_history_matcher_sbc]{run_joint_history_matcher_sbc()}},
+\code{\link[=select_service_share_concentration]{select_service_share_concentration()}},
+\code{\link[=draw_service_share_composition]{draw_service_share_composition()}},
+\code{\link[=validate_service_share_bundle]{validate_service_share_bundle()}}
 }
 \concept{calibration}
