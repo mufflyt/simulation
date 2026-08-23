@@ -75,7 +75,13 @@ test_that("calibrated shares reach workload FTE and provider-year allocation", {
 
 
 test_that("calibrated practice economics receives provider-level URPS wRVU", {
-  .skip_unless_namcs_pooled_data()
+  # No .skip_unless_namcs_pooled_data() here any more. This block CONSUMES a
+  # payer mix rather than testing how one is derived, and namcs_urps_payer_mix()
+  # now falls back to the vendored aggregate when the pooled microdata is out of
+  # reach -- so the precondition the guard protected against no longer exists
+  # and the gate runs in CI instead of going dark. The guard remains correct,
+  # and still applies, for the blocks in test-practice-payer-mix.R that really
+  # are about the derivation itself.
   bundle <- service_share_full_routing_fixture()
   result <- suppressWarnings(run_end_to_end_simulation(
     start_year = 2025L,

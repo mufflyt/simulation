@@ -9,7 +9,10 @@
 #' confirmed against `tidycensus::load_variables(2023, "acs5")` labels, not
 #' assumed from memory of the ACS variable-code scheme.
 #'
-#' @param acs_path Path to the vendored ACS sex-by-age-by-state extract.
+#' @param acs_path Path to the vendored ACS sex-by-age-by-state extract. When
+#'   the `.rds` is absent (it is `.gitignore`d, so it never exists in CI or
+#'   under `R CMD check`), the sibling `.csv` of the same name is read
+#'   instead -- see `inst/extdata/acs5_2023_sex_by_age_state_manifest.txt`.
 #'
 #' @return Tibble: `state` (2-letter abbreviation), `state_fips`,
 #'   `older_female_population`, `share` (fraction of the national total).
@@ -28,12 +31,54 @@ national_older_female_population_by_state <- function(
     }
   }
   if (!base::file.exists(acs_path)) {
+    # THE .rds CAN NEVER EXIST IN CI, SO A VENDORED .csv STANDS IN FOR IT.
+    # data-raw/ is .Rbuildignore'd and .gitignore excludes *.rds -- the latter
+    # deliberately, as a PHI/DUA control the nightly leak-guard job asserts is
+    # still present. The docstring above has always described this table as
+    # "vendored"; until now it was not, and every caller errored under R CMD
+    # check and in the nightly. The CSV carries the identical columns and is a
+    # published Census SUMMARY table, not microdata.
+    #
+    # It ships in inst/extdata rather than beside the .rds in data-raw,
+    # because data-raw is .Rbuildignore'd too: a copy there is invisible to
+    # the installed package that R CMD check actually runs, which is precisely
+    # the environment this fallback exists to serve.
+    csv_path <- base::system.file(
+      "extdata", "acs5_2023_sex_by_age_state.csv", package = "urpssim"
+    )
+    if (!base::nzchar(csv_path)) {
+      csv_path <- "inst/extdata/acs5_2023_sex_by_age_state.csv"  # dev
+    }
+    if (!base::file.exists(csv_path)) {
+      root <- .repo_source_root()
+      if (!base::is.na(root)) {
+        csv_path <- base::file.path(root, "inst", "extdata",
+                                    "acs5_2023_sex_by_age_state.csv")
+      }
+    }
+    if (base::file.exists(csv_path)) acs_path <- csv_path
+  }
+  if (!base::file.exists(acs_path)) {
     base::stop(
       "national_older_female_population_by_state(): file not found: ",
       acs_path, call. = FALSE
     )
   }
-  raw <- base::readRDS(acs_path)
+  raw <- if (base::grepl("\\.csv$", acs_path)) {
+    # GEOID must stay character: "01" is Alabama, 1 is not.
+    readr::read_csv(
+      acs_path,
+      col_types = readr::cols(
+        GEOID = readr::col_character(),
+        NAME = readr::col_character(),
+        variable = readr::col_character(),
+        estimate = readr::col_double(),
+        moe = readr::col_double()
+      )
+    )
+  } else {
+    base::readRDS(acs_path)
+  }
   older_female_vars <- base::sprintf("B01001_0%02d", 41:49)
   by_state <- raw |>
     dplyr::filter(.data$variable %in% older_female_vars) |>
