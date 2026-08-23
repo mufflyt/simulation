@@ -24,6 +24,16 @@ into one number -- see \code{\link[=practice_economics_evidence]{practice_econom
 about 10.3\%) is carried over onto the new mean; BLS OEWS reports a
 national mean and percentile bands, not a usable individual-level SD, so
 this specific figure remains an assumption, not a BLS number.
+
+\code{malpractice_median}/\code{malpractice_cv} are now the real median and
+coefficient of variation of seven real 2024 OB/GYN $1M/$3M-policy
+premiums (CA/CT/FL/IL/NJ/NY/PA) published in AMA Economic and Health
+Policy Research (Hardiman 2025), itself citing the Medical Liability
+Monitor Annual Rate Survey -- see \code{malpractice_state_premiums_2024} for
+the seven underlying values and \code{\link[=practice_economics_evidence]{practice_economics_evidence()}} for the
+full citation and its real limitation (a 10-year data-availability
+sample, not a national random sample; likely skewed toward
+higher-litigation states).
 }
 \seealso{
 Other supply:

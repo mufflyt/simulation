@@ -14,13 +14,13 @@
 #' NCHS reliability; `"medium"`: literature-derived, cross-check-only, or a
 #' small-but-usable fielded sample; `"low"`: single-site, preliminary, or
 #' below a reliability floor; `"uncited"`: no external source at all --
-#' currently overhead, malpractice, and all four payer collection rates).
-#' The revenue side (conversion factors, payer mix) is materially better
-#' sourced than the cost side; this table makes that asymmetry visible
-#' rather than treating every input as equally solid. APP compensation was
-#' uncited until real BLS OEWS wage data and a real BLS ECEC benefits load
-#' factor replaced it (see the rows below) -- overhead and malpractice
-#' remain the largest uncited cost inputs.
+#' currently overhead and all four payer collection rates). The revenue
+#' side (conversion factors, payer mix) is materially better sourced than
+#' the cost side; this table makes that asymmetry visible rather than
+#' treating every input as equally solid. APP compensation (real BLS OEWS
+#' wage data and a real BLS ECEC benefits load factor) and malpractice
+#' (real AMA/MLM 2024 OB/GYN premium data) are no longer uncited --
+#' overhead is now the single largest uncited cost input.
 #'
 #' Also carries three MedPAC physician/APP compensation figures as an
 #' external PLAUSIBILITY benchmark for `physician_compensation_capacity`
@@ -57,9 +57,11 @@ practice_economics_evidence <- function() {
     "2026 USD per clinical FTE", NA_character_, "uncited", "assumption",
     "cost prior -- NO EXTERNAL CITATION, see practice_overhead_by_setting()",
 
-    "User-specified scenario", "malpractice premium (lognormal, median/5th/95th)",
-    45000, 25726, 78713, "2026 USD per clinical FTE", NA_character_,
-    "uncited", "assumption", "cost prior -- NO EXTERNAL CITATION",
+    "AMA Economic and Health Policy Research (Hardiman 2025), citing Medical Liability Monitor Annual Rate Survey",
+    "OB/GYN malpractice premium, $1M/$3M policy, 2024, 7 states (CA/CT/FL/IL/NJ/NY/PA), lognormal median/5th/95th",
+    154591, 78514, 304385, "2024 USD per clinical FTE", "2024", "medium",
+    "administrative_survey",
+    "cost prior -- real, but a 7-state data-availability sample (not a national random sample), likely skewed toward higher-litigation states",
 
     "BLS OEWS May 2025, SOC 29-1171", "nurse practitioner mean base wage",
     137300, NA_real_, NA_real_, "2025 USD per FTE", "2025", "high",
@@ -183,6 +185,16 @@ practice_economics_evidence <- function() {
 #' national mean and percentile bands, not a usable individual-level SD, so
 #' this specific figure remains an assumption, not a BLS number.
 #'
+#' `malpractice_median`/`malpractice_cv` are now the real median and
+#' coefficient of variation of seven real 2024 OB/GYN $1M/$3M-policy
+#' premiums (CA/CT/FL/IL/NJ/NY/PA) published in AMA Economic and Health
+#' Policy Research (Hardiman 2025), itself citing the Medical Liability
+#' Monitor Annual Rate Survey -- see `malpractice_state_premiums_2024` for
+#' the seven underlying values and [practice_economics_evidence()] for the
+#' full citation and its real limitation (a 10-year data-availability
+#' sample, not a national random sample; likely skewed toward
+#' higher-litigation states).
+#'
 #' @return A named list of simulation inputs.
 #' @family supply
 #' @concept economics
@@ -194,6 +206,17 @@ practice_economics_defaults <- function() {
   app_base_wage_mean <- base::mean(base::c(app_base_wage_np, app_base_wage_pa))
   app_benefits_load_factor <- 1 / 0.704
   app_compensation_mean <- app_base_wage_mean * app_benefits_load_factor
+  # 2024 OB/GYN $1M/$3M-policy manual premiums, AMA Economic and Health
+  # Policy Research (Hardiman 2025) Exhibit 3, citing the Medical Liability
+  # Monitor Annual Rate Survey. Seven states chosen by the source for data
+  # availability across all ten years (2015-2024), not representativeness.
+  malpractice_state_premiums_2024 <- base::c(
+    California = 49804, Connecticut = 154591, Florida = 243988,
+    Illinois = 207907, `New Jersey` = 94640, `New York` = 171672,
+    Pennsylvania = 122906
+  )
+  malpractice_median <- stats::median(malpractice_state_premiums_2024)
+  malpractice_cv <- stats::sd(malpractice_state_premiums_2024) / malpractice_median
   base::list(
     medicare_conversion_factor = 33.40,
     qp_conversion_factor = 33.57,
@@ -203,8 +226,9 @@ practice_economics_defaults <- function() {
     overhead_lower = 280000,
     overhead_mode = 330000,
     overhead_upper = 380000,
-    malpractice_median = 45000,
-    malpractice_cv = 0.35,
+    malpractice_state_premiums_2024 = malpractice_state_premiums_2024,
+    malpractice_median = malpractice_median,
+    malpractice_cv = malpractice_cv,
     app_base_wage_np = app_base_wage_np,
     app_base_wage_pa = app_base_wage_pa,
     app_benefits_load_factor = app_benefits_load_factor,
