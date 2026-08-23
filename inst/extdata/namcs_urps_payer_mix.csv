@@ -1,0 +1,5 @@
+payer_tier,share,n_unweighted,reliable
+Medicaid,0.04675763930499235,37,TRUE
+Medicare,0.5586121085170227,267,TRUE
+Private,0.3938766009069897,191,TRUE
+Uninsured,7.536512709951905e-4,1,FALSE

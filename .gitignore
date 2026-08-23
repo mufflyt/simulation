@@ -85,6 +85,12 @@ outputs/
 !dpmm_demand_contract_v*_manifest.json
 !tests/**/*.csv
 
+# The two vendored AGGREGATE extracts standing in for microdata CI cannot
+# reach live in inst/extdata (already un-ignored below by
+# !inst/extdata/**/*.csv), NOT here: data-raw/ is .Rbuildignore'd, so a copy
+# under it is invisible to the installed package R CMD check actually runs.
+# Their *_manifest.txt files sit beside them and are not ignored.
+
 # Back-test artifacts are deliverables and must be tracked despite the broad
 # *.csv / *.png / *.parquet rules above.
 !artifacts/backtest_*.csv

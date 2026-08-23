@@ -9,7 +9,10 @@ national_older_female_population_by_state(
 )
 }
 \arguments{
-\item{acs_path}{Path to the vendored ACS sex-by-age-by-state extract.}
+\item{acs_path}{Path to the vendored ACS sex-by-age-by-state extract. When
+the \code{.rds} is absent (it is \code{.gitignore}d, so it never exists in CI or
+under \verb{R CMD check}), the sibling \code{.csv} of the same name is read
+instead -- see \code{inst/extdata/acs5_2023_sex_by_age_state_manifest.txt}.}
 }
 \value{
 Tibble: \code{state} (2-letter abbreviation), \code{state_fips},

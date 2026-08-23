@@ -7,7 +7,13 @@
 namcs_urps_payer_mix(namcs = NULL, min_records = NAMCS_MIN_RECORDS)
 }
 \arguments{
-\item{namcs}{Tibble from \code{\link[=load_namcs_pooled]{load_namcs_pooled()}}; loaded when \code{NULL}.}
+\item{namcs}{Tibble from \code{\link[=load_namcs_pooled]{load_namcs_pooled()}}; loaded when \code{NULL}. When
+\code{NULL} and the pooled microdata is not present (it is \code{.gitignore}d and
+lives under the \code{.Rbuildignore}d \verb{data-raw/}, so it never exists in CI or
+under \verb{R CMD check}), the vendored four-row aggregate
+\code{inst/extdata/namcs_urps_payer_mix.csv} is read instead and the
+returned \code{provenance} attribute carries an extra \code{derivation} field
+saying so.}
 
 \item{min_records}{NCHS reliability floor (see \code{\link[=namcs_urps_visit_anchor]{namcs_urps_visit_anchor()}});
 any tier below this unweighted-record count is flagged \code{reliable = FALSE}.}
