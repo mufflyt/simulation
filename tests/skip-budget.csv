@@ -51,4 +51,8 @@ reason_pattern,max_tests,why
 "CMS PSPS 2024 raw file not present",1,"Downloaded CMS extract, not in git."
 "NHANES UI microdata file not present",1,"Downloaded survey microdata, not in git."
 "NHANES AI microdata file not present",1,"Downloaded survey microdata, not in git."
+"real CMS service-share input[(]s[)] not present",2,"data-raw/cms_psps/PHY_R26_P05_V10_D24_Prov_Svc.csv, cy2022_psps.zip, and data-raw/urps_roster are large real CMS extracts / NPI-bearing rosters not vendored in git. .skip_unless_cms_service_share_data() guards build_cms_service_share_evidence() and its DuckDB-ingestion caller."
+"build_cms_service_share_evidence[(][)] has no wrvu_shares output",1,"Documented, real gap: R/data-public_evidence_duckdb.R assumes cms_evidence$wrvu_shares exists, but the weighting semantics need a design decision (work_rvu is constant within one service, so naive weighting is a no-op) that this test cannot make unilaterally. Left as an honest skip rather than a fabricated output."
+"combine_service_share_evidence[(][)] and build_service_share_calibration_bundle[(][)] no longer exist",1,"test-service-share-pipeline.R names the Design-A-era functions superseded by calibrate_service_share_model()'s Bayesian-shrinkage redesign. Rewrite once R/core-service_share_runner.R's own contract is stable rather than guess at it here."
+"real pooled NAMCS input not present",1,".skip_unless_namcs_pooled_data() guards run_end_to_end_simulation(..., run_practice_economics = TRUE) under the calibrated engine, which resolves payer mix via namcs_urps_payer_mix() against data-raw/namcs/namcs_pooled_2015_2019.rds -- *.rds-gitignored, so never present on a fresh CI checkout."
 

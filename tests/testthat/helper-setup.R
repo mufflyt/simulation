@@ -103,6 +103,23 @@ valid_pathway <- function(pathway = condition_service_pathway()) {
   )
 }
 
+# run_end_to_end_simulation(..., run_practice_economics = TRUE) calibrates
+# payer mix from namcs_urps_payer_mix(), which fails closed against the
+# real pooled NAMCS RDS (data-raw/namcs/namcs_pooled_2015_2019.rds) rather
+# than a placeholder. That file is *.rds-gitignored (large real survey
+# extract, see data-raw/namcs/02-namcs_multiyear_acquire.R), so it is
+# never present on a fresh CI checkout even though it is vendored locally.
+# testthat::test_file() runs with the working directory set to
+# tests/testthat/, not the repo root (see test-practice-payer-mix.R's
+# .pooled_namcs_path()), so both relative forms must be checked.
+.skip_unless_namcs_pooled_data <- function() {
+  rel <- "data-raw/namcs/namcs_pooled_2015_2019.rds"
+  skip_if_not(
+    file.exists(rel) || file.exists(file.path("..", "..", rel)),
+    paste0("real pooled NAMCS input not present: ", rel)
+  )
+}
+
 # calibrate_service_share_model()'s real API requires an `events` argument
 # (real per-service/condition/year/provider_group compositional event
 # counts) with at least two years per service for its leave-latest-year-out
