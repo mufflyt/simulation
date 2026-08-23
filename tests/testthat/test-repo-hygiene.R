@@ -41,11 +41,26 @@
   do.call(rbind, out)
 }
 
+# Not an accidental duplicate: R/zzz-service_share_runner.R deliberately
+# captures run_end_to_end_simulation as .run_end_to_end_simulation_legacy
+# before redefining it, so service_share_engine = "legacy_matrix" can
+# dispatch to a true regression-preserving copy of the pre-service-share
+# implementation rather than a reimplementation of it. The "zzz-" filename
+# is the load-order mechanism this override depends on (alphabetically
+# last, guaranteeing it runs after core-run_end_to_end_simulation.R
+# defines the original) -- unlike the accidental duplicates this test
+# exists to catch, here the second definition is the entire point, and
+# it's the only thing on this list because it's the only place in this
+# codebase that overrides another R/ file's top-level definition on
+# purpose.
+ALLOWED_RUNTIME_OVERRIDES <- c("run_end_to_end_simulation")
+
 test_that("no function is defined twice in the package R directory", {
   defs <- .definitions(.r_files("R"))
   # as.character(): names() on an empty table is NULL, not character(0), so a
   # legitimately empty result compared unequal to the expectation.
   dup <- as.character(names(which(table(defs$fn) > 1)))
+  dup <- setdiff(dup, ALLOWED_RUNTIME_OVERRIDES)
   expect_equal(
     dup, character(0),
     info = paste("Duplicate definitions silently shadow one another:",

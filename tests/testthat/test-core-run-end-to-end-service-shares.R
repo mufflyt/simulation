@@ -85,7 +85,10 @@ test_that("calibrated practice economics receives provider-level URPS wRVU", {
     service_share_bundle = bundle,
     service_share_draw = 1L,
     run_practice_economics = TRUE,
-    practice_economics_draws = 5L,
+    # simulate_practice_economics() refuses draws < 100 -- a deliberate
+    # guard against Monte Carlo intervals too small to be statistically
+    # meaningful, not a limit this test should route around.
+    practice_economics_draws = 100L,
     seed = 1122L,
     save_outputs = FALSE
   ))

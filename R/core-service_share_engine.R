@@ -162,10 +162,18 @@ service_share_routing_for_year <- function(
     dplyr::group_by(.data$service) |>
     dplyr::summarise(
       first_year = base::min(.data$year),
-      has_past_evidence = base::any(.data$year <= year),
+      # !!year (not bare year): this function's own `year` argument is
+      # shadowed by draws' OWN `year` column inside dplyr's data mask, so
+      # `.data$year <= year` silently became `.data$year <= .data$year`
+      # (always TRUE) instead of comparing to the requested year -- the
+      # backcast refusal below never fired for ANY year. Same class of bug
+      # as draw_service_share_composition()'s service/condition/year
+      # shadowing in R/calibration-urogynecology_service_shares.R; confirmed
+      # with the same kind of minimal repro before fixing.
+      has_past_evidence = base::any(.data$year <= !!year),
       evidence_year = dplyr::if_else(
         .data$has_past_evidence,
-        base::max(.data$year[.data$year <= year]),
+        base::max(.data$year[.data$year <= !!year]),
         NA_integer_
       ),
       .groups = "drop"
@@ -368,7 +376,7 @@ allocate_urps_workload_to_active_providers <- function(
   out <- active |>
     dplyr::transmute(
       .data$provider_id,
-      year = base::as.integer(year),
+      year = base::as.integer(!!year),
       clinical_fte = .data$fte,
       workload_share = .data$fte / total_fte,
       annual_wrvu = total_urps_wrvu * .data$fte / total_fte
