@@ -20,8 +20,11 @@ Open or create the national evidence DuckDB
 \seealso{
 Other data acquisition:
 \code{\link[=audit_urps_evidence_readiness]{audit_urps_evidence_readiness()}},
+\code{\link[=build_chia_service_share_evidence]{build_chia_service_share_evidence()}},
 \code{\link[=build_urps_national_evidence_lake]{build_urps_national_evidence_lake()}},
 \code{\link[=download_urps_evidence_extract]{download_urps_evidence_extract()}},
+\code{\link[=ingest_all_12_infrastructure_tables_to_duckdb]{ingest_all_12_infrastructure_tables_to_duckdb()}},
+\code{\link[=ingest_public_evidence_duckdb]{ingest_public_evidence_duckdb()}},
 \code{\link[=ingest_urps_evidence_file]{ingest_urps_evidence_file()}},
 \code{\link[=seed_urps_repository_evidence]{seed_urps_repository_evidence()}},
 \code{\link[=urps_national_source_registry]{urps_national_source_registry()}}

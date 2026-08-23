@@ -11,9 +11,13 @@ Example prior for a four-parameter workforce DGP
 }
 \seealso{
 Other calibration:
+\code{\link[=build_service_share_calibration_bundle]{build_service_share_calibration_bundle()}},
 \code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
 \code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
+\code{\link[=calibrate_service_share_model]{calibrate_service_share_model()}},
+\code{\link[=combine_service_share_evidence]{combine_service_share_evidence()}},
 \code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
+\code{\link[=draw_compositional_service_shares]{draw_compositional_service_shares()}},
 \code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
 \code{\link[=example_sbc_simulator]{example_sbc_simulator()}},
 \code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}},

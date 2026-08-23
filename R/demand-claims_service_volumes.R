@@ -560,7 +560,6 @@ example_taxonomy_crosswalk <- tibble::tribble(
   "363A00000X", "Physician assistant",
   "225100000X", "Physical therapist",
   "207Q00000X", "Family medicine",
-  "208D00000X", "General internal medicine"
 )
 
 

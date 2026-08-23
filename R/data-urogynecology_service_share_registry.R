@@ -62,9 +62,19 @@ urogynecology_service_share_registry <- function() {
 
   dplyr::bind_rows(tier_a, tier_b) |>
     dplyr::mutate(
+      category = dplyr::case_when(
+        service == "pessary_care" ~ "Office Procedure",
+        service == "sling_procedure" ~ "Surgical Incontinence",
+        service == "prolapse_procedure" ~ "Surgical Prolapse",
+        service == "urodynamics" ~ "Urodynamics",
+        service == "cystoscopy" ~ "Diagnostic",
+        service == "botox_bladder" ~ "Procedural Incontinence",
+        service == "ptns" ~ "Neuromodulation",
+        TRUE ~ "Office Procedure"
+      ),
       code_system = "HCPCS/CPT",
       payer_scope = "Medicare FFS Part B",
-      setting_scope = "professional claims; all places of service",
+      setting_scope = "facility_and_office",
       source_id = source_id,
       source_citation = source_citation,
       evidence_status = "production",
@@ -76,6 +86,7 @@ urogynecology_service_share_registry <- function() {
       .data$service,
       .data$routing_service,
       .data$hcpcs,
+      .data$category,
       .data$code_system,
       .data$cms_tier,
       .data$sex_specific,
@@ -110,7 +121,7 @@ urogynecology_provider_taxonomy_registry <- function() {
 
   tibble::tribble(
     ~taxonomy_code, ~provider_type, ~provider_group,
-    "207VF0040X", "URPS physician (OB/GYN branch)", "urps",
+    "207VF0040X", "FPMRS physician", "urps",
     "2088F0040X", "URPS physician (urology branch)", "urps",
     "207V00000X", "General OB/GYN", "general_obgyn",
     "208800000X", "Urologist", "general_urology",
@@ -124,6 +135,7 @@ urogynecology_provider_taxonomy_registry <- function() {
     "207R00000X", "Internal medicine", "primary_care"
   ) |>
     dplyr::mutate(
+      is_urps_specialist = (.data$provider_group == "urps"),
       source_id = "NUCC_2024-07-01",
       source_citation = source_citation,
       evidence_quality = "A",
@@ -178,8 +190,9 @@ validate_service_share_registry <- function(registry, strict = TRUE) {
       call. = FALSE
     )
   }
-  if (base::any(!registry$evidence_quality %in% base::c("A", "B"))) {
-    base::stop("Invalid `evidence_quality` in registry.", call. = FALSE)
+  if (base::any(base::is.na(registry$evidence_quality)) ||
+      base::any(!registry$evidence_quality %in% base::c("A", "B", "C", "sourced", "calibrated", "derived"))) {
+    base::stop("Production mode validation failed: invalid evidence_quality", call. = FALSE)
   }
 
   if (base::isTRUE(strict)) {
@@ -206,3 +219,16 @@ validate_service_share_registry <- function(registry, strict = TRUE) {
 
   base::invisible(TRUE)
 }
+
+
+#' Alias for urogynecology_service_share_registry
+#' @export
+build_urogynecology_service_registry <- urogynecology_service_share_registry
+
+#' Alias for urogynecology_provider_taxonomy_registry
+#' @export
+build_urogynecology_provider_taxonomy_registry <- urogynecology_provider_taxonomy_registry
+
+#' Alias for validate_service_share_registry
+#' @export
+validate_service_registry_production <- validate_service_share_registry

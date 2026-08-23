@@ -4,7 +4,7 @@
 \alias{validate_delegation_matrix}
 \title{Validate a provider-type delegation matrix}
 \usage{
-validate_delegation_matrix(matrix = URPS_DELEGATION_MATRIX, tol = 1e-08)
+validate_delegation_matrix(matrix = URPS_DELEGATION_MATRIX, tol = 0.00000001)
 }
 \arguments{
 \item{matrix}{Delegation tibble with \code{service} and share columns.}
