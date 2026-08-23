@@ -17,6 +17,30 @@
 # writable connection).
 ################################################################################
 
+#' Build the long-format diagnosis-code view
+#'
+#' Thin rename over `v_hdd_diagnoscode_all_years` (already one row per
+#' `(RecordType20ID, DiagnosisCode)`, so this is a rename, not a melt).
+#' Several already-committed call sites (`R/calibration-transport_to_national.R`,
+#' `scripts/calibration/build_empirical_calibration_targets.R`,
+#' `scripts/chia/run_chia_revenue_setting.R`'s `dx_sql()`) reference
+#' `chia_casemix.hdd_diagnosis_long` without anything in the repo creating it;
+#' this closes that gap.
+#'
+#' @param con Open, writable DuckDB connection.
+#' @return `con`, invisibly.
+#' @family chia physician attribution
+#' @concept supply
+#' @export
+build_chia_hdd_diagnosis_long_view <- function(con) {
+  DBI::dbExecute(con, "
+    CREATE OR REPLACE VIEW chia_casemix.hdd_diagnosis_long AS
+    SELECT RecordType20ID, _data_year, DiagnosisCode AS code
+    FROM chia_casemix.v_hdd_diagnosiscode_all_years
+  ")
+  invisible(con)
+}
+
 #' Build the physician-attribution view (2015-2018 raw BORIM numbers)
 #'
 #' Melts the 15 `OperatingPhysician*` columns on
@@ -137,8 +161,13 @@ build_chia_hdd_discharge_procedure_views <- function(con, min_n = 20,
 
 #' Build the canonical HDD discharge view (demographics + is_surgical)
 #'
-#' Requires [build_chia_hdd_discharge_procedure_views()] to have been run
-#' first.
+#' Requires [build_chia_hdd_discharge_procedure_views()] and
+#' [build_chia_hdd_procedure_family_view()] to have been run first.
+#'
+#' `procedure_family` is a `LEFT JOIN`, deliberately optional: most discharges
+#' are not urogynecologic and correctly get `NULL`, matching how
+#' `build_chia_inpatient_urps_series()` already filters on
+#' `procedure_family IS NOT NULL`.
 #'
 #' @param con Open, writable DuckDB connection.
 #' @return `con`, invisibly.
@@ -158,9 +187,11 @@ build_chia_hdd_discharge_canonical_view <- function(con) {
       c.IdOrgFiler AS org_filer,
       TRY_CAST(c.TotalChargesSpecial AS DOUBLE) AS charges_special,
       c.AdmissionType,
-      (p.procedure_class = 'operative') AS is_surgical
+      (p.procedure_class = 'operative') AS is_surgical,
+      f.procedure_family
     FROM chia_casemix.v_hdd_discharge_all_years c
     LEFT JOIN chia_casemix.v_hdd_discharge_procedure p USING (RecordType20ID, _data_year)
+    LEFT JOIN chia_casemix.v_hdd_discharge_procedure_family f USING (RecordType20ID, _data_year)
   ")
   invisible(con)
 }
@@ -218,21 +249,32 @@ build_chia_surgeon_year_volume_views <- function(con) {
 #'
 #' Orchestrates [build_chia_hdd_discharge_physician_view()],
 #' [build_chia_hdd_discharge_procedure_views()],
+#' [build_chia_hdd_diagnosis_long_view()],
+#' [build_chia_hdd_procedure_family_view()],
 #' [build_chia_hdd_discharge_canonical_view()], and
 #' [build_chia_surgeon_year_volume_views()] in dependency order. Requires
 #' `chia_casemix.v_hdd_discharge_all_years` / `v_hdd_procedurecode_all_years`
-#' (built by `scripts/chia/finalize_db.py`) and
-#' `chia_provider.borim_stdrel_npi_straight_from_cd` to already exist on
+#' / `v_hdd_diagnosiscode_all_years` (built by `scripts/chia/finalize_db.py`)
+#' and `chia_provider.borim_stdrel_npi_straight_from_cd` to already exist on
 #' `con`.
 #'
 #' @param con Open, writable DuckDB connection.
+#' @param procedure_family_config Passed through to
+#'   [build_chia_hdd_procedure_family_view()] as `config`. Exposed so tests
+#'   can inject a small fixture config instead of reading
+#'   `config/chia_urps_inpatient_codes.yml` (a path relative to the package
+#'   root, which does not resolve under testthat's working directory).
 #' @return `con`, invisibly.
 #' @family chia physician attribution
 #' @concept supply
 #' @export
-build_chia_physician_attribution <- function(con) {
+build_chia_physician_attribution <- function(
+    con,
+    procedure_family_config = yaml::read_yaml("config/chia_urps_inpatient_codes.yml")) {
   build_chia_hdd_discharge_physician_view(con)
   build_chia_hdd_discharge_procedure_views(con)
+  build_chia_hdd_diagnosis_long_view(con)
+  build_chia_hdd_procedure_family_view(con, config = procedure_family_config)
   build_chia_hdd_discharge_canonical_view(con)
   build_chia_surgeon_year_volume_views(con)
   invisible(con)
