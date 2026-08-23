@@ -46,7 +46,7 @@ test_that("CHIA evidence recognizes both URPS taxonomy branches", {
     "3333333333", "207V00000X", TRUE
   )
 
-  evidence <- build_chia_service_share_evidence(events, taxonomy)
+  evidence <- classify_chia_service_share_events(events, taxonomy)
   shares <- evidence$provider_shares
   expect_equal(
     base::sum(shares$provider_share),
@@ -82,7 +82,7 @@ test_that("frozen roster membership overrides non-URPS taxonomy", {
   )
   roster <- tibble::tibble(npi = "1111111111")
 
-  evidence <- build_chia_service_share_evidence(
+  evidence <- classify_chia_service_share_events(
     events,
     taxonomy,
     urps_roster = roster
