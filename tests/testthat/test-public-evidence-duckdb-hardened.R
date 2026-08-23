@@ -1,4 +1,5 @@
 test_that("ingest_all_12_infrastructure_tables_to_duckdb writes valid schemas and non-empty tables to DuckDB", {
+  .skip_unless_cms_service_share_data()
   tmp_db <- tempfile(fileext = ".duckdb")
   on.exit(unlink(tmp_db), add = TRUE)
 

@@ -151,12 +151,24 @@ ingest_all_12_infrastructure_tables_to_duckdb <- function(
   summary_counts$provider_taxonomy_registry <- nrow(taxonomy_registry)
 
   # 3. CMS Service Share Evidence
-  cms_evidence <- build_cms_service_share_evidence(service_registry = service_registry, taxonomy_registry = taxonomy_registry)
-  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "cms_service_shares_suppression"), cms_evidence$service_shares, overwrite = TRUE)
-  summary_counts$cms_service_shares_suppression <- nrow(cms_evidence$service_shares)
+  cms_evidence <- default_cms_service_share_evidence()
+  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "cms_service_shares_suppression"), cms_evidence$service_bounds, overwrite = TRUE)
+  summary_counts$cms_service_shares_suppression <- nrow(cms_evidence$service_bounds)
 
-  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "cms_wrvu_weighted_shares"), cms_evidence$wrvu_shares, overwrite = TRUE)
-  summary_counts$cms_wrvu_weighted_shares <- nrow(cms_evidence$wrvu_shares)
+  # cms_evidence$wrvu_shares does not exist: build_cms_service_share_evidence()
+  # never grew a per-service, per-provider-bucket wRVU-weighted share table
+  # (see tests/testthat/test-data-cms-service-shares.R's skipped "wRVU
+  # weighted shares" test for why this isn't invented here -- the weighting
+  # semantics need a real design decision, not a guess). Warn and skip this
+  # one table rather than halting all 12 -- the other 11 do not depend on it.
+  base::warning(
+    "ingest_all_12_infrastructure_tables_to_duckdb(): skipping ",
+    "cms_wrvu_weighted_shares -- build_cms_service_share_evidence() does ",
+    "not produce a wrvu_shares table. This is a real gap, not a missing ",
+    "argument.",
+    call. = FALSE
+  )
+  summary_counts$cms_wrvu_weighted_shares <- NA_integer_
 
   # 4. CHIA All-Payer Evidence
   chia_evidence <- build_chia_service_share_evidence(service_registry = service_registry, taxonomy_registry = taxonomy_registry)
