@@ -355,57 +355,19 @@ run_end_to_end_simulation <- function(
     active_providers <- provider_cohort |>
       dplyr::filter(.data$active)
 
-    geography_iterations <- NA_integer_
-    geography_converged <- NA
-    if (geography_engine == "county_endogenous") {
-      base::message("Applying county endogenous geography for ",
-        simulation_year, ".")
-      if ("year" %in% base::names(county_market_tbl)) {
-        year_markets <- county_market_tbl |>
-          dplyr::filter(.data$year == simulation_year)
-      } else {
-        year_markets <- county_market_tbl
-      }
-      geography_arguments <- base::c(
-        base::list(
-          provider_roster = active_providers,
-          county_market_tbl = year_markets,
-          year = simulation_year
-        ),
-        geography_control
-      )
-      geography_solution <- base::do.call(
-        geography_solver,
-        geography_arguments
-      )
-      if (base::is.data.frame(geography_solution)) {
-        relocated_providers <- geography_solution
-      } else {
-        relocated_providers <- geography_solution$provider_roster
-        geography_iterations <- .urps_null_or(geography_solution$iterations, NA_integer_)
-        geography_converged <- .urps_null_or(geography_solution$converged, NA)
-      }
-      required_geo_columns <- base::c("provider_id", "county_fips")
-      missing_geo_columns <- base::setdiff(
-        required_geo_columns,
-        base::names(relocated_providers)
-      )
-      if (base::length(missing_geo_columns) > 0L) {
-        base::stop(
-          "The geography solver must return provider_id and county_fips.",
-          call. = FALSE
-        )
-      }
-      provider_cohort <- provider_cohort |>
-        dplyr::select(-dplyr::any_of("county_fips")) |>
-        dplyr::left_join(
-          relocated_providers |>
-            dplyr::select(.data$provider_id, .data$county_fips),
-          by = "provider_id"
-        )
-      active_providers <- provider_cohort |>
-        dplyr::filter(.data$active)
-    }
+    geo_relocation_result <- .run_geography_relocation_year(
+      provider_cohort = provider_cohort,
+      active_providers = active_providers,
+      simulation_year = simulation_year,
+      geography_engine = geography_engine,
+      county_market_tbl = county_market_tbl,
+      geography_control = geography_control,
+      geography_solver = geography_solver
+    )
+    provider_cohort <- geo_relocation_result$provider_cohort
+    active_providers <- geo_relocation_result$active_providers
+    geography_iterations <- geo_relocation_result$geography_iterations
+    geography_converged <- geo_relocation_result$geography_converged
 
     reachable_count <- referred_count * 0.885
     medicaid_acceptance <- predict_medicaid_acceptance(
@@ -424,118 +386,13 @@ run_end_to_end_simulation <- function(
       medicaid_eligible_count * mean_medicaid_acceptance
 
     supplied_fte <- base::sum(active_providers$fte, na.rm = TRUE)
-    if (productivity_engine == "benchmark") {
-      provider_capacity <- active_providers |>
-        dplyr::transmute(
-          provider_id = .data$provider_id,
-          annual_patient_capacity = .data$fte * 1600
-        )
-    } else {
-      base::message("Predicting fitted provider capacity for ",
-        simulation_year, ".")
-      if (!base::is.function(productivity_predictor)) {
-        base::message(
-          "NOTE: productivity_engine = \"lmer_fitted\" with no custom ",
-          "productivity_predictor uses .lmer_fitted_predictor_bridge(), ",
-          "which fills sex/rural/app_support_rate/case-mix-share with ",
-          "fixed placeholder constants (provider_cohort has no real ",
-          "per-provider data for them). This is a SYNTHETIC-FIT capacity ",
-          "path -- fit_provider_productivity_model()'s trained data is not ",
-          "empirical unless a real, non-mock productivity_panel was ",
-          "supplied. Treat these results as a mechanism demonstration, ",
-          "not an empirical estimate."
-        )
-      }
-      if (base::is.function(productivity_predictor)) {
-        predicted_capacity <- productivity_predictor(
-          fitted_productivity_model,
-          active_providers,
-          simulation_year
-        )
-      } else {
-        # fitted_productivity_model is a model_bundle (list: model,
-        # analysis_panel, diagnostics, outcome, formula), not a bare lme4
-        # fit -- stats::predict() on the bundle itself does not dispatch to
-        # predict.merMod() and would error before reaching a prediction.
-        # predict_provider_capacity() (R/demand-measure_provider_productivity.R)
-        # is the correct, pre-existing wrapper: it extracts $model,
-        # predicts on the model's log(outcome) scale, and exponentiates --
-        # calling stats::predict() directly here previously returned raw
-        # log-scale values as if they were already annual_patient_capacity.
-        bridged_providers <- .lmer_fitted_predictor_bridge(active_providers)
-        predicted_panel <- predict_provider_capacity(
-          fitted_productivity_model, bridged_providers
-        )
-        # UNIT CHECK, not a formality: the model_bundle's outcome can be
-        # wrvu_per_clinical_fte or wrvu_per_clinical_hour -- workload
-        # measures, not a patient headcount -- and treating either as
-        # annual_patient_capacity would silently corrupt the patient-flow
-        # conservation identity downstream by roughly an order of
-        # magnitude. Only encounters_per_clinical_fte means "patient
-        # capacity" in this runner's units.
-        if (!base::identical(
-          predicted_panel$capacity_outcome[[1]], "encounters_per_clinical_fte"
-        )) {
-          base::stop(
-            "run_end_to_end_simulation(): fitted_productivity_model was ",
-            "fit on outcome = '", predicted_panel$capacity_outcome[[1]],
-            "', not 'encounters_per_clinical_fte'. Re-fit with ",
-            "fit_provider_productivity_model(outcome = ",
-            "\"encounters_per_clinical_fte\") -- a wRVU-scale outcome is ",
-            "not a patient headcount and must not be used as ",
-            "annual_patient_capacity.",
-            call. = FALSE
-          )
-        }
-        predicted_capacity <- predicted_panel |>
-          dplyr::transmute(
-            provider_id = .data$provider_id,
-            predicted_capacity = .data$predicted_capacity
-          )
-      }
-      if (base::is.data.frame(predicted_capacity)) {
-        capacity_columns <- base::intersect(
-          base::c(
-            "annual_patient_capacity",
-            "predicted_capacity",
-            "capacity"
-          ),
-          base::names(predicted_capacity)
-        )
-        if (base::length(capacity_columns) == 0L ||
-            !"provider_id" %in% base::names(predicted_capacity)) {
-          base::stop(
-            paste0(
-              "A tabular productivity prediction must contain provider_id ",
-              "and a recognized capacity column."
-            ),
-            call. = FALSE
-          )
-        }
-        capacity_column <- capacity_columns[[1L]]
-        provider_capacity <- predicted_capacity |>
-          dplyr::transmute(
-            provider_id = .data$provider_id,
-            annual_patient_capacity = .data[[capacity_column]]
-          )
-      } else {
-        provider_capacity <- active_providers |>
-          dplyr::transmute(
-            provider_id = .data$provider_id,
-            annual_patient_capacity = base::as.numeric(
-              predicted_capacity
-            )
-          )
-      }
-      if (base::any(!base::is.finite(
-        provider_capacity$annual_patient_capacity
-      )) || base::any(provider_capacity$annual_patient_capacity < 0)) {
-        base::stop(
-          "Fitted productivity predictions must be finite and nonnegative.",
-          call. = FALSE
-        )
-      }
-    }
+    provider_capacity <- .run_provider_capacity_year(
+      active_providers = active_providers,
+      simulation_year = simulation_year,
+      productivity_engine = productivity_engine,
+      productivity_predictor = productivity_predictor,
+      fitted_productivity_model = fitted_productivity_model
+    )
 
     clinical_capacity <- base::sum(
       provider_capacity$annual_patient_capacity,
@@ -688,165 +545,17 @@ run_end_to_end_simulation <- function(
     )
 
     if (run_practice_economics) {
-      practice_tbl <- active_providers |>
-        dplyr::transmute(
-          practice_id = .data$provider_id,
-          year = simulation_year,
-          clinical_fte = .data$fte,
-          annual_wrvu = wrvu_total * .data$fte / supplied_fte,
-          medicare_share = practice_payer_mix$medicare_share,
-          medicaid_share = practice_payer_mix$medicaid_share,
-          commercial_share = practice_payer_mix$commercial_share,
-          self_pay_share = practice_payer_mix$self_pay_share,
-          practice_setting = dplyr::case_when(
-            .data$academic_setting ~ "academic",
-            .data$hospital_outpatient ~ "hospital_employed",
-            TRUE ~ "independent"
-          ),
-          app_fte = .data$fte * app_delegation_rate
-        )
-      practice_result <- simulate_practice_economics(
-        practice_tbl,
-        draws = practice_economics_draws,
-        seed = seed + year_index
+      practice_economics_diagnostic_rows[[year_index]] <- .run_practice_economics_year(
+        active_providers = active_providers,
+        simulation_year = simulation_year,
+        year_index = year_index,
+        supplied_fte = supplied_fte,
+        wrvu_total = wrvu_total,
+        practice_payer_mix = practice_payer_mix,
+        app_delegation_rate = app_delegation_rate,
+        seed = seed,
+        practice_economics_draws = practice_economics_draws
       )
-      practice_draws <- practice_result$draws
-      # Exact cost-component decomposition (verified by accounting identity
-      # in tests/testthat/test-supply-practice-economics.R): operating_cost
-      # == clinical_fte*(overhead_per_fte + malpractice_per_fte) +
-      # app_fte*app_compensation. There is NO physician-compensation line
-      # item anywhere in this cost model -- mean_operating_income is money
-      # available to compensate the physician BEFORE they are paid, not a
-      # true bottom-line practice profit. A negative value does not mean
-      # cash losses in the ordinary sense; it means the composed overhead +
-      # malpractice + APP-labor cost exceeds wRVU-proxy revenue before
-      # physician pay is even considered.
-      practice_diagnostic_row <- practice_result$summary |>
-        dplyr::summarise(
-          year = simulation_year,
-          n_practices = dplyr::n(),
-          mean_wrvu_per_fte = base::sum(practice_tbl$annual_wrvu) /
-            base::sum(practice_tbl$clinical_fte),
-          mean_revenue_per_fte = base::mean(
-            practice_draws$gross_revenue / practice_draws$clinical_fte
-          ),
-          mean_expense_per_fte = base::mean(
-            practice_draws$operating_cost / practice_draws$clinical_fte
-          ),
-          mean_overhead_per_fte = base::mean(practice_draws$overhead_per_fte),
-          mean_malpractice_per_fte = base::mean(
-            practice_draws$malpractice_per_fte
-          ),
-          mean_app_labor_per_fte = base::mean(
-            practice_draws$app_fte * practice_draws$app_compensation /
-              practice_draws$clinical_fte
-          ),
-          mean_revenue_per_wrvu = base::sum(practice_draws$gross_revenue) /
-            base::sum(practice_draws$annual_wrvu),
-          mean_break_even_wrvu_per_fte = base::mean(
-            practice_draws$break_even_wrvu_per_fte, na.rm = TRUE
-          ),
-          mean_required_revenue_per_wrvu = base::mean(
-            practice_draws$required_revenue_per_wrvu, na.rm = TRUE
-          ),
-          mean_operating_income = base::mean(practice_draws$operating_income),
-          # Legacy alias, identical arithmetic to mean_operating_income --
-          # see the file-level comment above on why this is the primary
-          # name going forward: there is no physician-compensation line
-          # item anywhere in this cost model, so a negative value means
-          # modeled professional revenue does not cover nonphysician
-          # practice costs, before the physician is paid at all.
-          mean_physician_compensation_capacity = base::mean(
-            practice_draws$physician_compensation_capacity
-          ),
-          # Two distinct estimands, kept separate rather than assumed equal:
-          # the sum-based aggregate margin (national revenue-weighted) and
-          # the distributional mean-of-per-practice-median margin (equal
-          # weight per practice regardless of size).
-          aggregate_operating_margin =
-            (base::sum(practice_draws$gross_revenue) -
-              base::sum(practice_draws$operating_cost)) /
-              base::sum(practice_draws$gross_revenue),
-          mean_operating_margin = base::mean(
-            .data$median_operating_margin, na.rm = TRUE
-          ),
-          mean_loss_probability = base::mean(
-            .data$loss_probability, na.rm = TRUE
-          ),
-          mean_acquisition_probability = base::mean(
-            .data$acquisition_probability, na.rm = TRUE
-          ),
-          mean_cash_pay_probability = base::mean(
-            .data$cash_pay_probability, na.rm = TRUE
-          )
-        )
-
-      # EXTERNAL PLAUSIBILITY CONTEXT, not an internal-consistency alarm and
-      # never a calibration target: compares modeled compensation capacity
-      # against MedPAC's real, cited surgical-specialty compensation median
-      # (FPMRS/urogyn falls under MedPAC's "surgical" grouping, which
-      # explicitly includes OB/GYN and urology). Reported via message(), not
-      # warning() -- disagreeing with an external benchmark is a different
-      # kind of signal than the internal accounting alarms below.
-      surgical_benchmark <- physician_compensation_plausibility(
-        practice_draws$physician_compensation_capacity
-      ) |>
-        dplyr::filter(.data$benchmark_name == "surgical")
-      practice_diagnostic_row$pct_of_medpac_surgical_benchmark <-
-        surgical_benchmark$pct_of_benchmark
-      practice_diagnostic_row$medpac_plausibility_band <-
-        surgical_benchmark$plausibility_band
-      base::message(
-        "practice-economics year ", simulation_year,
-        ": modeled physician compensation capacity is ",
-        surgical_benchmark$plausibility_band,
-        " vs. MedPAC's $496,000 surgical-specialty median (",
-        base::sprintf("%.1f%%", surgical_benchmark$pct_of_benchmark),
-        " of benchmark)."
-      )
-
-      # FAIL-LOUD PLAUSIBILITY ALARMS, not calibration targets: these warn
-      # (never silently adjust an input) when the composed cost/revenue
-      # model produces an implausible headline result, so a wrong number
-      # cannot pass through unnoticed the way -56% margins / 99.98% loss
-      # probability did on the first wiring pass. See R/supply-
-      # practice_economics.R's overhead assumption -- "User-specified
-      # scenario"/"assumption" status, the one cost input with no external
-      # citation -- as the most likely thing to revisit if these fire.
-      if (base::isTRUE(practice_diagnostic_row$mean_operating_margin < -0.25)) {
-        base::warning(
-          "run_end_to_end_simulation(): year ", simulation_year,
-          " practice-economics mean operating margin is ",
-          base::sprintf("%.1f%%", 100 * practice_diagnostic_row$mean_operating_margin),
-          " (< -25% plausibility bound). This is a fail-loud alarm about the",
-          " composed revenue/cost model, not a claim the simulation is wrong;",
-          " see practice_economics_diagnostics for the revenue/expense",
-          " decomposition.",
-          call. = FALSE
-        )
-      }
-      if (base::isTRUE(practice_diagnostic_row$mean_loss_probability > 0.90)) {
-        base::warning(
-          "run_end_to_end_simulation(): year ", simulation_year,
-          " practice-economics loss probability is ",
-          base::sprintf("%.1f%%", 100 * practice_diagnostic_row$mean_loss_probability),
-          " (> 90% plausibility bound).",
-          call. = FALSE
-        )
-      }
-      if (base::isTRUE(practice_diagnostic_row$mean_revenue_per_wrvu < 15 ||
-          practice_diagnostic_row$mean_revenue_per_wrvu > 100)) {
-        base::warning(
-          "run_end_to_end_simulation(): year ", simulation_year,
-          " realized revenue per wRVU is $",
-          base::sprintf("%.2f", practice_diagnostic_row$mean_revenue_per_wrvu),
-          ", outside the [$15, $100] plausibility bound around real Medicare",
-          " conversion factors (~$33-34/RVU).",
-          call. = FALSE
-        )
-      }
-
-      practice_economics_diagnostic_rows[[year_index]] <- practice_diagnostic_row
     }
 
     provider_cohort <- provider_cohort |>

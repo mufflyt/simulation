@@ -1,19 +1,9 @@
 # Unit tests for care cascade estimation pipeline and demand transition registry
 
 .repo_path <- function(...) {
-  p1 <- file.path(...)
-  p2 <- file.path("..", "..", ...)
-  if (file.exists(p1)) return(p1)
-  if (file.exists(p2)) return(p2)
-  curr <- getwd()
-  for (i in 1:6) {
-    c1 <- file.path(curr, ...)
-    if (file.exists(c1)) return(c1)
-    c2 <- file.path(curr, "00_pkg_src", "urpssim", ...)
-    if (file.exists(c2)) return(c2)
-    curr <- dirname(curr)
-  }
-  p1
+  root <- .source_tree_root()
+  if (length(root) == 0) root <- ".."
+  file.path(root[1], ...)
 }
 
 test_that("estimate_care_cascade.R script exists and has valid syntax", {

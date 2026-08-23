@@ -99,6 +99,7 @@ estimate_urogynecology_service_share <- function(
 
   base::message("Normalizing identifiers, dates, HCPCS codes, and diagnoses.")
   normalized_claims <- claims |>
+    dplyr::select(-dplyr::any_of(c("provider_type", "taxonomy_code"))) |>
     dplyr::mutate(
       claim_id = base::as.character(.data$claim_id),
       service_date = base::as.Date(.data$service_date),
@@ -111,7 +112,7 @@ estimate_urogynecology_service_share <- function(
       hcpcs = stringr::str_to_upper(
         stringr::str_trim(base::as.character(.data$hcpcs))
       ),
-      year = base::as.integer(base::format(base::as.Date(.data$service_date), "%Y"))
+      year = lubridate::year(.data$service_date)
     )
 
   if (!"is_primary" %in% base::names(npi_taxonomy)) {
@@ -155,11 +156,7 @@ estimate_urogynecology_service_share <- function(
         unknown_provider
       )
     ) |>
-    dplyr::select(
-      .data$rendering_npi,
-      .data$taxonomy_code,
-      .data$provider_type
-    )
+    dplyr::select("rendering_npi", "taxonomy_code", "provider_type")
 
   normalized_services <- service_rules |>
     dplyr::transmute(
@@ -235,7 +232,7 @@ estimate_urogynecology_service_share <- function(
         )
       ) |>
       dplyr::distinct(.data$rendering_npi, .keep_all = TRUE) |>
-      dplyr::select(.data$rendering_npi, .data$practice_id)
+      dplyr::select("rendering_npi", "practice_id")
     classified_claims <- classified_claims |>
       dplyr::left_join(affiliation_lookup, by = "rendering_npi")
   } else {
@@ -317,11 +314,7 @@ estimate_urogynecology_service_share <- function(
   shares <- share_cells |>
     dplyr::left_join(
       service_prior |>
-        dplyr::select(
-          .data$service,
-          .data$provider_type,
-          .data$prior_probability
-        ),
+        dplyr::select("service", "provider_type", "prior_probability"),
       by = c("service", "provider_type")
     ) |>
     dplyr::mutate(
