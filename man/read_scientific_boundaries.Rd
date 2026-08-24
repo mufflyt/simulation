@@ -7,7 +7,10 @@
 read_scientific_boundaries(path = "config/scientific_boundaries.yml")
 }
 \arguments{
-\item{path}{Path to boundary YAML config (defaults to \code{config/scientific_boundaries.yml}).}
+\item{path}{Path to boundary YAML config (defaults to \code{config/scientific_boundaries.yml}).
+When that is absent -- \verb{config/} is \code{.Rbuildignore}d, so it never exists in
+an installed package -- the copy shipped at \code{extdata/scientific_boundaries.yml}
+is read instead.}
 }
 \value{
 List of boundary specifications.
