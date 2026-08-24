@@ -8,6 +8,30 @@
   base::as.character(DBI::dbQuoteString(connection, value))
 }
 
+# The build stamp, as a SQL literal, computed in R.
+#
+# NOT SQL's CURRENT_DATE. In DuckDB current_date/today()/now() live in the ICU
+# extension, not the core catalog, so the first statement using one triggers
+# extension autoloading. On a CI runner that cannot fetch the extension that
+# autoload fails outright --
+#
+#   Extension Autoloading Error: ... required extension 'icu':
+#   Extension ".../v1.5.5/linux_amd64/icu.duckdb_extension" not found.
+#
+# -- and every query carrying a build_date column errors. It works locally only
+# because a developer machine already has icu cached, which is exactly the kind
+# of difference that makes a green local run mean nothing.
+#
+# Computing it in R also makes the stamp CONSISTENT: one date for the whole
+# build rather than a separate clock read per statement, which could otherwise
+# straddle midnight and label tables from one build with two different dates.
+.app_build_date_sql <- function(connection, build_date = base::Sys.Date()) {
+  base::paste0(
+    "CAST(", .app_sql_string(connection, base::format(build_date, "%Y-%m-%d")),
+    " AS DATE)"
+  )
+}
+
 .app_resolve_column <- function(columns, candidates, required = TRUE) {
   matched <- columns[base::tolower(columns) %in% base::tolower(candidates)]
   if (base::length(matched) > 0L) return(matched[[1]])
@@ -231,7 +255,7 @@ build_app_skill_mix_evidence_duckdb <- function(
     "FROM ", schema_sql, ".nppes_provider_year) SELECT DISTINCT CAST(d.", .app_sql_name(connection, dac_npi), " AS VARCHAR) AS npi, ",
     "CAST(d.", .app_sql_name(connection, dac_group), " AS VARCHAR) AS practice_id, ", org_sql, " AS practice_name, ",
     "upper(trim(CAST(d.", .app_sql_name(connection, dac_state), " AS VARCHAR))) AS state, l.provider_type, l.taxonomy_codes, ",
-    "l.year AS nppes_year, CURRENT_DATE AS build_date FROM ", dac_relation, " d LEFT JOIN latest l ON CAST(d.",
+    "l.year AS nppes_year, ", .app_build_date_sql(connection), " AS build_date FROM ", dac_relation, " d LEFT JOIN latest l ON CAST(d.",
     .app_sql_name(connection, dac_npi), " AS VARCHAR) = l.npi AND l.rn = 1 WHERE d.", .app_sql_name(connection, dac_group), " IS NOT NULL"
   )
   DBI::dbExecute(connection, affiliation_sql)
@@ -241,7 +265,7 @@ build_app_skill_mix_evidence_duckdb <- function(
     "CREATE OR REPLACE TABLE ", schema_sql, ".practice_supervision_pools AS SELECT state, practice_id, max(practice_name) AS practice_name, ",
     "count(DISTINCT CASE WHEN provider_type IN ('nurse_practitioner', 'physician_assistant', 'clinical_nurse_specialist', 'certified_nurse_midwife') THEN npi END) AS app_headcount, ",
     "count(DISTINCT CASE WHEN provider_type IN ('fpmrs_obgyn', 'fpmrs_urology', 'obgyn_physician', 'urology_physician') THEN npi END) AS physician_headcount, ",
-    "app_headcount / NULLIF(physician_headcount, 0) AS observed_app_physician_ratio, max(nppes_year) AS nppes_year, CURRENT_DATE AS build_date ",
+    "app_headcount / NULLIF(physician_headcount, 0) AS observed_app_physician_ratio, max(nppes_year) AS nppes_year, ", .app_build_date_sql(connection), " AS build_date ",
     "FROM ", schema_sql, ".doctors_clinicians_affiliations GROUP BY state, practice_id"
   )
   DBI::dbExecute(connection, pool_sql)
