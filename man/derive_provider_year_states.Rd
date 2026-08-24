@@ -42,6 +42,7 @@ after revocation or surrender, which requires explicit reinstatement.
 Other retirement contract:
 \code{\link[=adjudicate_terminal_events]{adjudicate_terminal_events()}},
 \code{\link[=build_retirement_artifact_manifest]{build_retirement_artifact_manifest()}},
+\code{\link[=derive_provider_career_states]{derive_provider_career_states()}},
 \code{\link[=persist_retirement_consensus_artifact]{persist_retirement_consensus_artifact()}},
 \code{\link[=propagate_retirement_uncertainty_to_access]{propagate_retirement_uncertainty_to_access()}},
 \code{\link[=retirement_confidence_dimensions]{retirement_confidence_dimensions()}},

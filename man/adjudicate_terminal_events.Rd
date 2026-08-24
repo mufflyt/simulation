@@ -45,6 +45,7 @@ wrong-person retirement is not.
 \seealso{
 Other retirement contract:
 \code{\link[=build_retirement_artifact_manifest]{build_retirement_artifact_manifest()}},
+\code{\link[=derive_provider_career_states]{derive_provider_career_states()}},
 \code{\link[=derive_provider_year_states]{derive_provider_year_states()}},
 \code{\link[=persist_retirement_consensus_artifact]{persist_retirement_consensus_artifact()}},
 \code{\link[=propagate_retirement_uncertainty_to_access]{propagate_retirement_uncertainty_to_access()}},

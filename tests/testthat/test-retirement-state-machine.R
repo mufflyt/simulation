@@ -414,3 +414,154 @@ testthat::test_that("an unmatured retirement is a candidate, not a confirmed exi
   ))
   testthat::expect_identical(immature$terminal_decision, "candidate_only")
 })
+
+# ---- time dimension: effective dates, no retroactive rewriting -------------
+
+testthat::test_that("a lapse ends active years at its effective date and not before", {
+  # The exit must begin AT the effective year. Rewriting earlier years would
+  # erase practice that was observed, and shifting it later would keep a
+  # terminated licence in the active workforce.
+  panel <- dplyr::bind_rows(
+    .rsm_panel_row(2017, positive_activity = TRUE, activity_confidence = 0.99),
+    .rsm_panel_row(2018, positive_activity = TRUE, activity_confidence = 0.99),
+    .rsm_panel_row(2019, event_type = "lapsed",
+                   terminal_decision = "confirmed_exit"),
+    .rsm_panel_row(2020),
+    .rsm_panel_row(2021)
+  )
+  states <- suppressMessages(derive_provider_year_states(panel))
+
+  testthat::expect_identical(
+    states$activity_state,
+    c("ACTIVE", "ACTIVE", "EXITED", "EXITED", "EXITED")
+  )
+  # Explicitly: the two pre-lapse years are untouched.
+  testthat::expect_identical(
+    states$activity_state[states$year < 2019L], c("ACTIVE", "ACTIVE")
+  )
+})
+
+testthat::test_that("reinstatement restores ACTIVE from its own year, not retroactively", {
+  panel <- dplyr::bind_rows(
+    .rsm_panel_row(2018, positive_activity = TRUE, activity_confidence = 0.99),
+    .rsm_panel_row(2019, event_type = "lapsed",
+                   terminal_decision = "confirmed_exit"),
+    .rsm_panel_row(2020),
+    .rsm_panel_row(2021, event_type = "lapsed",
+                   terminal_decision = "reactivated",
+                   positive_activity = TRUE, activity_confidence = 0.99,
+                   explicit_reinstatement = TRUE),
+    .rsm_panel_row(2022, positive_activity = TRUE, activity_confidence = 0.99)
+  )
+  states <- suppressMessages(derive_provider_year_states(panel))
+
+  # 2020 must stay EXITED: a 2021 renewal is not evidence about 2020.
+  testthat::expect_identical(
+    states$activity_state,
+    c("ACTIVE", "EXITED", "EXITED", "ACTIVE", "ACTIVE")
+  )
+})
+
+# ---- multiple licences -----------------------------------------------------
+
+.rsm_license_row <- function(year, license_id, activity_state,
+                             provider_id = "P1", qualifying = TRUE) {
+  tibble::tibble(
+    provider_id = provider_id, license_id = license_id,
+    year = as.integer(year), activity_state = activity_state,
+    qualifying = qualifying
+  )
+}
+
+testthat::test_that("one state's lapse does not end a career while another licence is active", {
+  # The Colorado/Wyoming case. Declaring a career exit from a single licence
+  # event overstates attrition, and does so selectively: multi-state
+  # physicians have the most licences to lapse.
+  licenses <- dplyr::bind_rows(
+    .rsm_license_row(2020, "CO", "ACTIVE"),
+    .rsm_license_row(2020, "WY", "EXITED")
+  )
+  career <- suppressMessages(derive_provider_career_states(licenses))
+
+  testthat::expect_identical(career$career_state, "ACTIVE")
+  testthat::expect_identical(
+    career$career_reason, "qualifying_active_license_remains"
+  )
+  testthat::expect_equal(career$n_active_licenses, 1L)
+})
+
+testthat::test_that("a career exit requires that no qualifying active licence remains", {
+  licenses <- dplyr::bind_rows(
+    .rsm_license_row(2020, "CO", "EXITED"),
+    .rsm_license_row(2020, "WY", "EXITED")
+  )
+  career <- suppressMessages(derive_provider_career_states(licenses))
+
+  testthat::expect_identical(career$career_state, "EXITED")
+  testthat::expect_identical(
+    career$career_reason, "no_qualifying_active_license_remains"
+  )
+})
+
+testthat::test_that("exit is not asserted while any licence status is unobserved", {
+  # That unobserved licence might be the active one, so claiming a career exit
+  # would be asserting something unmeasured.
+  licenses <- dplyr::bind_rows(
+    .rsm_license_row(2020, "CO", "EXITED"),
+    .rsm_license_row(2020, "WY", "UNKNOWN")
+  )
+  career <- suppressMessages(derive_provider_career_states(licenses))
+
+  testthat::expect_identical(career$career_state, "UNKNOWN")
+  testthat::expect_identical(career$career_reason, "license_status_unobserved")
+})
+
+testthat::test_that("a non-qualifying licence cannot hold a provider in the workforce", {
+  licenses <- dplyr::bind_rows(
+    .rsm_license_row(2020, "CO", "EXITED"),
+    .rsm_license_row(2020, "XX", "ACTIVE", qualifying = FALSE)
+  )
+  career <- suppressMessages(derive_provider_career_states(licenses))
+
+  testthat::expect_identical(career$career_state, "EXITED")
+  testthat::expect_equal(career$n_qualifying_licenses, 1L)
+})
+
+testthat::test_that("death applies to the person, not the credential", {
+  deceased_only <- dplyr::bind_rows(
+    .rsm_license_row(2020, "CO", "DECEASED"),
+    .rsm_license_row(2020, "WY", "EXITED")
+  )
+  testthat::expect_identical(
+    suppressMessages(derive_provider_career_states(deceased_only))$career_state,
+    "DECEASED"
+  )
+
+  # A licence showing practice after death is a conflict, never a return.
+  contradictory <- dplyr::bind_rows(
+    .rsm_license_row(2020, "CO", "DECEASED"),
+    .rsm_license_row(2020, "WY", "ACTIVE")
+  )
+  contradiction <- suppressMessages(
+    derive_provider_career_states(contradictory)
+  )
+  testthat::expect_identical(contradiction$career_state, "CONFLICT")
+  testthat::expect_identical(
+    contradiction$career_reason,
+    "activity_under_another_license_after_death"
+  )
+})
+
+testthat::test_that("career state tracks licence changes across years", {
+  licenses <- dplyr::bind_rows(
+    .rsm_license_row(2019, "CO", "ACTIVE"), .rsm_license_row(2019, "WY", "ACTIVE"),
+    .rsm_license_row(2020, "CO", "ACTIVE"), .rsm_license_row(2020, "WY", "EXITED"),
+    .rsm_license_row(2021, "CO", "EXITED"), .rsm_license_row(2021, "WY", "EXITED")
+  )
+  career <- suppressMessages(derive_provider_career_states(licenses))
+
+  # The career exit lands in 2021, when the LAST licence goes -- not in 2020
+  # when the first one lapsed.
+  testthat::expect_identical(career$career_state, c("ACTIVE", "ACTIVE", "EXITED"))
+  testthat::expect_equal(career$n_active_licenses, c(2L, 1L, 0L))
+})
