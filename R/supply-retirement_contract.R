@@ -419,3 +419,122 @@ derive_provider_year_states <- function(panel_tbl,
 
   state_tbl
 }
+
+#' Roll licence-level states up to a provider-level career state
+#'
+#' @description
+#' A LAPSE IS AN EXIT FROM A LICENCE, NOT NECESSARILY FROM THE PROFESSION.
+#' A physician licensed in Colorado and Wyoming whose Wyoming licence expires
+#' has not left the workforce; they have left Wyoming's. Declaring a career
+#' exit from a single licence event overstates attrition, and it does so
+#' selectively -- multi-state physicians are the ones with the most licences to
+#' lapse, so the bias concentrates in exactly the group least likely to have
+#' actually retired.
+#'
+#' The rule is therefore: **a provider-level career exit requires that no
+#' qualifying active licence remains.**
+#'
+#' Precedence, applied per provider-year, and deliberately fail-closed against
+#' OVERSTATING supply rather than against overstating exit:
+#'
+#' \enumerate{
+#'   \item Any `DECEASED` licence together with any `ACTIVE` licence is a
+#'     `CONFLICT` -- death is a fact about a person, so it cannot coexist with
+#'     practice under another licence.
+#'   \item Any `DECEASED` licence makes the provider `DECEASED`; death applies
+#'     to the person, not the credential.
+#'   \item Any qualifying `ACTIVE` licence makes the provider `ACTIVE`.
+#'   \item Any `CONFLICT` makes the provider `CONFLICT`.
+#'   \item Any `UNKNOWN` licence leaves the provider `UNKNOWN`. Exit cannot be
+#'     asserted while some licence's status is unobserved -- that licence might
+#'     be the active one.
+#'   \item Only when every qualifying licence is `EXITED` is the provider
+#'     `EXITED`.
+#' }
+#'
+#' Non-qualifying licences (`qualifying = FALSE`) are excluded before any of
+#' this: a licence outside the study's scope must not keep a provider in the
+#' active workforce.
+#'
+#' @param license_state_tbl Licence-level provider-year states, as returned by
+#'   [derive_provider_year_states()] per licence, with `provider_id`,
+#'   `license_id`, `year`, `activity_state` and optionally `qualifying`.
+#'
+#' @return One row per provider-year: `provider_id`, `year`, `career_state`,
+#'   `career_reason`, `n_qualifying_licenses`, `n_active_licenses`.
+#' @family retirement contract
+#' @concept supply
+#' @export
+derive_provider_career_states <- function(license_state_tbl) {
+  base::message("[retirement] Rolling licence states up to career states.")
+
+  required_columns <- base::c(
+    "provider_id", "license_id", "year", "activity_state"
+  )
+  missing_columns <- base::setdiff(
+    required_columns, base::names(license_state_tbl)
+  )
+  if (base::length(missing_columns) > 0L) {
+    base::stop(
+      "Licence-level state table is missing: ",
+      base::paste(missing_columns, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  scoped_tbl <- license_state_tbl
+  if (!"qualifying" %in% base::names(scoped_tbl)) {
+    scoped_tbl$qualifying <- TRUE
+  }
+  scoped_tbl$qualifying <- dplyr::coalesce(scoped_tbl$qualifying, FALSE)
+  scoped_tbl <- scoped_tbl[scoped_tbl$qualifying, , drop = FALSE]
+
+  career_tbl <- scoped_tbl |>
+    dplyr::group_by(.data$provider_id, .data$year) |>
+    dplyr::summarise(
+      n_qualifying_licenses = dplyr::n(),
+      n_active_licenses = base::sum(.data$activity_state == "ACTIVE"),
+      .any_deceased = base::any(.data$activity_state == "DECEASED"),
+      .any_active = base::any(.data$activity_state == "ACTIVE"),
+      .any_conflict = base::any(.data$activity_state == "CONFLICT"),
+      .any_unknown = base::any(.data$activity_state == "UNKNOWN"),
+      .all_exited = base::all(.data$activity_state == "EXITED"),
+      .groups = "drop"
+    ) |>
+    dplyr::mutate(
+      career_state = dplyr::case_when(
+        .data$.any_deceased & .data$.any_active ~ "CONFLICT",
+        .data$.any_deceased ~ "DECEASED",
+        .data$.any_active ~ "ACTIVE",
+        .data$.any_conflict ~ "CONFLICT",
+        .data$.any_unknown ~ "UNKNOWN",
+        .data$.all_exited ~ "EXITED",
+        TRUE ~ "UNKNOWN"
+      ),
+      career_reason = dplyr::case_when(
+        .data$.any_deceased & .data$.any_active ~ "activity_under_another_license_after_death",
+        .data$.any_deceased ~ "death_applies_to_the_person",
+        .data$.any_active ~ "qualifying_active_license_remains",
+        .data$.any_conflict ~ "unresolved_license_conflict",
+        .data$.any_unknown ~ "license_status_unobserved",
+        .data$.all_exited ~ "no_qualifying_active_license_remains",
+        TRUE ~ "no_qualifying_license"
+      )
+    ) |>
+    dplyr::select(
+      "provider_id", "year", "career_state", "career_reason",
+      "n_qualifying_licenses", "n_active_licenses"
+    )
+
+  career_summary <- career_tbl |>
+    dplyr::count(.data$career_state, name = "provider_years")
+  base::message(
+    "[retirement] Career states: ",
+    base::paste(
+      career_summary$career_state, career_summary$provider_years,
+      sep = "=", collapse = ", "
+    )
+  )
+
+  career_tbl
+}

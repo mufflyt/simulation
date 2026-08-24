@@ -48,6 +48,7 @@ shortage estimates look more certain than they are.
 Other retirement contract:
 \code{\link[=adjudicate_terminal_events]{adjudicate_terminal_events()}},
 \code{\link[=build_retirement_artifact_manifest]{build_retirement_artifact_manifest()}},
+\code{\link[=derive_provider_career_states]{derive_provider_career_states()}},
 \code{\link[=derive_provider_year_states]{derive_provider_year_states()}},
 \code{\link[=persist_retirement_consensus_artifact]{persist_retirement_consensus_artifact()}},
 \code{\link[=retirement_confidence_dimensions]{retirement_confidence_dimensions()}},
