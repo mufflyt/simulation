@@ -10,7 +10,17 @@ testthat::test_that("national source registry covers all ten source families", {
 testthat::test_that("repository evidence builds a provenance-complete DuckDB", {
   testthat::skip_if_not_installed("duckdb")
   testthat::skip_if_not_installed("DBI")
-  project_root <- testthat::test_path("..", "..")
+
+  # seed_urps_repository_evidence() reads real CSVs under data-raw/ (spatial
+  # tract population, NRMP entrants, ACGME fellows). data-raw/ is
+  # .Rbuildignore'd, so under R CMD check test_path("..","..") points into
+  # <pkg>.Rcheck/ where none of them exist, and the build failed with "No
+  # canonical evidence tables were available" -- absent input reported as a
+  # broken builder. Those CSVs ARE tracked in git, so this gate still runs for
+  # real in scripts/ci/check_suite.R, which executes from the repository root.
+  root <- .source_tree_root()
+  testthat::skip_if(length(root) == 0, "repository root not reachable")
+  project_root <- root[1]
   duckdb_path <- base::file.path(
     base::tempdir(),
     base::paste0(
