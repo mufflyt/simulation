@@ -1360,6 +1360,49 @@
       "Maintainer": "Tyson Barrett <t.barrett88@gmail.com>",
       "Repository": "CRAN"
     },
+    "dbplyr": {
+      "Package": "dbplyr",
+      "Version": "2.5.1",
+      "Source": "Repository",
+      "Depends": [
+        "R (>= 3.6)"
+      ],
+      "Imports": [
+        "blob (>= 1.2.0)",
+        "cli (>= 3.6.1)",
+        "DBI (>= 1.1.3)",
+        "dplyr (>=\n1.1.2)",
+        "glue (>= 1.6.2)",
+        "lifecycle (>= 1.0.3)",
+        "magrittr",
+        "methods",
+        "pillar (>= 1.9.0)",
+        "purrr (>= 1.0.1)",
+        "R6 (>= 2.2.2)",
+        "rlang (>= 1.1.1)",
+        "tibble (>= 3.2.1)",
+        "tidyr (>= 1.3.0)",
+        "tidyselect (>= 1.2.1)",
+        "utils",
+        "vctrs (>= 0.6.3)",
+        "withr (>=\n2.5.0)"
+      ],
+      "Suggests": [
+        "bit64",
+        "covr",
+        "knitr",
+        "Lahman",
+        "nycflights13",
+        "odbc (>= 1.4.2)",
+        "RMariaDB (>= 1.2.2)",
+        "rmarkdown",
+        "RPostgres (>= 1.4.5)",
+        "RPostgreSQL",
+        "RSQLite (>= 2.3.8)",
+        "testthat (>= 3.1.10)"
+      ],
+      "Repository": "CRAN"
+    },
     "deSolve": {
       "Package": "deSolve",
       "Version": "1.41",
@@ -1596,6 +1639,12 @@
       "NeedsCompilation": "yes",
       "Author": "Hannes Mühleisen [aut] (ORCID: <https://orcid.org/0000-0001-8552-0029>), Mark Raasveldt [aut] (ORCID: <https://orcid.org/0000-0001-5005-6844>), Kirill Müller [cre] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Stichting DuckDB Foundation [cph], Apache Software Foundation [cph], PostgreSQL Global Development Group [cph], The Regents of the University of California [cph], Cameron Desrochers [cph], Victor Zverovich [cph], RAD Game Tools [cph], Valve Software [cph], Rich Geldreich [cph], Tenacious Software LLC [cph], The RE2 Authors [cph], Google Inc. [cph], Facebook Inc. [cph], Steven G. Johnson [cph], Jiahao Chen [cph], Tony Kelman [cph], Jonas Fonseca [cph], Lukas Fittl [cph], Salvatore Sanfilippo [cph], Art.sy, Inc. [cph], Oran Agra [cph], Redis Labs, Inc. [cph], Melissa O'Neill [cph], PCG Project contributors [cph]",
       "Maintainer": "Kirill Müller <kirill@cynkra.com>",
+      "Repository": "CRAN"
+    },
+    "duckplyr": {
+      "Package": "duckplyr",
+      "Version": "1.0.0",
+      "Source": "Repository",
       "Repository": "CRAN"
     },
     "e1071": {
@@ -1874,6 +1923,12 @@
       "NeedsCompilation": "yes",
       "Author": "Jim Hester [aut], Hadley Wickham [aut], Gábor Csárdi [aut], Jeroen Ooms [cre], libuv project contributors [cph] (libuv library), Joyent, Inc. and other Node contributors [cph] (libuv library), Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
+      "Repository": "CRAN"
+    },
+    "future.apply": {
+      "Package": "future.apply",
+      "Version": "1.11.3",
+      "Source": "Repository",
       "Repository": "CRAN"
     },
     "generics": {
@@ -2243,6 +2298,14 @@
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
     },
+    "httr2": {
+      "Package": "httr2",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Title": "Perform HTTP Requests and Process Responses",
+      "License": "MIT + file LICENSE",
+      "Repository": "CRAN"
+    },
     "hunspell": {
       "Package": "hunspell",
       "Version": "3.0.5",
@@ -2341,14 +2404,6 @@
       "NeedsCompilation": "no",
       "Author": "Carson Sievert [aut, cre] (<https://orcid.org/0000-0002-4958-2844>), Joe Cheng [aut], RStudio [cph], jQuery Foundation [cph] (jQuery library and jQuery UI library), jQuery contributors [ctb, cph] (jQuery library; authors listed in inst/lib/jquery-AUTHORS.txt)",
       "Maintainer": "Carson Sievert <carson@rstudio.com>",
-      "Repository": "CRAN"
-    },
-    "httr2": {
-      "Package": "httr2",
-      "Version": "1.0.0",
-      "Source": "Repository",
-      "Title": "Perform HTTP Requests and Process Responses",
-      "License": "MIT + file LICENSE",
       "Repository": "CRAN"
     },
     "jsonlite": {
@@ -2700,6 +2755,12 @@
       "NeedsCompilation": "yes",
       "Author": "Mark Clements [aut, cre], Dilawar Singh [ctb], Heng Li [ctb], Peter N. Brown [ctb], George D. Byrne [ctb], Alan C. Hindmarsh [ctb], Cleve Moler [ctb], Linda R. Petzold [ctb]",
       "Maintainer": "Mark Clements <mark.clements@ki.se>",
+      "Repository": "CRAN"
+    },
+    "lubridate": {
+      "Package": "lubridate",
+      "Version": "1.9.4",
+      "Source": "Repository",
       "Repository": "CRAN"
     },
     "magrittr": {
@@ -3540,6 +3601,12 @@
       "NeedsCompilation": "yes",
       "Repository": "CRAN"
     },
+    "ranger": {
+      "Package": "ranger",
+      "Version": "0.17.0",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
     "rappdirs": {
       "Package": "rappdirs",
       "Version": "0.3.4",
@@ -3741,6 +3808,12 @@
       "NeedsCompilation": "yes",
       "Author": "Hadley Wickham [aut], Jim Hester [aut], Romain Francois [ctb], Jennifer Bryan [aut, cre] (ORCID: <https://orcid.org/0000-0002-6983-2759>), Shelby Bearrows [ctb], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>), https://github.com/mandreyel/ [cph] (mio library), Jukka Jylänki [ctb, cph] (grisu3 implementation), Mikkel Jørgensen [ctb, cph] (grisu3 implementation)",
       "Maintainer": "Jennifer Bryan <jenny@posit.co>",
+      "Repository": "CRAN"
+    },
+    "readxl": {
+      "Package": "readxl",
+      "Version": "1.4.3",
+      "Source": "Repository",
       "Repository": "CRAN"
     },
     "reformulas": {
@@ -4423,6 +4496,12 @@
       "NeedsCompilation": "yes",
       "Author": "Edzer Pebesma [aut, cre] (ORCID: <https://orcid.org/0000-0001-8049-7069>), Roger Bivand [ctb] (ORCID: <https://orcid.org/0000-0003-2392-6140>), Etienne Racine [ctb], Michael Sumner [ctb], Ian Cook [ctb], Tim Keitt [ctb], Robin Lovelace [ctb], Hadley Wickham [ctb], Jeroen Ooms [ctb] (ORCID: <https://orcid.org/0000-0002-4035-0289>), Kirill Müller [ctb], Thomas Lin Pedersen [ctb], Dan Baston [ctb], Dewey Dunnington [ctb] (ORCID: <https://orcid.org/0000-0002-9415-4582>), Alexandre Courtiol [ctb] (ORCID: <https://orcid.org/0000-0003-0637-2959>)",
       "Maintainer": "Edzer Pebesma <edzer.pebesma@uni-muenster.de>",
+      "Repository": "CRAN"
+    },
+    "shiny": {
+      "Package": "shiny",
+      "Version": "1.10.0",
+      "Source": "Repository",
       "Repository": "CRAN"
     },
     "sp": {
@@ -5710,42 +5789,6 @@
       "NeedsCompilation": "no",
       "Author": "Gavin Rozzi [aut, cre] (<https://orcid.org/0000-0002-9969-8175>)",
       "Maintainer": "Gavin Rozzi <gr@gavinrozzi.com>",
-      "Repository": "CRAN"
-    },
-    "duckplyr": {
-      "Package": "duckplyr",
-      "Version": "1.0.0",
-      "Source": "Repository",
-      "Repository": "CRAN"
-    },
-    "ranger": {
-      "Package": "ranger",
-      "Version": "0.17.0",
-      "Source": "Repository",
-      "Repository": "CRAN"
-    },
-    "shiny": {
-      "Package": "shiny",
-      "Version": "1.10.0",
-      "Source": "Repository",
-      "Repository": "CRAN"
-    },
-    "future.apply": {
-      "Package": "future.apply",
-      "Version": "1.11.3",
-      "Source": "Repository",
-      "Repository": "CRAN"
-    },
-    "readxl": {
-      "Package": "readxl",
-      "Version": "1.4.3",
-      "Source": "Repository",
-      "Repository": "CRAN"
-    },
-    "lubridate": {
-      "Package": "lubridate",
-      "Version": "1.9.4",
-      "Source": "Repository",
       "Repository": "CRAN"
     }
   }
