@@ -54,7 +54,7 @@ jobs:
           # R/core-contract_pin -- see R-CMD-check.yaml for why a bare repo spec
           # is not good enough. It IS installable here: this job requires
           # MUFFLYACCESS_PAT above.
-          extra-packages: any::testthat, any::pkgload, any::dplyr, any::tibble, any::tidyr, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4, any::ranger, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          extra-packages: any::testthat, any::pkgload, any::dplyr, any::tibble, any::tidyr, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4, any::ranger, mufflyt/mufflyaccess@9d13b2e197c4a95cfdae3e3520e07d309e8ad9bc
           # Suggests are not resolved wholesale (mufflyaccess is private and pak
           # fails the job on it); the reachable ones are named above.
           dependencies: '"hard"'

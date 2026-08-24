@@ -83,7 +83,7 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::testthat, any::pkgload, any::knitr, any::rmarkdown, any::survey, any::flexsurv, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          extra-packages: any::testthat, any::pkgload, any::knitr, any::rmarkdown, any::survey, any::flexsurv, mufflyt/mufflyaccess@9d13b2e197c4a95cfdae3e3520e07d309e8ad9bc
           dependencies: '"hard"'
 
       - name: Refusal gates still refuse
