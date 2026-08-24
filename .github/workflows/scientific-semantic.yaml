@@ -33,7 +33,7 @@ jobs:
       - name: Restore dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::testthat, any::sf, any::survey, any::zipcodeR, mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+          extra-packages: any::testthat, any::sf, any::survey, any::zipcodeR, mufflyt/mufflyaccess@9d13b2e197c4a95cfdae3e3520e07d309e8ad9bc
           dependencies: '"hard"'
 
       - name: Run Semantic Correctness & Estimand Contract Tests
