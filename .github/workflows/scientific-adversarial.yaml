@@ -64,7 +64,7 @@ env:
   R_KEEP_PKG_SOURCE: yes
   _R_CHECK_FORCE_SUGGESTS_: false
   GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
-  MUFFLYACCESS_PIN: mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+  MUFFLYACCESS_PIN: mufflyt/mufflyaccess@9d13b2e197c4a95cfdae3e3520e07d309e8ad9bc
   R_EXTRA_PKGS: any::testthat, any::pkgload, any::knitr, any::rmarkdown, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4, any::flexsurv
 
 jobs:

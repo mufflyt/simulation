@@ -21,7 +21,7 @@
 #' @family contract pin
 #' @concept core
 #' @export
-MUFFLYACCESS_PINNED_SHA <- "a88dba8f4bafec7659df3f3c1404aca814709208"
+MUFFLYACCESS_PINNED_SHA <- "9d13b2e197c4a95cfdae3e3520e07d309e8ad9bc"
 
 #' Contract functions this package calls
 #'
@@ -60,7 +60,7 @@ MUFFLYACCESS_REQUIRED_EXPORTS <- c(
   "weighted_mean_all",
   # The README state maps call urps_state_female_pop() from
   # scripts/plot_readme_figures.R. Present and exported at the pinned commit
-  # a88dba8, so declaring it moves no pin -- the check that separates a safe
+  # 9d13b2e, so declaring it moves no pin -- the check that separates a safe
   # declaration from the pin bump 72a7e13 reverted.
   "urps_state_female_pop"
 )

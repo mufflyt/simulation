@@ -67,7 +67,7 @@ env:
   # Pinned by commit, NOT by ref. An extra-packages entry does not inherit the
   # DESCRIPTION Remotes pin, so a bare repo name silently installs HEAD and CI
   # drifts from every developer. test-contract-pin.R asserts this SHA.
-  MUFFLYACCESS_PIN: mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+  MUFFLYACCESS_PIN: mufflyt/mufflyaccess@9d13b2e197c4a95cfdae3e3520e07d309e8ad9bc
   R_EXTRA_PKGS: any::rcmdcheck, any::testthat, any::pkgload, any::knitr, any::rmarkdown, any::sf, any::survey, any::zipcodeR, any::ggplot2, any::blme, any::lme4
 
 jobs:
