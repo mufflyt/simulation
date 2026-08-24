@@ -98,6 +98,24 @@ NULL
 #' @return The result of calling `rhs(lhs)`.
 NULL
 
+# dbplyr is a REAL runtime dependency that no line of this package calls.
+#
+# dplyr::tbl() on a DBI connection dispatches into dbplyr, so
+# build_policy_migration_evidence(), the policy-migration DuckDB loader and the
+# provider-career evidence loader all need it -- but they reach it through
+# dplyr, never as dbplyr::. Without it those calls die with
+# "The package \"dbplyr\" is required to communicate with database backends",
+# which is what four of the nightly's errors were.
+#
+# It belongs in Imports rather than Suggests: CI runs with
+# _R_CHECK_FORCE_SUGGESTS_=false, so a Suggests entry would not be installed
+# and the failure would survive the fix. This reference exists only so R CMD
+# check does not then report it under "All declared Imports should be used";
+# it is never called.
+.urpssim_declared_import_anchor <- function() {
+  dbplyr::sql
+}
+
 # PR #8's survey-weighted fits construct temporary offset and weight columns
 # inside the model frame; R CMD check reads the names as undeclared globals.
 # Column names used in dplyr/tidy NSE. Declared so R CMD check does not read
