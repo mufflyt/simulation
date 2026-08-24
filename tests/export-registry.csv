@@ -230,3 +230,8 @@
 "adjudicate_terminal_events","api"
 "collapse_claims_to_service_events","api"
 "derive_provider_year_states","api"
+"build_retirement_artifact_manifest","api"
+"persist_retirement_consensus_artifact","api"
+"propagate_retirement_uncertainty_to_access","api"
+"validate_retirement_evidence_v2","api"
+"validate_retirement_oos","api"
