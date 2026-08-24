@@ -25,6 +25,7 @@ Depends:
 Imports:
     assertthat,
     DBI,
+    dbplyr,
     datasets,
     digest,
     dplyr (>= 1.1.0),

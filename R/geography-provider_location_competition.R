@@ -562,6 +562,7 @@ build_provider_location_choice_sets <- function(
 #' @return Fitted entrant and mover location-choice models.
 #' @family provider geography
 #' @concept geography
+#' @importFrom survival strata
 #' @export
 fit_provider_location_choice_model <- function(choice_tbl) {
   required_cols <- c("choice_id", "chosen", "event_type", "log_unmet_demand_30", "payer_mix_log_ratio", "hospital_system_score", "log_competition_30")
