@@ -26,6 +26,7 @@ Imports:
     assertthat,
     DBI,
     datasets,
+    dbplyr,
     digest,
     dplyr (>= 1.1.0),
     duckdb,
