@@ -227,3 +227,6 @@
 "practice_economics_sensitivity_decomposition","api"
 "practice_economics_elasticity","api"
 "classify_chia_service_share_events","api"
+"adjudicate_terminal_events","api"
+"collapse_claims_to_service_events","api"
+"derive_provider_year_states","api"
