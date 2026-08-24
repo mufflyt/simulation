@@ -2,13 +2,13 @@
 % Please edit documentation in R/calibration-urogynecology_service_shares.R
 \name{calibrate_service_share_model}
 \alias{calibrate_service_share_model}
-\title{Calibrate a compositional urogynecology service-share model}
+\title{Calibrate a joint urogynecology provider service-share model}
 \usage{
 calibrate_service_share_model(
   events,
   cms_evidence = NULL,
   chia_evidence = NULL,
-  alpha_grid = c(0.5, 1, 2, 5, 10, 20, 50, 100),
+  alpha_grid = base::c(0.5, 1, 2, 5, 10, 20, 50, 100),
   draws = 500L,
   seed = 20260822L
 )
@@ -30,12 +30,7 @@ calibrate_service_share_model(
 A validated service-share calibration bundle.
 }
 \description{
-Selects a Dirichlet concentration per service by leave-latest-year-out
-predictive log-score (see \code{\link[=select_service_share_concentration]{select_service_share_concentration()}}), draws
-the joint compositional posterior (see \code{\link[=draw_service_share_composition]{draw_service_share_composition()}}),
-and -- when \code{cms_evidence} and/or \code{chia_evidence} are supplied -- reweights
-those draws by importance sampling against how well each draw matches the
-external evidence, rather than pooling or averaging the sources.
+Calibrate a joint urogynecology provider service-share model
 }
 \seealso{
 Other calibration:

@@ -12,7 +12,7 @@ apply_wait_time_elasticity(
 )
 }
 \arguments{
-\item{base_rate}{Baseline transition rate (in \link{0, 1}).}
+\item{base_rate}{Baseline transition rate (in \verb{[0, 1]}).}
 
 \item{observed_wait_days}{Observed appointment wait time (business days).
 Defaults to \code{urps_observed_wait_days()$business_days}.}
@@ -22,7 +22,7 @@ Defaults to \code{urps_observed_wait_days()$business_days}.}
 \item{elasticity}{Constant elasticity factor (default -0.25).}
 }
 \value{
-Adjusted transition rate in \link{0, 1}.
+Adjusted transition rate in \verb{[0, 1]}.
 }
 \description{
 Adjusts baseline entry and re-entry transition rates according to observed or

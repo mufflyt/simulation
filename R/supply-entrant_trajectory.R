@@ -726,7 +726,7 @@ build_entrant_summary_sentence <- function(entrant_records) {
     dplyr::pull(.data$value)
 
   sentence <- base::paste0(
-    "Across ", first_year, "–", last_year, ", the simulated female share ",
+    "Across ", first_year, "\u2013", last_year, ", the simulated female share ",
     direction, " from ", scales::percent(first_percent, accuracy = 0.1),
     " to ", scales::percent(last_percent, accuracy = 0.1),
     " (p = ", scales::pvalue(p_value, accuracy = 0.001), ") among ",

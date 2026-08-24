@@ -31,12 +31,12 @@ run_end_to_end_simulation(
   run_practice_economics = FALSE,
   practice_payer_mix = NULL,
   practice_economics_draws = 100L,
-  service_share_engine = c("legacy_matrix", "calibrated"),
-  service_share_bundle = NULL,
-  service_share_draw = NULL,
   seed = 20260821L,
   save_outputs = TRUE,
-  output_dir = "artifacts/end_to_end"
+  output_dir = "artifacts/end_to_end",
+  service_share_engine = c("legacy_matrix", "calibrated"),
+  service_share_bundle = NULL,
+  service_share_draw = NULL
 )
 }
 \arguments{
@@ -120,6 +120,18 @@ bound runtime at full provider-cohort scale.}
 \item{save_outputs}{Whether to save timestamped CSV files.}
 
 \item{output_dir}{Directory for saved CSV files.}
+
+\item{service_share_engine}{Which service-share pathway to route demand
+through: \code{"legacy_matrix"} (the default fixed matrix) or \code{"calibrated"},
+which draws from \code{service_share_bundle}.}
+
+\item{service_share_bundle}{Calibrated service-share bundle, as validated by
+\code{\link[=validate_service_share_bundle]{validate_service_share_bundle()}}. Required when \code{service_share_engine} is
+\code{"calibrated"}.}
+
+\item{service_share_draw}{Which \code{draw_id} of \code{service_share_bundle} to use.
+\code{NULL} selects one deterministically from \code{seed}, so a run stays
+reproducible; an unavailable id is an error rather than a silent fallback.}
 }
 \value{
 A named list containing the audit ledger, spatial balances,

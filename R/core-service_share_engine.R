@@ -266,6 +266,7 @@ service_share_routing_for_year <- function(
 #'
 #' @return List with service workload and exact totals.
 #' @keywords internal
+#' @export
 allocate_urps_service_workload <- function(
     routed,
     workload = service_share_routing_workload()) {

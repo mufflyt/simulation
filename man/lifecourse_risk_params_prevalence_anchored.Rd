@@ -7,7 +7,7 @@
 lifecourse_risk_params_prevalence_anchored(
   n = 40000L,
   seed = 20260817L,
-  pop_by_age = data.frame(age = 18:90, population = 100000)
+  pop_by_age = data.frame(age = 18:90, population = 1e+05)
 )
 }
 \arguments{
@@ -20,13 +20,13 @@ Defaults to a flat 18-90 span so the fit is not dominated by whichever
 ages happen to be numerous in a particular projection year.}
 }
 \value{
-A risk-params list in the shape of \code{\link[=lifecourse_risk_params]{lifecourse_risk_params()}}.
+A risk-params list in the shape of \code{lifecourse_risk_params()}.
 }
 \description{
 Life-course risk parameters anchored to published symptomatic prevalence
 }
 \details{
-A drop-in alternative to \code{\link[=lifecourse_risk_params]{lifecourse_risk_params()}} whose intercept and age
+A drop-in alternative to \code{lifecourse_risk_params()} whose intercept and age
 slope are recalibrated to published prevalence, with cited covariate effects
 unchanged. Deterministic: it builds its own cohort under a fixed seed, so
 repeated calls return identical coefficients.

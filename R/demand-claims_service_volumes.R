@@ -525,6 +525,16 @@ build_share_summary <- function(shares, trends) {
 
 # Example crosswalk skeletons ---------------------------------------------
 
+#' Example HCPCS-to-service crosswalk skeleton
+#'
+#' A minimal, illustrative mapping for [resolve_service_volumes()] and friends.
+#' These are SKELETONS for documentation and tests, not a validated coding
+#' crosswalk; no published volume should be derived from them.
+#'
+#' @format A tibble with columns `hcpcs` (HCPCS/CPT code) and `service`
+#'   (URPS service label).
+#' @family claims service volumes
+#' @concept demand
 #' @export
 example_service_rules <- tibble::tribble(
   ~hcpcs, ~service,
@@ -537,6 +547,15 @@ example_service_rules <- tibble::tribble(
   "64581", "Sacral neuromodulation implant"
 )
 
+#' Example ICD-10-to-condition crosswalk skeleton
+#'
+#' Companion to [example_service_rules]. Illustrative only -- see that object's
+#' note on why these must not back a published number.
+#'
+#' @format A tibble with columns `dx_prefix` (ICD-10-CM prefix) and `condition`
+#'   (URPS condition label).
+#' @family claims service volumes
+#' @concept demand
 #' @export
 example_condition_rules <- tibble::tribble(
   ~dx_prefix, ~condition,
@@ -549,6 +568,15 @@ example_condition_rules <- tibble::tribble(
   "N39.0", "Urinary tract infection"
 )
 
+#' Example NUCC-taxonomy-to-provider-type crosswalk skeleton
+#'
+#' Companion to [example_service_rules]. Illustrative only -- see that object's
+#' note on why these must not back a published number.
+#'
+#' @format A tibble with columns `taxonomy_code` (NUCC provider taxonomy) and
+#'   `provider_type` (routing group label).
+#' @family claims service volumes
+#' @concept demand
 #' @export
 example_taxonomy_crosswalk <- tibble::tribble(
   ~taxonomy_code, ~provider_type,

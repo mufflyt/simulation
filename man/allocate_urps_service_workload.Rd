@@ -4,7 +4,10 @@
 \alias{allocate_urps_service_workload}
 \title{Convert routed URPS service volume to service-specific work RVUs}
 \usage{
-allocate_urps_service_workload(routed, workload = service_share_routing_workload())
+allocate_urps_service_workload(
+  routed,
+  workload = service_share_routing_workload()
+)
 }
 \arguments{
 \item{routed}{Routed service table from \code{\link[=pathway_provider_service_volumes]{pathway_provider_service_volumes()}}.}
@@ -17,30 +20,4 @@ List with service workload and exact totals.
 \description{
 Convert routed URPS service volume to service-specific work RVUs
 }
-\seealso{
-Other supply:
-\code{\link[=acgme_procedural_minimums]{acgme_procedural_minimums()}},
-\code{\link[=acgme_program_requirements]{acgme_program_requirements()}},
-\code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
-\code{\link[=build_cpt_acgme_incidence_matrix]{build_cpt_acgme_incidence_matrix()}},
-\code{\link[=build_empirical_entrant_parameters]{build_empirical_entrant_parameters()}},
-\code{\link[=compound_growth_rate]{compound_growth_rate()}},
-\code{\link[=default_case_mix_parameters]{default_case_mix_parameters()}},
-\code{\link[=default_entrant_parameters]{default_entrant_parameters()}},
-\code{\link[=default_region_probabilities]{default_region_probabilities()}},
-\code{\link[=entrant_trajectory]{entrant_trajectory()}},
-\code{\link[=entrant_trajectory_scenarios]{entrant_trajectory_scenarios()}},
-\code{\link[=lookup_state_medicaid_fee_ratio]{lookup_state_medicaid_fee_ratio()}},
-\code{\link[=medicaid_acceptance_coefficients]{medicaid_acceptance_coefficients()}},
-\code{\link[=medicaid_medicare_fee_index_table]{medicaid_medicare_fee_index_table()}},
-\code{\link[=nrmp_growth_rates]{nrmp_growth_rates()}},
-\code{\link[=practice_economics_defaults]{practice_economics_defaults()}},
-\code{\link[=practice_economics_evidence]{practice_economics_evidence()}},
-\code{\link[=predict_medicaid_acceptance]{predict_medicaid_acceptance()}},
-\code{\link[=simulate_acgme_fellowship_capacity]{simulate_acgme_fellowship_capacity()}},
-\code{\link[=simulate_entrant_characteristics]{simulate_entrant_characteristics()}},
-\code{\link[=simulate_joint_entrant_characteristics]{simulate_joint_entrant_characteristics()}},
-\code{\link[=simulate_practice_economics]{simulate_practice_economics()}}
-}
-\concept{allocation}
-\concept{supply}
+\keyword{internal}

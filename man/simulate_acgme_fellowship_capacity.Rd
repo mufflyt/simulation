@@ -24,13 +24,12 @@ A list with program capacity, limiting bottlenecks, and detailed case-volume met
 Calculates fellowship training capacity per program-year as the minimum across
 5 structural bounds: approved complement, case-log volume bottlenecks,
 faculty composition, participating-site capacity, and funding slots:
-[\text{Capacity}_{p,t} = \min(C^{\text{approved}}, C^{\text{cases}}, C^{\text{faculty}}, C^{\text{sites}}, C^{\text{funding}})]
+\deqn{\mathrm{Capacity}_{p,t} = \min(C^{\mathrm{approved}}, C^{\mathrm{cases}}, C^{\mathrm{faculty}}, C^{\mathrm{sites}}, C^{\mathrm{funding}})}{Capacity(p,t) = min(C.approved, C.cases, C.faculty, C.sites, C.funding)}
 }
 \seealso{
 Other supply:
 \code{\link[=acgme_procedural_minimums]{acgme_procedural_minimums()}},
 \code{\link[=acgme_program_requirements]{acgme_program_requirements()}},
-\code{\link[=allocate_urps_service_workload]{allocate_urps_service_workload()}},
 \code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
 \code{\link[=build_cpt_acgme_incidence_matrix]{build_cpt_acgme_incidence_matrix()}},
 \code{\link[=build_empirical_entrant_parameters]{build_empirical_entrant_parameters()}},

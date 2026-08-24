@@ -147,10 +147,13 @@ nhanes_ui_prevalence_by_stratum <- function(nhanes, ui_type = "any") {
 #' rate to produce annual URPS visit demand and required FTE.
 #'
 #' Formula:
-#'   demand_visits[stratum, year] =
-#'     prevalence[stratum] × population[stratum, year] × care_seeking_rate
 #'
-#'   demand_fte[year] = sum(demand_visits[year]) × fte_fraction / visits_per_fte
+#' ```
+#' demand_visits[stratum, year] =
+#'   prevalence[stratum] x population[stratum, year] x care_seeking_rate
+#'
+#' demand_fte[year] = sum(demand_visits[year]) x fte_fraction / visits_per_fte
+#' ```
 #'
 #' @param pop_projection Tibble with `year`, `age_band`, `race_eth`,
 #'   `population` (projected women 20+).  Columns `hysterectomy` is optional;

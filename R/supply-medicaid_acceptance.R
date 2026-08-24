@@ -423,7 +423,7 @@ lookup_state_medicaid_fee_ratio <- function(
 #' @param academic_setting Logical or 0/1.
 #' @param hospital_outpatient Logical or 0/1.
 #' @param medicaid_fee_ratio State Medicaid-to-Medicare fee ratio.
-#' @param svi Social Vulnerability Index in [0, 1].
+#' @param svi Social Vulnerability Index in `[0, 1]`.
 #' @param years_certified Years since board certification.
 #' @param coef Logistic coefficient specification.
 #' @param probability_bounds Optional lower and upper probability bounds.

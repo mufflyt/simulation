@@ -18,11 +18,10 @@ claims_service_volumes(
 
 \item{require_complete}{Require complete claims coverage.}
 
-\item{mode}{Mode when fallback is required: \code{"strict"} (error) or
-\code{"relaxed"} (warning).}
+\item{mode}{Mode when fallback is required: "strict" (error) or "relaxed" (warning).}
 }
 \value{
-Service volumes table with \code{overall_status} attribute.
+Service volumes table with overall_status attribute.
 }
 \description{
 Calibrate URPS service volumes from claims data with fallback

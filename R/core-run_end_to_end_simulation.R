@@ -56,6 +56,15 @@
 #' @param practice_economics_draws Monte Carlo draws per practice-year passed
 #'   to [simulate_practice_economics()]; kept below its 500-draw default to
 #'   bound runtime at full provider-cohort scale.
+#' @param service_share_engine Which service-share pathway to route demand
+#'   through: `"legacy_matrix"` (the default fixed matrix) or `"calibrated"`,
+#'   which draws from `service_share_bundle`.
+#' @param service_share_bundle Calibrated service-share bundle, as validated by
+#'   [validate_service_share_bundle()]. Required when `service_share_engine` is
+#'   `"calibrated"`.
+#' @param service_share_draw Which `draw_id` of `service_share_bundle` to use.
+#'   `NULL` selects one deterministically from `seed`, so a run stays
+#'   reproducible; an unavailable id is an error rather than a silent fallback.
 #' @param seed Master random seed.
 #' @param save_outputs Whether to save timestamped CSV files.
 #' @param output_dir Directory for saved CSV files.
@@ -501,8 +510,11 @@ run_end_to_end_simulation <- function(
           by = "county_fips"
         ) |>
         dplyr::mutate(
+          # dplyr::c() does not exist; this errored at runtime whenever the
+          # county_endogenous engine reached it. .data$ inside a tidyselect
+          # context is deprecated, so all_of() rather than bare c().
           dplyr::across(
-            dplyr::c(.data$supplied_fte, .data$demand_fte),
+            dplyr::all_of(c("supplied_fte", "demand_fte")),
             ~ tidyr::replace_na(.x, 0)
           ),
           fte_gap = .data$supplied_fte - .data$demand_fte,

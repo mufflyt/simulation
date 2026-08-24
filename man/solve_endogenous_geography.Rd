@@ -12,7 +12,7 @@ solve_endogenous_geography(
   year_value,
   accessibility = NULL,
   policy_shocks = NULL,
-  tolerance = 0.000001,
+  tolerance = 1e-06,
   max_iterations = 200L,
   damping = 0.35
 )

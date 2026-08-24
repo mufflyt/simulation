@@ -93,7 +93,7 @@ national_older_female_population_by_state <- function(
     by_state$NAME == "District of Columbia", "DC",
     base::ifelse(
       by_state$NAME == "Puerto Rico", "PR",
-      state.abb[base::match(by_state$NAME, state.name)]
+      datasets::state.abb[base::match(by_state$NAME, datasets::state.name)]
     )
   )
   out <- tibble::tibble(

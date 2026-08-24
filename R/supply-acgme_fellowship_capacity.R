@@ -119,13 +119,17 @@ build_cpt_acgme_incidence_matrix <- function() {
   )
 }
 
+# The formula below is \deqn{}{} with braced subscripts; see the note above
+# calculate_patient_destination_probabilities() in
+# R/geography-patient_destination_choice.R for why.
+
 #' Evaluate Program Fellowship Capacity Under ACGME Bottlenecks
 #'
 #' @description
 #' Calculates fellowship training capacity per program-year as the minimum across
 #' 5 structural bounds: approved complement, case-log volume bottlenecks,
 #' faculty composition, participating-site capacity, and funding slots:
-#' \[\text{Capacity}_{p,t} = \min(C^{\text{approved}}, C^{\text{cases}}, C^{\text{faculty}}, C^{\text{sites}}, C^{\text{funding}})\]
+#' \deqn{\mathrm{Capacity}_{p,t} = \min(C^{\mathrm{approved}}, C^{\mathrm{cases}}, C^{\mathrm{faculty}}, C^{\mathrm{sites}}, C^{\mathrm{funding}})}{Capacity(p,t) = min(C.approved, C.cases, C.faculty, C.sites, C.funding)}
 #'
 #' @param program_tbl Tibble containing program parameters (`program_id`, `year`, `approved_complement`, `faculty_urologists`, `faculty_obgyn`, `funding_slots`, `site_capacity`).
 #' @param case_volume_tbl Institutional surgical volume per program (`program_id`, `category`, `annual_case_volume`, `fellow_accessible_share`, `qualifying_role_prob`).

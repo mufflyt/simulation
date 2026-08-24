@@ -675,7 +675,7 @@ predict_provider_location_probabilities <- function(
 #' Solve competitive entrant-location equilibrium
 #'
 #' @description
-#' Solves the fixed point p[j] = softmax(U[j, incumbent competition + expected entrant competition])
+#' Solves the fixed point `p[j] = softmax(U[j, incumbent competition + expected entrant competition])`
 #' so entrants respond to one another rather than choosing against a static workforce distribution.
 #'
 #' @param choice_model Fitted location-choice model.
