@@ -45,4 +45,3 @@ Other chia physician attribution:
 }
 \concept{chia physician attribution}
 \concept{supply}
-</content>
