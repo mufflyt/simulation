@@ -21,3 +21,19 @@
 #   runtime-assembled string precisely so the scanner would stop matching it.
 5d22d50
 24d772c
+#
+# 1140962  added   tests/testthat/test-nightly-ci-contract.R (scan-phi-dua.sh's
+#                   own creation commit)
+# 47b7e15  removed same
+#   String: printf "PatientName,MRN\nJane Roe,00123\n" > leak.csv
+#   The FIRST occurrence of the identical 5d22d50/24d772c pair above, from when
+#   the leak guard and its self-test were originally authored: 1140962 created
+#   scan-phi-dua.sh (whose own PHI_COLS pattern list names "PatientName" as a
+#   column NAME to search for, not a value) together with a probe using the
+#   same literal fixture string; 47b7e15 is the very next day's fix, replacing
+#   the literal with a runtime-assembled string for the same reason 24d772c
+#   documents. Verified via git show: both diffs are byte-identical to the
+#   5d22d50/24d772c pair's content, just an earlier point in the file's
+#   history before it was touched again.
+1140962
+47b7e15
