@@ -83,7 +83,7 @@ jobs:
             any::sf, any::yaml, any::digest, any::jsonlite, any::DBI, any::duckdb,
             any::pkgload,
             mufflyt/mysterycall@098bb834,
-            mufflyt/mufflyaccess@a88dba8f4bafec7659df3f3c1404aca814709208
+            mufflyt/mufflyaccess@9d13b2e197c4a95cfdae3e3520e07d309e8ad9bc
           dependencies: '"hard"'
 
       - name: Configure AWS credentials
