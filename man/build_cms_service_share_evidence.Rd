@@ -11,7 +11,7 @@ build_cms_service_share_evidence(
   provider_type_map,
   service_registry = urogynecology_service_share_registry(),
   workload = urps_service_workload(),
-  tolerance = 0.00000001
+  tolerance = 1e-08
 )
 }
 \arguments{

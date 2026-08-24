@@ -204,6 +204,10 @@ build_chia_hospital_surgical_volume_map <- function(
 }
 
 #' Legacy Alias for [build_chia_hospital_surgical_volume_map()]
+#'
+#' @param ... Passed unchanged to [build_chia_hospital_surgical_volume_map()];
+#'   see that function for the arguments and their meanings.
+#' @return Whatever [build_chia_hospital_surgical_volume_map()] returns.
 #' @export
 build_chia_hospital_capacity_map <- function(...) {
   build_chia_hospital_surgical_volume_map(...)

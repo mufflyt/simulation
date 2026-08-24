@@ -4,11 +4,7 @@
 \alias{detect_proportional_estimands}
 \title{Detect estimands that are proportional rescalings of one another}
 \usage{
-detect_proportional_estimands(
-  long,
-  value_col = "demand_cases",
-  tol = 0.00000001
-)
+detect_proportional_estimands(long, value_col = "demand_cases", tol = 1e-08)
 }
 \arguments{
 \item{long}{Long tibble with \code{year}, \code{estimand}, and a value column.}

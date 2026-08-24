@@ -2,38 +2,22 @@
 % Please edit documentation in R/demand-claims_service_volumes.R
 \name{example_condition_rules}
 \alias{example_condition_rules}
-\title{Example condition rules for pelvic floor disorders}
+\title{Example ICD-10-to-condition crosswalk skeleton}
+\format{
+A tibble with columns \code{dx_prefix} (ICD-10-CM prefix) and \code{condition}
+(URPS condition label).
+}
 \usage{
 example_condition_rules
 }
 \description{
-Example condition rules for pelvic floor disorders
+Companion to \link{example_service_rules}. Illustrative only -- see that object's
+note on why these must not back a published number.
 }
 \seealso{
-Other demand:
-\code{\link[=accessible_need_vs_capacity]{accessible_need_vs_capacity()}},
-\code{\link[=apply_hrsa_insurance_demand_multipliers]{apply_hrsa_insurance_demand_multipliers()}},
-\code{\link[=apply_insurance_mix_demand_multiplier]{apply_insurance_mix_demand_multiplier()}},
-\code{\link[=build_county_synthetic_female_population]{build_county_synthetic_female_population()}},
-\code{\link[=claims_service_volumes]{claims_service_volumes()}},
-\code{\link[=cpt_setting_mix]{cpt_setting_mix()}},
-\code{\link[=default_pfd_transition_models]{default_pfd_transition_models()}},
-\code{\link[=demand_by_travel_band]{demand_by_travel_band()}},
-\code{\link[=draw_insurance_demand_multipliers]{draw_insurance_demand_multipliers()}},
-\code{\link[=estimate_urogynecology_service_share]{estimate_urogynecology_service_share()}},
+Other claims service volumes:
 \code{\link{example_service_rules}},
-\code{\link{example_taxonomy_crosswalk}},
-\code{\link[=generate_obstetric_lifecourse_cohort]{generate_obstetric_lifecourse_cohort()}},
-\code{\link[=geographic_demand_summary]{geographic_demand_summary()}},
-\code{\link[=insurance_demand_multiplier_spec]{insurance_demand_multiplier_spec()}},
-\code{\link[=isochrone_demand_from_tracts]{isochrone_demand_from_tracts()}},
-\code{\link[=need_weighted_access]{need_weighted_access()}},
-\code{\link[=normalize_urps_insurance]{normalize_urps_insurance()}},
-\code{\link[=predict_pelvic_floor_disease_trajectory]{predict_pelvic_floor_disease_trajectory()}},
-\code{\link[=prolapse_setting_mix]{prolapse_setting_mix()}},
-\code{\link[=simulate_pfd_trajectories]{simulate_pfd_trajectories()}},
-\code{\link[=summarize_county_pfd_burden]{summarize_county_pfd_burden()}},
-\code{\link[=tract_need_from_population]{tract_need_from_population()}},
-\code{\link[=validate_insurance_demand_multipliers]{validate_insurance_demand_multipliers()}}
+\code{\link{example_taxonomy_crosswalk}}
 }
+\concept{claims service volumes}
 \concept{demand}

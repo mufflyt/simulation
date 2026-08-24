@@ -337,8 +337,10 @@
       by = "county_fips"
     ) |>
     dplyr::mutate(
+      # See the note at the twin call in R/core-run_end_to_end_simulation.R:
+      # dplyr::c() is not a function, and this errored at runtime.
       dplyr::across(
-        dplyr::c(.data$supplied_fte, .data$demand_fte),
+        dplyr::all_of(c("supplied_fte", "demand_fte")),
         ~ tidyr::replace_na(.x, 0)
       ),
       fte_gap = .data$supplied_fte - .data$demand_fte,

@@ -44,7 +44,7 @@ load_tract_demand <- function(mode = resolve_reproducibility_mode()) {
 #' Two loading paths, tried in order (unchanged from the original
 #' implementation): a single consolidated `provider_isochrones.rds` (Option
 #' A), else per-band `isochrones_{band}min_consolidated.rds` files via
-#' [ISOCHRONE_BAND_FILE()] (Option B). Both paths now share the same
+#' `ISOCHRONE_BAND_FILE()` (Option B). Both paths now share the same
 #' post-load discipline:
 #'
 #' \enumerate{

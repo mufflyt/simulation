@@ -127,7 +127,7 @@ that R/data-urps_population.R is loaded).}
 (as \code{demand_cases = demand_visits}) for concordance assessment.}
 
 \item{d6_estimand}{Optional precomputed D6 tibble from
-\code{build_d6_nhanes_estimand()$estimand} (NHANES UI prevalence × care-seeking
+\code{build_d6_nhanes_estimand()$estimand} (NHANES UI prevalence x care-seeking
 demand).  Must have columns \code{year}, \code{estimand}, \code{demand_visits}.
 When non-NULL, appended to \code{demand_long} for concordance assessment.}
 

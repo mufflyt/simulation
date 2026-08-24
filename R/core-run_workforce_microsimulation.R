@@ -244,7 +244,7 @@ example_capacity_survey <- function() {
 #'   `estimand`, `demand_visits`.  When non-NULL, appended to `demand_long`
 #'   (as `demand_cases = demand_visits`) for concordance assessment.
 #' @param d6_estimand Optional precomputed D6 tibble from
-#'   `build_d6_nhanes_estimand()$estimand` (NHANES UI prevalence × care-seeking
+#'   `build_d6_nhanes_estimand()$estimand` (NHANES UI prevalence x care-seeking
 #'   demand).  Must have columns `year`, `estimand`, `demand_visits`.
 #'   When non-NULL, appended to `demand_long` for concordance assessment.
 #' @param prevention_scenario Character key in [URPS_PREVENTION_SCENARIOS], or
@@ -596,7 +596,7 @@ run_workforce_microsimulation <- function(baseline_supply = NULL,
       d6_estimand |>
         dplyr::mutate(
           demand_cases = .data$demand_visits,
-          label = "NHANES UI prevalence × care-seeking demand"
+          label = "NHANES UI prevalence \u00d7 care-seeking demand"
         ) |>
         dplyr::filter(.data$year %in% years) |>
         dplyr::select("year", "estimand", "label", "demand_cases")

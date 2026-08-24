@@ -58,12 +58,12 @@ estimate_incident_care_seeking <- function() {
 #' simulated appointment wait times. When local capacity is strained and wait times
 #' increase above baseline anchors, care-seeking rate decreases logarithmically.
 #'
-#' @param base_rate Baseline transition rate (in [0, 1]).
+#' @param base_rate Baseline transition rate (in `[0, 1]`).
 #' @param observed_wait_days Observed appointment wait time (business days).
 #'   Defaults to `urps_observed_wait_days()$business_days`.
 #' @param baseline_wait_days Baseline target wait time (default 23.1 business days).
 #' @param elasticity Constant elasticity factor (default -0.25).
-#' @return Adjusted transition rate in [0, 1].
+#' @return Adjusted transition rate in `[0, 1]`.
 #' @family care engagement
 #' @concept demand
 #' @export

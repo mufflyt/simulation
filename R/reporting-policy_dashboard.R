@@ -17,6 +17,17 @@
 #' @param app_delegation_rate Share of conservative evaluation visits delegated to
 #'   Advanced Practice Providers (APPs, 0.0 to 0.30).
 #' @param retirement_shift Shift in median retirement age in years (-3 to +3).
+#' @param asc_shift_rate Share of volume shifting to ambulatory surgery centres.
+#'   Enters as a productivity multiplier of `1 + asc_shift_rate * 0.15`.
+#' @param telehealth_expansion Telehealth expansion share. Reduces visit demand
+#'   by `telehealth_expansion * 0.10`.
+#' @param part_time_rate Share of the workforce moving to part-time. Scales both
+#'   FTE per provider and base supply by `1 - part_time_rate * 0.35`.
+#' @param pop_growth_multiplier Multiplier on the 1.2% baseline annual growth in
+#'   the female 65+ population; 1.0 leaves the baseline unchanged.
+#' @param survival_engine Fitted provider-survival model from
+#'   [fit_provider_survival_hazards()]. When `NULL` a model is fitted internally
+#'   from mock history, so supply the real one for any reportable run.
 #' @param start_year Projection start year (default 2025).
 #' @param end_year Projection end year (default 2050).
 #' @return A tibble with `year`, `supply_fte`, `demand_fte`, `gap_fte`, `deficit_status`.

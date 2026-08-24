@@ -2,17 +2,21 @@
 % Please edit documentation in R/calibration-urogynecology_service_shares.R
 \name{draw_service_share_composition}
 \alias{draw_service_share_composition}
-\title{Draw the joint compositional posterior of provider-group service shares}
+\title{Draw joint provider compositions for every service cell}
 \usage{
-draw_service_share_composition(events, selected_alpha, draws = 500L, seed = 20260822L)
+draw_service_share_composition(
+  events,
+  selected_alpha,
+  draws = 500L,
+  seed = 20260822L
+)
 }
 \arguments{
-\item{events}{Provider-group service counts by condition and year.}
+\item{events}{Provider-group event counts.}
 
-\item{selected_alpha}{Per-service concentration, from
-\code{\link[=select_service_share_concentration]{select_service_share_concentration()}}.}
+\item{selected_alpha}{Selected service-specific concentration table.}
 
-\item{draws}{Number of posterior draws per service/condition/year cell.}
+\item{draws}{Number of joint Monte Carlo draws.}
 
 \item{seed}{Random seed.}
 }
@@ -20,16 +24,25 @@ draw_service_share_composition(events, selected_alpha, draws = 500L, seed = 2026
 Long tibble of joint provider-share draws.
 }
 \description{
-For every (service, condition, year) cell, combines the empirical service
-counts with a prior scaled by the cell's selected concentration into a
-Dirichlet posterior over \code{\link[=provider_routing_groups]{provider_routing_groups()}}, then draws from it.
+Draw joint provider compositions for every service cell
 }
 \seealso{
 Other calibration:
+\code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
+\code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
 \code{\link[=calibrate_service_share_model]{calibrate_service_share_model()}},
 \code{\link[=classify_chia_service_share_events]{classify_chia_service_share_events()}},
 \code{\link[=compare_chia_to_cms_service_share_evidence]{compare_chia_to_cms_service_share_evidence()}},
+\code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
+\code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
+\code{\link[=example_sbc_prior]{example_sbc_prior()}},
+\code{\link[=example_sbc_simulator]{example_sbc_simulator()}},
+\code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}},
+\code{\link[=generate_synthetic_adequacy_data]{generate_synthetic_adequacy_data()}},
+\code{\link[=make_joint_history_matcher_adapter]{make_joint_history_matcher_adapter()}},
 \code{\link[=read_chia_service_share_events]{read_chia_service_share_events()}},
+\code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}},
+\code{\link[=run_joint_history_matcher_sbc]{run_joint_history_matcher_sbc()}},
 \code{\link[=select_service_share_concentration]{select_service_share_concentration()}},
 \code{\link[=validate_service_share_bundle]{validate_service_share_bundle()}}
 }

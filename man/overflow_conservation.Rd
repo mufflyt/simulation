@@ -4,7 +4,7 @@
 \alias{overflow_conservation}
 \title{Check the demand-conservation invariants of an overflow_access() result}
 \usage{
-overflow_conservation(x, tol = 0.00000001)
+overflow_conservation(x, tol = 1e-08)
 }
 \arguments{
 \item{x}{A tibble returned by \code{\link[=overflow_access]{overflow_access()}}.}

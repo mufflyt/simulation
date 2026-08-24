@@ -21,7 +21,7 @@ predict_medicaid_acceptance(
 
 \item{medicaid_fee_ratio}{State Medicaid-to-Medicare fee ratio.}
 
-\item{svi}{Social Vulnerability Index in \link{0, 1}.}
+\item{svi}{Social Vulnerability Index in \verb{[0, 1]}.}
 
 \item{years_certified}{Years since board certification.}
 
@@ -50,7 +50,6 @@ beta_Y * (years_i - years_reference)
 Other supply:
 \code{\link[=acgme_procedural_minimums]{acgme_procedural_minimums()}},
 \code{\link[=acgme_program_requirements]{acgme_program_requirements()}},
-\code{\link[=allocate_urps_service_workload]{allocate_urps_service_workload()}},
 \code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
 \code{\link[=build_cpt_acgme_incidence_matrix]{build_cpt_acgme_incidence_matrix()}},
 \code{\link[=build_empirical_entrant_parameters]{build_empirical_entrant_parameters()}},

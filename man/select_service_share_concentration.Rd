@@ -2,35 +2,44 @@
 % Please edit documentation in R/calibration-urogynecology_service_shares.R
 \name{select_service_share_concentration}
 \alias{select_service_share_concentration}
-\title{Select a Dirichlet concentration per service by held-out log score}
+\title{Select service-share concentration using a held-out year}
 \usage{
 select_service_share_concentration(
   events,
-  alpha_grid = c(0.5, 1, 2, 5, 10, 20, 50, 100)
+  alpha_grid = base::c(0.5, 1, 2, 5, 10, 20, 50, 100)
 )
 }
 \arguments{
-\item{events}{Provider-group service counts by condition and year. Requires
-at least two years per service (the latest year is held out).}
+\item{events}{Provider-group counts by service, condition, and year.}
 
-\item{alpha_grid}{Candidate concentration values to score.}
+\item{alpha_grid}{Positive candidate concentrations.}
 }
 \value{
 A list with \code{selected} and candidate \code{scores} tables.
 }
 \description{
-Leave-latest-year-out cross-validation: for each service, fits a prior
-from all years but the last, scores every candidate concentration in
-\code{alpha_grid} by predictive log score against the held-out year, and picks
-the concentration with the lowest cross-entropy.
+Selects the amount of service-level shrinkage independently for each
+service by minimizing multinomial cross-entropy in the latest held-out year.
+This is the calibrated replacement for the historical fixed prior strength.
 }
 \seealso{
 Other calibration:
+\code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
+\code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
 \code{\link[=calibrate_service_share_model]{calibrate_service_share_model()}},
 \code{\link[=classify_chia_service_share_events]{classify_chia_service_share_events()}},
 \code{\link[=compare_chia_to_cms_service_share_evidence]{compare_chia_to_cms_service_share_evidence()}},
+\code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
 \code{\link[=draw_service_share_composition]{draw_service_share_composition()}},
+\code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
+\code{\link[=example_sbc_prior]{example_sbc_prior()}},
+\code{\link[=example_sbc_simulator]{example_sbc_simulator()}},
+\code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}},
+\code{\link[=generate_synthetic_adequacy_data]{generate_synthetic_adequacy_data()}},
+\code{\link[=make_joint_history_matcher_adapter]{make_joint_history_matcher_adapter()}},
 \code{\link[=read_chia_service_share_events]{read_chia_service_share_events()}},
+\code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}},
+\code{\link[=run_joint_history_matcher_sbc]{run_joint_history_matcher_sbc()}},
 \code{\link[=validate_service_share_bundle]{validate_service_share_bundle()}}
 }
 \concept{calibration}

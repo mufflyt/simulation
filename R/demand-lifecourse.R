@@ -64,7 +64,7 @@ lifecourse_risk_params_cited <- function() .demand_risk_params("cited")
 #' above published symptomatic values and are NOT suitable for any reported
 #' figure -- they exist to document what changed.
 #'
-#' @return A risk-params list in the shape of [lifecourse_risk_params()].
+#' @return A risk-params list in the shape of `lifecourse_risk_params()`.
 #' @family lifecourse
 #' @concept demand
 #' @export

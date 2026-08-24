@@ -7,7 +7,7 @@
 recurrence_mass_from_cumulative(cumulative_incidence)
 }
 \arguments{
-\item{cumulative_incidence}{Non-decreasing numeric vector in \link{0, 1}.}
+\item{cumulative_incidence}{Non-decreasing numeric vector in \verb{[0, 1]}.}
 }
 \value{
 Numeric vector of first-recurrence probability mass by year.

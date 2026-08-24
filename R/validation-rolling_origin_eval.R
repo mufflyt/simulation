@@ -506,7 +506,7 @@ urps_backtest_evidence_registry <- function() {
     "https://github.com/mufflyt/simulation",
     "NRMP_SMS",
     "NRMP Specialties Matching Service reports",
-    "2017–2025 appointment years",
+    "2017\u20132025 appointment years",
     "United States",
     "filled fellowship positions",
     "entrant-flow forecasting when published by the origin",
@@ -514,7 +514,7 @@ urps_backtest_evidence_registry <- function() {
     "https://www.nrmp.org/match-data-analytics/",
     "CHIA_D6",
     "Massachusetts CHIA case-mix inpatient discharge series",
-    "2010–2018",
+    "2010\u20132018",
     "Massachusetts",
     "all-payer inpatient URPS surgery",
     "regional inpatient utilization validation",
@@ -648,7 +648,7 @@ build_backtest_summary <- function(
       base::paste(collapse = ", ")
     base::paste0(
       key_row$.summary_group[[1L]], ": across ",
-      base::format(first_year, big.mark = ","), "–",
+      base::format(first_year, big.mark = ","), "\u2013",
       base::format(last_year, big.mark = ","), ", mean CRPS ",
       direction, " from the ", shortest, "-year to ", longest,
       "-year horizon (p=", p_text, "); ",

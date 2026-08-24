@@ -14,7 +14,7 @@ calibrate_lifecourse_prevalence(
 \item{cohort}{Person-level tibble from the life-course generator, carrying
 \code{age} and the covariates the linear predictor uses.}
 
-\item{risk_params}{Risk parameters to adjust, e.g. \code{\link[=lifecourse_risk_params]{lifecourse_risk_params()}}.}
+\item{risk_params}{Risk parameters to adjust, e.g. \code{lifecourse_risk_params()}.}
 
 \item{conditions}{Which limbs to recalibrate.}
 }

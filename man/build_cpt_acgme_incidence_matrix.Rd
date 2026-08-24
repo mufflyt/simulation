@@ -18,7 +18,6 @@ and total urinary-incontinence).
 Other supply:
 \code{\link[=acgme_procedural_minimums]{acgme_procedural_minimums()}},
 \code{\link[=acgme_program_requirements]{acgme_program_requirements()}},
-\code{\link[=allocate_urps_service_workload]{allocate_urps_service_workload()}},
 \code{\link[=attach_state_medicaid_fee_policy]{attach_state_medicaid_fee_policy()}},
 \code{\link[=build_empirical_entrant_parameters]{build_empirical_entrant_parameters()}},
 \code{\link[=compound_growth_rate]{compound_growth_rate()}},

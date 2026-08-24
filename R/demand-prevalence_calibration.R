@@ -70,7 +70,7 @@ lifecourse_prevalence_targets <- function(condition = c("ui", "pop", "ai")) {
 #'
 #' @param cohort Person-level tibble from the life-course generator, carrying
 #'   `age` and the covariates the linear predictor uses.
-#' @param risk_params Risk parameters to adjust, e.g. [lifecourse_risk_params()].
+#' @param risk_params Risk parameters to adjust, e.g. `lifecourse_risk_params()`.
 #' @param conditions Which limbs to recalibrate.
 #' @return A list with the adjusted `risk_params` and a `fit` tibble of
 #'   achieved-versus-target prevalence by band.
@@ -136,7 +136,7 @@ calibrate_lifecourse_prevalence <- function(cohort,
 #' Life-course risk parameters anchored to published symptomatic prevalence
 #'
 #' @details
-#' A drop-in alternative to [lifecourse_risk_params()] whose intercept and age
+#' A drop-in alternative to `lifecourse_risk_params()` whose intercept and age
 #' slope are recalibrated to published prevalence, with cited covariate effects
 #' unchanged. Deterministic: it builds its own cohort under a fixed seed, so
 #' repeated calls return identical coefficients.
@@ -146,7 +146,7 @@ calibrate_lifecourse_prevalence <- function(cohort,
 #' @param pop_by_age Age distribution the calibration cohort is drawn from.
 #'   Defaults to a flat 18-90 span so the fit is not dominated by whichever
 #'   ages happen to be numerous in a particular projection year.
-#' @return A risk-params list in the shape of [lifecourse_risk_params()].
+#' @return A risk-params list in the shape of `lifecourse_risk_params()`.
 #' @family prevalence calibration
 #' @concept demand
 #' @export

@@ -56,7 +56,7 @@
 #' are different quantities, and treating one as the other is the specific
 #' error recorded in docs/POP_RECURRENCE_ESTIMAND_AUDIT.md.
 #'
-#' @param cumulative_incidence Non-decreasing numeric vector in [0, 1].
+#' @param cumulative_incidence Non-decreasing numeric vector in `[0, 1]`.
 #' @return Numeric vector of first-recurrence probability mass by year.
 #' @family recurrence
 #' @concept demand
