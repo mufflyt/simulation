@@ -44,9 +44,15 @@ wrong-person retirement is not.
 }
 \seealso{
 Other retirement contract:
+\code{\link[=build_retirement_artifact_manifest]{build_retirement_artifact_manifest()}},
 \code{\link[=derive_provider_year_states]{derive_provider_year_states()}},
+\code{\link[=persist_retirement_consensus_artifact]{persist_retirement_consensus_artifact()}},
+\code{\link[=propagate_retirement_uncertainty_to_access]{propagate_retirement_uncertainty_to_access()}},
+\code{\link[=retirement_confidence_dimensions]{retirement_confidence_dimensions()}},
 \code{\link[=retirement_exit_taxonomy]{retirement_exit_taxonomy()}},
-\code{\link[=retirement_strong_linkage_classes]{retirement_strong_linkage_classes()}}
+\code{\link[=retirement_strong_linkage_classes]{retirement_strong_linkage_classes()}},
+\code{\link[=validate_retirement_evidence_v2]{validate_retirement_evidence_v2()}},
+\code{\link[=validate_retirement_oos]{validate_retirement_oos()}}
 }
 \concept{retirement contract}
 \concept{supply}
