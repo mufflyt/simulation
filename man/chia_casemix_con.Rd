@@ -8,7 +8,7 @@ chia_casemix_con(duckdb_path = .chia_duckdb_default())
 }
 \arguments{
 \item{duckdb_path}{Path to the DuckDB. Default resolves via
-\code{\link[=.chia_duckdb_default]{.chia_duckdb_default()}} (env var \code{URPS_CHIA_DUCKDB}, else a glob for the
+\code{.chia_duckdb_default()} (env var \code{URPS_CHIA_DUCKDB}, else a glob for the
 external data volume).}
 }
 \value{

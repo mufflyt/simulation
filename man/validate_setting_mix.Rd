@@ -4,7 +4,7 @@
 \alias{validate_setting_mix}
 \title{Validate a setting mix table}
 \usage{
-validate_setting_mix(mix, tol = 0.00000001)
+validate_setting_mix(mix, tol = 1e-08)
 }
 \arguments{
 \item{mix}{Tibble with \code{service}, \code{setting}, \code{share}.}

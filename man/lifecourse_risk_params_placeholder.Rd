@@ -7,7 +7,7 @@
 lifecourse_risk_params_placeholder()
 }
 \value{
-A risk-params list in the shape of \code{\link[=lifecourse_risk_params]{lifecourse_risk_params()}}.
+A risk-params list in the shape of \code{lifecourse_risk_params()}.
 }
 \description{
 Life-course risk parameters, PRE-ANCHORING placeholders

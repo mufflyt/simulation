@@ -463,8 +463,9 @@ classify_chia_service_share_events <- function(
 #' Compare CHIA's URPS-given-physician share against the CMS bound interval
 #'
 #' The comparison is diagnostic: it does not average the sources. A CHIA
-#' point estimate outside the CMS partial-identification interval ([lower_bound,
-#' upper_bound] from [build_cms_service_share_evidence()]'s `service_bounds`)
+#' point estimate outside the CMS partial-identification interval
+#' (`[lower_bound, upper_bound]` from [build_cms_service_share_evidence()]'s
+#' `service_bounds`)
 #' increases the transport standard deviation used by later calibration,
 #' combined with `baseline_transport_sd` in quadrature (independent variance
 #' addition) rather than a simple sum -- agreement leaves the SD at its

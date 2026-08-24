@@ -38,8 +38,10 @@ rate to produce annual URPS visit demand and required FTE.
 }
 \details{
 Formula:
-demand_visits\link{stratum, year} =
-prevalence\link{stratum} × population\link{stratum, year} × care_seeking_rate
 
-demand_fte\link[lubridate:year]{year} = sum(demand_visits\link[lubridate:year]{year}) × fte_fraction / visits_per_fte
+\if{html}{\out{<div class="sourceCode">}}\preformatted{demand_visits[stratum, year] =
+  prevalence[stratum] x population[stratum, year] x care_seeking_rate
+
+demand_fte[year] = sum(demand_visits[year]) x fte_fraction / visits_per_fte
+}\if{html}{\out{</div>}}
 }

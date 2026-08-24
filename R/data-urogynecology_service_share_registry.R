@@ -230,5 +230,11 @@ build_urogynecology_service_registry <- urogynecology_service_share_registry
 build_urogynecology_provider_taxonomy_registry <- urogynecology_provider_taxonomy_registry
 
 #' Alias for validate_service_share_registry
+#'
+#' @param registry Registry tibble to validate, as returned by
+#'   [urogynecology_service_share_registry()].
+#' @param strict Whether a validation problem is an error (`TRUE`, the default)
+#'   rather than a warning.
+#' @return See [validate_service_share_registry()].
 #' @export
 validate_service_registry_production <- validate_service_share_registry

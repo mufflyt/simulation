@@ -34,7 +34,7 @@
 #' silently return nothing.
 #'
 #' @param duckdb_path Path to the DuckDB. Default resolves via
-#'   [.chia_duckdb_default()] (env var `URPS_CHIA_DUCKDB`, else a glob for the
+#'   `.chia_duckdb_default()` (env var `URPS_CHIA_DUCKDB`, else a glob for the
 #'   external data volume).
 #' @return An open `DBIConnection`.
 #' @family chia inpatient surgery

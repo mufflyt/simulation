@@ -10,7 +10,7 @@ solve_provider_entry_equilibrium(
   n_entrants,
   competition_neighbors_tbl = NULL,
   entrant_fte = 1,
-  tolerance = 0.00000001,
+  tolerance = 1e-08,
   max_iterations = 200L,
   damping = 0.5
 )
@@ -36,7 +36,7 @@ solve_provider_entry_equilibrium(
 Equilibrium choice probabilities.
 }
 \description{
-Solves the fixed point p\link{j} = softmax(U\link{j, incumbent competition + expected entrant competition})
+Solves the fixed point \verb{p[j] = softmax(U[j, incumbent competition + expected entrant competition])}
 so entrants respond to one another rather than choosing against a static workforce distribution.
 }
 \seealso{

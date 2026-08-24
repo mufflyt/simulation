@@ -8,7 +8,7 @@ build_hcris_hospital_capability_panel(
   report_tbl,
   cell_tbl,
   capability_spec = hcris_urps_capability_spec(),
-  zero_tolerance = 0.00000001
+  zero_tolerance = 1e-08
 )
 }
 \arguments{

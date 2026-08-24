@@ -6,6 +6,13 @@
 \usage{
 build_chia_hospital_capacity_map(...)
 }
+\arguments{
+\item{...}{Passed unchanged to \code{\link[=build_chia_hospital_surgical_volume_map]{build_chia_hospital_surgical_volume_map()}};
+see that function for the arguments and their meanings.}
+}
+\value{
+Whatever \code{\link[=build_chia_hospital_surgical_volume_map]{build_chia_hospital_surgical_volume_map()}} returns.
+}
 \description{
 Legacy Alias for \code{\link[=build_chia_hospital_surgical_volume_map]{build_chia_hospital_surgical_volume_map()}}
 }

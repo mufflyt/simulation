@@ -489,6 +489,11 @@ save_sbc_artifacts <- function(rank_draws, rank_summary, coverage_summary,
 }
 
 #' Example prior for a four-parameter workforce DGP
+#'
+#' @param n Number of prior draws to return.
+#' @param seed Integer seed; set before drawing so a rank is reproducible.
+#' @return A tibble of `n` draws with columns `entrant_rate`,
+#'   `annual_exit_hazard`, `productivity_growth` and `care_seeking_rate`.
 #' @family calibration
 #' @concept calibration
 #' @export
@@ -503,6 +508,11 @@ example_sbc_prior <- function(n, seed) {
 }
 
 #' Example synthetic target simulator
+#'
+#' @param parameters One row of the prior draws from [example_sbc_prior()];
+#'   its columns are read by name.
+#' @param seed Integer seed; set before simulating so a draw is reproducible.
+#' @return A one-row tibble of synthetic observed targets.
 #' @family calibration
 #' @concept calibration
 #' @export
@@ -542,6 +552,18 @@ example_sbc_simulator <- function(parameters, seed) {
 #' the SBC engine. If `weight_extractor` is NULL, ranks are explicitly labeled
 #' as history-matching diagnostics rather than formal posterior SBC.
 #'
+#' @param calibration_function Calibration entry point to wrap. Called with
+#'   `historical_targets` and `seed` plus `fixed_arguments`.
+#' @param fixed_arguments Named list of further arguments passed unchanged to
+#'   `calibration_function` on every call.
+#' @param ensemble_extractor Function taking the fit and returning the
+#'   parameter ensemble to rank.
+#' @param weight_extractor Function taking the fit and returning per-member
+#'   weights, or `NULL`. `NULL` is not a neutral default: it is what marks the
+#'   ranks as history-matching diagnostics rather than formal posterior SBC.
+#' @param convergence_extractor Function taking the fit and returning a single
+#'   `TRUE`/`FALSE` for whether the calibration converged.
+#' @return A function of `(targets, seed)` suitable for the SBC engine.
 #' @family calibration
 #' @concept calibration
 #' @export

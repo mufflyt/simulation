@@ -6,6 +6,16 @@
 \usage{
 validate_service_registry_production(registry, strict = TRUE)
 }
+\arguments{
+\item{registry}{Registry tibble to validate, as returned by
+\code{\link[=urogynecology_service_share_registry]{urogynecology_service_share_registry()}}.}
+
+\item{strict}{Whether a validation problem is an error (\code{TRUE}, the default)
+rather than a warning.}
+}
+\value{
+See \code{\link[=validate_service_share_registry]{validate_service_share_registry()}}.
+}
 \description{
 Alias for validate_service_share_registry
 }

@@ -7,7 +7,7 @@
 provider_routing_prior(
   nonprocedural_strength = 1,
   surgical_strength = 20,
-  epsilon = 0.000001
+  epsilon = 1e-06
 )
 }
 \arguments{

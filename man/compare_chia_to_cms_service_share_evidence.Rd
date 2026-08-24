@@ -23,17 +23,32 @@ A service-level comparison tibble.
 \description{
 The comparison is diagnostic: it does not average the sources. A CHIA
 point estimate outside the CMS partial-identification interval
-(\code{lower_bound}/\code{upper_bound} from \code{\link[=build_cms_service_share_evidence]{build_cms_service_share_evidence()}}'s
-\code{service_bounds}) increases the transport standard deviation used by
-later calibration, combined with \code{baseline_transport_sd} in quadrature
-(independent variance addition) rather than a simple sum -- agreement
-leaves the SD at its baseline; growing disagreement widens it, never
-resolved by picking a side.
+(\verb{[lower_bound, upper_bound]} from \code{\link[=build_cms_service_share_evidence]{build_cms_service_share_evidence()}}'s
+\code{service_bounds})
+increases the transport standard deviation used by later calibration,
+combined with \code{baseline_transport_sd} in quadrature (independent variance
+addition) rather than a simple sum -- agreement leaves the SD at its
+baseline; growing disagreement widens it, never resolved by picking a side.
 }
 \seealso{
 Other calibration:
+\code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
+\code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
+\code{\link[=calibrate_service_share_model]{calibrate_service_share_model()}},
 \code{\link[=classify_chia_service_share_events]{classify_chia_service_share_events()}},
-\code{\link[=read_chia_service_share_events]{read_chia_service_share_events()}}
+\code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
+\code{\link[=draw_service_share_composition]{draw_service_share_composition()}},
+\code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
+\code{\link[=example_sbc_prior]{example_sbc_prior()}},
+\code{\link[=example_sbc_simulator]{example_sbc_simulator()}},
+\code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}},
+\code{\link[=generate_synthetic_adequacy_data]{generate_synthetic_adequacy_data()}},
+\code{\link[=make_joint_history_matcher_adapter]{make_joint_history_matcher_adapter()}},
+\code{\link[=read_chia_service_share_events]{read_chia_service_share_events()}},
+\code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}},
+\code{\link[=run_joint_history_matcher_sbc]{run_joint_history_matcher_sbc()}},
+\code{\link[=select_service_share_concentration]{select_service_share_concentration()}},
+\code{\link[=validate_service_share_bundle]{validate_service_share_bundle()}}
 }
 \concept{calibration}
 \concept{model}

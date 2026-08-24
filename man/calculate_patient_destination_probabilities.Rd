@@ -25,8 +25,9 @@ Matrix of origin-to-destination probabilities (rows = origins, cols = destinatio
 }
 \description{
 Computes numerically stable destination choice probabilities for patients travelling from
-origin $i$ to destination provider/county $j$:
-[V_{ij} = \beta_{\text{fte}} \log(\text{FTE}\emph{j) - \beta}{\text{travel}} \text{TravelTime}\emph{{ij} - \beta}{\text{wait}} \text{WaitDays}\emph{j + \beta}{\text{subspec}} \text{Subspecialist}_j]
+origin \eqn{i} to destination provider/county \eqn{j}:
+
+\deqn{V_{ij} = \beta_{\mathrm{fte}} \log(\mathrm{FTE}_{j}) - \beta_{\mathrm{travel}} \mathrm{TravelTime}_{ij} - \beta_{\mathrm{wait}} \mathrm{WaitDays}_{j} + \beta_{\mathrm{subspec}} \mathrm{Subspecialist}_{j}}{V(ij) = beta.fte * log(FTE(j)) - beta.travel * TravelTime(ij) - beta.wait * WaitDays(j) + beta.subspec * Subspecialist(j)}
 }
 \seealso{
 Other geography:

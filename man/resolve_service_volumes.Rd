@@ -10,8 +10,6 @@ resolve_service_volumes(demand_long, path = NULL, mode = NULL)
 \item{demand_long}{Demand table.}
 
 \item{path}{Path to claims service volume CSV file.}
-
-\item{mode}{Reserved compatibility argument.}
 }
 \value{
 Table of service volumes.

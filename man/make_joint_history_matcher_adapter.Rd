@@ -12,6 +12,26 @@ make_joint_history_matcher_adapter(
   convergence_extractor = function(fit) TRUE
 )
 }
+\arguments{
+\item{calibration_function}{Calibration entry point to wrap. Called with
+\code{historical_targets} and \code{seed} plus \code{fixed_arguments}.}
+
+\item{fixed_arguments}{Named list of further arguments passed unchanged to
+\code{calibration_function} on every call.}
+
+\item{ensemble_extractor}{Function taking the fit and returning the
+parameter ensemble to rank.}
+
+\item{weight_extractor}{Function taking the fit and returning per-member
+weights, or \code{NULL}. \code{NULL} is not a neutral default: it is what marks the
+ranks as history-matching diagnostics rather than formal posterior SBC.}
+
+\item{convergence_extractor}{Function taking the fit and returning a single
+\code{TRUE}/\code{FALSE} for whether the calibration converged.}
+}
+\value{
+A function of \verb{(targets, seed)} suitable for the SBC engine.
+}
 \description{
 Change argument names and extraction functions once, rather than changing
 the SBC engine. If \code{weight_extractor} is NULL, ranks are explicitly labeled
@@ -22,19 +42,19 @@ Other calibration:
 \code{\link[=calibrate_joint_history_matching]{calibrate_joint_history_matching()}},
 \code{\link[=calibrate_latent_adequacy]{calibrate_latent_adequacy()}},
 \code{\link[=calibrate_service_share_model]{calibrate_service_share_model()}},
-\code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
 \code{\link[=classify_chia_service_share_events]{classify_chia_service_share_events()}},
 \code{\link[=compare_chia_to_cms_service_share_evidence]{compare_chia_to_cms_service_share_evidence()}},
+\code{\link[=derive_urps_empirical_parameters]{derive_urps_empirical_parameters()}},
+\code{\link[=draw_service_share_composition]{draw_service_share_composition()}},
 \code{\link[=evaluate_adequacy_synthetic_recovery]{evaluate_adequacy_synthetic_recovery()}},
 \code{\link[=example_sbc_prior]{example_sbc_prior()}},
 \code{\link[=example_sbc_simulator]{example_sbc_simulator()}},
 \code{\link[=fit_latent_adequacy_calibration]{fit_latent_adequacy_calibration()}},
 \code{\link[=generate_synthetic_adequacy_data]{generate_synthetic_adequacy_data()}},
-\code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}},
 \code{\link[=read_chia_service_share_events]{read_chia_service_share_events()}},
+\code{\link[=read_urps_empirical_parameters]{read_urps_empirical_parameters()}},
 \code{\link[=run_joint_history_matcher_sbc]{run_joint_history_matcher_sbc()}},
 \code{\link[=select_service_share_concentration]{select_service_share_concentration()}},
-\code{\link[=draw_service_share_composition]{draw_service_share_composition()}},
 \code{\link[=validate_service_share_bundle]{validate_service_share_bundle()}}
 }
 \concept{calibration}

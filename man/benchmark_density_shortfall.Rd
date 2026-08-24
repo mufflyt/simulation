@@ -4,7 +4,7 @@
 \alias{benchmark_density_shortfall}
 \title{Providers required to raise every geography to a benchmark density}
 \usage{
-benchmark_density_shortfall(per_capita, benchmark, per = 1000000)
+benchmark_density_shortfall(per_capita, benchmark, per = 1e+06)
 }
 \arguments{
 \item{per_capita}{Tibble from \code{\link[=supply_per_capita]{supply_per_capita()}}.}

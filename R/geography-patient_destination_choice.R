@@ -15,12 +15,25 @@ default_destination_choice_coefficients <- function() {
   )
 }
 
+# WHY THE FORMULA BELOW IS \deqn{}{} AND NOT BARE \[...\].
+#
+# This is a plain comment, not roxygen: written with #' it lands in the .Rd as
+# literal text and the Rd parser chokes on the very macros it describes.
+#
+# Outside \deqn the parser reads \beta and \text as Rd macros it does not have,
+# and roxygen's markdown pass turned the `_j) - \beta_` underscore pair into
+# \emph{}, so the rendered formula was both warned about and wrong. Subscripts
+# are therefore braced (_{j}, never _j) so no underscore can pair into
+# emphasis, \mathrm replaces \text (which needs amsmath), and the ASCII
+# fallback avoids _ and [] so neither markdown emphasis nor link syntax fires.
+
 #' Calculate Huff Gravity / MNL Destination Choice Probabilities
 #'
 #' @description
 #' Computes numerically stable destination choice probabilities for patients travelling from
-#' origin $i$ to destination provider/county $j$:
-#' \[V_{ij} = \beta_{\text{fte}} \log(\text{FTE}_j) - \beta_{\text{travel}} \text{TravelTime}_{ij} - \beta_{\text{wait}} \text{WaitDays}_j + \beta_{\text{subspec}} \text{Subspecialist}_j\]
+#' origin \eqn{i} to destination provider/county \eqn{j}:
+#'
+#' \deqn{V_{ij} = \beta_{\mathrm{fte}} \log(\mathrm{FTE}_{j}) - \beta_{\mathrm{travel}} \mathrm{TravelTime}_{ij} - \beta_{\mathrm{wait}} \mathrm{WaitDays}_{j} + \beta_{\mathrm{subspec}} \mathrm{Subspecialist}_{j}}{V(ij) = beta.fte * log(FTE(j)) - beta.travel * TravelTime(ij) - beta.wait * WaitDays(j) + beta.subspec * Subspecialist(j)}
 #'
 #' @param distance_matrix Matrix or data frame of origin-destination travel times (minutes).
 #' @param destination_tbl Data frame of destination characteristics (`destination_id`, `clinical_fte`, `wait_days`, `has_subspecialist`).

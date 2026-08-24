@@ -37,7 +37,7 @@ closed if the directory or files are absent. Requires \code{sf}.
 Two loading paths, tried in order (unchanged from the original
 implementation): a single consolidated \code{provider_isochrones.rds} (Option
 A), else per-band \verb{isochrones_\{band\}min_consolidated.rds} files via
-\code{\link[=ISOCHRONE_BAND_FILE]{ISOCHRONE_BAND_FILE()}} (Option B). Both paths now share the same
+\code{ISOCHRONE_BAND_FILE()} (Option B). Both paths now share the same
 post-load discipline:
 
 \enumerate{

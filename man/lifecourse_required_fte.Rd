@@ -8,7 +8,7 @@ lifecourse_required_fte(
   pop_by_age_year,
   wrvu_per_fte,
   scenario = "baseline",
-  n = 100000,
+  n = 1e+05,
   seed = NULL,
   ...
 )

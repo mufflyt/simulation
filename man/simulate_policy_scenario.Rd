@@ -30,6 +30,22 @@ Advanced Practice Providers (APPs, 0.0 to 0.30).}
 
 \item{retirement_shift}{Shift in median retirement age in years (-3 to +3).}
 
+\item{asc_shift_rate}{Share of volume shifting to ambulatory surgery centres.
+Enters as a productivity multiplier of \code{1 + asc_shift_rate * 0.15}.}
+
+\item{telehealth_expansion}{Telehealth expansion share. Reduces visit demand
+by \code{telehealth_expansion * 0.10}.}
+
+\item{part_time_rate}{Share of the workforce moving to part-time. Scales both
+FTE per provider and base supply by \code{1 - part_time_rate * 0.35}.}
+
+\item{pop_growth_multiplier}{Multiplier on the 1.2\% baseline annual growth in
+the female 65+ population; 1.0 leaves the baseline unchanged.}
+
+\item{survival_engine}{Fitted provider-survival model from
+\code{\link[=fit_provider_survival_hazards]{fit_provider_survival_hazards()}}. When \code{NULL} a model is fitted internally
+from mock history, so supply the real one for any reportable run.}
+
 \item{start_year}{Projection start year (default 2025).}
 
 \item{end_year}{Projection end year (default 2050).}
