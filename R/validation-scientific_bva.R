@@ -8,16 +8,51 @@
 #' Read Machine-Readable Scientific Boundary Registry
 #'
 #' @param path Path to boundary YAML config (defaults to `config/scientific_boundaries.yml`).
+#'   When that is absent -- `config/` is `.Rbuildignore`d, so it never exists in
+#'   an installed package -- the copy shipped at `extdata/scientific_boundaries.yml`
+#'   is read instead.
 #' @return List of boundary specifications.
 #' @family bva
 #' @concept testing
 #' @export
 read_scientific_boundaries <- function(path = "config/scientific_boundaries.yml") {
+  # RESOLUTION ORDER: caller's path -> source tree -> INSTALLED COPY.
+  #
+  # The installed copy is the one that matters and the one that was missing.
+  # config/ is .Rbuildignore'd, so under R CMD check -- where tests run from
+  # inside <pkg>.Rcheck/ with no source tree -- neither the relative default
+  # nor the ../../ probe below resolves, and every caller died with
+  # "Boundary ID 'drive_time_30' not found in registry", which reads like a
+  # registry defect rather than a missing file.
+  #
+  # This function already reached for system.file(), so shipping it was always
+  # the intent; it looked in "config", a directory inst/ does not have. The
+  # registry now ships in inst/extdata alongside the other config files this
+  # package installs (ai_claims_basket.yml, recurrence_evidence.csv, ...),
+  # and tests/testthat/test-config-extdata-sync.R asserts the shipped copy
+  # still matches config/.
   if (!file.exists(path)) {
-    path <- system.file("config", "scientific_boundaries.yml", package = "urpssim")
+    root <- .repo_source_root()
+    if (!is.na(root)) {
+      candidate <- file.path(root, "config", "scientific_boundaries.yml")
+      if (file.exists(candidate)) path <- candidate
+    }
   }
-  if (!file.exists(path) && file.exists("../../config/scientific_boundaries.yml")) {
-    path <- "../../config/scientific_boundaries.yml"
+  if (!file.exists(path)) {
+    installed <- system.file("extdata", "scientific_boundaries.yml",
+                             package = "urpssim")
+    if (nzchar(installed) && file.exists(installed)) path <- installed
+  }
+  if (!file.exists(path)) {
+    path <- "inst/extdata/scientific_boundaries.yml"   # dev (load_all)
+  }
+  if (!file.exists(path)) {
+    stop(
+      "read_scientific_boundaries(): boundary registry not found. Looked for ",
+      "config/scientific_boundaries.yml in the source tree and ",
+      "extdata/scientific_boundaries.yml in the installed package.",
+      call. = FALSE
+    )
   }
 
   cfg <- yaml::read_yaml(path)
