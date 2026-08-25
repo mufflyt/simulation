@@ -105,6 +105,80 @@ retirement_exit_taxonomy <- function() {
   )
 }
 
+#' Which activity evidence can reverse a self-declared retirement
+#'
+#' @description
+#' `retired` is the one exit that documented clinical activity can reverse
+#' without a licence action, because nothing was revoked. That makes the
+#' definition of "activity" load-bearing: if any signal counts, a single stale
+#' source resurrects a genuinely retired physician, and the workforce is
+#' overcounted exactly where the correction was supposed to prevent it.
+#'
+#' The dividing line is **evidence of care delivered in that year**, not
+#' evidence of continuing to exist in a database:
+#'
+#' \describe{
+#'   \item{`clinical_contemporaneous`}{Dated evidence that the physician
+#'     personally delivered care in the year in question -- claims with service
+#'     dates, encounter or procedure records, admitting or operating logs.
+#'     These reverse `retired`.}
+#'   \item{`administrative_registry`}{Presence in, or a timestamp on, a
+#'     directory: NPPES records, provider directories, roster membership,
+#'     affiliation listings. **These never reverse a retirement.** An NPPES
+#'     record persists after a physician stops practising and its deactivation
+#'     is notoriously lagged, so treating registry presence as practice
+#'     converts a data-maintenance artefact into a working physician.}
+#'   \item{`credential_status`}{A credential that remains valid on its own
+#'     schedule -- board certification, an unexpired licence, DEA
+#'     registration. Certification routinely outlives practice; holding a
+#'     credential is permission to work, not evidence of working.}
+#' }
+#'
+#' A source outside this table cannot reverse a retirement. That is deliberate:
+#' an unclassified source is unassessed, and the failure this guards against is
+#' a weak signal being admitted by default.
+#'
+#' @return A tibble with `activity_source`, `evidence_tier`,
+#'   `reverses_retirement` and `rationale`.
+#' @family retirement contract
+#' @concept supply
+#' @export
+retirement_activity_evidence_tiers <- function() {
+  tibble::tribble(
+    ~activity_source,        ~evidence_tier,             ~reverses_retirement,
+    "medicare_claims",       "clinical_contemporaneous",  TRUE,
+    "medicaid_claims",       "clinical_contemporaneous",  TRUE,
+    "commercial_claims",     "clinical_contemporaneous",  TRUE,
+    "encounter_record",      "clinical_contemporaneous",  TRUE,
+    "procedure_log",         "clinical_contemporaneous",  TRUE,
+    "hospital_privileging",  "clinical_contemporaneous",  TRUE,
+    "nppes_record",          "administrative_registry",   FALSE,
+    "provider_directory",    "administrative_registry",   FALSE,
+    "roster_membership",     "administrative_registry",   FALSE,
+    "affiliation_listing",   "administrative_registry",   FALSE,
+    "board_certification",   "credential_status",         FALSE,
+    "license_active",        "credential_status",         FALSE,
+    "dea_registration",      "credential_status",         FALSE
+  ) |>
+    dplyr::mutate(
+      rationale = dplyr::case_when(
+        .data$evidence_tier == "clinical_contemporaneous" ~
+          "dated evidence that care was delivered in the year",
+        .data$evidence_tier == "administrative_registry" ~
+          "a directory entry persists after practice stops; presence is not practice",
+        TRUE ~
+          "a credential outlives practice; permission to work is not evidence of working"
+      )
+    )
+}
+
+# Which sources may end a self-declared retirement. Anything absent from the
+# table is excluded, so a new or unrecognised source fails closed.
+.retirement_reversing_sources <- function() {
+  tiers <- retirement_activity_evidence_tiers()
+  tiers$activity_source[tiers$reverses_retirement]
+}
+
 #' Adjudicate terminal career events behind an identity gate
 #'
 #' @description
@@ -164,6 +238,10 @@ adjudicate_terminal_events <- function(event_tbl,
 
   strong_linkage <- retirement_strong_linkage_classes()
   taxonomy <- retirement_exit_taxonomy()
+  reversing_sources <- .retirement_reversing_sources()
+  if (!"activity_source" %in% base::names(event_tbl)) {
+    event_tbl$activity_source <- NA_character_
+  }
 
   adjudicated_tbl <- event_tbl |>
     dplyr::mutate(
@@ -183,6 +261,10 @@ adjudicate_terminal_events <- function(event_tbl,
       # dropped, because a status nobody classified is how a real exit goes
       # unrecorded.
       exit_class = dplyr::coalesce(.data$exit_class, "unclassified"),
+      # A source absent from retirement_activity_evidence_tiers() is
+      # unassessed, so it fails closed and cannot reverse a retirement.
+      activity_reverses_retirement =
+        .data$activity_source %in% reversing_sources,
       linkage_ok = .data$linkage_class %in% strong_linkage,
       # NA identity is not "unknown, proceed" -- it is a failed gate.
       identity_ok = dplyr::case_when(
@@ -218,8 +300,14 @@ adjudicate_terminal_events <- function(event_tbl,
         .data$reinstatement_required & .data$later_activity ~
           "quarantine_conflict",
         # Self-declared retirement is not a licensure action, so a documented
-        # return to practice reactivates it without a licence event.
-        !.data$reinstatement_required & .data$later_activity ~ "reactivated",
+        # return to practice reactivates it without a licence event -- but only
+        # on CLINICAL evidence. A directory entry or an unexpired credential
+        # outlives practice, so admitting either would let a stale record
+        # resurrect a genuinely retired physician.
+        !.data$reinstatement_required & .data$later_activity &
+          .data$activity_reverses_retirement ~ "reactivated",
+        !.data$reinstatement_required & .data$later_activity ~
+          "candidate_only",
         .data$event_type == "retired" & !.data$confirmation_matured ~
           "candidate_only",
         TRUE ~ "confirmed_exit"
@@ -302,6 +390,12 @@ derive_provider_year_states <- function(panel_tbl,
   }
 
   taxonomy <- retirement_exit_taxonomy()
+  reversing_sources <- .retirement_reversing_sources()
+  if (!"activity_source" %in% base::names(panel_tbl)) {
+    # Absent entirely means nothing was assessed, which must not read as
+    # "qualifying". NA matches no reversing source, so it fails closed.
+    panel_tbl$activity_source <- NA_character_
+  }
   reinstatement_required_types <- taxonomy$event_type[
     !base::is.na(taxonomy$reinstatement_required) &
       taxonomy$reinstatement_required
@@ -373,9 +467,22 @@ derive_provider_year_states <- function(panel_tbl,
             base::identical(current_state, "EXITED") &&
             !base::is.na(current_terminal) &&
             current_terminal %in% reinstatement_required_types
+          reverses_retirement <-
+            provider_tbl$activity_source[[row_id]] %in% reversing_sources
+          retirement_needs_clinical <-
+            base::identical(current_state, "EXITED") &&
+            base::identical(current_terminal, "retired") &&
+            !reverses_retirement
+
           if (requires_reinstatement && !reinstated) {
             current_state <- "CONFLICT"
             reason_values[[row_id]] <- "activity_without_reinstatement"
+          } else if (retirement_needs_clinical) {
+            # NOT a conflict. A directory entry or a live credential after
+            # retirement is EXPECTED, not contradictory -- flagging it for
+            # adjudication would bury the real conflicts under routine noise.
+            # The provider simply stays retired.
+            reason_values[[row_id]] <- "activity_source_cannot_reverse_retirement"
           } else {
             current_state <- "ACTIVE"
             current_terminal <- NA_character_

@@ -565,3 +565,145 @@ testthat::test_that("career state tracks licence changes across years", {
   testthat::expect_identical(career$career_state, c("ACTIVE", "ACTIVE", "EXITED"))
   testthat::expect_equal(career$n_active_licenses, c(2L, 1L, 0L))
 })
+
+# ---- what activity may reverse a self-declared retirement ------------------
+
+.rsm_src_row <- function(year, source, provider_id = "P1") {
+  tibble::tibble(
+    provider_id = provider_id, year = as.integer(year),
+    event_type = NA_character_, terminal_decision = "candidate_only",
+    positive_activity = TRUE, activity_confidence = 0.99,
+    explicit_reinstatement = FALSE, activity_source = source
+  )
+}
+
+.rsm_retired_then <- function(source) {
+  dplyr::bind_rows(
+    .rsm_panel_row(2020, event_type = "retired",
+                   terminal_decision = "confirmed_exit"),
+    .rsm_src_row(2021, source)
+  )
+}
+
+testthat::test_that("clinical evidence of care delivered reverses a retirement", {
+  for (source in c("medicare_claims", "medicaid_claims", "commercial_claims",
+                   "encounter_record", "procedure_log", "hospital_privileging")) {
+    states <- suppressMessages(
+      derive_provider_year_states(.rsm_retired_then(source))
+    )
+    testthat::expect_identical(
+      states$activity_state, c("EXITED", "ACTIVE"),
+      info = paste(source, "did not reverse a retirement")
+    )
+  }
+})
+
+testthat::test_that("a registry entry or a live credential NEVER reverses a retirement", {
+  # THE FAILURE THIS PREVENTS. An NPPES record persists after a physician stops
+  # practising and its deactivation is notoriously lagged; board certification
+  # and an unexpired licence outlive practice by design. Admitting any of them
+  # would let one stale source resurrect a genuinely retired physician, which
+  # is the overcount the lapse correction exists to prevent, arriving by a
+  # different door.
+  for (source in c("nppes_record", "provider_directory", "roster_membership",
+                   "affiliation_listing", "board_certification",
+                   "license_active", "dea_registration")) {
+    states <- suppressMessages(
+      derive_provider_year_states(.rsm_retired_then(source))
+    )
+    testthat::expect_identical(
+      states$activity_state, c("EXITED", "EXITED"),
+      info = paste(source, "resurrected a retired physician")
+    )
+    testthat::expect_identical(
+      states$state_reason[[2]], "activity_source_cannot_reverse_retirement"
+    )
+  }
+})
+
+testthat::test_that("an unrecognised or undeclared source fails closed", {
+  # An unassessed source is not a qualifying one. Defaulting the other way
+  # would mean every new data feed silently gains the power to un-retire
+  # people the day it is added.
+  for (source in list("some_new_feed", NA_character_)) {
+    states <- suppressMessages(
+      derive_provider_year_states(.rsm_retired_then(source))
+    )
+    testthat::expect_identical(
+      states$activity_state, c("EXITED", "EXITED"),
+      info = "an unassessed activity source was treated as qualifying"
+    )
+  }
+
+  # And when the column is absent entirely.
+  panel <- dplyr::bind_rows(
+    .rsm_panel_row(2020, event_type = "retired",
+                   terminal_decision = "confirmed_exit"),
+    .rsm_panel_row(2021, positive_activity = TRUE, activity_confidence = 0.99)
+  )
+  testthat::expect_identical(
+    suppressMessages(derive_provider_year_states(panel))$activity_state,
+    c("EXITED", "EXITED")
+  )
+})
+
+testthat::test_that("registry activity after retirement is not a CONFLICT", {
+  # Deliberate: a directory listing after retirement is EXPECTED, not
+  # contradictory. Routing it to CONFLICT would bury the real conflicts --
+  # post-death activity, unlicensed practice -- under routine registry noise.
+  states <- suppressMessages(
+    derive_provider_year_states(.rsm_retired_then("nppes_record"))
+  )
+  testthat::expect_false(base::any(states$activity_state == "CONFLICT"))
+})
+
+testthat::test_that("the source threshold does not weaken licensure exits", {
+  # Clinical evidence reverses a RETIREMENT. It must not reverse a lapse or a
+  # revocation, which still require documented reinstatement.
+  for (event in c("lapsed", "suspended", "revoked")) {
+    panel <- dplyr::bind_rows(
+      .rsm_panel_row(2020, event_type = event,
+                     terminal_decision = "confirmed_exit"),
+      .rsm_src_row(2021, "medicare_claims")
+    )
+    states <- suppressMessages(derive_provider_year_states(panel))
+    testthat::expect_identical(
+      states$activity_state[[2]], "CONFLICT",
+      info = paste("clinical activity cleared a", event, "without reinstatement")
+    )
+  }
+})
+
+testthat::test_that("the adjudicator applies the same evidence hierarchy", {
+  event <- function(source) tibble::tibble(
+    provider_id = "P1", event_type = "retired", event_year = 2021L,
+    identity_confidence = 0.99, event_confidence = 0.99,
+    timing_confidence = 0.99, linkage_class = "direct_npi",
+    later_activity = TRUE, explicit_reinstatement = FALSE,
+    confirmation_matured = TRUE, activity_source = source
+  )
+  testthat::expect_identical(
+    suppressMessages(adjudicate_terminal_events(event("medicare_claims")))$terminal_decision,
+    "reactivated"
+  )
+  testthat::expect_identical(
+    suppressMessages(adjudicate_terminal_events(event("nppes_record")))$terminal_decision,
+    "candidate_only"
+  )
+  testthat::expect_identical(
+    suppressMessages(adjudicate_terminal_events(event(NA_character_)))$terminal_decision,
+    "candidate_only"
+  )
+})
+
+testthat::test_that("the evidence tier table states the hierarchy explicitly", {
+  tiers <- retirement_activity_evidence_tiers()
+  testthat::expect_setequal(
+    tiers$evidence_tier[tiers$reverses_retirement], "clinical_contemporaneous"
+  )
+  testthat::expect_setequal(
+    base::unique(tiers$evidence_tier[!tiers$reverses_retirement]),
+    c("administrative_registry", "credential_status")
+  )
+  testthat::expect_true(base::all(base::nzchar(tiers$rationale)))
+})
