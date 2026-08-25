@@ -1,0 +1,118 @@
+# COLD INSTALL — prove a fresh machine can still reconstruct the environment.
+#
+# WHY THIS IS PERMANENT AND NOT A ONE-OFF CLEANUP.
+#
+# mysterycall entered Suggests in b0430bd with no matching Remotes entry, so
+# the dependency graph became unsolvable. Nothing noticed for months, because
+# r-lib/setup-r-dependencies restores a built library and a warm cache never
+# re-resolves: scientific-bva was still reporting "Cache hit ... ~161 MB" on
+# the very commit where a cold solve failed outright with
+#
+#   Could not solve package dependencies:
+#   * local::.: Can't install dependency mysterycall
+#
+# It surfaced only because a NEW workflow had no cache to restore. That is a
+# terrible way to find out. Every workflow in this repository was one cache
+# eviction away from being unable to install the package at all.
+#
+# So this job exists to keep solving the graph from nothing on a schedule,
+# whatever the caches happen to hold. It is deliberately NOT a required check:
+# a cold solve reaches the network and third-party remotes, so it can fail for
+# reasons a pull request did not cause. It is loud and scheduled instead.
+#
+# It runs on any change to DESCRIPTION or renv.lock, because those are the two
+# files that can break the graph.
+
+on:
+  schedule:
+    - cron: '41 9 * * 1'   # Mondays, offset from the nightly's 10:17
+  push:
+    branches: [main]
+    paths:
+      - 'DESCRIPTION'
+      - 'renv.lock'
+      - '.github/workflows/cold-install.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'DESCRIPTION'
+      - 'renv.lock'
+  workflow_dispatch:
+
+name: cold-install
+
+permissions:
+  contents: read
+
+jobs:
+  cold-resolve:
+    name: cold dependency resolution
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.MUFFLYACCESS_PAT }}
+      RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/noble/latest
+      _R_CHECK_FORCE_SUGGESTS_: false
+      NOT_CRAN: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+
+      - name: Prove the library starts empty
+        # The whole point is that nothing was restored. Asserting it beats
+        # trusting `cache: never` to mean what it says.
+        run: |
+          Rscript -e '
+            libs <- .libPaths()
+            cat("libPaths:\n"); for (p in libs) cat("  ", p, "\n")
+            installed <- rownames(installed.packages())
+            cat("packages present before resolution:", length(installed), "\n")
+            for (pkg in c("mysterycall", "mufflyaccess", "researchpaths", "duckdb")) {
+              cat(sprintf("  %-14s present=%s\n", pkg, pkg %in% installed))
+            }
+          '
+
+      - name: Resolve and install with NO cache
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::testthat, any::pkgload
+          dependencies: '"all"'   # Suggests included: that is where mysterycall lives
+          cache: 'never'
+
+      - name: The pinned remotes must actually be installed and loadable
+        # A resolution that "succeeded" while silently omitting a remote would
+        # leave the same latent break in place, so this asserts presence AND
+        # that the namespace loads.
+        run: |
+          Rscript -e '
+            required <- c("mysterycall", "mufflyaccess")
+            installed <- rownames(installed.packages())
+            failures <- character(0)
+            for (pkg in required) {
+              is_present <- pkg %in% installed
+              loads <- is_present && requireNamespace(pkg, quietly = TRUE)
+              cat(sprintf("  %-14s installed=%-5s loads=%s\n", pkg, is_present, loads))
+              if (!loads) failures <- c(failures, pkg)
+            }
+            if (length(failures)) {
+              cat(sprintf("::error::Cold resolve did not deliver: %s\n",
+                          paste(failures, collapse = ", ")))
+              quit(status = 1L)
+            }
+            cat("Cold dependency resolution succeeded from an empty library.\n")
+          '
+
+      - name: The package itself must load from the cold library
+        run: |
+          Rscript -e '
+            suppressMessages(pkgload::load_all(".", quiet = TRUE))
+            cat("urpssim loaded from a cold environment.\n")
+            cat("exports:", length(getNamespaceExports("urpssim")), "\n")
+          '
+
+      - name: Run the scientific contracts against the cold library
+        # If the contracts only hold on a warm cache, they do not hold.
+        run: |
+          Rscript .github/scripts/run-scientific-contract.R "cold: identity and state machine" test-retirement-state-machine.R
+          Rscript .github/scripts/run-scientific-contract.R "cold: provenance and confidence" test-retirement-artifact.R
+          Rscript .github/scripts/run-scientific-contract.R "cold: calibration gate" test-retirement-oos-gate.R
