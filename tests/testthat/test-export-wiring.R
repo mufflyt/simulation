@@ -78,7 +78,7 @@ ew_registry <- function(root) {
                   stringsAsFactors = FALSE, comment.char = "#")
 }
 
-test_that("every unwired export is registered, and the register has no stale rows", {
+test_that("@hall_of_shame 2 | every unwired export is registered, and the register has no stale rows", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
   o <- ew_orphans(root)
@@ -129,7 +129,7 @@ test_that("the dormant list is short enough to be decided entry by entry", {
   expect_equal(dormant, character(0))
 })
 
-test_that("no guard is left unwired, and the category stays in the schema", {
+test_that("@hall_of_shame 3 | no guard is left unwired, and the category stays in the schema", {
   root <- ew_root()
   skip_if(is.null(root), "repository root not reachable (source tree absent under R CMD check)")
   reg <- ew_registry(root)

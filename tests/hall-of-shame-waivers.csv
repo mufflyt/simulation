@@ -1,0 +1,46 @@
+# Hall of Shame entries with no executable enforcing test, and why.
+#
+# A WAIVER IS A DEBT, NOT AN EXEMPTION. This file exists so the coverage gate
+# can distinguish "no test yet" from "no test is possible", and so the second
+# claim has to be argued in writing. It should shrink. A waiver whose reason is
+# only "hard to test" does not belong here.
+#
+# The gate reports waived entries SEPARATELY from covered ones, so this list can
+# never be mistaken for coverage.
+#
+# Two legitimate kinds appear below:
+#
+#   process   The failure was in how a person worked, not in what the code
+#             computes -- a fix applied twice in opposite directions, a status
+#             reported for a dead process, docs regenerated in someone else's
+#             tree. There is no code path to assert. Writing a fake test would
+#             inflate the ratio while protecting nothing.
+#
+#   external  The law belongs to a repository or system this package does not
+#             contain: manuscript artifacts, geocoding pipelines, procedure
+#             taxonomies whose data lives elsewhere. Enforcing them here would
+#             mean asserting against fixtures we invented, which tests the
+#             fixture rather than the science.
+id,kind,reason
+9,process,"A claim ('the URPS split is definitively not in the archive') asserted faster than it was checked. The defect is verification discipline before speaking, which no assertion in this package can enforce."
+10,process,"Same shape: a count stated before it was computed. The remedy is checking before reporting, not a code path."
+11,process,"Same shape: a row count asserted from memory rather than from a query."
+12,process,"A capability claim about an external download mechanism, stated without attempting it. Nothing in this package can test whether somebody tried before concluding."
+16,process,"Reinventing a GFM table renderer that already existed. A 'do not reimplement' rule has no executable form; the repo-hygiene duplicate-definition gate covers the in-package case."
+18,process,"The same red build fixed twice in opposite directions across two sessions. This is a coordination failure between agents, not a computation."
+19,process,"Documentation regenerated in a tree somebody else was editing. Concurrency between humans; no assertion applies."
+27,process,"A running status reported for a process dead seven minutes. The remedy is checking the process before reporting it."
+29,process,"A branch reverted a fix main already had. Git-level coordination; the merge, not the code, was wrong."
+14,external,"Manuscript tables carrying no run identity. The manuscript artifacts are not in this repository -- see the manuscript-artifact-sync work, which must run where output/ lives."
+15,external,"A capture rate that is true and misleading. The number and its denominator are produced outside this package; asserting it here would test a fixture."
+seven-hospitals-fell-out-of-a-geocode-an,external,"Geocode dropout accounting. The geocoding pipeline and its provider coordinates live outside this package (data-raw/urps_roster carries NPIs and is deliberately untracked)."
+circumcision-was-the-top-urogynaecology,external,"A procedure-taxonomy filter defect. The claims extract that produced it is not in this repository."
+20,external,"The PHI history scanner. .github/scripts/scan-phi-dua.sh is shell run by the leak-guard job against full git history; it is exercised there rather than from testthat, and a testthat assertion would duplicate rather than enforce it."
+21,external,"The test proving the scanner fires was itself inert. Same location as 20: the scanner's own self-test belongs beside the scanner in the leak-guard job."
+30,external,"A live API key public for two weeks. Enforced by gitleaks in the leak-guard job over full history, which is the right layer; a testthat check would only re-scan the worktree."
+4b,external,"A broken Rd cross-reference blocked every push. Now enforced by R CMD check's 'checking Rd cross-references' step, which reports zero warnings as of the warnings cleanup; that gate lives in the check matrix, not in testthat."
+25,external,"survey treats a logical as a two-level factor. Reproducing it requires the survey package, which is not installed in the scientific-integrity job; it is exercised where survey is available rather than adding a compiled dependency to the required check."
+17,external,"A 'classification invariant' that was a grep. The replacement gate reads artifact provenance rather than scanning source, and lives in the artifact-classification tests rather than as a Hall of Shame regression."
+13,external,"The Tier A upper bound wrong in five places. The single-source-of-truth fix is a constant in the calibration layer; its duplication guard is the repo-hygiene duplicate-definition check."
+28,external,"'The POP cascade is inert.' The claim was about which model path runs at production configuration; the cascade's own tests live with the POP transition code."
+a-constant-presented-as-a-measurement,external,"A constant presented as a measurement. Enforced structurally by the calibration_status tier requirement on baseline_gap(), which refuses to infer whether a number was measured or assumed."
