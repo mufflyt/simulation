@@ -124,11 +124,29 @@ jobs:
           "${{ matrix.contract }}" ${{ matrix.files }}
 
   # ---------------------------------------------------------------------------
+  # Every recorded failure must be enforced by a test or carry a written
+  # waiver. The invariant is the RATIO, not a count of tests, so this cannot be
+  # satisfied by adding unrelated coverage.
+  # ---------------------------------------------------------------------------
+  hall-of-shame-coverage:
+    name: hall-of-shame coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - name: Every recorded failure is enforced or explicitly waived
+        # No package dependencies: this reads the registry, the test tags and
+        # the waiver file as text, so it stays green even when the dependency
+        # graph is broken -- which is exactly when it is most useful.
+        run: Rscript .github/scripts/hall-of-shame-coverage.R --check
+
+  # ---------------------------------------------------------------------------
   # THE REQUIRED CHECK. Point branch protection at this job and nothing else.
   # ---------------------------------------------------------------------------
   verdict:
     name: scientific-integrity
-    needs: [contracts]
+    needs: [contracts, hall-of-shame-coverage]
     if: always()   # must run even when a contract failed, or it reports nothing
     runs-on: ubuntu-latest
     steps:
@@ -138,11 +156,16 @@ jobs:
         # skip is exactly the "green means tests actually ran" defect this
         # workflow exists to close.
         run: |
-          result='${{ needs.contracts.result }}'
-          echo "contracts matrix result: $result"
-          if [ "$result" != "success" ]; then
-            echo "::error::SCIENTIFIC INTEGRITY NOT ESTABLISHED (contracts=$result)."
-            echo "::error::A scientific law failed, was skipped, or was cancelled."
+          fail=0
+          check() {
+            case "$2" in
+              success) echo "  OK       $1" ;;
+              *) echo "::error::SCIENTIFIC LAW NOT ESTABLISHED: $1 (result=$2)"; fail=1 ;;
+            esac
+          }
+          check "scientific contracts"    "${{ needs.contracts.result }}"
+          check "hall-of-shame coverage"  "${{ needs.hall-of-shame-coverage.result }}"
+          if [ "$fail" -ne 0 ]; then
             echo "::error::Skipped counts as failed: a law that did not run did not pass."
             exit 1
           fi
