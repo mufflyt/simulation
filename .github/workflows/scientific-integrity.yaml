@@ -1,0 +1,120 @@
+# SCIENTIFIC INTEGRITY — the single required check.
+#
+# WHAT THIS IS FOR. Branch protection can require one check. Requiring
+# `verdict` here makes every scientific contract below blocking without
+# maintaining a list of required checks in the GitHub UI, where it drifts
+# silently from the workflows it names.
+#
+# The standard it aims at is stronger than "all tests pass":
+#
+#   No plausible code change can alter who exists, when they exist, which data
+#   created that decision, or the published result, without CI noticing.
+#
+# WHY EACH CONTRACT IS A SEPARATE JOB rather than one big run. A single job
+# reports one result, so a change that breaks the identity gate and a change
+# that breaks artifact provenance are indistinguishable in the checks list.
+# Separate jobs name the law that broke in the UI, before anyone opens a log.
+#
+# WHY `verdict` RE-CHECKS RESULTS INSTEAD OF RELYING ON `needs`. A job that is
+# SKIPPED or CANCELLED does not fail its dependents by default -- `needs` with
+# the default `if` treats the whole downstream as skipped, and a skipped
+# required check can be reported as neutral. Only 'success' counts here. This
+# is the same idiom as the nightly's "Every blocking gate must have actually
+# RUN" step, kept deliberately identical so the two cannot drift.
+#
+# WHY THE RUNNER IS A SCRIPT. `testthat::test_file()` exiting 0 proves nothing:
+# the file may have discovered zero tests, or skipped every one of them.
+# .github/scripts/run-scientific-contract.R asserts positively that tests were
+# discovered AND that assertions actually passed, and fails otherwise.
+#
+# DELIBERATELY NOT INCLUDED: the canonical readiness audit
+# (.github/scripts/assert-canonical-science.R). It is RED BY DESIGN and stays
+# red until an unresolved parameter is sourced -- see the note in
+# tests/testthat/helper-setup.R. Putting a permanently-red gate inside a
+# required check trains everybody to merge past a red required check, which is
+# worse than not having one. It remains blocking in the nightly, where its
+# redness is the message rather than an obstacle.
+#
+# Also not here: the platform matrix, coverage, the frozen restore and the full
+# suite. Those are slow and live in the nightly; this workflow is the subset
+# whose failure means a scientific law was broken, and it must be fast enough
+# that nobody is tempted to skip it.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+name: scientific-integrity
+
+permissions:
+  contents: read
+
+env:
+  R_KEEP_PKG_SOURCE: yes
+  _R_CHECK_FORCE_SUGGESTS_: false
+  NOT_CRAN: true
+  TZ: UTC
+  RSPM: https://packagemanager.posit.co/cran/__linux__/noble/latest
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Each job is one scientific law. The `contract` input is what appears in the
+  # error annotation, so it should read as the law, not as a file name.
+  # ---------------------------------------------------------------------------
+  contracts:
+    name: ${{ matrix.contract }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false   # one broken law must not hide the others
+      matrix:
+        include:
+          - contract: identity gate and provider-year state machine
+            files: test-retirement-state-machine.R
+          - contract: artifact provenance and confidence schema
+            files: test-retirement-artifact.R
+          - contract: out-of-sample calibration gate
+            files: test-retirement-oos-gate.R
+          - contract: boundary and decision-surface values
+            files: test-scientific-bva.R
+          - contract: historical defect regressions
+            files: test-hall-of-shame-regressions.R test-config-extdata-sync.R
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::testthat, any::pkgload
+          dependencies: '"hard"'
+      - name: Enforce the contract
+        run: >
+          Rscript .github/scripts/run-scientific-contract.R
+          "${{ matrix.contract }}" ${{ matrix.files }}
+
+  # ---------------------------------------------------------------------------
+  # THE REQUIRED CHECK. Point branch protection at this job and nothing else.
+  # ---------------------------------------------------------------------------
+  verdict:
+    name: scientific-integrity
+    needs: [contracts]
+    if: always()   # must run even when a contract failed, or it reports nothing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every scientific contract must have actually held
+        # 'skipped' and 'cancelled' are failures here. A law that did not run
+        # is not a law that passed, and a required check that goes green on a
+        # skip is exactly the "green means tests actually ran" defect this
+        # workflow exists to close.
+        run: |
+          result='${{ needs.contracts.result }}'
+          echo "contracts matrix result: $result"
+          if [ "$result" != "success" ]; then
+            echo "::error::SCIENTIFIC INTEGRITY NOT ESTABLISHED (contracts=$result)."
+            echo "::error::A scientific law failed, was skipped, or was cancelled."
+            echo "::error::Skipped counts as failed: a law that did not run did not pass."
+            exit 1
+          fi
+          echo "All scientific contracts held."
