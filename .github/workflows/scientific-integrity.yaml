@@ -100,6 +100,24 @@ jobs:
         with:
           extra-packages: any::testthat, any::pkgload, mufflyt/mufflyaccess@9d13b2e197c4a95cfdae3e3520e07d309e8ad9bc
           dependencies: '"hard"'
+      - name: Report how this environment was built
+        # A warm cache concealed an unsolvable dependency graph for months (see
+        # .github/workflows/cold-install.yaml). This does not re-solve anything
+        # -- it records what the run is standing on, so "it passed" can be read
+        # together with "and the graph was/was not actually solved here".
+        # cold-install.yaml is the authoritative clean resolution.
+        run: |
+          Rscript -e '
+            installed <- rownames(installed.packages())
+            cat("library packages:", length(installed), "\n")
+            suggested_remote <- "mysterycall" %in% installed
+            cat("mysterycall present:", suggested_remote, "\n")
+            cat(if (suggested_remote)
+              "MODE: full graph available (Suggests remotes resolved or restored)\n"
+            else
+              "MODE: hard-dependency subset only; Suggests remotes not present here\n")
+          '
+
       - name: Enforce the contract
         run: >
           Rscript .github/scripts/run-scientific-contract.R
