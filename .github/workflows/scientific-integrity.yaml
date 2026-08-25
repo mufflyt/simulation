@@ -142,11 +142,29 @@ jobs:
         run: Rscript .github/scripts/hall-of-shame-coverage.R --check
 
   # ---------------------------------------------------------------------------
+  # A rendered manuscript table must still agree with the artifact that made
+  # it. Drift here is invisible on inspection: the table is full of plausible
+  # numbers either way.
+  # ---------------------------------------------------------------------------
+  manuscript-sync:
+    name: manuscript / artifact sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - name: Rendered tables match their generated panels
+        # Base R only, like the coverage gate: it must survive a broken
+        # dependency graph, since a manuscript can be wrong while the package
+        # will not install.
+        run: Rscript .github/scripts/manuscript-artifact-sync.R --check
+
+  # ---------------------------------------------------------------------------
   # THE REQUIRED CHECK. Point branch protection at this job and nothing else.
   # ---------------------------------------------------------------------------
   verdict:
     name: scientific-integrity
-    needs: [contracts, hall-of-shame-coverage]
+    needs: [contracts, hall-of-shame-coverage, manuscript-sync]
     if: always()   # must run even when a contract failed, or it reports nothing
     runs-on: ubuntu-latest
     steps:
@@ -165,6 +183,7 @@ jobs:
           }
           check "scientific contracts"    "${{ needs.contracts.result }}"
           check "hall-of-shame coverage"  "${{ needs.hall-of-shame-coverage.result }}"
+          check "manuscript / artifact sync" "${{ needs.manuscript-sync.result }}"
           if [ "$fail" -ne 0 ]; then
             echo "::error::Skipped counts as failed: a law that did not run did not pass."
             exit 1
