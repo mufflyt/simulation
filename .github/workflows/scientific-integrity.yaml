@@ -39,6 +39,70 @@
 # suite. Those are slow and live in the nightly; this workflow is the subset
 # whose failure means a scientific law was broken, and it must be fast enough
 # that nobody is tempted to skip it.
+#
+# -----------------------------------------------------------------------------
+# THE BRANCH PROTECTION IS PART OF THE CONTRACT, NOT DEPLOYMENT TRIVIA.
+#
+# A required check that an administrator can push past is a suggestion. The
+# configuration below is therefore recorded here, because a gate is only worth
+# what its enforcement is worth, and that enforcement lives in GitHub settings
+# where nothing else in this repository can see it:
+#
+#     required_status_checks.contexts = ["scientific-integrity"]
+#     required_status_checks.strict   = false
+#     enforce_admins                  = true
+#     allow_force_pushes              = false
+#     allow_deletions                 = false
+#
+# enforce_admins = true is the load-bearing line. Without it the repository
+# owner bypasses every scientific law here by pushing to main, which is exactly
+# how the checks stop being consulted.
+#
+# NOT REQUIRED, ON PURPOSE: the nightly, the canonical readiness audit, and
+# cold-install. The readiness audit is red by design; cold-install reaches the
+# network and can fail for reasons a pull request did not cause. Requiring
+# either would make a red required check routine, and a routinely-red gate is
+# one nobody reads.
+#
+# BREAK-GLASS. There is no standing bypass. If a change genuinely must land
+# while this is red -- a CI outage, a security fix -- the sequence is:
+#
+#   1. gh api -X PUT repos/mufflyt/simulation/branches/main/protection/enforce_admins
+#   2. push, and say in the commit message why the gate was bypassed
+#   3. gh api -X DELETE .../enforce_admins    <- immediately, same session
+#
+# Each of those three calls is in the audit log, which is the point: the
+# exception is recoverable from the record rather than invisible. Leaving
+# enforce_admins off permanently converts every push into an untracked
+# exception.
+#
+# Verify the live state, do not assume it:
+#   gh api repos/mufflyt/simulation/branches/main/protection \
+#     -q '.required_status_checks.contexts, .enforce_admins.enabled'
+#
+# -----------------------------------------------------------------------------
+# CROSS-REPOSITORY DEPENDENCY: manuscript-artifact-sync is INCOMPLETE here.
+#
+# The manuscript-sync job below governs docs/submission/tables in THIS
+# repository, and that is all it can govern. The abstract/manuscript
+# disagreement that motivated the rule -- an all-pathway URPS estimand at
+# 58.6% -> 75.4% against a combined-OB/GYN denominator at 66.2% -> 82.6%, the
+# same 1.59 pp/year slope over different denominators, and Gini values on
+# different bases -- involves output/manuscript.md and output/abstract.txt,
+# neither of which exists in this repository.
+#
+# Those files live in the isochrones repository, which also owns the retirement
+# adjudication pipeline (F-retirement_year_confirmation.R, the NPPES
+# extractors) that consumes the contracts in R/supply-retirement_contract.R.
+# The corresponding gate has to be built THERE, and must additionally:
+#
+#   * treat the manuscript as authoritative for the current submission and
+#     retire output/abstract.txt rather than validating against it, so a stale
+#     derivative cannot become a competing source of truth;
+#   * pin the estimand and denominator by name, not by matching a number.
+#
+# Nothing in this repository can enforce that, and this workflow does not
+# pretend to.
 
 on:
   pull_request:

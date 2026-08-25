@@ -22,6 +22,7 @@ Other retirement contract:
 \code{\link[=derive_provider_year_states]{derive_provider_year_states()}},
 \code{\link[=persist_retirement_consensus_artifact]{persist_retirement_consensus_artifact()}},
 \code{\link[=propagate_retirement_uncertainty_to_access]{propagate_retirement_uncertainty_to_access()}},
+\code{\link[=retirement_activity_evidence_tiers]{retirement_activity_evidence_tiers()}},
 \code{\link[=retirement_confidence_dimensions]{retirement_confidence_dimensions()}},
 \code{\link[=retirement_exit_taxonomy]{retirement_exit_taxonomy()}},
 \code{\link[=validate_retirement_evidence_v2]{validate_retirement_evidence_v2()}},
