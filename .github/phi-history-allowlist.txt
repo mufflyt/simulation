@@ -11,16 +11,19 @@
 # cannot state plainly why the content is fabricated, the answer is to purge the
 # history, not to add a line here.
 #
-# 5d22d50  added   tests/testthat/test-nightly-ci-contract.R
-# 24d772c  removed same
+# 9576c44  added   tests/testthat/test-nightly-ci-contract.R
+# 35ea5de  removed same
 #   String: printf "PatientName,MRN\nJane Roe,00123\n" > leak.csv
 #   A probe planted into a mktemp throwaway git repository to prove the scanner
 #   actually fires -- "a scanner that has never fired is indistinguishable from
 #   one that cannot". The name is a placeholder, the MRN is 00123, and the file
-#   never existed outside the fixture. 24d772c replaced the literal with a
+#   never existed outside the fixture. 35ea5de replaced the literal with a
 #   runtime-assembled string precisely so the scanner would stop matching it.
-5d22d50
-24d772c
+#   (Originally 5d22d50/24d772c; SHAs rewritten by the 2026-08-26
+#   git-filter-repo purge of tests/testthat/artifacts/chia_*/ -- same commits,
+#   same content, verified via commit message + diff before relisting.)
+9576c44
+35ea5de
 #
 # 1140962  added   tests/testthat/test-nightly-ci-contract.R (scan-phi-dua.sh's
 #                   own creation commit)
