@@ -237,7 +237,13 @@ test_that("the unwired surface does not grow", {
   # work exports open_five_source_db() as `api` -- a caller opens the database
   # directly to run its own queries, the package has no orchestrator step that
   # would open it on their behalf.
-  expect_lte(length(o$orphans), 182L)
+  #
+  # RAISED 182 -> 183, ratio still under 0.25. The empirical-simulation-DuckDB
+  # coupling work exports load_empirical_runner_inputs() as `api` -- a runner
+  # calls it directly to assemble its inputs, the package has no orchestrator
+  # step that would call it for them. Independent of the raise above; the two
+  # land together only because both PRs merged in the same window.
+  expect_lte(length(o$orphans), 183L)
   expect_lte(length(o$orphans) / length(o$exports), 0.25)
 })
 
