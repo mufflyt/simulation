@@ -91,6 +91,19 @@ outputs/
 # under it is invisible to the installed package R CMD check actually runs.
 # Their *_manifest.txt files sit beside them and are not ignored.
 
+# ...EXCEPT tests/testthat/artifacts/: every subdirectory there is
+# runtime-generated output from a CHIA/DUA-restricted-data pipeline
+# (chia_capacity, chia_inpatient, chia_revenue_setting, chia_travel,
+# chia_validation as of this writing), not a committed source fixture --
+# confirmed by checking every *.csv currently tracked under tests/**: the
+# only legitimate fixtures live under tests/testthat/fixtures/. Several of
+# these generators write real small-cell discharge-derived counts straight
+# to this path with no synthetic/real distinction in the filename, so the
+# broad !tests/**/*.csv negation above was silently making real CHIA output
+# committable. Re-ignoring the whole tree here, not just *.csv, since the
+# same generators can also write other formats.
+tests/testthat/artifacts/
+
 # Back-test artifacts are deliverables and must be tracked despite the broad
 # *.csv / *.png / *.parquet rules above.
 !artifacts/backtest_*.csv

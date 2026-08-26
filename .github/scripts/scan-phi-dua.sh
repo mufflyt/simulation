@@ -31,6 +31,28 @@ high() { printf '::warning::[HIGH] %s :: %s\n' "$1" "$2"; HIGH=$((HIGH+1)); }
 PHI_COLS='PatientName|PAT_ADDR_[0-9]|PAT_CITY|BirthDate|DateOfBirth|\bMRN\b|MedicalRecordNum|SocialSecurity|PAT_ZIP'
 # DUA-restricted CHIA artifacts, by filename.
 DUA_FILES='\.mdb$|\.accdb$|casemix.*\.zip$|HIDD.*\.txt$|chia.*\.duckdb$'
+# Runtime output directories that several R/data-chia_*.R / R/geography-chia_*.R
+# generators write real (non-synthetic) small-cell discharge/facility counts
+# into. These directories should never contain a tracked file at all -- the
+# generators' own save_dir defaults live under artifacts/ or
+# tests/testthat/artifacts/, both meant to be gitignored, so anything tracked
+# here means either a `git add -f` bypass or pre-existing exposure. Found by
+# discovering tests/testthat/artifacts/chia_inpatient/*.csv and
+# tests/testthat/artifacts/chia_capacity/*.csv already tracked and pushed:
+# small-cell aggregate counts (e.g. a single-digit case count for one
+# year/age-band/procedure_family stratum) derived from real DUA-restricted
+# CHIA discharge data, indistinguishable from synthetic fixture output by
+# content alone because the synthetic generators intentionally mimic the same
+# category vocabulary. Only build_chia_inpatient_urps_series() and
+# build_chia_hospital_surgical_volume_map() currently mark synthetic output
+# with a `synthetic_` filename prefix (redirected to tempdir(), never
+# reaching a tracked path); build_chia_ub04_setting_evidence(),
+# build_chia_surgical_travel_kernel(), and validate_chia_inpatient_demand()
+# have no such distinction at all and always write to the tracked-risk path
+# regardless of whether the input was real or synthetic. A filename check
+# for "real vs synthetic" is therefore not reliable across all five
+# generators; treat ANY tracked file under these directories as a finding.
+DUA_ARTIFACT_DIRS='^(artifacts|tests/testthat/artifacts)/chia_(capacity|inpatient|revenue_setting|travel|validation)/'
 # SSN-shaped. Public-use fixed-width survey files (NAMCS/NHAMCS/MCBS/MEPS/BRFSS)
 # are excluded: they are de-identified by construction and their digit runs
 # match this pattern by coincidence.
@@ -44,6 +66,25 @@ if [ "$MODE" = "worktree" ]; then
   while IFS= read -r f; do
     [ -n "$f" ] && crit "DUA-restricted file is tracked" "$f"
   done < <(git ls-files | grep -E "$DUA_FILES" || true)
+
+  # CRITICAL 1b: anything tracked under a CHIA runtime-output directory. See
+  # the DUA_ARTIFACT_DIRS comment above -- content alone cannot reliably
+  # distinguish real from synthetic output here, so any tracked file in these
+  # directories is a finding UNLESS individually allowlisted (see
+  # chia-artifact-allowlist.txt's own header for what "verified" means here).
+  CHIA_ALLOW=".github/chia-artifact-allowlist.txt"
+  chia_allowed() {
+    [ -f "$CHIA_ALLOW" ] || return 1
+    grep -qxF "$1" "$CHIA_ALLOW"
+  }
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if chia_allowed "$f"; then
+      printf '::notice::[allowlisted] verified-synthetic CHIA artifact: %s -- see %s\n' "$f" "$CHIA_ALLOW"
+      continue
+    fi
+    crit "tracked file under a CHIA runtime-output directory, not on the verified allowlist" "$f"
+  done < <(git ls-files | grep -E "$DUA_ARTIFACT_DIRS" || true)
 
   # CRITICAL 2: PHI column names in tracked content
   while IFS= read -r m; do
@@ -79,6 +120,23 @@ else
     [ -n "$f" ] && crit "DUA-restricted file exists in git history" "$f"
   done < <(git log --all --pretty=format: --name-only --diff-filter=A 2>/dev/null \
              | sort -u | grep -E "$DUA_FILES" || true)
+
+  # Same as the worktree DUA_ARTIFACT_DIRS check, but history: a file removed
+  # from the tree still ships as a blob in a public clone. Deliberately still
+  # flags the 480 files removed from the tree during the 2026-08-23
+  # remediation -- their blobs remain fetchable from history until it is
+  # rewritten, which this finding exists to make visible, not to silence.
+  CHIA_ALLOW=".github/chia-artifact-allowlist.txt"
+  chia_allowed() {
+    [ -f "$CHIA_ALLOW" ] || return 1
+    grep -qxF "$1" "$CHIA_ALLOW"
+  }
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    chia_allowed "$f" && continue
+    crit "CHIA runtime-output file exists in git history, not on the verified allowlist" "$f"
+  done < <(git log --all --pretty=format: --name-only --diff-filter=A 2>/dev/null \
+             | sort -u | grep -E "$DUA_ARTIFACT_DIRS" || true)
 
   ALLOW=".github/phi-history-allowlist.txt"
   allowed() {
