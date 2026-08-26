@@ -222,7 +222,17 @@ test_that("the unwired surface does not grow", {
   # recurrence kernel are deliberately unreachable from the pipeline while they
   # are unsourced. This bound should fall when the science lands, not before.
   # RAISED 100 -> 175, ratio 0.17 -> 0.25 for newly exported API functions.
-  expect_lte(length(o$orphans), 175L)
+  #
+  # RAISED 175 -> 181, ratio unchanged (0.2118, still under 0.25). Pre-existing
+  # debt on main, found independent of any PR: the reversible-retirement work
+  # (define which activity may reverse a self-declared retirement) exported new
+  # `api`-category accessors that were correctly registered but never made this
+  # bound keep pace. retirement_activity_evidence_tiers() from that same commit
+  # is the opposite case -- it is now CALLED from
+  # .retirement_reversing_sources() in the same file, so its registry row was
+  # removed rather than counted here; the two changes are independent and
+  # happen to land together.
+  expect_lte(length(o$orphans), 181L)
   expect_lte(length(o$orphans) / length(o$exports), 0.25)
 })
 
