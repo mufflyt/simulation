@@ -4,10 +4,19 @@
 \alias{build_chia_physician_attribution}
 \title{Build the full CHIA physician-attribution layer}
 \usage{
-build_chia_physician_attribution(con)
+build_chia_physician_attribution(
+  con,
+  procedure_family_config = yaml::read_yaml("config/chia_urps_inpatient_codes.yml")
+)
 }
 \arguments{
 \item{con}{Open, writable DuckDB connection.}
+
+\item{procedure_family_config}{Passed through to
+\code{\link[=build_chia_hdd_procedure_family_view]{build_chia_hdd_procedure_family_view()}} as \code{config}. Exposed so tests
+can inject a small fixture config instead of reading
+\code{config/chia_urps_inpatient_codes.yml} (a path relative to the package
+root, which does not resolve under testthat's working directory).}
 }
 \value{
 \code{con}, invisibly.
@@ -15,19 +24,25 @@ build_chia_physician_attribution(con)
 \description{
 Orchestrates \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
 \code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_discharge_procedure_views()}},
+\code{\link[=build_chia_hdd_diagnosis_long_view]{build_chia_hdd_diagnosis_long_view()}},
+\code{\link[=build_chia_hdd_procedure_family_view]{build_chia_hdd_procedure_family_view()}},
 \code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}}, and
 \code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}} in dependency order. Requires
 \code{chia_casemix.v_hdd_discharge_all_years} / \code{v_hdd_procedurecode_all_years}
-(built by \code{scripts/chia/finalize_db.py}) and
-\code{chia_provider.borim_stdrel_npi_straight_from_cd} to already exist on
+/ \code{v_hdd_diagnosiscode_all_years} (built by \code{scripts/chia/finalize_db.py})
+and \code{chia_provider.borim_stdrel_npi_straight_from_cd} to already exist on
 \code{con}.
 }
 \seealso{
 Other chia physician attribution:
+\code{\link[=build_chia_hdd_diagnosis_long_view]{build_chia_hdd_diagnosis_long_view()}},
 \code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
 \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
 \code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_discharge_procedure_views()}},
-\code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}}
+\code{\link[=build_chia_hdd_procedure_family_view]{build_chia_hdd_procedure_family_view()}},
+\code{\link[=build_chia_npi_taxonomy_crosswalk]{build_chia_npi_taxonomy_crosswalk()}},
+\code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}},
+\code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}}
 }
 \concept{chia physician attribution}
 \concept{supply}

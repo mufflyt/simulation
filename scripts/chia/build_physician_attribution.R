@@ -89,6 +89,16 @@ downgraded <- DBI::dbGetQuery(con, "SELECT code, n, round(pct_surgical,1) pct_su
 cat("  codes downgraded to non_operative by the specialty-share refinement:\n")
 print(downgraded)
 
+cat("\n=== Phase 3a: chia_casemix.hdd_diagnosis_long ===\n")
+build_chia_hdd_diagnosis_long_view(con)
+n_dx <- DBI::dbGetQuery(con, "SELECT count(*) n FROM chia_casemix.hdd_diagnosis_long")$n
+cat(sprintf("  [ok] %s diagnosis rows\n", format(n_dx, big.mark = ",")))
+
+cat("\n=== Phase 3a2: chia_casemix.v_hdd_discharge_procedure_family ===\n")
+build_chia_hdd_procedure_family_view(con)
+fam_counts <- DBI::dbGetQuery(con, "SELECT procedure_family, count(*) n FROM chia_casemix.v_hdd_discharge_procedure_family WHERE procedure_family IS NOT NULL GROUP BY 1 ORDER BY 2 DESC")
+print(fam_counts)
+
 cat("\n=== Phase 3b: chia_casemix.v_hdd_discharge_canonical ===\n")
 build_chia_hdd_discharge_canonical_view(con)
 n2 <- DBI::dbGetQuery(con, "SELECT count(*) n FROM chia_casemix.v_hdd_discharge_canonical")$n

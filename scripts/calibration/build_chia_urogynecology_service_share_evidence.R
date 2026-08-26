@@ -58,7 +58,7 @@ if (!"npi" %in% base::names(roster)) {
   base::stop("Frozen URPS roster must contain `npi`.", call. = FALSE)
 }
 
-evidence <- build_chia_service_share_evidence(
+evidence <- classify_chia_service_share_events(
   events = events,
   npi_taxonomy = npi_taxonomy,
   urps_roster = roster
