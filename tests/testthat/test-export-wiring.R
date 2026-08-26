@@ -232,7 +232,12 @@ test_that("the unwired surface does not grow", {
   # .retirement_reversing_sources() in the same file, so its registry row was
   # removed rather than counted here; the two changes are independent and
   # happen to land together.
-  expect_lte(length(o$orphans), 181L)
+  #
+  # RAISED 181 -> 182, ratio still under 0.25. The five-source-DuckDB coupling
+  # work exports open_five_source_db() as `api` -- a caller opens the database
+  # directly to run its own queries, the package has no orchestrator step that
+  # would open it on their behalf.
+  expect_lte(length(o$orphans), 182L)
   expect_lte(length(o$orphans) / length(o$exports), 0.25)
 })
 
