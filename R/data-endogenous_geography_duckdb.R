@@ -311,7 +311,7 @@ build_endogenous_geography_market_panel <- function(
     end_year) {
   base::message(
     "Building county-year geography panel for ", start_year,
-    "–", end_year, "."
+    "-", end_year, "."
   )
 
   required_tables <- c(
