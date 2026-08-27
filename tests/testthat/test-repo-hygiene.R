@@ -340,6 +340,47 @@ test_that("every setup-r-dependencies step is preceded by setup-pandoc in its jo
   )
 })
 
+# Guard: a disabled GitHub Pages site fails the pkgdown deploy silently.
+#
+# actions/deploy-pages@v4 reported the failure as a bare
+# "HttpError: Not Found" with no indication of what was wrong -- the site
+# build and leak-guard scan both succeeded on every run, so the workflow
+# LOOKED healthy while the actual publication step died underneath it. Root
+# cause: this repository never had GitHub Pages enabled (`gh api
+# repos/OWNER/REPO/pages` returned 404), which nothing in the source tree
+# could have shown. Once enabled, the failure mode that remains is someone
+# removing the precondition check during a future edit to pkgdown.yaml, and
+# that IS visible from the source tree.
+test_that("pkgdown deploy checks GitHub Pages is enabled before calling deploy-pages", {
+  f <- file.path(.repo_root(), ".github", "workflows", "pkgdown.yaml")
+  skip_if_not(file.exists(f), "pkgdown.yaml not present")
+  wf <- yaml::read_yaml(f)
+  deploy_steps <- wf$jobs$deploy$steps
+  expect_true(!is.null(deploy_steps), info = "pkgdown.yaml has no deploy job")
+
+  uses <- vapply(deploy_steps, function(s) {
+    u <- s[["uses"]]
+    if (is.null(u)) NA_character_ else as.character(u)[1]
+  }, character(1))
+  deploy_idx <- grep("actions/deploy-pages", uses)
+  expect_true(length(deploy_idx) > 0,
+              info = "deploy job has no actions/deploy-pages step")
+
+  step_names <- vapply(deploy_steps, function(s) {
+    n <- s[["name"]]
+    if (is.null(n)) "" else as.character(n)
+  }, character(1))
+  check_idx <- grep("GitHub Pages.*enabled", step_names, ignore.case = TRUE)
+  expect_true(
+    length(check_idx) > 0 && any(check_idx < min(deploy_idx)),
+    info = paste(
+      "The deploy job must verify GitHub Pages is enabled BEFORE calling",
+      "actions/deploy-pages@v4, or a disabled/removed Pages site fails with",
+      "an unexplained 'HttpError: Not Found' instead of an actionable message."
+    )
+  )
+})
+
 test_that("the package does not redefine operators that base or rlang provide", {
   # Defining `%||%` locally shadows base R (>= 4.4) and rlang, so behaviour would
   # depend on attach order.

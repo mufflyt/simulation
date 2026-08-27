@@ -160,5 +160,23 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # actions/deploy-pages@v4 surfaces a disabled Pages site as a bare
+      # "HttpError: Not Found" with no indication of what broke or how to fix
+      # it -- that is exactly what happened here: the repository never had
+      # Pages enabled, and the site build succeeded every time while the
+      # deploy silently failed underneath it. This step converts the same
+      # precondition into an actionable error before the opaque one can occur.
+      - name: GitHub Pages must be enabled before deploying
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh api "repos/${{ github.repository }}/pages" >/dev/null 2>&1; then
+            echo "::error::GitHub Pages is not enabled for ${{ github.repository }}. Enable it with:"
+            echo "::error::  gh api repos/${{ github.repository }}/pages -X POST -f build_type=workflow"
+            echo "::error::(or Settings -> Pages -> Build and deployment -> Source: GitHub Actions)"
+            exit 1
+          fi
+          echo "GitHub Pages is enabled; deploy can proceed."
+
       - id: deployment
         uses: actions/deploy-pages@v4
