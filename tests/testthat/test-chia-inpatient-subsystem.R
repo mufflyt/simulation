@@ -1,11 +1,5 @@
 # Unit tests for the CHIA Inpatient Subsystem (D6, Rate Fitting, Rolling-Origin Backtest, Travel Kernel)
 
-.repo_path <- function(...) {
-  root <- .source_tree_root()
-  if (length(root) == 0) root <- ".."
-  file.path(root[1], ...)
-}
-
 test_that("CHIA inpatient subsystem files exist and parse cleanly", {
   files <- c(
     .repo_path("R", "data-chia_inpatient_surgery.R"),
@@ -68,5 +62,4 @@ test_that("build_chia_hospital_capacity_map evaluates facility volume & Gini con
   expect_true("hospital_inpatient" %in% URPS_SETTING_NAMES)
   expect_false("operative" %in% URPS_SETTING_NAMES)
 })
-
 

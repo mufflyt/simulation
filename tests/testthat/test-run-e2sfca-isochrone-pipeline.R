@@ -1,11 +1,5 @@
 # Unit tests for end-to-end E2SFCA real isochrone pipeline (Steps 1 - 4)
 
-.repo_path <- function(...) {
-  root <- .source_tree_root()
-  if (length(root) == 0) root <- ".."
-  file.path(root[1], ...)
-}
-
 test_that("run_e2sfca_isochrone_pipeline.R script exists and has valid syntax", {
   script_path <- .repo_path("scripts", "run_e2sfca_isochrone_pipeline.R")
   expect_true(file.exists(script_path))
@@ -15,6 +9,11 @@ test_that("run_e2sfca_isochrone_pipeline.R script exists and has valid syntax", 
 })
 
 test_that("load_tract_demand loads real Census tract female demand", {
+  # resolve_canonical() reads config/canonical_sources.yml, which is excluded
+  # from the built package (.Rbuildignore: ^config$) and only reachable from
+  # the source tree -- genuinely absent under covr's isolated temp install.
+  skip_if(length(.source_tree_root()) == 0,
+          "canonical source registry unreachable (source tree absent under R CMD check/covr)")
   demand <- load_tract_demand()
   expect_s3_class(demand, "data.frame")
   expect_gt(nrow(demand), 80000L) # 83,492 US Census tracts
@@ -23,6 +22,8 @@ test_that("load_tract_demand loads real Census tract female demand", {
 })
 
 test_that("compute_e2sfca_access produces valid SPAR scores and catchments", {
+  skip_if(length(.source_tree_root()) == 0,
+          "canonical source registry unreachable (source tree absent under R CMD check/covr)")
   demand <- load_tract_demand()[1:50, ]
   supply <- tibble::tibble(provider_id = c("P1", "P2"), supply = c(1.0, 1.0))
   membership <- tibble::tibble(

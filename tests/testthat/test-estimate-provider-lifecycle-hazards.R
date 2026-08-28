@@ -1,11 +1,5 @@
 # Unit tests for provider career lifecycle and retirement hazard pipeline
 
-.repo_path <- function(...) {
-  root <- .source_tree_root()
-  if (length(root) == 0) root <- ".."
-  file.path(root[1], ...)
-}
-
 test_that("estimate_provider_lifecycle_hazards.R script exists and has valid syntax", {
   script_path <- .repo_path("scripts", "estimate_provider_lifecycle_hazards.R")
   expect_true(file.exists(script_path))

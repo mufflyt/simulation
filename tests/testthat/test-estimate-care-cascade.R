@@ -1,11 +1,5 @@
 # Unit tests for care cascade estimation pipeline and demand transition registry
 
-.repo_path <- function(...) {
-  root <- .source_tree_root()
-  if (length(root) == 0) root <- ".."
-  file.path(root[1], ...)
-}
-
 test_that("estimate_care_cascade.R script exists and has valid syntax", {
   script_path <- .repo_path("scripts", "estimate_care_cascade.R")
   skip_if_not(file.exists(script_path), "Script absent under R CMD check")

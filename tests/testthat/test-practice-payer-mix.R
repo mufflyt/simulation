@@ -66,6 +66,14 @@ testthat::test_that("namcs_urps_payer_mix flags cells below the NCHS reliability
 })
 
 testthat::test_that("ahrq_3prd_medicare_medicaid_ratio reads the vendored summary", {
+  # "Vendored" here means committed under data-raw/, not shipped in the built
+  # package (.Rbuildignore: ^data-raw$) -- only reachable from the source
+  # tree, genuinely absent under covr's isolated temp install.
+  testthat::skip_if(
+    is.na(.repo_source_root()) &&
+      !file.exists("data-raw/ahrq_3prd/ahrq_3prd_medicare_medicaid_claims_by_state.csv"),
+    "AHRQ 3PRD summary unreachable (source tree absent under R CMD check/covr)"
+  )
   crosscheck <- ahrq_3prd_medicare_medicaid_ratio()
 
   testthat::expect_equal(nrow(crosscheck), 1L)
