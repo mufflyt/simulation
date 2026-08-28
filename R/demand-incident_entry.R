@@ -422,3 +422,152 @@ save_incident_entry_hazard <- function(
 
   invisible(exact_path)
 }
+
+# Pre-Registered Sensitivity Matrix ------------------------------------------
+#
+# docs/INCIDENT_ENTRY_ESTIMAND.md #8 fixes seven dimensions BEFORE the answer
+# is seen: washout, index-event definition, diagnosis window, enrollment gap,
+# provider definition, incidence years, and case rule. Three of those --
+# washout_months, allowed_gap_months, analysis_years -- are parameters
+# estimate_incident_entry_hazard() already exposes natively, so this function
+# sweeps them directly. The other four -- index-event definition, diagnosis
+# window, provider definition, case rule -- are properties of HOW claims_tbl
+# and roster_tbl were classified upstream (which encounters count as
+# "qualifying", which NPIs count as the roster), not properties this function
+# can vary on its own: the classification happens before the claims ever
+# reach this contract. Those four are swept by supplying multiple NAMED
+# variants of claims_tbl/roster_tbl, one per upstream classification choice.
+#
+# ONE-AT-A-TIME, NOT FULL FACTORIAL. Each row in the pre-registered table
+# holds every dimension at its primary value except the one being tested --
+# this mirrors that directly, rather than the combinatorial explosion a full
+# factorial sweep would produce, so it stays a small, auditable set of runs
+# that maps one-to-one onto the pre-registered table.
+
+#' Run the Pre-Registered Incident-Entry Sensitivity Matrix
+#'
+#' @description
+#' Runs [estimate_incident_entry_hazard()] once per dimension of the
+#' pre-registered sensitivity matrix (docs/INCIDENT_ENTRY_ESTIMAND.md #8),
+#' holding every other dimension at its primary value. Existence of a swing
+#' across reasonable definitions is itself a finding -- see the estimand's own
+#' framing: "If `q` swings from 0.08 to 0.40 across reasonable case
+#' definitions, that uncertainty belongs in the simulation." This function
+#' produces the comparison table that swing is read from; it does not
+#' interpret it.
+#'
+#' @param claims_variants Named list of `claims_tbl` variants, one per
+#'   index-event / diagnosis-window / provider-definition / case-rule
+#'   combination to test. Must include an element named `"primary"`.
+#' @param roster_variants Named list of `roster_tbl` variants, parallel to
+#'   `claims_variants` by name. A single unnamed/length-1 list is recycled
+#'   across every claims variant (the common case: only the claims
+#'   classification changes, the roster does not).
+#' @param enrollment_tbl,member_year_tbl,stock_probability_tbl Passed through
+#'   unchanged to every run -- these are not part of the pre-registered
+#'   sensitivity matrix.
+#' @param washout_variants Washout months to sweep one at a time against the
+#'   primary spec. Must include 24 (the primary value); default matches the
+#'   pre-registered `c(12, 24, 36)`.
+#' @param gap_variants Allowed enrollment-gap months to sweep one at a time.
+#'   Must include 0 (the primary value); default matches the pre-registered
+#'   `c(0, 1)`.
+#' @param year_variants Named list of `analysis_years` vectors to sweep one at
+#'   a time. Must include an element named `"primary"`; default matches the
+#'   pre-registered primary (2023-2024) against the 2022-24 sensitivity.
+#' @param ... Passed to every call of [estimate_incident_entry_hazard()]
+#'   (e.g. `min_cell_n`, `conf_level`).
+#' @return A tibble: `estimate_incident_entry_hazard()$public` row-bound
+#'   across every run, with two added columns identifying which single axis
+#'   moved from the primary spec for that row -- `sensitivity_dimension`
+#'   (`"primary"`, `"washout_months"`, `"allowed_gap_months"`,
+#'   `"analysis_years"`, or `"claims_variant"`) and `sensitivity_value` (the
+#'   value or variant name that produced it).
+#' @family incident entry
+#' @concept demand
+#' @export
+run_incident_entry_sensitivity_matrix <- function(
+    claims_variants,
+    enrollment_tbl,
+    member_year_tbl,
+    roster_variants,
+    stock_probability_tbl,
+    washout_variants = c(12L, 24L, 36L),
+    gap_variants = c(0L, 1L),
+    year_variants = list(
+      primary = c(2023L, 2024L),
+      sensitivity_2022_24 = c(2022L, 2023L, 2024L)
+    ),
+    ...) {
+
+  if (!"primary" %in% names(claims_variants)) {
+    stop("claims_variants must include an element named 'primary'.", call. = FALSE)
+  }
+  if (!24L %in% washout_variants) {
+    stop("washout_variants must include the primary value, 24.", call. = FALSE)
+  }
+  if (!0L %in% gap_variants) {
+    stop("gap_variants must include the primary value, 0.", call. = FALSE)
+  }
+  if (!"primary" %in% names(year_variants)) {
+    stop("year_variants must include an element named 'primary'.", call. = FALSE)
+  }
+
+  if (length(roster_variants) == 1L) {
+    roster_variants <- stats::setNames(
+      rep(roster_variants, length(claims_variants)),
+      names(claims_variants)
+    )
+  }
+  missing_roster <- setdiff(names(claims_variants), names(roster_variants))
+  if (length(missing_roster) > 0L) {
+    stop("roster_variants is missing a variant matching claims_variants: ",
+         paste(missing_roster, collapse = ", "), call. = FALSE)
+  }
+
+  run_one <- function(claims_name, washout_months, allowed_gap_months,
+                      year_label, analysis_years, dimension, value) {
+    message("Sensitivity run: ", dimension, " = ", value)
+    res <- estimate_incident_entry_hazard(
+      claims_tbl = claims_variants[[claims_name]],
+      enrollment_tbl = enrollment_tbl,
+      member_year_tbl = member_year_tbl,
+      roster_tbl = roster_variants[[claims_name]],
+      stock_probability_tbl = stock_probability_tbl,
+      analysis_years = analysis_years,
+      washout_months = washout_months,
+      allowed_gap_months = allowed_gap_months,
+      ...
+    )
+    res$public |>
+      dplyr::mutate(sensitivity_dimension = dimension, sensitivity_value = as.character(value),
+                    .before = 1L)
+  }
+
+  runs <- list(
+    run_one("primary", 24L, 0L, "primary", year_variants[["primary"]],
+            "primary", "primary")
+  )
+
+  for (w in setdiff(washout_variants, 24L)) {
+    runs <- c(runs, list(run_one("primary", w, 0L, "primary", year_variants[["primary"]],
+                                  "washout_months", w)))
+  }
+
+  for (g in setdiff(gap_variants, 0L)) {
+    runs <- c(runs, list(run_one("primary", 24L, g, "primary", year_variants[["primary"]],
+                                  "allowed_gap_months", g)))
+  }
+
+  for (yl in setdiff(names(year_variants), "primary")) {
+    runs <- c(runs, list(run_one("primary", 24L, 0L, yl, year_variants[[yl]],
+                                  "analysis_years", yl)))
+  }
+
+  for (cv in setdiff(names(claims_variants), "primary")) {
+    runs <- c(runs, list(run_one(cv, 24L, 0L, "primary", year_variants[["primary"]],
+                                  "claims_variant", cv)))
+  }
+
+  dplyr::bind_rows(runs)
+}

@@ -22,6 +22,7 @@ Compute Wilson Score Confidence Interval for Incident Entry Rate
 \seealso{
 Other incident entry:
 \code{\link[=estimate_incident_entry_hazard]{estimate_incident_entry_hazard()}},
+\code{\link[=run_incident_entry_sensitivity_matrix]{run_incident_entry_sensitivity_matrix()}},
 \code{\link[=save_incident_entry_hazard]{save_incident_entry_hazard()}}
 }
 \concept{demand}

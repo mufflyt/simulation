@@ -26,7 +26,8 @@ Save Disclosure-Safe Incident-Entry Estimates
 \seealso{
 Other incident entry:
 \code{\link[=estimate_incident_entry_hazard]{estimate_incident_entry_hazard()}},
-\code{\link[=incident_entry_wilson]{incident_entry_wilson()}}
+\code{\link[=incident_entry_wilson]{incident_entry_wilson()}},
+\code{\link[=run_incident_entry_sensitivity_matrix]{run_incident_entry_sensitivity_matrix()}}
 }
 \concept{demand}
 \concept{incident entry}
