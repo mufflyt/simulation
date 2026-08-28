@@ -10,17 +10,40 @@
 #' Every parameter [simulate_practice_economics()] draws from carries real
 #' provenance here -- `lower`/`upper` (the actual distributional bounds the
 #' simulator uses, not an invented range), `year`, and `evidence_quality`
-#' (`"high"`: official regulatory/administrative rate or a real survey at
-#' NCHS reliability; `"medium"`: literature-derived, cross-check-only, or a
-#' small-but-usable fielded sample; `"low"`: single-site, preliminary, or
-#' below a reliability floor; `"uncited"`: no external source at all --
-#' currently overhead and all four payer collection rates). The revenue
-#' side (conversion factors, payer mix) is materially better sourced than
-#' the cost side; this table makes that asymmetry visible rather than
-#' treating every input as equally solid. APP compensation (real BLS OEWS
-#' wage data and a real BLS ECEC benefits load factor) and malpractice
-#' (real AMA/MLM 2024 OB/GYN premium data) are no longer uncited --
-#' overhead is now the single largest uncited cost input.
+#' (`"high"`: official regulatory/administrative rate, a real survey at NCHS
+#' reliability, or a large peer-reviewed administrative-data study;
+#' `"medium"`: literature-derived, cross-check-only, or a small-but-usable
+#' fielded/industry sample; `"low"`: single-site, preliminary, or below a
+#' reliability floor; `"uncited"`: no external source at all -- currently
+#' just overhead). APP compensation (real BLS OEWS wage data and a real BLS
+#' ECEC benefits load factor), malpractice (real AMA/MLM 2024 OB/GYN premium
+#' data), and all four payer collection rates (real Dunn et al. 2024 QJE
+#' national remittance data for Medicare/Medicaid/commercial, real
+#' Superscript 2025 patient-collections data for self-pay) are no longer
+#' uncited -- overhead is now the ONLY uncited cost input.
+#'
+#' Collection-rate note: Dunn et al. report TWO realization measures --
+#' cash-flow realization (cash ultimately collected / initial claim value)
+#' and an administrative-loss-adjusted variant that additionally nets out
+#' the office cost of chasing denied claims (Medicaid 82.4% vs. the 85.2%
+#' cash-flow figure used here). This model uses the cash-flow figures
+#' because `simulate_practice_economics()` already charges a separate,
+#' undecomposed `overhead` cost per FTE (see below) that plausibly already
+#' includes routine billing/collections staffing -- using the
+#' admin-loss-adjusted collection rate on top of that would risk double-
+#' counting the same administrative cost once on the revenue side and again
+#' inside `overhead`. If `overhead` is ever decomposed into cost categories
+#' that provably EXCLUDE billing/collections staffing, switch to the
+#' admin-loss-adjusted rates instead (Medicare 95.3%, Medicaid 82.4%,
+#' commercial 97.6%) -- do not apply both adjustments simultaneously.
+#'
+#' State-level Medicaid note: Dunn et al.'s public replication data
+#' (Harvard Dataverse) includes state-specific Medicaid collection-realization
+#' estimates -- the 85.2% here is the national mean. Not yet wired into a
+#' per-state parameter (unlike the Medicaid FEE ratio, which already varies
+#' by state via [medicaid_medicare_fee_index_table()] -- collection realization
+#' and fee level are separate mechanisms and this repo only geographically
+#' varies the latter so far). Flagged as follow-up work, not implemented here.
 #'
 #' Also carries three MedPAC physician/APP compensation figures as an
 #' external PLAUSIBILITY benchmark for `physician_compensation_capacity`
@@ -82,21 +105,28 @@ practice_economics_evidence <- function() {
     "2026 USD per APP FTE", "2025", "medium", "derived_from_bls",
     "cost prior -- mean/load factor are real BLS figures, SD is an assumption",
 
-    "User-specified scenario", "Medicare collection rate", 0.98, NA_real_,
-    NA_real_, "proportion", NA_character_, "uncited", "assumption",
-    "collection rate -- NO EXTERNAL CITATION",
+    "Dunn, Gottlieb, Shapiro & Sonnenstuhl, \"A Denial a Day Keeps the Doctor Away\", Quarterly Journal of Economics 2024, Table II (national remittance data, ~90M visits, >100k physicians, 2013-2015)",
+    "Medicare collection rate (cash ultimately collected / initial claim value)",
+    0.958, NA_real_, NA_real_, "proportion", "2013-2015", "high",
+    "peer_reviewed",
+    "collection rate -- cash-flow realization, not the admin-loss-adjusted variant; see note below",
 
-    "User-specified scenario", "Medicaid collection rate", 0.94, NA_real_,
-    NA_real_, "proportion", NA_character_, "uncited", "assumption",
-    "collection rate -- NO EXTERNAL CITATION",
+    "Dunn, Gottlieb, Shapiro & Sonnenstuhl 2024 QJE, Table II",
+    "Medicaid collection rate (cash ultimately collected / initial claim value)",
+    0.852, NA_real_, NA_real_, "proportion", "2013-2015", "high",
+    "peer_reviewed",
+    "collection rate -- national mean; the same paper reports large state variation (implicit incomplete-payment burden >25% in some states, <10% in CO/ID/WA/MN), not yet modeled here -- see practice_economics_defaults() note",
 
-    "User-specified scenario", "commercial collection rate", 0.96, NA_real_,
-    NA_real_, "proportion", NA_character_, "uncited", "assumption",
-    "collection rate -- NO EXTERNAL CITATION",
+    "Dunn, Gottlieb, Shapiro & Sonnenstuhl 2024 QJE, Table II",
+    "commercial collection rate (cash ultimately collected / initial claim value)",
+    0.974, NA_real_, NA_real_, "proportion", "2013-2015", "high",
+    "peer_reviewed",
+    "collection rate -- cash-flow realization, not the admin-loss-adjusted variant; see note below",
 
-    "User-specified scenario", "self-pay collection rate", 0.72, NA_real_,
-    NA_real_, "proportion", NA_character_, "uncited", "assumption",
-    "collection rate -- NO EXTERNAL CITATION",
+    "Superscript, \"The State of Patient Collections\" 2025 (1.9M patient-liability claims, 35 practices, 44 states, 20 specialties; not peer-reviewed)",
+    "self-pay collection rate (2025 realized collection of patient-liability balances)",
+    0.540, 0.52, 0.63, "proportion", "2025", "medium", "industry_survey",
+    "collection rate -- lower evidence tier than the three Dunn-sourced payers (industry report, not peer-reviewed); lower/upper is the reported 2019-2025 range, not a CI",
 
     "Lizeth/Acosta 2026", "Medicaid acceptance, definite responses", 0.77,
     NA_real_, NA_real_, "proportion", "2026", "low", "preliminary",
@@ -235,10 +265,10 @@ practice_economics_defaults <- function() {
     app_compensation_mean = app_compensation_mean,
     app_compensation_sd = app_compensation_mean *
       (15000 / 145000),
-    medicare_collection = 0.98,
-    medicaid_collection = 0.94,
-    commercial_collection = 0.96,
-    self_pay_collection = 0.72,
+    medicare_collection = 0.958,
+    medicaid_collection = 0.852,
+    commercial_collection = 0.974,
+    self_pay_collection = 0.540,
     acquisition_margin_threshold = 0,
     cash_pay_margin_threshold = -0.05,
     transition_slope = 12
