@@ -53,6 +53,40 @@ if (!requireNamespace("urpssim", quietly = TRUE) ||
 }
 
 # ---------------------------------------------------------------------------
+# SOURCE-TREE PATHS, WITH THE SKIP THAT MUST TRAVEL WITH THEM.
+#
+# .source_tree_root() returning character(0) means "the source tree is not
+# reachable from here." Under covr specifically -- which installs the package
+# to an isolated temp() location with no relation to the checkout at all --
+# this is the NORMAL case for a coverage run, not a rare edge case. Fourteen
+# test files each wrote their own copy of this idea and, on an empty result,
+# fell back to a guessed ".." instead of skipping. So instead of skipping
+# cleanly, each one ran its test against a path that does not exist and
+# failed with a confusing assertion ("script exists" is FALSE) that reads like
+# a missing file, not a missing precondition. That silently broke
+# covr::package_coverage() on every nightly run for weeks: R CMD check's own
+# installed-test context happens to leave ".." resolvable to something, so the
+# bug never showed there, and only covr's fully isolated install path exposed
+# it, with no detail surfaced in CI's log (covr reports only the path to an
+# ephemeral Rout.fail file, never its contents).
+#
+# ONE copy, here, where every test file can see it regardless of load order.
+# testthat loads every helper-*.R before any test-*.R, so this is defined
+# before even alphabetically-EARLIER test files need it -- which is exactly
+# why the fourteen local copies existed in the first place: a definition
+# living in test-repo-hygiene.R is not guaranteed to load before a file named
+# test-chia-*.R.
+.repo_root <- function() {
+  r <- .source_tree_root()
+  if (length(r) == 0) {
+    testthat::skip("repository sources not present (installed-package context)")
+  }
+  r
+}
+
+.repo_path <- function(...) file.path(.repo_root(), ...)
+
+# ---------------------------------------------------------------------------
 # A SCIENTIFICALLY VALID PATHWAY, for tests of machinery rather than of the
 # canonical parameterization.
 #

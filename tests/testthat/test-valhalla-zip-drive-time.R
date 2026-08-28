@@ -1,11 +1,5 @@
 # Unit tests for valhalla_zip_drive_time routing function
 
-.repo_path <- function(...) {
-  root <- .source_tree_root()
-  if (length(root) == 0) root <- ".."
-  file.path(root[1], ...)
-}
-
 test_that("R/geography-chia_inpatient_flows.R script exists and has valid syntax", {
   script_path <- .repo_path("R", "geography-chia_inpatient_flows.R")
   expect_true(file.exists(script_path))

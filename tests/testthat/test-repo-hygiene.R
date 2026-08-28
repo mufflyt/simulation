@@ -5,23 +5,10 @@
 # filesystem paths hardcoded in library code; a file read at source time; library
 # code installing packages. These are cheap to check and expensive to rediscover.
 
-.repo_root <- function() {
-  # A DESCRIPTION alone is NOT enough. Under covr and R CMD check the tests run
-  # inside the INSTALLED package, which also has a DESCRIPTION -- so the walk
-  # returned the install directory as the "root", ../R existed (holding .rdb and
-  # .rdx, not sources), no skip fired, and .definitions() returned NULL. The
-  # failure surfaced as `names(which(table(NULL) > 1))` being NULL rather than
-  # character(0): a confusing assertion error standing in for "the source tree
-  # is not here".
-  #
-  # The Meta/ discriminator that fixes this lives in helper-setup.R and is
-  # DELIBERATELY NOT RESTATED HERE. This file's whole subject is defects caused
-  # by the same logic existing in two places; keeping a second copy of the root
-  # walk would be the exact failure it tests for.
-  r <- .source_tree_root()
-  if (length(r) == 0) skip("repository sources not present (installed-package context)")
-  r
-}
+# .repo_root() and .repo_path() live in helper-setup.R, not here. This file's
+# whole subject is defects caused by the same logic existing in two places;
+# keeping a second copy of the root walk would be the exact failure it tests
+# for -- see "no test file redefines .repo_root/.repo_path locally" below.
 
 .r_files <- function(dir) {
   root <- .repo_root()
@@ -336,6 +323,36 @@ test_that("every setup-r-dependencies step is preceded by setup-pandoc in its jo
       "GitHub-only mysterycall) in its pandoc-needs check unless pandoc is ",
       "already on PATH. Add `- uses: r-lib/actions/setup-pandoc@v2` before ",
       "setup-r-dependencies in: ", paste(unique(offenders), collapse = ", ")
+    )
+  )
+})
+
+# Guard: a test file that reimplements .repo_root()/.repo_path() locally,
+# instead of using the shared copy in helper-setup.R, is how this repository
+# ended up with fourteen independent copies of "find the source tree" -- each
+# one guessed a fallback path (".."), rather than skip()-ing, when the source
+# tree genuinely was not reachable, which is the NORMAL case under covr's
+# isolated temp install. That silently broke covr::package_coverage() on
+# every nightly run for weeks: the tests didn't skip, they ran against a path
+# that doesn't exist and failed with a confusing assertion that reads like a
+# missing file, not a missing precondition. One copy, in helper-setup.R,
+# which is loaded before any test-*.R file regardless of alphabetical order.
+test_that("no test file redefines .repo_root()/.repo_path() locally", {
+  root <- .repo_root()
+  test_files <- list.files(file.path(root, "tests", "testthat"), pattern = "^test-.*[.]R$",
+                            full.names = TRUE)
+  offenders <- character(0)
+  for (f in test_files) {
+    x <- readLines(f, warn = FALSE)
+    hits <- grep("^\\.repo_root *<- *function|^\\.repo_path *<- *function", x)
+    if (length(hits)) offenders <- c(offenders, basename(f))
+  }
+  expect_equal(
+    offenders, character(0),
+    info = paste(
+      "These files redefine .repo_root()/.repo_path() instead of using the",
+      "shared, skip-safe copy in helper-setup.R:",
+      paste(offenders, collapse = ", ")
     )
   )
 })

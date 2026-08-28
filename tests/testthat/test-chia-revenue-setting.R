@@ -1,11 +1,5 @@
 # Unit tests for build_chia_ub04_setting_evidence()
 
-.repo_path <- function(...) {
-  root <- .source_tree_root()
-  if (length(root) == 0) root <- ".."
-  file.path(root[1], ...)
-}
-
 test_that("R/data-chia_revenue_setting.R script exists and has valid syntax", {
   script_path <- .repo_path("R", "data-chia_revenue_setting.R")
   skip_if_not(file.exists(script_path), "Source script absent under R CMD check")

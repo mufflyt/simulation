@@ -1,11 +1,5 @@
 # Unit tests for CMS PSPS 2024 CPT setting mix pipeline and lookup functions
 
-.repo_path <- function(...) {
-  root <- .source_tree_root()
-  if (length(root) == 0) root <- ".."
-  file.path(root[1], ...)
-}
-
 test_that("estimate_cms_psps_setting_mix.R script exists and has valid syntax", {
   script_path <- .repo_path("scripts", "estimate_cms_psps_setting_mix.R")
   skip_if_not(file.exists(script_path), "Script absent under R CMD check")

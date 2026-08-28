@@ -1,11 +1,5 @@
 # Unit tests for export_access_surface (spatial access contract exporter)
 
-.repo_path <- function(...) {
-  root <- .source_tree_root()
-  if (length(root) == 0) root <- ".."
-  file.path(root[1], ...)
-}
-
 test_that("export_access_surface requires valid columns and fails closed on unvalidated status", {
   tmp_dir <- tempfile("access_export_test")
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)

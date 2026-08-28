@@ -1,11 +1,5 @@
 # Unit tests for SWAN dynamic transition hazard pipeline (a*) and fitted transitions
 
-.repo_path <- function(...) {
-  root <- .source_tree_root()
-  if (length(root) == 0) root <- ".."
-  file.path(root[1], ...)
-}
-
 test_that("estimate_swan_dmdm_hazards.R script exists and has valid syntax", {
   script_path <- .repo_path("scripts", "estimate_swan_dmdm_hazards.R")
   expect_true(file.exists(script_path))
