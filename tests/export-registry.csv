@@ -93,7 +93,6 @@
 "dmdm_prevalence_trajectory","api"
 "dmdm_swan_fitted_transitions","api"
 "entrant_trajectory_scenarios","api"
-"estimate_incident_entry_hazard","api"
 "fellowship_certification_series","api"
 "fellowship_first_billing_series","api"
 "first_entry_rate_status","api"
@@ -238,3 +237,4 @@
 "build_chia_urogynecology_service_events","api"
 "open_five_source_db","api"
 "load_empirical_runner_inputs","api"
+"run_incident_entry_sensitivity_matrix","api"

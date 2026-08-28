@@ -243,6 +243,15 @@ test_that("the unwired surface does not grow", {
   # calls it directly to assemble its inputs, the package has no orchestrator
   # step that would call it for them. Independent of the raise above; the two
   # land together only because both PRs merged in the same window.
+  #
+  # NOT RAISED for run_incident_entry_sensitivity_matrix(). It is `api` for
+  # the same reason its sibling save_incident_entry_hazard() already is: a
+  # researcher runs the pre-registered sensitivity sweep by hand once real
+  # longitudinal claims data is available (docs/INCIDENT_ENTRY_ESTIMAND.md) --
+  # but adding it calls estimate_incident_entry_hazard() directly from the
+  # same file, which WIRES that sibling (previously its own `api` row) into
+  # the source tree for the first time. One new orphan, one newly-wired
+  # export: net zero, so the bound does not move.
   expect_lte(length(o$orphans), 183L)
   expect_lte(length(o$orphans) / length(o$exports), 0.25)
 })

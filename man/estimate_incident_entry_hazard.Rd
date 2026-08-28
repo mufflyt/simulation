@@ -49,6 +49,7 @@ external prevalence science supplies the disease-stock probability.
 \seealso{
 Other incident entry:
 \code{\link[=incident_entry_wilson]{incident_entry_wilson()}},
+\code{\link[=run_incident_entry_sensitivity_matrix]{run_incident_entry_sensitivity_matrix()}},
 \code{\link[=save_incident_entry_hazard]{save_incident_entry_hazard()}}
 }
 \concept{demand}
