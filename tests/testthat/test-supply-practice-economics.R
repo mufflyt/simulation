@@ -237,16 +237,15 @@ test_that("practice_economics_evidence has real provenance, not just point value
     evidence_tbl$evidence_quality %in% c("high", "medium", "low", "uncited")
   ))
 
-  # Overhead and all four collection rates must be visibly uncited -- the
-  # whole point of this table. APP compensation and malpractice are NO
-  # LONGER uncited (real BLS OEWS wages + a real BLS ECEC load factor
-  # replaced APP compensation; real AMA/MLM 2024 OB/GYN premium data
-  # replaced malpractice) -- confirm both left the uncited set rather than
-  # merely asserting nothing about them.
+  # Overhead is the ONLY estimand that should still be visibly uncited.
+  # APP compensation, malpractice, and (as of the Dunn et al. 2024 QJE /
+  # Superscript 2025 citations) all four collection rates are NO LONGER
+  # uncited -- confirm each left the uncited set rather than merely
+  # asserting nothing about them.
   uncited <- dplyr::filter(evidence_tbl, .data$evidence_quality == "uncited")
-  expect_gte(nrow(uncited), 5L)
+  expect_equal(nrow(uncited), 1L)
   expect_true(any(grepl("overhead", uncited$estimand, ignore.case = TRUE)))
-  expect_true(any(grepl(
+  expect_false(any(grepl(
     "collection rate", uncited$estimand, fixed = TRUE
   )))
   expect_false(any(grepl(
@@ -255,6 +254,23 @@ test_that("practice_economics_evidence has real provenance, not just point value
   expect_false(any(grepl(
     "malpractice", uncited$estimand, ignore.case = TRUE
   )))
+
+  # Collection rates are now cited: three from Dunn et al. 2024 QJE
+  # (peer-reviewed, "high"), one (self-pay) from Superscript 2025 (industry
+  # report, "medium" -- explicitly a lower tier than the peer-reviewed trio).
+  collection_rows <- dplyr::filter(
+    evidence_tbl, grepl("collection rate", .data$estimand, fixed = TRUE)
+  )
+  expect_equal(nrow(collection_rows), 4L)
+  dunn_rows <- dplyr::filter(collection_rows, grepl("Dunn", .data$source, fixed = TRUE))
+  expect_equal(nrow(dunn_rows), 3L)
+  expect_true(all(dunn_rows$evidence_quality == "high"))
+  expect_true(all(dunn_rows$status == "peer_reviewed"))
+  self_pay_row <- dplyr::filter(collection_rows, grepl("self-pay", .data$estimand, fixed = TRUE))
+  expect_equal(nrow(self_pay_row), 1L)
+  expect_equal(self_pay_row$evidence_quality, "medium")
+  expect_equal(self_pay_row$lower, 0.52)
+  expect_equal(self_pay_row$upper, 0.63)
 
   # The real BLS OEWS/ECEC rows exist and are cited (not "uncited").
   bls_rows <- dplyr::filter(
