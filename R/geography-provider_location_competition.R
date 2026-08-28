@@ -562,6 +562,7 @@ build_provider_location_choice_sets <- function(
 #' @return Fitted entrant and mover location-choice models.
 #' @family provider geography
 #' @concept geography
+#' @importFrom survival strata
 #' @export
 fit_provider_location_choice_model <- function(choice_tbl) {
   if (!requireNamespace("survival", quietly = TRUE)) {
