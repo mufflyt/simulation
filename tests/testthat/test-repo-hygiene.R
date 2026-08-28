@@ -357,6 +357,52 @@ test_that("no test file redefines .repo_root()/.repo_path() locally", {
   )
 })
 
+# Guard: nightly's tracking-issue alert must not fire on the by-design-red
+# gate alone, and must not silently stop firing on platform-matrix failures.
+#
+# scientific-invariants is red by design for an extended, known period
+# (blocked on real data, not a bug -- see scientific-integrity.yaml). Once
+# included in this step's trigger, it fired the alert on EVERY nightly run
+# regardless of anything else, posting a near-daily comment (17 in 11 days,
+# several reading "**Failing:**" with nothing after it) to a single growing
+# tracking issue. matrix-check's failures, meanwhile, were never in the
+# trigger on their own -- they only ever alerted by riding along with
+# scientific-invariants' constant redness, which is invisible unless someone
+# reads the trigger condition itself, not just the displayed table.
+test_that("nightly's tracking-issue trigger excludes scientific-invariants and includes matrix-check", {
+  f <- file.path(.repo_root(), ".github", "workflows", "nightly.yaml")
+  skip_if_not(file.exists(f), "nightly.yaml not present")
+  wf <- yaml::read_yaml(f)
+  steps <- wf$jobs[["report"]]$steps
+  expect_true(!is.null(steps), info = "nightly.yaml's 'report' job has no steps")
+
+  step_names <- vapply(steps, function(s) {
+    n <- s[["name"]]
+    if (is.null(n)) "" else as.character(n)
+  }, character(1))
+  idx <- grep("tracking issue", step_names, ignore.case = TRUE)
+  expect_true(length(idx) == 1,
+              info = "no step matching 'tracking issue' found in nightly.yaml's report job")
+
+  trigger <- as.character(steps[[idx[1]]][["if"]])
+  expect_false(
+    grepl("scientific-invariants", trigger, fixed = TRUE),
+    info = paste(
+      "The tracking-issue trigger must not include needs.scientific-invariants",
+      "-- that gate is red by design and firing on it alone turns a known,",
+      "accepted condition into a comment on every single nightly run."
+    )
+  )
+  expect_true(
+    grepl("matrix-check", trigger, fixed = TRUE),
+    info = paste(
+      "The tracking-issue trigger must include needs.matrix-check -- it is",
+      "one of the rows the step displays, and without an explicit trigger",
+      "condition its failures stop alerting anyone."
+    )
+  )
+})
+
 # Guard: a disabled GitHub Pages site fails the pkgdown deploy silently.
 #
 # actions/deploy-pages@v4 reported the failure as a bare

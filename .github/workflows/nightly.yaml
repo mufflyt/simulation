@@ -605,7 +605,28 @@ jobs:
           exit $fail
 
       - name: Open or update the tracking issue on failure
-        if: ${{ always() && (needs.leak-guard.result != 'success' || needs.refusal-gates.result != 'success' || needs.scientific-invariants.result != 'success' || needs.full-suite.result != 'success' || needs.reproducibility.result != 'success') }}
+        # scientific-invariants is DELIBERATELY EXCLUDED from this trigger. It
+        # is red by design (see the comment on that job below and in
+        # scientific-integrity.yaml) -- blocked on real longitudinal claims
+        # data that has not been sourced, not a bug -- and stays that way for
+        # an extended, known period. Including it here meant this step fired
+        # on EVERY nightly run regardless of anything else, and on a night
+        # where nothing else failed it posted a comment reading "**Failing:**"
+        # with nothing after it, to a single growing tracking issue: 17
+        # comments in 11 days, most non-actionable. Its redness is already
+        # visible in the run's own job list and in the summary table below --
+        # that is the right place for a permanent, by-design daily reminder.
+        # An alert should fire for gates whose failure is actually unexpected.
+        #
+        # matrix-check is included here even though it is not one of the
+        # "Every blocking gate must have actually RUN" checks above (it can be
+        # opted out via workflow_dispatch) -- it IS one of the rows in the
+        # table this step posts, and before this fix its failures only ever
+        # triggered a comment by riding along with scientific-invariants'
+        # constant redness. Removing that constant trigger without adding
+        # this one would have silently stopped alerting on platform-matrix
+        # failures, historically the most common single-item failure here.
+        if: ${{ always() && (needs.leak-guard.result != 'success' || needs.refusal-gates.result != 'success' || needs.matrix-check.result != 'success' || needs.full-suite.result != 'success' || needs.reproducibility.result != 'success') }}
         uses: actions/github-script@v7
         with:
           script: |
