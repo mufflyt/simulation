@@ -14,7 +14,7 @@ build_chia_hdd_diagnosis_long_view(con)
 }
 \description{
 Thin rename over \code{v_hdd_diagnoscode_all_years} (already one row per
-\code{(RecordType20ID, DiagnosisCode)}, so this is a rename, not a melt).
+\verb{(RecordType20ID, DiagnosisCode)}, so this is a rename, not a melt).
 Several already-committed call sites (\code{R/calibration-transport_to_national.R},
 \code{scripts/calibration/build_empirical_calibration_targets.R},
 \code{scripts/chia/run_chia_revenue_setting.R}'s \code{dx_sql()}) reference
@@ -23,6 +23,8 @@ this closes that gap.
 }
 \seealso{
 Other chia physician attribution:
+\code{\link[=.chia_resolve_payer_group]{.chia_resolve_payer_group()}},
+\code{\link[=.chia_suppress_small_cells]{.chia_suppress_small_cells()}},
 \code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
 \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
 \code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_discharge_procedure_views()}},
@@ -30,7 +32,8 @@ Other chia physician attribution:
 \code{\link[=build_chia_npi_taxonomy_crosswalk]{build_chia_npi_taxonomy_crosswalk()}},
 \code{\link[=build_chia_physician_attribution]{build_chia_physician_attribution()}},
 \code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}},
-\code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}}
+\code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}},
+\code{\link[=chia_npi_taxonomy_credentials_db_default]{chia_npi_taxonomy_credentials_db_default()}}
 }
 \concept{chia physician attribution}
 \concept{supply}

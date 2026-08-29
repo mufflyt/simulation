@@ -16,12 +16,13 @@ Tibble containing wait, utilization, and implied adequacy.
 }
 \description{
 For the existing clear_access() equation:
-
-\preformatted{  wait = wait_scale * rho / (1 - rho)}
+}
+\details{
+wait = wait_scale * rho / (1 - rho)
 
 the inverse is:
 
-\preformatted{  rho = wait / (wait + wait_scale)}
+rho = wait / (wait + wait_scale)
 
 and capacity / demand is 1 / rho.
 
@@ -31,6 +32,25 @@ as an estimate of a national workforce shortage.
 }
 \seealso{
 \code{\link[=simulate_access_for_adequacy]{simulate_access_for_adequacy()}} for the forward direction.
+
+Other baseline gap:
+\code{\link[=assert_access_not_double_counted]{assert_access_not_double_counted()}},
+\code{\link[=assert_baseline_gap_estimated]{assert_baseline_gap_estimated()}},
+\code{\link[=assumed_baseline_gap]{assumed_baseline_gap()}},
+\code{\link[=baseline_gap]{baseline_gap()}},
+\code{\link[=capacity_category_adequacy]{capacity_category_adequacy()}},
+\code{\link[=capacity_survey_adequacy]{capacity_survey_adequacy()}},
+\code{\link[=capacity_survey_shortfall_bottom_up]{capacity_survey_shortfall_bottom_up()}},
+\code{\link[=external_anchor_gap]{external_anchor_gap()}},
+\code{\link[=fit_wait_scale_given_adequacy]{fit_wait_scale_given_adequacy()}},
+\code{\link[=hpsa_removal_shortfall]{hpsa_removal_shortfall()}},
+\code{\link[=published_baseline_gaps]{published_baseline_gaps()}},
+\code{\link[=required_fte_base_year]{required_fte_base_year()}},
+\code{\link[=summarize_wait_adequacy_fix]{summarize_wait_adequacy_fix()}},
+\code{\link[=urps_wait_adequacy_evidence]{urps_wait_adequacy_evidence()}},
+\code{\link[=urps_wait_calibration_targets]{urps_wait_calibration_targets()}},
+\code{\link[=urps_wait_inverse_surface]{urps_wait_inverse_surface()}},
+\code{\link[=wait_adequacy_identification_status]{wait_adequacy_identification_status()}}
 }
 \concept{baseline gap}
 \concept{calibration}

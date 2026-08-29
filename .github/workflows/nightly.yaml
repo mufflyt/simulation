@@ -456,7 +456,7 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}, any::covr, any::lintr, any::spelling, any::urlchecker, roxygen2@7.3.3
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}, any::covr, any::lintr, any::spelling, any::urlchecker, roxygen2@8.0.0
           dependencies: '"hard"'
 
       - name: Coverage
@@ -475,13 +475,22 @@ jobs:
         # Regenerate and fail if man/ or NAMESPACE would change. Two merges once
         # reached main with @export tags missing from NAMESPACE.
         #
-        # roxygen2 IS PINNED TO 7.3.3 ABOVE, matching DESCRIPTION's RoxygenNote.
-        # An unpinned `any::roxygen2` installs whatever is current and rewrites
-        # all ~500 .Rd files on a version bump, so this gate reported "stale"
-        # against docs that were perfectly current for the declared generator --
-        # and the only way to satisfy it would have been to commit a 500-file
-        # diff that changes no documentation. The generator version is part of
-        # the contract, so it is declared in exactly one place.
+        # roxygen2 IS PINNED ABOVE, and the pin is part of the contract: an
+        # unpinned `any::roxygen2` installs whatever is current and rewrites all
+        # ~500 .Rd files on a version bump, reporting "stale" against docs that
+        # were perfectly current for the declared generator.
+        #
+        # PIN MOVED 7.3.3 -> 8.0.0 (2026-08-29). It had drifted from reality
+        # rather than holding the line: DESCRIPTION already carried
+        # `Config/roxygen2/version: 8.0.0` from a partial regeneration, so man/
+        # was a MIXTURE of both generators and neither reproduced it. Measured on
+        # the committed tree, 7.3.3 rewrote 783 files and 8.0.0 rewrote 83, so
+        # 8.0.0 is both the smaller diff and the generator developers actually
+        # run. Pinning to the older one meant every local regeneration re-broke
+        # this gate.
+        #
+        # The version is still declared in exactly one place; that place now
+        # names 8.0.0.
         run: |
           # PROVENANCE FIRST. "Stale" is not actionable without knowing which
           # generator produced the committed files and which produced the

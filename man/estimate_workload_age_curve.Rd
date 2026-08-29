@@ -20,5 +20,18 @@ borrowed HWSM hours/FTE curve. It does not assert that workload equals hours;
 it estimates the empirical age gradient in delivered all-payer workload and
 normalizes that gradient to age 45-54.
 }
+\seealso{
+Other allpayer bridge:
+\code{\link[=build_chia_provider_year]{build_chia_provider_year()}},
+\code{\link[=build_claims_provider_year]{build_claims_provider_year()}},
+\code{\link[=build_medicare_provider_year]{build_medicare_provider_year()}},
+\code{\link[=filter_claims_to_urps]{filter_claims_to_urps()}},
+\code{\link[=fit_chia_medicare_bridge]{fit_chia_medicare_bridge()}},
+\code{\link[=join_chia_medicare_overlap]{join_chia_medicare_overlap()}},
+\code{\link[=normalize_npi]{normalize_npi()}},
+\code{\link[=predict_allpayer_from_medicare]{predict_allpayer_from_medicare()}},
+\code{\link[=read_claims_source]{read_claims_source()}},
+\code{\link[=select_bridge_workload]{select_bridge_workload()}}
+}
 \concept{allpayer bridge}
 \concept{calibration}

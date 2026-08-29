@@ -12,8 +12,8 @@ run_incident_entry_sensitivity_matrix(
   stock_probability_tbl,
   washout_variants = c(12L, 24L, 36L),
   gap_variants = c(0L, 1L),
-  year_variants = list(primary = c(2023L, 2024L), sensitivity_2022_24 = c(2022L,
-    2023L, 2024L)),
+  year_variants = list(primary = c(2023L, 2024L), sensitivity_2022_24 = c(2022L, 2023L,
+    2024L)),
   ...
 )
 }
