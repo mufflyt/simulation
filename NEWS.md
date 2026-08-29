@@ -1,3 +1,88 @@
+# urpssim 0.6.0
+
+## The retirement contract
+
+* **Exit is no longer absorbing by construction.** `cumsum(any_exit) > 0` made a
+  provider who returned to practice stay `EXITED` for every later year, and gave
+  a gap year no way to say *no evidence* — activity in one year silently filled
+  the years around it. `derive_provider_year_states()` replaces it with an
+  explicit `ACTIVE` / `UNKNOWN` / `EXITED` / `CONFLICT` machine in which active
+  evidence applies only to the year observed.
+
+* **A licence lapse is a career exit, and a reversible one.** An earlier draft
+  called `expired`/`lapsed`/`inactive`/`not renewed` *nonterminal*. That is wrong
+  in a specific direction for a workforce study: treating a lapse as missingness
+  leaves the provider-year standing, so supply is **overcounted** after a known
+  licence termination. `retirement_exit_taxonomy()` now states the reversibility
+  tiers — lapse, suspension and revocation all need documented reinstatement;
+  death is absorbing.
+
+* **Identity gates everything.** `adjudicate_terminal_events()` evaluates
+  linkage and identity confidence *before* event or timing, so a weak name-only
+  match can raise a candidate signal but never a confirmed death, revocation or
+  exit. Death carries a stricter identity threshold, because it is irreversible
+  downstream.
+
+* **"Activity" that may reverse a retirement is now defined.**
+  `retirement_activity_evidence_tiers()` admits evidence of *care delivered* —
+  claims, encounters, procedure logs, privileging — and refuses evidence of
+  *continuing to exist in a database*: an NPPES record persists after practice
+  stops, and a credential is permission to work rather than evidence of working.
+  Unrecognised sources fail closed.
+
+* **A licence lapse is not a career exit.** `derive_provider_career_states()`
+  requires that **no qualifying active licence remains**. The old behaviour
+  overstated attrition selectively, since multi-state physicians have the most
+  licences to lapse. An unobserved licence yields `UNKNOWN`, never `EXITED`:
+  missing data must not manufacture a retirement.
+
+## Provenance and calibration
+
+* **Consensus artifacts are append-only.** `CREATE OR REPLACE TABLE` meant "the
+  retirement panel" named whatever was built last.
+  `build_retirement_artifact_manifest()` derives an `artifact_id` from content
+  and provenance, and re-persisting *different* content under the same id is now
+  an error. Timestamps are recorded but excluded from the hash, so a rebuild of
+  identical inputs reproduces the same id.
+
+* **Confidence is four dimensions, not one.** `final_confidence` collapsed four
+  independent questions into a number nobody could take apart.
+  `validate_retirement_evidence_v2()` requires identity, event, timing and
+  activity confidence separately — and refuses a single legacy value broadcast
+  across all four, which satisfies every name-based check while asserting the
+  same unverified claim four times.
+
+* **Out-of-sample calibration is a release gate, and it is red on purpose.**
+  `validate_retirement_oos()` refuses to promote a model whose intervals are not
+  calibrated: measured coverage near 0.80 against a nominal 0.95 means the
+  published uncertainty is too narrow, and an interval narrower than the truth is
+  reported as precision. Leakage is checked *before* coverage, because coverage
+  measured with access to the future is not evidence.
+
+## CI that means something
+
+* **`scientific-integrity` is the single required check**, with
+  `enforce_admins = true`. Skipped and cancelled count as failed: a law that did
+  not run did not pass. See `docs/SCIENTIFIC_INTEGRITY.md`.
+
+* **A green job is no longer evidence a law was checked.**
+  `run-scientific-contract.R` fails on zero discovered blocks, on every-test
+  skipped, and on a missing contract file — so deleting a test is not a way to
+  stop enforcing a law.
+
+* **Hall-of-Shame coverage is enforced as a ratio** — 12 of 34 entries enforced,
+  22 waived with written reasons, 0 unaccounted. Waivers are reported separately
+  so the list can never be read as coverage.
+
+* **A permanent cold-install job.** `mysterycall` sat in `Suggests` with no
+  `Remotes:` entry, leaving the dependency graph unsolvable for months while warm
+  caches concealed it. Every workflow was one cache eviction from being unable to
+  install the package.
+
+* **All seven R CMD check warnings cleared**, two of which were real defects:
+  `dplyr::c()` does not exist and errored at runtime in the county-endogenous
+  geography path, and `datasets::` was unqualified.
+
 # urpssim 0.5.0
 
 ## What changed in how results may be read
