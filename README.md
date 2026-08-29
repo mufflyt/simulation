@@ -1117,6 +1117,74 @@ conservative care.
 
 ---
 
+## Scientific integrity: what a green build means
+
+One required check, `scientific-integrity`, gates `main`. It is the aggregator
+for every executable scientific contract in the package, and it exists because
+"all tests pass" was not a strong enough claim:
+
+> No plausible code change can alter who exists, when they exist, which data
+> created that decision, or the published result, without CI noticing.
+
+```mermaid
+flowchart TD
+    subgraph M["contracts (matrix · fail-fast off)"]
+        A["identity gate &<br/>provider-year state machine"]
+        B["artifact provenance &<br/>confidence schema"]
+        C["out-of-sample<br/>calibration gate"]
+        D["boundary &<br/>decision-surface values"]
+        E["historical defect<br/>regressions"]
+    end
+    F["hall-of-shame<br/>coverage ratio"]
+    G["manuscript /<br/>artifact sync"]
+    V{{"<b>scientific-integrity</b><br/>only 'success' counts"}}
+    A --> V
+    B --> V
+    C --> V
+    D --> V
+    E --> V
+    F --> V
+    G --> V
+    V -->|all green| P["✅ merge allowed"]
+    V -->|"failed, skipped<br/>or cancelled"| X["❌ blocked<br/><i>enforce_admins = true</i>"]
+```
+
+Each contract is a separate job so the checks list names the broken **law**
+before anyone opens a log. `skipped` and `cancelled` count as failures — a law
+that did not run did not pass — and `enforce_admins = true` means the repository
+owner is gated too, with break-glass made explicit and auditable rather than
+standing.
+
+A green job is not by itself evidence a law was checked, so contracts run through
+`.github/scripts/run-scientific-contract.R`, which fails on zero discovered
+blocks, on every-test-skipped, and on a missing contract file.
+
+**The retirement contract**, which most of this protects, replaced a cumulative
+exit flag that made exit absorbing by construction:
+
+```mermaid
+flowchart LR
+    I["identity<br/>admissibility"] --> E["event<br/>interpretation"]
+    E --> T["temporal<br/>arbitration"]
+    T --> S["provider-year<br/>state"]
+    S --> C["career state<br/>across licences"]
+    I -. fails .-> Q["🔒 quarantine"]
+```
+
+A weak name-only match may raise a candidate signal but never a confirmed death,
+revocation or exit — temporal sophistication cannot repair a wrong-person match.
+A licence lapse **is** a career exit (treating it as missingness overcounts supply
+after a known termination) but a reversible one, and only evidence of *care
+delivered* reverses a self-declared retirement; a directory entry or an unexpired
+credential does not.
+
+Every law is mutation-verified: reverting its fix must turn the suite red. Two
+first-draft mutations turned out to be no-ops and had to be re-planted, which is
+the same failure as an inert test.
+
+Full rationale, including the branch-protection contract and the cold-install
+job: **[`docs/SCIENTIFIC_INTEGRITY.md`](docs/SCIENTIFIC_INTEGRITY.md)**.
+
 ## Test suite
 
 ```
