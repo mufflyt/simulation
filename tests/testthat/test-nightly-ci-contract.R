@@ -158,6 +158,73 @@ test_that("the scientific-invariants gate is wired and blocking", {
   expect_false(isTRUE(y$jobs$`scientific-invariants`$`continue-on-error`))
 })
 
+# THE BLOCKER MUST NOT SHARE A JOB WITH ANY CORRECTNESS CHECK.
+#
+# assert-canonical-science.R exits 1 BY DESIGN. While it was a step inside
+# scientific-invariants that had two consequences, both silent:
+#
+#   1. MASKING. A job-level `failure` could not say which step failed, so a
+#      real regression in assert-scientific-invariants.R -- which runs FIRST,
+#      before readiness is reached -- produced the same result as the expected
+#      blocker and was reported as "BLOCKED (expected)".
+#   2. SUPPRESSION. Exiting 1 mid-job skipped every step after it: the
+#      scorecard, BVA boundaries, mutation recovery and the CHIA audit did not
+#      run on any night the blocker stood.
+#
+# Both return the moment the script is moved back in beside anything else, and
+# neither is visible from a green/red dashboard. Hence a structural assertion.
+test_that("canonical readiness is isolated in its own job with the 0/1/2 contract", {
+  skip_if_not(.repo())
+  skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))
+  y <- .wf()
+
+  expect_true("canonical-readiness" %in% names(y$jobs),
+              info = "assert-canonical-science.R must have its own job")
+
+  step_runs <- function(job) {
+    steps <- y$jobs[[job]]$steps
+    paste(vapply(steps, function(s) s$run %||% "", character(1)), collapse = "\n")
+  }
+
+  # It lives here...
+  expect_match(step_runs("canonical-readiness"), "assert-canonical-science.R",
+               fixed = TRUE)
+  # ...and NOWHERE else. This is the assertion that actually prevents the
+  # regression; the one above would still pass if the script ran in both.
+  others <- setdiff(names(y$jobs), "canonical-readiness")
+  contaminated <- Filter(
+    function(j) grepl("assert-canonical-science.R", step_runs(j), fixed = TRUE),
+    others
+  )
+  expect_identical(
+    contaminated, character(0),
+    info = paste0(
+      "assert-canonical-science.R exits 1 by design and must not share a job ",
+      "with correctness checks -- it would both mask their failures and skip ",
+      "every step after it. Found in: ", paste(contaminated, collapse = ", ")
+    )
+  )
+
+  # The three-state contract must be readable by the report job, which is the
+  # only way BLOCKED (exit 1) can be told from BROKEN (exit 2) downstream.
+  outs <- y$jobs[["canonical-readiness"]]$outputs
+  expect_true("canonical_state" %in% names(outs))
+  expect_true("canonical-readiness" %in% y$jobs$report$needs)
+  expect_false(isTRUE(y$jobs[["canonical-readiness"]]$`continue-on-error`))
+
+  raw <- .wf_raw()
+  for (state in c("READY", "BLOCKED", "BROKEN")) {
+    expect_true(any(grepl(paste0("canonical_state=", state), raw, fixed = TRUE)),
+                info = paste("canonical-readiness must be able to report", state))
+  }
+  # The status check is only reachable because of `set +e`; under the workflow's
+  # `bash -eo pipefail` default a non-zero Rscript aborts the step at the
+  # pipeline and PIPESTATUS is never read. Losing this line silently collapses
+  # all three states back into one.
+  expect_true(any(grepl("set +e", raw, fixed = TRUE)),
+              info = "the readiness pipeline needs `set +e` or its exit-code branch is dead code")
+})
+
 test_that("a skipped blocking gate cannot masquerade as a green nightly", {
   skip_if_not(.repo())
   skip_if_not(file.exists("../../.github/workflows/nightly.yaml"))

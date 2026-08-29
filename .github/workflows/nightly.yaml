@@ -218,7 +218,7 @@ jobs:
   #     and a back-test regression ratchet.
   # ---------------------------------------------------------------------------
   scientific-invariants:
-    name: scientific invariants & readiness audit
+    name: scientific invariants & mutation recovery
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -234,43 +234,6 @@ jobs:
         run: Rscript .github/scripts/assert-scientific-invariants.R | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Assert temporal integrity (no future-data leakage)
         run: Rscript .github/scripts/assert-temporal-integrity.R | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Audit canonical scientific readiness & blockers
-        id: readiness
-        # THE STATUS CHECK BELOW WAS UNREACHABLE. This job runs under
-        # `bash -eo pipefail` (see `defaults:`), so a non-zero Rscript aborted
-        # the step AT THE PIPELINE -- before `status="${PIPESTATUS[0]}"` was
-        # ever evaluated. The script has always distinguished exit 1 (the known,
-        # declared scientific blocker) from exit 2 (infrastructure or integrity
-        # failure), and that distinction was dead code: every run reported a
-        # bare "Process completed with exit code 1", and the exit-2 message
-        # below had never once been printed.
-        #
-        # `set +e` around the pipeline restores it. This does NOT make the gate
-        # green -- a declared blocker still fails the job, deliberately. What it
-        # restores is the ability to say WHICH kind of failure it is, so an
-        # unresolved estimand stops looking identical to a broken repository.
-        run: |
-          set +e
-          Rscript .github/scripts/assert-canonical-science.R | tee -a "$GITHUB_STEP_SUMMARY"
-          status="${PIPESTATUS[0]}"
-          set -e
-          echo "readiness_status=$status" >> "$GITHUB_OUTPUT"
-
-          if [ "$status" -eq 2 ]; then
-            echo "::error::assert-canonical-science.R exited 2 -- infrastructure or integrity failure, NOT the known scientific blocker. The repository is broken."
-            echo "canonical_state=BROKEN" >> "$GITHUB_OUTPUT"
-            exit 2
-          fi
-          if [ "$status" -eq 1 ]; then
-            # Exit 1 is the declared blocker. It is expected, it is not a
-            # regression, and the ::SCIENTIFIC-BLOCKER:: markers above name
-            # exactly which parameter and which data source would clear it.
-            echo "::warning::BLOCKED (expected): the canonical parameterization rests on an unresolved scientific estimand. See the ::SCIENTIFIC-BLOCKER:: markers above. This is not a software failure."
-            echo "canonical_state=BLOCKED" >> "$GITHUB_OUTPUT"
-            exit 1
-          fi
-          echo "canonical_state=READY" >> "$GITHUB_OUTPUT"
-          exit 0
       - name: Generate scientific scorecard
         run: |
           Rscript -e '
@@ -319,6 +282,86 @@ jobs:
           fi
           python3 scripts/chia/test_chia.py --db "$DB" | tee -a "$GITHUB_STEP_SUMMARY"
 
+  # ---------------------------------------------------------------------------
+  # CANONICAL READINESS -- DELIBERATELY SEPARATE, AND THIS SEPARATION IS LOAD-BEARING.
+  #
+  # This was a step inside scientific-invariants, which was wrong in two ways
+  # that pointed in opposite directions.
+  #
+  # IT MASKED REGRESSIONS. scientific-invariants runs the invariants, temporal
+  # integrity, the scorecard and the mutation-recovery suite. A job-level
+  # `failure` therefore could not say WHICH of those failed. Reporting that
+  # result as "BLOCKED (expected)" -- as this workflow briefly did -- meant a
+  # genuine regression in assert-scientific-invariants.R, exiting BEFORE the
+  # readiness step was ever reached, would have been labelled expected and
+  # waved through. That is precisely the masking the BLOCKED/RED distinction
+  # exists to prevent, reintroduced one layer up.
+  #
+  # IT ALSO SUPPRESSED THE CHECKS AFTER IT. Readiness exits 1 by design, in the
+  # middle of the job, so the scorecard, BVA boundaries, mutation recovery and
+  # the CHIA audit were SKIPPED every single night the blocker stood. The
+  # nightly could not simultaneously report "canonical model blocked as
+  # expected" and "the rest of the scientific suite actually ran" -- it was
+  # never running them.
+  #
+  # Split, each job means one thing. scientific-invariants is an ordinary
+  # correctness gate that must be GREEN. This job carries the blocker alone,
+  # with the three-state contract the script has always implemented:
+  # 0 = READY, 1 = BLOCKED (expected), 2 = BROKEN (action required).
+  # ---------------------------------------------------------------------------
+  canonical-readiness:
+    name: canonical scientific readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      canonical_state: ${{ steps.readiness.outputs.canonical_state }}
+      readiness_status: ${{ steps.readiness.outputs.readiness_status }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with: { r-version: release, use-public-rspm: true }
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: ${{ env.R_EXTRA_PKGS }}, ${{ env.MUFFLYACCESS_PIN }}
+          dependencies: '"hard"'
+      - name: Audit canonical scientific readiness & blockers
+        id: readiness
+        # THE STATUS CHECK BELOW WAS UNREACHABLE. This job runs under
+        # `bash -eo pipefail` (see `defaults:`), so a non-zero Rscript aborted
+        # the step AT THE PIPELINE -- before `status="${PIPESTATUS[0]}"` was
+        # ever evaluated. The script has always distinguished exit 1 (the known,
+        # declared scientific blocker) from exit 2 (infrastructure or integrity
+        # failure), and that distinction was dead code: every run reported a
+        # bare "Process completed with exit code 1", and the exit-2 message
+        # below had never once been printed.
+        #
+        # `set +e` around the pipeline restores it. This does NOT make the gate
+        # green -- a declared blocker still fails the job, deliberately. What it
+        # restores is the ability to say WHICH kind of failure it is, so an
+        # unresolved estimand stops looking identical to a broken repository.
+        run: |
+          set +e
+          Rscript .github/scripts/assert-canonical-science.R | tee -a "$GITHUB_STEP_SUMMARY"
+          status="${PIPESTATUS[0]}"
+          set -e
+          echo "readiness_status=$status" >> "$GITHUB_OUTPUT"
+
+          if [ "$status" -eq 2 ]; then
+            echo "::error::assert-canonical-science.R exited 2 -- infrastructure or integrity failure, NOT the known scientific blocker. The repository is broken."
+            echo "canonical_state=BROKEN" >> "$GITHUB_OUTPUT"
+            exit 2
+          fi
+          if [ "$status" -eq 1 ]; then
+            # Exit 1 is the declared blocker. It is expected, it is not a
+            # regression, and the ::SCIENTIFIC-BLOCKER:: markers above name
+            # exactly which parameter and which data source would clear it.
+            echo "::warning::BLOCKED (expected): the canonical parameterization rests on an unresolved scientific estimand. See the ::SCIENTIFIC-BLOCKER:: markers above. This is not a software failure."
+            echo "canonical_state=BLOCKED" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo "canonical_state=READY" >> "$GITHUB_OUTPUT"
+          exit 0
   # ---------------------------------------------------------------------------
   # 3. FULL PLATFORM MATRIX. The per-push gate checks ubuntu-release only.
   # ---------------------------------------------------------------------------
@@ -592,7 +635,7 @@ jobs:
   report:
     name: nightly report
     runs-on: ubuntu-latest
-    needs: [frozen-restore, leak-guard, refusal-gates, scientific-invariants, matrix-check, full-suite, reproducibility, quality]
+    needs: [frozen-restore, leak-guard, refusal-gates, scientific-invariants, canonical-readiness, matrix-check, full-suite, reproducibility, quality]
     if: always()
     permissions:
       contents: read
@@ -600,7 +643,20 @@ jobs:
     steps:
       - name: Summarise
         id: sum
+        env:
+          # Job outputs from a FAILED job can arrive empty, and this job fails by
+          # design, so the result is the fallback rather than the other way round.
+          CANON_RAW: ${{ needs.canonical-readiness.outputs.canonical_state }}
+          CANON_RESULT: ${{ needs.canonical-readiness.result }}
         run: |
+          CANON_STATE="${CANON_RAW:-}"
+          if [ -z "$CANON_STATE" ]; then
+            case "$CANON_RESULT" in
+              success) CANON_STATE="READY" ;;
+              failure) CANON_STATE="BLOCKED or BROKEN (output unavailable -- check the job log)" ;;
+              *)       CANON_STATE="did not run" ;;
+            esac
+          fi
           {
             echo "## Nightly $(date -u '+%Y-%m-%d %H:%M UTC')"
             echo
@@ -609,7 +665,8 @@ jobs:
             echo "| frozen restore | ${{ needs.frozen-restore.result }} |"
             echo "| leak guard | ${{ needs.leak-guard.result }} |"
             echo "| refusal gates | ${{ needs.refusal-gates.result }} |"
-            echo "| scientific invariants | ${{ needs.scientific-invariants.result }} (see canonical-science note below) |"
+            echo "| scientific invariants | ${{ needs.scientific-invariants.result }} |"
+            echo "| canonical readiness | ${{ needs.canonical-readiness.result }} -- state: ${CANON_STATE} |"
             echo "| platform matrix | ${{ needs.matrix-check.result }} |"
             echo "| full suite | ${{ needs.full-suite.result }} |"
             echo "| reproducibility | ${{ needs.reproducibility.result }} |"
@@ -617,19 +674,35 @@ jobs:
             echo
             echo "### Two kinds of red"
             echo
-            echo "**RED / action required** -- a software or scientific-integrity gate broke."
-            echo "Something that used to hold no longer holds, and somebody has to fix it."
+            echo "Exactly one job in this workflow is allowed to be red without anyone"
+            echo "acting on it, and it is \`canonical readiness\` -- never any other."
             echo
-            echo "**BLOCKED / expected** -- the canonical parameterization rests on a"
-            echo "scientific estimand nobody has resolved yet. \`scientific invariants\`"
-            echo "fails for this reason today: \`new_consultation/per_entering\` is 1.00,"
-            echo "which treats a prevalence STOCK as an annual FLOW. The gate is designed"
-            echo "to stay red until the parameter is defined and sourced, so its redness is"
-            echo "the message rather than a defect. Grep the log for"
-            echo "\`::SCIENTIFIC-BLOCKER::\` to see which parameters and which data source."
+            echo "**RED / action required** -- every other row above. A software or"
+            echo "scientific-integrity gate broke: something that used to hold no longer"
+            echo "holds, and somebody has to fix it. \`scientific invariants\` is one of"
+            echo "these; it must be green."
             echo
-            echo "A blocked canonical model and a broken repository are different states."
-            echo "Reporting them identically is how a real regression hides behind a known one."
+            echo "**BLOCKED / expected** -- \`canonical readiness\` only, and only on"
+            echo "state BLOCKED. The canonical parameterization rests on an estimand that"
+            echo "has been DEFINED but not yet MEASURED: \`new_consultation/per_entering\`"
+            echo "ships as 1.00, which treats a prevalence STOCK as an annual FLOW. The"
+            echo "replacement is \`annual_first_urps_entry_rate()\` and what it needs is"
+            echo "longitudinal claims, not further model architecture. Grep the log for"
+            echo "\`::SCIENTIFIC-BLOCKER::\` for the parameters and the data source."
+            echo
+            echo "That job reports three states, and BROKEN is NOT excused:"
+            echo
+            echo "| state | exit | meaning |"
+            echo "|---|---|---|"
+            echo "| READY | 0 | blocker cleared |"
+            echo "| BLOCKED | 1 | expected; the estimand is unmeasured |"
+            echo "| BROKEN | 2 | RED -- infrastructure or integrity failure |"
+            echo
+            echo "It is a separate job precisely so that this exemption covers one"
+            echo "script and nothing else. While it was a step inside \`scientific"
+            echo "invariants\`, a real regression in the invariants themselves would have"
+            echo "been reported as BLOCKED and waved through -- and every check after it"
+            echo "in that job was skipped nightly, because it exits 1 by design."
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Every blocking gate must have actually RUN
@@ -647,17 +720,34 @@ jobs:
           check "frozen restore"        "${{ needs.frozen-restore.result }}"
           check "leak guard"            "${{ needs.leak-guard.result }}"
           check "refusal gates"         "${{ needs.refusal-gates.result }}"
-          # scientific-invariants is deliberately NOT checked here. It carries the
-          # canonical-science blocker, which fails by design; asserting it as a
-          # correctness gate would mean the nightly can never report a clean
-          # software state, and a gate that can never be green is one nobody
-          # reads. Its exit-2 case -- infrastructure failure rather than the
-          # declared blocker -- is caught inside the job itself, which is where
-          # the two can actually be told apart.
-          case "${{ needs.scientific-invariants.result }}" in
-            success) echo "  OK       canonical science (READY -- blocker cleared)" ;;
-            failure) echo "  BLOCKED  canonical science (expected; see ::SCIENTIFIC-BLOCKER:: markers)" ;;
-            *)       echo "::error::canonical science job did not run (result=${{ needs.scientific-invariants.result }})"; fail=1 ;;
+          # scientific-invariants is now an ORDINARY BLOCKING GATE and must be
+          # green. It was previously exempted, on the reasoning that it carried
+          # the canonical-science blocker and so could never pass. That
+          # reasoning was sound about the blocker and wrong about the scope: the
+          # job also runs the invariants, temporal integrity, the scorecard and
+          # mutation recovery, so exempting it exempted ALL of them. A genuine
+          # regression in assert-scientific-invariants.R -- which runs FIRST,
+          # before readiness was ever reached -- produced the same job-level
+          # `failure` and was reported as BLOCKED (expected). The blocker now
+          # lives in its own job, so this one can be held to green.
+          check "scientific invariants" "${{ needs.scientific-invariants.result }}"
+          # canonical-readiness is the ONLY job allowed to be red unactioned,
+          # and only in state BLOCKED. BROKEN (exit 2) is a real failure and is
+          # treated as one here. The state comes from the job's own output;
+          # since this job fails by design, and outputs from a failed job can
+          # arrive empty, an unreadable state is escalated rather than assumed
+          # benign -- guessing BLOCKED is exactly the mistake being fixed.
+          case "${{ needs.canonical-readiness.result }}:${{ needs.canonical-readiness.outputs.canonical_state }}" in
+            success:*|*:READY)
+              echo "  OK       canonical readiness (READY -- blocker cleared)" ;;
+            failure:BLOCKED)
+              echo "  BLOCKED  canonical readiness (expected; see ::SCIENTIFIC-BLOCKER:: markers)" ;;
+            failure:BROKEN)
+              echo "::error::canonical readiness exited 2 -- infrastructure or integrity failure, NOT the known blocker"; fail=1 ;;
+            failure:)
+              echo "::error::canonical readiness failed but reported no state; cannot distinguish BLOCKED from BROKEN -- check the job log"; fail=1 ;;
+            *)
+              echo "::error::canonical readiness did not run (result=${{ needs.canonical-readiness.result }})"; fail=1 ;;
           esac
           check "full suite"            "${{ needs.full-suite.result }}"
           check "reproducibility"       "${{ needs.reproducibility.result }}"
@@ -669,18 +759,23 @@ jobs:
           exit $fail
 
       - name: Open or update the tracking issue on failure
-        # scientific-invariants is DELIBERATELY EXCLUDED from this trigger. It
-        # is red by design (see the comment on that job below and in
-        # scientific-integrity.yaml) -- blocked on real longitudinal claims
-        # data that has not been sourced, not a bug -- and stays that way for
-        # an extended, known period. Including it here meant this step fired
-        # on EVERY nightly run regardless of anything else, and on a night
-        # where nothing else failed it posted a comment reading "**Failing:**"
-        # with nothing after it, to a single growing tracking issue: 17
-        # comments in 11 days, most non-actionable. Its redness is already
-        # visible in the run's own job list and in the summary table below --
-        # that is the right place for a permanent, by-design daily reminder.
-        # An alert should fire for gates whose failure is actually unexpected.
+        # WHAT IS EXCLUDED HERE IS canonical-readiness IN STATE BLOCKED --
+        # NOT scientific-invariants. That distinction is the whole point.
+        #
+        # scientific-invariants used to be excluded, because it contained the
+        # by-design blocker and so fired on EVERY nightly run regardless of
+        # anything else: on a night where nothing else failed it posted a
+        # comment reading "**Failing:**" with nothing after it, 17 comments in
+        # 11 days, most non-actionable. But excluding the whole job also
+        # silenced the invariants, temporal integrity, the scorecard and
+        # mutation recovery. Now that the blocker has its own job, this one is
+        # alertable again, and a regression in it is genuinely unexpected.
+        #
+        # canonical-readiness is excluded ONLY while BLOCKED, whose redness is
+        # a permanent known state better read from the summary table than from
+        # a daily comment. Its BROKEN state (exit 2) DOES fire: that is an
+        # infrastructure or integrity failure wearing the blocker's clothes,
+        # and it is the one thing here nobody would otherwise notice.
         #
         # matrix-check is included here even though it is not one of the
         # "Every blocking gate must have actually RUN" checks above (it can be
@@ -690,13 +785,15 @@ jobs:
         # constant redness. Removing that constant trigger without adding
         # this one would have silently stopped alerting on platform-matrix
         # failures, historically the most common single-item failure here.
-        if: ${{ always() && (needs.leak-guard.result != 'success' || needs.refusal-gates.result != 'success' || needs.matrix-check.result != 'success' || needs.full-suite.result != 'success' || needs.reproducibility.result != 'success') }}
+        if: ${{ always() && (needs.leak-guard.result != 'success' || needs.refusal-gates.result != 'success' || needs.scientific-invariants.result != 'success' || needs.matrix-check.result != 'success' || needs.full-suite.result != 'success' || needs.reproducibility.result != 'success' || needs.canonical-readiness.outputs.canonical_state == 'BROKEN') }}
         uses: actions/github-script@v7
         with:
           script: |
             const rows = {
               'leak guard': '${{ needs.leak-guard.result }}',
               'refusal gates': '${{ needs.refusal-gates.result }}',
+              'scientific invariants': '${{ needs.scientific-invariants.result }}',
+              'canonical readiness (BLOCKED is expected)': '${{ needs.canonical-readiness.outputs.canonical_state || needs.canonical-readiness.result }}',
               'platform matrix': '${{ needs.matrix-check.result }}',
               'full suite': '${{ needs.full-suite.result }}',
               'reproducibility': '${{ needs.reproducibility.result }}',

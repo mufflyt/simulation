@@ -53,10 +53,12 @@ already-in-care patients, not the disease stock.
 not a multiplier applied to the whole stock. It must not regenerate a fresh
 cohort of "new" patients from the entire prevalent pool each model year.
 
-> **SUPERSEDED WORDING — read
+> **POST-FREEZE CLARIFICATION, 2026-08-29 — superseded wording. Read
 > [`PATHWAY_STATE_TRANSITION_AUDIT.md`](PATHWAY_STATE_TRANSITION_AUDIT.md) §8
-> before using the word "hazard" here.** This paragraph is from 2026-08-16/17
-> and predates the §8 ruling. §8 adopted the **population-level rate**
+> before using the word "hazard" here.** Nothing above this note has been
+> altered: the pre-registration stands as written, and this paragraph is from
+> 2026-08-16/17, predating the §8 ruling. The note is dated so the later
+> architectural decision cannot be mistaken for part of the frozen document. §8 adopted the **population-level rate**
 > (denominator: *all* eligible prevalent women in the year, regardless of prior
 > care history) and **rejected** the conditional hazard whose denominator is
 > women who have never entered before. Consequence 1 of that ruling is that the

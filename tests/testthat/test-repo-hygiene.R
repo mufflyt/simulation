@@ -360,16 +360,22 @@ test_that("no test file redefines .repo_root()/.repo_path() locally", {
 # Guard: nightly's tracking-issue alert must not fire on the by-design-red
 # gate alone, and must not silently stop firing on platform-matrix failures.
 #
-# scientific-invariants is red by design for an extended, known period
-# (blocked on real data, not a bug -- see scientific-integrity.yaml). Once
-# included in this step's trigger, it fired the alert on EVERY nightly run
-# regardless of anything else, posting a near-daily comment (17 in 11 days,
-# several reading "**Failing:**" with nothing after it) to a single growing
-# tracking issue. matrix-check's failures, meanwhile, were never in the
-# trigger on their own -- they only ever alerted by riding along with
-# scientific-invariants' constant redness, which is invisible unless someone
-# reads the trigger condition itself, not just the displayed table.
-test_that("nightly's tracking-issue trigger excludes scientific-invariants and includes matrix-check", {
+# THE EXEMPTION MUST BE SCOPED TO THE BLOCKER, NOT TO THE JOB THAT CONTAINED IT.
+# This guard originally required that scientific-invariants be EXCLUDED, because
+# it held the canonical-science blocker and so fired the alert on every nightly
+# run regardless of anything else (17 comments in 11 days, several reading
+# "**Failing:**" with nothing after it). The observation was right; the scope
+# was too wide. That job also runs the invariants, temporal integrity, the
+# scorecard and mutation recovery, so excluding it excluded all of them -- a
+# genuine regression in assert-scientific-invariants.R, which runs FIRST, would
+# have alerted nobody.
+#
+# The blocker now lives in its own canonical-readiness job, so the exemption
+# follows it there and scientific-invariants becomes alertable again. The
+# BROKEN state (exit 2, infrastructure or integrity failure rather than the
+# declared blocker) must still fire, or an exit-2 hides behind the exemption
+# that exists for exit-1.
+test_that("nightly's tracking-issue trigger scopes the by-design exemption to canonical readiness", {
   f <- file.path(.repo_root(), ".github", "workflows", "nightly.yaml")
   skip_if_not(file.exists(f), "nightly.yaml not present")
   wf <- yaml::read_yaml(f)
@@ -385,12 +391,34 @@ test_that("nightly's tracking-issue trigger excludes scientific-invariants and i
               info = "no step matching 'tracking issue' found in nightly.yaml's report job")
 
   trigger <- as.character(steps[[idx[1]]][["if"]])
+
+  # The blocker's own job must not alert on its RESULT -- that is the
+  # every-single-night comment this guard was written for.
   expect_false(
-    grepl("scientific-invariants", trigger, fixed = TRUE),
+    grepl("needs.canonical-readiness.result", trigger, fixed = TRUE),
     info = paste(
-      "The tracking-issue trigger must not include needs.scientific-invariants",
-      "-- that gate is red by design and firing on it alone turns a known,",
+      "The tracking-issue trigger must not fire on canonical-readiness'",
+      "job RESULT -- it is red by design, and firing on it turns a known,",
       "accepted condition into a comment on every single nightly run."
+    )
+  )
+  # ...but exit 2 is NOT the accepted condition and must still alert.
+  expect_true(
+    grepl("canonical_state == 'BROKEN'", trigger, fixed = TRUE),
+    info = paste(
+      "The trigger must fire on canonical-readiness state BROKEN (exit 2).",
+      "That is an infrastructure or integrity failure wearing the blocker's",
+      "clothes, and the by-design exemption must not cover it."
+    )
+  )
+  # The rest of the scientific suite is no longer exempt.
+  expect_true(
+    grepl("needs.scientific-invariants.result != 'success'", trigger, fixed = TRUE),
+    info = paste(
+      "The trigger must include needs.scientific-invariants -- now that the",
+      "by-design blocker has its own job, a failure of the invariants,",
+      "temporal integrity, the scorecard or mutation recovery is genuinely",
+      "unexpected and must alert."
     )
   )
   expect_true(
