@@ -192,3 +192,85 @@ test_that("the APCD request covers all three limbs and does not gate on Medicare
                  "As a required floor it rejects MA APCD, which §5 recommends."
                ))
 })
+
+# PAYER/COVERAGE UNIVERSE IS PART OF POPULATION ALIGNMENT, NOT A REFINEMENT.
+#
+# An earlier revision required the denominator to match on state, years and age
+# bands. Necessary, and NOT sufficient. MA APCD covers commercial, MassHealth
+# and Medicare Advantage but excludes Medicare fee-for-service and some
+# self-insured commercial coverage, so dividing what it observes by every
+# eligible prevalent woman in Massachusetts yields
+#
+#     first entries observable in APCD-covered payers
+#     -----------------------------------------------
+#          ALL eligible prevalent women in the state
+#
+# which is biased DOWNWARD by the entries occurring outside the coverage
+# universe. The missing stratum is Medicare FFS -- the oldest women, carrying
+# the highest expected entry rate -- so the bias runs against the quantity of
+# interest rather than washing out.
+#
+# This is harder to notice than the geographic version because the geography
+# and years DO match; the mismatch hides one axis over. It also interacts with
+# §2b: relaxing Medicare FFS from "required" to "desired" is correct for
+# extract eligibility, but without this rule it converts a stated limitation
+# into an unstated bias. The two changes are only safe together.
+test_that("the APCD request aligns the payer/coverage universe, not just state/year/age", {
+  live <- .apcd_operative(.apcd_request())
+
+  expect_match(live, "payer/coverage universe", fixed = TRUE,
+               info = paste(
+                 "Population alignment must name the payer/coverage universe.",
+                 "State, years and age bands alone let a payer-restricted",
+                 "numerator sit over an all-population denominator."
+               ))
+  # Necessary-but-insufficient must be stated. A document can list the payer
+  # axis among the others and still read as though matching any of them suffices.
+  expect_match(live, "not sufficient", ignore.case = TRUE,
+               info = "state/year/age matching must be marked necessary but NOT sufficient")
+
+  # Stratified estimation with matched denominators is the actual remedy.
+  # NOT an alternation with the q(c,a,t,p) formula: that block survives on its
+  # own, so removing the instruction to stratify still satisfied the guard.
+  # An OR is only as strong as its weakest branch.
+  expect_match(live, "payer/coverage-stratified", fixed = TRUE,
+               info = "the request must instruct that rates be payer/coverage-stratified")
+  # ...and the per-stratum denominator pairing must be spelled out, or
+  # "stratified" can be read as reporting-only.
+  expect_match(live, "MassHealth-covered eligible prevalence", fixed = TRUE,
+               info = "each numerator stratum must be paired with its own denominator")
+  expect_match(live, "standardise|standardize|transport", ignore.case = TRUE,
+               info = "stratum-specific rates must be standardised/transported, as an argued step")
+
+  # The fallback must be labelled, not silently adopted. An unlabelled
+  # coverage-limited estimate becomes the canonical rate by inheritance.
+  expect_match(live, "APCD-covered-population estimate", fixed = TRUE,
+               info = paste(
+                 "If payer alignment is unavailable the result must be labelled",
+                 "an APCD-covered-population estimate rather than the complete",
+                 "Massachusetts annual_first_urps_entry_rate."
+               ))
+  expect_match(live, "downward", ignore.case = TRUE,
+               info = "the direction of the bias must be stated, not just its existence")
+
+  # And aligning the payer universe must not be mistaken for an enrolment
+  # restriction on the denominator -- the error this whole file exists to stop.
+  # Anchored on §3c's OWN sentence, not the bare phrase: "numerator
+  # observability and washout" also appears in the §2a requirements table, so
+  # matching it alone let a mutant that pushed enrolment onto the denominator
+  # survive. A guard must match the claim it is guarding, not a phrase that
+  # happens to occur somewhere in the document.
+  expect_match(
+    live, "Continuous enrolment remains a numerator observability and washout",
+    fixed = TRUE,
+    info = paste(
+      "Continuous enrolment must remain a numerator rule *in the payer",
+      "alignment section*. Payer alignment restricts the target POPULATION,",
+      "not to the continuously enrolled within it."
+    )
+  )
+  expect_false(
+    grepl("Continuous enrolment applies to both sides", live, fixed = TRUE),
+    info = "continuous enrolment must never be stated as applying to the denominator"
+  )
+})

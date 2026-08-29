@@ -164,22 +164,95 @@ with recurrent disease — deliberately.
 A claims-derived rate such as *"1.8 new POP consultations per 1,000
 women/year"* is **not** the estimand. It is the numerator only.
 
-### 3c. Population alignment is a stated assumption, not an arithmetic detail
+### 3c. Population alignment — geography, years, age bands, AND payer/coverage universe
 
 A **state** APCD numerator divided by a **national** prevalence denominator is a
-category error, and a single ratio makes it invisible. Therefore:
+category error, and a single ratio makes it invisible. **So is a
+payer-restricted numerator divided by an all-population denominator**, and that
+one is easier to miss because the geography and years match.
+
+#### The bias this closes
+
+MA APCD covers commercial, MassHealth and Medicare Advantage. It does **not**
+include Medicare fee-for-service, and some self-insured commercial coverage has
+been absent since *Gobeille*. Dividing what it observes by every eligible
+prevalent woman in Massachusetts gives
+
+```
+      first entries observable in APCD-covered payers
+  ----------------------------------------------------
+        ALL eligible prevalent women in the state
+```
+
+which is **not** the canonical rate. It is biased **downward** by exactly the
+entries occurring outside the coverage universe — and because pelvic-floor
+burden is concentrated in older women, the missing stratum is Medicare FFS,
+i.e. the one with the highest expected entry rate. This is a material bias, not
+a rounding concern. `INCIDENT_ENTRY_ESTIMAND.md` §4 already flags the coverage
+gap; this section is what stops it from silently entering the arithmetic.
+
+Note that §2b's ruling and this one are consistent, not in tension: Medicare FFS
+is **not** an eligibility bar on the extract, **and** its absence must be
+carried explicitly through the denominator rather than ignored. Relaxing the
+requirement without this section would have converted a stated limitation into
+an unstated bias.
+
+#### The requirement
+
+Estimate **payer/coverage-stratified** rates, each with a denominator drawn
+from the same target population as its numerator:
+
+```
+                  first observed entrants in payer/coverage stratum p
+q(c,a,t,p) = -----------------------------------------------------------
+              eligible prevalent women in the SAME c, a, t, p population
+```
+
+| numerator stratum | denominator must be |
+|---|---|
+| commercial APCD | commercial-covered eligible prevalence |
+| MassHealth | MassHealth-covered eligible prevalence |
+| Medicare Advantage | MA-covered eligible prevalence |
+| Medicare FFS (§6) | separately obtained FFS denominator |
+
+Then **standardise or transport** the stratum-specific rates into the desired
+state or national target population, as a separate and argued step.
+
+#### What continuous enrolment still is, and is not
+
+Aligning the payer universe does **not** reintroduce an enrolment restriction on
+the denominator. Continuous enrolment remains a **numerator observability and
+washout** rule. The denominator is the eligible prevalent women *in that
+coverage population*, whether or not any individual was continuously enrolled.
+
+#### If full payer alignment is unavailable
+
+Payer-specific prevalence may not be estimable. That is an acceptable outcome
+and an unacceptable silence. In that case:
+
+- the result is labelled an **"APCD-covered-population estimate"**, never the
+  complete Massachusetts `annual_first_urps_entry_rate`;
+- the transport assumption is **stated explicitly**, including the expected
+  direction of the bias (downward);
+- the label travels with the number into the model, so a coverage-limited
+  estimate cannot be adopted as the canonical rate by inheritance.
+
+#### Mechanics
 
 - `annual_first_urps_entry_rate()` **returns `entrants_n`, `eligible_prevalent_n`
   and the rate separately**, and requires `numerator_source` and
-  `denominator_source`. It refuses to run without both.
-- The denominator must be constructed for **the same state, years and age bands**
-  as the claims extract.
-- Any transport to national estimates is a **separate, argued step**, recorded
+  `denominator_source`. It refuses to run without both — precisely so a
+  numerator and denominator drawn from different populations cannot be collapsed
+  into one unquestionable number.
+- The denominator must be constructed for **the same state, years, age bands and
+  payer/coverage universe** as the claims extract. The first three are necessary
+  and **not sufficient**.
+- Any transport to a national estimate is a **separate, argued step**, recorded
   as such.
 
-Estimation is by **Wilson interval**, stratified by age band where cell counts
-permit, with index-month right-censoring handled explicitly — the same error
-corrected in the MEPS Panel 27 re-estimation.
+Estimation is by **Wilson interval**, stratified by age band and payer where
+cell counts permit, with index-month right-censoring handled explicitly — the
+same error corrected in the MEPS Panel 27 re-estimation.
 
 ## 4. Disclosure and governance
 
