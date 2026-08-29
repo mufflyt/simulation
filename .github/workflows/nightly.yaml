@@ -737,8 +737,14 @@ jobs:
           # since this job fails by design, and outputs from a failed job can
           # arrive empty, an unreadable state is escalated rather than assumed
           # benign -- guessing BLOCKED is exactly the mistake being fixed.
+          # `success` is the ONLY healthy pattern, and `failure:BLOCKED` the only
+          # excused one. An earlier draft also accepted `*:READY`, which would
+          # have passed a job that FAILED while claiming READY -- a state the
+          # script cannot legitimately produce, and therefore exactly the state
+          # not to wave through. The state string is corroborating evidence for
+          # a failure, never grounds to overrule a result.
           case "${{ needs.canonical-readiness.result }}:${{ needs.canonical-readiness.outputs.canonical_state }}" in
-            success:*|*:READY)
+            success:*)
               echo "  OK       canonical readiness (READY -- blocker cleared)" ;;
             failure:BLOCKED)
               echo "  BLOCKED  canonical readiness (expected; see ::SCIENTIFIC-BLOCKER:: markers)" ;;
@@ -746,6 +752,8 @@ jobs:
               echo "::error::canonical readiness exited 2 -- infrastructure or integrity failure, NOT the known blocker"; fail=1 ;;
             failure:)
               echo "::error::canonical readiness failed but reported no state; cannot distinguish BLOCKED from BROKEN -- check the job log"; fail=1 ;;
+            failure:*)
+              echo "::error::canonical readiness failed while reporting state '${{ needs.canonical-readiness.outputs.canonical_state }}' -- not a state a failing run should be able to reach"; fail=1 ;;
             *)
               echo "::error::canonical readiness did not run (result=${{ needs.canonical-readiness.result }})"; fail=1 ;;
           esac
@@ -785,7 +793,7 @@ jobs:
         # constant redness. Removing that constant trigger without adding
         # this one would have silently stopped alerting on platform-matrix
         # failures, historically the most common single-item failure here.
-        if: ${{ always() && (needs.leak-guard.result != 'success' || needs.refusal-gates.result != 'success' || needs.scientific-invariants.result != 'success' || needs.matrix-check.result != 'success' || needs.full-suite.result != 'success' || needs.reproducibility.result != 'success' || needs.canonical-readiness.outputs.canonical_state == 'BROKEN') }}
+        if: ${{ always() && (needs.leak-guard.result != 'success' || needs.refusal-gates.result != 'success' || needs.scientific-invariants.result != 'success' || needs.matrix-check.result != 'success' || needs.full-suite.result != 'success' || needs.reproducibility.result != 'success' || (needs.canonical-readiness.result != 'success' && needs.canonical-readiness.outputs.canonical_state != 'BLOCKED')) }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -793,13 +801,26 @@ jobs:
               'leak guard': '${{ needs.leak-guard.result }}',
               'refusal gates': '${{ needs.refusal-gates.result }}',
               'scientific invariants': '${{ needs.scientific-invariants.result }}',
-              'canonical readiness (BLOCKED is expected)': '${{ needs.canonical-readiness.outputs.canonical_state || needs.canonical-readiness.result }}',
+              // Normalised to 'failure' unless positively BLOCKED, for the same
+              // fail-closed reason as this step's trigger: an unreadable state
+              // must not drop out of the "Failing:" line, which is computed
+              // from these values and once posted comments reading
+              // "**Failing:**" with nothing after them.
+              'canonical readiness': (function () {
+                const st = '${{ needs.canonical-readiness.outputs.canonical_state }}';
+                const rs = '${{ needs.canonical-readiness.result }}';
+                if (rs === 'success') return 'success';
+                if (st === 'BLOCKED') return 'BLOCKED (expected)';
+                return `failure (state: ${st || 'unavailable'})`;
+              })(),
               'platform matrix': '${{ needs.matrix-check.result }}',
               'full suite': '${{ needs.full-suite.result }}',
               'reproducibility': '${{ needs.reproducibility.result }}',
               'quality (informational)': '${{ needs.quality.result }}',
             };
-            const failed = Object.entries(rows).filter(([, v]) => v === 'failure').map(([k]) => k);
+            const failed = Object.entries(rows)
+              .filter(([, v]) => v.startsWith('failure'))
+              .map(([k]) => k);
             const title = 'Nightly CI failing';
             const body = [
               `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
