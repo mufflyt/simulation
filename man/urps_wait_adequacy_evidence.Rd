@@ -16,13 +16,33 @@ urps_adequacy_evidence object.
 Wires the registered Rabice and Acosta/Lizeth wait observations into the
 baseline-gap evidence layer without incorrectly calling the capacity anchor
 calibrated. Every row is filed as \code{not_identifiable_from_this_evidence}.
-
+}
+\details{
 This is the registered-summary counterpart to
 \code{\link[=lizeth_adequacy_evidence]{lizeth_adequacy_evidence()}}, which builds the same kind of ledger from the
 raw Lizeth mystery-caller records; use whichever matches the input you hold.
 }
 \seealso{
 \code{\link[=lizeth_adequacy_evidence]{lizeth_adequacy_evidence()}}
+
+Other baseline gap:
+\code{\link[=assert_access_not_double_counted]{assert_access_not_double_counted()}},
+\code{\link[=assert_baseline_gap_estimated]{assert_baseline_gap_estimated()}},
+\code{\link[=assumed_baseline_gap]{assumed_baseline_gap()}},
+\code{\link[=baseline_gap]{baseline_gap()}},
+\code{\link[=capacity_category_adequacy]{capacity_category_adequacy()}},
+\code{\link[=capacity_survey_adequacy]{capacity_survey_adequacy()}},
+\code{\link[=capacity_survey_shortfall_bottom_up]{capacity_survey_shortfall_bottom_up()}},
+\code{\link[=external_anchor_gap]{external_anchor_gap()}},
+\code{\link[=fit_wait_scale_given_adequacy]{fit_wait_scale_given_adequacy()}},
+\code{\link[=hpsa_removal_shortfall]{hpsa_removal_shortfall()}},
+\code{\link[=invert_clear_access_wait]{invert_clear_access_wait()}},
+\code{\link[=published_baseline_gaps]{published_baseline_gaps()}},
+\code{\link[=required_fte_base_year]{required_fte_base_year()}},
+\code{\link[=summarize_wait_adequacy_fix]{summarize_wait_adequacy_fix()}},
+\code{\link[=urps_wait_calibration_targets]{urps_wait_calibration_targets()}},
+\code{\link[=urps_wait_inverse_surface]{urps_wait_inverse_surface()}},
+\code{\link[=wait_adequacy_identification_status]{wait_adequacy_identification_status()}}
 }
 \concept{baseline gap}
 \concept{calibration}

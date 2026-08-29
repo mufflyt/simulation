@@ -15,4 +15,3 @@ URLs. Set \code{download_url} to the exact versioned file selected for an
 analysis. This prevents an unannounced upstream release from changing a
 frozen simulation.
 }
-\concept{data}

@@ -20,5 +20,10 @@ Invisibly, character vector of written paths.
 \description{
 Save empirical capacity evidence with timestamped filenames
 }
+\seealso{
+Other capacity evidence:
+\code{\link[=build_empirical_capacity_evidence]{build_empirical_capacity_evidence()}},
+\code{\link[=empirical_capacity_status]{empirical_capacity_status()}}
+}
 \concept{calibration}
 \concept{capacity evidence}

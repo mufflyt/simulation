@@ -15,5 +15,14 @@ Character scalar.
 \description{
 Locate the Massachusetts BORIM-to-NPI source
 }
+\seealso{
+Other CHIA capacity evidence:
+\code{\link[=chia_urps_physician_year]{chia_urps_physician_year()}},
+\code{\link[=identify_chia_provider_columns]{identify_chia_provider_columns()}},
+\code{\link[=link_chia_to_urps]{link_chia_to_urps()}},
+\code{\link[=read_chia_capacity_fields]{read_chia_capacity_fields()}},
+\code{\link[=read_ma_borim_npi_bridge]{read_ma_borim_npi_bridge()}},
+\code{\link[=summarize_chia_urps_workload]{summarize_chia_urps_workload()}}
+}
 \concept{CHIA capacity evidence}
 \concept{calibration}

@@ -28,7 +28,7 @@ per distinct NPI actually attributed to a CHIA discharge in \code{years}.
 Resolves each CHIA discharge's operating-physician BORIM license to an NPI
 (via \code{chia_provider.borim_stdrel_npi_straight_from_cd}, the same join
 \code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}} uses), then looks up that NPI's
-primary taxonomy code in the year-matched \code{credentials.temporal_nppes_<year>_fixed}
+primary taxonomy code in the year-matched \verb{credentials.temporal_nppes_<year>_fixed}
 table -- CHIA's own BORIM \code{specialty_1} is free text ("Obstetrics and
 Gynecology") and not a NUCC code, so it is not used here.
 }
@@ -40,6 +40,8 @@ function issues the \code{ATTACH}/\code{DETACH} itself).
 }
 \seealso{
 Other chia physician attribution:
+\code{\link[=.chia_resolve_payer_group]{.chia_resolve_payer_group()}},
+\code{\link[=.chia_suppress_small_cells]{.chia_suppress_small_cells()}},
 \code{\link[=build_chia_hdd_diagnosis_long_view]{build_chia_hdd_diagnosis_long_view()}},
 \code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
 \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
@@ -47,7 +49,8 @@ Other chia physician attribution:
 \code{\link[=build_chia_hdd_procedure_family_view]{build_chia_hdd_procedure_family_view()}},
 \code{\link[=build_chia_physician_attribution]{build_chia_physician_attribution()}},
 \code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}},
-\code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}}
+\code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}},
+\code{\link[=chia_npi_taxonomy_credentials_db_default]{chia_npi_taxonomy_credentials_db_default()}}
 }
 \concept{chia physician attribution}
 \concept{supply}

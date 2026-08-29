@@ -35,6 +35,8 @@ and \code{chia_provider.borim_stdrel_npi_straight_from_cd} to already exist on
 }
 \seealso{
 Other chia physician attribution:
+\code{\link[=.chia_resolve_payer_group]{.chia_resolve_payer_group()}},
+\code{\link[=.chia_suppress_small_cells]{.chia_suppress_small_cells()}},
 \code{\link[=build_chia_hdd_diagnosis_long_view]{build_chia_hdd_diagnosis_long_view()}},
 \code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
 \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
@@ -42,7 +44,8 @@ Other chia physician attribution:
 \code{\link[=build_chia_hdd_procedure_family_view]{build_chia_hdd_procedure_family_view()}},
 \code{\link[=build_chia_npi_taxonomy_crosswalk]{build_chia_npi_taxonomy_crosswalk()}},
 \code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}},
-\code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}}
+\code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}},
+\code{\link[=chia_npi_taxonomy_credentials_db_default]{chia_npi_taxonomy_credentials_db_default()}}
 }
 \concept{chia physician attribution}
 \concept{supply}

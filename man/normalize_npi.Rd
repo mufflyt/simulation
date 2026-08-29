@@ -15,5 +15,18 @@ Character NPI.
 \description{
 Normalize NPI values
 }
+\seealso{
+Other allpayer bridge:
+\code{\link[=build_chia_provider_year]{build_chia_provider_year()}},
+\code{\link[=build_claims_provider_year]{build_claims_provider_year()}},
+\code{\link[=build_medicare_provider_year]{build_medicare_provider_year()}},
+\code{\link[=estimate_workload_age_curve]{estimate_workload_age_curve()}},
+\code{\link[=filter_claims_to_urps]{filter_claims_to_urps()}},
+\code{\link[=fit_chia_medicare_bridge]{fit_chia_medicare_bridge()}},
+\code{\link[=join_chia_medicare_overlap]{join_chia_medicare_overlap()}},
+\code{\link[=predict_allpayer_from_medicare]{predict_allpayer_from_medicare()}},
+\code{\link[=read_claims_source]{read_claims_source()}},
+\code{\link[=select_bridge_workload]{select_bridge_workload()}}
+}
 \concept{allpayer bridge}
 \concept{calibration}
