@@ -62,7 +62,7 @@ exists — so deleting a test is not a way to stop enforcing a law.
 
 | gate | why not |
 |---|---|
-| canonical readiness audit | **Red by design** until an unresolved parameter is sourced. A permanently-red required check trains everyone to merge past red, which is worse than having none. The estimand it waits on is frozen in [`INCIDENT_ENTRY_DENOMINATOR_DECISION.md`](INCIDENT_ENTRY_DENOMINATOR_DECISION.md); the nightly reports it as **BLOCKED / expected** rather than **RED / action required**, because a blocked canonical model and a broken repository are different states and reporting them identically is how a real regression hides behind a known one. |
+| canonical readiness audit | **Red by design** until an unresolved parameter is sourced. A permanently-red required check trains everyone to merge past red, which is worse than having none. The estimand it waits on was settled 2026-08-17 in [`PATHWAY_STATE_TRANSITION_AUDIT.md`](PATHWAY_STATE_TRANSITION_AUDIT.md) §7-§8 and specified in [`INCIDENT_ENTRY_ESTIMAND.md`](INCIDENT_ENTRY_ESTIMAND.md); what remains is data, not definition. The nightly reports it as **BLOCKED / expected** rather than **RED / action required**, because a blocked canonical model and a broken repository are different states and reporting them identically is how a real regression hides behind a known one. |
 | `cold-install` | Reaches the network and third-party remotes; can fail for reasons a PR did not cause. Loud and scheduled instead. |
 | platform matrix, coverage, frozen restore, full suite | Slow. They live in the nightly. |
 

@@ -53,6 +53,23 @@ already-in-care patients, not the disease stock.
 not a multiplier applied to the whole stock. It must not regenerate a fresh
 cohort of "new" patients from the entire prevalent pool each model year.
 
+> **SUPERSEDED WORDING — read
+> [`PATHWAY_STATE_TRANSITION_AUDIT.md`](PATHWAY_STATE_TRANSITION_AUDIT.md) §8
+> before using the word "hazard" here.** This paragraph is from 2026-08-16/17
+> and predates the §8 ruling. §8 adopted the **population-level rate**
+> (denominator: *all* eligible prevalent women in the year, regardless of prior
+> care history) and **rejected** the conditional hazard whose denominator is
+> women who have never entered before. Consequence 1 of that ruling is that the
+> quantity **is not a conditional hazard and must not be named like one**; the
+> canonical name is `annual_first_urps_entry_rate`.
+>
+> The distinction is not pedantic. "Hazard acting on those eligible to enter"
+> reads as a depleting never-entered risk set, which invites a depletion
+> correction on top of a rate that already embeds depletion empirically --
+> double-counting history. §8 consequence 2 forbids exactly that. What this
+> paragraph gets right, and what survives, is the negative claim: the
+> denominator is the DISEASE stock, not already-in-care patients.
+
 ## 3. THE DENOMINATOR PROBLEM — resolve before estimating anything
 
 Traced from `R/demand-lifecourse.R:163`:
