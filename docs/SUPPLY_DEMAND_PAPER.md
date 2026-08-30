@@ -127,9 +127,10 @@ that was not put into the adequacy parameter.
 ### Declared calibration status
 
 Every demand dimension carries an explicit status (Table 1). We report these
-rather than presenting demand as uniformly estimated, because two of the four
-dimensions are not calibrated and one is undeclared, and a reader cannot weigh
-the projection without knowing which is which.
+rather than presenting demand as uniformly estimated, because none of the four
+is calibrated to an independent observed series -- two are derived by analogy,
+one is an explicit placeholder, and one is evidence-anchored but not fitted --
+and a reader cannot weigh the projection without knowing which is which.
 
 ### Threshold analysis
 
@@ -177,15 +178,22 @@ growth in required FTE throughout.
 
 | Dimension | Status | What that means |
 |---|---|---|
-| Care seeking | Calibrated | Fitted to observed data |
+| Care seeking | Evidence-anchored, not calibrated | Literal per-condition probabilities (0.48 UI, 0.52 POP, 0.38 AI) declared `evidence_anchored` by the model, not fitted to an observed care-seeking series |
 | Disease burden | Derived by analogy | Structure adopted from another specialty |
 | Access barriers | Uncalibrated, illustrative | Placeholder values |
-| Baseline adequacy | Undeclared | No status asserted |
+| Baseline adequacy | Derived by analogy | Borrowed from a published physical-therapy survey; the tier is declared, not inferred |
 
-Only one of four dimensions is calibrated. National demand anchors are
+**None of the four dimensions is calibrated.** National demand anchors are
 `illustrative_fallback` placeholders, and the reported 3.6% backtest error is
 circular, because the scaling factors were fitted to the same anchors they are
 scored against.
+
+Care seeking additionally cannot be identified on its own. Claims and survey
+data recover the *product* of recognition, care seeking, referral and arrival,
+never its components, so a separate care-seeking probability multiplied by the
+others double-counts losses already inside the measured quantity. The model
+therefore retires care seeking as an independent multiplier in favour of a
+single annual entry rate, which is not yet sourced (see Limitations).
 
 **Table 2. Projected supply and required FTE, baseline scenario**
 
@@ -265,8 +273,9 @@ This asymmetry is worth stating plainly, because workforce projections are
 usually presented with both sides equally confident. Our supply arm rests on
 individual-level agents, empirical retirement hazards, and an out-of-time
 validation against a subsequently observed national count. Our demand arm rests
-on a base-year parameter borrowed from physical therapists and national anchors
-that are round placeholder numbers. Presenting a single projected shortfall
+on a base-year parameter borrowed from physical therapists, national anchors
+that are round placeholder numbers, and no dimension calibrated to an observed
+series. Presenting a single projected shortfall
 would have concealed that difference behind a number.
 
 Fellowship policy has more leverage here than retirement policy. Constraining
