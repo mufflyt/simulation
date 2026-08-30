@@ -488,9 +488,15 @@ build_diagnostic_denominator_table <- function(
   # condition = NA, because the source cannot split it. It deliberately does
   # NOT join to the condition rows: a join is exactly how 79,787 would end up
   # allocated across three conditions.
+  # The aggregate row takes its denominator and rate FROM the rate function
+  # rather than recomputing them. Two sites computing the same number is two
+  # sites that can drift apart, and the duplication was already there: this
+  # block previously repeated `female_65plus_ffs * any_PFD` verbatim.
   agg <- medicare_ffs_practice_new_fpmrs_2023()
-  p_any65 <- .diagnostic_prevalence_65plus("any_PFD", pop_band)
-  agg_denom <- enr$female_65plus_ffs * p_any65
+  rates <- medicare_ffs_practice_new_fpmrs_ratio_65plus_2023(acs_path)
+  disease_row <- rates[rates$denominator_definition ==
+                         "disease_stock_aligned_coverage_unrestricted", ]
+  agg_denom <- disease_row$denominator_n[[1]]
   rows[[length(rows) + 1L]] <- tibble::tibble(
     condition = NA_character_,
     year = 2023L,
@@ -500,7 +506,7 @@ build_diagnostic_denominator_table <- function(
     prevalent_n = agg_denom,
     eligible_prevalent_n = agg_denom,
     practice_new_fpmrs_n = as.numeric(agg$practice_new_fpmrs_services),
-    practice_new_ratio = as.numeric(agg$practice_new_fpmrs_services) / agg_denom,
+    practice_new_ratio = disease_row$services_per_1000[[1]] / 1000,
     numerator_source = agg$numerator_source,
     denominator_source = paste0(enr$source, ";pfd_prevalence_by_band(any_PFD)"),
     numerator_estimand = agg$numerator_estimand,
