@@ -44,7 +44,7 @@ The canonical denominator is the **upstream eligible prevalent stock**:
 |---|---|
 | **Numerator, aggregate** | 79,787 practice-new FPMRS consultations, 2023, Medicare FFS |
 | source | Part B PUF `by_service` 2023, HCPCS 99202–99205, 794 roster NPIs |
-| corroboration | `Tot_Srvcs` and `Tot_Benes` agree to <0.01% at every code — effectively one per person |
+| unit | **services**, not people — `Tot_Benes` is a within-cell count and cannot be deduplicated across the 1,322 NPI × HCPCS cells |
 | series | 2013–2023 available; 2020 dips to 65,487 and recovers to 79,960 by 2021, the right shape for a real utilization series |
 | **Denominator, all-payer 65+** | constructed and populated — 6 rows at status `OK` |
 | source | ACS 5-year 2023 `B01001` female × `pfd_prevalence_by_band()` × `p_eligible` |
@@ -131,24 +131,58 @@ tree.
 
 ---
 
-## The computed ratio
+## The computed service rate
 
-| denominator | n | per 1,000 | status |
+**79,787 is a count of SERVICES, not of women.** An earlier version of this
+document inferred that because `Tot_Srvcs` (79,787) and summed `Tot_Benes`
+(79,785) are nearly equal, the total was "effectively one per person". That
+inference is wrong. PUF beneficiary counts are computed **within** each
+provider/service cell, so their near-equality shows only that a woman rarely
+receives the same new-patient code twice from the same provider — which the
+billing rules already require. It says nothing about the same woman appearing in
+a *different* cell: another NPI, another group, another new-patient code. There
+are **1,322 cells across 794 NPIs**, and the PUF supplies no key with which to
+detect the overlap.
+
+So every figure below is **services per 1,000 population**, never a per-woman
+probability.
+
+| denominator | n | services/1,000 | reading |
 |---|---:|---:|---|
-| all FFS women 65+ | 16,542,982 | **4.82** | OK — no assumption |
-| PFD-prevalent FFS women 65+ | 6,622,155 | **12.05** | assumes FFS 65-79/80+ age split matches ACS |
-| Part B ∩ PFD-prevalent | 5,526,514 | **14.44** | above, plus Part B share not published by sex |
+| all FFS women 65+ | 16,542,982 | 4.82 | crude — denominator includes women without Part B |
+| **Part B female 65+** | **13,805,931** | **5.78** | **primary** |
+| any-PFD stock, coverage-unrestricted | 6,622,155 | 12.05 | exploratory |
+| Part B ∩ any-PFD stock | 5,526,514 | 14.44 | exploratory |
 
-The middle row is the estimand-aligned one: practice-new FPMRS consultations per
-prevalent pelvic-floor-disorder woman in Medicare FFS 65+, **12.05 per 1,000
-per year**. About 1.2% of prevalent women 65+ have a new FPMRS office visit in a
-year.
+**The primary rate is 5.78 practice-new FPMRS E/M services per 1,000 Part B
+women 65+ per year.** It is primary because numerator and denominator sit on the
+same coverage footing and no disease definition is imposed — which matters
+precisely because the numerator carries no diagnosis. Its one assumption is that
+the published 65+ Part B share (0.83455) applies to women.
 
-**Is that a believable universe?** It is at least the right order of magnitude —
-a fraction of a percent to a few percent of prevalent women entering specialist
-care annually is consistent with a chronic, under-treated condition where most
-prevalent disease never reaches a subspecialist. It is not evidence that the
-model's 65+ arm is right, and it is not a target to fit to.
+The two disease-conditioned rows are **exploratory, not estimand-aligned**. A
+previous revision called 12.05 estimand-aligned; that was wrong twice over —
+its denominator includes women without Part B, a coverage universe the numerator
+cannot arise from, and conditioning a diagnosis-free numerator on disease
+prevalence assumes every practice-new FPMRS visit arises from a prevalent PFD
+case, which is neither established nor testable here.
+
+### On the any-PFD universe
+
+Checked rather than assumed. At 65+ the value comes from
+`mufflyaccess::pfd_prevalence()` and **is a genuine union, not a sum**: 0.368 at
+65–79 against UI + POP + FI = 0.473. That is consistent with Nygaard's "at least
+one of UI, FI or POP", so FI/AI is included and overlap is handled.
+
+It is **not** the `.PFD_PREVALENCE_BY_BAND` constant in
+`R/data-urps_population.R`, whose "UI + POP combined" comment describes a
+different local fallback on a different band scheme (18-34/35-44/45-64/65-74/75+)
+that is not used at 65+.
+
+**Is 5.78/1,000 a believable universe?** It is the right order of magnitude for
+a chronic, under-treated condition where most prevalent disease never reaches a
+subspecialist. It is not evidence the model's 65+ arm is right, and not a target
+to fit to.
 
 ## What the 79,787 is not
 
@@ -165,8 +199,9 @@ directions — which is why the number cannot be rescued as a bound:
   assumption, and the under-65 FFS population is the disability cohort, not a
   younger version of this one.
 
-Because the biases run in both directions, 12.05 per 1,000 is **neither a
-defensible lower bound nor an upper bound** on the true entry rate. It is an
+Because the biases run in both directions — and because the numerator cannot
+be deduplicated to people at all — these rates are **neither a defensible lower
+bound nor an upper bound** on the true entry rate. It is an
 aggregate plausibility statistic, and the fact that it is now a real number
 rather than an `NA` does not upgrade it.
 

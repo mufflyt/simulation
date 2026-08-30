@@ -129,7 +129,7 @@ test_that("a condition-level FFS ratio stays NA even though the denominator arri
 
 test_that("the 79,787 aggregate is preserved and never allocated across conditions", {
   agg <- medicare_ffs_practice_new_fpmrs_2023()
-  expect_equal(agg$practice_new_fpmrs_n, 79787L)
+  expect_equal(agg$practice_new_fpmrs_services, 79787L)
   expect_false(agg$condition_split_available)
   expect_equal(agg$condition_split_blocked_by,
                "part_b_puf_carries_no_diagnosis_field")
@@ -150,27 +150,82 @@ test_that("the 79,787 aggregate is preserved and never allocated across conditio
   expect_true(all(is.na(tbl$practice_new_fpmrs_n[!is.na(tbl$condition)])))
 })
 
-test_that("the named Medicare ratio is computed, with its assumptions declared", {
+test_that("the service rate is computed with four denominators, correctly ranked", {
   r <- medicare_ffs_practice_new_fpmrs_ratio_65plus_2023()
-  expect_equal(nrow(r), 3L)
-  expect_true(all(r$practice_new_fpmrs_n == 79787))
-  expect_true(all(is.finite(r$ratio)))
+  expect_equal(nrow(r), 4L)
+  expect_true(all(r$practice_new_fpmrs_services == 79787))
+  expect_true(all(is.finite(r$services_per_1000)))
 
-  # THREE denominators, not one. The choice between them is a real modelling
-  # decision; returning a single number would hide it and invite the reader to
-  # treat whichever was chosen as the answer.
-  expect_setequal(r$denominator_definition,
-                  c("all_ffs_women_65plus", "pfd_prevalent_ffs_women_65plus",
-                    "part_b_pfd_prevalent"))
-  # Crude < PFD-prevalent < Part-B-restricted, since each shrinks the denominator.
-  ord <- r$ratio[match(c("all_ffs_women_65plus", "pfd_prevalent_ffs_women_65plus",
-                         "part_b_pfd_prevalent"), r$denominator_definition)]
+  # THE PART B ROW IS THE PRIMARY ONE, and it must exist. Numerator and
+  # denominator sit on the same coverage footing, and no disease definition is
+  # imposed -- which matters because the numerator carries no diagnosis.
+  expect_true("all_part_b_female_65plus" %in% r$denominator_definition)
+  expect_equal(r$interpretation[r$denominator_definition == "all_part_b_female_65plus"],
+               "primary")
+
+  # The disease-conditioned rows are EXPLORATORY, not estimand-aligned. An
+  # earlier version called the 12.05 figure estimand-aligned while its
+  # denominator included women without Part B -- i.e. a coverage universe the
+  # numerator cannot arise from.
+  disease <- r$denominator_definition %in%
+    c("disease_stock_aligned_coverage_unrestricted", "coverage_aligned_partb_disease")
+  expect_true(all(r$interpretation[disease] == "exploratory"))
+  expect_true(all(grepl("numerator_has_no_diagnosis", r$assumption[disease])))
+
+  # Each restriction shrinks the denominator, so rates rise monotonically.
+  ord <- r$services_per_1000[match(
+    c("all_ffs_women_65plus", "all_part_b_female_65plus",
+      "disease_stock_aligned_coverage_unrestricted", "coverage_aligned_partb_disease"),
+    r$denominator_definition)]
   expect_true(all(diff(ord) > 0))
-
-  # Only the crude denominator is assumption-free; the other two must say so.
   expect_true(is.na(r$assumption[r$denominator_definition == "all_ffs_women_65plus"]))
-  expect_true(all(!is.na(r$assumption[r$denominator_definition != "all_ffs_women_65plus"])))
-  expect_true(all(r$status[r$denominator_definition != "all_ffs_women_65plus"] == "ASSUMPTION"))
+})
+
+test_that("the PUF numerator is never described as unique women or a probability", {
+  # PUF beneficiary counts are computed WITHIN provider/service cells, so their
+  # near-equality with service counts (79,785 vs 79,787) shows only that a woman
+  # rarely gets the same new-patient code twice from the same provider -- which
+  # the billing rules already require. It says nothing about the same woman
+  # appearing under a different NPI or code. 1,322 cells over 794 NPIs leaves
+  # ample room, and the PUF supplies no key to detect it.
+  #
+  # The coincidence is seductive, which is why this is a test and not a comment.
+  agg <- medicare_ffs_practice_new_fpmrs_2023()
+  expect_false(agg$beneficiary_deduplication_possible)
+  expect_equal(agg$deduplication_blocked_by,
+               "puf_bene_counts_are_within_provider_service_cells")
+  # Both raw quantities are kept separate; neither is collapsed into a "count".
+  expect_equal(agg$practice_new_fpmrs_services, 79787L)
+  expect_equal(agg$summed_bene_cells, 79785L)
+  expect_true(agg$n_cells > agg$n_roster_npis_billing)
+
+  # Rate columns must be named as SERVICE rates, never per-woman probabilities.
+  r <- medicare_ffs_practice_new_fpmrs_ratio_65plus_2023()
+  expect_true("services_per_1000" %in% names(r))
+  expect_false(any(grepl("unique_women|unique_benef|probability|per_woman",
+                         names(r), ignore.case = TRUE)))
+  expect_false(any(grepl("unique_women|unique_benef", names(agg), ignore.case = TRUE)))
+
+  # And the prose must not reintroduce it. The shipped documentation is the
+  # surface where "79,787 women" is most likely to reappear.
+  doc <- file.path(.repo_root(), "docs", "DIAGNOSTIC_DENOMINATOR_STATUS.md")
+  skip_if_not(file.exists(doc), "status doc not present")
+  # Strip double-quoted spans: the document must stay free to QUOTE the wrong
+  # claim in order to reject it. Same exclusion as the APCD guard, and for the
+  # same reason -- a guard its own correction prose trips is a guard that
+  # forbids recording the correction.
+  txt <- tolower(paste(readLines(doc, warn = FALSE), collapse = " "))
+  txt <- gsub('"[^"]*"', " ", txt)
+  # Phrases are matched loosely on purpose: the first draft of this guard
+  # banned "of prevalent women have a new" and the document said "of prevalent
+  # women 65+ have a new", so the guard passed over the exact sentence it was
+  # written to catch. Anchor on the shortest distinctive fragment.
+  for (phrase in c("unique women", "79,787 women", "unique beneficiaries",
+                   "prevalent women", "% of women", "one per person")) {
+    expect_false(grepl(phrase, txt, fixed = TRUE),
+                 info = paste0("'", phrase, "' describes the PUF numerator as ",
+                               "deduplicated people, which it is not."))
+  }
 })
 
 test_that("the diagnostic quantity is not named like a canonical parameter", {

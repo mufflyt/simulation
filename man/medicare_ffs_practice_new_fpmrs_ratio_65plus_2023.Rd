@@ -2,7 +2,7 @@
 % Please edit documentation in R/demand-diagnostic_denominator_table.R
 \name{medicare_ffs_practice_new_fpmrs_ratio_65plus_2023}
 \alias{medicare_ffs_practice_new_fpmrs_ratio_65plus_2023}
-\title{Named Medicare FFS practice-new ratio for 2023}
+\title{Named Medicare FFS practice-new service rate, 2023}
 \usage{
 medicare_ffs_practice_new_fpmrs_ratio_65plus_2023(
   acs_path = system.file("extdata", "acs5_2023_sex_by_age_state.csv", package =
@@ -16,30 +16,45 @@ medicare_ffs_practice_new_fpmrs_ratio_65plus_2023(
 A tibble, one row per denominator definition.
 }
 \description{
-Named Medicare FFS practice-new ratio for 2023
+Named Medicare FFS practice-new service rate, 2023
 }
 \details{
-Deliberately \strong{not} called \code{per_entering} or \code{annual_first_urps_entry_rate}.
-It is a practice-new consultation ratio in one payer stratum, and naming it
-like a canonical parameter is how a diagnostic gets adopted as an estimate.
+Deliberately \strong{not} \code{per_entering} or \code{annual_first_urps_entry_rate}. It is
+a practice-new E/M \strong{service rate} in one payer stratum.
 
-Now computable: the denominator arrived from CMS Program Statistics (public,
-no DUA). Three denominators are returned rather than one, because the choice
-is a real modelling decision and collapsing to a single number would hide it:
+Four denominators, ordered from most to least interpretable:
 
 \describe{
-\item{\code{all_ffs_women_65plus}}{crude: every FFS woman 65+, diseased or not.}
-\item{\code{pfd_prevalent_ffs_women_65plus}}{the estimand-aligned one: FFS women
-65+ with any pelvic-floor disorder. Closest in spirit to the canonical
-denominator, since the numerator is all-condition.}
-\item{\code{part_b_pfd_prevalent}}{as above, restricted to Part B coverage,
-which the numerator actually requires. Uses the 65+ Part B share, which
-CMS does not publish by sex -- so this one carries an extra assumption.}
+\item{\code{all_ffs_women_65plus}}{every woman 65+ in Original Medicare. Assumption
+free, but its denominator includes women without Part B while the
+numerator can only arise under Part B.}
+\item{\code{all_part_b_female_65plus}}{\strong{the primary interpretable rate.}
+Numerator and denominator are on the same coverage footing, and no
+disease definition is imposed -- which matters because the numerator
+carries no diagnosis. Requires only that the published 65+ Part B share
+applies to women.}
+\item{\code{disease_stock_aligned_coverage_unrestricted}}{EXPLORATORY. Imposes
+any-PFD prevalence but leaves the denominator coverage-unrestricted, so
+numerator and denominator sit on different coverage universes.}
+\item{\code{coverage_aligned_partb_disease}}{EXPLORATORY. Both restrictions at
+once.}
 }
 
-\strong{None of these is the entry rate.} The numerator is practice-new, not
-care-new; it has no condition split; PUF suppression and non-FPMRS care push
-it down while practice switching pushes it up. It is a plausibility statistic.
+\strong{The disease-conditioned rows are exploratory, not estimand-aligned.} The
+numerator has no diagnosis, so conditioning its denominator on disease
+assumes every practice-new FPMRS visit arises from a prevalent PFD case --
+which is neither established nor testable here.
+
+On the any-PFD universe: at 65+ the value comes from
+\code{mufflyaccess::pfd_prevalence()}, and it is a genuine union rather than a
+sum -- 0.368 at 65-79 against UI + POP + FI = 0.473 -- consistent with
+Nygaard's "at least one of UI, FI or POP". It is NOT the
+\code{.PFD_PREVALENCE_BY_BAND} constant in \code{R/data-urps_population.R}, whose
+"UI + POP combined" comment describes a different local fallback on a
+different band scheme that is not used at 65+.
+
+Every rate here is \strong{services per 1,000 population}, never a per-woman
+probability: the numerator cannot be deduplicated to people.
 }
 \seealso{
 Other diagnostic denominator:

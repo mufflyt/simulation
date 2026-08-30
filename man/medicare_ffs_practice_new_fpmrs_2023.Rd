@@ -2,34 +2,49 @@
 % Please edit documentation in R/demand-diagnostic_denominator_table.R
 \name{medicare_ffs_practice_new_fpmrs_2023}
 \alias{medicare_ffs_practice_new_fpmrs_2023}
-\title{Aggregate Medicare FFS practice-new FPMRS consultations, 2023}
+\title{Aggregate Medicare FFS practice-new FPMRS E/M services, 2023}
 \usage{
 medicare_ffs_practice_new_fpmrs_2023()
 }
 \value{
-A one-row tibble with the count and its provenance.
+A one-row tibble with both raw quantities and their provenance.
 }
 \description{
-Aggregate Medicare FFS practice-new FPMRS consultations, 2023
+Aggregate Medicare FFS practice-new FPMRS E/M services, 2023
 }
 \details{
-79,787 consultations, from Medicare Part B PUF \code{by_service} 2023: HCPCS
-99202-99205 billed by 794 NPIs on the URPS/FPMRS roster. \code{Tot_Srvcs} and
-\code{Tot_Benes} agree to within 0.01\% at every code, so these are effectively
-one-per-person.
+\strong{79,787 SERVICES, not 79,787 women.} From Medicare Part B PUF \code{by_service}
+2023: HCPCS 99202-99205 billed by 794 roster NPIs, across 1,322
+NPI x HCPCS x place-of-service cells.
+
+THE COUNT CANNOT BE DEDUPLICATED TO PEOPLE. An earlier version of this
+function reasoned that because \code{Tot_Srvcs} (79,787) and summed \code{Tot_Benes}
+(79,785) are nearly equal, the total was "effectively one per person". That
+inference does not hold. PUF beneficiary counts are computed WITHIN each
+provider/service cell, so their near-equality shows only that a woman rarely
+receives the same new-patient code twice from the same provider -- which is
+what the billing rules already require. It says nothing about whether the
+same woman appears in a DIFFERENT cell: another NPI, another group, or
+another new-patient code during the year. With 1,322 cells over 794 NPIs
+there is ample room for exactly that, and the PUF provides no key with which
+to detect it.
+
+So the defensible unit is \strong{summed practice-new FPMRS E/M services}, and any
+rate built on it is a service rate per 1,000 population -- never a
+probability that an individual woman entered care. Both raw quantities are
+returned separately rather than collapsed into one "count".
 
 \strong{This is an aggregate, and it stays one.} The Part B PUF carries no
-diagnosis field of any kind, so the count cannot be split into UI, POP and
-AI. Allocating it across conditions by prevalence share would manufacture
-three condition-specific numbers from one, and the canonical blocker needs
-three \emph{independently estimated} rates.
+diagnosis field of any kind, so it cannot be split into UI, POP and AI.
+Allocating it across conditions would manufacture three condition-specific
+numbers from one, and the canonical blocker needs three \emph{independently
+estimated} rates.
 
 \strong{It is not a first-entry count.} New-patient CPT identifies patients new to
-a \emph{practice}, not to urogynecologic care. Its biases run in both directions:
-practice switching overcounts true first entry; PUF suppression of cells
-below 11 beneficiaries undercounts it; pelvic-floor care delivered outside
-roster FPMRS is invisible. It is therefore neither a lower nor an upper
-bound, and must not be described as either.
+a \emph{practice}, not to urogynecologic care. Practice switching and cross-NPI
+duplication push it up; PUF suppression below 11 beneficiaries and
+pelvic-floor care outside roster FPMRS push it down. Neither a lower nor an
+upper bound.
 }
 \seealso{
 Other diagnostic denominator:

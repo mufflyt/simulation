@@ -24,9 +24,11 @@ Diagnostic denominator table: condition x year x age band x payer/coverage
 }
 \details{
 Populates only what is genuinely derivable and marks everything else \code{NA}
-with a machine-readable \code{missing_reason}. In particular the Medicare FFS
-stratum's denominator stays empty rather than being manufactured from a
-national population, a Medicare share, a treated count or a service volume.
+with a machine-readable \code{missing_reason}. The Medicare FFS denominator now
+comes from CMS Program Statistics (public, no DUA); it is never manufactured
+from a national population, a Medicare share, a treated count or a service
+volume. Condition-level FFS ratios remain \code{NA} regardless, because the
+numerator has no diagnosis field.
 
 \code{eligible_prevalent_n} is always \code{population_n * prevalence * p_eligible} —
 the upstream stock, with no recognition, seeking, referral or treatment term.
