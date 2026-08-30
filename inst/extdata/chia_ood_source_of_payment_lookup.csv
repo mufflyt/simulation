@@ -1,0 +1,158 @@
+﻿source_pay_code,source_of_payment_definitions
+1,Harvard Community Health Plan 
+2,Bay State – a product of HMO Blue 
+3,Network Blue (PPO) 
+4,"Fallon Community Health Plan (includes Fallon Plus, Fallon Affiliates, Fallon UMass.) "
+8,Pilgrim Health Care 
+10,Pilgrim Advantage - PPO 
+11,Blue Care Elect 
+13,Community Health Plan Options (New York) 
+14,Health new England Advantage POS 
+19,Matthew Thornton 
+20,HCHP of New England (formerly RIGHA) 
+21,Commonwealth PPO 
+22,Aetna Open Choice PPO 
+23,Guardian Life Insurance Company PPO 
+27,First Allmerica Financial Life Insurance PPO 
+28,Great West Life PPO 
+30,CIGNA (Indemnity) 
+31,One Health Plan HMO (Great West Life) 
+33,Mutual of Omaha PPO 
+34,New York Life Care PPO 
+35,United Healthcare Insurance Company – HMO (new for 1997) 
+36,United Healthcare Insurance Company – PPO (new for 1997) 
+37,HCHP-Pilgrim HMO (integrated product) 
+39,Pilgrim Direct 
+42,ConnectiCare of Massachusetts 
+43,MEDTAC 
+44,Community Health Plan 
+46,Blue CHiP (BCBS Rhode Island) 
+47,Neighborhood Health Plan 
+48,US Healthcare 
+50,Blue Health Plan for Kids 
+51,Aetna Life Insurance 
+52,Boston Mutual Insurance 
+54,Continental Assurance Insurance 
+55,Guardian Life Insurance 
+56,Hartford L&A Insurance 
+59,Lincoln National Insurance 
+62,Mutual of Omaha Insurance 
+63,Mutual of Omaha Insurance 
+64,New York Life Care Indemnity (New York Life Insurance) 
+65,Paul Revere Life Insurance 
+67,First Allmerica Financial Life Insurance 
+69,Corporate Health Insurance Liberty Plan 
+71,ADMAR 
+77,Options for Healthcare PPO 
+78,Phoenix Preferred PPO 
+79,Pioneer Health Care PPO 
+83,US Healthcare Quality Network Choice- PPO 
+87,CIGNA PPO 
+88,Freedom Care 
+89,Great West/NE Care 
+91,New England Benefits 
+95,Pilgrim Select - PPO 
+96,Metrahealth (United Care of NE) 
+99,Other POS (not listed elsewhere) *** 
+102,Wausau Insurance Company 
+103,Medicaid (includes MassHealth) 
+104,Medicaid Managed Care-Primary Care Clinician (PCC) 
+106,Medicaid Managed Care-Central Mass. Health Care 
+107,Medicaid Managed Care – Community Health Plan 
+108,Medicaid Managed Care – Fallon Community Health Plan 
+109,Medicaid Managed Care – Harvard Community Health Plan 
+110,Medicaid Managed Care – Health New England 
+111,Medicaid Managed Care – HMO Blue 
+112,Medicaid Managed Care – Kaiser Foundation Plan 
+113,Medicaid Managed Care – Neighborhood Health Plan 
+114,Medicaid Managed Care – United Health Plans of NE (Ocean State Physician’s Plan) 
+115,Medicaid Managed Care – Pilgrim Health Care 
+116,Medicaid Managed Care – Tufts Associated Health Plan 
+118,Medicaid Mental Health & Substance Abuse Plan – Mass Behavioral Health Partnership 
+119,Medicaid Managed Care Other (not listed elsewhere) *** 
+120,Out-of-State Medicaid 
+121,Medicare 
+125,Medicare HMO – Fallon Senior Plan 
+127,Medicare HMO – Health New England Medicare Wrap ** 
+128,Medicare HMO – HMO Blue for Seniors ** 
+129,Medicare HMO – Kaiser Medicare Plus Plan ** 
+131,Medicare HMO – Pilgrim Enhance 65 ** 
+132,Medicare HMO – Matthew Thornton Senior Plan 
+133,Medicare HMO – Tufts Medicare Supplement (TMS) 
+134,Medicare HMO – Other (not listed elsewhere) *** 
+135,Out-of-State Medicare 
+136,BCBS Medex
+137,AARP/Medigap supplement
+138,Banker’s Life and Casualty Insurance
+139,Banker’s Multiple Line 
+140,Combined Insurance Company of America
+141,Other Medigap (not listed elsewhere) 
+142,Blue Cross Indemnity 
+143,Free Care 
+144,Other Government 
+146,Worker’s Compensation 
+147,Other Commercial Insurance (not listed elsewhere) *** 
+148,Other HMO (not listed elsewhere) *** 
+150,Other Non-Managed Care (not listed elsewhere) *** 
+151,CHAMPUS 
+152,Foundation 
+153,Grant 
+154,BCBS Other (not listed elsewhere)
+155,Blue Cross Managed Care Other (not listed elsewhere)
+156,Out of State BCBS 
+157,Metrahealth – PPO (United Care of NE) 
+158,Metrahealth – HMO (United Care of NE) 
+159,None (Valid only for secondary source of payment) 
+160,Blue Choice (incl. Healthflex Blue) - POS 
+161,Aetna Managed Choice POS 
+162,Great West Life POS 
+163,United Healthcare Insurance Company – POS (new for 1997) 
+167,Fallon POS 
+170,US Healthcare Quality POS 
+171,CIGNA POS 
+172,Metrahealth – POS (United Care of NE) 
+181,First Allmerica Financial Life Insurance EPO 
+183,Pioneer Health Care EPO 
+199,Other EPO (not listed elsewhere) *** 
+200,Hartford Life Insurance Co ** 
+201,Mutual of Omaha ** 
+202,New York Life Insurance ** 
+204,Christian Brothers Employee 
+207,Network Health (Cambridge Health Alliance MCD Program) 
+208,HealthNet (Boston Medical Center MCD Program) 
+210,Medicare HMO – Pilgrim Preferred 65 ** 
+211,Medicare HMO – Neighborhood Health Plan Senior Health Plus ** 
+212,Medicare HMO – Healthsource CMHC Central Care Supplement ** 
+220,Medicare HMO – Blue Care 65 
+221,Medicare HMO – Harvard Community Health Plan 65 
+222,Medicare HMO – Healthsource CMHC 
+223,Medicare HMO – Harvard Pilgrim Health Care of New England Care Plus 
+224,Medicare HMO – Tufts Secure Horizons 
+225,Medicare HMO – US Healthcare 
+230,Medicare HMO – HCHP First Seniority 
+231,Medicare HMO – Pilgrim Prime 
+232,Medicare HMO – Seniorcare Direct 
+233,Medicare HMO – Seniorcare Plus 
+234,Medicare HMO – Managed Blue for Seniors 
+250,CIGNA HMO 
+272,Auto Insurance 
+300,CommCare: BMC HealthNet Plan/Commonwealth Care – General Classification (For use only when no specific level for this plan can be identified) 
+301,CommCare: BMC HealthNet Plan/Commonwealth Care – Plan Type I 
+302,CommCare: BMC HealthNet Plan/Commonwealth Care – Plan Type II 
+303,CommCare: BMC HealthNet Plan/Commonwealth Care – Plan Type III 
+304,CommCare: BMC HealthNet Plan/Commonwealth Care–Plan Type IV 
+401,CommCare: Cambridge Network Health Forward – Plan Type I 
+402,CommCare: Cambridge Network Health Forward – Plan Type II 
+403,CommCare: Cambridge Network Health Forward – Plan Type III 
+404,CommCare: Cambridge Network Health Forward – Plan Type IV 
+500,CommCare: Fallon Community Health Care: Commonwealth Care FCHP Direct Care – General Classification (For use only when no specific level for this plan can be identified) 
+501,CommCare: Fallon Community Health Care: Commonwealth Care FCHP Direct Care – Plan 1 (Group No. 4445077) 
+502,CommCare: Fallon Community Health Care: Commonwealth Care FCHP Direct Care – Plan 2 (Group No. 4455220) 
+503,CommCare: Fallon Community Health Care: Commonwealth Care FCHP Direct Care – Plan 3 (Group No. 4455221) 
+504,CommCare: Fallon Community Health Care: Commonwealth Care FCHP Direct Care – Plan 4 (Group No. 4455222) 
+600,CommCare: Neighborhood Health Plan– General Classification
+601,CommCare: Neighborhood Health Plan – NHP Commonwealth Care Plan – Plan Type I (9CC1) 
+602,CommCare: Neighborhood Health Plan – NHP Commonwealth Care Plan – Plan Type II (9CC2) 
+603,CommCare: Neighborhood Health Plan – NHP Commonwealth Care Plan – Plan Type III (9CC3) 
+604,CommCare: Neighborhood Health Plan – NHP Commonwealth Care Plan – Plan Type IV (9CC4) 
+990,"Free Care – co-pay, deductible, or co- insurance (when billing for free care services use #143) "

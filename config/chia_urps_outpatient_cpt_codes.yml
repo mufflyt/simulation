@@ -1,0 +1,39 @@
+# CPT -> service crosswalk for the six URPS services that CHIA Hospital
+# Discharge Data (HDD, inpatient-only) structurally cannot capture, per
+# docs/superpowers/plans/2026-08-22-urogynecology-service-shares.md's scope
+# decision. Built for docs/superpowers/plans/2026-08-28-chia-ood-outpatient-urps-service-events.md
+# (gap a), matched against chia_casemix.ood_observation_* (Outpatient
+# Observation Data, hospital-based observation-status billing -- see that
+# plan's Scope Decision for why this is a partial, hospital-selected sample,
+# never blended into primary calibration for these six services).
+#
+# Sibling file: config/chia_urps_inpatient_codes.yml (ICD-based, HDD side).
+# This file is CPT-based (OOD's CPTCode1-5/CPT1-5 + PrincipalProcedureCode),
+# matching AMA CPT 2024 code definitions for the corresponding
+# urogynecology_service_share_registry() service.
+
+pessary_care:
+  cpt: ["57160"]  # Fitting and insertion of pessary or other intravaginal device
+
+urodynamics:
+  cpt:
+    - "51725"  # Simple cystometrogram
+    - "51726"  # Complex cystometrogram
+    - "51727"  # Complex cystometrogram with voiding pressure studies
+    - "51728"  # Complex cystometrogram with voiding pressure studies and urethral pressure profile
+    - "51729"  # Complex cystometrogram with voiding pressure studies, urethral pressure profile, and EMG
+    - "51741"  # Uroflowmetry, complex
+    - "51784"  # EMG studies, anal/urethral sphincter
+    - "51785"  # Needle EMG studies, anal/urethral sphincter
+
+cystoscopy:
+  cpt: ["52000"]  # Cystourethroscopy (diagnostic)
+
+botox_bladder:
+  cpt: ["52287"]  # Cystourethroscopy with injection of chemodenervation agent (bladder)
+
+ptns:
+  cpt: ["64566"]  # Posterior tibial neurostimulation, percutaneous
+
+bladder_instillation:
+  cpt: ["51720"]  # Bladder instillation of anticarcinogenic/therapeutic agent
