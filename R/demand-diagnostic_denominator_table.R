@@ -116,6 +116,18 @@ assert_upstream_denominator <- function(denominator_estimand,
 # publishes 20-39/40-59/60-64/65-79/80+, and interpolating those into
 # 18-34/35-44/45-64/65-74/75+ would invent within-band structure the source does
 # not carry. The mismatch is reported as a limitation instead of smoothed away.
+.diagnostic_acs_female_bands <- function(acs_path) {
+  if (!nzchar(acs_path) || !file.exists(acs_path)) {
+    stop("diagnostic denominator: ACS population file not found. This function ",
+         "will not substitute an estimate.", call. = FALSE)
+  }
+  acs <- utils::read.csv(acs_path, colClasses = "character", stringsAsFactors = FALSE)
+  acs$estimate <- suppressWarnings(as.numeric(acs$estimate))
+  vapply(.DIAGNOSTIC_ACS_FEMALE_BANDS, function(vars) {
+    sum(acs$estimate[acs$variable %in% vars], na.rm = TRUE)
+  }, numeric(1))
+}
+
 .DIAGNOSTIC_ACS_FEMALE_BANDS <- list(
   "20-39" = sprintf("B01001_%03d", 32:37),
   "40-59" = sprintf("B01001_%03d", 38:41),
@@ -123,6 +135,65 @@ assert_upstream_denominator <- function(denominator_estimand,
   "65-79" = sprintf("B01001_%03d", 44:47),
   "80+"   = sprintf("B01001_%03d", 48:49)
 )
+
+#' Medicare FFS enrolment denominator, 2023
+#'
+#' @details
+#' Women aged 65+ enrolled in Original Medicare (fee-for-service), 2023:
+#' **16,542,982**. From CMS Program Statistics, Original Medicare Enrolment,
+#' Table 12 -- a PUBLISHED CELL crossing sex with entitlement type, not a
+#' marginal multiplied by a share. Male + female aged reconciles to the
+#' published 65+ total within one person.
+#'
+#' Public data. No DUA. See the shipped manifest for provenance.
+#'
+#' `part_b_share_65plus` is published for 65+ overall but NOT by sex, so
+#' applying it to the female count is an assumption and is returned separately
+#' rather than folded in.
+#'
+#' @param path Path to the shipped CSV.
+#' @return A named list of enrolment quantities.
+#' @family diagnostic denominator
+#' @concept demand
+#' @export
+cms_original_medicare_enrollment_2023 <- function(
+    path = system.file("extdata", "cms_original_medicare_enrollment_2023.csv",
+                       package = "urpssim")) {
+  if (!nzchar(path) || !file.exists(path)) {
+    stop("cms_original_medicare_enrollment_2023(): shipped CSV not found. ",
+         "This function will not substitute an estimate.", call. = FALSE)
+  }
+  d <- utils::read.csv(path, stringsAsFactors = FALSE)
+  v <- stats::setNames(as.numeric(d$value), d$metric)
+  female_65 <- unname(v[["female_aged_65plus_original_medicare"]])
+  recon <- unname(v[["male_aged_65plus_original_medicare"]]) + female_65
+  published <- unname(v[["total_aged_65plus_original_medicare"]])
+  # The reconciliation is ASSERTED, not trusted. If a future edit changes one
+  # cell, this fails loudly rather than silently shifting every rate built on it.
+  if (abs(recon - published) > 5) {
+    stop("cms_original_medicare_enrollment_2023(): male + female aged (",
+         recon, ") does not reconcile with the published 65+ total (",
+         published, "). One of the vendored cells is wrong.", call. = FALSE)
+  }
+  list(
+    female_65plus_ffs = female_65,
+    total_65plus_ffs = published,
+    part_b_share_65plus = unname(v[["part_b_65plus_original_medicare"]]) /
+      unname(v[["part_a_or_b_65plus_original_medicare"]]),
+    source = "cms_program_statistics_original_medicare_enrollment_2023_table12"
+  )
+}
+
+# Prevalence at 65+ requires collapsing the source's 65-79 and 80+ bands into
+# one. The weights come from the ACS female 65+ age split, because CMS does not
+# publish its FFS age distribution crossed with sex. That is an ASSUMPTION --
+# that FFS women 65+ have the same 65-79 vs 80+ split as all women 65+ -- and
+# rows built on it are tagged ASSUMPTION rather than OK.
+.diagnostic_prevalence_65plus <- function(condition_key, pop_band) {
+  prev <- pfd_prevalence_by_band(condition_key)
+  w79 <- pop_band[["65-79"]]; w80 <- pop_band[["80+"]]
+  (prev[["65-79"]] * w79 + prev[["80+"]] * w80) / (w79 + w80)
+}
 
 #' Aggregate Medicare FFS practice-new FPMRS consultations, 2023
 #'
@@ -166,45 +237,69 @@ medicare_ffs_practice_new_fpmrs_2023 <- function() {
   )
 }
 
-#' Named Medicare FFS practice-new ratio for 2023 — currently unresolvable
+#' Named Medicare FFS practice-new ratio for 2023
 #'
 #' @details
 #' Deliberately **not** called `per_entering` or `annual_first_urps_entry_rate`.
-#' Even once computable it would be a practice-new consultation ratio in one
-#' payer stratum, not either canonical parameter.
+#' It is a practice-new consultation ratio in one payer stratum, and naming it
+#' like a canonical parameter is how a diagnostic gets adopted as an estimate.
 #'
-#' It returns `NA` today because the matched denominator does not exist. It
-#' requires the count of **Medicare FFS-enrolled women 65+ with the condition**,
-#' and nothing on hand supplies it:
+#' Now computable: the denominator arrived from CMS Program Statistics (public,
+#' no DUA). Three denominators are returned rather than one, because the choice
+#' is a real modelling decision and collapsing to a single number would hide it:
 #'
-#' - MCBS 2022 is a weighted survey PUF for the wrong year, needing its own
-#'   transport argument;
-#' - Part B PUF beneficiary counts are **users**, so using them would make the
-#'   denominator a function of the numerator — the one genuine circularity
-#'   available here;
-#' - no CMS Medicare enrollment file is present.
+#' \describe{
+#'   \item{`all_ffs_women_65plus`}{crude: every FFS woman 65+, diseased or not.}
+#'   \item{`pfd_prevalent_ffs_women_65plus`}{the estimand-aligned one: FFS women
+#'     65+ with any pelvic-floor disorder. Closest in spirit to the canonical
+#'     denominator, since the numerator is all-condition.}
+#'   \item{`part_b_pfd_prevalent`}{as above, restricted to Part B coverage,
+#'     which the numerator actually requires. Uses the 65+ Part B share, which
+#'     CMS does not publish by sex -- so this one carries an extra assumption.}
+#' }
 #'
-#' Returning `NA` with a machine-readable reason is the point. A national 65+
-#' denominator would silently answer a different question.
+#' **None of these is the entry rate.** The numerator is practice-new, not
+#' care-new; it has no condition split; PUF suppression and non-FPMRS care push
+#' it down while practice switching pushes it up. It is a plausibility statistic.
 #'
-#' @return A one-row tibble; `ratio` is `NA_real_` until CMS enrollment data
-#'   exist.
+#' @param acs_path Path to the ACS population file, for the 65-79/80+ weights.
+#' @return A tibble, one row per denominator definition.
 #' @family diagnostic denominator
 #' @concept demand
 #' @export
-medicare_ffs_practice_new_fpmrs_ratio_65plus_2023 <- function() {
+medicare_ffs_practice_new_fpmrs_ratio_65plus_2023 <- function(
+    acs_path = system.file("extdata", "acs5_2023_sex_by_age_state.csv",
+                           package = "urpssim")) {
   num <- medicare_ffs_practice_new_fpmrs_2023()
+  enr <- cms_original_medicare_enrollment_2023()
+  pop_band <- .diagnostic_acs_female_bands(acs_path)
+  p_any <- .diagnostic_prevalence_65plus("any_PFD", pop_band)
+
+  d_all  <- enr$female_65plus_ffs
+  d_pfd  <- d_all * p_any
+  d_partb <- d_pfd * enr$part_b_share_65plus
+
   tibble::tibble(
+    denominator_definition = c("all_ffs_women_65plus",
+                               "pfd_prevalent_ffs_women_65plus",
+                               "part_b_pfd_prevalent"),
     year = 2023L,
     payer_coverage = "medicare_ffs",
     age_band = "65+",
-    practice_new_fpmrs_n = num$practice_new_fpmrs_n,
-    eligible_prevalent_n = NA_real_,
-    ratio = NA_real_,
+    practice_new_fpmrs_n = as.numeric(num$practice_new_fpmrs_n),
+    denominator_n = c(d_all, d_pfd, d_partb),
+    ratio = as.numeric(num$practice_new_fpmrs_n) / c(d_all, d_pfd, d_partb),
+    per_1000 = 1000 * as.numeric(num$practice_new_fpmrs_n) / c(d_all, d_pfd, d_partb),
     numerator_source = num$numerator_source,
-    denominator_source = NA_character_,
-    status = "BLOCKED",
-    missing_reason = "missing_cms_ffs_enrollment_denominator"
+    denominator_source = enr$source,
+    numerator_estimand = num$numerator_estimand,
+    denominator_estimand = DIAGNOSTIC_UPSTREAM_DENOMINATOR_TAG,
+    status = c("OK", "ASSUMPTION", "ASSUMPTION"),
+    assumption = c(
+      NA_character_,
+      "ffs_female_65plus_age_split_matches_acs",
+      "ffs_female_65plus_age_split_matches_acs;part_b_share_not_published_by_sex"
+    )
   )
 }
 
@@ -245,12 +340,8 @@ build_diagnostic_denominator_table <- function(
          "substitute an estimate.", call. = FALSE)
   }
 
-  acs <- utils::read.csv(acs_path, colClasses = "character",
-                         stringsAsFactors = FALSE)
-  acs$estimate <- suppressWarnings(as.numeric(acs$estimate))
-  pop_band <- vapply(.DIAGNOSTIC_ACS_FEMALE_BANDS, function(vars) {
-    sum(acs$estimate[acs$variable %in% vars], na.rm = TRUE)
-  }, numeric(1))
+  pop_band <- .diagnostic_acs_female_bands(acs_path)
+  enr <- cms_original_medicare_enrollment_2023()
 
   p_eligible <- lifecourse_eligibility_params()$p_eligible
   conditions <- c(ui = "UI", pop = "POP", ai = "FI")
@@ -276,7 +367,7 @@ build_diagnostic_denominator_table <- function(
         # that could never be populated by the CMS enrolment file this table is
         # waiting for -- burying the six rows that are actually pending behind
         # rows that are not pending at all, merely inapplicable.
-        if (is_ffs && !cond_specific) next
+        if (is_ffs) next   # FFS rows are emitted separately, at 65+ only
 
         population_n <- if (is_ffs) NA_real_ else unname(pop_band[[b]])
         prevalence   <- unname(prev[[b]])
@@ -318,27 +409,59 @@ build_diagnostic_denominator_table <- function(
     }
   }
 
-  # The aggregate Medicare numerator. One row, condition = NA, because the
-  # source cannot split it -- see medicare_ffs_practice_new_fpmrs_2023(). It
-  # deliberately does NOT join to the condition rows above: a join is exactly
-  # how 79,787 would end up allocated across three conditions.
+  # MEDICARE FFS, 65+ -- now populated. Emitted at 65+ only, and as a single
+  # band, because that is the granularity CMS publishes crossed with sex.
+  # Splitting it into 65-79/80+ would invent a split the source does not carry,
+  # which is the same error as filling it from the all-payer population.
+  for (cond in names(conditions)) {
+    p65 <- .diagnostic_prevalence_65plus(conditions[[cond]], pop_band)
+    prevalent_n <- enr$female_65plus_ffs * p65
+    rows[[length(rows) + 1L]] <- tibble::tibble(
+      condition = cond,
+      year = 2023L,
+      age_band = "65+",
+      payer_coverage = "medicare_ffs",
+      population_n = enr$female_65plus_ffs,
+      prevalent_n = prevalent_n,
+      eligible_prevalent_n = prevalent_n * p_eligible[[cond]],
+      # STILL NA, and this is the load-bearing part. The numerator has no
+      # condition split (Part B PUF carries no diagnosis), so a condition-level
+      # ratio cannot be formed. The denominator arriving does not change that.
+      practice_new_fpmrs_n = NA_real_,
+      practice_new_ratio = NA_real_,
+      numerator_source = NA_character_,
+      denominator_source = paste0(enr$source, ";pfd_prevalence_by_band(",
+                                  conditions[[cond]], ");p_eligible"),
+      numerator_estimand = NA_character_,
+      denominator_estimand = DIAGNOSTIC_UPSTREAM_DENOMINATOR_TAG,
+      status = "ASSUMPTION",
+      missing_reason = "numerator_has_no_condition_split;denominator_assumes_ffs_age_split_matches_acs"
+    )
+  }
+
+  # The aggregate Medicare numerator, now with a denominator. One row,
+  # condition = NA, because the source cannot split it. It deliberately does
+  # NOT join to the condition rows: a join is exactly how 79,787 would end up
+  # allocated across three conditions.
   agg <- medicare_ffs_practice_new_fpmrs_2023()
+  p_any65 <- .diagnostic_prevalence_65plus("any_PFD", pop_band)
+  agg_denom <- enr$female_65plus_ffs * p_any65
   rows[[length(rows) + 1L]] <- tibble::tibble(
     condition = NA_character_,
     year = 2023L,
     age_band = "65+",
     payer_coverage = "medicare_ffs",
-    population_n = NA_real_,
-    prevalent_n = NA_real_,
-    eligible_prevalent_n = NA_real_,
+    population_n = enr$female_65plus_ffs,
+    prevalent_n = agg_denom,
+    eligible_prevalent_n = agg_denom,
     practice_new_fpmrs_n = as.numeric(agg$practice_new_fpmrs_n),
-    practice_new_ratio = NA_real_,
+    practice_new_ratio = as.numeric(agg$practice_new_fpmrs_n) / agg_denom,
     numerator_source = agg$numerator_source,
-    denominator_source = NA_character_,
+    denominator_source = paste0(enr$source, ";pfd_prevalence_by_band(any_PFD)"),
     numerator_estimand = agg$numerator_estimand,
     denominator_estimand = DIAGNOSTIC_UPSTREAM_DENOMINATOR_TAG,
-    status = "BLOCKED",
-    missing_reason = "missing_cms_ffs_enrollment_denominator"
+    status = "ASSUMPTION",
+    missing_reason = "assumes_ffs_female_65plus_age_split_matches_acs"
   )
 
   out <- dplyr::bind_rows(rows)

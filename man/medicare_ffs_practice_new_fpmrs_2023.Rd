@@ -36,6 +36,7 @@ Other diagnostic denominator:
 \code{\link{DIAGNOSTIC_UPSTREAM_DENOMINATOR_TAG}},
 \code{\link[=assert_upstream_denominator]{assert_upstream_denominator()}},
 \code{\link[=build_diagnostic_denominator_table]{build_diagnostic_denominator_table()}},
+\code{\link[=cms_original_medicare_enrollment_2023]{cms_original_medicare_enrollment_2023()}},
 \code{\link[=medicare_ffs_practice_new_fpmrs_ratio_65plus_2023]{medicare_ffs_practice_new_fpmrs_ratio_65plus_2023()}}
 }
 \concept{demand}

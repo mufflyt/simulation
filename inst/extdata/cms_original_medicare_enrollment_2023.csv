@@ -1,0 +1,6 @@
+metric,value,source_table,note
+female_aged_65plus_original_medicare,16542982,MDCR ENROLL AB 12_CPS_02ENR,"Female x Total Aged; Part A and/or Part B"
+male_aged_65plus_original_medicare,14290951,MDCR ENROLL AB 12_CPS_02ENR,"Male x Total Aged; reconciliation check"
+total_aged_65plus_original_medicare,30833932,MDCR ENROLL AB 12_CPS_02ENR,"published 65+ total; male+female differs by 1 (rounding)"
+part_b_65plus_original_medicare,25732430,MDCR ENROLL AB 11_CPS_02ENR,"65+ with Part B"
+part_a_or_b_65plus_original_medicare,30833932,MDCR ENROLL AB 11_CPS_02ENR,"65+ with Part A and/or Part B"

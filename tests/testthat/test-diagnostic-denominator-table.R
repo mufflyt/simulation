@@ -77,32 +77,54 @@ test_that("the table is built, shaped, and carries required provenance columns",
   expect_true(all(tbl$denominator_estimand == DIAGNOSTIC_UPSTREAM_DENOMINATOR_TAG))
 })
 
-test_that("the Medicare FFS denominator stays MISSING rather than falling back", {
+test_that("the CMS enrolment cell is a published cross and reconciles", {
+  e <- cms_original_medicare_enrollment_2023()
+  expect_equal(e$female_65plus_ffs, 16542982)
+  # Male + female aged must reconcile with the published 65+ total. This is the
+  # evidence that 16,542,982 is a PUBLISHED CELL rather than a marginal times a
+  # share -- the distinction that makes it admissible as a denominator at all.
+  expect_lt(abs(e$total_65plus_ffs - 30833932), 1e-9)
+  expect_gt(e$part_b_share_65plus, 0.8)
+  expect_lt(e$part_b_share_65plus, 0.9)
+})
+
+test_that("the Medicare FFS denominator is populated from CMS, never inherited", {
   skip_if_not(nzchar(system.file("extdata", "acs5_2023_sex_by_age_state.csv",
                                  package = "urpssim")),
               "ACS 2023 population file not installed")
   tbl <- build_diagnostic_denominator_table(2023L)
   ffs <- tbl[tbl$payer_coverage == "medicare_ffs", ]
-  expect_gt(nrow(ffs), 0L)
+  expect_equal(nrow(ffs), 4L)   # 3 conditions at 65+, plus the aggregate
 
-  # THE CENTRAL ASSERTION. No CMS enrolment file exists, so every Medicare FFS
-  # denominator must be NA -- never quietly filled from the all-payer national
-  # population, which is the exact substitution that would look like an answer
-  # while answering a different question.
-  expect_true(all(is.na(ffs$population_n)))
-  expect_true(all(is.na(ffs$prevalent_n)))
-  expect_true(all(is.na(ffs$eligible_prevalent_n)))
-  expect_true(all(is.na(ffs$practice_new_ratio)))
-  expect_true(all(ffs$status == "BLOCKED"))
-  expect_true(all(ffs$missing_reason == "missing_cms_ffs_enrollment_denominator"))
+  # Populated now -- and populated from the CMS enrolment cell specifically.
+  expect_true(all(ffs$population_n == 16542982))
+  expect_true(all(is.finite(ffs$eligible_prevalent_n)))
+  expect_true(all(grepl("cms_program_statistics", ffs$denominator_source)))
 
-  # And it must not have silently inherited the all-payer value for its band.
-  allp <- tbl[tbl$payer_coverage == "all_payers" & tbl$condition == "ui" &
-                tbl$age_band == "65-79", ]
-  expect_true(is.finite(allp$eligible_prevalent_n[[1]]))
-  ffs_ui <- ffs[!is.na(ffs$condition) & ffs$condition == "ui" &
-                  ffs$age_band == "65-79", ]
-  expect_true(is.na(ffs_ui$eligible_prevalent_n[[1]]))
+  # THE ANTI-INHERITANCE ASSERTION SURVIVES THE DENOMINATOR ARRIVING. The FFS
+  # population must be the CMS figure, never the all-payer ACS one -- that
+  # substitution is what would answer a different question while looking like
+  # an answer to this one.
+  allp <- tbl[tbl$payer_coverage == "all_payers" & tbl$age_band == "65-79", ]
+  expect_false(any(ffs$population_n %in% allp$population_n))
+  expect_true(all(ffs$age_band == "65+"))
+})
+
+test_that("a condition-level FFS ratio stays NA even though the denominator arrived", {
+  skip_if_not(nzchar(system.file("extdata", "acs5_2023_sex_by_age_state.csv",
+                                 package = "urpssim")),
+              "ACS 2023 population file not installed")
+  tbl <- build_diagnostic_denominator_table(2023L)
+  cond_ffs <- tbl[tbl$payer_coverage == "medicare_ffs" & !is.na(tbl$condition), ]
+  expect_equal(nrow(cond_ffs), 3L)
+
+  # The numerator has no condition split, so no condition-level ratio can be
+  # formed. Getting the denominator does not change that, and this is the most
+  # likely place for someone to later "finish the job" by dividing 79,787 three
+  # ways.
+  expect_true(all(is.na(cond_ffs$practice_new_fpmrs_n)))
+  expect_true(all(is.na(cond_ffs$practice_new_ratio)))
+  expect_true(all(grepl("numerator_has_no_condition_split", cond_ffs$missing_reason)))
 })
 
 test_that("the 79,787 aggregate is preserved and never allocated across conditions", {
@@ -128,14 +150,27 @@ test_that("the 79,787 aggregate is preserved and never allocated across conditio
   expect_true(all(is.na(tbl$practice_new_fpmrs_n[!is.na(tbl$condition)])))
 })
 
-test_that("the named Medicare ratio returns NA with a machine-readable reason", {
+test_that("the named Medicare ratio is computed, with its assumptions declared", {
   r <- medicare_ffs_practice_new_fpmrs_ratio_65plus_2023()
-  expect_true(is.na(r$ratio))
-  expect_true(is.na(r$eligible_prevalent_n))
-  expect_equal(r$status, "BLOCKED")
-  expect_equal(r$missing_reason, "missing_cms_ffs_enrollment_denominator")
-  # The numerator is real and stays visible; only the ratio is unresolvable.
-  expect_equal(r$practice_new_fpmrs_n, 79787L)
+  expect_equal(nrow(r), 3L)
+  expect_true(all(r$practice_new_fpmrs_n == 79787))
+  expect_true(all(is.finite(r$ratio)))
+
+  # THREE denominators, not one. The choice between them is a real modelling
+  # decision; returning a single number would hide it and invite the reader to
+  # treat whichever was chosen as the answer.
+  expect_setequal(r$denominator_definition,
+                  c("all_ffs_women_65plus", "pfd_prevalent_ffs_women_65plus",
+                    "part_b_pfd_prevalent"))
+  # Crude < PFD-prevalent < Part-B-restricted, since each shrinks the denominator.
+  ord <- r$ratio[match(c("all_ffs_women_65plus", "pfd_prevalent_ffs_women_65plus",
+                         "part_b_pfd_prevalent"), r$denominator_definition)]
+  expect_true(all(diff(ord) > 0))
+
+  # Only the crude denominator is assumption-free; the other two must say so.
+  expect_true(is.na(r$assumption[r$denominator_definition == "all_ffs_women_65plus"]))
+  expect_true(all(!is.na(r$assumption[r$denominator_definition != "all_ffs_women_65plus"])))
+  expect_true(all(r$status[r$denominator_definition != "all_ffs_women_65plus"] == "ASSUMPTION"))
 })
 
 test_that("the diagnostic quantity is not named like a canonical parameter", {

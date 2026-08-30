@@ -2,42 +2,51 @@
 % Please edit documentation in R/demand-diagnostic_denominator_table.R
 \name{medicare_ffs_practice_new_fpmrs_ratio_65plus_2023}
 \alias{medicare_ffs_practice_new_fpmrs_ratio_65plus_2023}
-\title{Named Medicare FFS practice-new ratio for 2023 — currently unresolvable}
+\title{Named Medicare FFS practice-new ratio for 2023}
 \usage{
-medicare_ffs_practice_new_fpmrs_ratio_65plus_2023()
+medicare_ffs_practice_new_fpmrs_ratio_65plus_2023(
+  acs_path = system.file("extdata", "acs5_2023_sex_by_age_state.csv", package =
+    "urpssim")
+)
+}
+\arguments{
+\item{acs_path}{Path to the ACS population file, for the 65-79/80+ weights.}
 }
 \value{
-A one-row tibble; \code{ratio} is \code{NA_real_} until CMS enrollment data
-exist.
+A tibble, one row per denominator definition.
 }
 \description{
-Named Medicare FFS practice-new ratio for 2023 — currently unresolvable
+Named Medicare FFS practice-new ratio for 2023
 }
 \details{
 Deliberately \strong{not} called \code{per_entering} or \code{annual_first_urps_entry_rate}.
-Even once computable it would be a practice-new consultation ratio in one
-payer stratum, not either canonical parameter.
+It is a practice-new consultation ratio in one payer stratum, and naming it
+like a canonical parameter is how a diagnostic gets adopted as an estimate.
 
-It returns \code{NA} today because the matched denominator does not exist. It
-requires the count of \strong{Medicare FFS-enrolled women 65+ with the condition},
-and nothing on hand supplies it:
-\itemize{
-\item MCBS 2022 is a weighted survey PUF for the wrong year, needing its own
-transport argument;
-\item Part B PUF beneficiary counts are \strong{users}, so using them would make the
-denominator a function of the numerator — the one genuine circularity
-available here;
-\item no CMS Medicare enrollment file is present.
+Now computable: the denominator arrived from CMS Program Statistics (public,
+no DUA). Three denominators are returned rather than one, because the choice
+is a real modelling decision and collapsing to a single number would hide it:
+
+\describe{
+\item{\code{all_ffs_women_65plus}}{crude: every FFS woman 65+, diseased or not.}
+\item{\code{pfd_prevalent_ffs_women_65plus}}{the estimand-aligned one: FFS women
+65+ with any pelvic-floor disorder. Closest in spirit to the canonical
+denominator, since the numerator is all-condition.}
+\item{\code{part_b_pfd_prevalent}}{as above, restricted to Part B coverage,
+which the numerator actually requires. Uses the 65+ Part B share, which
+CMS does not publish by sex -- so this one carries an extra assumption.}
 }
 
-Returning \code{NA} with a machine-readable reason is the point. A national 65+
-denominator would silently answer a different question.
+\strong{None of these is the entry rate.} The numerator is practice-new, not
+care-new; it has no condition split; PUF suppression and non-FPMRS care push
+it down while practice switching pushes it up. It is a plausibility statistic.
 }
 \seealso{
 Other diagnostic denominator:
 \code{\link{DIAGNOSTIC_UPSTREAM_DENOMINATOR_TAG}},
 \code{\link[=assert_upstream_denominator]{assert_upstream_denominator()}},
 \code{\link[=build_diagnostic_denominator_table]{build_diagnostic_denominator_table()}},
+\code{\link[=cms_original_medicare_enrollment_2023]{cms_original_medicare_enrollment_2023()}},
 \code{\link[=medicare_ffs_practice_new_fpmrs_2023]{medicare_ffs_practice_new_fpmrs_2023()}}
 }
 \concept{demand}
