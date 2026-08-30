@@ -152,6 +152,24 @@ model's 65+ arm is right, and it is not a target to fit to.
 
 ## What the 79,787 is not
 
+Four constraints belong on the label, and the first two point in opposite
+directions — which is why the number cannot be rescued as a bound:
+
+- **Practice-new, not care-new.** New-patient CPT identifies patients new to a
+  *practice*. Someone switching FPMRS practices bills as new — **overcounts**
+  first entry.
+- **PUF suppression** drops cells below 11 beneficiaries entirely — **undercounts**.
+- **Roster FPMRS only** — pelvic-floor care by generalist ObGyn or urology is
+  invisible — **undercounts**.
+- **Medicare FFS, 65+** — nothing transports to under-65 without a stated
+  assumption, and the under-65 FFS population is the disability cohort, not a
+  younger version of this one.
+
+Because the biases run in both directions, 12.05 per 1,000 is **neither a
+defensible lower bound nor an upper bound** on the true entry rate. It is an
+aggregate plausibility statistic, and the fact that it is now a real number
+rather than an `NA` does not upgrade it.
+
 ## Naming
 
 Where the aggregate ratio eventually becomes computable it is called
@@ -165,8 +183,9 @@ parameters with settled definitions; this is a practice-new consultation ratio i
 one payer stratum. A shared name is how a diagnostic gets adopted as an estimate
 by inheritance, so a test asserts the name does not collide.
 
-`medicare_ffs_practice_new_fpmrs_ratio_65plus_2023()` returns `ratio = NA_real_`
-today, with `status = "BLOCKED"` and the machine-readable reason above.
+`medicare_ffs_practice_new_fpmrs_ratio_65plus_2023()` now returns three rows,
+one per denominator definition, each carrying its own `status` and a declared
+`assumption`. Only the crude denominator is assumption-free.
 
 ---
 
