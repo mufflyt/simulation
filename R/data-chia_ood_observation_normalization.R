@@ -77,6 +77,34 @@ build_chia_ood_observation_normalized_view <- function(con) {
   out
 }
 
+#' Locate and parse the OOD CPT -> URPS service crosswalk
+#'
+#' Reads the shipped `inst/extdata/chia_urps_outpatient_cpt_codes.yml` via
+#' [system.file()]. `config/` is `.Rbuildignore`d and is NOT in the installed
+#' package, so a relative path or `here::here()` cannot reach the crosswalk
+#' during `R CMD check` -- the same reason the OOD source-of-payment lookup
+#' ships in `inst/extdata` and loads through `system.file()`
+#' ([.chia_ood_source_of_payment_table()]). The `config/` copy remains the
+#' human-edited source of record; `inst/extdata` is the installable mirror.
+#'
+#' @return Parsed YAML (a named list, each element a list with a `cpt` vector).
+#' @family chia physician attribution
+#' @concept supply
+#' @keywords internal
+.chia_ood_cpt_service_config <- function() {
+  path <- system.file(
+    "extdata", "chia_urps_outpatient_cpt_codes.yml",
+    package = "urpssim"
+  )
+  if (!nzchar(path)) {
+    stop(
+      "inst/extdata/chia_urps_outpatient_cpt_codes.yml not found -- ",
+      "package not installed/loaded correctly.", call. = FALSE
+    )
+  }
+  yaml::read_yaml(path)
+}
+
 #' Build the CPT-classified OOD observation view
 #'
 #' A row is classified into `service` if ANY of its five CPT slots (normalized
@@ -88,16 +116,15 @@ build_chia_ood_observation_normalized_view <- function(con) {
 #'
 #' @param con Open, writable DuckDB connection.
 #' @param config Parsed YAML, default
-#'   `yaml::read_yaml("config/chia_urps_outpatient_cpt_codes.yml")`.
+#'   [.chia_ood_cpt_service_config()] (the shipped
+#'   `inst/extdata/chia_urps_outpatient_cpt_codes.yml`).
 #' @return `con`, invisibly.
 #' @family chia physician attribution
 #' @concept supply
 #' @export
 build_chia_ood_cpt_service_view <- function(
     con,
-    config = yaml::read_yaml(
-      here::here("config", "chia_urps_outpatient_cpt_codes.yml")
-    )) {
+    config = .chia_ood_cpt_service_config()) {
   cpt_map <- .chia_ood_cpt_service_map(config)
 
   case_when_sql <- paste(
