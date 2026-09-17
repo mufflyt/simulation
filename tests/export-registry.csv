@@ -238,3 +238,6 @@
 "open_five_source_db","api"
 "load_empirical_runner_inputs","api"
 "run_incident_entry_sensitivity_matrix","api"
+"build_endogenous_geography_market_panel","api"
+"download_geography_source_files","api"
+"ingest_geography_sources_duckdb","api"

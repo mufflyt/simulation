@@ -21,5 +21,10 @@ survey can resolve \code{capacity_status()}. CHIA and CADR strengthen/validate t
 evidence bundle, but the numerical adequacy still has to be identified by a
 fielded access fit (for example, the Lizeth inverse wait-time fit).
 }
+\seealso{
+Other capacity evidence:
+\code{\link[=build_empirical_capacity_evidence]{build_empirical_capacity_evidence()}},
+\code{\link[=save_empirical_capacity_evidence]{save_empirical_capacity_evidence()}}
+}
 \concept{calibration}
 \concept{capacity evidence}

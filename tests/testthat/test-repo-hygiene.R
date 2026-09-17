@@ -360,16 +360,22 @@ test_that("no test file redefines .repo_root()/.repo_path() locally", {
 # Guard: nightly's tracking-issue alert must not fire on the by-design-red
 # gate alone, and must not silently stop firing on platform-matrix failures.
 #
-# scientific-invariants is red by design for an extended, known period
-# (blocked on real data, not a bug -- see scientific-integrity.yaml). Once
-# included in this step's trigger, it fired the alert on EVERY nightly run
-# regardless of anything else, posting a near-daily comment (17 in 11 days,
-# several reading "**Failing:**" with nothing after it) to a single growing
-# tracking issue. matrix-check's failures, meanwhile, were never in the
-# trigger on their own -- they only ever alerted by riding along with
-# scientific-invariants' constant redness, which is invisible unless someone
-# reads the trigger condition itself, not just the displayed table.
-test_that("nightly's tracking-issue trigger excludes scientific-invariants and includes matrix-check", {
+# THE EXEMPTION MUST BE SCOPED TO THE BLOCKER, NOT TO THE JOB THAT CONTAINED IT.
+# This guard originally required that scientific-invariants be EXCLUDED, because
+# it held the canonical-science blocker and so fired the alert on every nightly
+# run regardless of anything else (17 comments in 11 days, several reading
+# "**Failing:**" with nothing after it). The observation was right; the scope
+# was too wide. That job also runs the invariants, temporal integrity, the
+# scorecard and mutation recovery, so excluding it excluded all of them -- a
+# genuine regression in assert-scientific-invariants.R, which runs FIRST, would
+# have alerted nobody.
+#
+# The blocker now lives in its own canonical-readiness job, so the exemption
+# follows it there and scientific-invariants becomes alertable again. The
+# BROKEN state (exit 2, infrastructure or integrity failure rather than the
+# declared blocker) must still fire, or an exit-2 hides behind the exemption
+# that exists for exit-1.
+test_that("nightly's tracking-issue trigger scopes the by-design exemption to canonical readiness", {
   f <- file.path(.repo_root(), ".github", "workflows", "nightly.yaml")
   skip_if_not(file.exists(f), "nightly.yaml not present")
   wf <- yaml::read_yaml(f)
@@ -385,12 +391,53 @@ test_that("nightly's tracking-issue trigger excludes scientific-invariants and i
               info = "no step matching 'tracking issue' found in nightly.yaml's report job")
 
   trigger <- as.character(steps[[idx[1]]][["if"]])
+
+  # The blocker's own job must not alert on its RESULT ALONE -- that is the
+  # every-single-night comment this guard was written for. It may appear in the
+  # trigger only in conjunction with a state test, which is what excuses the
+  # expected BLOCKED nights while still alerting on everything else.
   expect_false(
-    grepl("scientific-invariants", trigger, fixed = TRUE),
+    grepl("needs.canonical-readiness.result != 'success' ||", trigger, fixed = TRUE) ||
+      grepl("|| needs.canonical-readiness.result != 'success')", trigger, fixed = TRUE),
     info = paste(
-      "The tracking-issue trigger must not include needs.scientific-invariants",
-      "-- that gate is red by design and firing on it alone turns a known,",
-      "accepted condition into a comment on every single nightly run."
+      "The tracking-issue trigger must not fire on canonical-readiness'",
+      "job RESULT as a standalone disjunct -- it is red by design, and firing",
+      "on it turns a known, accepted condition into a comment on every single",
+      "nightly run. Pair it with the state test instead."
+    )
+  )
+  # ...and the exemption must be FAIL-CLOSED: alert on any non-success unless
+  # the state is positively BLOCKED. Naming the alerting states instead
+  # (e.g. `canonical_state == 'BROKEN'`) is subtly wrong, because the state is
+  # a job output and outputs from a FAILED job can arrive empty -- and this job
+  # fails by design. A hard environment failure that never set the output would
+  # then match neither BLOCKED nor BROKEN and alert nobody, which is precisely
+  # the rare case worth alerting on.
+  expect_true(
+    grepl("needs.canonical-readiness.result != 'success'", trigger, fixed = TRUE) &&
+      grepl("canonical_state != 'BLOCKED'", trigger, fixed = TRUE),
+    info = paste(
+      "The trigger must be expressed as 'readiness did not succeed AND its",
+      "state is not BLOCKED', so that BROKEN *and* an unreadable state both",
+      "alert. Enumerating the bad states instead lets a missing output pass",
+      "silently."
+    )
+  )
+  expect_false(
+    grepl("canonical_state == ", trigger, fixed = TRUE),
+    info = paste(
+      "Do not gate the alert on the state EQUALLING a bad value -- an empty",
+      "output then matches nothing. Gate on it not equalling BLOCKED."
+    )
+  )
+  # The rest of the scientific suite is no longer exempt.
+  expect_true(
+    grepl("needs.scientific-invariants.result != 'success'", trigger, fixed = TRUE),
+    info = paste(
+      "The trigger must include needs.scientific-invariants -- now that the",
+      "by-design blocker has its own job, a failure of the invariants,",
+      "temporal integrity, the scorecard or mutation recovery is genuinely",
+      "unexpected and must alert."
     )
   )
   expect_true(

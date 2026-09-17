@@ -15,5 +15,14 @@ Tibble with physician-year workload counts.
 \description{
 Summarize CHIA all-payer inpatient workload by URPS physician-year
 }
+\seealso{
+Other CHIA capacity evidence:
+\code{\link[=find_ma_borim_npi_source]{find_ma_borim_npi_source()}},
+\code{\link[=identify_chia_provider_columns]{identify_chia_provider_columns()}},
+\code{\link[=link_chia_to_urps]{link_chia_to_urps()}},
+\code{\link[=read_chia_capacity_fields]{read_chia_capacity_fields()}},
+\code{\link[=read_ma_borim_npi_bridge]{read_ma_borim_npi_bridge()}},
+\code{\link[=summarize_chia_urps_workload]{summarize_chia_urps_workload()}}
+}
 \concept{CHIA capacity evidence}
 \concept{calibration}

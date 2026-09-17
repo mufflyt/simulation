@@ -17,13 +17,15 @@ Requires \code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_d
 \code{\link[=build_chia_hdd_procedure_family_view]{build_chia_hdd_procedure_family_view()}} to have been run first.
 }
 \details{
-\code{procedure_family} is a \code{LEFT JOIN}, deliberately optional: most discharges
+\code{procedure_family} is a \verb{LEFT JOIN}, deliberately optional: most discharges
 are not urogynecologic and correctly get \code{NULL}, matching how
 \code{build_chia_inpatient_urps_series()} already filters on
-\code{procedure_family IS NOT NULL}.
+\verb{procedure_family IS NOT NULL}.
 }
 \seealso{
 Other chia physician attribution:
+\code{\link[=.chia_resolve_payer_group]{.chia_resolve_payer_group()}},
+\code{\link[=.chia_suppress_small_cells]{.chia_suppress_small_cells()}},
 \code{\link[=build_chia_hdd_diagnosis_long_view]{build_chia_hdd_diagnosis_long_view()}},
 \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
 \code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_discharge_procedure_views()}},
@@ -31,7 +33,8 @@ Other chia physician attribution:
 \code{\link[=build_chia_npi_taxonomy_crosswalk]{build_chia_npi_taxonomy_crosswalk()}},
 \code{\link[=build_chia_physician_attribution]{build_chia_physician_attribution()}},
 \code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}},
-\code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}}
+\code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}},
+\code{\link[=chia_npi_taxonomy_credentials_db_default]{chia_npi_taxonomy_credentials_db_default()}}
 }
 \concept{chia physician attribution}
 \concept{supply}

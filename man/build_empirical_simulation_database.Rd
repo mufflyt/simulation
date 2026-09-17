@@ -32,4 +32,3 @@ provider, productivity, county-market, and population tables. Existing local
 files are reused before any download is attempted. Every load is registered
 with its source URL, release, size, checksum, row count, and load time.
 }
-\concept{data}

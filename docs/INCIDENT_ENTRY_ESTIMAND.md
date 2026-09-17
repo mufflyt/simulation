@@ -53,6 +53,25 @@ already-in-care patients, not the disease stock.
 not a multiplier applied to the whole stock. It must not regenerate a fresh
 cohort of "new" patients from the entire prevalent pool each model year.
 
+> **POST-FREEZE CLARIFICATION, 2026-08-29 — superseded wording. Read
+> [`PATHWAY_STATE_TRANSITION_AUDIT.md`](PATHWAY_STATE_TRANSITION_AUDIT.md) §8
+> before using the word "hazard" here.** Nothing above this note has been
+> altered: the pre-registration stands as written, and this paragraph is from
+> 2026-08-16/17, predating the §8 ruling. The note is dated so the later
+> architectural decision cannot be mistaken for part of the frozen document. §8 adopted the **population-level rate**
+> (denominator: *all* eligible prevalent women in the year, regardless of prior
+> care history) and **rejected** the conditional hazard whose denominator is
+> women who have never entered before. Consequence 1 of that ruling is that the
+> quantity **is not a conditional hazard and must not be named like one**; the
+> canonical name is `annual_first_urps_entry_rate`.
+>
+> The distinction is not pedantic. "Hazard acting on those eligible to enter"
+> reads as a depleting never-entered risk set, which invites a depletion
+> correction on top of a rate that already embeds depletion empirically --
+> double-counting history. §8 consequence 2 forbids exactly that. What this
+> paragraph gets right, and what survives, is the negative claim: the
+> denominator is the DISEASE stock, not already-in-care patients.
+
 ## 3. THE DENOMINATOR PROBLEM — resolve before estimating anything
 
 Traced from `R/demand-lifecourse.R:163`:
@@ -96,6 +115,20 @@ deliberately, not inferred here:
 
 **Every arrow above needs an explicit mathematical definition and a source
 before any number is adopted.** Several currently have neither.
+
+> **POST-FREEZE CLARIFICATION, 2026-08-29:** **This choice is no longer open — (A) was adopted.**
+> `PATHWAY_STATE_TRANSITION_AUDIT.md` §7 ruled one identifiable annual RATE
+> from the eligible prevalent stock to first observed URPS care, on
+> identifiability grounds: claims identify the PRODUCT of recognition, seeking,
+> referral and arrival, never its components. `recognition`, `p_seek` and
+> `p_referral` are **retired** as independent multipliers; `p_eligible` moves
+> **upstream** to define the exposed stock; treatment and procedure stay
+> downstream. §8 then rejected (B)'s conditional never-entered denominator as
+> not directly observable.
+>
+> The paragraph above therefore overstates what remains open. The arrows are
+> resolved; what is missing is the DATA. Original pre-registration language is
+> retained for provenance.
 
 ## 4. Numerator — MA APCD as primary
 
@@ -190,6 +223,16 @@ Estimate by the simulation's existing age bands (18–44, 45–54, 55–64, 65�
 75+) and stratify by payer (commercial, MassHealth, Medicare Advantage). The
 target is an **age-specific entry hazard**, not three replacement constants.
 
+> **POST-FREEZE CLARIFICATION, 2026-08-29:** Read "entry hazard" here as the **age-specific
+> population-level first-entry RATE**, `annual_first_urps_entry_rate`.
+> `PATHWAY_STATE_TRANSITION_AUDIT.md` §8 consequence 1 rules that the quantity
+> is not a conditional hazard and must not be named like one: "hazard" invites
+> a depleting never-entered risk set, and hence a depletion correction on top
+> of a rate that already embeds depletion empirically. The stratification
+> instruction itself stands unchanged, and payer stratification has since
+> become load-bearing for a second reason — see `APCD_DATA_REQUEST.md` §3c on
+> aligning the payer/coverage universe.
+
 ## 10. The 0.297 ratio is a HOLDOUT, never an estimator
 
 | | |
@@ -223,6 +266,13 @@ enrollment rules · what source supplies each quantity.
 
 §3 is the open one and blocks the rest.
 
+> **POST-FREEZE CLARIFICATION, 2026-08-29:** **No longer accurate.** §3 was settled by
+> `PATHWAY_STATE_TRANSITION_AUDIT.md` §7–§8 and implemented as
+> `annual_first_urps_entry_rate()` in `R/demand-first_entry_rate.R`. Every
+> question listed above now has an answer. What blocks the rest is
+> **acquisition of longitudinal claims**, not a definitional question — see
+> `APCD_DATA_REQUEST.md`.
+
 ## 13. Disease incidence literature is a plausibility check only
 
 Longitudinal studies of incident symptomatic POP describe **onset/progression of
@@ -246,3 +296,12 @@ disease**, not first entry into care. Useful for bounding, never a substitute.
   age-specific first-care incidence → prevalence-denominator alignment →
   Medicare FFS replication → insert without calibration → observe the
   8.51× / 0.297 discrepancy → recurrence limb.**
+
+> **POST-FREEZE CLARIFICATION, 2026-08-29:** The first two steps are **done**. "Estimand contract"
+> and "resolve §3 denominator" were completed on 2026-08-17
+> (`PATHWAY_STATE_TRANSITION_AUDIT.md` §7–§8). The live front of the queue is
+> **APCD cohort acquisition**, and "prevalence-denominator alignment" has since
+> been specified to include the **payer/coverage universe**, not only state,
+> years and age bands (`APCD_DATA_REQUEST.md` §3c). Everything from
+> "insert without calibration" onward is unchanged, including that the 0.297
+> ratio is compared once, as a holdout, without adjusting.

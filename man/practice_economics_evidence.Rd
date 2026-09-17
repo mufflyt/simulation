@@ -18,17 +18,40 @@ with a definite response. Neither directly observes practice profit.
 Every parameter \code{\link[=simulate_practice_economics]{simulate_practice_economics()}} draws from carries real
 provenance here -- \code{lower}/\code{upper} (the actual distributional bounds the
 simulator uses, not an invented range), \code{year}, and \code{evidence_quality}
-(\code{"high"}: official regulatory/administrative rate or a real survey at
-NCHS reliability; \code{"medium"}: literature-derived, cross-check-only, or a
-small-but-usable fielded sample; \code{"low"}: single-site, preliminary, or
-below a reliability floor; \code{"uncited"}: no external source at all --
-currently overhead and all four payer collection rates). The revenue
-side (conversion factors, payer mix) is materially better sourced than
-the cost side; this table makes that asymmetry visible rather than
-treating every input as equally solid. APP compensation (real BLS OEWS
-wage data and a real BLS ECEC benefits load factor) and malpractice
-(real AMA/MLM 2024 OB/GYN premium data) are no longer uncited --
-overhead is now the single largest uncited cost input.
+(\code{"high"}: official regulatory/administrative rate, a real survey at NCHS
+reliability, or a large peer-reviewed administrative-data study;
+\code{"medium"}: literature-derived, cross-check-only, or a small-but-usable
+fielded/industry sample; \code{"low"}: single-site, preliminary, or below a
+reliability floor; \code{"uncited"}: no external source at all -- currently
+just overhead). APP compensation (real BLS OEWS wage data and a real BLS
+ECEC benefits load factor), malpractice (real AMA/MLM 2024 OB/GYN premium
+data), and all four payer collection rates (real Dunn et al. 2024 QJE
+national remittance data for Medicare/Medicaid/commercial, real
+Superscript 2025 patient-collections data for self-pay) are no longer
+uncited -- overhead is now the ONLY uncited cost input.
+
+Collection-rate note: Dunn et al. report TWO realization measures --
+cash-flow realization (cash ultimately collected / initial claim value)
+and an administrative-loss-adjusted variant that additionally nets out
+the office cost of chasing denied claims (Medicaid 82.4\% vs. the 85.2\%
+cash-flow figure used here). This model uses the cash-flow figures
+because \code{simulate_practice_economics()} already charges a separate,
+undecomposed \code{overhead} cost per FTE (see below) that plausibly already
+includes routine billing/collections staffing -- using the
+admin-loss-adjusted collection rate on top of that would risk double-
+counting the same administrative cost once on the revenue side and again
+inside \code{overhead}. If \code{overhead} is ever decomposed into cost categories
+that provably EXCLUDE billing/collections staffing, switch to the
+admin-loss-adjusted rates instead (Medicare 95.3\%, Medicaid 82.4\%,
+commercial 97.6\%) -- do not apply both adjustments simultaneously.
+
+State-level Medicaid note: Dunn et al.'s public replication data
+(Harvard Dataverse) includes state-specific Medicaid collection-realization
+estimates -- the 85.2\% here is the national mean. Not yet wired into a
+per-state parameter (unlike the Medicaid FEE ratio, which already varies
+by state via \code{\link[=medicaid_medicare_fee_index_table]{medicaid_medicare_fee_index_table()}} -- collection realization
+and fee level are separate mechanisms and this repo only geographically
+varies the latter so far). Flagged as follow-up work, not implemented here.
 
 Also carries three MedPAC physician/APP compensation figures as an
 external PLAUSIBILITY benchmark for \code{physician_compensation_capacity}

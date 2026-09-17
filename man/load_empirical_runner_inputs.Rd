@@ -20,4 +20,3 @@ Named list of lazy duckplyr tables and source provenance.
 \description{
 Load empirical inputs for the master simulation runner
 }
-\concept{data}

@@ -17,6 +17,8 @@ second, independently-drifting resolver.
 }
 \seealso{
 Other chia physician attribution:
+\code{\link[=.chia_resolve_payer_group]{.chia_resolve_payer_group()}},
+\code{\link[=.chia_suppress_small_cells]{.chia_suppress_small_cells()}},
 \code{\link[=build_chia_hdd_diagnosis_long_view]{build_chia_hdd_diagnosis_long_view()}},
 \code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
 \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},

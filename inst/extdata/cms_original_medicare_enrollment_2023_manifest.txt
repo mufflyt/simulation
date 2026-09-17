@@ -1,0 +1,45 @@
+CMS Program Statistics - Original Medicare Enrollment, Calendar Year 2023
+========================================================================
+
+PUBLIC. No DUA, no restriction, no license. Free download from data.cms.gov.
+
+Source file : MDCR ENROLL AB 9-14_CPS_02ENR_2023.zip
+Download    : https://data.cms.gov/sites/default/files/2025-09/
+              d3e2470b-f7ed-4c92-9615-4bfee94b6bdb/
+              MDCR%20ENROLL%20AB%209-14_CPS_02ENR_2023.zip
+Retrieved   : 2026-08-29
+Publisher   : CMS Office of Enterprise Data and Analytics,
+              CMS Chronic Conditions Data Warehouse
+Method note : "The enrollment counts are determined using a person-year
+              methodology."
+
+WHY THIS FILE EXISTS
+--------------------
+It supplies the ONE quantity the diagnostic denominator table could not
+construct: women aged 65+ enrolled in Original Medicare (fee-for-service),
+2023. Without it the Medicare FFS rows were NA with missing_reason
+`missing_cms_ffs_enrollment_denominator`.
+
+THE FEMALE x 65+ CROSS IS PUBLISHED, NOT IMPUTED
+------------------------------------------------
+Table 11 gives age and sex only as MARGINALS and cannot supply the cross.
+Table 12 ("by Type of Entitlement and Demographic Characteristics") crosses
+sex with entitlement type, and "Total Aged" IS the 65+ category -- Table 12
+row "65 Years and Over" places its entire count in Total Aged, with zero in
+Total Disabled.
+
+Reconciliation, computed rather than asserted:
+    Male x Aged      14,290,951
+  + Female x Aged    16,542,982
+  = 30,833,933  vs published 65+ total 30,833,932  (differs by 1, rounding)
+
+So 16,542,982 is a published cell, not a marginal times a share.
+
+PART A/B CAVEAT -- MATTERS FOR THIS NUMERATOR
+---------------------------------------------
+16,542,982 counts Part A AND/OR Part B. The numerator (Part B PUF office
+visits) requires Part B. Among 65+, Part B coverage is
+    25,732,430 / 30,833,932 = 0.83455
+but that share is NOT published by sex, so applying it to the female count is
+an ASSUMPTION, not a measurement. Both denominators are therefore reported and
+the ratio is given both ways rather than picking one silently.

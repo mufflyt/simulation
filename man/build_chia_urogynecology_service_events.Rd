@@ -9,7 +9,7 @@ build_chia_urogynecology_service_events(con, min_cell_size = 11L)
 \arguments{
 \item{con}{Open, writable DuckDB connection to the CHIA database.}
 
-\item{min_cell_size}{Passed to \code{.chia_suppress_small_cells()}.}
+\item{min_cell_size}{Passed to \code{\link[=.chia_suppress_small_cells]{.chia_suppress_small_cells()}}.}
 }
 \value{
 \code{con}, invisibly.
@@ -27,6 +27,8 @@ the same connection.
 }
 \seealso{
 Other chia physician attribution:
+\code{\link[=.chia_resolve_payer_group]{.chia_resolve_payer_group()}},
+\code{\link[=.chia_suppress_small_cells]{.chia_suppress_small_cells()}},
 \code{\link[=build_chia_hdd_diagnosis_long_view]{build_chia_hdd_diagnosis_long_view()}},
 \code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
 \code{\link[=build_chia_hdd_discharge_physician_view]{build_chia_hdd_discharge_physician_view()}},
@@ -34,7 +36,8 @@ Other chia physician attribution:
 \code{\link[=build_chia_hdd_procedure_family_view]{build_chia_hdd_procedure_family_view()}},
 \code{\link[=build_chia_npi_taxonomy_crosswalk]{build_chia_npi_taxonomy_crosswalk()}},
 \code{\link[=build_chia_physician_attribution]{build_chia_physician_attribution()}},
-\code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}}
+\code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}},
+\code{\link[=chia_npi_taxonomy_credentials_db_default]{chia_npi_taxonomy_credentials_db_default()}}
 }
 \concept{chia physician attribution}
 \concept{supply}

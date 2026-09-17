@@ -13,10 +13,22 @@ read_ma_borim_npi_bridge(path = find_ma_borim_npi_source())
 Tibble with \code{key_value}, \code{key_source}, and \code{npi}.
 }
 \description{
-The Cadish BORIM extract contains NPI directly. This function also keeps other
-identifier-like BORIM columns so CHIA can link even when a case-mix vintage
-carries an internal BORIM identifier rather than the literal license number.
+The Cadish BORIM extract contains NPI directly. This function also keeps
+other identifier-like BORIM columns so CHIA can link even when a case-mix
+vintage carries an internal BORIM identifier rather than the literal license
+number.
+}
+\details{
 Ambiguous identifier values mapping to more than one NPI are dropped.
+}
+\seealso{
+Other CHIA capacity evidence:
+\code{\link[=chia_urps_physician_year]{chia_urps_physician_year()}},
+\code{\link[=find_ma_borim_npi_source]{find_ma_borim_npi_source()}},
+\code{\link[=identify_chia_provider_columns]{identify_chia_provider_columns()}},
+\code{\link[=link_chia_to_urps]{link_chia_to_urps()}},
+\code{\link[=read_chia_capacity_fields]{read_chia_capacity_fields()}},
+\code{\link[=summarize_chia_urps_workload]{summarize_chia_urps_workload()}}
 }
 \concept{CHIA capacity evidence}
 \concept{calibration}

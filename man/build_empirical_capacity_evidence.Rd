@@ -45,5 +45,10 @@ Named list with linked evidence streams and status table.
 \description{
 Build the CHIA + BORIM + CADR capacity-evidence bundle
 }
+\seealso{
+Other capacity evidence:
+\code{\link[=empirical_capacity_status]{empirical_capacity_status()}},
+\code{\link[=save_empirical_capacity_evidence]{save_empirical_capacity_evidence()}}
+}
 \concept{calibration}
 \concept{capacity evidence}
