@@ -545,7 +545,7 @@ narrow.
 
 ---
 
-## The NAMCS calibration scalar, and what 0.963 means
+## The NAMCS calibration scalar, and why 0.297 is structural
 
 The model predicts office-visit demand from disease burden and care pathways.
 Nothing internal tells you whether that prediction is the right size. A
@@ -556,9 +556,22 @@ scalar = independent national estimate / model prediction
 ```
 
 The NAMCS anchor is **4,814,760** pelvic-floor-related office visits (NAMCS 2019
-Public Use File, CI 1,982,987–7,646,533). Against a base-year prediction of
-5,000,000 that gives a scalar of **0.963** — the model runs about **3.7% high**,
-which is close agreement.
+Public Use File, CI 1,982,987–7,646,533). The first production calibration run
+(base year 2017) exposed an *uncalibrated* base-year prediction of
+**16,226,458**, so the scalar is **0.297** — and the run **flags it as
+structural**. A scalar that far below 1 (past the `max_scalar: 3.0` threshold) is
+not an offset to divide out; it says the model and the anchor are counting
+different things. The gap is a **service-intensity** defect: the conservative
+stage assigns every treated patient one new consultation plus 1.5 return visits
+(2.5 visits/year), and 6.18M treated × 2.5 ≈ 15.44M visits is 95.2% of the 16.2M
+prediction — generated before any clinically interesting transition. The fix
+belongs in the service-intensity structure (splitting newly-entering from
+continuing care), not in a scalar applied to the output.
+
+> An earlier draft reported **0.963** against a base-year prediction of
+> 5,000,000. That prediction was illustrative — no model ever emitted it — so
+> 0.963 was arithmetic, not a calibration result. `compute_production_scalar()`
+> now refuses any prediction whose `prediction_status` is not `"production"`.
 
 **How to read the number.** A scalar near 1 means the model and an independent
 source agree on magnitude. A scalar far from 1 signals a **structural
@@ -762,25 +775,26 @@ point of the figure: intervals that cover 1.0 are drawn muted.
 
 | Effect | Multiplier | 95% interval | Identified |
 |---|---|---|---|
-| Income < 100% FPL | 0.59 | 0.28 – 0.90 | yes |
+| Income < 100% FPL | 0.46 | 0.19 – 0.74 | yes |
 | Non-Hispanic Black | 0.35 | 0.18 – 0.53 | yes |
-| Non-Hispanic Asian | 0.44 | 0.08 – 0.79 | yes |
-| Uninsured | 1.14 | 0.00 – 3.35 | **no** |
-| Public insurance | 0.53 | 0.00 – 1.19 | **no** |
+| Non-Hispanic Asian | 0.43 | 0.08 – 0.79 | yes |
+| Uninsured | 0.56 | 0.00 – 1.25 | **no** |
+| Public insurance | 1.21 | 0.76 – 1.67 | **no** |
 
 Two consequences. **The shipped uninsured multiplier of 0.58 is not supported by
-these data** — its interval runs from 0 to 3.35, so the estimate cannot be
-distinguished from no effect in either direction, and replacing an assumed
-constant with an unidentified estimate would be no improvement. And the effects
+these data** — the MEPS estimate is 0.56 but its interval runs from 0 to 1.25, so
+the estimate cannot be distinguished from no effect in either direction, and
+replacing an assumed constant with an unidentified estimate would be no
+improvement. And the effects
 the data *do* identify — income and race/ethnicity — are gradients the demand
 model does not currently carry at all.
 
 ![Expected pelvic-floor visits by comorbidity burden](figures/meps_care_seeking_comorbidity.png)
 
 Comorbidity burden is the strongest predictor, and it moves **both** parts:
-across 0 → 12 recorded conditions, P(any visit) rises 0.020 → 0.104 and visits
-per woman in care rise 1.40 → 2.52, so expected visits per woman rise **0.027 →
-0.263, a factor of 9.6**. A single care-seeking rate cannot represent that,
+across 0 → 12 recorded conditions, P(any visit) rises 0.019 → 0.101 and visits
+per woman in care rise 1.35 → 2.42, so expected visits per woman rise **0.026 →
+0.243, a factor of 9.3**. A single care-seeking rate cannot represent that,
 because it cannot separate "more women enter care" from "each woman is seen more
 often".
 
@@ -916,7 +930,7 @@ refuses `uncalibrated_illustrative` outright.
 
 ## Module map
 
-The 82 modules in `R/` are grouped into nine conceptual families (`core-`,
+The 210 modules in `R/` are grouped into nine conceptual families (`core-`,
 `supply-`, `demand-`, `geography-`, `reporting-`, `calibration-`, `validation-`,
 `data-`). **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) is the complete map** —
 every file with its purpose, the run data flow, the contract boundary, and
@@ -1016,9 +1030,9 @@ Retirement is drawn from a **Weibull survival curve** (`R/supply-fraher_agent_su
 ```
 P(still active at age a) = exp(−(a / scale)^shape)
 
-ABOG female:  shape ≈ 2.1,  scale ≈ 68.5  (peak exit ~65–67)
-ABOG male:    shape ≈ 1.9,  scale ≈ 70.2
-ABU mixed:    shape ≈ 2.0,  scale ≈ 66.0  (mixed urology practice exits earlier)
+ABOG female:  shape ≈ 2.1,  scale ≈ 80.1  (median retirement age 67)
+ABOG male:    shape ≈ 1.9,  scale ≈ 85.4  (median retirement age 70)
+ABU mixed:    shape ≈ 2.0,  scale ≈ 76.9  (median retirement age 64; mixed urology practice exits earlier)
 ```
 
 Scenario levers shift the `scale` parameter (±2 yr = scale ± 2), which moves
@@ -1045,9 +1059,9 @@ P(active)
     └───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬─▶ age
        40  45  50  55  60  65  70  75  80  85
 
-    ── baseline (scale=68.5)
-    ·· early retirement (scale=66.5, −2 yr)
-    ── delayed retirement (scale=70.5, +2 yr)
+    ── baseline (scale=80.1)
+    ·· early retirement (scale=78.1, −2 yr)
+    ── delayed retirement (scale=82.1, +2 yr)
 ```
 
 ---
@@ -1188,7 +1202,10 @@ job: **[`docs/SCIENTIFIC_INTEGRITY.md`](docs/SCIENTIFIC_INTEGRITY.md)**.
 ## Test suite
 
 ```
-[ FAIL 0 | WARN 0 | SKIP 59 | PASS 2432 ]   (86 test files, 923 tests)
+286 test files · 2,316 test_that blocks · 6,861 expectations
+The full suite runs in CI on every push (repo-hygiene gate) and must be green to
+merge; skip counts are budgeted in tests/skip-budget.csv so a gate going dark
+fails the build.
 
 Key test files:
   test-38-fraher-agent-supply.R     Fraher agent engine
@@ -1228,7 +1245,7 @@ lesson rather than the date because the lessons repeat.
 
 ```
 simulation/
-├── R/                # 82 modules in 9 conceptual families (see docs/ARCHITECTURE.md)
+├── R/                # 210 modules in 9 conceptual families (see docs/ARCHITECTURE.md)
 ├── man/              # roxygen-generated documentation
 ├── inst/legacy/      # original DPMM/SWAN/workforce scripts (NOT loaded by package)
 ├── inst/extdata/     # cited obstetric reference data, SWAN variable map
@@ -1337,6 +1354,90 @@ All 15 empirical parameter calibrations, spatial isochrone access integrations, 
 | Sandvik et al., *Scand J Prim Health Care* 1993 | Incontinence Severity Index (frequency × amount) |
 
 ---
+
+## Appendix: data pipelines added since 0.5.0
+
+Two subsystems added in the 0.6.0 cycle are documented here because they run
+outside the package's ordinary in-repo data flow — one needs an external routing
+service, the other reads a database the working tree does not carry.
+
+### A. CHIA OOD outpatient urogynecology service events
+
+`R/data-chia_ood_observation_normalization.R`,
+`R/data-chia_ood_urogynecology_service_events.R`,
+`R/calibration-ood_namcs_crosscheck.R`
+
+CHIA inpatient discharge data (HDD) cannot see six URPS services that happen in
+outpatient/observation settings. This pipeline recovers them from the CHIA
+**Outpatient Observation Data (OOD)**, FY2004–FY2018.
+
+* **Column-era normalization.** OOD names its CPT columns `CPT1`–`CPT5` before
+  2015 and `CPTCode1`–`CPTCode5` from 2015 on. The existing
+  `v_ood_observation_all_years` view is a bare `UNION ALL BY NAME`, which does
+  **not** merge those — it keeps both and leaves each `NULL` for the era that
+  lacks it, so a naïve query silently covers only half the years.
+  `build_chia_ood_observation_normalized_view()` coalesces them into
+  `cpt_1`–`cpt_5` and stamps a `_cpt_column_era` flag so downstream code asserts
+  which era supplied a row instead of assuming.
+
+* **CPT → service crosswalk.** `config/chia_urps_outpatient_cpt_codes.yml` is the
+  human-edited source of record; because `config/` is `.Rbuildignore`d, an
+  installable mirror ships at `inst/extdata/chia_urps_outpatient_cpt_codes.yml`
+  and loads through `system.file()`. `build_chia_ood_cpt_service_view()`
+  classifies a row into a service if any of its five CPT slots or its
+  `PrincipalProcedureCode` matches.
+
+* **Two outputs, deliberately.**
+  `build_chia_ood_urogynecology_service_events()` is physician-attributed and
+  limited to FY2015–2018 (matching the HDD table's validated NPPES-taxonomy
+  window); `build_chia_ood_urogynecology_service_volume()` is physician-blind and
+  spans the full 2004–2018 range for a trend/validation view.
+
+* **Separate payer code space.** OOD's `PrimarySourceOfPayment` uses ~150 numeric
+  insurer codes (`inst/extdata/chia_ood_source_of_payment_lookup.csv`), not HDD's
+  ~15 single-character codes, and is classified by keyword rule against the
+  CHIA-published definition text — the HDD resolver is deliberately not reused.
+
+* **Cross-check only.** OOD is hospital-based observation-status billing, not
+  general ambulatory/office visits — a partial, hospital-selected sample. Neither
+  output is blended into `calibrate_service_share_model()`'s primary evidence;
+  `compare_ood_to_namcs_service_shares()` uses it as a NAMCS cross-check.
+
+### B. Drive-time-to-nearest generator (Valhalla)
+
+`scripts/data_acquisition/build_drive_time_to_nearest.R`
+
+Produces a **continuous** drive-time-to-nearest artifact
+(`demand_id, drive_minutes_to_nearest, nearest_provider_id, n_candidates`) — the
+drive-time analog of the retired straight-line `miles_to_nearest`, reported by
+cliff Module D. Unlike the isochrone bands (30/60/120/180 min), it is continuous
+minutes.
+
+```bash
+Rscript scripts/data_acquisition/build_drive_time_to_nearest.R
+Rscript scripts/data_acquisition/build_drive_time_to_nearest.R --self-test   # pure core, no network
+```
+
+* **Where it runs.** On the Valhalla host — a Valhalla Docker container served
+  against the tile set — POSTing to its `/sources_to_targets` matrix endpoint.
+  `SIMULATION_VALHALLA_URL` sets the endpoint (default `http://localhost:8002`).
+  There is **no offline fallback**: without a reachable Valhalla the script
+  stops, because a made-up drive time is worse than none.
+
+* **Why it is bounded.** A full ~72k-tract × ~1,300-provider matrix is ~96M
+  pairs. The isochrone membership table already lists, per tract, the providers
+  reachable within 180 min; the generator computes exact times only to those
+  candidates and takes the minimum — correct (a nearer provider cannot sit
+  outside the 180-min set) and 2–3 orders of magnitude cheaper. A tract with no
+  candidate is >180 min from every provider, so `drive_minutes_to_nearest = NA`.
+
+* **Inputs (env vars, with repo defaults) and resumability.** `ORIGINS_CSV`,
+  `PROVIDERS_CSV`, `MEMBERSHIP_RDS`, `OUT_CSV`. The run is resumable: rows already
+  in `OUT_CSV` are kept and their `demand_id`s skipped.
+
+Two other subsystems added in this cycle already have dedicated docs: the
+diagnostic denominator table (`docs/DIAGNOSTIC_DENOMINATOR_STATUS.md`) and the
+incident-entry estimand (`docs/INCIDENT_ENTRY_ESTIMAND.md`).
 
 ## Citation
 
