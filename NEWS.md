@@ -83,6 +83,70 @@
   `dplyr::c()` does not exist and errored at runtime in the county-endogenous
   geography path, and `datasets::` was unqualified.
 
+* **The roxygen generator pin is reconciled, restoring 15 lost exports** (#152).
+  A drifted RoxygenNote had regenerated `NAMESPACE` without fifteen functions,
+  so documented exports were silently unavailable to callers; the generator
+  version is pinned and the exports are back.
+
+* **`DiceKriging` and `lhs` are installed in the hygiene job** (#158) so the
+  history-matching test runs instead of skipping, and its skip is now budgeted
+  in `tests/skip-budget.csv`.
+
+## Demand and calibration
+
+* **Incident-entry sensitivity matrix, pre-registered** (#145). A pre-registered
+  sensitivity matrix and correctness tests are wired into
+  `estimate_incident_entry_hazard()`, which had been an orphaned function. See
+  `docs/INCIDENT_ENTRY_ESTIMAND.md`.
+
+* **Diagnostic denominator table, fail-closed** (#156). A diagnostic denominator
+  table now fails closed on missing denominators rather than reporting a partial
+  count as complete; the Medicare FFS denominator is populated from public CMS
+  data. A unit error is corrected — 79,787 is a count of *services*, not women —
+  and the Part B rate becomes the primary denominator. See
+  `docs/DIAGNOSTIC_DENOMINATOR_STATUS.md`.
+
+* **Payer collection-rate assumptions are now cited** (#147). Uncited payer
+  collection-rate assumptions are replaced with Dunn et al. 2024 (QJE) and
+  Superscript 2025.
+
+## Supply, geography and CHIA
+
+* **Point-to-point drive-time-to-nearest generator (Valhalla)** (#146). A
+  resumable generator computes each demand point's drive time to its nearest
+  provider through a Valhalla routing endpoint (`SIMULATION_VALHALLA_URL`), with
+  a ≤180-minute candidate set and no offline fallback. See the appendix in the
+  README.
+
+* **CHIA OOD outpatient urogynecology service events** (#149). Six URPS services
+  that CHIA inpatient discharge data cannot see are recovered from the CHIA
+  Outpatient Observation Data (2004–2018), normalising the `CPT1-5` /
+  `CPTCode1-5` column-name era split that `UNION ALL BY NAME` leaves as separate
+  always-NULL columns. See the appendix in the README.
+
+* **`survival::strata` is imported for the clogit location-choice model** (#148),
+  fixing a runtime failure in the conditional-logit geography path.
+
+## CI, readiness and estimand documentation
+
+* **A known scientific blocker reports as BLOCKED, not as a broken repository**
+  (#153). The readiness alert fails closed on an unreadable state, and canonical
+  readiness is split out of `scientific-invariants` so a by-design-red gate no
+  longer looks like an infrastructure failure.
+
+* **Nightly no longer opens a tracking issue for a by-design-red gate alone**
+  (#144), removing recurring false-alarm issue noise.
+
+* **APCD request denominator repaired** (#154). A stale never-entered denominator
+  is fixed and the payer/coverage universe is aligned, not just state/year/age.
+
+* **Estimand post-freeze notes dated** (#155). The four passages the §7–§8 ruling
+  overtook are dated so the settled estimand is unambiguous, and a redundant ADR
+  that contradicted it is withdrawn.
+
+* **Paper Table 1 corrected against the code** (#157). Rows 1 and 4 are brought
+  into agreement with the values the code actually emits.
+
 # urpssim 0.5.0
 
 ## What changed in how results may be read
