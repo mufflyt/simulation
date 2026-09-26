@@ -358,7 +358,10 @@ jobs:
             # exactly which parameter and which data source would clear it.
             echo "::warning::BLOCKED (expected): the canonical parameterization rests on an unresolved scientific estimand. See the ::SCIENTIFIC-BLOCKER:: markers above. This is not a software failure."
             echo "canonical_state=BLOCKED" >> "$GITHUB_OUTPUT"
-            exit 1
+            # BLOCKED is an expected scientific state, not a CI failure.
+            # Keep the blocker visible in outputs and the job summary while
+            # reserving a red check for BROKEN (exit 2) or real regressions.
+            exit 0
           fi
           echo "canonical_state=READY" >> "$GITHUB_OUTPUT"
           exit 0
@@ -652,8 +655,8 @@ jobs:
           CANON_STATE="${CANON_RAW:-}"
           if [ -z "$CANON_STATE" ]; then
             case "$CANON_RESULT" in
-              success) CANON_STATE="READY" ;;
-              failure) CANON_STATE="BLOCKED or BROKEN (output unavailable -- check the job log)" ;;
+              success) CANON_STATE="READY or BLOCKED (inspect job output)" ;;
+              failure) CANON_STATE="BROKEN or unavailable -- check the job log" ;;
               *)       CANON_STATE="did not run" ;;
             esac
           fi
@@ -731,23 +734,25 @@ jobs:
           # `failure` and was reported as BLOCKED (expected). The blocker now
           # lives in its own job, so this one can be held to green.
           check "scientific invariants" "${{ needs.scientific-invariants.result }}"
-          # canonical-readiness is the ONLY job allowed to be red unactioned,
-          # and only in state BLOCKED. BROKEN (exit 2) is a real failure and is
-          # treated as one here. The state comes from the job's own output;
-          # since this job fails by design, and outputs from a failed job can
-          # arrive empty, an unreadable state is escalated rather than assumed
-          # benign -- guessing BLOCKED is exactly the mistake being fixed.
-          # `success` is the ONLY healthy pattern, and `failure:BLOCKED` the only
-          # excused one. An earlier draft also accepted `*:READY`, which would
-          # have passed a job that FAILED while claiming READY -- a state the
-          # script cannot legitimately produce, and therefore exactly the state
-          # not to wave through. The state string is corroborating evidence for
-          # a failure, never grounds to overrule a result.
+          # canonical-readiness reports a three-state contract via exit code:
+          # READY (0) and BLOCKED (the script's exit 1, which the step maps to
+          # exit 0) both SUCCEED; BROKEN (exit 2) is a real failure and is
+          # treated as one here. `success:READY` and `success:BLOCKED` are the
+          # two healthy patterns; a `success:*` carrying any other or empty state
+          # is escalated rather than assumed benign -- guessing BLOCKED is
+          # exactly the mistake being fixed. Every `failure:*` is red, including
+          # `failure:)` where a job that broke hard never wrote its state. An
+          # earlier draft also accepted `*:READY`, which would have passed a job
+          # that FAILED while claiming READY -- a state the script cannot
+          # legitimately produce, and therefore exactly the one not to wave
+          # through. The state string never overrules a result.
           case "${{ needs.canonical-readiness.result }}:${{ needs.canonical-readiness.outputs.canonical_state }}" in
-            success:*)
+            success:READY)
               echo "  OK       canonical readiness (READY -- blocker cleared)" ;;
-            failure:BLOCKED)
+            success:BLOCKED)
               echo "  BLOCKED  canonical readiness (expected; see ::SCIENTIFIC-BLOCKER:: markers)" ;;
+            success:*)
+              echo "::error::canonical readiness succeeded with an invalid or missing state"; fail=1 ;;
             failure:BROKEN)
               echo "::error::canonical readiness exited 2 -- infrastructure or integrity failure, NOT the known blocker"; fail=1 ;;
             failure:)
@@ -793,7 +798,7 @@ jobs:
         # constant redness. Removing that constant trigger without adding
         # this one would have silently stopped alerting on platform-matrix
         # failures, historically the most common single-item failure here.
-        if: ${{ always() && (needs.leak-guard.result != 'success' || needs.refusal-gates.result != 'success' || needs.scientific-invariants.result != 'success' || needs.matrix-check.result != 'success' || needs.full-suite.result != 'success' || needs.reproducibility.result != 'success' || (needs.canonical-readiness.result != 'success' && needs.canonical-readiness.outputs.canonical_state != 'BLOCKED')) }}
+        if: ${{ always() && (needs.leak-guard.result != 'success' || needs.refusal-gates.result != 'success' || needs.scientific-invariants.result != 'success' || needs.matrix-check.result != 'success' || needs.full-suite.result != 'success' || needs.reproducibility.result != 'success' || needs.canonical-readiness.result != 'success') }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -809,8 +814,8 @@ jobs:
               'canonical readiness': (function () {
                 const st = '${{ needs.canonical-readiness.outputs.canonical_state }}';
                 const rs = '${{ needs.canonical-readiness.result }}';
-                if (rs === 'success') return 'success';
-                if (st === 'BLOCKED') return 'BLOCKED (expected)';
+                if (rs === 'success' && st === 'BLOCKED') return 'BLOCKED (expected)';
+                if (rs === 'success' && st === 'READY') return 'success';
                 return `failure (state: ${st || 'unavailable'})`;
               })(),
               'platform matrix': '${{ needs.matrix-check.result }}',
