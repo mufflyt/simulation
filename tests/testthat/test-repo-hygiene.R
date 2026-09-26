@@ -392,42 +392,33 @@ test_that("nightly's tracking-issue trigger scopes the by-design exemption to ca
 
   trigger <- as.character(steps[[idx[1]]][["if"]])
 
-  # The blocker's own job must not alert on its RESULT ALONE -- that is the
-  # every-single-night comment this guard was written for. It may appear in the
-  # trigger only in conjunction with a state test, which is what excuses the
-  # expected BLOCKED nights while still alerting on everything else.
-  expect_false(
-    grepl("needs.canonical-readiness.result != 'success' ||", trigger, fixed = TRUE) ||
-      grepl("|| needs.canonical-readiness.result != 'success')", trigger, fixed = TRUE),
-    info = paste(
-      "The tracking-issue trigger must not fire on canonical-readiness'",
-      "job RESULT as a standalone disjunct -- it is red by design, and firing",
-      "on it turns a known, accepted condition into a comment on every single",
-      "nightly run. Pair it with the state test instead."
-    )
-  )
-  # ...and the exemption must be FAIL-CLOSED: alert on any non-success unless
-  # the state is positively BLOCKED. Naming the alerting states instead
-  # (e.g. `canonical_state == 'BROKEN'`) is subtly wrong, because the state is
-  # a job output and outputs from a FAILED job can arrive empty -- and this job
-  # fails by design. A hard environment failure that never set the output would
-  # then match neither BLOCKED nor BROKEN and alert nobody, which is precisely
-  # the rare case worth alerting on.
+  # Under the exit-0 readiness contract, canonical-readiness SUCCEEDS in state
+  # BLOCKED (the expected scientific blocker) and READY; only BROKEN (exit 2) or
+  # a real environment failure is non-success. So gating the alert on the job
+  # RESULT is both correct and fail-closed: a BLOCKED night is `success` and
+  # does NOT fire, while BROKEN and a job that died before writing its output are
+  # non-success and DO fire. The result is the authority; the state is
+  # corroborating only, and is deliberately NOT tested in the trigger.
   expect_true(
-    grepl("needs.canonical-readiness.result != 'success'", trigger, fixed = TRUE) &&
-      grepl("canonical_state != 'BLOCKED'", trigger, fixed = TRUE),
+    grepl("needs.canonical-readiness.result != 'success'", trigger, fixed = TRUE),
     info = paste(
-      "The trigger must be expressed as 'readiness did not succeed AND its",
-      "state is not BLOCKED', so that BROKEN *and* an unreadable state both",
-      "alert. Enumerating the bad states instead lets a missing output pass",
-      "silently."
+      "The trigger must alert whenever canonical-readiness does not succeed, so",
+      "BROKEN (exit 2) and an unreadable/never-run job both alert. Under the",
+      "exit-0 contract BLOCKED is a success, so this never fires on the",
+      "expected, accepted blocker."
     )
   )
+  # FAIL-CLOSED: the alert must rely on the job RESULT, not on canonical_state.
+  # A job that died before writing its output would match no state value and
+  # alert nobody -- exactly the case worth alerting on. The result is success
+  # only for READY/BLOCKED and non-success for everything that should alert, so
+  # no canonical_state test belongs in this trigger at all.
   expect_false(
-    grepl("canonical_state == ", trigger, fixed = TRUE),
+    grepl("canonical_state", trigger, fixed = TRUE),
     info = paste(
-      "Do not gate the alert on the state EQUALLING a bad value -- an empty",
-      "output then matches nothing. Gate on it not equalling BLOCKED."
+      "Do not gate the alert on canonical_state -- rely on the job result. A",
+      "state output from a failed job can arrive empty, so testing the state",
+      "here would let a hard failure that never wrote it pass silently."
     )
   )
   # The rest of the scientific suite is no longer exempt.
