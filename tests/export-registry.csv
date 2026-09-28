@@ -241,3 +241,8 @@
 "build_endogenous_geography_market_panel","api"
 "download_geography_source_files","api"
 "ingest_geography_sources_duckdb","api"
+"build_chia_ood_cpt_service_view","api"
+"build_chia_ood_observation_normalized_view","api"
+"build_chia_ood_urogynecology_service_events","api"
+"build_chia_ood_urogynecology_service_volume","api"
+"compare_ood_to_namcs_service_shares","api"
