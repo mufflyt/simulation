@@ -18,6 +18,11 @@ Resolve CHIA \code{PrimaryPayerType} codes to a canonical \code{payer_group}
 }
 \seealso{
 Other chia physician attribution:
+\code{\link[=.chia_ood_classify_source_of_payment]{.chia_ood_classify_source_of_payment()}},
+\code{\link[=.chia_ood_cpt_service_config]{.chia_ood_cpt_service_config()}},
+\code{\link[=.chia_ood_cpt_service_map]{.chia_ood_cpt_service_map()}},
+\code{\link[=.chia_ood_resolve_payer_group]{.chia_ood_resolve_payer_group()}},
+\code{\link[=.chia_ood_source_of_payment_table]{.chia_ood_source_of_payment_table()}},
 \code{\link[=.chia_suppress_small_cells]{.chia_suppress_small_cells()}},
 \code{\link[=build_chia_hdd_diagnosis_long_view]{build_chia_hdd_diagnosis_long_view()}},
 \code{\link[=build_chia_hdd_discharge_canonical_view]{build_chia_hdd_discharge_canonical_view()}},
@@ -25,10 +30,15 @@ Other chia physician attribution:
 \code{\link[=build_chia_hdd_discharge_procedure_views]{build_chia_hdd_discharge_procedure_views()}},
 \code{\link[=build_chia_hdd_procedure_family_view]{build_chia_hdd_procedure_family_view()}},
 \code{\link[=build_chia_npi_taxonomy_crosswalk]{build_chia_npi_taxonomy_crosswalk()}},
+\code{\link[=build_chia_ood_cpt_service_view]{build_chia_ood_cpt_service_view()}},
+\code{\link[=build_chia_ood_observation_normalized_view]{build_chia_ood_observation_normalized_view()}},
+\code{\link[=build_chia_ood_urogynecology_service_events]{build_chia_ood_urogynecology_service_events()}},
+\code{\link[=build_chia_ood_urogynecology_service_volume]{build_chia_ood_urogynecology_service_volume()}},
 \code{\link[=build_chia_physician_attribution]{build_chia_physician_attribution()}},
 \code{\link[=build_chia_surgeon_year_volume_views]{build_chia_surgeon_year_volume_views()}},
 \code{\link[=build_chia_urogynecology_service_events]{build_chia_urogynecology_service_events()}},
-\code{\link[=chia_npi_taxonomy_credentials_db_default]{chia_npi_taxonomy_credentials_db_default()}}
+\code{\link[=chia_npi_taxonomy_credentials_db_default]{chia_npi_taxonomy_credentials_db_default()}},
+\code{\link[=compare_ood_to_namcs_service_shares]{compare_ood_to_namcs_service_shares()}}
 }
 \concept{chia physician attribution}
 \concept{supply}
