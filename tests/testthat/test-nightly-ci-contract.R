@@ -215,8 +215,10 @@ test_that("canonical readiness is isolated in its own job with the 0/1/2 contrac
   # THE REPORT MUST NOT LET A FAILING JOB TALK ITS WAY INTO GREEN.
   # An earlier draft accepted the pattern `*:READY`, which would have passed a
   # job that FAILED while reporting READY -- a combination the script cannot
-  # legitimately produce, and so exactly the one not to wave through. `success`
-  # is the only healthy pattern; `failure:BLOCKED` the only excused one.
+  # legitimately produce, and so exactly the one not to wave through. Under the
+  # exit-0 contract `success:READY` is healthy and `success:BLOCKED` is the one
+  # excused state; every `failure:*`, and a `success:*` carrying an invalid or
+  # missing state, is red.
   # Read the gate step's OWN script with comment lines stripped. Grepping the
   # raw file would match the prose explaining why `*:READY` is wrong, and a
   # guard that its own rationale can satisfy is not a guard.
@@ -232,10 +234,14 @@ test_that("canonical readiness is isolated in its own job with the 0/1/2 contrac
   )
   expect_false(grepl("*:READY", gate, fixed = TRUE),
                info = "a failing canonical-readiness job must not pass by reporting READY")
-  expect_true(grepl("failure:BLOCKED", gate, fixed = TRUE),
-              info = "failure:BLOCKED is the one excused state and must be named explicitly")
-  # The unreadable-state arm must exist. Defaulting an empty output to BLOCKED
-  # is the assumption this whole split removes.
+  expect_true(grepl("success:BLOCKED", gate, fixed = TRUE),
+              info = "success:BLOCKED is the one excused state and must be named explicitly")
+  # A success carrying an invalid or missing state must be rejected, not waved
+  # through: READY and BLOCKED are the only states a successful run may report.
+  expect_true(grepl("success:*", gate, fixed = TRUE),
+              info = "a success with an invalid/missing state must have an explicit failure arm")
+  # The unreadable-state arm must exist: a failure that reported no state cannot
+  # be told apart from the blocker and must escalate, never default to BLOCKED.
   expect_true(grepl("failure:)", gate, fixed = TRUE),
               info = "there must be an explicit arm for a failure that reported no state")
 
