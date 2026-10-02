@@ -107,7 +107,9 @@ if (!requireNamespace("urpssim", quietly = TRUE) ||
 #
 # Tests that ARE about the canonical configuration must NOT use this -- they
 # assert the refusal explicitly, and the end-to-end canonical run lives in
-# .github/scripts/assert-canonical-science.R, which stays red by design.
+# .github/scripts/assert-canonical-science.R, which still refuses the canonical
+# configuration (exit 1); since #159 the readiness workflow reports that as a
+# green BLOCKED state rather than a red check.
 valid_pathway <- function(pathway = condition_service_pathway()) {
   pathway$per_entering[pathway$service == "new_consultation"] <- 0.25
   pathway

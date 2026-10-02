@@ -288,6 +288,15 @@ disease**, not first entry into care. Useful for bounding, never a substitute.
 - Blockers `ui_incident_entry`, `pop_incident_entry`, `ai_incident_entry` under
   `category=conservative_incident_entry`, emitted as `::SCIENTIFIC-BLOCKER::`
   markers at exit 1.
+
+> **UPDATE, 2026-09-28 (#159):** the operational CI *mapping* above has changed
+> (the estimand status has not, and the freeze is undisturbed).
+> `scientific-readiness` is no longer *red* for the declared blocker: the audit
+> script still exits 1 for BLOCKED, but the workflow now maps READY (exit 0) and
+> BLOCKED (exit 1) to a **green** job carrying a warning and
+> `canonical_state=BLOCKED`, reserving a red check for BROKEN (exit 2) — a blocked
+> canonical model and a broken repository are different states. See `NEWS.md` and
+> `docs/SCIENTIFIC_INTEGRITY.md`.
 - Fixtures working around it — `valid_pathway()` in
   `tests/testthat/helper-setup.R` and `.github/scripts/_pathway_fixture.R` —
   are labelled as fixtures, not candidate values, and are to be **deleted** once

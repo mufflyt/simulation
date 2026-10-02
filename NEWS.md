@@ -147,6 +147,17 @@
 * **Paper Table 1 corrected against the code** (#157). Rows 1 and 4 are brought
   into agreement with the values the code actually emits.
 
+* **The expected scientific blocker now reports green, not red** (#159).
+  Completing #153, the canonical-readiness gate maps the audit script's three
+  exit codes to CI state directly: READY (exit 0) and BLOCKED (exit 1) both
+  *succeed* — BLOCKED carries a warning and `canonical_state=BLOCKED` — while
+  only BROKEN (exit 2) or an unexpected failure stays red. The nightly report and
+  its tracking-issue trigger key off the job *result*, so a BLOCKED night no
+  longer looks like a broken repository or files a false alarm, and the
+  `test-nightly-ci-contract.R` / `test-repo-hygiene.R` contract tests assert the
+  exit-0 semantics (success:BLOCKED is the excused state; a success with an
+  invalid state still fails).
+
 # urpssim 0.5.0
 
 ## What changed in how results may be read
